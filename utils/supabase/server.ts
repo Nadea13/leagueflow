@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function createClient() {
@@ -15,23 +15,26 @@ export async function createClient() {
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) => {
-                            // Force secure: false on localhost to prevent cookie rejection
-                            // This is critical for authentication to work in development
+                            // 1. บังคับปิด Secure บน Localhost
                             if (process.env.NODE_ENV !== 'production') {
                                 options.secure = false
                             }
 
-                            cookieStore.set(name, value, {
+                            // 2. ปรับจูน Option (เพิ่ม path: '/' คือพระเอกของเรา)
+                            const cookieOptions = {
                                 ...options,
-                                // Ensure these standard security options are set
-                                sameSite: 'lax',
+                                path: '/',
+                                sameSite: 'lax' as const,
                                 httpOnly: true,
-                            })
+                                maxAge: 60 * 60 * 24 * 7,
+                            }
+
+                            console.log(`>>> [COOKIE DEBUG] Setting: ${name} | Path: ${cookieOptions.path}`)
+
+                            cookieStore.set(name, value, cookieOptions)
                         })
-                    } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
+                    } catch (error) {
+                        console.error(">>> [COOKIE ERROR]", error)
                     }
                 },
             },

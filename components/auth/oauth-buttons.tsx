@@ -9,12 +9,24 @@ import { useLocale } from "next-intl";
 
 export function OAuthButtons() {
     const locale = useLocale();
+
     const handleLogin = async (provider: Provider) => {
         const supabase = createClient();
+        
+        // ใช้ window.location.origin เพื่อความชัวร์ (Browser Only)
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider,
             options: {
-                redirectTo: `${location.origin}/${locale}/auth/callback?next=/${locale}/dashboard`,
+                // 1. ระบุปลายทางให้ชัดเจน (ตามที่คุณเขียนถูกแล้ว)
+                redirectTo: `${origin}/${locale}/auth/callback?next=/${locale}/dashboard`,
+                
+                // 2. ⚠️ เพิ่มส่วนนี้ครับ! (สำคัญมากสำหรับ Google)
+                queryParams: {
+                    access_type: 'offline', // บังคับขอ Refresh Token (เพื่อให้ Server จัดการ Session ได้)
+                    prompt: 'consent',      // บังคับขึ้นหน้าเลือกบัญชีทุกครั้ง (ป้องกันการ Login ค้าง)
+                },
             },
         });
 
