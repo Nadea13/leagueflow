@@ -43,7 +43,11 @@ function GroupItem({ team, tournamentId }: { team: Team; tournamentId: string })
         setLoading(true);
         const groupName = value === "none" ? null : value;
         try {
-            const result = await updateTeam(team.id, { group_name: groupName }, tournamentId);
+            const formData = new FormData();
+            formData.append("name", team.name); // Required by action
+            if (groupName) formData.append("group_name", groupName);
+
+            const result = await updateTeam(team.id, formData, tournamentId);
             if (!result.success) {
                 console.error(result.error);
                 alert("Failed to update group: " + result.error);
