@@ -166,8 +166,8 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                     let headerText = `${tMatch("round")} ${round}`;
                     if (stage === 'league' || stage === 'group') {
                         headerText = `${tFixtures("match_day")} ${round}`;
-                    } else if (stage === 'knockout_16') {
-                        headerText = tBracket("knockout_16");
+                    } else if (stage === 'round_of_16') {
+                        headerText = tBracket("round_of_16");
                     } else if (stage === 'quarter_final') {
                         headerText = tBracket("quarter_final");
                     } else if (stage === 'semi_final') {

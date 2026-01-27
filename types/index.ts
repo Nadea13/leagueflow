@@ -20,7 +20,7 @@ export interface Match {
     home_score: number | null;
     away_score: number | null;
     round: number;
-    stage: 'league' | 'group' | 'round_of_64' | 'round_of_32' | 'knockout_16' | 'quarter_final' | 'semi_final' | 'final';
+    stage: 'league' | 'group' | 'round_of_64' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final';
     winner_id?: string | null;
     is_manual: boolean;
     status: MatchStatus;

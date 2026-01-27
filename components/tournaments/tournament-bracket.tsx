@@ -25,12 +25,12 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
     }
 
     // 1. Define ALL possible stages in order (supports larger tournaments)
-    const allStages = ["round_of_64", "round_of_32", "knockout_16", "quarter_final", "semi_final", "final"];
+    const allStages = ["round_of_64", "round_of_32", "round_of_16", "quarter_final", "semi_final", "final"];
 
     const stageLabels: Record<string, string> = {
         round_of_64: t("round_of_64"),
         round_of_32: t("round_of_32"),
-        knockout_16: t("knockout_16"),
+        round_of_16: t("round_of_16"),
         quarter_final: t("quarter_final"),
         semi_final: t("semi_final"),
         final: t("final"),

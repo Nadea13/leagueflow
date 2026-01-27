@@ -253,13 +253,13 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
 
         while (currentRoundMatchCount >= 1) {
             // Determine Stage Name
-            let stage: 'final' | 'semi_final' | 'quarter_final' | 'knockout_16' | 'round_of_32' | 'round_of_64' | 'group'; // Added wider types just in case
+            let stage: 'final' | 'semi_final' | 'quarter_final' | 'round_of_16' | 'round_of_32' | 'round_of_64' | 'group'; // Added wider types just in case
             if (currentRoundMatchCount === 1) stage = 'final';
             else if (currentRoundMatchCount === 2) stage = 'semi_final';
             else if (currentRoundMatchCount === 4) stage = 'quarter_final';
-            else if (currentRoundMatchCount === 8) stage = 'knockout_16';
+            else if (currentRoundMatchCount === 8) stage = 'round_of_16';
             else if (currentRoundMatchCount === 16) stage = 'round_of_32'; // Need to ensure type exists or cast
-            else stage = 'knockout_16'; // Fallback for larger (or add more types)
+            else stage = 'round_of_16'; // Fallback for larger (or add more types)
 
             for (let i = 0; i < currentRoundMatchCount; i++) {
                 const match: Partial<Match> = {
@@ -920,10 +920,10 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
 
     // LOGIC B: Knockout Progression
     else {
-        // e.g. knockout_16 -> quarter_final -> semi_final -> final
+        // e.g. round_of_16 -> quarter_final -> semi_final -> final
 
         let nextStage = '';
-        if (currentStage === 'knockout_16') nextStage = 'quarter_final';
+        if (currentStage === 'round_of_16') nextStage = 'quarter_final';
         else if (currentStage === 'quarter_final') nextStage = 'semi_final';
         else if (currentStage === 'semi_final') nextStage = 'final';
         else if (currentStage === 'final') return { success: false, error: "Tournament is already finished." };

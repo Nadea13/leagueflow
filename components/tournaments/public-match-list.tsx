@@ -33,7 +33,7 @@ export function PublicMatchList({ matches, tournamentId }: { matches: any[]; tou
                 let headerText = `Round ${round}`;
                 if (stage === 'league' || stage === 'group') {
                     headerText = `Match Day ${round}`;
-                } else if (stage === 'knockout_16') {
+                } else if (stage === 'round_of_16') {
                     headerText = "Round of 16";
                 } else if (stage === 'quarter_final') {
                     headerText = "Quarter Final";

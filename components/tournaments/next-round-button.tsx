@@ -19,7 +19,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
     const [isPending, startTransition] = useTransition();
 
     // 1. Identify Current Stage
-    // Order: group -> knockout_16 -> quarter_final -> semi_final -> final
+    // Order: group -> round_of_16 -> quarter_final -> semi_final -> final
     if (!matches || matches.length === 0) return null;
 
     // Quick check for League (no progression)
@@ -30,7 +30,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
     if (stages.has('final')) currentStage = 'final';
     else if (stages.has('semi_final')) currentStage = 'semi_final';
     else if (stages.has('quarter_final')) currentStage = 'quarter_final';
-    else if (stages.has('knockout_16')) currentStage = 'knockout_16';
+    else if (stages.has('round_of_16')) currentStage = 'round_of_16';
     else if (stages.has('group')) currentStage = 'group';
 
     // 2. Check if Final
@@ -64,7 +64,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
 
     let buttonText = t("start_next_round");
     if (currentStage === 'group') buttonText = t("generate_semis");
-    else if (currentStage === 'knockout_16') buttonText = t("start_quarters");
+    else if (currentStage === 'round_of_16') buttonText = t("start_quarters");
     else if (currentStage === 'quarter_final') buttonText = t("start_semis");
     else if (currentStage === 'semi_final') buttonText = t("start_final");
 
