@@ -10,7 +10,7 @@ export default async function DashboardLayout({ children, params }: { children: 
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect(`/${locale}/login`);
+        // redirect(`/${locale}/login`);
     }
 
     return (

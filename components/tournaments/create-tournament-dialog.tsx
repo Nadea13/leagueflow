@@ -101,6 +101,26 @@ export function CreateTournamentDialog() {
                         />
                     </div>
 
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="start_date" className="text-right">{t("start_date")}</Label>
+                        <Input
+                            id="start_date"
+                            name="start_date"
+                            type="date"
+                            className="col-span-3"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="end_date" className="text-right">{t("end_date")}</Label>
+                        <Input
+                            id="end_date"
+                            name="end_date"
+                            type="date"
+                            className="col-span-3"
+                        />
+                    </div>
+
                     {state?.error && (
                         <div className="text-sm text-red-500 text-center">
                             {state.error}

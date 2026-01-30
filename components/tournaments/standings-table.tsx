@@ -19,7 +19,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
     // .order("gf", { ascending: false });
 
     return (
-        <div className="w-full max-w-[calc(100vw-5.1rem)] overflow-x-auto rounded-md border">
+        <div className="w-full overflow-x-auto rounded-md border">
             <Table className="min-w-[500px]">
                 <TableHeader>
                     <TableRow>

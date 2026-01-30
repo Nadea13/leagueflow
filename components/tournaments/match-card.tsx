@@ -116,30 +116,32 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
         >
             {/* 1. Status/Time/Badge Section */}
             <div className="flex items-center justify-center w-full md:w-auto md:flex-col md:items-start md:justify-start md:gap-1 min-w-[90px] mb-2 md:mb-0">
-                <Badge
-                    variant="outline"
-                    className={cn(
-                        "uppercase text-[10px] tracking-wider font-bold border px-2 py-0.5",
-                        status === 'scheduled' && "text-muted-foreground border-muted-foreground/30",
-                        isLive && "bg-red-500 text-white border-red-600 animate-pulse",
-                        isFinished && "bg-muted text-muted-foreground border-transparent", // Fixed transparent border for better vis
-                        !match.away_team_id && "text-muted-foreground border-muted-foreground/30"
-                    )}
-                >
-                    {!match.away_team_id ? t("scheduled") : (
-                        isLive ? (
-                            <span className="flex items-center gap-1.5">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                {status !== 'scheduled' && (
+                    <Badge
+                        variant="outline"
+                        className={cn(
+                            "uppercase text-[10px] tracking-wider font-bold border px-2 py-0.5",
+                            status === 'scheduled' && "text-muted-foreground border-muted-foreground/30",
+                            isLive && "bg-red-500 text-white border-red-600 animate-pulse",
+                            isFinished && "bg-muted text-muted-foreground border-transparent", // Fixed transparent border for better vis
+                            !match.away_team_id && "text-muted-foreground border-muted-foreground/30"
+                        )}
+                    >
+                        {!match.away_team_id ? t("scheduled") : (
+                            isLive ? (
+                                <span className="flex items-center gap-1.5">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                    </span>
+                                    {t("live")}
                                 </span>
-                                {t("live")}
-                            </span>
-                        ) : (
-                            isFinished ? "FT" : t("scheduled")
-                        )
-                    )}
-                </Badge>
+                            ) : (
+                                isFinished ? t("ft") : t("scheduled")
+                            )
+                        )}
+                    </Badge>
+                )}
 
                 {/* Date/Time Info (Editable if Admin & Not Finished) */}
                 {!isFinished && !isLive && (
@@ -203,7 +205,7 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                                 onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
                             >
                                 <SelectTrigger className="h-8 w-[140px] text-xs">
-                                    <SelectValue placeholder="Select Team" />
+                                    <SelectValue placeholder={tMatch("select_team")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="tbd">{tMatch("tbd")}</SelectItem>
@@ -269,7 +271,7 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                                 onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
                             >
                                 <SelectTrigger className="h-8 w-[140px] text-xs">
-                                    <SelectValue placeholder="Select Team" />
+                                    <SelectValue placeholder={tMatch("select_team")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="tbd">{tMatch("tbd")}</SelectItem>

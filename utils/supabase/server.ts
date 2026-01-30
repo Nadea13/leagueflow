@@ -15,17 +15,20 @@ export async function createClient() {
                 setAll(cookiesToSet) {
                     try {
                         cookiesToSet.forEach(({ name, value, options }) => {
-                            // Adjust options to be compatible with Next.js cookie store
+                            // ✅ แก้ไข: บังคับปิด Secure บน Localhost (โค้ดเก่าคุณไม่มีส่วนนี้)
+                            if (process.env.NODE_ENV !== 'production') {
+                                options.secure = false
+                            }
+
                             const cookieOptions = {
                                 ...options,
                                 sameSite: 'lax' as const,
+                                path: '/', // ✅ เพิ่ม path: '/' เพื่อความชัวร์ว่าใช้ได้ทั้งเว็บ
                             }
                             cookieStore.set(name, value, cookieOptions)
                         })
                     } catch {
                         // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
                     }
                 },
             },

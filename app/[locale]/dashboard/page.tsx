@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
@@ -48,8 +49,12 @@ export default async function DashboardPage() {
                                     {tournament.name}
                                 </CardTitle>
                                 <Badge
-                                    variant={tournament.status === 'active' ? 'default' : 'secondary'}
-                                    className="capitalize"
+                                    className={cn(
+                                        "capitalize",
+                                        tournament.status === 'active' && "bg-green-600 hover:bg-green-700",
+                                        tournament.status === 'completed' && "bg-gray-500 hover:bg-gray-600",
+                                        (!tournament.status || tournament.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black"
+                                    )}
                                 >
                                     {tournament.status ? tSettings(tournament.status as any) : tSettings('draft')}
                                 </Badge>

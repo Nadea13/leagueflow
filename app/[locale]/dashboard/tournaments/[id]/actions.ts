@@ -57,6 +57,26 @@ export async function addTeam(
     return { success: true };
 }
 
+export async function assignTeamGroup(
+    teamId: string,
+    groupName: string | null,
+    tournamentId: string
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from("teams")
+        .update({ group_name: groupName })
+        .eq("id", teamId);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    return { success: true };
+}
+
 export async function updateTeam(
     teamId: string,
     formData: FormData,
@@ -134,7 +154,7 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
     // 2. Fetch tournament format and teams
     const { data: tournament } = await supabase
         .from('tournaments')
-        .select('format')
+        .select('format, start_date, end_date, number_of_pitches')
         .eq('id', tournamentId)
         .single();
 
@@ -169,16 +189,21 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
         let globalMatchIndex = 1;
 
         // Run RR for each group
+        let allGroupMatches: Partial<Match>[] = [];
         Object.keys(groups).forEach(groupName => {
             const groupFixtures = generateRoundRobinMatches(groups[groupName], tournamentId, 'group', startRound);
-
-            // Assign sequential match_index
-            groupFixtures.forEach(m => {
-                m.match_index = globalMatchIndex++;
-            });
-
-            fixtures.push(...groupFixtures);
+            allGroupMatches.push(...groupFixtures);
         });
+
+        // Sort by Round -> Interleave matches from different groups
+        allGroupMatches.sort((a, b) => (a.round || 0) - (b.round || 0));
+
+        // Assign sequential match_index
+        allGroupMatches.forEach(m => {
+            m.match_index = globalMatchIndex++;
+        });
+
+        fixtures.push(...allGroupMatches);
 
         // Pre-generate Knockout Bracket
         // Determine number of advancing teams (Top 2 from each group)
@@ -382,7 +407,13 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
         fixtures.push(...leagueFixtures);
     }
 
-    // 4. Save to Database
+    // 4. Assign Times if parameters are available
+    if (tournament?.start_date && fixtures.length > 0) {
+        console.log("Assigning timess....")
+        assignMatchTimes(fixtures, tournament.start_date, tournament.end_date, tournament.number_of_pitches || 1);
+    }
+
+    // 5. Save to Database
     if (fixtures.length === 0) {
         return { success: false, error: "No fixtures generated. Check tournament settings." };
     }
@@ -462,6 +493,57 @@ function generateRoundRobinMatches(teamIds: string[], tournamentId: string, stag
     }
 
     return fixtures;
+}
+
+// Helper: Assign Match Times
+function assignMatchTimes(fixtures: Partial<Match>[], startDateStr: string, endDateStr: string | null | undefined, numberOfPitches: number) {
+    if (!startDateStr) return;
+
+    let currentDate = new Date(startDateStr);
+    const endDate = endDateStr ? new Date(endDateStr) : null;
+
+    // Set start time to 08:00
+    currentDate.setHours(8, 0, 0, 0);
+
+    const START_HOUR = 8;
+    const END_HOUR = 20; // 8 PM
+    const MATCH_DURATION_MINS = 120; // 2 Hours
+
+    let currentPitch = 1;
+
+    // Group fixtures by round to respect round ordering (optional, but good practice to play round 1 before round 2)
+    // However, for basic scheduling, we can just iterate the list if it's already sorted by round.
+    // Assuming fixtures are pushed in order of rounds.
+
+    for (const match of fixtures) {
+        // If we exceed end date, just stop assigning (or continue indefinitely? let's continue but maybe log/warn implicitly by just going forward)
+        if (endDate && currentDate > endDate) {
+            // Option: Stop assigning times, leave as TBD
+            // break; 
+            // Option: Just keep assigning dates beyond end date (User can fix) -> Preferred
+        }
+
+        match.match_date = currentDate.toISOString().split('T')[0];
+        match.match_time = currentDate.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
+        match.venue = `Pitch ${currentPitch}`;
+
+        // Move to next slot
+        // Logic: Fill all pitches for current time, then move time forward.
+        if (currentPitch < numberOfPitches) {
+            currentPitch++;
+        } else {
+            // All pitches used for this time slot. Advance time.
+            currentPitch = 1;
+            currentDate.setMinutes(currentDate.getMinutes() + MATCH_DURATION_MINS);
+
+            // Check if we passed the end hour (20:00)
+            // If current Hour >= END_HOUR, move to next day 08:00
+            if (currentDate.getHours() >= END_HOUR) {
+                currentDate.setDate(currentDate.getDate() + 1);
+                currentDate.setHours(START_HOUR, 0, 0, 0);
+            }
+        }
+    }
 }
 
 

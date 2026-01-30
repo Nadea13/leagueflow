@@ -22,7 +22,7 @@ export function GroupStandings({ teams, matches }: GroupStandingsProps) {
     const sortedGroups = Object.keys(teamsByGroup).sort();
 
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {sortedGroups.map((group) => {
                 const groupTeams = teamsByGroup[group];
                 // Filter matches relevant to this group
@@ -37,9 +37,7 @@ export function GroupStandings({ teams, matches }: GroupStandingsProps) {
                 return (
                     <div key={group} className="space-y-3">
                         <h3 className="font-bold text-lg px-1">Group {group}</h3>
-                        <div className="w-full max-w-[calc(100vw-2rem)] overflow-x-auto">
-                            <StandingsTable standings={groupStandings} />
-                        </div>
+                        <StandingsTable standings={groupStandings} />
                     </div>
                 );
             })}

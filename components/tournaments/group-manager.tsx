@@ -1,7 +1,7 @@
 "use client";
 
 import { Team } from "@/types/index";
-import { updateTeam } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { assignTeamGroup } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 import {
     Select,
     SelectContent,
@@ -43,11 +43,7 @@ function GroupItem({ team, tournamentId }: { team: Team; tournamentId: string })
         setLoading(true);
         const groupName = value === "none" ? null : value;
         try {
-            const formData = new FormData();
-            formData.append("name", team.name); // Required by action
-            if (groupName) formData.append("group_name", groupName);
-
-            const result = await updateTeam(team.id, formData, tournamentId);
+            const result = await assignTeamGroup(team.id, groupName, tournamentId);
             if (!result.success) {
                 console.error(result.error);
                 alert("Failed to update group: " + result.error);

@@ -5,8 +5,9 @@ import { generateFixtures } from "@/app/[locale]/dashboard/tournaments/[id]/acti
 import { Button } from "@/components/ui/button"
 import { Wand2 } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { cn } from "@/lib/utils"
 
-export function FixtureGenerator({ tournamentId, hasFixtures }: { tournamentId: string, hasFixtures: boolean }) {
+export function FixtureGenerator({ tournamentId, hasFixtures, className }: { tournamentId: string, hasFixtures: boolean, className?: string }) {
   const t = useTranslations("Fixtures")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -28,11 +29,11 @@ export function FixtureGenerator({ tournamentId, hasFixtures }: { tournamentId: 
   }
 
   if (hasFixtures) {
-    return <Button disabled variant="secondary" className="w-full">✅ {t("generated")}</Button>
+    return <Button disabled variant="secondary" className={cn("w-full", className)}>{t("generated")}</Button>
   }
 
   return (
-    <Button onClick={handleGenerate} disabled={isLoading} className="w-full bg-indigo-600 hover:bg-indigo-700">
+    <Button onClick={handleGenerate} disabled={isLoading} className={cn("w-full bg-indigo-600 hover:bg-indigo-700", className)}>
       <Wand2 className="mr-2 h-4 w-4" />
       {isLoading ? t("generating") : t("generate_fixtures")}
     </Button>

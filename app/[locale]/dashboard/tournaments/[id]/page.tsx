@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +97,12 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
                 <div className="flex items-center gap-4">
                     <h1 className="text-3xl font-bold tracking-tight">{tournament?.name}</h1>
                     <Badge variant="outline" className="capitalize">{tournament?.format}</Badge>
-                    <Badge variant={tournament?.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                    <Badge className={cn(
+                        "capitalize",
+                        tournament?.status === 'active' && "bg-green-600 hover:bg-green-700",
+                        tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600",
+                        (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black"
+                    )}>
                         {tournament?.status || 'draft'}
                     </Badge>
                     <ShareButton tournamentId={id} />
@@ -105,7 +111,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
 
             {/* Tabs */}
             <Tabs defaultValue="overview" className="w-full">
-                <TabsList>
+                <TabsList className="w-full h-auto flex flex-wrap justify-start bg-muted p-1">
                     <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
                     <TabsTrigger value="teams">{t("teams")} ({teams?.length || 0})</TabsTrigger>
                     <TabsTrigger value="fixtures">{t("fixtures")}</TabsTrigger>
@@ -192,16 +198,16 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
                 {/* Fixtures Tab */}
                 <TabsContent value="fixtures" className="space-y-4">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>{t("match_schedule")}</CardTitle>
-                            <CardDescription>{t("manage_fixtures")}</CardDescription>
+                        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 space-y-0">
+                            <div className="space-y-1">
+                                <CardTitle>{t("match_schedule")}</CardTitle>
+                                <CardDescription>{t("manage_fixtures")}</CardDescription>
+                            </div>
+                            <div className="w-full md:w-auto">
+                                <FixtureGenerator tournamentId={id} hasFixtures={hasFixtures} className="w-full md:w-auto" />
+                            </div>
                         </CardHeader>
                         <CardContent>
-                            {/* Generator Button */}
-                            <div className="mb-6">
-                                <FixtureGenerator tournamentId={id} hasFixtures={hasFixtures} />
-                            </div>
-
                             {/* Fixtures List */}
                             <FixturesManager
                                 teams={teams || []}

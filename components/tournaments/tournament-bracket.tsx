@@ -4,6 +4,7 @@ import { Match } from "@/types/index";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 
 interface TournamentBracketProps {
     matches: Match[];
@@ -56,37 +57,42 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
     };
 
     return (
-        <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-            <div className="flex gap-8 min-w-max min-h-[500px] items-stretch px-4">
-                {activeStages.map((stage, stageIndex) => {
-                    let stageMatches = matchesByStage[stage];
+        <div className="space-y-4">
+            <div className="flex justify-end">
+                <ExportToImageButton targetId="tournament-bracket-canvas" filename="tournament_bracket" label={t("export") || "Export Bracket"} />
+            </div>
+            <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
+                <div id="tournament-bracket-canvas" className="flex gap-8 min-w-max min-h-[500px] items-stretch">
+                    {activeStages.map((stage, stageIndex) => {
+                        let stageMatches = matchesByStage[stage];
 
-                    // Sort by match_index to ensure correct pairing visual
-                    stageMatches = [...stageMatches].sort((a, b) => (a.match_index ?? 0) - (b.match_index ?? 0));
+                        // Sort by match_index to ensure correct pairing visual
+                        stageMatches = [...stageMatches].sort((a, b) => (a.match_index ?? 0) - (b.match_index ?? 0));
 
-                    const isFinal = stage === 'final';
-                    const pairs = isFinal ? [stageMatches] : getPairs(stageMatches);
+                        const isFinal = stage === 'final';
+                        const pairs = isFinal ? [stageMatches] : getPairs(stageMatches);
 
-                    return (
-                        <div key={stage} className="flex flex-col min-w-[260px]">
-                            <h3 className="text-xs font-bold text-center uppercase text-muted-foreground/70 mb-6 tracking-widest bg-muted/20 py-1 rounded">
-                                {stageLabels[stage] || stage.replace('_', ' ')}
-                            </h3>
+                        return (
+                            <div key={stage} className="flex flex-col min-w-[260px]">
+                                <h3 className="text-xs font-bold text-center uppercase text-muted-foreground/70 mb-6 tracking-widest bg-muted/20 py-1 rounded">
+                                    {stageLabels[stage] || stage.replace('_', ' ')}
+                                </h3>
 
-                            <div className="flex flex-col justify-around flex-grow relative">
-                                {pairs.map((pair, idx) => (
-                                    <div key={idx} className="relative flex flex-col justify-center gap-6 my-4">
-                                        {pair.map((match, matchIdx) => (
-                                            <div key={match.id} className="relative z-10 w-full">
-                                                <BracketMatchCard match={match} />
-                                            </div>
-                                        ))}
-                                    </div>
-                                ))}
+                                <div className="flex flex-col justify-around flex-grow relative">
+                                    {pairs.map((pair, idx) => (
+                                        <div key={idx} className="relative flex flex-col justify-center gap-6 my-4">
+                                            {pair.map((match, matchIdx) => (
+                                                <div key={match.id} className="relative z-10 w-full">
+                                                    <BracketMatchCard match={match} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

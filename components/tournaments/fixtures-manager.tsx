@@ -18,7 +18,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Plus, Calendar, ArrowRight } from "lucide-react";
-
+import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 
 interface FixturesManagerProps {
     teams: Team[];
@@ -110,6 +110,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                     </p>
                 </div>
             ) : (
+
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 p-4 rounded-lg">
                     {/* Filter */}
                     <div className="flex items-center gap-2 w-full md:w-auto">
@@ -133,78 +134,70 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                         </Select>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-                        <Label htmlFor="edit-mode" className="font-semibold">{t("edit_mode") || "Edit Mode"}</Label>
+                    <div className="flex items-center space-x-4">
+                        <ExportToImageButton targetId="fixtures-canvas" filename="fixtures" label={t("export") || "Export"} />
+                        <div className="flex items-center space-x-2">
+                            <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
+                            <Label htmlFor="edit-mode" className="font-semibold">{t("edit_mode") || "Edit Mode"}</Label>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Additional Global Add Match Button if filtered? */}
-            {/* Additional Global Add Match Button if filtered? */}
-            {/* {matches.length > 0 && isEditMode && (
-                <div className="flex justify-end">
-                    <MatchDialog
-                        tournamentId={tournamentId}
-                        teams={teams}
-                        defaultRound={1}
-                        trigger={<Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add Custom Match</Button>}
-                    />
-                </div>
-            )} */}
 
-            {Object.keys(matchesByRound).length === 0 ? (
-                <div className="text-center py-12 border rounded-lg bg-muted/10">
-                    <p className="text-muted-foreground">{tFixtures("no_fixtures")}</p>
-                </div>
-            ) : (
-                Object.keys(matchesByRound).map((roundKey) => {
-                    const round = Number(roundKey);
-                    const firstMatch = matchesByRound[round][0];
-                    const stage = firstMatch?.stage;
+            <div id="fixtures-canvas" className="space-y-6 rounded-lg">
+                {Object.keys(matchesByRound).length === 0 ? (
+                    <div className="text-center py-12 border rounded-lg bg-muted/10">
+                        <p className="text-muted-foreground">{tFixtures("no_fixtures")}</p>
+                    </div>
+                ) : (
+                    Object.keys(matchesByRound).map((roundKey) => {
+                        const round = Number(roundKey);
+                        const firstMatch = matchesByRound[round][0];
+                        const stage = firstMatch?.stage;
 
-                    let headerText = `${tMatch("round")} ${round}`;
-                    if (stage === 'league' || stage === 'group') {
-                        headerText = `${tFixtures("match_day")} ${round}`;
-                    } else if (stage === 'round_of_16') {
-                        headerText = tBracket("round_of_16");
-                    } else if (stage === 'quarter_final') {
-                        headerText = tBracket("quarter_final");
-                    } else if (stage === 'semi_final') {
-                        headerText = tBracket("semi_final");
-                    } else if (stage === 'final') {
-                        headerText = tBracket("final");
-                    }
+                        let headerText = `${tMatch("round")} ${round}`;
+                        if (stage === 'league' || stage === 'group') {
+                            headerText = `${tFixtures("match_day")} ${round}`;
+                        } else if (stage === 'round_of_16') {
+                            headerText = tBracket("round_of_16");
+                        } else if (stage === 'quarter_final') {
+                            headerText = tBracket("quarter_final");
+                        } else if (stage === 'semi_final') {
+                            headerText = tBracket("semi_final");
+                        } else if (stage === 'final') {
+                            headerText = tBracket("final");
+                        }
 
-                    return (
-                        <div key={round} className="border rounded-lg p-4 relative bg-card shadow-sm">
-                            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                                {headerText}
-                                {stage !== 'league' && stage !== 'group' && (
-                                    <span className="text-xs font-normal text-muted-foreground border px-2 py-0.5 rounded-full capitalize">
-                                        {stage?.replace('_', ' ')}
-                                    </span>
-                                )}
-                            </h3>
-                            <div className="grid gap-2">
-                                {matchesByRound[round].map((match) => (
-                                    <div key={match.id} className="relative group">
-                                        <MatchCard
-                                            match={match}
-                                            tournamentId={tournamentId}
-                                            goals={goals.filter((g: any) => g.match_id === match.id)}
-                                            isEditMode={isEditMode}
-                                            teams={teams}
-                                        />
+                        return (
+                            <div key={round} className="border rounded-lg p-4 relative bg-card shadow-sm">
+                                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                                    {headerText}
+                                    {stage !== 'league' && stage !== 'group' && (
+                                        <span className="text-xs font-normal text-muted-foreground border px-2 py-0.5 rounded-full capitalize">
+                                            {stage?.replace('_', ' ')}
+                                        </span>
+                                    )}
+                                </h3>
+                                <div className="grid gap-2">
+                                    {matchesByRound[round].map((match) => (
+                                        <div key={match.id} className="relative group">
+                                            <MatchCard
+                                                match={match}
+                                                tournamentId={tournamentId}
+                                                goals={goals.filter((g: any) => g.match_id === match.id)}
+                                                isEditMode={isEditMode}
+                                                teams={teams}
+                                            />
 
 
-                                    </div>
-                                ))}
-                            </div>
+                                        </div>
+                                    ))}
+                                </div>
 
-                            {/* Add Match to specific round */}
-                            {/* Add Match to specific round */}
-                            {/* {isEditMode && (
+                                {/* Add Match to specific round */}
+                                {/* Add Match to specific round */}
+                                {/* {isEditMode && (
                                 <div className="mt-4 flex justify-center">
                                     <MatchDialog
                                         tournamentId={tournamentId}
@@ -219,26 +212,27 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                                 </div>
                             )} */}
 
-                            {/* Proceed to Knockout Button - Only show on Max Group Round */}
-                            {round === maxGroupRound && stage === 'group' && (
-                                <div className="mt-6 flex justify-center border-t pt-4">
-                                    <Button
-                                        onClick={handleAdvance}
-                                        disabled={isAdvancing}
-                                        className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white"
-                                    >
-                                        {isAdvancing ? tFixtures("generating") : (
-                                            <>
-                                                {tFixtures("proceed_knockout")} <ArrowRight className="ml-2 h-4 w-4" />
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })
-            )}
+                                {/* Proceed to Knockout Button - Only show on Max Group Round */}
+                                {round === maxGroupRound && stage === 'group' && (
+                                    <div className="mt-6 flex justify-center border-t pt-4">
+                                        <Button
+                                            onClick={handleAdvance}
+                                            disabled={isAdvancing}
+                                            className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white"
+                                        >
+                                            {isAdvancing ? tFixtures("generating") : (
+                                                <>
+                                                    {tFixtures("proceed_knockout")} <ArrowRight className="ml-2 h-4 w-4" />
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
+                )}
+            </div>
         </div>
     );
 }

@@ -17,6 +17,9 @@
         "no_tournaments": "No tournaments yet",
         "no_tournaments_desc": "You haven't created any tournaments yet. Start your first league or knockout tournament today!",
         "format": "Format",
+        "create": "Create Tournament",
+        "creating": "Creating...",
+        "period": "Tournament Period",
         "teams": "Teams",
         "error": "Error"
     },
@@ -50,7 +53,8 @@
         "manage_fixtures": "Manage Fixtures & Results",
         "manage_teams": "Manage Participating Teams",
         "participating_teams": "Participating Teams",
-        "edit_mode": "Edit Mode"
+        "edit_mode": "Edit Mode",
+        "export": "Export"
     },
     "Format": {
         "league": "League",
@@ -84,6 +88,7 @@
         "schedule_new_match_manually": "Schedule New Match Manually",
         "select_home_team": "Select Home Team",
         "select_away_team": "Select Away Team",
+        "select_team": "Select Team",
         "all": "All",
         "group": "Group",
         "round_of_16": "Round of 16",
@@ -112,7 +117,9 @@
         "pitches": "Number of Pitches",
         "create": "Create",
         "cancel": "Cancel",
-        "select_format": "Select Format"
+        "select_format": "Select Format",
+        "start_date": "Start Date",
+        "end_date": "End Date"
     },
     "Standings": {
         "pos": "Pos",
@@ -153,7 +160,8 @@
         "match": "Match",
         "live": "LIVE",
         "ft": "FT",
-        "tbd": "TBD"
+        "tbd": "TBD",
+        "export": "Export"
     },
     "TopScorers": {
         "top_scorers": "Top Scorers",
@@ -161,7 +169,8 @@
         "player": "Player",
         "team": "Team",
         "goals": "Goals",
-        "no_goals": "No goals recorded yet"
+        "no_goals": "No goals recorded yet",
+        "export": "Export"
     },
     "Fixtures": {
         "generate_fixtures": "Generate Fixtures",
@@ -176,6 +185,8 @@
         "live_console": "Live Console",
         "view_details": "View Details",
         "scheduled": "Scheduled",
+        "live": "LIVE",
+        "ft": "FT",
         "clear": "Clear",
         "confirm_clear": "Are you sure you want to CLEAR this match? Scores will be removed but the slot will remain.",
         "select_winner": "Select Winner",
@@ -201,6 +212,7 @@
         "add_goal": "Add Goal",
         "time": "Time (min)",
         "scorer": "Scorer",
+        "player": "Player",
         "player_name": "Player Name",
         "confirm_end": "Confirm END MATCH? Result will be saved immediately.",
         "confirm_walkover": "Confirm Walkover (3-0)?",
@@ -244,5 +256,47 @@
         "delete_desc": "This action cannot be undone.",
         "added_success": "Player added successfully",
         "deleted_success": "Player removed successfully"
+    },
+    "Landing": {
+        "nav_features": "Features",
+        "nav_pricing": "Pricing",
+        "nav_signin": "Sign In",
+        "nav_dashboard": "Go to Dashboard",
+        "hero_title_1": "Manage Your Football League in",
+        "hero_title_2": "Seconds",
+        "hero_subtitle": "The easiest way to organize tournaments, generate fixtures, and track standings. No spreadsheet required.",
+        "hero_cta_start": "Start for Free",
+        "hero_cta_demo": "View Demo",
+        "screenshot_placeholder": "Dashboard Screenshot Placeholder",
+        "features_title": "Everything You Need",
+        "features_subtitle": "Stop wrestling with complicated tools. LeagueFlow gives you powerful features kept simple.",
+        "feature_1_title": "Automated Fixtures",
+        "feature_1_desc": "Generate Round Robin schedules with one click. Handle odd numbers of teams automatically.",
+        "feature_2_title": "Live Standings",
+        "feature_2_desc": "Table updates automatically as you enter scores. Points, goal difference, and rankings calculated instantly.",
+        "feature_3_title": "Public Sharing",
+        "feature_3_desc": "Share read-only links with fans and players instantly. No login required for viewers.",
+        "footer_rights": "All rights reserved.",
+        "pricing_title": "Simple Pricing",
+        "pricing_subtitle": "Choose the plan that fits your tournament needs.",
+        "tier_free": "FREE",
+        "tier_free_desc": "For small tournaments and friendly leagues.",
+        "tier_free_price": "Free",
+        "tier_free_limit": "Limit 8 Teams",
+        "tier_free_feature_1": "League or Knockout Format",
+        "tier_free_feature_2": "Basic Score Tracking",
+        "tier_free_feature_3": "No Staff Invites",
+        "tier_pro": "PRO",
+        "tier_pro_desc": "For professional leagues and organizers.",
+        "tier_pro_price": "฿990",
+        "tier_pro_price_original": "฿1,290",
+        "tier_pro_period": "/ tournament",
+        "tier_pro_unlimited": "Unlimited Teams",
+        "tier_pro_feature_1": "Unlock Group Stage",
+        "tier_pro_feature_2": "Individual Stats (Scorers/Cards)",
+        "tier_pro_feature_3": "Invite Staff Members",
+        "tier_pro_feature_4": "Export Reports",
+        "cta_free": "Get Started",
+        "cta_pro": "Upgrade Now"
     }
 }
