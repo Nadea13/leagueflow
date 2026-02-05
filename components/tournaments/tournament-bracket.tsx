@@ -61,8 +61,8 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
             <div className="flex justify-end">
                 <ExportToImageButton targetId="tournament-bracket-canvas" filename="tournament_bracket" label={t("export") || "Export Bracket"} />
             </div>
-            <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-                <div id="tournament-bracket-canvas" className="flex gap-8 min-w-max min-h-[500px] items-stretch">
+            <div className="w-full overflow-auto pb-4 custom-scrollbar scroll-smooth px-1">
+                <div id="tournament-bracket-canvas" className="flex gap-8 min-w-max min-h-[500px] items-stretch pr-4">
                     {activeStages.map((stage, stageIndex) => {
                         let stageMatches = matchesByStage[stage];
 

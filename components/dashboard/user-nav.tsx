@@ -58,12 +58,6 @@ export function UserNav({ email }: { email: string | undefined }) {
                             {t("profile")}
                         </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/dashboard/billing" className="w-full cursor-pointer">
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            {t("billing")}
-                        </Link>
-                    </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <LanguageSwitcher />

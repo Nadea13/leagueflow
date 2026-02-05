@@ -40,13 +40,13 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                 <ExportToImageButton targetId="top-scorers-canvas" filename="top_scorers" label={t("export") || "Export"} />
             </div>
             <div id="top-scorers-canvas" className="w-full overflow-x-auto rounded-md border">
-                <Table className="min-w-[400px]">
+                <Table className="min-w-[400px] text-xs md:text-sm">
                     <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-12 text-center">{t("rank")}</TableHead>
-                            <TableHead>{t("player")}</TableHead>
-                            <TableHead>{t("team") || "Team"}</TableHead>
-                            <TableHead className="text-center font-bold">{t("goals")}</TableHead>
+                        <TableRow className="h-8 md:h-10">
+                            <TableHead className="w-8 md:w-12 text-center px-1 md:px-4">{t("rank")}</TableHead>
+                            <TableHead className="px-1 md:px-4">{t("player")}</TableHead>
+                            <TableHead className="px-1 md:px-4">{t("team") || "Team"}</TableHead>
+                            <TableHead className="text-center font-bold px-1 md:px-4">{t("goals")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -60,22 +60,22 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                             sortedScorers.slice(0, 10).map((scorer, index) => {
                                 const team = getTeam(scorer.team_id);
                                 return (
-                                    <TableRow key={`${scorer.team_id}-${scorer.player_name}`}>
-                                        <TableCell className="text-center font-medium">{index + 1}</TableCell>
-                                        <TableCell>{scorer.player_name}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
+                                    <TableRow key={`${scorer.team_id}-${scorer.player_name}`} className="h-8 md:h-10">
+                                        <TableCell className="text-center font-medium px-1 md:px-4">{index + 1}</TableCell>
+                                        <TableCell className="px-1 md:px-4">{scorer.player_name}</TableCell>
+                                        <TableCell className="px-1 md:px-4">
+                                            <div className="flex items-center gap-1 md:gap-2">
                                                 {team?.logo_url ? (
-                                                    <img src={team.logo_url} alt={team.name} className="w-5 h-5 object-contain" />
+                                                    <img src={team.logo_url} alt={team.name} className="w-4 h-4 md:w-5 md:h-5 object-contain" />
                                                 ) : (
-                                                    <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center text-[8px] font-bold text-muted-foreground">
+                                                    <div className="w-4 h-4 md:w-5 md:h-5 bg-muted rounded-full flex items-center justify-center text-[8px] font-bold text-muted-foreground">
                                                         {team?.name.charAt(0)}
                                                     </div>
                                                 )}
-                                                <span className="text-sm text-muted-foreground">{team?.name}</span>
+                                                <span className="text-muted-foreground truncate max-w-[80px] md:max-w-none text-xs md:text-sm">{team?.name}</span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-center font-bold text-lg">{scorer.goals}</TableCell>
+                                        <TableCell className="text-center font-bold text-sm md:text-lg px-1 md:px-4">{scorer.goals}</TableCell>
                                     </TableRow>
                                 );
                             })

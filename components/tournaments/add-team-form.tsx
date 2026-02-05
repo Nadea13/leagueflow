@@ -14,7 +14,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function AddTeamForm({ tournamentId }: { tournamentId: string }) {
+export function AddTeamForm({ tournamentId, isLimitReached = false }: { tournamentId: string; isLimitReached?: boolean }) {
     const t = useTranslations("Team");
     const addTeamWithId = addTeam.bind(null, tournamentId);
     const [state, formAction] = useActionState(addTeamWithId, initialState);
@@ -46,7 +46,7 @@ export function AddTeamForm({ tournamentId }: { tournamentId: string }) {
         >
             <div className="flex gap-4 items-center w-full">
                 {/* Circular Logo Upload */}
-                <label htmlFor="add-logo-upload" className="cursor-pointer group relative shrink-0">
+                <label htmlFor="add-logo-upload" className={`cursor-pointer group relative shrink-0 ${isLimitReached ? 'pointer-events-none opacity-50' : ''}`}>
                     <div className="h-12 w-12 rounded-full border border-muted-foreground/30 flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
                         {preview ? (
                             <img src={preview} alt="Preview" className="h-full w-full object-cover" />
@@ -64,6 +64,7 @@ export function AddTeamForm({ tournamentId }: { tournamentId: string }) {
                         accept="image/*"
                         className="hidden"
                         onChange={handleFileChange}
+                        disabled={isLimitReached}
                     />
                 </label>
 
@@ -71,17 +72,23 @@ export function AddTeamForm({ tournamentId }: { tournamentId: string }) {
                     <Input
                         type="text"
                         name="name"
-                        placeholder={t("team_name_placeholder")}
+                        placeholder={isLimitReached ? "Limit reached (Max 8)" : t("team_name_placeholder")}
                         required
                         className="h-10"
+                        disabled={isLimitReached}
                     />
                 </div>
 
-                <SubmitButton>
+                <SubmitButton disabled={isLimitReached}>
                     <Plus className="h-4 w-4" />
                 </SubmitButton>
             </div>
             {state.error && <p className="text-sm text-red-500 w-full md:w-auto">{state.error}</p>}
+            {isLimitReached && (
+                <p className="text-sm text-amber-600 w-full md:w-auto mt-2">
+                    Team limit reached (Free Plan: 8). <a href="/dashboard/billing" className="underline font-medium">Upgrade to Pro</a> to add more.
+                </p>
+            )}
         </form>
     );
 }

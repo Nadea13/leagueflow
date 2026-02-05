@@ -2,35 +2,13 @@
 
 import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Trophy, Users, Settings } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { getNavItems } from "@/config/nav"
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar({ className, role }: { className?: string, role?: string }) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
-
-    const sidebarItems = [
-        {
-            title: t("home"),
-            href: "/dashboard",
-            icon: LayoutDashboard,
-        },
-        {
-            title: t("leagues"),
-            href: "/dashboard/tournaments",
-            icon: Trophy,
-        },
-        {
-            title: t("teams"),
-            href: "/dashboard/teams",
-            icon: Users,
-        },
-        {
-            title: t("settings"),
-            href: "/dashboard/settings",
-            icon: Settings,
-        },
-    ]
+    const navItems = getNavItems(role)
 
     return (
         <div className={cn("flex h-full max-h-screen flex-col gap-2 fixed md:w-[220px] lg:w-[280px]", className)}>
@@ -49,10 +27,11 @@ export function Sidebar({ className }: { className?: string }) {
             </div>
             <div className="flex-1">
                 <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-                    {sidebarItems.map((item) => (
+                    {navItems.map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
+                            target={item.openInNewTab ? "_blank" : undefined}
                             className={cn(
                                 "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
                                 pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
@@ -61,7 +40,7 @@ export function Sidebar({ className }: { className?: string }) {
                             )}
                         >
                             <item.icon className="h-4 w-4" />
-                            {item.title}
+                            {t(item.titleKey)}
                         </Link>
                     ))}
                 </nav>

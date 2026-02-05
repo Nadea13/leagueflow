@@ -32,7 +32,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function CreateTournamentDialog() {
+export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
     const t = useTranslations("Dialog");
     const tFormat = useTranslations("Format");
     const [open, setOpen] = useState(false);
@@ -58,7 +58,7 @@ export function CreateTournamentDialog() {
                         {t("create_desc")}
                     </DialogDescription>
                 </DialogHeader>
-                <form action={formAction} className="grid gap-4 py-4">
+                <form action={formAction} className="grid gap-4 pt-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="name" className="text-right">
                             {t("name")}
@@ -82,7 +82,9 @@ export function CreateTournamentDialog() {
                             <SelectContent>
                                 <SelectItem value="league">{tFormat("league")}</SelectItem>
                                 <SelectItem value="league_ha">{tFormat("league")} (Home & Away)</SelectItem>
-                                <SelectItem value="group_knockout">{tFormat("group_knockout")}</SelectItem>
+                                <SelectItem value="group_knockout" disabled={!isPro}>
+                                    {tFormat("group_knockout")} {!isPro && "(Pro Only)"}
+                                </SelectItem>
                                 <SelectItem value="knockout">{tFormat("knockout")}</SelectItem>
                             </SelectContent>
                         </Select>

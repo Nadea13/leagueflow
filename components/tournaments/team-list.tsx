@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Team } from "@/types/index";
-import { updateTeam } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { updateTeam, deleteTeam } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,16 +13,17 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Loader2, Users, Camera, Upload, ImageIcon } from "lucide-react";
+import { Pencil, Loader2, Users, Camera, Upload, ImageIcon, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { RosterDialog } from "./roster-dialog";
 
 interface TeamListProps {
     teams: Team[];
     tournamentId: string;
+    isPro?: boolean;
 }
 
-export function TeamList({ teams, tournamentId }: TeamListProps) {
+export function TeamList({ teams, tournamentId, isPro = false }: TeamListProps) {
     const t = useTranslations("Team");
 
     if (!teams || teams.length === 0) {
@@ -40,15 +41,15 @@ export function TeamList({ teams, tournamentId }: TeamListProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {teams.map((team) => (
-                <TeamItem key={team.id} team={team} tournamentId={tournamentId} />
+                <TeamItem key={team.id} team={team} tournamentId={tournamentId} isPro={isPro} />
             ))}
         </div>
     );
 }
 
-function TeamItem({ team, tournamentId }: { team: Team; tournamentId: string }) {
+function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: string; isPro: boolean }) {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
     const [open, setOpen] = useState(false);
@@ -68,6 +69,18 @@ function TeamItem({ team, tournamentId }: { team: Team; tournamentId: string }) 
         }
 
         const result = await updateTeam(team.id, formData, tournamentId);
+        setIsLoading(false);
+        if (result.success) {
+            setOpen(false);
+        } else {
+            alert(result.error);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm(tCommon("delete_confirm") || "Are you sure you want to delete this team?")) return;
+        setIsLoading(true);
+        const result = await deleteTeam(team.id, tournamentId);
         setIsLoading(false);
         if (result.success) {
             setOpen(false);
@@ -97,7 +110,7 @@ function TeamItem({ team, tournamentId }: { team: Team; tournamentId: string }) 
             </div>
 
             <div className="flex gap-1">
-                <RosterDialog teamId={team.id} teamName={team.name} />
+                {isPro && <RosterDialog teamId={team.id} teamName={team.name} />}
 
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
@@ -153,7 +166,11 @@ function TeamItem({ team, tournamentId }: { team: Team; tournamentId: string }) 
                                 </div>
                             </div>
                         </div>
-                        <DialogFooter>
+                        <DialogFooter className="flex sm:justify-between w-full gap-2">
+                            <Button variant="destructive" onClick={handleDelete} disabled={isLoading} type="button">
+                                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                {tCommon("delete")}
+                            </Button>
                             <Button onClick={handleSave} disabled={isLoading}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {tCommon("save")}

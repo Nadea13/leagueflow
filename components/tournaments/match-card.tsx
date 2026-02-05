@@ -1,32 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { CalendarIcon, MapPin, Clock, Gamepad2, Trophy, Eraser } from "lucide-react";
-import { Match, Goal } from "@/types/index";
+import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
+import { CalendarIcon, MapPin, Clock, Trophy, Eraser } from "lucide-react";
+import { Match, Goal, Team } from "@/types/index";
 import { updateMatch, deleteMatch } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { LiveMatchConsole } from "@/components/matches/live-match-console";
-import { useTranslations } from "next-intl";
+import { createClient } from "@/utils/supabase/client"; // Added Import
 
-import { Input } from "@/components/ui/input";
+// ...
 
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Team } from "@/types/index";
-
-export function MatchCard({ match, tournamentId, goals = [], isPublic = false, isEditMode = false, teams = [] }: { match: Match; tournamentId: string; goals?: Goal[]; isPublic?: boolean; isEditMode?: boolean; teams?: Team[] }) {
+export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPublic = false, isEditMode = false, teams = [], isPro = false }: { match: Match; tournamentId: string; goals?: Goal[]; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; isPro?: boolean }) {
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
 
     const [isLoading, setIsLoading] = useState(false);
+
+    // --- Realtime Sync State ---
+    const [match, setMatchState] = useState<Match>(initialMatch);
+
+    // Update local state if prop changes
+    useEffect(() => {
+        setMatchState(initialMatch);
+    }, [initialMatch]);
+
+    // Supabase Realtime Subscription
+    useEffect(() => {
+        const supabase = createClient();
+        const channel = supabase
+            .channel(`match-card-${match.id}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
+                setMatchState(payload.new as Match);
+                // No router.refresh() here to avoid full page reloads on every card update, local state is enough for the card itself
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [match.id]);
 
     // Local state for auto-save inputs
     const [matchDate, setMatchDate] = useState(match.match_date || "");
@@ -45,6 +61,46 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
             await updateMatch(match.id, { match_time: newTime }, tournamentId);
         }
     };
+
+    // Running Timer Logic
+    const [elapsedTime, setElapsedTime] = useState<string>("");
+
+    useEffect(() => {
+        if (match.status === 'live') {
+            const calculateTime = () => {
+                if (match.timer_status === 'paused' && match.elapsed_before_pause !== undefined) {
+                    // Paused: Static time from snapshot
+                    const totalSeconds = match.elapsed_before_pause;
+                    const mins = Math.floor(totalSeconds / 60);
+                    const secs = totalSeconds % 60;
+                    setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+                } else if (match.match_date && match.match_time) {
+                    // Playing: Calc diff from Last Resume Time + specific elapsed history
+                    const now = new Date();
+                    const start = new Date(`${match.match_date}T${match.match_time}`);
+                    const extraSeconds = match.elapsed_before_pause || 0;
+
+                    const diffMs = now.getTime() - start.getTime();
+                    const totalSeconds = Math.max(0, Math.floor(diffMs / 1000) + extraSeconds);
+
+                    const mins = Math.floor(totalSeconds / 60);
+                    const secs = totalSeconds % 60;
+
+                    setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+                }
+            };
+
+            calculateTime(); // Initial Update
+
+            // Run interval ONLY if playing
+            if (match.timer_status !== 'paused') {
+                const interval = setInterval(calculateTime, 1000);
+                return () => clearInterval(interval);
+            }
+        } else {
+            setElapsedTime("");
+        }
+    }, [match.status, match.match_date, match.match_time, match.timer_status, match.elapsed_before_pause]);
 
     // Helper Variables
     const status = match.status?.toLowerCase() || 'scheduled';
@@ -106,12 +162,13 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
         }
     };
 
-    return (
+    const CardContent = (
         <div
             className={cn(
-                "flex flex-col md:grid md:grid-cols-[140px_1fr_140px] items-center p-3 md:p-4 border rounded-lg shadow-sm transition-all hover:shadow-md",
+                "flex flex-col md:grid md:grid-cols-[140px_1fr_140px] items-center p-3 md:p-4 border rounded-lg shadow-sm transition-all hover:shadow-md cursor-pointer",
                 isFinished ? "bg-muted/30" : "bg-card",
-                "gap-3 md:gap-4"
+                "gap-3 md:gap-4",
+                isPublic && "hover:border-primary/50 hover:bg-muted/50"
             )}
         >
             {/* 1. Status/Time/Badge Section */}
@@ -134,7 +191,13 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                     </span>
-                                    {t("live")}
+                                    {match.current_minute ? (
+                                        typeof match.current_minute === 'number' ? `${match.current_minute}'` : match.current_minute
+                                    ) : (
+                                        <>
+                                            {t("live")} {elapsedTime && <span className="font-mono ml-1.5 min-w-[35px] inline-block text-left">{elapsedTime}</span>}
+                                        </>
+                                    )}
                                 </span>
                             ) : (
                                 isFinished ? t("ft") : t("scheduled")
@@ -169,7 +232,7 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-1 w-full min-w-[110px]">
+                            <div className="flex flex-col gap-1 w-full min-w-[110px]" onClick={(e) => e.stopPropagation()}>
                                 <Input
                                     type="date"
                                     className="h-6 text-[10px] px-1 w-full"
@@ -200,20 +263,22 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                         (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground"
                     )}>
                         {isEditMode ? (
-                            <Select
-                                value={match.home_team_id || "tbd"}
-                                onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
-                            >
-                                <SelectTrigger className="h-8 w-[140px] text-xs">
-                                    <SelectValue placeholder={tMatch("select_team")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="tbd">{tMatch("tbd")}</SelectItem>
-                                    {teams.map((t) => (
-                                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div onClick={e => e.stopPropagation()}>
+                                <Select
+                                    value={match.home_team_id || "tbd"}
+                                    onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
+                                >
+                                    <SelectTrigger className="h-8 w-[140px] text-xs">
+                                        <SelectValue placeholder={tMatch("select_team")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="tbd">{tMatch("tbd")}</SelectItem>
+                                        {teams.map((t) => (
+                                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         ) : (
                             <>
                                 {match.home_team?.name || tMatch("tbd")}
@@ -233,30 +298,24 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
 
                 {/* Score / VS Display */}
                 <div className="flex items-center justify-center min-w-[100px] shrink-0">
-                    {!match.away_team_id ? (
-                        <div className="flex items-center gap-2 px-4 py-1.5 rounded-lg border bg-muted/30 border-border/50">
+                    <div className={cn(
+                        "flex items-center gap-2 px-4 py-1.5 rounded-lg border",
+                        isLive ? "bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900/50" : "bg-muted/30 border-border/50"
+                    )}>
+                        {isLive || isFinished ? (
+                            <>
+                                <span className={cn("text-xl font-mono font-bold w-6 text-center", isLive && "text-red-600")}>
+                                    {match.home_score ?? 0}
+                                </span>
+                                <span className="text-muted-foreground/40 font-mono">:</span>
+                                <span className={cn("text-xl font-mono font-bold w-6 text-center", isLive && "text-red-600")}>
+                                    {match.away_score ?? 0}
+                                </span>
+                            </>
+                        ) : (
                             <span className="text-muted-foreground font-mono font-bold text-sm">VS</span>
-                        </div>
-                    ) : (
-                        <div className={cn(
-                            "flex items-center gap-2 px-4 py-1.5 rounded-lg border",
-                            isLive ? "bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900/50" : "bg-muted/30 border-border/50"
-                        )}>
-                            {isLive || isFinished ? (
-                                <>
-                                    <span className={cn("text-xl font-mono font-bold w-6 text-center", isLive && "text-red-600")}>
-                                        {match.home_score ?? 0}
-                                    </span>
-                                    <span className="text-muted-foreground/40 font-mono">:</span>
-                                    <span className={cn("text-xl font-mono font-bold w-6 text-center", isLive && "text-red-600")}>
-                                        {match.away_score ?? 0}
-                                    </span>
-                                </>
-                            ) : (
-                                <span className="text-muted-foreground font-mono font-bold text-sm">VS</span>
-                            )}
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* Away Team (Left Aligned on Desktop) */}
@@ -266,20 +325,22 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                         (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground"
                     )}>
                         {isEditMode ? (
-                            <Select
-                                value={match.away_team_id || tMatch("tbd")}
-                                onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
-                            >
-                                <SelectTrigger className="h-8 w-[140px] text-xs">
-                                    <SelectValue placeholder={tMatch("select_team")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="tbd">{tMatch("tbd")}</SelectItem>
-                                    {teams.map((t) => (
-                                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div onClick={e => e.stopPropagation()}>
+                                <Select
+                                    value={match.away_team_id || tMatch("tbd")}
+                                    onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
+                                >
+                                    <SelectTrigger className="h-8 w-[140px] text-xs">
+                                        <SelectValue placeholder={tMatch("select_team")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="tbd">{tMatch("tbd")}</SelectItem>
+                                        {teams.map((t) => (
+                                            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         ) : (
                             <>
                                 {/* Logo First for Symmetry */}
@@ -296,17 +357,15 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                             </>
                         )}
                     </div>
-
-                    {match.winner_id === match.away_team_id}
                 </div>
             </div>
 
             {/* 3. Actions / Tie Breaker */}
             {!isPublic && match.away_team_id && (
-                <div className="flex flex-col items-end gap-2 md:ml-auto w-full md:w-auto justify-end mt-2 md:mt-0">
+                <div className="flex flex-col items-end gap-2 md:ml-auto w-full md:w-auto justify-end mt-2 md:mt-0" onClick={e => e.stopPropagation()}>
 
-                    {/* Console Button (เปิดได้ตลอดเพื่อให้ดู Timeline ย้อนหลังได้) */}
-                    {isEditMode ? (
+                    {/* Console Button removed - Card is now trigger */}
+                    {isEditMode && (
                         <Button
                             size="sm"
                             variant="destructive"
@@ -317,22 +376,6 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
                             <Eraser className="h-4 w-4" />
                             {tCommon("clear")}
                         </Button>
-                    ) : (
-                        <LiveMatchConsole
-                            match={match}
-                            tournamentId={tournamentId}
-                            goals={goals}
-                            trigger={
-                                <Button
-                                    size="sm"
-                                    variant={isLive ? 'destructive' : 'outline'}
-                                    className={cn("gap-2 min-w-[110px]", isLive && "animate-pulse")}
-                                >
-                                    <Gamepad2 className="h-4 w-4" />
-                                    {isLive ? t("live_console") : (isFinished ? t("view_details") : tCommon("manage"))}
-                                </Button>
-                            }
-                        />
                     )}
 
                     {/* Tie Breaker Buttons (เฉพาะตอนเสมอในรอบน็อคเอาท์) */}
@@ -365,4 +408,24 @@ export function MatchCard({ match, tournamentId, goals = [], isPublic = false, i
             )}
         </div>
     );
+
+    // If there is an away team, the card is clickable to open console (or if public view)
+    // For Admin: Only clickable if away team exists (consistent with previous button visibility)
+    // For Public: Always clickable (readonly)
+    const canOpen = isPublic || !!match.away_team_id;
+
+    if (canOpen) {
+        return (
+            <LiveMatchConsole
+                match={match}
+                tournamentId={tournamentId}
+                goals={goals}
+                isPro={isPro}
+                readOnly={isPublic}
+                trigger={CardContent}
+            />
+        );
+    }
+
+    return CardContent;
 }

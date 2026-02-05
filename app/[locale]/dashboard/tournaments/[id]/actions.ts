@@ -4,6 +4,8 @@ import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ActionResponse, Match } from "@/types/index";
+import { retrieveCharge } from "@/app/[locale]/actions/payment";
+import { logActivity } from "@/lib/audit";
 
 export async function addTeam(
     tournamentId: string,
@@ -17,6 +19,24 @@ export async function addTeam(
 
     if (!name) {
         return { success: false, error: "Team name is required" };
+    }
+
+    // Check Team Limit for Free Plan
+    const { data: tournament } = await supabase
+        .from("tournaments")
+        .select("plan")
+        .eq("id", tournamentId)
+        .single();
+
+    if (tournament && (!tournament.plan || tournament.plan === 'free')) {
+        const { count } = await supabase
+            .from("teams")
+            .select("*", { count: 'exact', head: true })
+            .eq("tournament_id", tournamentId);
+
+        if (count !== null && count >= 8) {
+            return { success: false, error: "Team limit reached (Max 8 for Free Plan). Upgrade to Pro to add more." };
+        }
     }
 
     let logo_url = logoUrlInput || null;
@@ -54,6 +74,7 @@ export async function addTeam(
     }
 
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    await logActivity('ADD_TEAM', 'tournament', tournamentId, { team_name: name });
     return { success: true };
 }
 
@@ -116,6 +137,22 @@ export async function updateTeam(
             name,
             logo_url: logo_url || null
         })
+        .eq("id", teamId);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    return { success: true };
+}
+
+export async function deleteTeam(teamId: string, tournamentId: string): Promise<ActionResponse> {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from("teams")
+        .delete()
         .eq("id", teamId);
 
     if (error) {
@@ -631,6 +668,7 @@ export async function updateMatchScore(
     }
 
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    await logActivity('UPDATE_MATCH_SCORE', 'match', matchId, { home_score: homeScore, away_score: awayScore });
     return { success: true };
 }
 
@@ -642,6 +680,7 @@ export async function updateTournament(
     const supabase = await createClient();
     const name = formData.get("name") as string;
     const status = formData.get("status") as string;
+    const format = formData.get("format") as string;
 
     if (!name) {
         return { success: false, error: "Tournament name is required" };
@@ -649,7 +688,7 @@ export async function updateTournament(
 
     const { error } = await supabase
         .from("tournaments")
-        .update({ name, status })
+        .update({ name, status, format })
         .eq("id", tournamentId);
 
     if (error) {
@@ -657,6 +696,7 @@ export async function updateTournament(
     }
 
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    await logActivity('UPDATE_TOURNAMENT', 'tournament', tournamentId, { name, status, format });
     return { success: true };
 }
 
@@ -698,6 +738,8 @@ export async function deleteTournament(tournamentId: string) {
     if (error) {
         return { success: false, error: error.message };
     }
+
+    await logActivity('DELETE_TOURNAMENT', 'tournament', tournamentId, {});
 
     redirect("/dashboard");
 }
@@ -747,10 +789,15 @@ export async function updateMatch(
         match_date?: string | null;
         match_time?: string | null;
         venue?: string | null;
+        timer_status?: 'playing' | 'paused' | 'stopped';
+        elapsed_before_pause?: number;
+        current_minute?: number | string;
     },
     tournamentId: string
 ): Promise<ActionResponse> {
     const supabase = await createClient();
+
+    console.log("Updating match:", matchId, data);
 
     const { data: updatedMatch, error } = await supabase
         .from('matches')
@@ -760,8 +807,10 @@ export async function updateMatch(
         .single();
 
     if (error) {
+        console.error("Error updating match:", error);
         return { success: false, error: error.message };
     }
+    console.log("Update success:", updatedMatch);
 
     // Auto-Advance Winner (Knockout Only)
     if (updatedMatch && updatedMatch.status === 'finished' && updatedMatch.stage !== 'league' && updatedMatch.stage !== 'group') {
@@ -795,6 +844,55 @@ export async function updateMatch(
     }
 
 
+
+    revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+    return { success: true };
+}
+
+
+
+export async function confirmPayment(
+    tournamentId: string,
+    paymentId: string,
+    paymentMethod: string
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+
+    // 1. Verify Payment Server-Side with Omise
+    const charge = await retrieveCharge(paymentId);
+
+    if (!charge) {
+        return { success: false, error: "Failed to retrieve payment details." };
+    }
+
+    if (charge.status !== 'successful') {
+        return { success: false, error: `Payment is not successful (status: ${charge.status})` };
+    }
+
+    // 2. Validate Metadata (Anti-Fraud)
+    // Ensure this payment was actually meant for this tournament
+    if (charge.metadata && charge.metadata.tournament_id !== tournamentId) {
+        console.error(`Fraud Attempt? Charge ${paymentId} has tournament_id ${charge.metadata.tournament_id} but tried to upgrade ${tournamentId}`);
+        return { success: false, error: "Payment metadata mismatch. Please contact support." };
+    }
+
+    // 3. (Optional) Validate Amount
+    // if (charge.amount !== 59000) { ... }
+
+    // 4. Update Database
+    const { error } = await supabase
+        .from("tournaments")
+        .update({
+            plan: 'tournament',
+            payment_status: 'paid',
+            payment_id: paymentId,
+            payment_method: paymentMethod
+        })
+        .eq("id", tournamentId);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
 
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
     return { success: true };

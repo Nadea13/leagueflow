@@ -9,6 +9,10 @@ export interface Tournament {
     start_date?: string | null;
     end_date?: string | null;
     number_of_pitches?: number | null;
+    plan?: 'free' | 'tournament' | 'monthly' | 'yearly';
+    payment_status?: string | null;
+    payment_id?: string | null;
+    payment_method?: string | null;
     created_at: string;
 }
 
@@ -29,13 +33,17 @@ export interface Match {
     venue?: string | null;
     match_index?: number | null;
     created_at: string;
+    // Timer Fields
+    timer_status?: 'playing' | 'paused' | 'stopped';
+    elapsed_before_pause?: number; // Seconds calculated before pause
+    current_minute?: number | string | null;
     home_team?: { name: string; logo_url?: string | null };
     away_team?: { name: string; logo_url?: string | null };
 }
 
 export interface Team {
     id: string;
-    tournament_id: string;
+    tournament_id: string | null;
     name: string;
     group_name?: string | null;
     logo_url?: string | null;
@@ -51,7 +59,7 @@ export interface Player {
     created_at: string;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time';
+export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time';
 
 export interface MatchEvent {
     id: string;
@@ -106,3 +114,41 @@ export type ActionResponse<T = any> = {
     error?: string;
     data?: T;
 };
+
+export interface AuditLog {
+    id: string;
+    user_id: string | null;
+    action: string;
+    target_type: string;
+    target_id: string;
+    details: any;
+    ip_address?: string | null;
+    created_at: string;
+    // Join
+    user?: { email: string };
+}
+
+export interface Notification {
+    id: string;
+    user_id: string;
+    type: 'invite' | 'payment' | 'system';
+    title: string;
+    message: string;
+    link?: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export interface Payment {
+    id: string;
+    amount: number;
+    status: string;
+    payment_method: string;
+    plan: string | null;
+    created_at: string;
+    tournament_id: string | null;
+    provider_id: string | null; // PG Transaction ID
+    subscription_expires_at: string | null;
+    // Join
+    user?: { email: string; full_name?: string };
+}

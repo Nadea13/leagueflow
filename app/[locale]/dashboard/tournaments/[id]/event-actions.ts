@@ -21,7 +21,7 @@ export async function getMatchEvents(matchId: string): Promise<ActionResponse<Ma
             )
         `)
         .eq("match_id", matchId)
-        .order("minute", { ascending: false });
+        .order("created_at", { ascending: false });
 
     if (error) {
         console.error("Error fetching events:", error);

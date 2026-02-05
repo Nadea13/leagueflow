@@ -1,522 +1,427 @@
 "use client";
 
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getPlayers } from "@/app/[locale]/dashboard/tournaments/[id]/player-actions";
-import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/app/[locale]/dashboard/tournaments/[id]/event-actions"; // New Import
 import { updateMatch } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { createClient } from "@/utils/supabase/client";
 
-import {
-    Flag, Play, Pause, Plus, Timer, Trash2, AlertTriangle, Trophy,
-    Goal as IconGoal, CreditCard, RotateCw, ShieldAlert, MonitorPlay,
-    Square
-} from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Timer, Plus } from "lucide-react";
 
-// Interface Definitions
-import { Match, Goal, Team, Player, MatchEvent, EventType } from "@/types";
+// Types
+import { Match, Goal, Player, EventType } from "@/types";
 
-const EVENT_TYPES: { type: EventType; label: string; icon: any; color: string }[] = [
-    { type: 'goal', label: 'Goal', icon: IconGoal, color: 'text-green-600' },
-    { type: 'yellow_card', label: 'Yellow Card', icon: Square, color: 'text-yellow-500' },
-    { type: 'red_card', label: 'Red Card', icon: Square, color: 'text-red-600' },
-    { type: 'substitution', label: 'Subs', icon: RotateCw, color: 'text-blue-500' },
-    { type: 'penalty', label: 'Penalty', icon: ShieldAlert, color: 'text-indigo-600' },
-    { type: 'var', label: 'VAR', icon: MonitorPlay, color: 'text-purple-600' },
-];
+// Components & Hooks
+import { MatchTimer } from "./console/match-timer";
+import { MatchControls } from "./console/match-controls";
+import { Scoreboard } from "./console/scoreboard";
+import { EventTimeline } from "./console/event-timeline";
+import { MatchEventDialog } from "./console/match-event-dialog";
+import { WalkoverDialog } from "./console/walkover-dialog";
+import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
+import { useMatchTimer } from "@/hooks/use-match-timer";
+import { useMatchEvents } from "@/hooks/use-match-events";
 
 interface LiveMatchConsoleProps {
     match: Match;
     tournamentId: string;
     goals: Goal[];
     trigger?: ReactNode;
+    isPro?: boolean;
+    readOnly?: boolean;
 }
 
-export function LiveMatchConsole({ match, tournamentId, goals = [], trigger }: LiveMatchConsoleProps) {
+export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, isPro = false, readOnly = false }: LiveMatchConsoleProps) {
     const t = useTranslations("Console");
-    const tCommon = useTranslations("Common");
-    const tMatch = useTranslations("Match");
     const router = useRouter();
     const [open, setOpen] = useState(false);
 
-    // --- Local State (Optimistic UI) ---
-    const [localEvents, setLocalEvents] = useState<MatchEvent[]>([]); // New Events State
-    const [localStatus, setLocalStatus] = useState<string>(match.status);
-
-    // Players State
+    // --- State ---
+    const [match, setMatch] = useState<Match>(initialMatch);
     const [homePlayers, setHomePlayers] = useState<Player[]>([]);
     const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
 
-    // Timer State (Client Side Only for MVP)
-    const [time, setTime] = useState(0);
-    const [isRunning, setIsRunning] = useState(false);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    // Hooks
+    const { time, setTime, isRunning, setIsRunning } = useMatchTimer(match, tournamentId);
+    const { events, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId);
 
-    // Dialogs State
+    // Dialog States
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     const [woDialogOpen, setWoDialogOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [addTimeDialogOpen, setAddTimeDialogOpen] = useState(false);
+    const [setTimeDialogOpen, setSetTimeDialogOpen] = useState(false);
 
-    // Event Entry Data
+    // Event Selection State
     const [selectedTeamId, setSelectedTeamId] = useState<string>("");
     const [selectedEventType, setSelectedEventType] = useState<EventType | null>(null);
-    const [eventPlayerId, setEventPlayerId] = useState<string>("");
-    const [assistPlayerId, setAssistPlayerId] = useState<string>(""); // Extra for goals
-    const [subInPlayerId, setSubInPlayerId] = useState<string>(""); // Extra for subs
-    const [eventMinute, setEventMinute] = useState<string>("");
 
-    // Computed Scores from Local Events (Goals)
-    const homeScore = localEvents.filter(e => e.team_id === match.home_team_id && e.event_type === 'goal').length;
-    const awayScore = localEvents.filter(e => e.team_id === match.away_team_id && e.event_type === 'goal').length;
+    // --- Effects ---
 
-    // Fetch Data on Mount
+    // 1. Sync initial match prop
     useEffect(() => {
-        const loadData = async () => {
-            // 1. Players
-            if (match.home_team_id) {
-                const res = await getPlayers(match.home_team_id);
-                if (res.success && res.data) setHomePlayers(res.data);
-            }
-            if (match.away_team_id) {
-                const res = await getPlayers(match.away_team_id);
-                if (res.success && res.data) setAwayPlayers(res.data);
-            }
-            // 2. Events
-            const eventRes = await getMatchEvents(match.id);
-            if (eventRes.success && eventRes.data) {
-                setLocalEvents(eventRes.data);
-            }
+        setMatch(initialMatch);
+    }, [initialMatch]);
+
+    // 2. Fetch Players
+    useEffect(() => {
+        const loadPlayers = async () => {
+            // Helper to fetch and set
+            const fetchTeam = async (id: string, setter: any) => {
+                const res = await getPlayers(id);
+                if (res.success && res.data) setter(res.data);
+            };
+            if (match.home_team_id) fetchTeam(match.home_team_id, setHomePlayers);
+            if (match.away_team_id) fetchTeam(match.away_team_id, setAwayPlayers);
         };
-        loadData();
-    }, [match.id, match.home_team_id, match.away_team_id]);
+        loadPlayers();
+    }, [match.home_team_id, match.away_team_id]);
 
-    // ... Timer Logic ...
+    // 3. Realtime Subscription
     useEffect(() => {
-        if (isRunning) {
-            intervalRef.current = setInterval(() => setTime(prev => prev + 1), 1000);
-        } else if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-        }
-        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-    }, [isRunning]);
+        const supabase = createClient();
+        const channel = supabase
+            .channel(`match-${match.id}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
+                setMatch(payload.new as Match);
+                router.refresh();
+            })
+            .subscribe();
 
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
+        return () => { supabase.removeChannel(channel); };
+    }, [match.id, router]);
 
-    // ... Sync Logic ...
+
+    // --- Computed Data ---
+    const homeScore = events.filter(e => e.team_id === match.home_team_id && e.event_type === 'goal').length;
+    const awayScore = events.filter(e => e.team_id === match.away_team_id && e.event_type === 'goal').length;
+    const allPlayers = [...homePlayers, ...awayPlayers];
+
+    // --- Handlers ---
+
     const handleOpenChange = (isOpen: boolean) => {
         setOpen(isOpen);
         if (!isOpen) {
             router.refresh();
-        } else {
-            setLocalStatus(match.status);
-            // Re-fetch events? Maybe not needed if optimistic works well
         }
     };
 
-    // ... Handlers (Start/End/Pause) ...
+    // Match Action Handlers
     const handleStartMatch = async () => {
-        setLocalStatus('live');
+        if (readOnly) return;
+
+        const currentMinute = Math.floor(time / 60);
+
+        // Auto Event: Kick Off
+        // User Request: Log event every time Start is pressed.
+        const teamId = match.home_team_id || match.away_team_id;
+        if (teamId) {
+            await addEvent(teamId, 'kick_off', currentMinute, null, {}, "Kick Off");
+        }
+
+        // Optimistic State Update
+        const updatedMatch = {
+            ...match,
+            status: 'live',
+            timer_status: 'playing',
+            elapsed_before_pause: time,
+            current_minute: currentMinute
+        };
+        setMatch(updatedMatch as Match);
         setIsRunning(true);
-        await updateMatch(match.id, { status: 'live' }, tournamentId);
+
+        // Server Update
+        await updateMatch(match.id, {
+            status: 'live',
+            timer_status: 'playing',
+            elapsed_before_pause: time, // snapshot
+            current_minute: currentMinute
+        }, tournamentId);
         router.refresh();
     };
 
-    const handlePauseMatch = () => setIsRunning(false);
+    const handlePauseMatch = async () => {
+        if (readOnly) return;
+
+        const currentMinute = Math.ceil((time || 1) / 60);
+
+        // Auto Event: Half Time (or Pause)
+        const teamId = match.home_team_id || match.away_team_id;
+        if (teamId) {
+            await addEvent(teamId, 'half_time', currentMinute, null, {}, "Half Time");
+        }
+
+        const updatedMatch = {
+            ...match,
+            timer_status: 'paused',
+            elapsed_before_pause: time,
+            current_minute: "HT" // or string representation
+        };
+        // @ts-ignore
+        setMatch(updatedMatch as Match);
+        setIsRunning(false);
+
+        await updateMatch(match.id, {
+            timer_status: 'paused',
+            elapsed_before_pause: time,
+            current_minute: "HT"
+        }, tournamentId);
+        router.refresh();
+    };
+
+    const handleResumeMatch = async () => {
+        if (readOnly) return;
+
+        // User Request: Always log Kick Off on Resume (covers Set Time -> Start case)
+        const currentMinute = Math.floor(time / 60);
+        const teamId = match.home_team_id || match.away_team_id;
+        if (teamId) {
+            await addEvent(teamId, 'kick_off', currentMinute, null, {}, "Kick Off");
+        }
+
+        const updatedMatch = {
+            ...match,
+            timer_status: 'playing',
+        };
+        setMatch(updatedMatch as Match);
+        setIsRunning(true);
+
+        await updateMatch(match.id, {
+            timer_status: 'playing',
+            current_minute: Math.ceil((time || 1) / 60)
+        }, tournamentId);
+        router.refresh();
+    };
 
     const handleEndMatch = async () => {
         if (!confirm(t("confirm_end"))) return;
-        setLocalStatus('finished');
-        setLoading(true);
+
+        const currentMinute = Math.ceil((time || 1) / 60);
+        const teamId = match.home_team_id || match.away_team_id;
+        if (teamId) {
+            await addEvent(teamId, 'full_time', currentMinute, null, {}, "Full Time");
+        }
+
+        const updatedMatch = {
+            ...match,
+            status: 'finished',
+            home_score: homeScore,
+            away_score: awayScore,
+            current_minute: "FT"
+        };
+        setMatch(updatedMatch as Match);
         setIsRunning(false);
 
         await updateMatch(match.id, {
             status: 'finished',
             home_score: homeScore,
-            away_score: awayScore
+            away_score: awayScore,
+            current_minute: "FT"
         }, tournamentId);
 
         setOpen(false);
         router.refresh();
-        setLoading(false);
     };
 
-    const handleWalkover = async (winnerId: string | null | undefined) => {
-        if (!winnerId || !confirm(t("confirm_walkover"))) return;
-        setLocalStatus('finished');
-        setLoading(true);
+    const handleWalkover = async (winnerId: string) => {
+        if (!confirm(t("confirm_walkover"))) return;
+
         const isHomeWinner = winnerId === match.home_team_id;
+        // Logic: walkover sets scores 3-0 usually. 
+        // Server action likely handles this, but here we just pass updated fields
+
         await updateMatch(match.id, {
             status: 'finished',
             home_score: isHomeWinner ? 3 : 0,
             away_score: isHomeWinner ? 0 : 3,
             winner_id: winnerId
         }, tournamentId);
+
         setWoDialogOpen(false);
         setOpen(false);
         router.refresh();
-        setLoading(false);
     };
 
-    // --- Action Handlers ---
 
-    const handleOpenActionDialog = (teamId: string | null | undefined, type: EventType) => {
-        if (!teamId) return alert(t("error_team_missing"));
+    // Event Handlers
+    const handleQuickAction = (teamId: string, type: EventType) => {
+        if (readOnly) return;
+        if (!match.home_team_id || !match.away_team_id) return alert(t("error_team_missing"));
+
+        // Instant Goal for Free Plan or general ease of use?
+        // Original code: if !isPro && type === 'goal' -> Instant.
+        // Let's keep that logic.
+        if (!isPro && type === 'goal') {
+            const minute = Math.ceil((time || 1) / 60);
+            addEvent(teamId, 'goal', minute, null, {}, "Goal");
+            return;
+        }
 
         setSelectedTeamId(teamId);
         setSelectedEventType(type);
-        setEventMinute(`${Math.ceil((time || 1) / 60)}`);
-        setEventPlayerId("");
-        setAssistPlayerId("");
-        setSubInPlayerId("");
         setEventDialogOpen(true);
     };
 
-    const handleSaveEvent = async () => {
+    const handleSaveEvent = async (data: { minute: number; playerId: string; extraInfo: any }) => {
         if (!selectedTeamId || !selectedEventType) return;
 
-        const minute = parseInt(eventMinute.replace(/[^0-9]/g, '')) || 0;
+        // Player Name lookup for nicer optimistic UI
+        const player = allPlayers.find(p => p.id === data.playerId);
+        const playerName = player ? player.name : "Unknown";
 
-        // Extra Info Construction
-        let extraInfo: any = {};
-        if (selectedEventType === 'goal' && assistPlayerId && assistPlayerId !== 'none') extraInfo.assist_player_id = assistPlayerId;
-        if (selectedEventType === 'substitution') {
-            extraInfo.out_player_id = eventPlayerId;
-            extraInfo.in_player_id = subInPlayerId;
-        }
-
-        // Optimistic Update
-        const tempId = `temp-${Date.now()}`;
-        const newEvent: MatchEvent = {
-            id: tempId,
-            match_id: match.id,
-            team_id: selectedTeamId,
-            event_type: selectedEventType,
-            minute: minute,
-            player_id: eventPlayerId || null,
-            extra_info: extraInfo,
-            created_at: new Date().toISOString(),
-            // Optimistic player name lookup
-            player_name: [...homePlayers, ...awayPlayers].find(p => p.id === eventPlayerId)?.name || "Unknown"
-        };
-
-        setLocalEvents(prev => [newEvent, ...prev].sort((a, b) => b.minute - a.minute));
-        setEventDialogOpen(false);
-
-        // Server Action
-        const res = await addMatchEvent(match.id, selectedTeamId, selectedEventType, minute, eventPlayerId || null, extraInfo, tournamentId);
-
-        if (!res.success) {
-            console.error("Failed to add event:", res.error);
-            alert("Failed to save event");
-            // Revert
-            setLocalEvents(prev => prev.filter(e => e.id !== tempId));
-        } else {
-            // Replace temp ID with real ID if needed, or just let revalidation handle it next open
-            if (res.data) {
-                setLocalEvents(prev => prev.map(e => e.id === tempId ? { ...e, id: res.data.id } : e));
-            }
-        }
+        await addEvent(selectedTeamId, selectedEventType, data.minute, data.playerId, data.extraInfo, playerName);
     };
 
-    const handleDeleteEvent = async (eventId: string) => {
-        if (!confirm(t("confirm_delete_event") || "Delete event?")) return;
+    // Time Handlers
+    const handleSaveSetTime = async (minutes: number, seconds: number) => {
+        const totalSeconds = (minutes * 60) + seconds;
+        setTime(totalSeconds);
+        setSetTimeDialogOpen(false);
 
-        const backup = [...localEvents];
-        setLocalEvents(prev => prev.filter(e => e.id !== eventId)); // Optimistic delete
-
-        const res = await deleteMatchEvent(eventId, tournamentId);
-        if (!res.success) {
-            alert("Failed to delete event");
-            setLocalEvents(backup);
-        }
+        // Update Server
+        // Similar logic to original: update snapshot or current minute
+        await updateMatch(match.id, {
+            elapsed_before_pause: totalSeconds,
+            current_minute: Math.ceil((totalSeconds || 1) / 60)
+        }, tournamentId);
+        router.refresh();
     };
 
-    // --- RENDER ---
+    const handleSaveAddTime = async (minutes: number) => {
+        // Add Time Event
+        const currentMinute = Math.ceil((time || 1) / 60);
+        const teamId = match.home_team_id || match.away_team_id; // Arbitrary owner
+        if (teamId) {
+            await addEvent(teamId, 'add_time', currentMinute, null, { added_minutes: minutes }, `+${minutes} min`);
+        }
+        setAddTimeDialogOpen(false);
+    };
+
+
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="sm" className={cn("gap-2", localStatus === 'live' && "border-red-500 text-red-600")}>
-                        {localStatus === 'live' && <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+                    <Button variant="outline" size="sm" className={cn("gap-2", match.status === 'live' && "border-red-500 text-red-600")}>
+                        {match.status === 'live' && <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
                         {t("console")}
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="max-w-3xl h-[90vh] sm:h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
                 {/* Header */}
-                <DialogHeader className="p-4 border-b flex flex-row items-center justify-between bg-muted/20">
+                <div className="p-4 border-b flex flex-row items-center justify-between bg-muted/20">
                     <div className="flex items-center gap-3">
-                        <DialogTitle>{t("match_console")}</DialogTitle>
-                        <Badge variant={localStatus === 'live' ? 'destructive' : 'secondary'} className={localStatus === 'live' ? 'animate-pulse' : ''}>
-                            {localStatus.toUpperCase()}
+                        <span className="font-bold text-lg">{t("match_console")}</span>
+                        <Badge variant={match.status === 'live' ? 'destructive' : 'secondary'} className={match.status === 'live' ? 'animate-pulse' : ''}>
+                            {match.status.toUpperCase()}
                         </Badge>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="font-mono text-3xl font-black text-primary tabular-nums">
-                            {formatTime(time)}
-                        </div>
-                        <Button type="button" variant="outline" size="sm" onClick={() => setWoDialogOpen(true)} title={t("walkover")}>
-                            <Flag className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </DialogHeader>
+                    <MatchTimer
+                        time={time}
+                        readOnly={readOnly || match.status === 'finished'}
+                        customText={match.status === 'finished' ? (match.current_minute || "FT") : null}
+                    />
+                </div>
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50 dark:bg-slate-950/50">
+                    <MatchControls
+                        status={match.status}
+                        isRunning={isRunning}
+                        readOnly={readOnly}
+                        onStart={handleStartMatch}
+                        onPause={handlePauseMatch}
+                        onResume={handleResumeMatch}
+                        onEnd={handleEndMatch}
+                    />
 
-                    {/* Controls */}
-                    <div className="flex justify-center">
-                        {!isRunning ? (
-                            <Button type="button" size="icon" className="h-20 w-20 rounded-full bg-green-600 hover:bg-green-700 shadow-xl" onClick={handleStartMatch}>
-                                <Play className="h-10 w-10 ml-1 fill-current" />
+                    {!readOnly && match.status !== 'finished' && (
+                        <div className="flex justify-center items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSetTimeDialogOpen(true)}
+                                title={t("set_time")}
+                            >
+                                <Timer className="h-4 w-4 mr-1" /> {t("set_time")}
                             </Button>
-                        ) : (
-                            <Button type="button" size="icon" variant="outline" className="h-20 w-20 rounded-full border-4" onClick={handlePauseMatch}>
-                                <Pause className="h-8 w-8 fill-current" />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setAddTimeDialogOpen(true)}
+                                title={t("add_time")}
+                            >
+                                <Plus className="h-4 w-4 mr-1" /> {t("add_time")}
                             </Button>
-                        )}
-                    </div>
-
-                    {/* Scoreboard */}
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                        {/* Home */}
-                        <div className="flex flex-col items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl border shadow-sm">
-                            {match.home_team?.logo_url && <img src={match.home_team.logo_url} className="w-16 h-16 object-contain" />}
-                            <h3 className="font-bold text-center">{match.home_team?.name}</h3>
-                            <div className="text-6xl font-black">{homeScore}</div>
-                            <div className="grid grid-cols-3 gap-2 w-full mt-2">
-                                {EVENT_TYPES.filter(t => t.type !== 'var').map(evt => (
-                                    <Button
-                                        key={evt.type}
-                                        variant="outline"
-                                        size="sm"
-                                        className={cn("h-10 p-0 flex flex-col items-center justify-center gap-0.5", evt.color)}
-                                        onClick={() => handleOpenActionDialog(match.home_team_id, evt.type)}
-                                        disabled={!match.home_team_id}
-                                    >
-                                        <evt.icon className="h-4 w-4" />
-                                        <span className="text-[10px] uppercase font-bold">{evt.label.split(' ')[0]}</span>
-                                    </Button>
-                                ))}
-                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setWoDialogOpen(true)}
+                                title={t("walkover")}
+                            >
+                                <span className="text-xs font-bold mr-1">WO</span> {t("walkover")}
+                            </Button>
                         </div>
+                    )}
 
-                        <div className="text-2xl font-black text-muted-foreground/30">VS</div>
+                    <Scoreboard
+                        match={match}
+                        homeScore={homeScore}
+                        awayScore={awayScore}
+                        isPro={isPro}
+                        readOnly={readOnly}
+                        onAction={handleQuickAction}
+                    />
 
-                        {/* Away */}
-                        <div className="flex flex-col items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl border shadow-sm">
-                            {match.away_team?.logo_url && <img src={match.away_team.logo_url} className="w-16 h-16 object-contain" />}
-                            <h3 className="font-bold text-center">{match.away_team?.name}</h3>
-                            <div className="text-6xl font-black">{awayScore}</div>
-                            <div className="grid grid-cols-3 gap-2 w-full mt-2">
-                                {EVENT_TYPES.filter(t => t.type !== 'var').map(evt => (
-                                    <Button
-                                        key={evt.type}
-                                        variant="outline"
-                                        size="sm"
-                                        className={cn("h-10 p-0 flex flex-col items-center justify-center gap-0.5", evt.color)}
-                                        onClick={() => handleOpenActionDialog(match.away_team_id, evt.type)}
-                                        disabled={!match.away_team_id}
-                                    >
-                                        <evt.icon className="h-4 w-4" />
-                                        <span className="text-[10px] uppercase font-bold">{evt.label.split(' ')[0]}</span>
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Timeline */}
-                    <div className="space-y-2">
-                        <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                            <Timer className="w-4 h-4" /> {t("timeline")}
-                        </div>
-                        <div className="space-y-2">
-                            {localEvents.length === 0 && <p className="text-center text-muted-foreground text-sm italic py-4">{t("no_events")}</p>}
-                            {localEvents.map(event => {
-                                const typeConfig = EVENT_TYPES.find(t => t.type === event.event_type);
-                                const Icon = typeConfig?.icon || IconGoal;
-                                const isHome = event.team_id === match.home_team_id;
-
-                                return (
-                                    <div key={event.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded border text-sm">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex flex-col items-center min-w-[30px]">
-                                                <span className="font-mono font-bold text-blue-600">{event.minute}'</span>
-                                            </div>
-                                            <div className={cn("p-1.5 rounded-full bg-muted/50", typeConfig?.color)}>
-                                                <Icon className="h-4 w-4" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">
-                                                    {event.player_name || t("unknown_player")}
-                                                    {event.event_type === 'goal' && event.extra_info?.assist_player_id && (
-                                                        <span className="text-muted-foreground font-normal ml-1">
-                                                            ({t("assist")}: {[...homePlayers, ...awayPlayers].find(p => p.id === event.extra_info.assist_player_id)?.name})
-                                                        </span>
-                                                    )}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {typeConfig?.label} • {isHome ? tMatch("home") : tMatch("away")}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-red-600" onClick={() => handleDeleteEvent(event.id)}>
-                                            <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    <EventTimeline
+                        events={events}
+                        match={match}
+                        players={allPlayers}
+                        readOnly={readOnly}
+                        onDelete={deleteEvent}
+                    />
                 </div>
-
-                {/* Footer */}
-                <DialogFooter className="p-4 border-t bg-muted/10">
-                    <Button type="button" variant="destructive" className="w-full sm:w-auto" onClick={handleEndMatch}>{t("end_match")}</Button>
-                </DialogFooter>
-
-                {/* Nested Dialog: Add Event */}
-                <Dialog open={eventDialogOpen} onOpenChange={setEventDialogOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                                {selectedEventType && (() => {
-                                    const cfg = EVENT_TYPES.find(t => t.type === selectedEventType);
-                                    if (!cfg) return "Add Event";
-                                    const Icon = cfg.icon;
-                                    return <><Icon className={cn("h-5 w-5", cfg.color)} /> {cfg.label}</>;
-                                })()}
-                            </DialogTitle>
-                        </DialogHeader>
-
-                        <div className="grid gap-4 py-4">
-                            {/* Time Input */}
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label className="text-right">{t("time")}</Label>
-                                <Input
-                                    value={eventMinute}
-                                    onChange={e => setEventMinute(e.target.value)}
-                                    className="col-span-3"
-                                    type="number"
-                                />
-                            </div>
-
-                            {/* Main Player Selection */}
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label className="text-right">
-                                    {selectedEventType === 'substitution' ? "Player OUT" : t("player")}
-                                </Label>
-                                <div className="col-span-3">
-                                    <Select value={eventPlayerId} onValueChange={setEventPlayerId}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={t("player_name")} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {(selectedTeamId === match.home_team_id ? homePlayers : awayPlayers).map((player) => (
-                                                <SelectItem key={player.id} value={player.id}>
-                                                    {player.number ? `#${player.number} ` : ""}{player.name}
-                                                </SelectItem>
-                                            ))}
-                                            <SelectItem value="unknown">Unknown Player</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {/* Conditional Inputs */}
-
-                            {/* Goal: Assist */}
-                            {selectedEventType === 'goal' && (
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label className="text-right">{t("assist")}</Label>
-                                    <div className="col-span-3">
-                                        <Select value={assistPlayerId} onValueChange={setAssistPlayerId}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={t("no_assist")} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">{t("no_assist")}</SelectItem>
-                                                {(selectedTeamId === match.home_team_id ? homePlayers : awayPlayers).map((player) => (
-                                                    <SelectItem key={player.id} value={player.id}>
-                                                        {player.number ? `#${player.number} ` : ""}{player.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Substitution: Player IN */}
-                            {selectedEventType === 'substitution' && (
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label className="text-right">Player IN</Label>
-                                    <div className="col-span-3">
-                                        <Select value={subInPlayerId} onValueChange={setSubInPlayerId}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Player In" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {(selectedTeamId === match.home_team_id ? homePlayers : awayPlayers).map((player) => (
-                                                    <SelectItem key={player.id} value={player.id}>
-                                                        {player.number ? `#${player.number} ` : ""}{player.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            )}
-
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="ghost" onClick={() => setEventDialogOpen(false)}>{tCommon("cancel")}</Button>
-                            <Button type="button" onClick={handleSaveEvent} disabled={!eventPlayerId}>{tCommon("save")}</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Nested Dialog: W.O. */}
-                <Dialog open={woDialogOpen} onOpenChange={setWoDialogOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle className="text-destructive flex items-center gap-2">
-                                <AlertTriangle className="w-5 h-5" /> {t("walkover")}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <div className="grid grid-cols-2 gap-4 py-4">
-                            <Button type="button" variant="outline" className="h-24 flex flex-col gap-2 border-2 hover:border-primary" onClick={() => handleWalkover(match.home_team_id)}>
-                                <Trophy className="w-6 h-6 mb-1" />
-                                <span className="font-bold">{match.home_team?.name} {t("wins")}</span>
-                            </Button>
-                            <Button type="button" variant="outline" className="h-24 flex flex-col gap-2 border-2 hover:border-primary" onClick={() => handleWalkover(match.away_team_id)}>
-                                <Trophy className="w-6 h-6 mb-1" />
-                                <span className="font-bold">{match.away_team?.name} {t("wins")}</span>
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
             </DialogContent>
+
+            {/* Dialogs */}
+            <MatchEventDialog
+                open={eventDialogOpen}
+                onOpenChange={setEventDialogOpen}
+                teamId={selectedTeamId}
+                eventType={selectedEventType}
+                initialMinute={Math.ceil((time || 1) / 60)}
+                players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers}
+                onSave={handleSaveEvent}
+            />
+
+            <WalkoverDialog
+                open={woDialogOpen}
+                onOpenChange={setWoDialogOpen}
+                match={match}
+                onConfirm={handleWalkover}
+            />
+
+            <SetTimeDialog
+                open={setTimeDialogOpen}
+                onOpenChange={setSetTimeDialogOpen}
+                currentTime={time}
+                onSave={handleSaveSetTime}
+            />
+
+            <AddTimeDialog
+                open={addTimeDialogOpen}
+                onOpenChange={setAddTimeDialogOpen}
+                onSave={handleSaveAddTime}
+            />
+
         </Dialog>
     );
 }

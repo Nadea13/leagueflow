@@ -26,9 +26,10 @@ interface FixturesManagerProps {
     tournamentId: string;
     goals?: any[]; // Using any[] or Goal[] if imported
     format?: string;
+    isPro?: boolean;
 }
 
-export function FixturesManager({ matches, teams, tournamentId, format, goals = [] }: FixturesManagerProps) {
+export function FixturesManager({ matches, teams, tournamentId, format, goals = [], isPro = false }: FixturesManagerProps) {
     const t = useTranslations("Tournament");
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
@@ -188,6 +189,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                                                 goals={goals.filter((g: any) => g.match_id === match.id)}
                                                 isEditMode={isEditMode}
                                                 teams={teams}
+                                                isPro={isPro}
                                             />
 
 

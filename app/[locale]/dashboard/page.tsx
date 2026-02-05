@@ -1,30 +1,36 @@
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
+import { getDashboardTournaments, getUserSubscriptionPlan } from "./actions";
 
 export default async function DashboardPage() {
-    const supabase = await createClient();
-    const { data: tournaments } = await supabase
-        .from("tournaments")
-        .select("*")
-        .order("created_at", { ascending: false });
+    // Parallel data fetching
+    const [allTournaments, userPlan] = await Promise.all([
+        getDashboardTournaments(),
+        getUserSubscriptionPlan()
+    ]);
+
+    const ownedTournaments = allTournaments.filter((t: any) => t.role === 'owner');
+    const sharedTournaments = allTournaments.filter((t: any) => t.role !== 'owner');
+    const isPro = userPlan !== 'free';
 
     const t = await getTranslations("Common");
     const tSettings = await getTranslations("Settings");
+    const tCollab = await getTranslations("Collaborators");
 
-    const hasTournaments = tournaments && tournaments.length > 0;
+    const hasTournaments = ownedTournaments.length > 0;
+    const hasSharedTournaments = sharedTournaments.length > 0;
 
     return (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">{t("my_tournaments")}</h1>
-                <CreateTournamentDialog />
+                <CreateTournamentDialog isPro={isPro} />
             </div>
 
             {!hasTournaments ? (
@@ -38,11 +44,11 @@ export default async function DashboardPage() {
                     <p className="mt-2 text-sm text-muted-foreground max-w-sm mb-6">
                         {t("no_tournaments_desc")}
                     </p>
-                    <CreateTournamentDialog />
+                    <CreateTournamentDialog isPro={isPro} />
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {tournaments.map((tournament) => (
+                    {ownedTournaments.map((tournament: any) => (
                         <Card key={tournament.id} className="flex flex-col">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-xl font-bold">
@@ -65,13 +71,9 @@ export default async function DashboardPage() {
                                         <span className="font-medium mr-2">{t("format")}:</span>
                                         <span className="capitalize">{tournament.format || 'League'}</span>
                                     </div>
-                                    <div className="flex items-center text-sm text-muted-foreground">
-                                        {/* Placeholder for team count if we had it joined properly */}
-                                        {/* <span className="font-medium mr-2">Teams:</span> 8 */}
-                                    </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="bg-muted/20 pt-4">
+                            <CardFooter className="pt-4">
                                 <Button variant="outline" className="w-full" asChild>
                                     <Link href={`/dashboard/tournaments/${tournament.id}`}>
                                         {t("manage")}
@@ -81,6 +83,44 @@ export default async function DashboardPage() {
                         </Card>
                     ))}
                 </div>
+            )}
+
+            {/* Shared Tournaments Section */}
+            {hasSharedTournaments && (
+                <>
+                    <div className="flex items-center gap-2 mt-4">
+                        <h2 className="text-xl font-bold tracking-tight">{tCollab("shared_tournaments")}</h2>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {sharedTournaments.map((tournament: any) => (
+                            <Card key={tournament.id} className="flex flex-col">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-xl font-bold">
+                                        {tournament.name}
+                                    </CardTitle>
+                                    <Badge variant="outline" className="capitalize">
+                                        {tournament.role}
+                                    </Badge>
+                                </CardHeader>
+                                <CardContent className="flex-1 pt-4">
+                                    <div className="grid gap-2">
+                                        <div className="flex items-center text-sm text-muted-foreground">
+                                            <span className="font-medium mr-2">{t("format")}:</span>
+                                            <span className="capitalize">{tournament.format || 'League'}</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="pt-4">
+                                    <Button variant="outline" className="w-full" asChild>
+                                        <Link href={`/dashboard/tournaments/${tournament.id}`}>
+                                            {t("manage")}
+                                        </Link>
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+                </>
             )}
         </div>
     );
