@@ -6,7 +6,7 @@ export function calculateStandings(teams: Team[], matches: Match[]): Standing[] 
     // Initialize standings for all teams
     teams.forEach((team) => {
         standingsMap.set(team.id, {
-            tournament_id: team.tournament_id,
+            tournament_id: team.tournament_id || "",
             team_id: team.id,
             team: {
                 name: team.name,
