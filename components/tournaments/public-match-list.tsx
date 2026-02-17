@@ -2,13 +2,15 @@
 
 import { MatchCard } from "@/components/tournaments/match-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useTranslations } from "next-intl";
 
-export function PublicMatchList({ matches, tournamentId }: { matches: any[]; tournamentId: string }) {
+export function PublicMatchList({ matches, tournamentId, events = [] }: { matches: any[]; tournamentId: string; events?: any[] }) {
+    const t = useTranslations("PublicView");
+
     if (!matches || matches.length === 0) {
         return (
             <div className="text-center py-10 text-muted-foreground border rounded-lg border-dashed">
-                No matches scheduled yet.
+                {t("no_matches")}
             </div>
         );
     }
@@ -30,22 +32,22 @@ export function PublicMatchList({ matches, tournamentId }: { matches: any[]; tou
                 const firstMatch = matchesByRound[round][0];
                 const stage = firstMatch?.stage;
 
-                let headerText = `Round ${round}`;
+                let headerText = `${t("round_prefix")}${round}`;
                 if (stage === 'league' || stage === 'group') {
-                    headerText = `Match Day ${round}`;
+                    headerText = `${t("match_day_prefix")}${round}`;
                 } else if (stage === 'round_of_16') {
-                    headerText = "Round of 16";
+                    headerText = t("stage_round_of_16");
                 } else if (stage === 'quarter_final') {
-                    headerText = "Quarter Final";
+                    headerText = t("stage_quarter_final");
                 } else if (stage === 'semi_final') {
-                    headerText = "Semi Final";
+                    headerText = t("stage_semi_final");
                 } else if (stage === 'final') {
-                    headerText = "Final";
+                    headerText = t("stage_final");
                 }
 
                 return (
                     <Card key={round} className="overflow-hidden border-none shadow-sm ring-1 ring-border/50">
-                        <CardHeader className="bg-muted/30 py-3 border-b">
+                        <CardHeader className="py-3">
                             <CardTitle className="text-md font-medium flex items-center justify-between">
                                 {headerText}
                                 <span className="text-xs font-normal text-muted-foreground capitalize">
@@ -54,15 +56,32 @@ export function PublicMatchList({ matches, tournamentId }: { matches: any[]; tou
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-2 sm:p-4 space-y-3">
-                            {matchesByRound[round].map((match: any) => (
-                                <MatchCard
-                                    key={match.id}
-                                    match={match}
-                                    tournamentId={tournamentId}
-                                    goals={[]}
-                                    isPublic={true}
-                                />
-                            ))}
+                            {matchesByRound[round]
+                                .sort((a: any, b: any) => {
+                                    // 1. Date
+                                    if (a.match_date !== b.match_date) {
+                                        return (a.match_date || '') > (b.match_date || '') ? 1 : -1;
+                                    }
+                                    // 2. Time
+                                    if (a.match_time !== b.match_time) {
+                                        return (a.match_time || '') > (b.match_time || '') ? 1 : -1;
+                                    }
+                                    // 3. Venue (Numeric/Text sort)
+                                    return (a.venue || '').localeCompare(b.venue || '', undefined, { numeric: true });
+                                })
+                                .map((match: any) => {
+                                    const matchEvents = events.filter((e: any) => e.match_id === match.id);
+                                    return (
+                                        <MatchCard
+                                            key={match.id}
+                                            match={match}
+                                            tournamentId={tournamentId}
+                                            goals={[]} // Still empty, but we pass full events now
+                                            initialEvents={matchEvents}
+                                            isPublic={true}
+                                        />
+                                    );
+                                })}
                         </CardContent>
                     </Card>
                 );

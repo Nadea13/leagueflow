@@ -152,3 +152,22 @@ export interface Payment {
     // Join
     user?: { email: string; full_name?: string };
 }
+
+export interface Product {
+    id: string;
+    name: string;
+    description?: string[] | null;
+    price: number;
+    discounted_price?: number | null;
+    duration?: string | null;
+    user_limit?: number | null;
+    teams_limit: number; // 0 = infinity
+    format_support: string;
+    invite_enabled: boolean;
+    register_enabled: boolean;
+    stats_support: string;
+    support_level: string;
+    recommended: boolean;
+    created_at: string;
+    updated_at: string;
+}

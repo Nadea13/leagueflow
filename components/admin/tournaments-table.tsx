@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { useTranslations } from "next-intl";
+import { formatDate } from "@/lib/date";
+import { useLocale } from "next-intl";
 import { Search, Trophy, Trash2, ExternalLink } from "lucide-react";
 import { deleteTournamentAsAdmin } from "@/app/[locale]/admin/actions";
 import { Link } from "@/i18n/routing";
@@ -36,6 +37,10 @@ interface AdminTournamentsTableProps {
 }
 
 export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTableProps) {
+    const t = useTranslations("Admin");
+    const tCommon = useTranslations("Common");
+    const tSettings = useTranslations("Settings");
+    const locale = useLocale();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState("");
     const [tournaments, setTournaments] = useState(initialTournaments);
@@ -49,13 +54,13 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
         const result = await deleteTournamentAsAdmin(id);
         if (result.success) {
             toast({
-                description: `Deleted tournament: ${name}`,
+                description: `${tCommon("delete")}: ${name}`,
             });
             setTournaments(tournaments.filter(t => t.id !== id));
         } else {
             toast({
                 variant: "destructive",
-                description: `Failed to delete tournament: ${result.error}`,
+                description: `${tCommon("error")}: ${result.error}`,
             });
         }
     };
@@ -73,7 +78,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
             <div className="relative w-full md:w-[300px]">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                    placeholder="Search tournaments..."
+                    placeholder={t("search_tournaments")}
                     className="pl-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -84,19 +89,19 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Tournament</TableHead>
-                            <TableHead>Owner</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Plan</TableHead>
-                            <TableHead>Created</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{t("tournaments")}</TableHead>
+                            <TableHead>{t("owner")}</TableHead>
+                            <TableHead>{t("status")}</TableHead>
+                            <TableHead>{tSettings("billing_plan_label")}</TableHead>
+                            <TableHead>{t("created_at")}</TableHead>
+                            <TableHead className="text-right">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredTournaments.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                    No tournaments found.
+                                    {t("no_results")}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -118,40 +123,40 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className="capitalize">
-                                            {t.plan || 'Free'}
+                                            {t.plan || t("free")}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground text-xs">
-                                        {format(new Date(t.created_at), "d MMM yyyy", { locale: th })}
+                                        {formatDate(t.created_at, "d MMM yyyy", locale)}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Link href={`/dashboard/tournaments/${t.id}`} target="_blank">
-                                                <Button variant="ghost" size="icon" title="View">
+                                                <Button variant="ghost" size="icon" title={tCommon("manage")}>
                                                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
                                             </Link>
 
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="icon" title="Delete">
+                                                    <Button variant="ghost" size="icon" title={tCommon("delete")}>
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle>Force Delete Tournament?</AlertDialogTitle>
+                                                        <AlertDialogTitle>{tSettings("delete_tournament")}?</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            This action cannot be undone. This will permanently delete <b>{t.name}</b> and all associated matches, teams, and data.
+                                                            {tSettings("delete_desc")}. {t("deletions_removals")} <b>{t.name}</b>.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
                                                         <AlertDialogAction
                                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                             onClick={() => handleDelete(t.id, t.name)}
                                                         >
-                                                            Delete
+                                                            {tCommon("delete")}
                                                         </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
@@ -165,7 +170,10 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 </Table>
             </div>
             <div className="text-xs text-muted-foreground text-center">
-                Total {filteredTournaments.length} tournaments
+                {t.rich("showing_tournaments", {
+                    count: filteredTournaments.length,
+                    total: filteredTournaments.length
+                })}
             </div>
         </div>
     );

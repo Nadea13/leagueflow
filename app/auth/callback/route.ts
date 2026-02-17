@@ -48,7 +48,7 @@ export async function GET(request: Request) {
                 `${origin}/login?error=${encodeURIComponent(error.message)}`
             );
         }
-        console.log("Session exchanged successfully");
+        // console.log("Session exchanged successfully");
     }
 
     return response;

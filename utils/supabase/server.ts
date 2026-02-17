@@ -21,7 +21,7 @@ export async function createClient() {
                                 secure: process.env.NODE_ENV === 'production',
                             };
 
-                            console.log(`Setting cookie: ${name}, Secure: ${cookieOptions.secure}`);
+                            // console.log(`Setting cookie: ${name}, Secure: ${cookieOptions.secure}`);
                             cookieStore.set(name, value, cookieOptions)
                         })
                     } catch (error) {

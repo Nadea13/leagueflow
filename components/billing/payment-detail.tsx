@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
 
 declare global {
     interface Window {
@@ -24,6 +25,7 @@ declare global {
 export function PaymentDetails() {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
+    const t = useTranslations("Billing");
 
     // This would ideally come from your environment variables
     const OMISE_PUBLIC_KEY = process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY;
@@ -40,8 +42,8 @@ export function PaymentDetails() {
 
         if (!window.Omise) {
             toast({
-                title: "Error",
-                description: "Payment system not ready. Please try again.",
+                title: t("error_payment_system"),
+                description: t("error_payment_system"),
                 variant: "destructive",
             });
             setLoading(false);
@@ -60,9 +62,9 @@ export function PaymentDetails() {
         window.Omise.createToken("card", cardObject, (statusCode: number, response: any) => {
             if (statusCode === 200) {
                 // Success: response.id is the token
-                console.log("Omise Token Created:", response.id);
+                // console.log("Omise Token Created:", response.id);
                 toast({
-                    title: "Card Added",
+                    title: t("card_added"),
                     description: `Token created successfully: ${response.id}`,
                 });
                 // Here you would call your server action to save the customer/card
@@ -71,8 +73,8 @@ export function PaymentDetails() {
                 // Error
                 console.error("Omise Error:", response);
                 toast({
-                    title: "Payment Error",
-                    description: response.message || "Failed to process card.",
+                    title: t("error_card_failed"),
+                    description: response.message || t("error_card_failed"),
                     variant: "destructive",
                 });
             }
@@ -89,19 +91,19 @@ export function PaymentDetails() {
             <div className="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Payment Details</CardTitle>
+                        <CardTitle>{t("payment_details_title")}</CardTitle>
                         <CardDescription>
-                            Add a credit card to upgrade your plan.
+                            {t("add_card_desc")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">Cardholder Name</Label>
+                                <Label htmlFor="name">{t("cardholder_name")}</Label>
                                 <Input id="name" name="name" placeholder="John Doe" required />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="number">Card Number</Label>
+                                <Label htmlFor="number">{t("card_number")}</Label>
                                 <div className="relative">
                                     <CreditCard className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
@@ -116,7 +118,7 @@ export function PaymentDetails() {
                             </div>
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="expiry_month">Expires Month</Label>
+                                    <Label htmlFor="expiry_month">{t("expires_month")}</Label>
                                     <Input
                                         id="expiry_month"
                                         name="expiry_month"
@@ -126,7 +128,7 @@ export function PaymentDetails() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="expiry_year">Expires Year</Label>
+                                    <Label htmlFor="expiry_year">{t("expires_year")}</Label>
                                     <Input
                                         id="expiry_year"
                                         name="expiry_year"
@@ -136,7 +138,7 @@ export function PaymentDetails() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="security_code">CVC</Label>
+                                    <Label htmlFor="security_code">{t("cvc")}</Label>
                                     <Input
                                         id="security_code"
                                         name="security_code"
@@ -150,10 +152,10 @@ export function PaymentDetails() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Processing...
+                                        {t("processing")}
                                     </>
                                 ) : (
-                                    "Add Card"
+                                    t("add_card_btn")
                                 )}
                             </Button>
                         </form>

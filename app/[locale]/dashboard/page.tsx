@@ -1,12 +1,9 @@
-import { Link } from "@/i18n/routing";
-import { cn } from "@/lib/utils";
 import { getTranslations } from "next-intl/server";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { getDashboardTournaments, getUserSubscriptionPlan } from "./actions";
+import { StatsOverview } from "@/components/dashboard/stats-overview";
+import { TournamentCard } from "@/components/dashboard/tournament-card";
+import { EmptyState } from "@/components/dashboard/empty-state";
 
 export default async function DashboardPage() {
     // Parallel data fetching
@@ -19,108 +16,63 @@ export default async function DashboardPage() {
     const sharedTournaments = allTournaments.filter((t: any) => t.role !== 'owner');
     const isPro = userPlan !== 'free';
 
-    const t = await getTranslations("Common");
-    const tSettings = await getTranslations("Settings");
+    const t = await getTranslations("Dashboard");
     const tCollab = await getTranslations("Collaborators");
 
     const hasTournaments = ownedTournaments.length > 0;
     const hasSharedTournaments = sharedTournaments.length > 0;
 
-    return (
-        <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">{t("my_tournaments")}</h1>
-                <CreateTournamentDialog isPro={isPro} />
-            </div>
+    // Calculate stats
+    const totalTournaments = ownedTournaments.length;
+    const activeTournaments = ownedTournaments.filter((t: any) => t.status === 'active').length;
+    const completedTournaments = ownedTournaments.filter((t: any) => t.status === 'completed').length;
 
-            {!hasTournaments ? (
-                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed bg-muted/40 p-8 text-center animate-in fade-in-50">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-4">
-                        <Trophy className="h-10 w-10 text-primary" />
-                    </div>
-                    <h3 className="text-2xl font-semibold tracking-tight">
-                        {t("no_tournaments")}
-                    </h3>
-                    <p className="mt-2 text-sm text-muted-foreground max-w-sm mb-6">
-                        {t("no_tournaments_desc")}
+    return (
+        <div className="flex flex-col gap-8">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+                    <p className="text-muted-foreground">
+                        {t("welcome")}
                     </p>
+                </div>
+                <div className="flex items-center gap-2">
                     <CreateTournamentDialog isPro={isPro} />
                 </div>
-            ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {ownedTournaments.map((tournament: any) => (
-                        <Card key={tournament.id} className="flex flex-col">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xl font-bold">
-                                    {tournament.name}
-                                </CardTitle>
-                                <Badge
-                                    className={cn(
-                                        "capitalize",
-                                        tournament.status === 'active' && "bg-green-600 hover:bg-green-700",
-                                        tournament.status === 'completed' && "bg-gray-500 hover:bg-gray-600",
-                                        (!tournament.status || tournament.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black"
-                                    )}
-                                >
-                                    {tournament.status ? tSettings(tournament.status as any) : tSettings('draft')}
-                                </Badge>
-                            </CardHeader>
-                            <CardContent className="flex-1 pt-4">
-                                <div className="grid gap-2">
-                                    <div className="flex items-center text-sm text-muted-foreground">
-                                        <span className="font-medium mr-2">{t("format")}:</span>
-                                        <span className="capitalize">{tournament.format || 'League'}</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="pt-4">
-                                <Button variant="outline" className="w-full" asChild>
-                                    <Link href={`/dashboard/tournaments/${tournament.id}`}>
-                                        {t("manage")}
-                                    </Link>
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    ))}
-                </div>
-            )}
+            </div>
 
-            {/* Shared Tournaments Section */}
-            {hasSharedTournaments && (
-                <>
-                    <div className="flex items-center gap-2 mt-4">
-                        <h2 className="text-xl font-bold tracking-tight">{tCollab("shared_tournaments")}</h2>
-                    </div>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {sharedTournaments.map((tournament: any) => (
-                            <Card key={tournament.id} className="flex flex-col">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-xl font-bold">
-                                        {tournament.name}
-                                    </CardTitle>
-                                    <Badge variant="outline" className="capitalize">
-                                        {tournament.role}
-                                    </Badge>
-                                </CardHeader>
-                                <CardContent className="flex-1 pt-4">
-                                    <div className="grid gap-2">
-                                        <div className="flex items-center text-sm text-muted-foreground">
-                                            <span className="font-medium mr-2">{t("format")}:</span>
-                                            <span className="capitalize">{tournament.format || 'League'}</span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="pt-4">
-                                    <Button variant="outline" className="w-full" asChild>
-                                        <Link href={`/dashboard/tournaments/${tournament.id}`}>
-                                            {t("manage")}
-                                        </Link>
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                    </div>
-                </>
+            <StatsOverview
+                totalTournaments={totalTournaments}
+                activeTournaments={activeTournaments}
+                completedTournaments={completedTournaments}
+            />
+
+            {!hasTournaments && !hasSharedTournaments ? (
+                <EmptyState isPro={isPro} />
+            ) : (
+                <div className="space-y-8">
+                    {hasTournaments && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-semibold tracking-tight">{t("my_tournaments")}</h2>
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {ownedTournaments.map((tournament: any) => (
+                                    <TournamentCard key={tournament.id} tournament={tournament} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {hasSharedTournaments && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-semibold tracking-tight">{tCollab("shared_tournaments")}</h2>
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {sharedTournaments.map((tournament: any) => (
+                                    <TournamentCard key={tournament.id} tournament={tournament} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );

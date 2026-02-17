@@ -72,7 +72,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                     <Input
                         type="text"
                         name="name"
-                        placeholder={isLimitReached ? "Limit reached (Max 8)" : t("team_name_placeholder")}
+                        placeholder={isLimitReached ? t("limit_reached") : t("team_name_placeholder")}
                         required
                         className="h-10"
                         disabled={isLimitReached}
@@ -86,7 +86,9 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
             {state.error && <p className="text-sm text-red-500 w-full md:w-auto">{state.error}</p>}
             {isLimitReached && (
                 <p className="text-sm text-amber-600 w-full md:w-auto mt-2">
-                    Team limit reached (Free Plan: 8). <a href="/dashboard/billing" className="underline font-medium">Upgrade to Pro</a> to add more.
+                    {t.rich("limit_reached_desc", {
+                        link: (chunks) => <a href="/dashboard/billing" className="underline font-medium">{chunks}</a>
+                    })}
                 </p>
             )}
         </form>

@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
         error,
     } = await supabase.auth.getUser()
 
-    console.log("Middleware Auth Check:", user?.email || "No User", error?.message || "No Error");
+    // console.log("Middleware Auth Check:", user?.email || "No User", error?.message || "No Error");
 
     // REMOVED: Redirect logic here creates issues with i18n. 
     // We will handle protection in the dashboard layout or a separate route guard.

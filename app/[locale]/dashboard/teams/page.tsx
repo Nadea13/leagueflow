@@ -65,7 +65,7 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
                 {/* Folders Section */}
                 {tournaments && tournaments.length > 0 && (
                     <div>
-                        <h2 className="text-xl font-semibold mb-4 tracking-tight text-muted-foreground">Tournaments</h2>
+                        <h2 className="text-xl font-semibold mb-4 tracking-tight">{t("tournaments_folder")}</h2>
                         <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
                             {tournaments.map((tournament) => (
                                 <Link key={tournament.id} href={`/dashboard/teams/tournament/${tournament.id}`} className="block h-full">
@@ -75,12 +75,12 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
                                                 <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                                                     <Folder className="h-8 w-8 text-primary" />
                                                 </div>
-                                                <Badge variant="secondary" className="font-mono">
+                                                <Badge variant="secondary">
                                                     {teamCounts[tournament.id] || 0}
                                                 </Badge>
                                             </div>
-                                            <CardTitle className="mt-4 truncate">{tournament.name}</CardTitle>
-                                            <CardDescription>Teams Folder</CardDescription>
+                                            <CardTitle className="mt-4 truncate text-lg tracking-tight">{tournament.name}</CardTitle>
+                                            <CardDescription>{t("teams_folder_desc")}</CardDescription>
                                         </CardHeader>
                                     </Card>
                                 </Link>
@@ -91,10 +91,10 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
 
                 {/* Unassigned Teams Section */}
                 <div>
-                    <h2 className="text-xl font-semibold mb-4 tracking-tight text-muted-foreground">Unassigned Teams</h2>
+                    <h2 className="text-xl font-semibold mb-4 tracking-tight">{t("unassigned_teams")}</h2>
                     {(!unassignedTeams || unassignedTeams.length === 0) ? (
                         <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-dashed bg-muted/40 p-8 text-center">
-                            <p className="text-muted-foreground text-sm">No unassigned teams</p>
+                            <p className="text-muted-foreground text-sm">{t("no_unassigned")}</p>
                         </div>
                     ) : (
                         <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
@@ -106,9 +106,9 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
                                             <AvatarFallback>{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <div className="space-y-1 overflow-hidden">
-                                            <CardTitle className="text-lg truncate">{team.name}</CardTitle>
+                                            <CardTitle className="text-lg truncate tracking-tight">{team.name}</CardTitle>
                                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                <Badge variant="secondary" className="text-[10px]">Unassigned</Badge>
+                                                <Badge variant="secondary" className="text-[10px]">{t("unassigned_badge")}</Badge>
                                             </div>
                                         </div>
                                     </CardHeader>

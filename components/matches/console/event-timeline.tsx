@@ -34,7 +34,7 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                             <div key={event.id} className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded border border-dashed border-slate-300 text-sm">
                                 <div className="flex items-center gap-2 font-bold text-slate-600 dark:text-slate-400">
                                     <Timer className="w-4 h-4" />
-                                    <span>Added Time: +{event.extra_info?.added_minutes || '?'} min</span>
+                                    <span>{t("added_time_msg", { min: event.extra_info?.added_minutes || '?' })}</span>
                                     <span className="text-xs font-normal text-muted-foreground ml-2">(@ {event.minute}')</span>
                                 </div>
                                 {!readOnly && (
@@ -50,9 +50,9 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                         let label = "";
                         let icon = Flag;
                         switch (event.event_type) {
-                            case 'kick_off': label = "KICK OFF"; icon = Play; break;
-                            case 'half_time': label = "HALF TIME"; icon = Pause; break;
-                            case 'full_time': label = "FULL TIME"; icon = Square; break;
+                            case 'kick_off': label = t("kick_off"); icon = Play; break;
+                            case 'half_time': label = t("half_time"); icon = Pause; break;
+                            case 'full_time': label = t("full_time"); icon = Square; break;
                         }
                         const SysIcon = icon;
                         return (
@@ -100,7 +100,7 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                                         )}
                                     </span>
                                     <span className="text-xs text-muted-foreground">
-                                        {typeConfig?.label} • {isHome ? tMatch("home") : tMatch("away")}
+                                        {typeConfig?.label && t(typeConfig.label)} • {isHome ? tMatch("home") : tMatch("away")}
                                     </span>
                                 </div>
                             </div>

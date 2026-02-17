@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export async function deleteAccount() {
     const supabase = await createClient();
@@ -41,4 +42,22 @@ export async function deleteAccount() {
     await supabase.auth.signOut();
 
     redirect('/');
+}
+
+
+
+export async function updateProfile(formData: FormData) {
+    const supabase = await createClient();
+    const fullName = formData.get("fullName") as string;
+
+    const { error } = await supabase.auth.updateUser({
+        data: { full_name: fullName },
+    });
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/settings");
+    return { success: true };
 }

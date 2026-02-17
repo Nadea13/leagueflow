@@ -446,7 +446,7 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
 
     // 4. Assign Times if parameters are available
     if (tournament?.start_date && fixtures.length > 0) {
-        console.log("Assigning timess....")
+        // console.log("Assigning timess....")
         assignMatchTimes(fixtures, tournament.start_date, tournament.end_date, tournament.number_of_pitches || 1);
     }
 
@@ -682,13 +682,31 @@ export async function updateTournament(
     const status = formData.get("status") as string;
     const format = formData.get("format") as string;
 
+    // Registration Fields
+    const is_registration_open = formData.get("is_registration_open") === 'true';
+    const registration_fee = formData.get("registration_fee");
+    const bank_name = formData.get("bank_name") as string;
+    const bank_account_name = formData.get("bank_account_name") as string;
+    const bank_account_number = formData.get("bank_account_number") as string;
+
     if (!name) {
         return { success: false, error: "Tournament name is required" };
     }
 
+    const updateData: any = {
+        name,
+        status,
+        format,
+        is_registration_open,
+        registration_fee: registration_fee ? Number(registration_fee) : 0,
+        bank_name,
+        bank_account_name,
+        bank_account_number
+    };
+
     const { error } = await supabase
         .from("tournaments")
-        .update({ name, status, format })
+        .update(updateData)
         .eq("id", tournamentId);
 
     if (error) {
@@ -696,7 +714,6 @@ export async function updateTournament(
     }
 
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    await logActivity('UPDATE_TOURNAMENT', 'tournament', tournamentId, { name, status, format });
     return { success: true };
 }
 

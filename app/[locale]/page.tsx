@@ -1,11 +1,15 @@
 import { Link } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Trophy, Zap, List, Share2, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PricingCards } from "@/components/pricing/pricing-cards";
+import { getProducts } from "@/actions/products";
 
-export default function Home() {
-  const t = useTranslations('Landing');
-  const tPricing = useTranslations('Pricing');
+export default async function Home() {
+  const { data: products } = await getProducts();
+  const safeProducts = products || [];
+  const t = await getTranslations('Landing');
+  const tPricing = await getTranslations('Pricing');
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Navbar */}
@@ -128,7 +132,6 @@ export default function Home() {
         </section>
 
         {/* Pricing Section */}
-        {/* Pricing Section */}
         <section id="pricing" className="py-24 relative overflow-hidden">
           {/* Background decoration */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
@@ -141,196 +144,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {/* Free Tier */}
-              <div className="flex flex-col p-6 rounded-2xl border bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300 h-full">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2">{tPricing('free.title')}</h3>
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-3xl font-bold">{tPricing('free.price')}</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed h-10">{tPricing('free.desc')}</p>
-                </div>
-
-                <ul className="flex-1 space-y-4 mb-8 text-sm">
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="text-muted-foreground">{tPricing('free.features.teams')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="text-muted-foreground">{tPricing('free.features.format')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="text-muted-foreground">{tPricing('free.features.scoring')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="text-muted-foreground">{tPricing('free.features.public_page')}</span>
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full rounded-full" asChild>
-                  <Link href="/dashboard">{tPricing('free.cta')}</Link>
-                </Button>
-              </div>
-
-              {/* Per Tournament - Featured */}
-              <div className="flex flex-col p-6 rounded-2xl border-2 border-primary bg-card shadow-xl relative z-10 h-full">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-center px-4 py-1 text-xs font-bold rounded-full shadow-lg uppercase tracking-wide">
-                  {tPricing('tournament.highlight')}
-                </div>
-                <div className="mb-4 pt-2">
-                  <h3 className="text-lg font-bold mb-2 text-primary">{tPricing('tournament.title')}</h3>
-                  <div className="flex flex-col mb-2">
-                    <span className="text-sm text-muted-foreground line-through decoration-primary/50">{tPricing('tournament.original_price')}</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold tracking-tight">{tPricing('tournament.price')}</span>
-                      <span className="text-muted-foreground text-sm font-medium">{tPricing('tournament.unit')}</span>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed h-10">{tPricing('tournament.desc')}</p>
-                </div>
-
-                <ul className="flex-1 space-y-4 mb-8 text-sm">
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                    <span className="font-medium text-foreground">{tPricing('tournament.features.teams')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                    <span className="font-medium text-foreground">{tPricing('tournament.features.group_stage')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                    <span>{tPricing('tournament.features.stats')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                    <span>{tPricing('tournament.features.staff')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 flex items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary mt-0.5">∞</div>
-                    <span className="font-bold text-primary">{tPricing('tournament.features.lifetime')}</span>
-                  </li>
-                </ul>
-                <Button size="lg" className="w-full rounded-full shadow-lg hover:shadow-primary/25 transition-all" asChild>
-                  <Link href="/dashboard">{tPricing('tournament.cta')}</Link>
-                </Button>
-              </div>
-
-              {/* Monthly */}
-              <div className="flex flex-col p-6 rounded-2xl border bg-background/50 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300 h-full">
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-2">{tPricing('monthly.title')}</h3>
-                  <div className="flex flex-col mb-2">
-                    <span className="text-sm text-muted-foreground line-through">{tPricing('monthly.original_price')}</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">{tPricing('monthly.price')}</span>
-                      <span className="text-muted-foreground text-sm">{tPricing('monthly.unit')}</span>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed h-10">{tPricing('monthly.desc')}</p>
-                </div>
-
-                <ul className="flex-1 space-y-4 mb-8 text-sm">
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="font-medium">{tPricing('monthly.features.unlimited')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span>{tPricing('monthly.features.pro_features')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span>{tPricing('monthly.features.support')}</span>
-                  </li>
-                  <li className="flex items-start gap-3 text-muted-foreground/80 text-xs mt-auto pt-2 border-t">
-                    <span>{tPricing('monthly.condition')}</span>
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full rounded-full" asChild>
-                  <Link href="/dashboard">{tPricing('monthly.cta')}</Link>
-                </Button>
-              </div>
-
-              {/* Yearly - Best Value */}
-              <div className="flex flex-col p-6 rounded-2xl border bg-background/50 backdrop-blur-sm shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden group h-full">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Trophy className="w-24 h-24 text-primary rotate-12" />
-                </div>
-                <div className="mb-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold">{tPricing('yearly.title')}</h3>
-                    <span className="bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold rounded-full uppercase">
-                      {tPricing('yearly.highlight')}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-3xl font-bold">{tPricing('yearly.price')}</span>
-                    <span className="text-muted-foreground text-sm">{tPricing('yearly.unit')}</span>
-                  </div>
-                  <div className="absolute top-16 right-6 flex flex-col items-end">
-                    <span className="text-sm text-muted-foreground line-through">{tPricing('yearly.original_price')}</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed h-10">{tPricing('yearly.desc')}</p>
-                </div>
-
-                <ul className="flex-1 space-y-4 mb-8 text-sm relative z-10">
-                  <li className="flex items-start gap-3 p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400">
-                    <div className="h-5 w-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3" />
-                    </div>
-                    <span className="font-bold">{tPricing('yearly.features.savings')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span className="font-medium">{tPricing('yearly.features.unlimited')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span>{tPricing('yearly.features.pro_features')}</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-primary" />
-                    </div>
-                    <span>{tPricing('yearly.features.support')}</span>
-                  </li>
-                </ul>
-                <Button variant="outline" className="w-full rounded-full" asChild>
-                  <Link href="/dashboard">{tPricing('yearly.cta')}</Link>
-                </Button>
-              </div>
-
-            </div>
+            <PricingCards products={safeProducts} landingPageMode={true} />
           </div>
         </section>
 

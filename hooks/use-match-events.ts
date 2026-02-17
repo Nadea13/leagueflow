@@ -2,20 +2,35 @@ import { useState, useEffect } from "react";
 import { MatchEvent, EventType } from "@/types";
 import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/app/[locale]/dashboard/tournaments/[id]/event-actions";
 
-export function useMatchEvents(matchId: string, tournamentId: string) {
-    const [events, setEvents] = useState<MatchEvent[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+export function useMatchEvents(matchId: string, tournamentId: string, initialData?: MatchEvent[]) {
+    const [events, setEvents] = useState<MatchEvent[]>(initialData || []);
+    const [isLoading, setIsLoading] = useState(!initialData); // If initialData exists, not loading
 
-    // Load events on mount
+    // Load events on mount (only if no initial data or to sync?)
+    // If we want to support Realtime, we should probably fetch to be sure, or rely on realtime subscription separately (which we don't have for events yet, only matches table).
+    // Actually, we don't have realtime for events table in this code. `LiveMatchConsole` subscribes to `matches` table changes.
+    // So fetching on mount is the only way to get updates if we don't have `initialData` or if it's stale.
+    // But for Public View, `initialData` comes from Server Component so it's fresh.
+    // And client fetch will likely fail.
+
     useEffect(() => {
         const loadEvents = async () => {
-            setIsLoading(true);
+            // If we have initial data, maybe we don't need to fetch immediately?
+            // But if we are in admin mode, we might want to.
+            // Let's always try to fetch, but handle specific failures gracefully.
+            if (!initialData) setIsLoading(true);
+
             const res = await getMatchEvents(matchId);
             if (res.success && res.data) {
                 setEvents(res.data);
             }
+            // If failed (e.g. RLS), we stick with initialData if any.
+
             setIsLoading(false);
         };
+
+        // If we provided initialData, we might want to skip fetch to avoid RLS 403 errors in console
+        // checking if matchId exists is enough usually.
         loadEvents();
     }, [matchId]);
 

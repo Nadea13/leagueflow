@@ -1,5 +1,6 @@
 "use client";
 
+import { Product } from "@/types";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, RefreshCw, Clock, X } from "lucide-react";
@@ -11,13 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { confirmPayment } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 
 interface PaymentSectionProps {
-    plan: 'tournament' | 'monthly' | 'yearly';
+    product: Product;
     tournaments?: { id: string; name: string; status: string; }[] | null;
     onCancel: () => void;
     onSuccess: () => void;
 }
 
-export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: PaymentSectionProps) {
+export function PaymentSection({ product, tournaments, onCancel, onSuccess }: PaymentSectionProps) {
     const t = useTranslations("Billing");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
@@ -32,22 +33,28 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
     }>({ qrCode: null, chargeId: null, status: 'pending' });
     const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
 
+    // Derive legacy plan type for backend compatibility
+    // Logic: 'lifetime' -> 'tournament', '1 month' -> 'monthly', '1 year' -> 'yearly'
+    const getPlanType = (): 'tournament' | 'monthly' | 'yearly' => {
+        const duration = product.duration?.toLowerCase();
+        if (duration === 'lifetime') return 'tournament';
+        if (duration === '1 year' || duration === 'year') return 'yearly';
+        return 'monthly'; // Default to monthly for '1 month' or others
+    };
+
+    const planType = getPlanType();
+
     // All tournaments are eligible (no plan column in tournaments table)
     const eligibleTournaments = tournaments || [];
 
-    // Prices (Hardcoded for now as per PricingTable, ideally config driven)
-    const getPrice = () => {
-        if (plan === 'tournament') return 590;
-        if (plan === 'monthly') return 890;
-        if (plan === 'yearly') return 8900;
-        return 0;
-    };
+    // Prices from Product
+    const getPrice = () => product.discounted_price || product.price;
 
     const isGeneratingRef = useRef(false);
 
     const handleGenerateQR = async () => {
-        if (plan === 'tournament' && !selectedTournament) {
-            toast({ title: tCommon("error"), description: "Please select a tournament", variant: "destructive" });
+        if (planType === 'tournament' && !selectedTournament) {
+            toast({ title: tCommon("error"), description: t("select_tournament_hint"), variant: "destructive" });
             return;
         }
 
@@ -59,8 +66,8 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
         try {
             const amount = getPrice() * 100; // Satang
             const metadata = {
-                plan_type: plan,
-                tournament_id: plan === 'tournament' ? selectedTournament : undefined
+                plan_type: planType,
+                tournament_id: planType === 'tournament' ? selectedTournament : undefined
             };
 
             const res = await createPromptPayCharge(amount, metadata);
@@ -72,7 +79,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                 });
 
                 // Update profile to pending
-                if (plan === 'monthly' || plan === 'yearly') {
+                if (planType === 'monthly' || planType === 'yearly') {
                     await updateProfilePaymentStatus({
                         payment_status: 'pending',
                         payment_id: res.data.charge_id,
@@ -82,10 +89,10 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                 }
 
             } else {
-                toast({ title: tCommon("error"), description: res.error || "Failed to generate QR", variant: "destructive" });
+                toast({ title: tCommon("error"), description: res.error || t("error_payment_system"), variant: "destructive" });
             }
         } catch (error) {
-            toast({ title: tCommon("error"), description: "Something went wrong", variant: "destructive" });
+            toast({ title: tCommon("error"), description: tCommon("something_went_wrong"), variant: "destructive" });
         } finally {
             setIsGeneratingQR(false);
             isGeneratingRef.current = false;
@@ -101,15 +108,15 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
             if (res.success && res.data && res.data.status === 'successful') {
 
                 // 1. Confirm Tournament Upgrade if applicable
-                if (plan === 'tournament' && selectedTournament) {
+                if (planType === 'tournament' && selectedTournament) {
                     await confirmPayment(selectedTournament, paymentState.chargeId, 'promptpay');
-                } else if (plan === 'monthly' || plan === 'yearly') {
+                } else if (planType === 'monthly' || planType === 'yearly') {
                     // Update profile for subscription plans
                     await updateProfilePaymentStatus({
                         payment_status: 'paid',
                         payment_id: paymentState.chargeId,
                         payment_method: 'promptpay',
-                        plan: plan
+                        plan: planType
                     });
                 }
 
@@ -119,8 +126,8 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                     status: 'success',
                     payment_method: 'promptpay',
                     charge_id: paymentState.chargeId,
-                    plan_type: plan,
-                    tournament_id: plan === 'tournament' ? selectedTournament : undefined
+                    plan_type: planType,
+                    tournament_id: planType === 'tournament' ? selectedTournament : undefined
                 });
 
                 setPaymentState(prev => ({ ...prev, status: 'success' }));
@@ -136,7 +143,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
         } finally {
             if (!silent) setIsCheckingStatus(false);
         }
-    }, [paymentState.chargeId, paymentState.status, plan, selectedTournament, t, tCommon, getPrice, onSuccess]);
+    }, [paymentState.chargeId, paymentState.status, planType, selectedTournament, t, tCommon, getPrice, onSuccess]);
 
     // Timer Effect
     useEffect(() => {
@@ -169,12 +176,12 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
     // Reset auto-gen guard when plan changes
     useEffect(() => {
         hasAutoGeneratedRef.current = false;
-    }, [plan]);
+    }, [product.id]);
 
     // Auto-Generate QR for non-tournament plans (Safe Version)
     useEffect(() => {
         if (
-            plan !== 'tournament' &&
+            planType !== 'tournament' &&
             !paymentState.qrCode &&
             !isGeneratingQR &&
             !hasAutoGeneratedRef.current
@@ -183,7 +190,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
             handleGenerateQR();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [plan]);
+    }, [planType]);
 
     // ... (rest of code)
 
@@ -205,23 +212,38 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                 <h4 className="font-semibold text-lg">{t("pay_with_promptpay")}</h4>
                 <p className="text-sm text-muted-foreground">{t("scan_desc")}</p>
                 <div className="mt-2 flex items-center gap-2">
-                    <span className="text-sm font-medium">Plan: {plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
+                    <span className="text-sm font-medium">
+                        {t("plan_prefix")}
+                        {
+                            product.name === 'Starter' ? t('free.title') :
+                                product.name === 'Per Tournament' ? t('tournament.title') :
+                                    product.name === 'Monthly Pro' ? t('monthly.title') :
+                                        product.name === 'Yearly Pro' ? t('yearly.title') :
+                                            product.name
+                        }
+                    </span>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-xs text-muted-foreground line-through">
-                            {plan === 'tournament' ? '฿990' : plan === 'monthly' ? '฿1,290' : '฿12,900'}
-                        </span>
-                        <span className="text-sm font-bold text-primary">฿{getPrice().toFixed(2)}</span>
+                        {product.discounted_price ? (
+                            <>
+                                <span className="text-xs text-muted-foreground line-through">
+                                    ฿{product.price}
+                                </span>
+                                <span className="text-sm font-bold text-primary">฿{product.discounted_price}</span>
+                            </>
+                        ) : (
+                            <span className="text-sm font-bold text-primary">฿{product.price}</span>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {plan === 'tournament' && !paymentState.qrCode && (
+            {planType === 'tournament' && !paymentState.qrCode && (
                 <div className="mb-6 max-w-sm">
-                    <label className="text-sm font-medium mb-1.5 block">Select Tournament to Upgrade</label>
+                    <label className="text-sm font-medium mb-1.5 block">{t("select_tournament_label")}</label>
                     <div className="flex gap-2">
                         <Select value={selectedTournament} onValueChange={setSelectedTournament}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Tournament" />
+                                <SelectValue placeholder={t("select_tournament_placeholder")} />
                             </SelectTrigger>
                             <SelectContent>
                                 {eligibleTournaments.length > 0 ? (
@@ -229,12 +251,12 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                                         <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
                                     ))
                                 ) : (
-                                    <SelectItem value="none" disabled>No eligible tournaments</SelectItem>
+                                    <SelectItem value="none" disabled>{t("no_tournaments")}</SelectItem>
                                 )}
                             </SelectContent>
                         </Select>
                         <Button onClick={handleGenerateQR} disabled={!selectedTournament || isGeneratingQR}>
-                            {isGeneratingQR ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
+                            {isGeneratingQR ? <Loader2 className="w-4 h-4 animate-spin" /> : t("generate_btn")}
                         </Button>
                     </div>
                 </div>
@@ -247,17 +269,17 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                         <p className="text-muted-foreground">{tCommon("loading")}</p>
                     </div>
                 ) : !paymentState.qrCode ? (
-                    plan !== 'tournament' ? (
+                    planType !== 'tournament' ? (
                         <div className="text-center space-y-4">
                             {/* Keep the button just in case, or if auto-gen fails/is guarded */}
                             <Button onClick={handleGenerateQR} disabled={isGeneratingQR}>
                                 {isGeneratingQR ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                {tCommon("generate_qr") || "Generate QR Code"}
+                                {tCommon("generate_qr")}
                             </Button>
                         </div>
                     ) : (
                         <div className="text-muted-foreground text-center">
-                            Please select a tournament and click Generate to proceed.
+                            {t("select_tournament_hint")}
                         </div>
                     )
                 ) : (
@@ -274,9 +296,9 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                             <div className="text-center space-y-4">
                                 <Clock className="w-12 h-12 text-muted-foreground mx-auto" />
                                 <div>
-                                    <h3 className="font-semibold text-lg">QR Code Expired</h3>
+                                    <h3 className="font-semibold text-lg">{t("qr_expired")}</h3>
                                     <Button onClick={handleGenerateQR} disabled={isGeneratingQR} className="mt-2">
-                                        <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
+                                        <RefreshCw className="w-4 h-4 mr-2" /> {t("regenerate_btn")}
                                     </Button>
                                 </div>
                             </div>
@@ -296,7 +318,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess }: Payme
                                         <span>{t("waiting_payment")}</span>
                                     </div>
                                     <p className="text-xs text-muted-foreground text-center animate-pulse">
-                                        Checking payment status automatically...
+                                        {t("checking_status")}
                                     </p>
                                 </div>
                             </>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Payment } from "@/types";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { formatDate } from "@/lib/date";
+import { useLocale } from "next-intl";
 import { Search, CreditCard, Filter, ArrowUpRight, Check, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,9 @@ interface AdminPaymentsTableProps {
 }
 
 export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps) {
+    const t = useTranslations("Admin");
+    const tCommon = useTranslations("Common");
+    const locale = useLocale();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
 
@@ -67,32 +71,32 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("total_revenue")}</CardTitle>
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">฿{totalAmount.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground">Processed volume</p>
+                        <p className="text-xs text-muted-foreground">{t("all_time_earnings")}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Successful Transactions</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("recent_transactions")}</CardTitle>
                         <Check className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{successfulPayments}</div>
-                        <p className="text-xs text-muted-foreground">Completed payments</p>
+                        <p className="text-xs text-muted-foreground">{t("transactions_recorded")}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">All Transactions</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("total_activity")}</CardTitle>
                         <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{initialPayments.length}</div>
-                        <p className="text-xs text-muted-foreground">Total records</p>
+                        <p className="text-xs text-muted-foreground">{t("recorded_actions")}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -102,7 +106,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search email, PG ID..."
+                        placeholder={t("search_payments")}
                         className="pl-8"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -112,14 +116,14 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                     <SelectTrigger className="w-full md:w-[200px]">
                         <div className="flex items-center gap-2">
                             <Filter className="h-4 w-4" />
-                            <SelectValue placeholder="Filter Status" />
+                            <SelectValue placeholder={t("status")} />
                         </div>
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="success">Success</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="failed">Failed</SelectItem>
+                        <SelectItem value="all">{t("all_statuses")}</SelectItem>
+                        <SelectItem value="success">{t("status")}: {t("status_success")}</SelectItem>
+                        <SelectItem value="pending">{t("status")}: {t("status_pending")}</SelectItem>
+                        <SelectItem value="failed">{t("status")}: {t("status_failed")}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -129,40 +133,40 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[180px]">Date</TableHead>
-                            <TableHead>User</TableHead>
-                            <TableHead>Details</TableHead>
+                            <TableHead className="w-[180px]">{t("date")}</TableHead>
+                            <TableHead>{t("user")}</TableHead>
+                            <TableHead>{t("details")}</TableHead>
                             <TableHead>PG ID</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead className="text-right">Status</TableHead>
+                            <TableHead>{t("amount")}</TableHead>
+                            <TableHead className="text-right">{t("status")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredPayments.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                                    No payments found.
+                                    {t("no_results")}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredPayments.map((payment) => (
                                 <TableRow key={payment.id}>
                                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                                        {format(new Date(payment.created_at), "d MMM yyyy, HH:mm", { locale: th })}
+                                        {formatDate(payment.created_at, "d MMM yyyy, HH:mm", locale)}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-medium">{payment.user?.email || 'Unknown User'}</span>
+                                            <span className="font-medium">{payment.user?.email || t("unknown")}</span>
                                             <span className="text-xs text-muted-foreground">{payment.user?.full_name}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <span className="text-sm font-medium capitalize">
-                                                {payment.plan ? `${payment.plan} Plan` : 'One-time'}
+                                                {payment.plan ? t("plan_label", { plan: payment.plan }) : t("one_time")}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                {payment.tournament_id ? 'Tournament Upgrade' : 'Subscription'}
+                                                {payment.tournament_id ? t("tournament_upgrade") : t("subscription")}
                                             </span>
                                         </div>
                                     </TableCell>
@@ -189,7 +193,10 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
-                Showing {filteredPayments.length} of {initialPayments.length} records
+                {t.rich("showing_payments", {
+                    count: filteredPayments.length,
+                    total: initialPayments.length
+                })}
             </div>
         </div>
     );

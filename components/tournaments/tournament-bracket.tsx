@@ -8,9 +8,10 @@ import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 
 interface TournamentBracketProps {
     matches: Match[];
+    isPublic?: boolean;
 }
 
-export function TournamentBracket({ matches }: TournamentBracketProps) {
+export function TournamentBracket({ matches, isPublic = false }: TournamentBracketProps) {
     const t = useTranslations("Bracket");
     // Filter knockout matches
     const knockoutMatches = matches.filter(
@@ -58,9 +59,11 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
-                <ExportToImageButton targetId="tournament-bracket-canvas" filename="tournament_bracket" label={t("export") || "Export Bracket"} />
-            </div>
+            {!isPublic && (
+                <div className="flex justify-end">
+                    <ExportToImageButton targetId="tournament-bracket-canvas" filename="tournament_bracket" label={t("export") || "Export Bracket"} />
+                </div>
+            )}
             <div className="w-full overflow-auto pb-4 custom-scrollbar scroll-smooth px-1">
                 <div id="tournament-bracket-canvas" className="flex gap-8 min-w-max min-h-[500px] items-stretch pr-4">
                     {activeStages.map((stage, stageIndex) => {

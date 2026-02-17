@@ -80,11 +80,11 @@ export default function InvitesPage() {
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <div className="flex items-center gap-2">
                                         <CardTitle className="text-lg font-bold">
-                                            {invite.tournament_name || "Unknown Tournament"}
+                                            {invite.tournament_name || t("unknown_tournament")}
                                         </CardTitle>
                                     </div>
                                     <Badge variant="outline" className="capitalize">
-                                        {invite.role}
+                                        {t(`roles.${invite.role}` as any)}
                                     </Badge>
                                 </CardHeader>
                                 <CardContent className="flex-1">
@@ -100,7 +100,7 @@ export default function InvitesPage() {
                                                 <span>{tCommon("error")}</span>
                                             </div>
                                         ) : (
-                                            <span>{t("invite_pending_action") || "Click accept to join this tournament"}</span>
+                                            <span>{t("invite_pending_action")}</span>
                                         )}
                                     </div>
                                 </CardContent>
@@ -126,7 +126,7 @@ export default function InvitesPage() {
                                             }}
                                             disabled={isPending}
                                         >
-                                            {t("retry") || "Retry"}
+                                            {t("retry")}
                                         </Button>
                                     ) : (
                                         <Button

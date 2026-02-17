@@ -74,11 +74,11 @@ export function CreateTeamDialog({ tournaments, defaultTournamentId }: { tournam
                 <form action={formAction} className="grid gap-4 pt-4">
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="tournament_id" className="text-right">
-                            Tournament
+                            {tCommon("tournament")}
                         </Label>
                         <Select name="tournament_id" defaultValue={defaultTournamentId}>
                             <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="No Tournament (Optional)" />
+                                <SelectValue placeholder={tCommon("no_tournament_placeholder")} />
                             </SelectTrigger>
                             <SelectContent>
                                 {tournaments.map((t) => (
@@ -112,7 +112,7 @@ export function CreateTeamDialog({ tournaments, defaultTournamentId }: { tournam
                                 {previewUrl && (
                                     <img
                                         src={previewUrl}
-                                        alt="Preview"
+                                        alt={tCommon("preview")}
                                         className="h-10 w-10 object-contain rounded-full border bg-muted"
                                     />
                                 )}
@@ -142,7 +142,7 @@ export function CreateTeamDialog({ tournaments, defaultTournamentId }: { tournam
                     )}
 
                     <DialogFooter>
-                        <SubmitButton>{tCommon("create")}</SubmitButton>
+                        <SubmitButton>{tCommon("create_btn")}</SubmitButton>
                     </DialogFooter>
                 </form>
             </DialogContent>

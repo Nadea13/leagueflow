@@ -29,11 +29,11 @@ export function FixtureGenerator({ tournamentId, hasFixtures, className }: { tou
   }
 
   if (hasFixtures) {
-    return <Button disabled variant="secondary" className={cn("w-full", className)}>{t("generated")}</Button>
+    return <Button disabled variant="outline" className={cn("w-full bg-primary/10 text-primary border-primary/20", className)}>{t("generated")}</Button>
   }
 
   return (
-    <Button onClick={handleGenerate} disabled={isLoading} className={cn("w-full bg-indigo-600 hover:bg-indigo-700", className)}>
+    <Button onClick={handleGenerate} disabled={isLoading} className={cn("w-full", className)}>
       <Wand2 className="mr-2 h-4 w-4" />
       {isLoading ? t("generating") : t("generate_fixtures")}
     </Button>

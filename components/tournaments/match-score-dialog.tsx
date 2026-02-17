@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,8 @@ interface MatchScoreDialogProps {
 }
 
 export function MatchScoreDialog({ open, onOpenChange, match, tournamentId, goals: initialGoals = [] }: MatchScoreDialogProps) {
+    const t = useTranslations("Match");
+    const tCommon = useTranslations("Common");
     const [homeScore, setHomeScore] = useState(match.home_score?.toString() ?? "0");
     const [awayScore, setAwayScore] = useState(match.away_score?.toString() ?? "0");
     const [loading, setLoading] = useState(false);
@@ -40,7 +43,7 @@ export function MatchScoreDialog({ open, onOpenChange, match, tournamentId, goal
     };
 
     const handleWalkover = async (winnerTeamId: string) => {
-        if (!confirm("Are you sure? This will set the score to 3-0 for the winner and mark match as finished.")) return;
+        if (!confirm(t("walkover_confirm"))) return;
 
         setLoading(true);
         try {
@@ -84,7 +87,7 @@ export function MatchScoreDialog({ open, onOpenChange, match, tournamentId, goal
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Update Match Score</DialogTitle>
+                    <DialogTitle>{t("update_score")}</DialogTitle>
                     <DialogDescription>
                         {match.home_team?.name} vs {match.away_team?.name}
                     </DialogDescription>
@@ -116,24 +119,24 @@ export function MatchScoreDialog({ open, onOpenChange, match, tournamentId, goal
 
                     {/* Walkover / W.O. */}
                     <div className="border-t pt-4">
-                        <Label className="mb-2 block text-muted-foreground text-xs uppercase tracking-wider">Walkover (W.O.)</Label>
+                        <Label className="mb-2 block text-muted-foreground text-xs uppercase tracking-wider">{t("walkover")}</Label>
                         <div className="flex gap-2">
                             <Button variant="outline" size="sm" onClick={() => match.home_team_id && handleWalkover(match.home_team_id)} disabled={loading}>
-                                W.O. {match.home_team?.name} (3-0)
+                                {t("wo")} {match.home_team?.name} (3-0)
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => match.away_team_id && handleWalkover(match.away_team_id)} disabled={loading}>
-                                W.O. {match.away_team?.name} (0-3)
+                                {t("wo")} {match.away_team?.name} (0-3)
                             </Button>
                         </div>
                     </div>
 
                     {/* Goal Scorers */}
                     <div className="border-t pt-4">
-                        <Label className="mb-2 block text-muted-foreground text-xs uppercase tracking-wider">Add Goal Scorer</Label>
+                        <Label className="mb-2 block text-muted-foreground text-xs uppercase tracking-wider">{t("add_scorer")}</Label>
                         <div className="flex gap-2 mb-2">
                             <Select value={scorerTeamId} onValueChange={setScorerTeamId}>
                                 <SelectTrigger className="w-[140px]">
-                                    <SelectValue placeholder="Team" />
+                                    <SelectValue placeholder={t("team")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {match.home_team_id && <SelectItem value={match.home_team_id}>{match.home_team?.name}</SelectItem>}
@@ -141,7 +144,7 @@ export function MatchScoreDialog({ open, onOpenChange, match, tournamentId, goal
                                 </SelectContent>
                             </Select>
                             <Input
-                                placeholder="Player Name"
+                                placeholder={t("player_name_placeholder")}
                                 value={scorerName}
                                 onChange={(e) => setScorerName(e.target.value)}
                             />
@@ -166,10 +169,10 @@ export function MatchScoreDialog({ open, onOpenChange, match, tournamentId, goal
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)}>{tCommon("cancel")}</Button>
                     <Button onClick={handleSaveScore} disabled={loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Score
+                        {t("save_score")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

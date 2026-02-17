@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { formatDate } from "@/lib/date";
+import { useLocale, useTranslations } from "next-intl";
 import { CalendarIcon, MapPin, Clock, Trophy, Eraser } from "lucide-react";
-import { Match, Goal, Team } from "@/types/index";
+import { Match, Goal, Team, MatchEvent } from "@/types/index";
 import { updateMatch, deleteMatch } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,10 +16,11 @@ import { createClient } from "@/utils/supabase/client"; // Added Import
 
 // ...
 
-export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPublic = false, isEditMode = false, teams = [], isPro = false }: { match: Match; tournamentId: string; goals?: Goal[]; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; isPro?: boolean }) {
+export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPublic = false, isEditMode = false, teams = [], isPro = false, initialEvents = [] }: { match: Match; tournamentId: string; goals?: Goal[]; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; isPro?: boolean; initialEvents?: MatchEvent[] }) {
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
+    const locale = useLocale();
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -109,10 +111,8 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
     const isTie = isFinished && (match.home_score === match.away_score);
 
     // Format Date Helper
-    const formatDate = (dateStr?: string | null) => {
-        if (!dateStr) return null;
-        return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    };
+    // Use global formatDate helper
+    // const formatDate = ... (removed)
 
     // Format Time Helper (24H)
     const formatTime = (timeStr?: string | null) => {
@@ -172,7 +172,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
             )}
         >
             {/* 1. Status/Time/Badge Section */}
-            <div className="flex items-center justify-center w-full md:w-auto md:flex-col md:items-start md:justify-start md:gap-1 min-w-[90px] mb-2 md:mb-0">
+            <div className="flex flex-col items-center justify-center w-full md:w-auto md:items-start md:justify-start md:gap-1 min-w-[90px] mb-2 md:mb-0">
                 {status !== 'scheduled' && (
                     <Badge
                         variant="outline"
@@ -208,14 +208,14 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
 
                 {/* Date/Time Info (Editable if Admin & Not Finished) */}
                 {!isFinished && !isLive && (
-                    <div className="mt-2 w-full space-y-1">
+                    <div className="mt-1 md:mt-2 w-full md:space-y-1">
                         {/* If Public -> Show Text. If Admin -> Show Inputs */}
                         {isPublic || !isEditMode ? (
-                            <div className="flex flex-col text-xs text-muted-foreground gap-1">
+                            <div className="flex flex-row md:flex-col items-center justify-center md:items-start gap-3 md:gap-1 text-xs text-muted-foreground flex-wrap">
                                 {match.match_date && (
                                     <div className="flex items-center gap-1.5">
                                         <CalendarIcon className="w-3 h-3" />
-                                        <span>{formatDate(match.match_date)}</span>
+                                        <span>{formatDate(match.match_date, "d MMM", locale)}</span>
                                     </div>
                                 )}
                                 {match.match_time && (
@@ -252,14 +252,14 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
             </div>
 
             {/* 2. Teams & Score Section */}
-            <div className="flex flex-col md:flex-row items-center justify-between w-full gap-2 md:gap-4">
+            <div className="flex flex-row items-center justify-between w-full gap-2 md:gap-4">
 
-                {/* Home Team (Right Aligned on Desktop) */}
-                <div className="flex-1 flex items-center justify-center md:justify-end gap-2 md:gap-3 text-center md:text-right w-full">
+                {/* Home Team (Right Aligned) */}
+                <div className="flex-1 flex items-center justify-end gap-2 md:gap-3 text-right w-[40%]">
                     {match.winner_id === match.home_team_id}
 
                     <div className={cn(
-                        "font-semibold text-base md:text-lg flex items-center gap-2 justify-end",
+                        "font-semibold text-sm md:text-lg flex items-center gap-2 justify-end",
                         (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground"
                     )}>
                         {isEditMode ? (
@@ -268,7 +268,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                     value={match.home_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-8 w-[140px] text-xs">
+                                    <SelectTrigger className="h-8 w-[100px] md:w-[140px] text-xs">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -281,12 +281,12 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                             </div>
                         ) : (
                             <>
-                                {match.home_team?.name || tMatch("tbd")}
+                                <span className="line-clamp-1">{match.home_team?.name || tMatch("tbd")}</span>
                                 {match.home_team?.logo_url ? (
-                                    <img src={match.home_team.logo_url} className="w-8 h-8 object-contain" alt="" />
+                                    <img src={match.home_team.logo_url} className="w-6 h-6 md:w-8 md:h-8 object-contain" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                        <span className="text-xs font-bold text-muted-foreground">
+                                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                        <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
                                             {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
                                     </div>
@@ -297,31 +297,31 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                 </div>
 
                 {/* Score / VS Display */}
-                <div className="flex items-center justify-center min-w-[100px] shrink-0">
+                <div className="flex items-center justify-center w-[20%] min-w-[60px] md:min-w-[100px] shrink-0">
                     <div className={cn(
-                        "flex items-center gap-2 px-4 py-1.5 rounded-lg border",
+                        "flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1 md:py-1.5 rounded-lg border",
                         isLive ? "bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900/50" : "bg-muted/30 border-border/50"
                     )}>
                         {isLive || isFinished ? (
                             <>
-                                <span className={cn("text-xl font-mono font-bold w-6 text-center", isLive && "text-red-600")}>
+                                <span className={cn("text-lg md:text-xl font-mono font-bold w-4 md:w-6 text-center", isLive && "text-red-600")}>
                                     {match.home_score ?? 0}
                                 </span>
                                 <span className="text-muted-foreground/40 font-mono">:</span>
-                                <span className={cn("text-xl font-mono font-bold w-6 text-center", isLive && "text-red-600")}>
+                                <span className={cn("text-lg md:text-xl font-mono font-bold w-4 md:w-6 text-center", isLive && "text-red-600")}>
                                     {match.away_score ?? 0}
                                 </span>
                             </>
                         ) : (
-                            <span className="text-muted-foreground font-mono font-bold text-sm">VS</span>
+                            <span className="text-muted-foreground font-mono font-bold text-xs md:text-sm">VS</span>
                         )}
                     </div>
                 </div>
 
-                {/* Away Team (Left Aligned on Desktop) */}
-                <div className="flex-1 flex items-center justify-center md:justify-start gap-2 md:gap-3 text-center md:text-left w-full">
+                {/* Away Team (Left Aligned) */}
+                <div className="flex-1 flex items-center justify-start gap-2 md:gap-3 text-left w-[40%]">
                     <div className={cn(
-                        "font-semibold text-base md:text-lg flex items-center gap-2 justify-start",
+                        "font-semibold text-sm md:text-lg flex items-center gap-2 justify-start",
                         (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground"
                     )}>
                         {isEditMode ? (
@@ -330,7 +330,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                     value={match.away_team_id || tMatch("tbd")}
                                     onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-8 w-[140px] text-xs">
+                                    <SelectTrigger className="h-8 w-[100px] md:w-[140px] text-xs">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -345,15 +345,15 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                             <>
                                 {/* Logo First for Symmetry */}
                                 {match.away_team?.logo_url ? (
-                                    <img src={match.away_team.logo_url} className="w-8 h-8 object-contain" alt="" />
+                                    <img src={match.away_team.logo_url} className="w-6 h-6 md:w-8 md:h-8 object-contain" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                        <span className="text-xs font-bold text-muted-foreground">
+                                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                        <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
                                             {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
                                     </div>
                                 )}
-                                {match.away_team?.name || tMatch("tbd")}
+                                <span className="line-clamp-1">{match.away_team?.name || tMatch("tbd")}</span>
                             </>
                         )}
                     </div>
@@ -423,6 +423,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                 isPro={isPro}
                 readOnly={isPublic}
                 trigger={CardContent}
+                initialEvents={initialEvents}
             />
         );
     }

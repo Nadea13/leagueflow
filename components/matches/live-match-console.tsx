@@ -7,14 +7,15 @@ import { getPlayers } from "@/app/[locale]/dashboard/tournaments/[id]/player-act
 import { updateMatch } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 import { createClient } from "@/utils/supabase/client";
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Timer, Plus } from "lucide-react";
 
 // Types
-import { Match, Goal, Player, EventType } from "@/types";
+// Types
+import { Match, Goal, Player, EventType, MatchEvent } from "@/types";
 
 // Components & Hooks
 import { MatchTimer } from "./console/match-timer";
@@ -34,10 +35,12 @@ interface LiveMatchConsoleProps {
     trigger?: ReactNode;
     isPro?: boolean;
     readOnly?: boolean;
+    initialEvents?: MatchEvent[];
 }
 
-export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, isPro = false, readOnly = false }: LiveMatchConsoleProps) {
+export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, isPro = false, readOnly = false, initialEvents }: LiveMatchConsoleProps) {
     const t = useTranslations("Console");
+    const tMatch = useTranslations("Match");
     const router = useRouter();
     const [open, setOpen] = useState(false);
 
@@ -48,7 +51,7 @@ export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, i
 
     // Hooks
     const { time, setTime, isRunning, setIsRunning } = useMatchTimer(match, tournamentId);
-    const { events, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId);
+    const { events, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents);
 
     // Dialog States
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
@@ -316,9 +319,14 @@ export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, i
                 {/* Header */}
                 <div className="p-4 border-b flex flex-row items-center justify-between bg-muted/20">
                     <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg">{t("match_console")}</span>
-                        <Badge variant={match.status === 'live' ? 'destructive' : 'secondary'} className={match.status === 'live' ? 'animate-pulse' : ''}>
-                            {match.status.toUpperCase()}
+                        <DialogTitle className="font-bold text-lg">{t("match_console")}</DialogTitle>
+                        <div className="sr-only">
+                            <DialogDescription>
+                                {t("match_console")}
+                            </DialogDescription>
+                        </div>
+                        <Badge variant={match.status === 'live' ? 'destructive' : 'secondary'} className="animate-pulse">
+                            {match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status)}
                         </Badge>
                     </div>
                     <MatchTimer

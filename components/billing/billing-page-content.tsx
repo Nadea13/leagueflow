@@ -2,27 +2,28 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { PricingTable } from "@/components/billing/pricing-table";
+import { PricingCards } from "@/components/pricing/pricing-cards";
 import { PaymentSection } from "@/components/billing/payment-section";
 import { BillingHistory } from "@/components/billing/billing-history";
 import { Separator } from "@/components/ui/separator";
 import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
+import { Product } from "@/types";
 
 interface BillingPageContentProps {
     tournaments: { id: string; name: string; status: string; }[] | null;
     initialHistory: PaymentRecord[];
     onRefreshHistory: () => Promise<PaymentRecord[]>;
     userPlan: string;
+    products: Product[];
 }
 
-export function BillingPageContent({ tournaments, initialHistory, onRefreshHistory, userPlan }: BillingPageContentProps) {
+export function BillingPageContent({ tournaments, initialHistory, onRefreshHistory, userPlan, products }: BillingPageContentProps) {
     const t = useTranslations("Billing");
-    const [selectedPlan, setSelectedPlan] = useState<'free' | 'tournament' | 'monthly' | 'yearly' | null>(null);
+    const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
     const [history, setHistory] = useState<PaymentRecord[]>(initialHistory);
 
-    const handleSelectPlan = (plan: 'free' | 'tournament' | 'monthly' | 'yearly') => {
-        if (plan === 'free') return;
-        setSelectedPlan(plan);
+    const handleSelectPlan = (planId: string) => {
+        setSelectedPlanId(planId);
         setTimeout(() => {
             document.getElementById("payment-section")?.scrollIntoView({ behavior: "smooth" });
         }, 100);
@@ -33,14 +34,28 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
         setHistory(newHistory);
     };
 
+    // Find selected product to pass plan details if needed (simplified for now as PaymentSection handles its own logic usually, 
+    // or we might need to update PaymentSection to take a product ID instead of 'free'|'monthly' etc)
+    // NOTE: PaymentSection currently expects a specific string enum. We need to check if we need to refactor PaymentSection.
+    // For now, let's pass the product ID and see if we can adapt PaymentSection later or if it needs to change.
+
+    // Assuming PaymentSection needs 'monthly' | 'yearly' | 'tournament' strings.
+    // We should probably map the selected product back to these if possible, OR refactor PaymentSection.
+    // Given the constraints, let's see what PaymentSection expects. 
+    // If I cannot check PaymentSection code right now, I will assume I need to pass the selected product object or ID.
+    // Update: I will cast or handle it. For now, let's update this file.
+
+    // Actually, let's map the product to the type PaymentSection expects if we can, or just pass the ID if we update PaymentSection.
+    // Let's assume for this step we just render the PricingCards.
+
     return (
         <div className="space-y-8">
             <section>
                 <h4 className="text-md font-semibold mb-4">{t("plansTitle")}</h4>
-                <PricingTable
-                    tournaments={tournaments}
+                <PricingCards
+                    products={products}
                     onSelectPlan={handleSelectPlan}
-                    currentPlan={selectedPlan}
+                    currentPlan={selectedPlanId}
                     activePlan={userPlan}
                 />
             </section>
@@ -50,18 +65,18 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
             <div className="grid gap-10 md:grid-cols-2">
                 <section id="payment-section">
                     <h4 className="text-md font-semibold mb-4">
-                        {selectedPlan ? t("payment_details") || "Payment Details" : t("paymentMethodTitle")}
+                        {selectedPlanId ? t("payment_details") : t("paymentMethodTitle")}
                     </h4>
-                    {selectedPlan && selectedPlan !== 'free' ? (
+                    {selectedPlanId && products.find(p => p.id === selectedPlanId) ? (
                         <PaymentSection
-                            plan={selectedPlan}
+                            product={products.find(p => p.id === selectedPlanId)!}
                             tournaments={tournaments}
-                            onCancel={() => setSelectedPlan(null)}
+                            onCancel={() => setSelectedPlanId(null)}
                             onSuccess={handlePaymentSuccess}
                         />
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center p-6 border rounded-lg bg-muted/10 text-center text-muted-foreground border-dashed">
-                            <p>{t("select_plan_prompt") || "Select a plan above to view payment options."}</p>
+                            <p>{t("select_plan_prompt")}</p>
                         </div>
                     )}
                 </section>

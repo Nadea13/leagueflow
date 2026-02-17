@@ -9,9 +9,10 @@ import { useTranslations } from "next-intl";
 interface GroupStandingsProps {
     teams: Team[];
     matches: Match[];
+    isPublic?: boolean;
 }
 
-export function GroupStandings({ teams, matches }: GroupStandingsProps) {
+export function GroupStandings({ teams, matches, isPublic = false }: GroupStandingsProps) {
     // 1. Group teams by group_name
     const teamsByGroup = teams.reduce((acc, team) => {
         const group = team.group_name || "Unassigned";
@@ -23,13 +24,15 @@ export function GroupStandings({ teams, matches }: GroupStandingsProps) {
     // Sort group names (A, B, C...)
     const sortedGroups = Object.keys(teamsByGroup).sort();
 
-    const t = useTranslations("GroupStandings");
+    const t = useTranslations("Tournament");
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
-                <ExportToImageButton targetId="group-standings-canvas" filename="group_standings" label={t("export") || "Export Groups"} />
-            </div>
+            {!isPublic && (
+                <div className="flex justify-end">
+                    <ExportToImageButton targetId="group-standings-canvas" filename="group_standings" label={t("export") || t("export_groups")} />
+                </div>
+            )}
             <div id="group-standings-canvas" className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-1">
                 {sortedGroups.map((group) => {
                     const groupTeams = teamsByGroup[group];
@@ -44,7 +47,7 @@ export function GroupStandings({ teams, matches }: GroupStandingsProps) {
 
                     return (
                         <div key={group} className="space-y-3">
-                            <h3 className="font-bold text-lg px-1">Group {group}</h3>
+                            <h3 className="font-bold text-lg px-1">{t("group_header", { group })}</h3>
                             <StandingsTable standings={groupStandings} />
                         </div>
                     );

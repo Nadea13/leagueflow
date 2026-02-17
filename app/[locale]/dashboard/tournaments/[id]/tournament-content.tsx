@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Copy, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/utils/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AddTeamForm } from "@/components/tournaments/add-team-form";
 import { FixtureGenerator } from "@/components/tournaments/fixture-generator";
 import { StandingsTable } from "@/components/tournaments/standings-table";
@@ -25,6 +28,7 @@ import { FixturesManager } from "@/components/tournaments/fixtures-manager";
 import { NextRoundButton } from "@/components/tournaments/next-round-button";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { TournamentStats } from "@/components/tournaments/tournament-stats";
 
 interface TournamentContentProps {
     tournament: any;
@@ -49,7 +53,9 @@ export function TournamentContent({
 }: TournamentContentProps) {
     const t = useTranslations("Tournament");
     const tCommon = useTranslations("Common");
+    const tSettings = useTranslations("Settings");
     const router = useRouter();
+    const { toast } = useToast();
     const supabase = createClient();
 
     // State
@@ -128,14 +134,13 @@ export function TournamentContent({
     return (
         <div className="flex flex-col gap-6">
             {/* Header */}
-            {/* Header */}
             <div className="flex items-center gap-4">
                 <Button variant="outline" size="icon" className="shrink-0" asChild>
                     <Link href="/dashboard">
                         <ChevronLeft className="h-4 w-4" />
                     </Link>
                 </Button>
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4 flex-1">
                     <h1 className="text-3xl font-bold tracking-tight">{tournament?.name}</h1>
                     <Badge variant="outline" className="capitalize">{tournament?.format}</Badge>
                     <Badge className={cn(
@@ -144,11 +149,14 @@ export function TournamentContent({
                         tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600",
                         (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black"
                     )}>
-                        {tournament?.status || 'draft'}
+                        {tSettings(tournament?.status || 'draft')}
                     </Badge>
-                    <ShareButton tournamentId={id} />
                 </div>
+                <ShareButton tournamentId={id} />
             </div>
+
+            {/* Stats Overview */}
+            <TournamentStats teams={teams} matches={matches} goals={goals} />
 
             {/* Tabs */}
             <Tabs defaultValue="overview" className="w-full">
@@ -162,7 +170,7 @@ export function TournamentContent({
                 </TabsList>
 
                 {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-8">
+                <TabsContent value="overview" className="space-y-6">
                     {/* 1. League Table (For 'league' AND 'league_ha') */}
                     {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
                         <Card>
@@ -217,14 +225,14 @@ export function TournamentContent({
                             <CardHeader>
                                 <CardTitle className="flex justify-between items-center">
                                     {t("top_scorers")}
-                                    <Badge variant="outline">Pro Feature</Badge>
+                                    <Badge variant="outline">{t("upsell_pro_feature")}</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-                                    <p>Upgrade to Pro to view Top Scorers</p>
+                                <div className="text-center py-8 text-muted-foreground rounded-xl border bg-card text-card-foreground shadow-sm">
+                                    <p>{t("upsell_pro_required")}</p>
                                     <Button variant="link" asChild className="mt-2">
-                                        <Link href="/dashboard/billing">View Plans</Link>
+                                        <Link href="/dashboard/billing">{t("upsell_view_plans")}</Link>
                                     </Button>
                                 </div>
                             </CardContent>
@@ -233,70 +241,104 @@ export function TournamentContent({
                 </TabsContent>
 
                 {/* Teams Tab */}
-                <TabsContent value="teams" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t("teams")}</CardTitle>
-                            <CardDescription>{t("manage_teams")}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex flex-col gap-4 p-4 border rounded-lg bg-muted/50">
-                                <h3 className="font-semibold text-sm">{t("add_team")}</h3>
-                                <AddTeamForm
-                                    tournamentId={id}
-                                    isLimitReached={
-                                        // If isPro is true (which now includes shared tournaments), no limit.
-                                        // Otherwise check the free plan limit.
-                                        !isPro && (teams?.length || 0) >= 8
-                                    }
-                                />
-                            </div>
+                <TabsContent value="teams" className="space-y-6">
+                    <div className="flex flex-col gap-4 p-6 border rounded-xl bg-background shadow-sm">
+                        <h3 className="font-semibold leading-none tracking-tight">{t("add_team")}</h3>
+                        <AddTeamForm
+                            tournamentId={id}
+                            isLimitReached={
+                                // If isPro is true (which now includes shared tournaments), no limit.
+                                // Otherwise check the free plan limit.
+                                !isPro && (teams?.length || 0) >= 8
+                            }
+                        />
 
-                            {/* Group Manager (Only for Group formats) */}
-                            {tournament?.format?.includes("group") && (
-                                <GroupManager teams={teams} tournamentId={id} />
-                            )}
+                        {/* Public Registration Link - Only for Pro */}
+                        {isPro && (
+                            <>
+                                <div className="border-t my-2 pt-2" />
+                                <div className="flex flex-col gap-2">
+                                    <Label>{t("public_link")}</Label>
+                                    <div className="flex items-center gap-2">
+                                        <div className="relative flex-1">
+                                            <Input
+                                                readOnly
+                                                value={typeof window !== 'undefined' ? `${window.location.origin}/register/${id}` : `/register/${id}`}
+                                                className="bg-muted/50 font-mono text-sm"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => {
+                                                const url = `${window.location.origin}/register/${id}`;
+                                                navigator.clipboard.writeText(url);
+                                                toast({ title: tCommon("copied"), description: tCommon("copied_desc") });
+                                            }}
+                                            title={tCommon("copy_link")}
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            asChild
+                                            title={tCommon("open_link")}
+                                        >
+                                            <a href={`/register/${id}`} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
 
-                            <div className="space-y-4">
-                                <h3 className="font-semibold text-sm">{t("participating_teams")} ({teams?.length || 0})</h3>
-                                <TeamList teams={teams} tournamentId={id} isPro={isPro} />
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {/* Group Manager (Only for Group formats) */}
+                    {tournament?.format?.includes("group") && (
+                        <GroupManager teams={teams} tournamentId={id} />
+                    )}
+
+                    <div className="space-y-4 border rounded-xl p-6 bg-background shadow-sm">
+                        <h3 className="font-semibold leading-none tracking-tight">{t("participating_teams")} ({teams?.length || 0})</h3>
+                        <TeamList teams={teams} tournamentId={id} isPro={isPro} />
+                    </div>
                 </TabsContent>
 
                 {/* Fixtures Tab */}
-                <TabsContent value="fixtures" className="space-y-4">
-                    <Card>
-                        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 space-y-0">
+                <TabsContent value="fixtures" className="space-y-6">
+                    <div className="flex flex-col gap-6 p-6 border rounded-xl bg-background shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-y-1">
-                                <CardTitle>{t("match_schedule")}</CardTitle>
-                                <CardDescription>{t("manage_fixtures")}</CardDescription>
+                                <h3 className="font-semibold leading-none tracking-tight">{t("match_schedule")}</h3>
+                                <p className="text-sm text-muted-foreground">{t("manage_fixtures")}</p>
                             </div>
                             <div className="w-full md:w-auto">
                                 <FixtureGenerator tournamentId={id} hasFixtures={hasFixtures} className="w-full md:w-auto" />
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            {/* Fixtures List */}
-                            <FixturesManager
-                                teams={teams}
-                                matches={matches}
-                                tournamentId={id}
-                                goals={goals}
-                                isPro={isPro}
-                            />
+                        </div>
 
-                            {/* Hide Next Round Button for League formats */}
-                            {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                <NextRoundButton
-                                    tournamentId={id}
-                                    matches={matches}
-                                    format={tournament?.format || 'league'}
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
+                        {/* Fixtures List */}
+                        <FixturesManager
+                            teams={teams}
+                            matches={matches}
+                            tournamentId={id}
+                            goals={goals}
+                            isPro={isPro}
+                        />
+
+                        {/* Hide Next Round Button for League formats */}
+                        {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
+                            <NextRoundButton
+                                tournamentId={id}
+                                matches={matches}
+                                format={tournament?.format || 'league'}
+                            />
+                        )}
+                    </div>
                 </TabsContent>
 
                 {/* Settings Tab */}

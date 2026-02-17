@@ -5,15 +5,8 @@ import { Team } from "@/types/index";
 import { updateTeam, deleteTeam } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pencil, Loader2, Users, Camera, Upload, ImageIcon, Trash2 } from "lucide-react";
+import { Pencil, Loader2, Users, Upload, ImageIcon, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { RosterDialog } from "./roster-dialog";
 
@@ -78,7 +71,7 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
     };
 
     const handleDelete = async () => {
-        if (!confirm(tCommon("delete_confirm") || "Are you sure you want to delete this team?")) return;
+        if (!confirm(t("delete_confirm"))) return;
         setIsLoading(true);
         const result = await deleteTeam(team.id, tournamentId);
         setIsLoading(false);
@@ -90,7 +83,7 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
     };
 
     return (
-        <div className="flex items-center justify-between p-3 border rounded-md bg-background shadow-sm">
+        <div className="flex items-center justify-between p-3 border rounded-md bg-background">
             <div className="flex items-center">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 overflow-hidden">
                     {team.logo_url ? (
@@ -104,7 +97,7 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
                 <div className="flex flex-col">
                     <span className="font-medium">{team.name}</span>
                     {team.group_name && (
-                        <span className="text-xs text-muted-foreground">Group {team.group_name}</span>
+                        <span className="text-xs text-muted-foreground">{t("group")} {team.group_name}</span>
                     )}
                 </div>
             </div>

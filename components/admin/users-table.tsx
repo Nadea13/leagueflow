@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { useTranslations } from "next-intl";
+import { formatDate } from "@/lib/date";
+import { useLocale } from "next-intl";
 import { Search, Shield, User, MoreHorizontal, Check } from "lucide-react";
 import { updateUserRole } from "@/app/[locale]/admin/actions";
 import { toast } from "sonner";
@@ -32,6 +33,9 @@ interface AdminUsersTableProps {
 }
 
 export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
+    const t = useTranslations("Admin");
+    const tCommon = useTranslations("Common");
+    const locale = useLocale();
     const [searchTerm, setSearchTerm] = useState("");
     const [users, setUsers] = useState(initialUsers);
 
@@ -55,7 +59,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
             <div className="relative w-full md:w-[300px]">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                    placeholder="Search users..."
+                    placeholder={t("search_users")}
                     className="pl-8"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -66,17 +70,17 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>User</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Joined Date</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead>{t("user")}</TableHead>
+                            <TableHead>{t("role")}</TableHead>
+                            <TableHead>{t("created_at")}</TableHead>
+                            <TableHead className="text-right">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredUsers.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                    No users found.
+                                    {t("no_results")}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -85,7 +89,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <span className="font-medium">{user.email}</span>
-                                            <span className="text-xs text-muted-foreground">{user.full_name || 'No name'}</span>
+                                            <span className="text-xs text-muted-foreground">{user.full_name || t("no_name")}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -95,7 +99,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
                                         {user.created_at
-                                            ? format(new Date(user.created_at), "d MMM yyyy", { locale: th })
+                                            ? formatDate(user.created_at, "d MMM yyyy", locale)
                                             : "-"}
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -107,20 +111,20 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.id)}>
-                                                    Copy User ID
+                                                    {t("copy_user_id")}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                                                <DropdownMenuLabel>{t("change_role")}</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'user')}>
                                                     <User className="mr-2 h-4 w-4" />
-                                                    Set as User
+                                                    {t("set_as_user")}
                                                     {user.role === 'user' && <Check className="ml-auto h-4 w-4" />}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'admin')}>
                                                     <Shield className="mr-2 h-4 w-4" />
-                                                    Set as Admin
+                                                    {t("set_as_admin")}
                                                     {user.role === 'admin' && <Check className="ml-auto h-4 w-4" />}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -133,7 +137,10 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                 </Table>
             </div>
             <div className="text-xs text-muted-foreground text-center">
-                Total {filteredUsers.length} users
+                {t.rich("showing_users", {
+                    count: filteredUsers.length,
+                    total: filteredUsers.length
+                })}
             </div>
         </div>
     );

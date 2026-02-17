@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/routing";
@@ -7,11 +7,17 @@ import { ModeToggle } from "@/components/mode-toggle";
 import { DeleteAccountButton } from "./delete-account-button";
 import { ChevronRight, FileText, Shield, CreditCard } from "lucide-react";
 
-export default function SettingsPage() {
+import { createClient } from "@/utils/supabase/server";
+import { ProfileForm } from "@/components/dashboard/profile-form";
+
+export default async function SettingsPage() {
     // Use DashboardSettings to avoid conflict
-    const t = useTranslations("DashboardSettings");
-    const tCommon = useTranslations("Common");
-    const tLegal = useTranslations("Legal");
+    const t = await getTranslations("DashboardSettings");
+    const tCommon = await getTranslations("Common");
+    const tLegal = await getTranslations("Legal");
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     return (
         <div className="flex flex-col gap-6">
@@ -20,12 +26,15 @@ export default function SettingsPage() {
                 <p className="text-muted-foreground">{t("subtitle")}</p>
             </div>
 
+            {/* Profile Settings */}
+            <ProfileForm user={user} />
+
             {/* Preferences */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t("preferences")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
+            <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+                <div>
+                    <h3 className="font-semibold leading-none tracking-tight mb-2">{t("preferences")}</h3>
+                </div>
+                <div className="space-y-6">
                     <div className="flex items-center justify-between">
                         <Label>{tCommon("language")}</Label>
                         <LanguageSelect />
@@ -34,16 +43,16 @@ export default function SettingsPage() {
                         <Label>{tCommon("theme")}</Label>
                         <ModeToggle />
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Legal Links */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t("legal")}</CardTitle>
-                    <CardDescription>{t("legal_desc")}</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-1">
+            <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+                <div>
+                    <h3 className="font-semibold leading-none tracking-tight mb-2">{t("legal")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("legal_desc")}</p>
+                </div>
+                <div className="grid gap-1">
                     <Link href="/privacy-policy" className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors">
                         <div className="flex items-center gap-3">
                             <Shield className="h-5 w-5 text-muted-foreground" />
@@ -65,8 +74,8 @@ export default function SettingsPage() {
                         </div>
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </Link>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Danger Zone */}
             <Card className="border-destructive/20 bg-destructive/5">
@@ -75,7 +84,13 @@ export default function SettingsPage() {
                     <CardDescription className="text-destructive/80">{t("delete_account_desc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DeleteAccountButton />
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="font-medium text-destructive">{t("delete_account")}</h4>
+                            <p className="text-sm text-destructive/80">{t("delete_account_desc")}</p>
+                        </div>
+                        <DeleteAccountButton />
+                    </div>
                 </CardContent>
             </Card>
         </div>

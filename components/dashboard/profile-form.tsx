@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateProfile, signOut } from "@/app/[locale]/dashboard/profile/actions";
+import { updateProfile } from "@/app/[locale]/dashboard/settings/actions";
+import { signOut } from "@/app/[locale]/dashboard/actions";
 import { Loader2, LogOut } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -56,39 +57,12 @@ export function ProfileForm({ user }: { user: any }) {
                                 placeholder={t("enter_full_name")}
                             />
                         </div>
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {t("save_changes")}
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t("preferences")}</CardTitle>
-                    <CardDescription>{t("preferences_desc")}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label>{t("language")}</Label>
-                        <Input value="English" disabled />
-                        <p className="text-xs text-muted-foreground">{t("more_lang_soon")}</p>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="border-destructive/20">
-                <CardHeader>
-                    <CardTitle className="text-destructive">{t("danger_zone")}</CardTitle>
-                    <CardDescription>{t("danger_zone_desc")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form action={signOut}>
-                        <Button variant="destructive" className="w-full sm:w-auto">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            {t("sign_out")}
-                        </Button>
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {t("save_changes")}
+                            </Button>
+                        </div>
                     </form>
                 </CardContent>
             </Card>

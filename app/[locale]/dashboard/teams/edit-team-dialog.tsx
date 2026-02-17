@@ -91,14 +91,14 @@ export function EditTeamDialog({ team, tournaments }: { team: Team, tournaments:
 
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="tournament_id" className="text-right">
-                                    Tournament
+                                    {tCommon("tournament")}
                                 </Label>
                                 <Select name="tournament_id" defaultValue={team.tournament_id || undefined}>
                                     <SelectTrigger className="col-span-3">
-                                        <SelectValue placeholder="No Tournament (Optional)" />
+                                        <SelectValue placeholder={tCommon("no_tournament_placeholder")} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="unassigned">No Tournament</SelectItem>
+                                        <SelectItem value="unassigned">{tCommon("no_tournament")}</SelectItem>
                                         {tournaments.map((t) => (
                                             <SelectItem key={t.id} value={t.id}>
                                                 {t.name}
@@ -130,7 +130,7 @@ export function EditTeamDialog({ team, tournaments }: { team: Team, tournaments:
                                         {previewUrl && (
                                             <img
                                                 src={previewUrl}
-                                                alt="Preview"
+                                                alt={tCommon("preview")}
                                                 className="h-10 w-10 object-contain rounded-full border bg-muted"
                                             />
                                         )}

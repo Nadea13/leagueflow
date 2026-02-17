@@ -13,21 +13,25 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 
+import { useTranslations } from "next-intl";
+
 interface GroupManagerProps {
     teams: Team[];
     tournamentId: string;
 }
 
 export function GroupManager({ teams, tournamentId }: GroupManagerProps) {
+    const t = useTranslations("Group");
+
     if (!teams || teams.length === 0) return null;
 
     return (
-        <div className="space-y-4 border rounded-lg p-4 bg-muted/30 mt-6">
-            <h3 className="font-semibold text-lg">Group Assignment</h3>
+        <div className="space-y-4 border rounded-xl p-6 mt-6 bg-background shadow-sm">
+            <h3 className="font-semibold leading-none tracking-tight">{t("group_assignment")}</h3>
             <p className="text-sm text-muted-foreground">
-                Assign teams to groups before generating fixtures.
+                {t("group_assignment_desc")}
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {teams.map((team) => (
                     <GroupItem key={team.id} team={team} tournamentId={tournamentId} />
                 ))}
@@ -37,6 +41,8 @@ export function GroupManager({ teams, tournamentId }: GroupManagerProps) {
 }
 
 function GroupItem({ team, tournamentId }: { team: Team; tournamentId: string }) {
+    const t = useTranslations("Group");
+    const tCommon = useTranslations("Common");
     const [loading, setLoading] = useState(false);
 
     const handleGroupChange = async (value: string) => {
@@ -46,7 +52,7 @@ function GroupItem({ team, tournamentId }: { team: Team; tournamentId: string })
             const result = await assignTeamGroup(team.id, groupName, tournamentId);
             if (!result.success) {
                 console.error(result.error);
-                alert("Failed to update group: " + result.error);
+                alert(`${tCommon("error")}: ${result.error}`);
             }
         } catch (e) {
             console.error(e);
@@ -68,13 +74,13 @@ function GroupItem({ team, tournamentId }: { team: Team; tournamentId: string })
                     disabled={loading}
                 >
                     <SelectTrigger className="w-[100px] h-8 text-xs">
-                        <SelectValue placeholder="Group" />
+                        <SelectValue placeholder={t("group")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="none">{tCommon("none") || "None"}</SelectItem>
                         {["A", "B", "C", "D", "E", "F", "G", "H"].map((g) => (
                             <SelectItem key={g} value={g}>
-                                Group {g}
+                                {t("group")} {g}
                             </SelectItem>
                         ))}
                     </SelectContent>

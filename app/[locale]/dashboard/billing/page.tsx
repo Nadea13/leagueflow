@@ -3,6 +3,8 @@ import { createClient } from "@/utils/supabase/server";
 import { BillingPageContent } from "@/components/billing/billing-page-content";
 import { getPaymentHistory } from "./actions";
 
+import { getProducts } from "@/actions/products";
+
 export default async function BillingPage() {
     const t = await getTranslations("Billing");
     const supabase = await createClient();
@@ -18,6 +20,9 @@ export default async function BillingPage() {
         .select("id, name, status")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+    // Fetch products
+    const { data: products } = await getProducts();
 
     // Fetch payment history
     const history = await getPaymentHistory();
@@ -56,6 +61,7 @@ export default async function BillingPage() {
                 initialHistory={history}
                 onRefreshHistory={getPaymentHistory}
                 userPlan={userPlan}
+                products={products || []}
             />
         </div>
     );

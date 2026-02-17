@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X, Loader2, RefreshCw, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
 import { createPromptPayCharge, checkChargeStatus } from "@/app/[locale]/actions/payment";
 import { CollaboratorsCard } from "@/components/tournaments/collaborators-card";
@@ -180,10 +181,39 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
     const handleCheckStatus = () => checkStatus(false);
 
+    // Use useEffect to handle server action state changes and show toasts
+    useEffect(() => {
+        if (state.success) {
+            toast({
+                title: tCommon("success"),
+                description: t("update_success_desc") || "Tournament updated successfully",
+            });
+        } else if (state.error) {
+            toast({
+                title: tCommon("error"),
+                description: state.error,
+                variant: "destructive",
+            });
+        }
+    }, [state, tCommon, t, toast]);
+
     const handleReset = () => {
         if (confirm(t("reset_desc") + "?")) {
             startTransition(async () => {
-                await resetFixtures(tournament.id);
+                const res = await resetFixtures(tournament.id);
+                if (res.success) {
+                    toast({
+                        title: tCommon("success"),
+                        description: t("reset_success_desc") || "Fixtures reset successfully",
+                    });
+                    // Refresh explicitly if needed, but router refresh via action usually handles it
+                } else {
+                    toast({
+                        title: tCommon("error"),
+                        description: res.error,
+                        variant: "destructive",
+                    });
+                }
             });
         }
     };
@@ -191,7 +221,19 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
     const handleDelete = () => {
         if (confirm(t("delete_desc") + "?")) {
             startTransition(async () => {
-                await deleteTournament(tournament.id);
+                const res = await deleteTournament(tournament.id);
+                if (res.success) {
+                    toast({
+                        title: tCommon("success"),
+                        description: t("delete_success_desc") || "Tournament deleted successfully",
+                    });
+                } else {
+                    toast({
+                        title: tCommon("error"),
+                        description: res.error,
+                        variant: "destructive",
+                    });
+                }
             });
         }
     };
@@ -201,21 +243,23 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
             {/* Collaborators Card */}
             <CollaboratorsCard tournamentId={tournamentId} />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t("general_info")}</CardTitle>
-                    <CardDescription>{t("update_details")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form action={formAction} className="space-y-4">
-                        <div className="grid w-full max-w-sm gap-1.5">
+            {/* General Info */}
+            <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+                <div>
+                    <h3 className="font-semibold leading-none tracking-tight mb-2">{t("general_info")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("update_details")}</p>
+                </div>
+
+                <form action={formAction} className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <div className="space-y-2">
                             <Label htmlFor="name">{tDialog("name")}</Label>
                             <Input type="text" id="name" name="name" defaultValue={tournament.name} placeholder={tDialog("name")} />
                         </div>
-                        <div className="grid w-full max-w-sm gap-1.5">
+                        <div className="space-y-2">
                             <Label htmlFor="status">{t("status")}</Label>
                             <Select name="status" defaultValue={tournament.status || "draft"}>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder={t("select_status")} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -225,10 +269,10 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid w-full max-w-sm gap-1.5">
+                        <div className="space-y-2">
                             <Label htmlFor="format">{t("format")}</Label>
                             <Select name="format" defaultValue={tournament.format || "league"}>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder={t("select_format")} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -241,170 +285,256 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                                 </SelectContent>
                             </Select>
                         </div>
-                        {state.error && <p className="text-sm text-red-500">{state.error}</p>}
-                        <div className="flex justify-between items-center">
+                    </div>
+                    {state.error && <p className="text-sm text-red-500">{state.error}</p>}
+                    <div className="flex justify-end">
+                        <Button type="submit">{t("save_changes")}</Button>
+                    </div>
+                </form>
+            </div>
+
+            {/* Registration Settings Card - Only for Pro */}
+            {isPro && (
+                <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+                    <div>
+                        <h3 className="font-semibold leading-none tracking-tight mb-2">{t("registration_settings")}</h3>
+                        <p className="text-sm text-muted-foreground">{t("registration_settings_desc")}</p>
+                    </div>
+                    <form action={formAction} className="space-y-4">
+                        {/* Hidden fields for other required data to keep them as is (since untouced fields might be null in formData if not present?) 
+                            Actually, the action reads all fields. We need to preserve existing values if we use the same action.
+                            BUT, HTML forms only send what is inside them. 
+                            The `updateTournament` action expects `name`, `status`, `format` to be present.
+                            We should probably duplicate the input fields as hidden or use a separate action?
+                            Using keys to separate logic is cleaner, but modifying the existing action to support partial updates is better.
+                            However, for speed, I will include hidden inputs for the required fields OR 
+                            better, I will merge this form into the "General Info" form? 
+                            No, a separate card is better UI. I'll make the inputs hidden for the required base fields.
+                        */}
+                        <input type="hidden" name="name" value={tournament.name} />
+                        <input type="hidden" name="status" value={tournament.status || "draft"} />
+                        <input type="hidden" name="format" value={tournament.format || "league"} />
+
+                        <div className="flex items-center space-x-2">
+                            <div className="grid gap-1.5 leading-none">
+                                <Label htmlFor="is_registration_open">{t("allow_registration")}</Label>
+                                <p className="text-sm text-muted-foreground">
+                                    {t("allow_registration_desc")}
+                                </p>
+                            </div>
+                            <Switch
+                                id="is_registration_open"
+                                name="is_registration_open"
+                                value="true"
+                                defaultChecked={tournament.is_registration_open}
+                                className="ml-auto"
+                            />
+                        </div>
+
+                        <Separator />
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="registration_fee">{t("registration_fee")}</Label>
+                                <Input
+                                    type="number"
+                                    id="registration_fee"
+                                    name="registration_fee"
+                                    defaultValue={tournament.registration_fee}
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="bank_account_number">{t("promptpay_id")}</Label>
+                                <Input
+                                    type="text"
+                                    id="bank_account_number"
+                                    name="bank_account_number"
+                                    defaultValue={tournament.bank_account_number}
+                                    placeholder="08xxxxxxxx or ID Card"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="bank_name">{t("bank_name")}</Label>
+                                <Select name="bank_name" defaultValue={tournament.bank_name || "PromptPay"}>
+                                    <SelectTrigger id="bank_name" className="w-full">
+                                        <SelectValue placeholder={t("select_bank")} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="PromptPay">PromptPay</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="bank_account_name">{t("account_name")}</Label>
+                                <Input
+                                    type="text"
+                                    id="bank_account_name"
+                                    name="bank_account_name"
+                                    defaultValue={tournament.bank_account_name}
+                                    placeholder={t("account_name")}
+                                />
+                            </div>
+                        </div>
+
+
+                        <div className="flex justify-end">
                             <Button type="submit">{t("save_changes")}</Button>
-                            {!isPro && (
-                                <Button variant="outline" type="button" asChild>
-                                    <a href="/dashboard/billing">Manage Billing</a>
-                                </Button>
-                            )}
                         </div>
                     </form>
-                </CardContent>
-
-            </Card>
-
+                </div>
+            )}
             {/* Billing & Subscription Card */}
-            <Card>
-                <CardHeader>
+            <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+                <div>
                     <div className="flex items-center gap-2">
-                        <CardTitle>{t("billing_title")}</CardTitle>
+                        <h3 className="font-semibold leading-none tracking-tight mb-2">{t("billing_title")}</h3>
                     </div>
-                    <CardDescription>{t("billing_desc")}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-background/50 rounded-lg border">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">{t("billing_plan_label")}</p>
-                            <h4 className="text-lg font-bold flex items-center gap-2">
-                                {isGlobalPro ? (userPlan === 'monthly' ? 'Monthly Pro' : 'Yearly Pro') : (isTournamentPro ? 'Tournament Pro' : t("plan_free"))}
-                                <Badge variant={isPro ? "secondary" : "outline"} className={`text-xs font-normal ${isPro ? "bg-green-100 text-green-700" : "border-primary/20 text-primary"}`}>
-                                    {isPro ? 'Pro' : 'Free'}
-                                </Badge>
-                            </h4>
-                        </div>
-                        {!isPro && (
-                            <Button
-                                onClick={togglePayment}
-                                disabled={showPayment}
-                                className="w-full sm:w-auto"
-                            >
-                                {t("upgrade_button")}
-                            </Button>
-                        )}
-                    </div>
+                    <p className="text-sm text-muted-foreground">{t("billing_desc")}</p>
+                </div>
 
-                    {/* Inline Payment Section */}
-                    {!isPro && showPayment && (
-                        <div className="bg-background border rounded-lg p-6 animate-in fade-in slide-in-from-top-2">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h4 className="font-semibold text-lg">{tBilling("pay_with_promptpay")}</h4>
-                                    <p className="text-sm text-muted-foreground">{tBilling("scan_desc")}</p>
-                                </div>
-                                <Button variant="ghost" size="sm" onClick={() => setShowPayment(false)}>
-                                    <X className="w-4 h-4" />
-                                </Button>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-background/50 rounded-lg border">
+                    <div>
+                        <p className="text-sm font-medium text-muted-foreground">{t("billing_plan_label")}</p>
+                        <h4 className="text-lg font-bold flex items-center gap-2">
+                            {isGlobalPro ? (userPlan === 'monthly' ? 'Monthly Pro' : 'Yearly Pro') : (isTournamentPro ? 'Tournament Pro' : t("plan_free"))}
+                            <Badge variant={isPro ? "secondary" : "outline"} className={`text-xs font-normal ${isPro ? "bg-green-100 text-green-700" : "border-primary/20 text-primary"}`}>
+                                {isPro ? 'Pro' : 'Free'}
+                            </Badge>
+                        </h4>
+                    </div>
+                    {!isPro && (
+                        <Button
+                            onClick={togglePayment}
+                            disabled={showPayment}
+                            className="w-full sm:w-auto"
+                        >
+                            {t("upgrade_button")}
+                        </Button>
+                    )}
+                </div>
+
+                {/* Inline Payment Section */}
+                {!isPro && showPayment && (
+                    <div className="bg-background border rounded-lg p-6 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 className="font-semibold text-lg">{tBilling("pay_with_promptpay")}</h4>
+                                <p className="text-sm text-muted-foreground">{tBilling("scan_desc")}</p>
                             </div>
+                            <Button variant="ghost" size="sm" onClick={() => setShowPayment(false)}>
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
 
-                            {!paymentState.qrCode ? (
-                                <div className="flex flex-col items-center justify-center p-8 space-y-4">
-                                    <div className="text-center">
-                                        {isGeneratingQR ? (
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                                <p className="text-muted-foreground">{tCommon("loading")}</p>
-                                            </div>
-                                        ) : (
-                                            <Button onClick={handleGenerateQR}>
-                                                {tBilling("generate_qr")}
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center space-y-6">
-                                    {paymentState.status === 'success' ? (
-                                        <div className="text-center space-y-2 py-8">
-                                            <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
-                                                <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
-                                            </div>
-                                            <h3 className="text-xl font-bold text-green-600 dark:text-green-400">{tBilling("payment_success")}</h3>
-                                            <p className="text-muted-foreground">{tBilling("payment_success_desc")}</p>
-                                        </div>
-                                    ) : timeLeft <= 0 ? (
-                                        <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center">
-                                            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-                                                <Clock className="w-8 h-8 text-muted-foreground" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-lg">QR Code Expired</h3>
-                                                <p className="text-sm text-muted-foreground">Please regenerate a new QR code to continue.</p>
-                                            </div>
-                                            <Button onClick={handleGenerateQR} disabled={isGeneratingQR}>
-                                                {isGeneratingQR ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                                                Regenerate QR
-                                            </Button>
+                        {!paymentState.qrCode ? (
+                            <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                                <div className="text-center">
+                                    {isGeneratingQR ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                            <p className="text-muted-foreground">{tCommon("loading")}</p>
                                         </div>
                                     ) : (
-                                        <>
-                                            <div className="bg-white p-4 rounded-xl shadow-sm border border-border/50 relative">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
-                                                    src={paymentState.qrCode}
-                                                    alt="PromptPay QR Code"
-                                                    className="w-64 h-64 object-contain mix-blend-multiply"
-                                                />
-                                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-full flex items-center gap-2 text-xs font-mono font-medium">
-                                                    <Clock className="w-3 h-3 text-orange-500" />
-                                                    <span className={timeLeft < 60 ? "text-red-500" : ""}>
-                                                        {formatTime(timeLeft)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="text-2xl font-bold text-primary">฿590.00</p>
-                                                <p className="text-xs text-muted-foreground">PromptPay QR Payment</p>
-                                            </div>
-                                            <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-                                                <div className="flex items-center gap-2 text-primary font-medium animate-pulse text-sm">
-                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                    <span>{tBilling("waiting_payment")}</span>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground text-center animate-pulse">
-                                                    Checking payment status automatically...
-                                                </p>
-                                            </div>
-                                        </>
+                                        <Button onClick={handleGenerateQR}>
+                                            {tBilling("generate_qr")}
+                                        </Button>
                                     )}
                                 </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="flex justify-end">
-                        <Button variant="link" asChild className="px-0 text-muted-foreground hover:text-primary h-auto">
-                            <Link href="/dashboard/billing">{t("view_pricing")}</Link>
-                        </Button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center space-y-6">
+                                {paymentState.status === 'success' ? (
+                                    <div className="text-center space-y-2 py-8">
+                                        <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
+                                            <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-green-600 dark:text-green-400">{tBilling("payment_success")}</h3>
+                                        <p className="text-muted-foreground">{tBilling("payment_success_desc")}</p>
+                                    </div>
+                                ) : timeLeft <= 0 ? (
+                                    <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center">
+                                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                                            <Clock className="w-8 h-8 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-lg">QR Code Expired</h3>
+                                            <p className="text-sm text-muted-foreground">Please regenerate a new QR code to continue.</p>
+                                        </div>
+                                        <Button onClick={handleGenerateQR} disabled={isGeneratingQR}>
+                                            {isGeneratingQR ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                                            Regenerate QR
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-border/50 relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={paymentState.qrCode}
+                                                alt="PromptPay QR Code"
+                                                className="w-64 h-64 object-contain mix-blend-multiply"
+                                            />
+                                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-full flex items-center gap-2 text-xs font-mono font-medium">
+                                                <Clock className="w-3 h-3 text-orange-500" />
+                                                <span className={timeLeft < 60 ? "text-red-500" : ""}>
+                                                    {formatTime(timeLeft)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-2xl font-bold text-primary">฿590.00</p>
+                                            <p className="text-xs text-muted-foreground">PromptPay QR Payment</p>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
+                                            <div className="flex items-center gap-2 text-primary font-medium animate-pulse text-sm">
+                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                <span>{tBilling("waiting_payment")}</span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground text-center animate-pulse">
+                                                Checking payment status automatically...
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
-                </CardContent>
-            </Card>
+                )}
 
-            <Card className="border-destructive/30">
+                <div className="flex justify-end">
+                    <Button variant="link" asChild className="px-0 text-muted-foreground hover:text-primary h-auto">
+                        <Link href="/dashboard/billing">{t("view_pricing")}</Link>
+                    </Button>
+                </div>
+            </div>
+
+            <Card className="border-destructive/20 bg-destructive/5">
                 <CardHeader>
                     <CardTitle className="text-destructive">{t("danger_zone")}</CardTitle>
-                    <CardDescription>{t("delete_desc")}</CardDescription>
+                    <CardDescription className="text-destructive/80">{t("delete_desc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {hasFixtures && (
                         <>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h4 className="font-medium">{t("reset_fixtures")}</h4>
-                                    <p className="text-sm text-muted-foreground">{t("reset_desc")}</p>
+                                    <h4 className="font-medium text-destructive">{t("reset_fixtures")}</h4>
+                                    <p className="text-sm text-destructive/80">{t("reset_desc")}</p>
                                 </div>
                                 <Button variant="destructive" onClick={handleReset} disabled={isPending}>
                                     {isPending ? tCommon("loading") : t("reset_fixtures")}
                                 </Button>
                             </div>
-                            <Separator />
+                            <Separator className="bg-destructive/10" />
                         </>
                     )}
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="font-medium">{t("delete_tournament")}</h4>
-                            <p className="text-sm text-muted-foreground">{t("delete_desc")}</p>
+                            <h4 className="font-medium text-destructive">{t("delete_tournament")}</h4>
+                            <p className="text-sm text-destructive/80">{t("delete_desc")}</p>
                         </div>
                         <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
                             {isPending ? tCommon("loading") : t("delete_tournament")}

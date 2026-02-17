@@ -4,6 +4,7 @@ import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
+import { Badge } from "@/components/ui/badge"
 
 export function Sidebar({ className, role }: { className?: string, role?: string }) {
     const pathname = usePathname()
@@ -23,6 +24,7 @@ export function Sidebar({ className, role }: { className?: string, role?: string
                         <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
                     </svg>
                     <span className="">LeagueFlow</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{t("beta")}</Badge>
                 </Link>
             </div>
             <div className="flex-1">

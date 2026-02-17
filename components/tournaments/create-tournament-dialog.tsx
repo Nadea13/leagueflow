@@ -58,69 +58,66 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                         {t("create_desc")}
                     </DialogDescription>
                 </DialogHeader>
-                <form action={formAction} className="grid gap-4 pt-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">
+                <form action={formAction} className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">
                             {t("name")}
                         </Label>
                         <Input
                             id="name"
                             name="name"
-                            placeholder="Premier League"
-                            className="col-span-3"
+                            placeholder={t("name_placeholder")}
                             required
                         />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="format" className="text-right">
+                    <div className="grid gap-2">
+                        <Label htmlFor="format">
                             {t("format")}
                         </Label>
                         <Select name="format" defaultValue="league" required>
-                            <SelectTrigger className="col-span-3">
+                            <SelectTrigger>
                                 <SelectValue placeholder={t("select_format")} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="league">{tFormat("league")}</SelectItem>
                                 <SelectItem value="league_ha">{tFormat("league")} (Home & Away)</SelectItem>
                                 <SelectItem value="group_knockout" disabled={!isPro}>
-                                    {tFormat("group_knockout")} {!isPro && "(Pro Only)"}
+                                    {tFormat("group_knockout")} {!isPro && t("pro_only")}
                                 </SelectItem>
                                 <SelectItem value="knockout">{tFormat("knockout")}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="number_of_pitches" className="text-right">{t("pitches")}</Label>
+                    <div className="grid gap-2">
+                        <Label htmlFor="number_of_pitches">{t("pitches")}</Label>
                         <Input
                             id="number_of_pitches"
                             name="number_of_pitches"
                             type="number"
                             min="1"
                             defaultValue="1"
-                            className="col-span-3"
                             required
                         />
                     </div>
 
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="start_date" className="text-right">{t("start_date")}</Label>
-                        <Input
-                            id="start_date"
-                            name="start_date"
-                            type="date"
-                            className="col-span-3"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="end_date" className="text-right">{t("end_date")}</Label>
-                        <Input
-                            id="end_date"
-                            name="end_date"
-                            type="date"
-                            className="col-span-3"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="start_date">{t("start_date")}</Label>
+                            <Input
+                                id="start_date"
+                                name="start_date"
+                                type="date"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="end_date">{t("end_date")}</Label>
+                            <Input
+                                id="end_date"
+                                name="end_date"
+                                type="date"
+                            />
+                        </div>
                     </div>
 
                     {state?.error && (

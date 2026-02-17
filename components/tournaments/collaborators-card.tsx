@@ -87,99 +87,95 @@ export function CollaboratorsCard({ tournamentId }: CollaboratorsCardProps) {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Users className="h-5 w-5 text-muted-foreground" />
-                        <CardTitle>{t("title")}</CardTitle>
-                    </div>
-                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button size="sm" className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                {t("invite")}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>{t("invite_title")}</DialogTitle>
-                                <DialogDescription>{t("invite_desc")}</DialogDescription>
-                            </DialogHeader>
-                            <div className="py-4">
-                                <Input
-                                    type="email"
-                                    placeholder={t("email_placeholder")}
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-                                />
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                                    {tCommon("cancel")}
-                                </Button>
-                                <Button onClick={handleInvite} disabled={isInviting || !email.trim()}>
-                                    {isInviting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                    {t("send_invite")}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+        <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="font-semibold leading-none tracking-tight mb-2">{t("title")}</h3>
+                    <p className="text-sm text-muted-foreground">{t("description")}</p>
                 </div>
-                <CardDescription>{t("description")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {isLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                ) : collaborators.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                        <Users className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                        <p>{t("no_collaborators")}</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {collaborators.map((collab) => (
-                            <div
-                                key={collab.id}
-                                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                        {collab.status === 'accepted' ? (
-                                            <UserCheck className="h-4 w-4 text-green-600" />
-                                        ) : (
-                                            <Clock className="h-4 w-4 text-amber-500" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-sm">{collab.email}</span>
-                                            <Badge variant="outline" className="text-xs capitalize">
-                                                {collab.role}
-                                            </Badge>
-                                        </div>
-                                        <span className="text-xs text-muted-foreground">
-                                            {collab.status === 'accepted' ? t("status_accepted") : t("status_pending")}
-                                        </span>
-                                    </div>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button size="sm" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            {t("invite")}
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>{t("invite_title")}</DialogTitle>
+                            <DialogDescription>{t("invite_desc")}</DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Input
+                                type="email"
+                                placeholder={t("email_placeholder")}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                                {tCommon("cancel")}
+                            </Button>
+                            <Button onClick={handleInvite} disabled={isInviting || !email.trim()}>
+                                {isInviting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                {t("send_invite")}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+            ) : collaborators.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                    <p>{t("no_collaborators")}</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {collaborators.map((collab) => (
+                        <div
+                            key={collab.id}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    {collab.status === 'accepted' ? (
+                                        <UserCheck className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                        <Clock className="h-4 w-4 text-amber-500" />
+                                    )}
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                    onClick={() => handleRemove(collab.id)}
-                                    disabled={isPending}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-medium text-sm">{collab.email}</span>
+                                        <Badge variant="outline" className="text-xs capitalize">
+                                            {collab.role}
+                                        </Badge>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                        {collab.status === 'accepted' ? t("status_accepted") : t("status_pending")}
+                                    </span>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleRemove(collab.id)}
+                                disabled={isPending}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }

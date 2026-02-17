@@ -30,17 +30,17 @@ export default function AuthConfirmPage() {
             }
 
             if (session) {
-                console.log("AuthConfirmPage: Session found, redirecting to dashboard");
+                // console.log("AuthConfirmPage: Session found, redirecting to dashboard");
                 window.location.href = `/${locale}/dashboard`;
                 return;
             }
 
             // No session yet, listen for auth state changes
             // Supabase client will process the URL hash automatically
-            console.log("AuthConfirmPage: No session, waiting for auth state change...");
+            // console.log("AuthConfirmPage: No session, waiting for auth state change...");
 
             const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                console.log("AuthConfirmPage: Auth state changed:", event);
+                // console.log("AuthConfirmPage: Auth state changed:", event);
                 if (event === 'SIGNED_IN' && session) {
                     window.location.href = `/${locale}/dashboard`;
                 }
@@ -49,7 +49,7 @@ export default function AuthConfirmPage() {
             // Timeout fallback - if no session after 5 seconds, redirect to login
             setTimeout(() => {
                 if (isMounted) {
-                    console.log("AuthConfirmPage: Timeout, redirecting to login");
+                    // console.log("AuthConfirmPage: Timeout, redirecting to login");
                     router.push(`/${locale}/login`);
                 }
             }, 5000);

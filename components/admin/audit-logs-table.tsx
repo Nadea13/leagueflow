@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { AuditLog } from "@/types";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { formatDate } from "@/lib/date";
+import { useLocale } from "next-intl";
 import { Search, Filter, ShieldAlert, FileText, User, CreditCard } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,8 @@ interface AdminAuditLogsProps {
 }
 
 export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
+    const t = useTranslations("Admin");
+    const locale = useLocale();
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
 
@@ -69,42 +72,42 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Activity</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("total_activity")}</CardTitle>
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{totalLogs}</div>
-                        <p className="text-xs text-muted-foreground">Recorded actions</p>
+                        <p className="text-xs text-muted-foreground">{t("recorded_actions")}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Tournament Actions</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("tournament_actions")}</CardTitle>
                         <ShieldAlert className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{tournamentLogs}</div>
-                        <p className="text-xs text-muted-foreground">Creates, updates, deletes</p>
+                        <p className="text-xs text-muted-foreground">{t("creates_updates_deletes")}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Payments</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("payments")}</CardTitle>
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{paymentLogs}</div>
-                        <p className="text-xs text-muted-foreground">Transactions recorded</p>
+                        <p className="text-xs text-muted-foreground">{t("transactions_recorded")}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Critical Actions</CardTitle>
+                        <CardTitle className="text-sm font-medium">{t("critical_actions")}</CardTitle>
                         <ShieldAlert className="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-destructive">{suspiciousLogs}</div>
-                        <p className="text-xs text-muted-foreground">Deletions & removals</p>
+                        <p className="text-xs text-muted-foreground">{t("deletions_removals")}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -114,7 +117,7 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search logs..."
+                        placeholder={t("search_logs")}
                         className="pl-8"
                         value={searchTerm}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
@@ -124,11 +127,11 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
                     <SelectTrigger className="w-full md:w-[200px]">
                         <div className="flex items-center gap-2">
                             <Filter className="h-4 w-4" />
-                            <SelectValue placeholder="Filter by Action" />
+                            <SelectValue placeholder={t("filter_by_action")} />
                         </div>
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Actions</SelectItem>
+                        <SelectItem value="all">{t("all_actions")}</SelectItem>
                         {actionTypes.map(type => (
                             <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
@@ -141,25 +144,25 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[180px]">Time</TableHead>
-                            <TableHead className="w-[200px]">User</TableHead>
-                            <TableHead className="w-[150px]">Action</TableHead>
-                            <TableHead className="w-[150px]">Target</TableHead>
-                            <TableHead>Details</TableHead>
+                            <TableHead className="w-[180px]">{t("time")}</TableHead>
+                            <TableHead className="w-[200px]">{t("user")}</TableHead>
+                            <TableHead className="w-[150px]">{t("action")}</TableHead>
+                            <TableHead className="w-[150px]">{t("target")}</TableHead>
+                            <TableHead>{t("details")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredLogs.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                    No results found.
+                                    {t("no_results")}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             filteredLogs.map((log) => (
                                 <TableRow key={log.id}>
                                     <TableCell className="font-medium text-xs text-muted-foreground whitespace-nowrap">
-                                        {format(new Date(log.created_at), "d MMM yyyy, HH:mm", { locale: th })}
+                                        {formatDate(log.created_at, "d MMM yyyy, HH:mm", locale)}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
@@ -167,7 +170,7 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
                                                 <User className="h-3 w-3 text-primary" />
                                             </div>
                                             <span className="text-sm truncate max-w-[150px]" title={log.user?.email || 'Unknown'}>
-                                                {log.user?.email || 'System'}
+                                                {log.user?.email || t("system")}
                                             </span>
                                         </div>
                                     </TableCell>
@@ -197,7 +200,10 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
             </div>
 
             <div className="text-xs text-muted-foreground text-center">
-                Showing {filteredLogs.length} of {totalLogs} logs
+                {t.rich("showing_logs", {
+                    count: filteredLogs.length,
+                    total: totalLogs
+                })}
             </div>
         </div>
     );

@@ -98,7 +98,6 @@ export function useMatchTimer(match: Match, tournamentId: string) {
 
             if (lastSavedMinuteRef.current !== currentMinute) {
                 lastSavedMinuteRef.current = currentMinute;
-                // console.log("Auto-saving:", currentMinute);
                 updateMatch(match.id, { current_minute: currentMinute }, tournamentId);
             }
         }

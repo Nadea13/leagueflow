@@ -14,7 +14,7 @@ interface ScoreboardProps {
 }
 
 export function Scoreboard({ match, homeScore, awayScore, isPro = false, readOnly = false, onAction }: ScoreboardProps) {
-    const tMatch = useTranslations("Match");
+    const t = useTranslations("Console");
 
     const TeamScore = ({ team, teamId, score, isHome }: { team: any; teamId: string | null; score: number; isHome: boolean }) => (
         <div className="flex flex-col items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl border shadow-sm w-full">
@@ -30,10 +30,10 @@ export function Scoreboard({ match, homeScore, awayScore, isPro = false, readOnl
                         className={cn("h-10 p-0 flex flex-col items-center justify-center gap-0.5", evt.color)}
                         onClick={() => teamId && onAction(teamId, evt.type)}
                         disabled={!teamId}
-                        title={evt.label}
+                        title={t(evt.label)}
                     >
                         <evt.icon className="h-4 w-4" />
-                        <span className="text-[10px] uppercase font-bold hidden sm:inline">{evt.label.split(' ')[0]}</span>
+                        <span className="text-[10px] uppercase font-bold hidden sm:inline">{t(evt.label)}</span>
                     </Button>
                 ))}
             </div>

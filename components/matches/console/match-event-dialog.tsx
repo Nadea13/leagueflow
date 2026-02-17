@@ -78,7 +78,7 @@ export function MatchEventDialog({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         {Icon && <Icon className={cn("h-5 w-5", eventConfig?.color)} />}
-                        {eventConfig?.label}
+                        {eventConfig?.label && t(eventConfig.label)}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -97,7 +97,7 @@ export function MatchEventDialog({
                     {/* Player Selection */}
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label className="text-right">
-                            {eventType === 'substitution' ? "Player OUT" : t("player")}
+                            {eventType === 'substitution' ? t("player_out") : t("player")}
                         </Label>
                         <div className="col-span-3">
                             <Select value={playerId} onValueChange={setPlayerId}>
@@ -110,7 +110,7 @@ export function MatchEventDialog({
                                             {player.number ? `#${player.number} ` : ""}{player.name}
                                         </SelectItem>
                                     ))}
-                                    <SelectItem value="unknown">Unknown Player</SelectItem>
+                                    <SelectItem value="unknown">{t("unknown_player")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -141,11 +141,11 @@ export function MatchEventDialog({
                     {/* Substitution: Player IN */}
                     {eventType === 'substitution' && (
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Player IN</Label>
+                            <Label className="text-right">{t("player_in")}</Label>
                             <div className="col-span-3">
                                 <Select value={subInPlayerId} onValueChange={setSubInPlayerId}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select Player In" />
+                                        <SelectValue placeholder={t("select_player_in")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {players.map((player) => (
