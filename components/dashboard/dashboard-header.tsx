@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { UserNav } from "@/components/dashboard/user-nav"
 import { useState } from "react"
-import { getNavItems } from "@/config/nav"
+import { getNavItems, adminNavItem } from "@/config/nav"
 
 interface DashboardHeaderProps {
     userEmail?: string
@@ -52,7 +52,7 @@ export function DashboardHeader({ userEmail, role }: DashboardHeaderProps) {
                                 href={item.href}
                                 onClick={() => setOpen(false)}
                                 className={cn(
-                                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground",
+                                    "flex items-center gap-3 rounded-none px-3 py-2 text-muted-foreground hover:text-foreground",
                                     pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
                                         ? "bg-muted text-primary"
                                         : "text-muted-foreground"
@@ -68,6 +68,14 @@ export function DashboardHeader({ userEmail, role }: DashboardHeaderProps) {
             <div className="w-full flex-1">
                 {/* Search bar could go here */}
             </div>
+            {role === 'admin' && (
+                <Button variant="outline" size="sm" asChild className="gap-2 shrink-0">
+                    <Link href={adminNavItem.href} target={adminNavItem.openInNewTab ? "_blank" : undefined}>
+                        <adminNavItem.icon className="h-4 w-4" />
+                        <span className="hidden md:inline">{t(adminNavItem.titleKey)}</span>
+                    </Link>
+                </Button>
+            )}
             <UserNav email={userEmail} />
         </header>
     )

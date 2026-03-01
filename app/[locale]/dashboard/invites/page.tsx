@@ -58,14 +58,12 @@ export default function InvitesPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
             ) : invites.length === 0 ? (
-                <Card>
-                    <CardContent className="py-12">
-                        <div className="text-center text-muted-foreground">
-                            <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                            <p className="text-lg">{t("no_pending_invites")}</p>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                    <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                        <Users className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-sm font-medium text-muted-foreground">{t("no_pending_invites")}</h3>
+                </div>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {invites.map((invite) => {

@@ -80,10 +80,14 @@ export default async function TournamentTeamsPage({ params }: TournamentTeamsPag
             </div>
 
             {(!teams || teams.length === 0) ? (
-                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed bg-muted/40 p-8 text-center">
-                    <Users className="h-10 w-10 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold">{t("no_teams")}</h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mb-6">{t("no_teams_desc")}</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                    <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                        <Users className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-sm font-medium text-muted-foreground">{t("no_teams")}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                        {t("no_teams_desc")}
+                    </p>
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">

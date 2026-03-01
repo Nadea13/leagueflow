@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
-import { ChevronLeft, Copy, ExternalLink } from "lucide-react";
+import { ChevronLeft, Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -19,16 +19,22 @@ import { TeamList } from "@/components/tournaments/team-list";
 import { GroupStandings } from "@/components/tournaments/group-standings";
 import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
 import { GroupManager } from "@/components/tournaments/group-manager";
-import { Match, Team, Goal } from "@/types/index";
+import { Match, Team, Goal, MatchEvent } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
 import { calculateStandings } from "@/utils/standings";
 import { SettingsTab } from "@/components/tournaments/settings-tab";
 import { FixturesManager } from "@/components/tournaments/fixtures-manager";
+import { FixturesCalendar } from "@/components/tournaments/fixtures-calendar";
 import { NextRoundButton } from "@/components/tournaments/next-round-button";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { TournamentStats } from "@/components/tournaments/tournament-stats";
+import { PlayerStatsTable } from "@/components/tournaments/player-stats-table";
+import { BannedPlayersCard } from "@/components/tournaments/banned-players-card";
+import { AnnouncementsCard } from "@/components/tournaments/announcements-card";
+import { FinancialSummary } from "@/components/tournaments/financial-summary";
+import { calculatePlayerStats, getBannedPlayers } from "@/utils/player-stats";
 
 interface TournamentContentProps {
     tournament: any;
@@ -63,6 +69,8 @@ export function TournamentContent({
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [teams, setTeams] = useState<Team[]>(initialTeams);
     const [goals, setGoals] = useState<Goal[]>(initialGoals);
+    const [fixtureView, setFixtureView] = useState<'list' | 'calendar'>('list');
+    const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
 
     // Update state when props change (server revalidation)
     useEffect(() => {
@@ -71,6 +79,62 @@ export function TournamentContent({
         setTeams(initialTeams);
         setGoals(initialGoals);
     }, [initialTournament, initialMatches, initialTeams, initialGoals]);
+
+    // Fetch match events for player stats
+    useEffect(() => {
+        const fetchEvents = async () => {
+            const matchIds = matches.map(m => m.id);
+            if (matchIds.length === 0) {
+                setMatchEvents([]);
+                return;
+            }
+
+            const { data } = await supabase
+                .from("match_events")
+                .select("*, players(name)")
+                .in("match_id", matchIds);
+
+            if (data) {
+                const events = data.map((e: any) => ({
+                    ...e,
+                    player_name: e.players?.name || "Unknown",
+                }));
+                setMatchEvents(events);
+            }
+        };
+
+        if (matches.length > 0) {
+            fetchEvents();
+        }
+    }, [matches]);
+
+    // Fetch all players from all teams for stats
+    const [allPlayersForStats, setAllPlayersForStats] = useState<{ id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[]>([]);
+    useEffect(() => {
+        const fetchAllPlayers = async () => {
+            const teamIds = teams.map(t => t.id);
+            if (teamIds.length === 0) return;
+
+            const { data } = await supabase
+                .from("players")
+                .select("id, name, team_id")
+                .in("team_id", teamIds);
+
+            if (data) {
+                const playersWithTeam = data.map((p: any) => {
+                    const team = teams.find(t => t.id === p.team_id);
+                    return {
+                        ...p,
+                        teamName: team?.name,
+                        teamLogoUrl: team?.logo_url,
+                    };
+                });
+                setAllPlayersForStats(playersWithTeam);
+            }
+        };
+
+        fetchAllPlayers();
+    }, [teams]);
 
     // Realtime Subscription
     useEffect(() => {
@@ -117,7 +181,6 @@ export function TournamentContent({
                 }
                 router.refresh();
             })
-            // Goals subscription could be added here if needed for realtime top scorers
             .subscribe();
 
         return () => {
@@ -130,6 +193,10 @@ export function TournamentContent({
 
     // Calculate Standings
     const calculatedStandings = calculateStandings(teams, matches);
+
+    // Player stats
+    const playerStats = calculatePlayerStats(matchEvents, allPlayersForStats, null);
+    const bannedPlayers = getBannedPlayers(matchEvents, allPlayersForStats, null);
 
     return (
         <div className="flex flex-col gap-6">
@@ -175,7 +242,7 @@ export function TournamentContent({
                     {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("standings")}</CardTitle>
+                                <CardTitle className="flex items-center gap-2"><Trophy className="h-4 w-4" />{t("standings")}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <StandingsTable standings={calculatedStandings} />
@@ -187,7 +254,7 @@ export function TournamentContent({
                     {tournament?.format === 'group_knockout' && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("group_standings")}</CardTitle>
+                                <CardTitle className="flex items-center gap-2"><Trophy className="h-4 w-4" />{t("group_standings")}</CardTitle>
                                 <CardDescription>{t("group_standings_desc")}</CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -200,7 +267,7 @@ export function TournamentContent({
                     {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("bracket")}</CardTitle>
+                                <CardTitle className="flex items-center gap-2"><GitBranch className="h-4 w-4" />{t("bracket")}</CardTitle>
                                 <CardDescription>{t("bracket_desc")}</CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -209,11 +276,17 @@ export function TournamentContent({
                         </Card>
                     )}
 
-                    {/* 4. Top Scorers - Only for Pro */}
+                    {/* 4. Announcements */}
+                    <AnnouncementsCard
+                        tournamentId={id}
+                        isEditable={userRole === 'admin' || userRole === 'editor'}
+                    />
+
+                    {/* 5. Top Scorers */}
                     {isPro && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("top_scorers")}</CardTitle>
+                                <CardTitle className="flex items-center gap-2"><Award className="h-4 w-4" />{t("top_scorers")}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <TopScorersTable goals={goals} teams={teams} />
@@ -224,12 +297,12 @@ export function TournamentContent({
                         <Card className="opacity-70">
                             <CardHeader>
                                 <CardTitle className="flex justify-between items-center">
-                                    {t("top_scorers")}
+                                    <span className="flex items-center gap-2"><Award className="h-4 w-4" />{t("top_scorers")}</span>
                                     <Badge variant="outline">{t("upsell_pro_feature")}</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-center py-8 text-muted-foreground rounded-xl border bg-card text-card-foreground shadow-sm">
+                                <div className="text-center py-8 text-muted-foreground">
                                     <p>{t("upsell_pro_required")}</p>
                                     <Button variant="link" asChild className="mt-2">
                                         <Link href="/dashboard/billing">{t("upsell_view_plans")}</Link>
@@ -238,17 +311,36 @@ export function TournamentContent({
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* 6. Player Stats */}
+                    {isPro && playerStats.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><BarChart3 className="h-4 w-4" />Player Statistics</CardTitle>
+                                <CardDescription>Goals, assists, and disciplinary records</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <PlayerStatsTable stats={playerStats} />
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* 7. Financial Summary - Only for Pro */}
+                    {isPro && (
+                        <FinancialSummary tournamentId={id} />
+                    )}
+
+                    {/* 8. Banned Players Alert */}
+                    <BannedPlayersCard bannedPlayers={bannedPlayers} />
                 </TabsContent>
 
                 {/* Teams Tab */}
                 <TabsContent value="teams" className="space-y-6">
-                    <div className="flex flex-col gap-4 p-6 border rounded-xl bg-background shadow-sm">
+                    <div className="flex flex-col gap-4 p-6 border rounded-none bg-background shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight">{t("add_team")}</h3>
                         <AddTeamForm
                             tournamentId={id}
                             isLimitReached={
-                                // If isPro is true (which now includes shared tournaments), no limit.
-                                // Otherwise check the free plan limit.
                                 !isPro && (teams?.length || 0) >= 8
                             }
                         />
@@ -302,7 +394,7 @@ export function TournamentContent({
                         <GroupManager teams={teams} tournamentId={id} />
                     )}
 
-                    <div className="space-y-4 border rounded-xl p-6 bg-background shadow-sm">
+                    <div className="space-y-4 border rounded-none p-6 bg-background shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight">{t("participating_teams")} ({teams?.length || 0})</h3>
                         <TeamList teams={teams} tournamentId={id} isPro={isPro} />
                     </div>
@@ -310,25 +402,48 @@ export function TournamentContent({
 
                 {/* Fixtures Tab */}
                 <TabsContent value="fixtures" className="space-y-6">
-                    <div className="flex flex-col gap-6 p-6 border rounded-xl bg-background shadow-sm">
+                    <div className="flex flex-col gap-6 p-6 border rounded-none bg-background shadow-sm">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-y-1">
                                 <h3 className="font-semibold leading-none tracking-tight">{t("match_schedule")}</h3>
                                 <p className="text-sm text-muted-foreground">{t("manage_fixtures")}</p>
                             </div>
-                            <div className="w-full md:w-auto">
+                            <div className="flex items-center gap-2">
+                                {/* View Toggle */}
+                                <div className="flex border rounded-none">
+                                    <Button
+                                        variant={fixtureView === 'list' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        className="rounded-r-none h-8"
+                                        onClick={() => setFixtureView('list')}
+                                    >
+                                        <List className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant={fixtureView === 'calendar' ? 'default' : 'ghost'}
+                                        size="sm"
+                                        className="rounded-l-none h-8"
+                                        onClick={() => setFixtureView('calendar')}
+                                    >
+                                        <Calendar className="h-4 w-4" />
+                                    </Button>
+                                </div>
                                 <FixtureGenerator tournamentId={id} hasFixtures={hasFixtures} className="w-full md:w-auto" />
                             </div>
                         </div>
 
-                        {/* Fixtures List */}
-                        <FixturesManager
-                            teams={teams}
-                            matches={matches}
-                            tournamentId={id}
-                            goals={goals}
-                            isPro={isPro}
-                        />
+                        {/* Fixtures View */}
+                        {fixtureView === 'list' ? (
+                            <FixturesManager
+                                teams={teams}
+                                matches={matches}
+                                tournamentId={id}
+                                goals={goals}
+                                isPro={isPro}
+                            />
+                        ) : (
+                            <FixturesCalendar matches={matches} />
+                        )}
 
                         {/* Hide Next Round Button for League formats */}
                         {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
@@ -343,7 +458,7 @@ export function TournamentContent({
 
                 {/* Settings Tab */}
                 {userRole === 'admin' && (
-                    <TabsContent value="settings">
+                    <TabsContent value="settings" className="space-y-6">
                         <SettingsTab tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} />
                     </TabsContent>
                 )}

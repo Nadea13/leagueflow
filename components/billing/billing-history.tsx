@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
 import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
+import { List } from "lucide-react";
 
 interface BillingHistoryProps {
     history?: PaymentRecord[];
@@ -85,8 +86,13 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
-                                    {t("no_history")}
+                                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                                            <List className="h-6 w-6 text-muted-foreground" />
+                                        </div>
+                                        <h3 className="text-sm font-medium text-muted-foreground">{t("no_history")}</h3>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}

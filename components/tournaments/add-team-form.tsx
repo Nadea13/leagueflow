@@ -47,13 +47,13 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
             <div className="flex gap-4 items-center w-full">
                 {/* Circular Logo Upload */}
                 <label htmlFor="add-logo-upload" className={`cursor-pointer group relative shrink-0 ${isLimitReached ? 'pointer-events-none opacity-50' : ''}`}>
-                    <div className="h-12 w-12 rounded-full border border-muted-foreground/30 flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
+                    <div className="h-12 w-12 rounded-none border border-muted-foreground/30 flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
                         {preview ? (
                             <img src={preview} alt="Preview" className="h-full w-full object-cover" />
                         ) : (
                             <ImageIcon className="h-5 w-5 text-muted-foreground" />
                         )}
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-none">
                             <Upload className="h-4 w-4 text-white" />
                         </div>
                     </div>

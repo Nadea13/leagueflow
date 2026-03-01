@@ -38,7 +38,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
         const finalMatch = matches.find(m => m.stage === 'final');
         if (finalMatch?.status === 'finished') {
             return (
-                <div className="mt-6 flex items-center justify-center p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
+                <div className="mt-6 flex items-center justify-center p-4 bg-green-50 text-green-700 rounded-none border border-green-200">
                     <Trophy className="mr-2 h-5 w-5" />
                     <span className="font-semibold">{t("tournament_completed")}{finalMatch.winner_id ? t("completed") : ''}</span>
                 </div>

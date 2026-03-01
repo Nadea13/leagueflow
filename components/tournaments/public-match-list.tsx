@@ -4,13 +4,18 @@ import { MatchCard } from "@/components/tournaments/match-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
 
+import { Calendar } from "lucide-react";
+
 export function PublicMatchList({ matches, tournamentId, events = [] }: { matches: any[]; tournamentId: string; events?: any[] }) {
     const t = useTranslations("PublicView");
 
     if (!matches || matches.length === 0) {
         return (
-            <div className="text-center py-10 text-muted-foreground border rounded-lg border-dashed">
-                {t("no_matches")}
+            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                    <Calendar className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-sm font-medium text-muted-foreground">{t("no_matches")}</h3>
             </div>
         );
     }

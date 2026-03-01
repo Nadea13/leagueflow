@@ -17,7 +17,7 @@ export function Scoreboard({ match, homeScore, awayScore, isPro = false, readOnl
     const t = useTranslations("Console");
 
     const TeamScore = ({ team, teamId, score, isHome }: { team: any; teamId: string | null; score: number; isHome: boolean }) => (
-        <div className="flex flex-col items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl border shadow-sm w-full">
+        <div className="flex flex-col items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-none border shadow-sm w-full">
             {team?.logo_url && <img src={team.logo_url} className="w-16 h-16 object-contain" alt={team.name} />}
             <h3 className="font-bold text-center line-clamp-1" title={team?.name}>{team?.name}</h3>
             <div className="text-6xl font-black">{score}</div>

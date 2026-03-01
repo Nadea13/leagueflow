@@ -34,7 +34,7 @@ export function UserNav({ email }: { email: string | undefined }) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Button variant="ghost" className="relative h-8 w-8 rounded-none">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src="" alt={email} />
                         <AvatarFallback>{email?.substring(0, 2).toUpperCase()}</AvatarFallback>

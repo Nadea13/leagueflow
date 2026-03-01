@@ -65,7 +65,7 @@ export function PricingTable({ tournaments, onSelectPlan, currentPlan, activePla
     };
 
     return (
-        <div className="rounded-xl border overflow-hidden">
+        <div className="rounded-none border overflow-hidden">
             <Table>
                 <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent">

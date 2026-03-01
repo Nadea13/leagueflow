@@ -87,17 +87,17 @@ export function CollaboratorsCard({ tournamentId }: CollaboratorsCardProps) {
     };
 
     return (
-        <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+        <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="font-semibold leading-none tracking-tight mb-2">{t("title")}</h3>
+                    <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><Users className="h-4 w-4" />{t("title")}</h3>
                     <p className="text-sm text-muted-foreground">{t("description")}</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button size="sm" className="gap-2">
                             <Plus className="h-4 w-4" />
-                            {t("invite")}
+                            <span className="hidden sm:inline">{t("invite")}</span>
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
@@ -141,10 +141,10 @@ export function CollaboratorsCard({ tournamentId }: CollaboratorsCardProps) {
                     {collaborators.map((collab) => (
                         <div
                             key={collab.id}
-                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border"
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-none border"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-none bg-primary/10 flex items-center justify-center">
                                     {collab.status === 'accepted' ? (
                                         <UserCheck className="h-4 w-4 text-green-600" />
                                     ) : (

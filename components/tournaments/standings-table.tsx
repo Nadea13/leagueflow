@@ -9,6 +9,7 @@ import {
 import { useTranslations } from "next-intl";
 
 import { Standing } from "@/types/index";
+import { List } from "lucide-react";
 
 export function StandingsTable({ standings }: { standings: Standing[] }) {
     const t = useTranslations("Standings");
@@ -19,7 +20,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
     // .order("gf", { ascending: false });
 
     return (
-        <div className="w-full overflow-x-auto rounded-md border">
+        <div className="w-full overflow-x-auto rounded-none border">
             <Table className="min-w-[500px] text-xs md:text-sm">
                 <TableHeader>
                     <TableRow className="h-8 md:h-10">
@@ -44,7 +45,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                                     {team.team?.logo_url ? (
                                         <img src={team.team.logo_url} alt={team.team.name} className="w-4 h-4 md:w-6 md:h-6 object-contain" />
                                     ) : (
-                                        <div className="w-4 h-4 md:w-6 md:h-6 bg-muted rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold text-muted-foreground">
+                                        <div className="w-4 h-4 md:w-6 md:h-6 bg-muted rounded-none flex items-center justify-center text-[8px] md:text-[10px] font-bold text-muted-foreground">
                                             {team.team?.name.charAt(0)}
                                         </div>
                                     )}
@@ -65,8 +66,13 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                     ))}
                     {standings.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={10} className="text-center py-4 text-muted-foreground">
-                                {t("no_stats")}
+                            <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                                <div className="flex flex-col items-center justify-center">
+                                    <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                                        <List className="h-6 w-6 text-muted-foreground" />
+                                    </div>
+                                    <h3 className="text-sm font-medium text-muted-foreground">{t("no_stats")}</h3>
+                                </div>
                             </TableCell>
                         </TableRow>
                     )}

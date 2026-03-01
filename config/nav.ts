@@ -83,9 +83,5 @@ export const bottomNavItems: NavItem[] = [
  * Get nav items with optional admin item based on user role
  */
 export function getNavItems(role?: string): NavItem[] {
-    const items = [...dashboardNavItems]
-    if (role === 'admin') {
-        items.push(adminNavItem)
-    }
-    return items
+    return [...dashboardNavItems]
 }

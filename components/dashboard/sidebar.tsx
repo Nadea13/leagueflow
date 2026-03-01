@@ -35,7 +35,7 @@ export function Sidebar({ className, role }: { className?: string, role?: string
                             href={item.href}
                             target={item.openInNewTab ? "_blank" : undefined}
                             className={cn(
-                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                "flex items-center gap-3 rounded-none px-3 py-2 transition-all hover:text-primary",
                                 pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
                                     ? "bg-muted text-primary"
                                     : "text-muted-foreground"

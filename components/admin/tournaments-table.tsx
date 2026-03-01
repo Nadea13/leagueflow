@@ -85,14 +85,13 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 />
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-none border bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>{t("tournaments")}</TableHead>
                             <TableHead>{t("owner")}</TableHead>
                             <TableHead>{t("status")}</TableHead>
-                            <TableHead>{tSettings("billing_plan_label")}</TableHead>
                             <TableHead>{t("created_at")}</TableHead>
                             <TableHead className="text-right">{t("actions")}</TableHead>
                         </TableRow>
@@ -100,38 +99,34 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                     <TableBody>
                         {filteredTournaments.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                                     {t("no_results")}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            filteredTournaments.map((t) => (
-                                <TableRow key={t.id}>
+                            filteredTournaments.map((tournament) => (
+                                <TableRow key={tournament.id}>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-medium">{t.name}</span>
-                                            <span className="text-xs text-muted-foreground capitalize">{t.format}</span>
+                                            <span className="font-medium">{tournament.name}</span>
+                                            <span className="text-xs text-muted-foreground capitalize">{tournament.format}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">
-                                        {t.owner_email}
+                                        {tournament.owner_email}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={getStatusColor(t.status)} className="capitalize">
-                                            {t.status}
+                                        <Badge variant={getStatusColor(tournament.status)} className="capitalize">
+                                            {tournament.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="capitalize">
-                                            {t.plan || t("free")}
-                                        </Badge>
-                                    </TableCell>
+
                                     <TableCell className="text-muted-foreground text-xs">
-                                        {formatDate(t.created_at, "d MMM yyyy", locale)}
+                                        {formatDate(tournament.created_at, "d MMM yyyy", locale)}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Link href={`/dashboard/tournaments/${t.id}`} target="_blank">
+                                            <Link href={`/dashboard/tournaments/${tournament.id}`} target="_blank">
                                                 <Button variant="ghost" size="icon" title={tCommon("manage")}>
                                                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
@@ -147,14 +142,14 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle>{tSettings("delete_tournament")}?</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            {tSettings("delete_desc")}. {t("deletions_removals")} <b>{t.name}</b>.
+                                                            {tSettings("delete_desc")}. {t("deletions_removals")} <b>{tournament.name}</b>.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
                                                         <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
                                                         <AlertDialogAction
                                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                            onClick={() => handleDelete(t.id, t.name)}
+                                                            onClick={() => handleDelete(tournament.id, tournament.name)}
                                                         >
                                                             {tCommon("delete")}
                                                         </AlertDialogAction>

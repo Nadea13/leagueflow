@@ -1,0 +1,17 @@
+{
+    "name": "LeagueFlow",
+    "short_name": "LeagueFlow",
+    "description": "Tournament Management System",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#16a34a",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "64x64",
+            "type": "image/x-icon"
+        }
+    ]
+}

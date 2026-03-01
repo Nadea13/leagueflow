@@ -11,6 +11,8 @@ import { useTranslations } from "next-intl";
 
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 
+import { Activity } from "lucide-react";
+
 export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[] }) {
     const t = useTranslations("TopScorers");
 
@@ -34,12 +36,11 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
     const getTeam = (teamId: string) => teams.find(t => t.id === teamId);
 
     return (
-        <div className="w-full rounded-md border space-y-4 p-4">
-            <div className="flex justify-between items-center border-b pb-4">
-                <h3 className="font-semibold">{t("top_scorers") || "Top Scorers"}</h3>
+        <div className="w-full space-y-4 ">
+            <div className="flex justify-end">
                 <ExportToImageButton targetId="top-scorers-canvas" filename="top_scorers" label={t("export") || "Export"} />
             </div>
-            <div id="top-scorers-canvas" className="w-full overflow-x-auto rounded-md border">
+            <div id="top-scorers-canvas" className="w-full overflow-x-auto rounded-none border">
                 <Table className="min-w-[400px] text-xs md:text-sm">
                     <TableHeader>
                         <TableRow className="h-8 md:h-10">
@@ -52,8 +53,13 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                     <TableBody>
                         {sortedScorers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                                    {t("no_goals")}
+                                <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                                            <Activity className="h-6 w-6 text-muted-foreground" />
+                                        </div>
+                                        <h3 className="text-sm font-medium text-muted-foreground">{t("no_goals")}</h3>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -68,7 +74,7 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                                                 {team?.logo_url ? (
                                                     <img src={team.logo_url} alt={team.name} className="w-4 h-4 md:w-5 md:h-5 object-contain" />
                                                 ) : (
-                                                    <div className="w-4 h-4 md:w-5 md:h-5 bg-muted rounded-full flex items-center justify-center text-[8px] font-bold text-muted-foreground">
+                                                    <div className="w-4 h-4 md:w-5 md:h-5 bg-muted rounded-none flex items-center justify-center text-[8px] font-bold text-muted-foreground">
                                                         {team?.name.charAt(0)}
                                                     </div>
                                                 )}

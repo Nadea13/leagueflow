@@ -31,6 +31,8 @@ export interface Match {
     match_date?: string | null;
     match_time?: string | null;
     venue?: string | null;
+    venue_id?: string | null;
+    pitch_number?: number | null;
     match_index?: number | null;
     created_at: string;
     // Timer Fields
@@ -39,6 +41,9 @@ export interface Match {
     current_minute?: number | string | null;
     home_team?: { name: string; logo_url?: string | null };
     away_team?: { name: string; logo_url?: string | null };
+    // Penalty Shootout (joined)
+    penalty_home_score?: number | null;
+    penalty_away_score?: number | null;
 }
 
 export interface Team {
@@ -56,6 +61,18 @@ export interface Player {
     name: string;
     number?: number | null;
     position?: string | null;
+    global_player_id?: string | null;
+    created_at: string;
+    // Join
+    global_player?: GlobalPlayer | null;
+}
+
+export interface GlobalPlayer {
+    id: string;
+    name: string;
+    photo_url?: string | null;
+    date_of_birth?: string | null;
+    created_by?: string | null;
     created_at: string;
 }
 
@@ -170,4 +187,67 @@ export interface Product {
     recommended: boolean;
     created_at: string;
     updated_at: string;
+}
+
+// ========== New Types for Feature Improvements ==========
+
+export interface Venue {
+    id: string;
+    tournament_id: string;
+    name: string;
+    address?: string | null;
+    google_maps_url?: string | null;
+    capacity?: number | null;
+    notes?: string | null;
+    created_at: string;
+}
+
+export interface TournamentRules {
+    tournament_id: string;
+    half_duration: number;
+    extra_time_duration: number;
+    max_squad_size?: number | null;
+    min_squad_size?: number | null;
+    max_substitutions: number;
+    yellow_card_ban_threshold: number;
+    red_card_ban_matches: number;
+    points_for_win: number;
+    points_for_draw: number;
+    points_for_loss: number;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface PenaltyShot {
+    id: string;
+    match_id: string;
+    team_id: string;
+    player_id?: string | null;
+    round: number;
+    scored: boolean;
+    created_at: string;
+    // Join
+    player?: { name: string } | null;
+}
+
+export interface Announcement {
+    id: string;
+    tournament_id: string;
+    title: string;
+    content?: string | null;
+    is_pinned: boolean;
+    created_at: string;
+}
+
+export interface TeamPayment {
+    id: string;
+    tournament_id: string;
+    team_id: string;
+    amount: number;
+    status: 'pending' | 'paid' | 'waived';
+    paid_at?: string | null;
+    notes?: string | null;
+    created_at: string;
+    // Join
+    team?: { name: string; logo_url?: string | null };
 }

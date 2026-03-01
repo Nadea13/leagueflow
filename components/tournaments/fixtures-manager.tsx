@@ -101,18 +101,18 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
     return (
         <div className="space-y-6">
             {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-lg bg-muted/10">
-                    <div className="h-12 w-12 rounded-full bg-muted/20 flex items-center justify-center mb-4">
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                    <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
                         <Calendar className="h-6 w-6 text-muted-foreground" />
                     </div>
-                    <h3 className="font-semibold text-lg">{tFixtures("ready_to_start")}</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">{tFixtures("ready_to_start")}</h3>
                     <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                         {tFixtures("generate_instruction")}
                     </p>
                 </div>
             ) : (
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 rounded-lg">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 rounded-none">
                     {/* Filter */}
                     <div className="flex items-center gap-2 w-full md:w-auto">
                         <span className="text-sm font-medium">{tMatch("status")}:</span>
@@ -146,10 +146,16 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
             )}
 
 
-            <div id="fixtures-canvas" className="space-y-6 rounded-lg">
+            <div id="fixtures-canvas" className="space-y-6 rounded-none">
                 {Object.keys(matchesByRound).length === 0 ? (
-                    <div className="text-center py-12 border rounded-lg bg-muted/10">
-                        <p className="text-muted-foreground">{tFixtures("no_fixtures")}</p>
+                    <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                        <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                            <Calendar className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-sm font-medium text-muted-foreground">{tFixtures("no_fixtures")}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                            No match data available at this time.
+                        </p>
                     </div>
                 ) : (
                     Object.keys(matchesByRound).map((roundKey) => {
@@ -171,11 +177,11 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                         }
 
                         return (
-                            <div key={round} className="rounded-lg relative bg-card">
+                            <div key={round} className="rounded-none relative bg-card">
                                 <h3 className="font-semibold leading-none tracking-tight mb-4 flex items-center gap-2">
                                     {headerText}
                                     {stage !== 'league' && stage !== 'group' && (
-                                        <span className="text-xs font-normal text-muted-foreground border px-2 py-0.5 rounded-full capitalize">
+                                        <span className="text-xs font-normal text-muted-foreground border px-2 py-0.5 rounded-none capitalize">
                                             {stage?.replace('_', ' ')}
                                         </span>
                                     )}

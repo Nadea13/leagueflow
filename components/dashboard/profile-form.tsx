@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateProfile } from "@/app/[locale]/dashboard/settings/actions";
 import { signOut } from "@/app/[locale]/dashboard/actions";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, User } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,7 +39,10 @@ export function ProfileForm({ user }: { user: any }) {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>{t("user_info")}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                        {t("user_info")}
+                    </CardTitle>
                     <CardDescription>{t("user_info_desc")}</CardDescription>
                 </CardHeader>
                 <CardContent>

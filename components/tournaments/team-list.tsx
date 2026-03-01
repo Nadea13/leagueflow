@@ -21,11 +21,11 @@ export function TeamList({ teams, tournamentId, isPro = false }: TeamListProps) 
 
     if (!teams || teams.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-lg bg-muted/10">
-                <div className="h-12 w-12 rounded-full bg-muted/20 flex items-center justify-center mb-4">
+            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
                     <Users className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <h3 className="font-semibold text-lg">{t("no_teams")}</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">{t("no_teams")}</h3>
                 <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                     {t("no_teams_desc")}
                 </p>
@@ -83,9 +83,9 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
     };
 
     return (
-        <div className="flex items-center justify-between p-3 border rounded-md bg-background">
+        <div className="flex items-center justify-between p-3 border rounded-none bg-background">
             <div className="flex items-center">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 overflow-hidden">
+                <div className="h-8 w-8 rounded-none bg-primary/10 flex items-center justify-center mr-3 overflow-hidden">
                     {team.logo_url ? (
                         <img src={team.logo_url} alt={team.name} className="h-full w-full object-contain" />
                     ) : (
@@ -127,7 +127,7 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
                             <div className="grid gap-4 justify-center">
                                 <div className="flex flex-col items-center gap-2">
                                     <label htmlFor="edit-logo-upload" className="cursor-pointer group relative">
-                                        <div className="h-24 w-24 rounded-full border border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
+                                        <div className="h-24 w-24 rounded-none border border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
                                             {previewUrl || existingLogoUrl ? (
                                                 <img
                                                     src={previewUrl || existingLogoUrl}
@@ -137,7 +137,7 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
                                             ) : (
                                                 <ImageIcon className="h-8 w-8 text-muted-foreground" />
                                             )}
-                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-none">
                                                 <Upload className="h-6 w-6 text-white" />
                                             </div>
                                         </div>

@@ -31,7 +31,7 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                     // Render Logic
                     if (isAddTime) {
                         return (
-                            <div key={event.id} className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded border border-dashed border-slate-300 text-sm">
+                            <div key={event.id} className="flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 border border-dashed border-slate-300 text-sm">
                                 <div className="flex items-center gap-2 font-bold text-slate-600 dark:text-slate-400">
                                     <Timer className="w-4 h-4" />
                                     <span>{t("added_time_msg", { min: event.extra_info?.added_minutes || '?' })}</span>
@@ -56,7 +56,7 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                         }
                         const SysIcon = icon;
                         return (
-                            <div key={event.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded border border-l-4 border-l-primary/50 text-sm">
+                            <div key={event.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 border border-l-4 border-l-primary/50 text-sm">
                                 <div className="flex items-center gap-3 font-bold text-primary">
                                     <SysIcon className="w-4 h-4" />
                                     <span>{label}</span>
@@ -82,12 +82,12 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                         : null;
 
                     return (
-                        <div key={event.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded border text-sm">
+                        <div key={event.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 border text-sm">
                             <div className="flex items-center gap-3">
                                 <div className="flex flex-col items-center min-w-[30px]">
                                     <span className="font-mono font-bold text-blue-600">{event.minute}'</span>
                                 </div>
-                                <div className={cn("p-1.5 rounded-full bg-muted/50", typeConfig?.color)}>
+                                <div className={cn("p-1.5 rounded-none bg-muted/50", typeConfig?.color)}>
                                     <Icon className="h-4 w-4" />
                                 </div>
                                 <div className="flex flex-col">

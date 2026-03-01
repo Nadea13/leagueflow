@@ -8,6 +8,7 @@ import { BillingHistory } from "@/components/billing/billing-history";
 import { Separator } from "@/components/ui/separator";
 import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
 import { Product } from "@/types";
+import { CreditCard } from "lucide-react";
 
 interface BillingPageContentProps {
     tournaments: { id: string; name: string; status: string; }[] | null;
@@ -75,8 +76,11 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
                             onSuccess={handlePaymentSuccess}
                         />
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center p-6 border rounded-lg bg-muted/10 text-center text-muted-foreground border-dashed">
-                            <p>{t("select_plan_prompt")}</p>
+                        <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                            <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                                <CreditCard className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-sm font-medium text-muted-foreground">{t("select_plan_prompt")}</h3>
                         </div>
                     )}
                 </section>

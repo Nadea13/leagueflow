@@ -10,9 +10,7 @@ export function BottomNav({ role }: { role?: string }) {
     const t = useTranslations("Nav")
 
     // Use bottom nav items (subset for mobile)
-    const navItems = role === 'admin'
-        ? [...bottomNavItems.slice(0, 4), adminNavItem]
-        : bottomNavItems
+    const navItems = bottomNavItems
 
     return (
         <div className="fixed bottom-0 left-0 z-50 w-full border-t bg-background md:hidden">

@@ -203,7 +203,7 @@ export function PaymentSection({ product, tournaments, onCancel, onSuccess }: Pa
     };
 
     return (
-        <div className="bg-background border rounded-lg p-6 animate-in fade-in slide-in-from-top-2 relative">
+        <div className="bg-background border rounded-none p-6 animate-in fade-in slide-in-from-top-2 relative">
             <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onCancel}>
                 <X className="w-4 h-4" />
             </Button>
@@ -286,7 +286,7 @@ export function PaymentSection({ product, tournaments, onCancel, onSuccess }: Pa
                     <div className="flex flex-col items-center space-y-6 w-full">
                         {paymentState.status === 'success' ? (
                             <div className="text-center space-y-2 py-8">
-                                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
+                                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-none flex items-center justify-center mx-auto">
                                     <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
                                 </div>
                                 <h3 className="text-xl font-bold text-green-600 dark:text-green-400">{t("payment_success")}</h3>
@@ -304,10 +304,10 @@ export function PaymentSection({ product, tournaments, onCancel, onSuccess }: Pa
                             </div>
                         ) : (
                             <>
-                                <div className="bg-white p-4 rounded-xl shadow-sm border border-border/50 relative">
+                                <div className="bg-white p-4 rounded-none shadow-sm border border-border/50 relative">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={paymentState.qrCode} alt="PromptPay QR" className="w-64 h-64 object-contain mix-blend-multiply" />
-                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-full flex items-center gap-2 text-xs font-mono font-medium">
+                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-none flex items-center gap-2 text-xs font-mono font-medium">
                                         <Clock className="w-3 h-3 text-orange-500" />
                                         <span className={timeLeft < 60 ? "text-red-500" : ""}>{formatTime(timeLeft)}</span>
                                     </div>

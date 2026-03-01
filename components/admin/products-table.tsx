@@ -52,7 +52,7 @@ export function ProductsTable({ products }: ProductsTableProps) {
     }
 
     return (
-        <div className="rounded-md border">
+        <div className="rounded-none border">
             <Table>
                 <TableHeader>
                     <TableRow>

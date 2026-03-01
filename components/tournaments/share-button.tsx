@@ -33,7 +33,9 @@ export function ShareButton({ tournamentId }: { tournamentId?: string }) {
             className="gap-2"
         >
             {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-            {copied ? tCommon("copied") : tCommon("share")}
+            <span className="hidden sm:inline">
+                {copied ? tCommon("copied") : tCommon("share")}
+            </span>
         </Button>
     );
 }

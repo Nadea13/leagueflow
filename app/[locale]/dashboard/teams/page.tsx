@@ -72,7 +72,7 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
                                     <Card className="flex flex-col h-full hover:bg-muted/50 transition-colors cursor-pointer group">
                                         <CardHeader>
                                             <div className="flex items-center justify-between">
-                                                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                                <div className="p-2 bg-primary/10 rounded-none group-hover:bg-primary/20 transition-colors">
                                                     <Folder className="h-8 w-8 text-primary" />
                                                 </div>
                                                 <Badge variant="secondary">
@@ -93,8 +93,11 @@ export default async function TeamsPage({ searchParams }: TeamsPageProps) {
                 <div>
                     <h2 className="text-xl font-semibold mb-4 tracking-tight">{t("unassigned_teams")}</h2>
                     {(!unassignedTeams || unassignedTeams.length === 0) ? (
-                        <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-dashed bg-muted/40 p-8 text-center">
-                            <p className="text-muted-foreground text-sm">{t("no_unassigned")}</p>
+                        <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                            <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
+                                <Users className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-sm font-medium text-muted-foreground">{t("no_unassigned")}</h3>
                         </div>
                     ) : (
                         <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">

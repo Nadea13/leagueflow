@@ -15,11 +15,13 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Loader2, RefreshCw, Clock } from "lucide-react";
+import { Check, X, Loader2, RefreshCw, Clock, Settings, MapPin, BookOpen, UserPlus, Users, CreditCard, AlertTriangle, ClipboardEdit } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
 import { createPromptPayCharge, checkChargeStatus } from "@/app/[locale]/actions/payment";
 import { CollaboratorsCard } from "@/components/tournaments/collaborators-card";
+import { VenueManager } from "@/components/tournaments/venue-manager";
+import { RulesConfig } from "@/components/tournaments/rules-config";
 
 const initialState: ActionResponse = {
     success: false,
@@ -240,13 +242,10 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
     return (
         <div className="space-y-6">
-            {/* Collaborators Card */}
-            <CollaboratorsCard tournamentId={tournamentId} />
-
             {/* General Info */}
-            <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+            <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
                 <div>
-                    <h3 className="font-semibold leading-none tracking-tight mb-2">{t("general_info")}</h3>
+                    <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><Settings className="h-4 w-4" />{t("general_info")}</h3>
                     <p className="text-sm text-muted-foreground">{t("update_details")}</p>
                 </div>
 
@@ -276,11 +275,11 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                                     <SelectValue placeholder={t("select_format")} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="league">League</SelectItem>
-                                    <SelectItem value="league_ha">League (Home/Away)</SelectItem>
-                                    <SelectItem value="knockout">Knockout</SelectItem>
+                                    <SelectItem value="league">{t("format_league")}</SelectItem>
+                                    <SelectItem value="league_ha">{t("format_league_ha")}</SelectItem>
+                                    <SelectItem value="knockout">{t("format_knockout")}</SelectItem>
                                     <SelectItem value="group_knockout" disabled={!isPro}>
-                                        Group + Knockout {!isPro && "(Pro Only)"}
+                                        {t("format_group_knockout")} {!isPro && t("pro_only")}
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
@@ -293,11 +292,17 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                 </form>
             </div>
 
+            {/* Rules Configuration */}
+            <RulesConfig tournamentId={tournamentId} />
+
+            {/* Venue Manager */}
+            <VenueManager tournamentId={tournamentId} />
+
             {/* Registration Settings Card - Only for Pro */}
             {isPro && (
-                <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+                <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
                     <div>
-                        <h3 className="font-semibold leading-none tracking-tight mb-2">{t("registration_settings")}</h3>
+                        <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><ClipboardEdit className="h-4 w-4" />{t("registration_settings")}</h3>
                         <p className="text-sm text-muted-foreground">{t("registration_settings_desc")}</p>
                     </div>
                     <form action={formAction} className="space-y-4">
@@ -386,22 +391,26 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                     </form>
                 </div>
             )}
+
+            {/* Collaborators Card */}
+            <CollaboratorsCard tournamentId={tournamentId} />
+
             {/* Billing & Subscription Card */}
-            <div className="space-y-6 border rounded-xl p-6 bg-background shadow-sm">
+            <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
                 <div>
                     <div className="flex items-center gap-2">
-                        <h3 className="font-semibold leading-none tracking-tight mb-2">{t("billing_title")}</h3>
+                        <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><CreditCard className="h-4 w-4" />{t("billing_title")}</h3>
                     </div>
                     <p className="text-sm text-muted-foreground">{t("billing_desc")}</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-background/50 rounded-lg border">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-background/50 rounded-none border">
                     <div>
                         <p className="text-sm font-medium text-muted-foreground">{t("billing_plan_label")}</p>
                         <h4 className="text-lg font-bold flex items-center gap-2">
-                            {isGlobalPro ? (userPlan === 'monthly' ? 'Monthly Pro' : 'Yearly Pro') : (isTournamentPro ? 'Tournament Pro' : t("plan_free"))}
+                            {isGlobalPro ? (userPlan === 'monthly' ? t("plan_monthly") : t("plan_yearly")) : (isTournamentPro ? t("plan_tournament") : t("plan_free"))}
                             <Badge variant={isPro ? "secondary" : "outline"} className={`text-xs font-normal ${isPro ? "bg-green-100 text-green-700" : "border-primary/20 text-primary"}`}>
-                                {isPro ? 'Pro' : 'Free'}
+                                {isPro ? t("plan_pro_badge") : t("plan_free_badge")}
                             </Badge>
                         </h4>
                     </div>
@@ -418,7 +427,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
                 {/* Inline Payment Section */}
                 {!isPro && showPayment && (
-                    <div className="bg-background border rounded-lg p-6 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-background border rounded-none p-6 animate-in fade-in slide-in-from-top-2">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h4 className="font-semibold text-lg">{tBilling("pay_with_promptpay")}</h4>
@@ -448,7 +457,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                             <div className="flex flex-col items-center space-y-6">
                                 {paymentState.status === 'success' ? (
                                     <div className="text-center space-y-2 py-8">
-                                        <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
+                                        <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-none flex items-center justify-center mx-auto">
                                             <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
                                         </div>
                                         <h3 className="text-xl font-bold text-green-600 dark:text-green-400">{tBilling("payment_success")}</h3>
@@ -456,28 +465,28 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                                     </div>
                                 ) : timeLeft <= 0 ? (
                                     <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center">
-                                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                                        <div className="w-16 h-16 bg-muted rounded-none flex items-center justify-center">
                                             <Clock className="w-8 h-8 text-muted-foreground" />
                                         </div>
                                         <div>
-                                            <h3 className="font-semibold text-lg">QR Code Expired</h3>
-                                            <p className="text-sm text-muted-foreground">Please regenerate a new QR code to continue.</p>
+                                            <h3 className="font-semibold text-lg">{t("qr_expired")}</h3>
+                                            <p className="text-sm text-muted-foreground">{t("qr_expired_desc")}</p>
                                         </div>
                                         <Button onClick={handleGenerateQR} disabled={isGeneratingQR}>
                                             {isGeneratingQR ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                                            Regenerate QR
+                                            {t("regenerate_qr")}
                                         </Button>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="bg-white p-4 rounded-xl shadow-sm border border-border/50 relative">
+                                        <div className="bg-white p-4 rounded-none shadow-sm border border-border/50 relative">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={paymentState.qrCode}
                                                 alt="PromptPay QR Code"
                                                 className="w-64 h-64 object-contain mix-blend-multiply"
                                             />
-                                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-full flex items-center gap-2 text-xs font-mono font-medium">
+                                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-none flex items-center gap-2 text-xs font-mono font-medium">
                                                 <Clock className="w-3 h-3 text-orange-500" />
                                                 <span className={timeLeft < 60 ? "text-red-500" : ""}>
                                                     {formatTime(timeLeft)}
@@ -494,7 +503,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                                                 <span>{tBilling("waiting_payment")}</span>
                                             </div>
                                             <p className="text-xs text-muted-foreground text-center animate-pulse">
-                                                Checking payment status automatically...
+                                                {t("checking_status")}
                                             </p>
                                         </div>
                                     </>
@@ -513,30 +522,30 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
             <Card className="border-destructive/20 bg-destructive/5">
                 <CardHeader>
-                    <CardTitle className="text-destructive">{t("danger_zone")}</CardTitle>
+                    <CardTitle className="text-destructive flex items-center gap-2"><AlertTriangle className="h-4 w-4" />{t("danger_zone")}</CardTitle>
                     <CardDescription className="text-destructive/80">{t("delete_desc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {hasFixtures && (
                         <>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div>
                                     <h4 className="font-medium text-destructive">{t("reset_fixtures")}</h4>
                                     <p className="text-sm text-destructive/80">{t("reset_desc")}</p>
                                 </div>
-                                <Button variant="destructive" onClick={handleReset} disabled={isPending}>
+                                <Button variant="destructive" onClick={handleReset} disabled={isPending} className="w-full sm:w-auto">
                                     {isPending ? tCommon("loading") : t("reset_fixtures")}
                                 </Button>
                             </div>
                             <Separator className="bg-destructive/10" />
                         </>
                     )}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h4 className="font-medium text-destructive">{t("delete_tournament")}</h4>
                             <p className="text-sm text-destructive/80">{t("delete_desc")}</p>
                         </div>
-                        <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+                        <Button variant="destructive" onClick={handleDelete} disabled={isPending} className="w-full sm:w-auto">
                             {isPending ? tCommon("loading") : t("delete_tournament")}
                         </Button>
                     </div>

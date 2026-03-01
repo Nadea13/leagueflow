@@ -84,7 +84,7 @@ export function PricingPlans() {
                     <CardHeader>
                         {plan.highlight && (
                             <div className="mb-2">
-                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${plan.isPopular ? "bg-primary/10 text-primary" : "bg-secondary text-secondary-foreground"}`}>
+                                <span className={`inline-block px-3 py-1 rounded-none text-xs font-semibold ${plan.isPopular ? "bg-primary/10 text-primary" : "bg-secondary text-secondary-foreground"}`}>
                                     {plan.highlight}
                                 </span>
                             </div>
@@ -100,7 +100,7 @@ export function PricingPlans() {
                         <ul className="space-y-3">
                             {plan.features.map((feature, index) => (
                                 <li key={index} className="flex items-center gap-2 text-sm">
-                                    <div className={`h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0 ${plan.isPopular ? "bg-primary text-primary-foreground" : "text-primary"}`}>
+                                    <div className={`h-4 w-4 rounded-none flex items-center justify-center flex-shrink-0 ${plan.isPopular ? "bg-primary text-primary-foreground" : "text-primary"}`}>
                                         <Check className={`h-3 w-3 ${plan.isPopular ? "text-primary-foreground" : "text-primary"}`} />
                                     </div>
                                     {feature}

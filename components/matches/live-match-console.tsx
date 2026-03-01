@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Timer, Plus } from "lucide-react";
+import { Timer, Plus, Target } from "lucide-react";
 
 // Types
 // Types
@@ -24,6 +24,7 @@ import { Scoreboard } from "./console/scoreboard";
 import { EventTimeline } from "./console/event-timeline";
 import { MatchEventDialog } from "./console/match-event-dialog";
 import { WalkoverDialog } from "./console/walkover-dialog";
+import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
 import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
@@ -310,7 +311,7 @@ export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, i
             <DialogTrigger asChild>
                 {trigger || (
                     <Button variant="outline" size="sm" className={cn("gap-2", match.status === 'live' && "border-red-500 text-red-600")}>
-                        {match.status === 'live' && <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+                        {match.status === 'live' && <span className="flex h-2 w-2 rounded-none bg-red-500 animate-pulse" />}
                         {t("console")}
                     </Button>
                 )}
@@ -377,6 +378,21 @@ export function LiveMatchConsole({ match: initialMatch, tournamentId, trigger, i
                             >
                                 <span className="text-xs font-bold mr-1">WO</span> {t("walkover")}
                             </Button>
+                            {/* Penalty Shootout - Only for knockout stages */}
+                            {(match.stage !== 'league' && match.stage !== 'group') && (
+                                <PenaltyShootoutDialog
+                                    matchId={match.id}
+                                    homeTeamId={match.home_team_id}
+                                    awayTeamId={match.away_team_id}
+                                    homeTeamName={match.home_team?.name || 'Home'}
+                                    awayTeamName={match.away_team?.name || 'Away'}
+                                    trigger={
+                                        <Button type="button" variant="outline" size="sm">
+                                            <Target className="h-4 w-4 mr-1" /> PEN
+                                        </Button>
+                                    }
+                                />
+                            )}
                         </div>
                     )}
 

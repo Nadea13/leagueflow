@@ -131,12 +131,12 @@ export function EditTeamDialog({ team, tournaments }: { team: Team, tournaments:
                                             <img
                                                 src={previewUrl}
                                                 alt={tCommon("preview")}
-                                                className="h-10 w-10 object-contain rounded-full border bg-muted"
+                                                className="h-10 w-10 object-contain rounded-none border bg-muted"
                                             />
                                         )}
                                         <Label
                                             htmlFor="edit-logo"
-                                            className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
+                                            className="cursor-pointer inline-flex items-center justify-center whitespace-nowrap rounded-none text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full"
                                         >
                                             <Upload className="mr-2 h-4 w-4" />
                                             {previewUrl ? t("click_to_upload") : t("upload_logo")}

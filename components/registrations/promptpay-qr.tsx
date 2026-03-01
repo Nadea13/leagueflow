@@ -44,7 +44,7 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
     const t = useTranslations("Billing");
 
     if (loading) {
-        return <Skeleton className="w-[300px] h-[300px] rounded-lg" />;
+        return <Skeleton className="w-[300px] h-[300px] rounded-none" />;
     }
 
     if (!qrCodeUrl) {
@@ -57,7 +57,7 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
 
             <div className="relative w-[200px] h-[200px]">
                 <img src={qrCodeUrl} alt="PromptPay QR Code" className="w-full h-full" />
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] rounded-md p-1 shadow-sm flex items-center justify-center overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] rounded-none p-1 shadow-sm flex items-center justify-center overflow-hidden">
                     <img
                         src="https://www.bot.or.th/content/dam/bot/icons/icon-thaiqr.png"
                         alt="Thai QR Payment"

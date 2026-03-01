@@ -140,7 +140,7 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
             </div>
 
             {/* Table */}
-            <div className="rounded-md border bg-card">
+            <div className="rounded-none border bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -188,7 +188,7 @@ export function AdminAuditLogs({ initialLogs }: AdminAuditLogsProps) {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xs text-muted-foreground block max-w-[300px] truncate" title={JSON.stringify(log.details, null, 2)}>
+                                        <code className="relative bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xs text-muted-foreground block max-w-[300px] truncate" title={JSON.stringify(log.details, null, 2)}>
                                             {JSON.stringify(log.details)}
                                         </code>
                                     </TableCell>

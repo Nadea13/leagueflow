@@ -47,8 +47,9 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> {t("create_tournament")}
+                <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("create_tournament")}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

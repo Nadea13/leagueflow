@@ -165,7 +165,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col md:grid md:grid-cols-[140px_1fr_140px] items-center p-3 md:p-4 border rounded-lg shadow-sm transition-all hover:shadow-md cursor-pointer",
+                "flex flex-col md:grid md:grid-cols-[140px_1fr_140px] items-center p-3 md:p-4 border rounded-none shadow-sm transition-all hover:shadow-md cursor-pointer",
                 isFinished ? "bg-muted/30" : "bg-card",
                 "gap-3 md:gap-4",
                 isPublic && "hover:border-primary/50 hover:bg-muted/50"
@@ -188,8 +188,8 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                             isLive ? (
                                 <span className="flex items-center gap-1.5">
                                     <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-white opacity-75"></span>
+                                        <span className="relative inline-flex rounded-none h-2 w-2 bg-white"></span>
                                     </span>
                                     {match.current_minute ? (
                                         typeof match.current_minute === 'number' ? `${match.current_minute}'` : match.current_minute
@@ -285,7 +285,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                 {match.home_team?.logo_url ? (
                                     <img src={match.home_team.logo_url} className="w-6 h-6 md:w-8 md:h-8 object-contain" alt="" />
                                 ) : (
-                                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-none bg-primary/10 flex items-center justify-center shrink-0">
                                         <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
                                             {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
@@ -299,19 +299,26 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                 {/* Score / VS Display */}
                 <div className="flex items-center justify-center w-[20%] min-w-[60px] md:min-w-[100px] shrink-0">
                     <div className={cn(
-                        "flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1 md:py-1.5 rounded-lg border",
+                        "flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1 md:py-1.5 rounded-none border",
                         isLive ? "bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900/50" : "bg-muted/30 border-border/50"
                     )}>
                         {isLive || isFinished ? (
-                            <>
-                                <span className={cn("text-lg md:text-xl font-mono font-bold w-4 md:w-6 text-center", isLive && "text-red-600")}>
-                                    {match.home_score ?? 0}
-                                </span>
-                                <span className="text-muted-foreground/40 font-mono">:</span>
-                                <span className={cn("text-lg md:text-xl font-mono font-bold w-4 md:w-6 text-center", isLive && "text-red-600")}>
-                                    {match.away_score ?? 0}
-                                </span>
-                            </>
+                            <div className="flex flex-col items-center">
+                                <div className="flex items-center gap-1 md:gap-2">
+                                    <span className={cn("text-lg md:text-xl font-mono font-bold w-4 md:w-6 text-center", isLive && "text-red-600")}>
+                                        {match.home_score ?? 0}
+                                    </span>
+                                    <span className="text-muted-foreground/40 font-mono">:</span>
+                                    <span className={cn("text-lg md:text-xl font-mono font-bold w-4 md:w-6 text-center", isLive && "text-red-600")}>
+                                        {match.away_score ?? 0}
+                                    </span>
+                                </div>
+                                {(match.penalty_home_score != null || match.penalty_away_score != null) && (
+                                    <span className="text-[9px] text-muted-foreground font-mono">
+                                        ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PEN)
+                                    </span>
+                                )}
+                            </div>
                         ) : (
                             <span className="text-muted-foreground font-mono font-bold text-xs md:text-sm">VS</span>
                         )}
@@ -347,7 +354,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                 {match.away_team?.logo_url ? (
                                     <img src={match.away_team.logo_url} className="w-6 h-6 md:w-8 md:h-8 object-contain" alt="" />
                                 ) : (
-                                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-none bg-primary/10 flex items-center justify-center shrink-0">
                                         <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
                                             {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>

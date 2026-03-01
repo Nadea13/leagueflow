@@ -117,7 +117,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
     if (success) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <div className="w-16 h-16 bg-green-100 rounded-none flex items-center justify-center mb-6">
                     <CheckCircle2 className="w-8 h-8 text-green-600" />
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">{t("success_title")}</h2>
@@ -159,13 +159,13 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                             render={({ field: { value, onChange, ...fieldProps } }) => (
                                                 <div className="shrink-0">
                                                     <label htmlFor="logo-upload-field" className="cursor-pointer group relative block">
-                                                        <div className="h-11 w-11 rounded-full border border-input flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
+                                                        <div className="h-11 w-11 rounded-none border border-input flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
                                                             {previewUrl ? (
                                                                 <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
                                                             ) : (
                                                                 <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
                                                             )}
-                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-none">
                                                                 <Upload className="h-4 w-4 text-white" />
                                                             </div>
                                                         </div>
@@ -261,7 +261,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                             <div className="grid md:grid-cols-2 gap-8 items-start">
                                 {/* QR Code Section */}
                                 {tournament.bank_account_number && (
-                                    <div className="p-2 bg-white rounded-lg shadow-sm border">
+                                    <div className="p-2 bg-white rounded-none shadow-sm border">
                                         <PromptPayQR
                                             phoneNumber={tournament.bank_account_number}
                                             amount={Number(tournament.registration_fee)}
@@ -271,7 +271,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
 
                                 {/* Bank Details & Upload */}
                                 <div className="space-y-6">
-                                    <div className="bg-muted/50 rounded-lg p-5 space-y-3 text-sm">
+                                    <div className="bg-muted/50 rounded-none p-5 space-y-3 text-sm">
                                         <div className="flex justify-between items-center pb-2 border-b border-border/50">
                                             <span className="text-muted-foreground">{t("bank_label")}</span>
                                             <span className="font-medium text-foreground">{tournament.bank_name || "-"}</span>
@@ -298,7 +298,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                                 <FormControl>
                                                     <div className="group relative">
                                                         {!previewUrl ? (
-                                                            <div className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors rounded-xl p-8 text-center cursor-pointer bg-muted/5 hover:bg-muted/10 relative">
+                                                            <div className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors rounded-none p-8 text-center cursor-pointer bg-muted/5 hover:bg-muted/10 relative">
                                                                 <Input
                                                                     type="file"
                                                                     accept="image/jpeg,image/png,image/webp"
@@ -313,7 +313,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                                                     {...rest}
                                                                 />
                                                                 <div className="flex flex-col items-center gap-2">
-                                                                    <div className="p-3 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform">
+                                                                    <div className="p-3 bg-primary/10 rounded-none text-primary group-hover:scale-110 transition-transform">
                                                                         <Upload className="w-5 h-5" />
                                                                     </div>
                                                                     <div className="text-sm font-medium text-foreground">
@@ -325,9 +325,9 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="relative rounded-xl overflow-hidden border bg-muted/30 p-2">
+                                                            <div className="relative rounded-none overflow-hidden border bg-muted/30 p-2">
                                                                 <div className="flex items-center gap-3">
-                                                                    <div className="h-16 w-16 relative rounded-lg overflow-hidden border">
+                                                                    <div className="h-16 w-16 relative rounded-none overflow-hidden border">
                                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                         <img
                                                                             src={previewUrl}

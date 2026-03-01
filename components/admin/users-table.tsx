@@ -47,10 +47,10 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
     const handleRoleChange = async (userId: string, newRole: string) => {
         const result = await updateUserRole(userId, newRole);
         if (result.success) {
-            toast.success(`Role updated to ${newRole}`);
+            toast.success(t("role_updated"));
             setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
         } else {
-            toast.error(`Failed to update role: ${result.error}`);
+            toast.error(t("role_update_failed"));
         }
     };
 
@@ -66,7 +66,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                 />
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-none border bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -106,7 +106,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
+                                                    <span className="sr-only">{t("actions")}</span>
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>

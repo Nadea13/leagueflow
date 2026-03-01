@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { BottomNav } from "@/components/dashboard/bottom-nav";
 
 export default async function DashboardLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
     const supabase = await createClient();
@@ -31,11 +30,10 @@ export default async function DashboardLayout({ children, params }: { children: 
             </div>
             <div className="flex flex-col">
                 <DashboardHeader userEmail={user?.email} role={userRole} />
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-20 md:pb-6">
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>
             </div>
-            <BottomNav role={userRole} />
         </div>
     );
 }
