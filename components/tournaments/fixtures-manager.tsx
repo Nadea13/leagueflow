@@ -112,10 +112,10 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                 </div>
             ) : (
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/30 rounded-none">
+                <div className="flex flex-row justify-between gap-4 rounded-none">
                     {/* Filter */}
-                    <div className="flex items-center gap-2 w-full md:w-auto">
-                        <span className="text-sm font-medium">{tMatch("status")}:</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium hidden md:inline">{tMatch("status")}:</span>
                         <Select value={filterStage} onValueChange={setFilterStage}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder={tMatch("round")} />

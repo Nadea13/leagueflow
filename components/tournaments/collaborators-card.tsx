@@ -87,7 +87,7 @@ export function CollaboratorsCard({ tournamentId }: CollaboratorsCardProps) {
     };
 
     return (
-        <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+        <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><Users className="h-4 w-4" />{t("title")}</h3>
@@ -141,7 +141,7 @@ export function CollaboratorsCard({ tournamentId }: CollaboratorsCardProps) {
                     {collaborators.map((collab) => (
                         <div
                             key={collab.id}
-                            className="flex items-center justify-between p-3 bg-muted/50 rounded-none border"
+                            className="flex items-center justify-between p-3 rounded-none border"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-none bg-primary/10 flex items-center justify-center">

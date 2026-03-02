@@ -20,12 +20,12 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
     // .order("gf", { ascending: false });
 
     return (
-        <div className="w-full overflow-x-auto rounded-none border">
+        <div className="w-full rounded-none border">
             <Table className="min-w-[500px] text-xs md:text-sm">
                 <TableHeader>
                     <TableRow className="h-8 md:h-10">
-                        <TableHead className="w-8 md:w-12 px-1 md:px-4 text-center">{t("pos")}</TableHead>
-                        <TableHead className="px-1 md:px-4">{t("team")}</TableHead>
+                        <TableHead className="w-8 md:w-12 px-1 md:px-4 text-center sticky left-0 z-20 bg-card supports-[backdrop-filter]:bg-card shadow-[1px_0_0_0_rgba(156,163,175,0.2)] md:shadow-none">{t("pos")}</TableHead>
+                        <TableHead className="px-1 md:px-4 sticky left-8 md:static md:left-auto z-20 bg-card supports-[backdrop-filter]:bg-card shadow-[1px_0_0_0_rgba(156,163,175,0.2)] md:shadow-none">{t("team")}</TableHead>
                         <TableHead className="text-center px-1 md:px-4">{t("played")}</TableHead>
                         <TableHead className="text-center px-1 md:px-4">{t("won")}</TableHead>
                         <TableHead className="text-center px-1 md:px-4">{t("drawn")}</TableHead>
@@ -33,14 +33,14 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                         <TableHead className="text-center px-1 md:px-4">{t("gf")}</TableHead>
                         <TableHead className="text-center px-1 md:px-4">{t("ga")}</TableHead>
                         <TableHead className="text-center px-1 md:px-4">{t("gd")}</TableHead>
-                        <TableHead className="text-center font-bold px-1 md:px-4">{t("pts")}</TableHead>
+                        <TableHead className="text-center font-bold px-1 md:px-4 sticky right-0 z-20 bg-card supports-[backdrop-filter]:bg-card shadow-[-1px_0_0_0_rgba(156,163,175,0.2)] md:shadow-none">{t("pts")}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {standings.map((team, index) => (
                         <TableRow key={team.team_id} className="h-8 md:h-10">
-                            <TableCell className="font-medium text-center px-1 md:px-4">{index + 1}</TableCell>
-                            <TableCell className="px-1 md:px-4">
+                            <TableCell className="font-medium text-center px-1 md:px-4 sticky left-0 z-10 bg-card supports-[backdrop-filter]:bg-card shadow-[1px_0_0_0_rgba(156,163,175,0.2)] md:shadow-none">{index + 1}</TableCell>
+                            <TableCell className="px-1 md:px-4 sticky left-8 md:static md:left-auto z-10 bg-card supports-[backdrop-filter]:bg-card shadow-[1px_0_0_0_rgba(156,163,175,0.2)] md:shadow-none">
                                 <div className="flex items-center gap-1 md:gap-2">
                                     {team.team?.logo_url ? (
                                         <img src={team.team.logo_url} alt={team.team.name} className="w-4 h-4 md:w-6 md:h-6 object-contain" />
@@ -61,7 +61,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                             <TableCell className={`text-center font-semibold px-1 md:px-4 ${team.gd > 0 ? "text-green-600" : (team.gd < 0 ? "text-red-500" : "")}`}>
                                 {team.gd > 0 ? `+${team.gd}` : team.gd}
                             </TableCell>
-                            <TableCell className="text-center font-bold text-sm md:text-lg px-1 md:px-4">{team.pts}</TableCell>
+                            <TableCell className="text-center font-bold text-sm md:text-lg px-1 md:px-4 sticky right-0 z-10 bg-card supports-[backdrop-filter]:bg-card shadow-[-1px_0_0_0_rgba(156,163,175,0.2)] md:shadow-none">{team.pts}</TableCell>
                         </TableRow>
                     ))}
                     {standings.length === 0 && (

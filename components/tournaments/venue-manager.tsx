@@ -87,7 +87,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
     };
 
     return (
-        <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+        <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="font-semibold leading-none tracking-tight mb-2">
@@ -167,7 +167,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
             ) : venues.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none">
                     <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
                         <MapPin className="h-6 w-6 text-muted-foreground" />
                     </div>

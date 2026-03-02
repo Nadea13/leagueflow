@@ -83,7 +83,7 @@ function TeamItem({ team, tournamentId, isPro }: { team: Team; tournamentId: str
     };
 
     return (
-        <div className="flex items-center justify-between p-3 border rounded-none bg-background">
+        <div className="flex items-center justify-between p-3 border rounded-none bg-card">
             <div className="flex items-center">
                 <div className="h-8 w-8 rounded-none bg-primary/10 flex items-center justify-center mr-3 overflow-hidden">
                     {team.logo_url ? (

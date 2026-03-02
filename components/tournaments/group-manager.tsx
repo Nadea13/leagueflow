@@ -26,7 +26,7 @@ export function GroupManager({ teams, tournamentId }: GroupManagerProps) {
     if (!teams || teams.length === 0) return null;
 
     return (
-        <div className="space-y-4 border rounded-none p-6 mt-6 bg-background shadow-sm">
+        <div className="space-y-4 border rounded-none p-6 mt-6 bg-card shadow-sm">
             <h3 className="font-semibold leading-none tracking-tight">{t("group_assignment")}</h3>
             <p className="text-sm text-muted-foreground">
                 {t("group_assignment_desc")}
@@ -62,7 +62,7 @@ function GroupItem({ team, tournamentId }: { team: Team; tournamentId: string })
     };
 
     return (
-        <div className="flex items-center justify-between p-3 border rounded-none bg-background">
+        <div className="flex items-center justify-between p-3 border rounded-none bg-card">
             <span className="font-medium truncate max-w-[150px]" title={team.name}>
                 {team.name}
             </span>

@@ -64,7 +64,7 @@ export function FinancialSummary({ tournamentId }: FinancialSummaryProps) {
     }
 
     return (
-        <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+        <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
             <div>
                 <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />
@@ -155,7 +155,7 @@ export function FinancialSummary({ tournamentId }: FinancialSummaryProps) {
                     </Table>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none">
                     <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
                         <DollarSign className="h-6 w-6 text-muted-foreground" />
                     </div>

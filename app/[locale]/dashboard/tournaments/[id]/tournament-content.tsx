@@ -270,7 +270,7 @@ export function TournamentContent({
                                 <CardTitle className="flex items-center gap-2"><GitBranch className="h-4 w-4" />{t("bracket")}</CardTitle>
                                 <CardDescription>{t("bracket_desc")}</CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="hidden md:block w-[calc(100vw)] overflow-x-auto">
                                 <TournamentBracket matches={matches} />
                             </CardContent>
                         </Card>
@@ -336,7 +336,7 @@ export function TournamentContent({
 
                 {/* Teams Tab */}
                 <TabsContent value="teams" className="space-y-6">
-                    <div className="flex flex-col gap-4 p-6 border rounded-none bg-background shadow-sm">
+                    <div className="flex flex-col gap-4 p-6 border rounded-none bg-card shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight">{t("add_team")}</h3>
                         <AddTeamForm
                             tournamentId={id}
@@ -394,7 +394,7 @@ export function TournamentContent({
                         <GroupManager teams={teams} tournamentId={id} />
                     )}
 
-                    <div className="space-y-4 border rounded-none p-6 bg-background shadow-sm">
+                    <div className="space-y-4 border rounded-none p-6 bg-card shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight">{t("participating_teams")} ({teams?.length || 0})</h3>
                         <TeamList teams={teams} tournamentId={id} isPro={isPro} />
                     </div>
@@ -402,19 +402,19 @@ export function TournamentContent({
 
                 {/* Fixtures Tab */}
                 <TabsContent value="fixtures" className="space-y-6">
-                    <div className="flex flex-col gap-6 p-6 border rounded-none bg-background shadow-sm">
+                    <div className="flex flex-col gap-6 p-6 border rounded-none bg-card shadow-sm">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="space-y-1">
                                 <h3 className="font-semibold leading-none tracking-tight">{t("match_schedule")}</h3>
                                 <p className="text-sm text-muted-foreground">{t("manage_fixtures")}</p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col md:flex-row w-full md:w-auto items-stretch md:items-center gap-2">
                                 {/* View Toggle */}
-                                <div className="flex border rounded-none">
+                                <div className="flex border rounded-none w-full md:w-auto">
                                     <Button
                                         variant={fixtureView === 'list' ? 'default' : 'ghost'}
                                         size="sm"
-                                        className="rounded-r-none h-8"
+                                        className="rounded-r-none h-8 flex-1 md:flex-none"
                                         onClick={() => setFixtureView('list')}
                                     >
                                         <List className="h-4 w-4" />
@@ -422,13 +422,15 @@ export function TournamentContent({
                                     <Button
                                         variant={fixtureView === 'calendar' ? 'default' : 'ghost'}
                                         size="sm"
-                                        className="rounded-l-none h-8"
+                                        className="rounded-l-none h-8 flex-1 md:flex-none"
                                         onClick={() => setFixtureView('calendar')}
                                     >
                                         <Calendar className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                <FixtureGenerator tournamentId={id} hasFixtures={hasFixtures} className="w-full md:w-auto" />
+                                {!hasFixtures && (
+                                    <FixtureGenerator tournamentId={id} hasFixtures={hasFixtures} className="w-full md:w-auto" />
+                                )}
                             </div>
                         </div>
 

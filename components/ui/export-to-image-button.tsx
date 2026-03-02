@@ -50,8 +50,8 @@ export function ExportToImageButton({ targetId, filename, label = "Export Image"
 
     return (
         <Button variant="outline" size="sm" onClick={handleExport} disabled={isLoading}>
-            <Download className="mr-2 h-4 w-4" />
-            {isLoading ? "Exporting..." : label}
+            <Download className="mr-0 md:mr-2 h-4 w-4" />
+            <span className="hidden md:inline">{isLoading ? "Exporting..." : label}</span>
         </Button>
     );
 }

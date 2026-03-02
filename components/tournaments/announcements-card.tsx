@@ -89,7 +89,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
     if (!isEditable && announcements.length === 0) return null;
 
     return (
-        <div className="space-y-4 border rounded-none p-6 bg-background shadow-sm">
+        <div className="space-y-4 border rounded-none p-6 bg-card shadow-sm">
             <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
                     <Megaphone className="h-4 w-4" />
@@ -97,8 +97,8 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                 </h3>
                 {isEditable && (
                     <Button size="sm" variant="outline" onClick={() => setShowForm(!showForm)}>
-                        <Plus className="h-4 w-4 mr-1" />
-                        {t("new")}
+                        <Plus className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">{t("new")}</span>
                     </Button>
                 )}
             </div>
@@ -130,7 +130,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
 
             {/* Announcement List */}
             {announcements.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
+                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none">
                     <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
                         <Megaphone className="h-6 w-6 text-muted-foreground" />
                     </div>

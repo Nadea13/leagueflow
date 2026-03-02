@@ -64,7 +64,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
     };
 
     return (
-        <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+        <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
             <div>
                 <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2">
                     <Settings2 className="h-4 w-4" />
@@ -199,7 +199,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                 <div className="flex justify-end">
                     <Button type="submit" disabled={isSaving}>
                         {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                        {t("save_rules")}
+                        {tCommon("save")}
                     </Button>
                 </div>
             </form>

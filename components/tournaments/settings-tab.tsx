@@ -243,7 +243,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
     return (
         <div className="space-y-6">
             {/* General Info */}
-            <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+            <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
                 <div>
                     <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><Settings className="h-4 w-4" />{t("general_info")}</h3>
                     <p className="text-sm text-muted-foreground">{t("update_details")}</p>
@@ -287,7 +287,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                     </div>
                     {state.error && <p className="text-sm text-red-500">{state.error}</p>}
                     <div className="flex justify-end">
-                        <Button type="submit">{t("save_changes")}</Button>
+                        <Button type="submit">{tCommon("save")}</Button>
                     </div>
                 </form>
             </div>
@@ -300,7 +300,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
             {/* Registration Settings Card - Only for Pro */}
             {isPro && (
-                <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+                <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
                     <div>
                         <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><ClipboardEdit className="h-4 w-4" />{t("registration_settings")}</h3>
                         <p className="text-sm text-muted-foreground">{t("registration_settings_desc")}</p>
@@ -386,7 +386,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
 
                         <div className="flex justify-end">
-                            <Button type="submit">{t("save_changes")}</Button>
+                            <Button type="submit">{tCommon("save")}</Button>
                         </div>
                     </form>
                 </div>
@@ -396,7 +396,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
             <CollaboratorsCard tournamentId={tournamentId} />
 
             {/* Billing & Subscription Card */}
-            <div className="space-y-6 border rounded-none p-6 bg-background shadow-sm">
+            <div className="space-y-6 border rounded-none p-6 bg-card shadow-sm">
                 <div>
                     <div className="flex items-center gap-2">
                         <h3 className="font-semibold leading-none tracking-tight mb-2 flex items-center gap-2"><CreditCard className="h-4 w-4" />{t("billing_title")}</h3>
@@ -404,7 +404,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                     <p className="text-sm text-muted-foreground">{t("billing_desc")}</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-background/50 rounded-none border">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-card rounded-none border">
                     <div>
                         <p className="text-sm font-medium text-muted-foreground">{t("billing_plan_label")}</p>
                         <h4 className="text-lg font-bold flex items-center gap-2">
@@ -427,7 +427,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
 
                 {/* Inline Payment Section */}
                 {!isPro && showPayment && (
-                    <div className="bg-background border rounded-none p-6 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-card border rounded-none p-6 animate-in fade-in slide-in-from-top-2">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h4 className="font-semibold text-lg">{tBilling("pay_with_promptpay")}</h4>
@@ -486,7 +486,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan }: { tournament:
                                                 alt="PromptPay QR Code"
                                                 className="w-64 h-64 object-contain mix-blend-multiply"
                                             />
-                                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border shadow-sm px-3 py-1 rounded-none flex items-center gap-2 text-xs font-mono font-medium">
+                                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-card border shadow-sm px-3 py-1 rounded-none flex items-center gap-2 text-xs font-mono font-medium">
                                                 <Clock className="w-3 h-3 text-orange-500" />
                                                 <span className={timeLeft < 60 ? "text-red-500" : ""}>
                                                     {formatTime(timeLeft)}

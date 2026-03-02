@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function ProfileForm({ user }: { user: any }) {
     const t = useTranslations("Profile");
+    const tCommon = useTranslations("Common");
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
@@ -63,7 +64,7 @@ export function ProfileForm({ user }: { user: any }) {
                         <div className="flex justify-end">
                             <Button type="submit" disabled={isLoading}>
                                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {t("save_changes")}
+                                {tCommon("save")}
                             </Button>
                         </div>
                     </form>
