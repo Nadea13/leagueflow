@@ -72,7 +72,10 @@ export async function recordPayment(data: {
             expiresAt.setFullYear(expiresAt.getFullYear() + 1);
         }
 
-        insertData.subscription_expires_at = expiresAt.toISOString();
+        // Only set if not already set (e.g. by a provider or previous logic)
+        if (!insertData.subscription_expires_at) {
+            insertData.subscription_expires_at = expiresAt.toISOString();
+        }
     }
 
     const { error } = await supabase.from("payments").insert(insertData);
@@ -83,6 +86,8 @@ export async function recordPayment(data: {
     }
 
     revalidatePath("/dashboard/billing");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
 
     // Log and Notify
     await logActivity('PAYMENT_RECORDED', 'payment', data.charge_id || 'manual', { amount: data.amount, status: data.status });
@@ -104,25 +109,8 @@ export async function updateProfilePaymentStatus(data: {
 
     if (!user) return { success: false, error: "User not authenticated" };
 
-    const updateData: any = {
-        payment_status: data.payment_status,
-    };
-
-    if (data.payment_id) updateData.payment_id = data.payment_id;
-    if (data.payment_method) updateData.payment_method = data.payment_method;
-    if (data.plan) {
-        updateData.plan = data.plan;
-    }
-
-    const { error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("id", user.id);
-
-    if (error) {
-        console.error("Error updating profile payment status:", error);
-        return { success: false, error: error.message };
-    }
-
+    // The pro status is derived from the 'payments' table history, 
+    // so we don't need to duplicate this data in the 'profiles' table 
+    // which may not even have these columns.
     return { success: true };
 }

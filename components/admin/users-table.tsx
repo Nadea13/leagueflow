@@ -37,12 +37,17 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
     const tCommon = useTranslations("Common");
     const locale = useLocale();
     const [searchTerm, setSearchTerm] = useState("");
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 100;
     const [users, setUsers] = useState(initialUsers);
 
     const filteredUsers = users.filter(user =>
         (user.email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
         (user.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
+
+    const paginatedUsers = filteredUsers.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
 
     const handleRoleChange = async (userId: string, newRole: string) => {
         const result = await updateUserRole(userId, newRole);
@@ -62,7 +67,10 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                     placeholder={t("search_users")}
                     className="pl-8"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                    }}
                 />
             </div>
 
@@ -84,7 +92,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            filteredUsers.map((user) => (
+                            paginatedUsers.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell>
                                         <div className="flex flex-col">
@@ -136,12 +144,42 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                     </TableBody>
                 </Table>
             </div>
-            <div className="text-xs text-muted-foreground text-center">
-                {t.rich("showing_users", {
-                    count: filteredUsers.length,
-                    total: filteredUsers.length
-                })}
-            </div>
+            {filteredUsers.length > 0 && (
+                <div className="flex items-center justify-between py-2">
+                    <div className="text-sm text-muted-foreground hidden sm:block">
+                        Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            id="pagination-prev"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setPage(p => Math.max(1, p - 1));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            disabled={page === 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground px-2" id="pagination-info">
+                            Page {page} of {totalPages}
+                        </span>
+                        <Button
+                            id="pagination-next"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setPage(p => Math.min(totalPages, p + 1));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            disabled={page === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

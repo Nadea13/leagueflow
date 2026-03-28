@@ -1,6 +1,7 @@
-import { Play, Pause, Square } from "lucide-react";
+import { Play, Pause, Square, History, Clock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 
 interface MatchControlsProps {
     status: string;
@@ -10,6 +11,8 @@ interface MatchControlsProps {
     onPause: () => void;
     onResume: () => void;
     onEnd: () => void;
+    onSetTime?: () => void;
+    onAddTime?: () => void;
 }
 
 export function MatchControls({
@@ -19,50 +22,115 @@ export function MatchControls({
     onStart,
     onPause,
     onResume,
-    onEnd
+    onEnd,
+    onSetTime,
+    onAddTime
 }: MatchControlsProps) {
     const t = useTranslations("Console");
 
-    if (readOnly || status === 'finished') return null;
+    if (readOnly) return null;
 
     return (
-        <div className="flex justify-center items-center gap-2">
-            {/* Start / Resume Button */}
-            <Button
-                type="button"
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white font-bold gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={status !== 'live' ? onStart : onResume}
-                disabled={status === 'live' && isRunning}
-            >
-                <Play className="h-4 w-4 fill-current" />
-                {status !== 'live' ? t("start_match") : t("resume_match")}
-            </Button>
+        <div className="flex flex-row md:flex-col gap-3 w-full">
+            {(status === 'pending' || status === 'scheduled') ? (
+                <Button 
+                    variant="outline"
+                    onClick={onStart}
+                    className="flex-1 md:w-full h-14 bg-secondary/10 border-secondary/20 hover:bg-secondary/20 hover:border-secondary/40 rounded-none transition-all group active:scale-[0.98]"
+                >
+                    <div className="flex flex-col items-center md:items-start">
+                        <div className="flex items-center gap-3">
+                            <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
+                            <span className="text-[11px] font-black uppercase tracking-widest text-secondary">{t("start_match")}</span>
+                        </div>
+                        <span className="hidden md:block text-[9px] text-secondary/60 italic ml-7">Kick off the competition</span>
+                    </div>
+                </Button>
+            ) : status === 'live' && isRunning ? (
+                <Button 
+                    variant="outline"
+                    onClick={onPause}
+                    className="flex-1 md:w-full h-14 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20 hover:border-orange-500/40 rounded-none transition-all group active:scale-[0.98]"
+                >
+                    <div className="flex flex-col items-center md:items-start">
+                        <div className="flex items-center gap-3">
+                            <Pause className="h-4 w-4 fill-orange-500 text-orange-500 group-hover:scale-110 transition-transform" /> 
+                            <span className="text-[11px] font-black uppercase tracking-widest text-orange-500">{t("pause")}</span>
+                        </div>
+                        <span className="hidden md:block text-[9px] text-orange-500/60 italic ml-7">Temporarily halt play</span>
+                    </div>
+                </Button>
+            ) : status === 'live' && !isRunning ? (
+                <Button 
+                    variant="outline"
+                    onClick={onResume}
+                    className="flex-1 md:w-full h-14 bg-secondary/10 border-secondary/20 hover:bg-secondary/20 hover:border-secondary/40 rounded-none transition-all group active:scale-[0.98]"
+                >
+                    <div className="flex flex-col items-center md:items-start">
+                        <div className="flex items-center gap-3">
+                            <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
+                            <span className="text-[11px] font-black uppercase tracking-widest text-secondary">{t("resume_match")}</span>
+                        </div>
+                        <span className="hidden md:block text-[9px] text-secondary/60 italic ml-7">Continue the match</span>
+                    </div>
+                </Button>
+            ) : (
+                <Button 
+                    variant="outline"
+                    disabled
+                    className="flex-1 md:w-full h-14 bg-white/5 border-white/10 rounded-none opacity-50 cursor-not-allowed"
+                >
+                    <div className="flex items-center gap-3">
+                        <Play className="h-4 w-4 text-white/20" /> 
+                        <span className="text-[11px] font-black uppercase tracking-widest text-white/20">{t("match_finished")}</span>
+                    </div>
+                </Button>
+            )}
 
-            {/* Pause Button */}
-            <Button
-                type="button"
-                size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-white font-bold gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={onPause}
-                disabled={status !== 'live' || !isRunning}
-            >
-                <Pause className="h-4 w-4 fill-current" />
-                {t("pause_match")}
-            </Button>
-
-            {/* End Button */}
-            <Button
-                type="button"
-                size="sm"
-                variant="destructive"
-                className="font-bold gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            <Button 
+                variant="outline"
                 onClick={onEnd}
-                disabled={status !== 'live'}
+                disabled={status === 'finished'}
+                className="flex-1 md:w-full h-14 bg-red-500/10 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 rounded-none transition-all group active:scale-[0.98]"
             >
-                <Square className="h-4 w-4 fill-current" />
-                {t("end_match")}
+                <div className="flex flex-col items-center md:items-start">
+                    <div className="flex items-center gap-3">
+                        <Square className="h-4 w-4 fill-red-500 text-red-500 group-hover:scale-110 transition-transform" /> 
+                        <span className="text-[11px] font-black uppercase tracking-widest text-red-500">{t("stop_finish")}</span>
+                    </div>
+                    <span className="hidden md:block text-[9px] text-red-500/60 italic ml-7">End the regulation time</span>
+                </div>
             </Button>
+
+            <div className="grid grid-cols-2 md:grid-cols-1 gap-3 w-full">
+                {onSetTime && (
+                    <Button 
+                        variant="outline"
+                        onClick={onSetTime}
+                        className="h-12 bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 rounded-none transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Clock className="h-4 w-4 text-white/40 group-hover:text-white transition-colors" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">{t("set_time")}</span>
+                        </div>
+                    </Button>
+                )}
+
+                {onAddTime && (
+                    <Button 
+                        variant="outline"
+                        onClick={onAddTime}
+                        className="h-12 bg-white/5 border-white/5 hover:bg-white/10 hover:border-secondary/40 rounded-none transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Plus className="h-4 w-4 text-secondary group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60 group-hover:text-secondary transition-colors">{t("add_time")}</span>
+                        </div>
+                    </Button>
+                )}
+            </div>
         </div>
     );
 }
+
+

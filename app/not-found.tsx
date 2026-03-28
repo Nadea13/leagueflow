@@ -10,11 +10,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export default function NotFound() {
   return (
-    <html lang="en">
+    <html lang="th" suppressHydrationWarning>
       <body className="antialiased font-sans">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

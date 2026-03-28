@@ -1,4 +1,5 @@
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { EmailLoginForm } from "@/components/auth/email-login-form";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,11 +53,16 @@ export default function LoginPage() {
                         </div>
                     </div>
 
+                    <EmailLoginForm />
+
                     <div className="text-center text-sm text-muted-foreground">
                         {t('no_account')}{" "}
-                        <span className="underline underline-offset-4 hover:text-primary transition-colors cursor-pointer">
+                        <Link
+                            href="/signup"
+                            className="underline underline-offset-4 hover:text-primary transition-colors font-medium"
+                        >
                             {t('create_account')}
-                        </span>
+                        </Link>
                     </div>
                 </CardContent>
 

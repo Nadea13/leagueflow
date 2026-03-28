@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { MatchEvent, EventType } from "@/types";
-import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/app/[locale]/dashboard/tournaments/[id]/event-actions";
+import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/app/[locale]/organizer/tournaments/[id]/event-actions";
+import { createClient } from "@/utils/supabase/client";
 
-export function useMatchEvents(matchId: string, tournamentId: string, initialData?: MatchEvent[]) {
+export function useMatchEvents(matchId: string, tournamentId: string, initialData?: MatchEvent[], isReadOnly?: boolean) {
     const [events, setEvents] = useState<MatchEvent[]>(initialData || []);
     const [isLoading, setIsLoading] = useState(!initialData); // If initialData exists, not loading
 
@@ -14,25 +15,93 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
     // And client fetch will likely fail.
 
     useEffect(() => {
-        const loadEvents = async () => {
-            // If we have initial data, maybe we don't need to fetch immediately?
-            // But if we are in admin mode, we might want to.
-            // Let's always try to fetch, but handle specific failures gracefully.
-            if (!initialData) setIsLoading(true);
+        const supabase = createClient();
 
-            const res = await getMatchEvents(matchId);
-            if (res.success && res.data) {
-                setEvents(res.data);
+        // Client-side fetch using browser Supabase (works for unauthenticated public users)
+        const fetchEventsClient = async () => {
+            const { data, error } = await supabase
+                .from('match_events')
+                .select(`*, players(name, number)`)
+                .eq('match_id', matchId)
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                const mapped = data.map((e: any) => ({
+                    ...e,
+                    player_name: e.players?.name || e.player_name || "Unknown",
+                    players: undefined
+                }));
+                setEvents(mapped);
             }
-            // If failed (e.g. RLS), we stick with initialData if any.
+            return data;
+        };
 
+        // Load on mount
+        const loadEvents = async () => {
+            if (!initialData) setIsLoading(true);
+            if (isReadOnly) {
+                // Public view: use client-side query (no auth issues)
+                await fetchEventsClient();
+            } else {
+                // Admin view: use server action (has proper auth context)
+                const res = await getMatchEvents(matchId);
+                if (res.success && res.data) setEvents(res.data);
+            }
             setIsLoading(false);
         };
 
-        // If we provided initialData, we might want to skip fetch to avoid RLS 403 errors in console
-        // checking if matchId exists is enough usually.
         loadEvents();
-    }, [matchId]);
+        
+        // --- Realtime Subscription ---
+        const channel = supabase
+            .channel(`match-events-${matchId}`)
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'match_events', 
+                filter: `match_id=eq.${matchId}` 
+            }, async (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    const newEvent = payload.new as MatchEvent;
+                    // Immediately add to state for instant UI update
+                    setEvents((prev: MatchEvent[]) => {
+                        if (prev.some((e: MatchEvent) => e.id === newEvent.id)) return prev;
+                        return [newEvent, ...prev].sort((a: MatchEvent, b: MatchEvent) => {
+                            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                        });
+                    });
+                    // Re-fetch with joins for complete data
+                    if (isReadOnly) {
+                        await fetchEventsClient();
+                    } else {
+                        const res = await getMatchEvents(matchId);
+                        if (res.success && res.data) setEvents(res.data);
+                    }
+                } else if (payload.eventType === 'DELETE') {
+                    setEvents((prev: MatchEvent[]) => prev.filter((e: MatchEvent) => e.id !== payload.old.id));
+                } else if (payload.eventType === 'UPDATE') {
+                    if (isReadOnly) {
+                        await fetchEventsClient();
+                    } else {
+                        loadEvents();
+                    }
+                }
+            })
+            .subscribe();
+
+        // Polling fallback for public/read-only views (uses client-side Supabase)
+        let pollInterval: NodeJS.Timeout | null = null;
+        if (isReadOnly) {
+            pollInterval = setInterval(() => {
+                fetchEventsClient();
+            }, 5000);
+        }
+
+        return () => {
+            supabase.removeChannel(channel);
+            if (pollInterval) clearInterval(pollInterval);
+        };
+    }, [matchId, isReadOnly]);
 
     const addEvent = async (
         teamId: string,
@@ -66,7 +135,15 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         const res = await addMatchEvent(matchId, teamId, type, minute, playerId, extraInfo, tournamentId);
 
         if (res.success && res.data) {
-            setEvents(prev => prev.map(e => e.id === tempId ? { ...e, id: res.data.id } : e));
+            const realId = res.data.id;
+            setEvents(prev => {
+                // If realId already exists (added via realtime INSERT), remove tempId
+                if (prev.some(e => e.id === realId)) {
+                    return prev.filter(e => e.id !== tempId);
+                }
+                // Else replace tempId with realId
+                return prev.map(e => e.id === tempId ? { ...e, id: realId } : e);
+            });
             return { success: true };
         } else {
             // Revert on failure

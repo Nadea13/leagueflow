@@ -27,50 +27,35 @@ export function formatDate(
 
         // Map date-fns format tokens to Intl options (Approximate mapping)
         // This is a basic mapping for common patterns used in the app
-        if (formatStr.includes("d") && formatStr.includes("MMM") && formatStr.includes("yyyy")) {
-            // "d MMMM yyyy" or similar
-            options.day = "numeric";
-            options.month = formatStr.includes("MMMM") ? "long" : "short";
-            options.year = "numeric";
-        } else if (formatStr.includes("HH:mm")) {
-            // Includes time
-            options.day = "numeric";
-            options.month = formatStr.includes("MMMM") ? "long" : "short";
-            options.year = "numeric";
-            options.hour = "2-digit";
-            options.minute = "2-digit";
-            options.hour12 = false;
-        }
+        // If it looks like a standard date format we want to localize to BE
+        const hasDay = formatStr.includes("d");
+        const hasMonth = formatStr.includes("MMM");
+        const hasYear = formatStr.includes("yyyy") || formatStr.includes("yy");
+        const hasTime = formatStr.includes("HH:mm");
 
-        // Custom override for specific format requirements if needed, 
-        // but generally we want "d MMMM yyyy" (5 กุมภาพันธ์ 2569)
-
-        // If the format is strictly simple date
-        if (formatStr === "d MMMM yyyy" || formatStr === "d MMM yyyy") {
-            return new Intl.DateTimeFormat('th-TH', {
-                year: 'numeric',
-                month: formatStr === "d MMMM yyyy" ? 'long' : 'short',
+        if (hasDay && hasMonth) {
+            const hasWeekday = formatStr.includes("E");
+            const options: Intl.DateTimeFormatOptions = {
                 day: 'numeric',
-                calendar: 'buddhist'
-            }).format(dateObj);
-        }
-
-        // If format includes time
-        if (formatStr.includes("HH:mm")) {
-            return new Intl.DateTimeFormat('th-TH', {
-                year: 'numeric',
                 month: formatStr.includes("MMMM") ? 'long' : 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false,
+                year: hasYear ? 'numeric' : undefined,
+                weekday: hasWeekday ? (formatStr.includes("EEEE") ? 'long' : 'short') : undefined,
                 calendar: 'buddhist'
-            }).format(dateObj);
+            };
+
+
+            if (hasTime) {
+                options.hour = '2-digit';
+                options.minute = '2-digit';
+                options.hour12 = false;
+            }
+
+            return new Intl.DateTimeFormat('th-TH', options).format(dateObj);
         }
     }
 
     // Fallback to date-fns for English or non-Thai (Gregorian)
     return dateFnsFormat(dateObj, formatStr, {
-        locale: locale === 'th' ? th : enUS // date-fns 'th' is still Gregorian usually unless configured, so we rely on Intl above for year
+        locale: locale === 'th' ? th : enUS 
     });
 }

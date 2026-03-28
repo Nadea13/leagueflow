@@ -12,24 +12,25 @@ export default async function DashboardLayout({ children, params }: { children: 
         redirect(`/${locale}/login`)
     }
 
-    // Fetch User Role
+    // Fetch User Profile
     const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, is_organizer")
         .eq("id", user.id)
         .single();
 
     const userRole = profile?.role || 'user';
+    const isOrganizer = profile?.is_organizer || false;
 
     return (
         <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
             <div className="border-r bg-muted/40 hidden md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
-                    <Sidebar role={userRole} />
+                    <Sidebar role={userRole} isOrganizer={isOrganizer} />
                 </div>
             </div>
             <div className="flex flex-col">
-                <DashboardHeader userEmail={user?.email} role={userRole} />
+                <DashboardHeader userEmail={user?.email || undefined} role={userRole} isOrganizer={isOrganizer} />
                 <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>

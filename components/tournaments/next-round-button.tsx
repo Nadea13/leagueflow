@@ -3,10 +3,21 @@
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Match } from "@/types/index";
-import { advanceStage } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { advanceStage } from "@/app/[locale]/organizer/tournaments/[id]/actions";
 import { startTransition } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowRight, Trophy } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 interface NextRoundButtonProps {
     tournamentId: string;
@@ -17,6 +28,7 @@ interface NextRoundButtonProps {
 export function NextRoundButton({ tournamentId, matches, format }: NextRoundButtonProps) {
     const t = useTranslations("Fixtures");
     const [isPending, startTransition] = useTransition();
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     // 1. Identify Current Stage
     // Order: group -> round_of_16 -> quarter_final -> semi_final -> final
@@ -52,8 +64,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
     const allFinished = currentStageMatches.every(m => m.status === 'finished');
 
     const handleAdvance = () => {
-        if (!confirm("Are you sure you want to advance to the next round? Ensure all scores are correct.")) return;
-
+        setConfirmOpen(false);
         startTransition(async () => {
             const result = await advanceStage(tournamentId);
             if (!result.success) {
@@ -71,7 +82,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
     return (
         <div className="flex justify-end mt-6">
             <Button
-                onClick={handleAdvance}
+                onClick={() => setConfirmOpen(true)}
                 disabled={!allFinished || isPending}
                 size="lg"
                 className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
@@ -84,6 +95,35 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
                     {t("complete_matches")}
                 </p>
             )}
+
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                            <ArrowRight className="h-5 w-5 text-primary" />
+                            Advance Round
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                            Are you sure you want to advance to the next round? Ensure all scores are correct.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleAdvance();
+                            }}
+                            className="rounded-none border border-primary/20 bg-primary/90 text-white hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                        >
+                            <ArrowRight className="h-3.5 w-3.5 mr-2" />
+                            Advance
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

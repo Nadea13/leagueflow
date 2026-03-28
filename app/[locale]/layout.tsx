@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Sans_Thai } from "next/font/google";
+import { Geist, Geist_Mono, Chakra_Petch } from "next/font/google";
 import "../globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -19,15 +19,38 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const ibmThai = IBM_Plex_Sans_Thai({
-  weight: ['100', '200', '300', '400', '500', '600', '700'],
-  subsets: ['thai'],
-  variable: '--font-ibm-thai',
+const chakraPetch = Chakra_Petch({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin', 'thai'],
+  variable: '--font-chakra-petch',
 });
 
 export const metadata: Metadata = {
-  title: "LeagueFlow",
-  description: "Advanced Tournament Management",
+  title: {
+    default: "LeagueFlow | Tournament Management Platform",
+    template: "%s | LeagueFlow",
+  },
+  description: "Create, manage, and run professional football tournaments with real-time scoring, automated fixtures, team registrations, and PromptPay billing. Multilingual (EN/TH).",
+  keywords: ["tournament management", "football league", "match scoring", "fixtures", "standings", "PromptPay", "team registration", "เครื่องมือจัดการทัวร์นาเมนต์"],
+  authors: [{ name: "LeagueFlow" }],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://leagueflow.app"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    alternateLocale: "th_TH",
+    title: "LeagueFlow | Tournament Management Platform",
+    description: "Create, manage, and run professional football tournaments with real-time scoring, automated fixtures, and PromptPay billing.",
+    siteName: "LeagueFlow",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LeagueFlow | Tournament Management Platform",
+    description: "Create, manage, and run professional football tournaments.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default async function LocaleLayout({
@@ -54,12 +77,12 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ibmThai.variable} font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${chakraPetch.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme="dark"
             enableSystem
             disableTransitionOnChange
           >

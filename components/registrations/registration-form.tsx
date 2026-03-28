@@ -4,8 +4,10 @@ import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Team } from "@/types/index";
 import { useTranslations } from "next-intl";
 import { Calendar, MapPin, Trophy, AlertCircle, CheckCircle2, Users, ImageIcon, X, Upload, User, Phone, FileText, Loader2, Smartphone, CreditCard } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PromptPayQR } from "./promptpay-qr";
 import { registerTeam } from "@/actions/register-team";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
 // Schema generator based on fee
@@ -30,6 +33,7 @@ const createFormSchema = (isFree: boolean, t: any) => z.object({
     teamName: z.string().min(2, t("team_name_error")),
     contactName: z.string().min(2, t("contact_name_error")),
     contactPhone: z.string().min(10, t("contact_phone_error")),
+    description: z.string().optional(),
     logoFile: z.any()
         .optional()
         .refine(
@@ -62,13 +66,18 @@ interface RegistrationFormProps {
         bank_account_number: string;
         bank_name: string;
         bank_account_name: string;
+        is_registration_open: boolean;
+        status: string;
     };
+    initialTeams?: Team[];
 }
 
-export function RegistrationForm({ tournament }: RegistrationFormProps) {
+export function RegistrationForm({ tournament, initialTeams }: RegistrationFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+    const [slipPreviewUrl, setSlipPreviewUrl] = useState<string | null>(null);
+    const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
     const t = useTranslations("Registration");
     const isFree = Number(tournament.registration_fee) <= 0;
@@ -80,8 +89,25 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
             teamName: "",
             contactName: "",
             contactPhone: "",
+            description: "",
         },
     });
+
+    const handleSelectTeam = (teamId: string) => {
+        setSelectedTeamId(teamId);
+        if (teamId === "new") {
+            form.setValue("teamName", "");
+            setLogoPreviewUrl(null);
+            return;
+        }
+
+        const selectedTeam = initialTeams?.find(t => t.id === teamId);
+        if (selectedTeam) {
+            form.setValue("teamName", selectedTeam.name);
+            form.setValue("description", selectedTeam.description || "");
+            setLogoPreviewUrl(selectedTeam.logo_url || null);
+        }
+    };
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true);
@@ -91,9 +117,19 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
             formData.append("teamName", values.teamName);
             formData.append("contactName", values.contactName);
             formData.append("contactPhone", values.contactPhone);
+            if (values.description) {
+                formData.append("description", values.description);
+            }
+            if (selectedTeamId && selectedTeamId !== "new") {
+                formData.append("existingTeamId", selectedTeamId);
+            }
             if (values.logoFile?.[0]) {
                 formData.append("logoFile", values.logoFile[0]);
+            } else if (logoPreviewUrl && !logoPreviewUrl.startsWith('data:')) {
+                // It's an existing URL
+                formData.append("logoUrl", logoPreviewUrl);
             }
+
             if (!isFree && values.slipFile?.[0]) {
                 formData.append("slipFile", values.slipFile[0]);
             }
@@ -128,7 +164,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                     <Button variant="outline" onClick={() => window.location.reload()}>
                         {t("register_another")}
                     </Button>
-                    <Button onClick={() => window.location.href = `/dashboard/tournaments/${tournament.id}`}>
+                    <Button onClick={() => window.location.href = `/manager/tournaments`}>
                         {t("go_to_dashboard")}
                     </Button>
                 </div>
@@ -136,9 +172,43 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
         );
     }
 
+    const isRegistrationClosed = !tournament.is_registration_open || tournament.status === 'completed';
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                
+                {isRegistrationClosed && (
+                    <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-none">
+                        <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                        <div>
+                            <p className="font-bold">{t("registration_closed_title")}</p>
+                            <p className="text-sm opacity-90">{t("registration_closed_desc")}</p>
+                        </div>
+                    </div>
+                )}
+                
+                {initialTeams && initialTeams.length > 0 && (
+                    <div className="space-y-4 p-4 border rounded-none bg-primary/5 border-primary/10">
+                        <div className="flex items-center gap-2">
+                            <Trophy className="h-4 w-4 text-primary" />
+                            <h4 className="text-sm font-bold uppercase tracking-wider">{t("use_existing_team") || "Use Existing Team"}</h4>
+                        </div>
+                        <Select value={selectedTeamId} onValueChange={handleSelectTeam}>
+                            <SelectTrigger className="rounded-none bg-background">
+                                <SelectValue placeholder={t("select_team_placeholder") || "Select one of your teams..."} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="new">{t("create_new_team") || "Create New Team"}</SelectItem>
+                                {initialTeams.map((team) => (
+                                    <SelectItem key={team.id} value={team.id}>
+                                        {team.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
 
                 <div className="grid gap-6 md:grid-cols-2">
                     <FormField
@@ -151,62 +221,103 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                     {t("team_name_label")}
                                 </FormLabel>
                                 <FormControl>
-                                    <div className="flex gap-4 items-center">
-                                        {/* Nested Logo Upload Field */}
-                                        <FormField
-                                            control={form.control}
-                                            name="logoFile"
-                                            render={({ field: { value, onChange, ...fieldProps } }) => (
-                                                <div className="shrink-0">
-                                                    <label htmlFor="logo-upload-field" className="cursor-pointer group relative block">
-                                                        <div className="h-11 w-11 rounded-none border border-input flex items-center justify-center overflow-hidden bg-muted/5 hover:bg-muted/10 transition-colors">
-                                                            {previewUrl ? (
-                                                                <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
-                                                            ) : (
-                                                                <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
-                                                            )}
-                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-none">
-                                                                <Upload className="h-4 w-4 text-white" />
-                                                            </div>
-                                                        </div>
-                                                        <Input
-                                                            {...fieldProps}
-                                                            id="logo-upload-field"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(event) => {
-                                                                const file = event.target.files && event.target.files[0];
-                                                                if (file) {
-                                                                    onChange(event.target.files);
-                                                                    const reader = new FileReader();
-                                                                    reader.onloadend = () => {
-                                                                        setPreviewUrl(reader.result as string);
-                                                                    };
-                                                                    reader.readAsDataURL(file);
-                                                                }
-                                                            }}
-                                                        />
-                                                    </label>
-                                                </div>
-                                            )}
-                                        />
+                                    <Input placeholder={t("team_name_placeholder")} {...field} className="h-11" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                                        <Input placeholder={t("team_name_placeholder")} {...field} className="h-11 flex-1" />
+                    <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem className="w-full md:col-span-2">
+                                <FormLabel className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-muted-foreground" />
+                                    {t("team_description_label")}
+                                </FormLabel>
+                                <FormControl>
+                                    <Textarea 
+                                        placeholder={t("team_description_placeholder")} 
+                                        {...field} 
+                                        className="min-h-[100px] resize-none border-none bg-primary/5 focus-visible:ring-1 focus-visible:ring-primary/50" 
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Separate Logo Upload Field */}
+                    <FormField
+                        control={form.control}
+                        name="logoFile"
+                        render={({ field: { value, onChange, ...fieldProps } }) => (
+                            <FormItem className="w-full md:col-span-2">
+                                <FormLabel className="flex items-center gap-2">
+                                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                                    {t("team_logo_label") || "Team Logo"}
+                                </FormLabel>
+                                <FormControl>
+                                    <div className="group relative">
+                                        {!logoPreviewUrl ? (
+                                            <div className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors rounded-none p-6 text-center cursor-pointer bg-muted/5 hover:bg-muted/10 relative">
+                                                <Input
+                                                    {...fieldProps}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    onChange={(event) => {
+                                                        const file = event.target.files && event.target.files[0];
+                                                        if (file) {
+                                                            onChange(event.target.files);
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => {
+                                                                setLogoPreviewUrl(reader.result as string);
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                />
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="p-2 bg-primary/10 rounded-none text-primary group-hover:scale-110 transition-transform">
+                                                        <Upload className="w-4 h-4" />
+                                                    </div>
+                                                    <div className="text-sm font-medium text-foreground">
+                                                        {t("click_to_upload_logo") || t("click_to_upload")}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="relative rounded-none overflow-hidden border bg-muted/30 p-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-16 w-16 relative rounded-none overflow-hidden border bg-white">
+                                                        <img src={logoPreviewUrl} alt="Logo preview" className="object-contain w-full h-full" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate text-foreground">{t("logo_preview") || "Logo Preview"}</p>
+                                                        <p className="text-xs text-muted-foreground">{t("ready_to_submit")}</p>
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-muted-foreground hover:text-destructive"
+                                                        onClick={() => {
+                                                            onChange(undefined);
+                                                            setLogoPreviewUrl(null);
+                                                            setSelectedTeamId("new");
+                                                        }}
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </FormControl>
-                                <div className="flex flex-col gap-1">
-                                    <FormMessage />
-                                    <FormField
-                                        control={form.control}
-                                        name="logoFile"
-                                        render={({ fieldState }) =>
-                                            fieldState.error ? (
-                                                <p className="text-sm font-medium text-destructive">{fieldState.error.message}</p>
-                                            ) : <></>
-                                        }
-                                    />
-                                </div>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -258,10 +369,10 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-8 items-start">
+                            <div className="grid md:grid-cols-2 gap-8 items-stretch">
                                 {/* QR Code Section */}
                                 {tournament.bank_account_number && (
-                                    <div className="p-2 bg-white rounded-none shadow-sm border">
+                                    <div className="rounded-none shadow-sm border">
                                         <PromptPayQR
                                             phoneNumber={tournament.bank_account_number}
                                             amount={Number(tournament.registration_fee)}
@@ -270,7 +381,7 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                 )}
 
                                 {/* Bank Details & Upload */}
-                                <div className="space-y-6">
+                                <div className="flex flex-col h-full gap-6">
                                     <div className="bg-muted/50 rounded-none p-5 space-y-3 text-sm">
                                         <div className="flex justify-between items-center pb-2 border-b border-border/50">
                                             <span className="text-muted-foreground">{t("bank_label")}</span>
@@ -290,15 +401,15 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                         control={form.control}
                                         name="slipFile"
                                         render={({ field: { onChange, value, ...rest } }) => (
-                                            <FormItem>
+                                            <FormItem className="flex-1 flex flex-col">
                                                 <FormLabel className="flex items-center gap-2">
                                                     <FileText className="w-4 h-4 text-muted-foreground" />
                                                     {t("upload_slip_label")}
                                                 </FormLabel>
-                                                <FormControl>
-                                                    <div className="group relative">
-                                                        {!previewUrl ? (
-                                                            <div className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors rounded-none p-8 text-center cursor-pointer bg-muted/5 hover:bg-muted/10 relative">
+                                                <FormControl className="flex-1">
+                                                    <div className="group relative h-full flex flex-col">
+                                                        {!slipPreviewUrl ? (
+                                                            <div className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors rounded-none p-12 py-20 text-center cursor-pointer bg-muted/5 hover:bg-muted/10 relative flex-1 flex items-center justify-center min-h-[300px]">
                                                                 <Input
                                                                     type="file"
                                                                     accept="image/jpeg,image/png,image/webp"
@@ -307,54 +418,57 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                                                                         const file = e.target.files?.[0];
                                                                         if (file) {
                                                                             onChange(e.target.files);
-                                                                            setPreviewUrl(URL.createObjectURL(file));
+                                                                            setSlipPreviewUrl(URL.createObjectURL(file));
                                                                         }
                                                                     }}
                                                                     {...rest}
                                                                 />
-                                                                <div className="flex flex-col items-center gap-2">
-                                                                    <div className="p-3 bg-primary/10 rounded-none text-primary group-hover:scale-110 transition-transform">
-                                                                        <Upload className="w-5 h-5" />
+                                                                <div className="flex flex-col items-center gap-4">
+                                                                    <div className="p-4 bg-primary/10 rounded-none text-primary group-hover:scale-110 transition-transform">
+                                                                        <Upload className="w-8 h-8" />
                                                                     </div>
-                                                                    <div className="text-sm font-medium text-foreground">
-                                                                        {t("click_to_upload")}
+                                                                    <div className="space-y-1">
+                                                                        <div className="text-base font-semibold text-foreground">
+                                                                            {t("click_to_upload")}
+                                                                        </div>
+                                                                        <p className="text-sm text-muted-foreground">
+                                                                            {t("file_types_hint")}
+                                                                        </p>
                                                                     </div>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        {t("file_types_hint")}
-                                                                    </p>
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <div className="relative rounded-none overflow-hidden border bg-muted/30 p-2">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="h-16 w-16 relative rounded-none overflow-hidden border">
+                                                            <div className="relative rounded-none overflow-hidden border bg-muted/30 p-4">
+                                                                <div className="flex flex-col gap-4">
+                                                                    <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-white flex items-center justify-center">
                                                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                         <img
-                                                                            src={previewUrl}
+                                                                            src={slipPreviewUrl}
                                                                             alt="Slip preview"
-                                                                            className="object-cover w-full h-full"
+                                                                            className="object-contain w-full h-full"
                                                                         />
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="destructive"
+                                                                            size="icon"
+                                                                            className="absolute top-2 right-2 h-8 w-8 rounded-none shadow-md"
+                                                                            onClick={() => {
+                                                                                onChange(undefined);
+                                                                                setSlipPreviewUrl(null);
+                                                                            }}
+                                                                        >
+                                                                            <X className="w-4 h-4" />
+                                                                        </Button>
                                                                     </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <p className="text-sm font-medium truncate text-foreground">{t("slip_preview")}</p>
-                                                                        <p className="text-xs text-muted-foreground">{t("ready_to_submit")}</p>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-sm font-semibold truncate text-foreground">{t("slip_preview")}</p>
+                                                                            <p className="text-xs text-muted-foreground">{t("ready_to_submit")}</p>
+                                                                        </div>
                                                                     </div>
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="text-muted-foreground hover:text-destructive"
-                                                                        onClick={() => {
-                                                                            onChange(undefined);
-                                                                            setPreviewUrl(null);
-                                                                        }}
-                                                                    >
-                                                                        <X className="w-4 h-4" />
-                                                                    </Button>
                                                                 </div>
                                                             </div>
                                                         )}
-
                                                     </div>
                                                 </FormControl>
                                                 <FormMessage />
@@ -370,15 +484,18 @@ export function RegistrationForm({ tournament }: RegistrationFormProps) {
                 <div className="pt-4">
                     <Button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isRegistrationClosed}
                         className="w-full h-12 text-base font-semibold shadow-md active:scale-[0.99] transition-all"
                         size="lg"
+                        variant={isRegistrationClosed ? "secondary" : "default"}
                     >
                         {isSubmitting ? (
                             <>
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                 {isFree ? t("registering") : t("verifying_registering")}
                             </>
+                        ) : isRegistrationClosed ? (
+                            t("registration_closed_title")
                         ) : (
                             isFree ? t("confirm_registration") : t("confirm_and_pay")
                         )}

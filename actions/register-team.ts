@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { ActionResponse } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -11,8 +11,11 @@ const registrationSchema = z.object({
     teamName: z.string().min(2, "Team name must be at least 2 characters"),
     contactName: z.string().min(2, "Contact name must be at least 2 characters"),
     contactPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-    logoFile: z.any().optional(),
-    slipFile: z.any().optional(),
+    logoFile: z.any().optional().nullable(),
+    logoUrl: z.string().optional().nullable(),
+    existingTeamId: z.string().uuid().optional().nullable(),
+    description: z.string().optional().nullable(),
+    slipFile: z.any().optional().nullable(),
 });
 
 // Mock Slip Verification Function
@@ -54,20 +57,32 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         contactName: formData.get("contactName"),
         contactPhone: formData.get("contactPhone"),
         logoFile: formData.get("logoFile"),
+        logoUrl: formData.get("logoUrl"),
+        existingTeamId: formData.get("existingTeamId") || null,
+        description: formData.get("description"),
         slipFile: formData.get("slipFile"),
     };
 
+    console.log("[registerTeam] Initiating registration for tournament:", rawData.tournamentId);
+    console.log("[registerTeam] Raw data keys present:", Object.keys(rawData).filter(k => (rawData as any)[k]));
+
     const validation = registrationSchema.safeParse(rawData);
     if (!validation.success) {
+        console.error("[registerTeam] Validation errors:", validation.error.flatten().fieldErrors);
+        const fieldErrors = validation.error.flatten().fieldErrors;
+        const firstError = Object.values(fieldErrors).flat()[0];
         return {
             success: false,
-            error: validation.error.flatten().fieldErrors.teamName?.[0] || "Invalid form data",
+            error: firstError || "Invalid form data",
         };
     }
 
-    const { tournamentId, teamName, contactName, contactPhone, slipFile, logoFile } = validation.data;
+    console.log("[registerTeam] Fetching tournament details for id:", validation.data.tournamentId);
+
+    const { tournamentId, teamName, contactName, contactPhone, slipFile, logoFile, logoUrl, existingTeamId, description } = validation.data;
 
     try {
+        console.log("[registerTeam] Fetching tournament details...");
         const { data: tournament, error: tourneyError } = await supabase
             .from("tournaments")
             .select("*")
@@ -82,16 +97,15 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             return { success: false, error: "Registration is closed for this tournament" };
         }
 
-        // Check Team Limit for Free Plan
-        if (!tournament.plan || tournament.plan === 'free') {
-            const { count } = await supabase
-                .from("teams")
-                .select("*", { count: 'exact', head: true })
-                .eq("tournament_id", tournamentId);
+        // Check Team Limit
+        const { count } = await supabase
+            .from("tournament_teams")
+            .select("*", { count: 'exact', head: true })
+            .eq("tournament_id", tournamentId);
 
-            if (count !== null && count >= 8) {
-                return { success: false, error: "Team limit reached (Max 8 for Free Plan). Upgrade to Pro to add more." };
-            }
+        const limit = tournament.max_teams || 8;
+        if (count !== null && count >= limit) {
+            return { success: false, error: `Team limit reached (Max ${limit}).` };
         }
 
         const registrationFee = Number(tournament.registration_fee || 0);
@@ -99,6 +113,25 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
 
         let transRef = "";
         let publicUrl = null;
+        let finalLogoUrl = logoUrl || null;
+
+        console.log("[registerTeam] Tournament isFree:", isFree);
+
+        // Handle Logo Upload if provided as file
+        if (logoFile && logoFile instanceof File && logoFile.size > 0) {
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `${tournamentId}/logo-${Date.now()}.${fileExt}`;
+            const { error: logoUploadError } = await supabase.storage
+                .from('team-logos')
+                .upload(fileName, logoFile);
+
+            if (!logoUploadError) {
+                const { data: logoUrlData } = supabase.storage
+                    .from('team-logos')
+                    .getPublicUrl(fileName);
+                finalLogoUrl = logoUrlData.publicUrl;
+            }
+        }
 
         if (!isFree) {
             // --- PAID TOURNAMENT LOGIC ---
@@ -111,6 +144,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             if (!slipFile.type.startsWith("image/")) return { success: false, error: "File must be an image" };
 
             // 3. Verify Slip (Mock)
+            console.log("[registerTeam] Verifying slip...");
             const verificationResult = await mockVerifySlip(
                 slipFile,
                 registrationFee,
@@ -132,12 +166,13 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 };
             }
 
-            // Check 3: Unique Transaction Ref
-            const { data: existingRef } = await supabase
+            // 3. Unique Transaction Ref (Use admin client to check existence)
+            const adminSupabase = createAdminClient();
+            const { data: existingRef } = await adminSupabase
                 .from("registrations")
                 .select("id")
                 .eq("trans_ref", transRef)
-                .single();
+                .maybeSingle();
 
             if (existingRef) {
                 return { success: false, error: "This slip has already been used" };
@@ -167,74 +202,98 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             publicUrl = null;
         }
 
-        // 5. Insert Registration
-        const { error: insertError } = await supabase
-            .from("registrations")
+        // 5. Create Tournament Team Participation record immediately
+        console.log("[registerTeam] Creating tournament team entry...");
+        const adminSupabase = createAdminClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        const { data: teamData, error: teamInsertError } = await adminSupabase
+            .from("tournament_teams")
             .insert({
                 tournament_id: tournamentId,
-                team_name: teamName,
-                contact_name: contactName,
-                contact_phone: contactPhone,
-                slip_url: publicUrl,
-                payment_status: 'PAID', // Or 'COMPLETED' if you prefer, but 'PAID' works for logic
-                trans_ref: transRef,
-            });
+                team_id: existingTeamId || null,
+                user_id: user?.id || null,
+                name: teamName,
+                description: description || null,
+                logo_url: finalLogoUrl,
+                created_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
 
-        if (insertError) {
-            console.error("Insert error:", insertError);
-            return { success: false, error: "Failed to save registration" };
+        if (teamInsertError) {
+            console.error("Tournament team creation error:", teamInsertError);
+            return { success: false, error: "Failed to initialize tournament squad" };
         }
 
-        // --- Handle Logo Upload ---
-        let teamLogoUrl = null;
-        if (logoFile && logoFile instanceof File) {
-            // Validate format and size (basic check)
-            if (logoFile.size <= 5 * 1024 * 1024 && logoFile.type.startsWith("image/")) {
-                const logoExt = logoFile.name.split('.').pop();
-                // Create a clean slug for team name
-                const teamSlug = teamName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-                // Use a dedicated bucket or folder. 'public_assets' or 'teams'
-                // Assuming 'teams' bucket exists or we use 'public' folder in a general bucket.
-                // For now, let's assume 'teams' bucket based on slip logic, or 'avatars'.
-                // If 'slips' works, we likely have storage setup. Let's try 'teams' bucket, or 'public'.
-                // Given previous context, I'll use 'teams' bucket if it exists, otherwise `avatars`.
-                // Safest bet for now: reuse 'slips' logic but different folder? No, slips are private usually.
-                // Let's assume there is a 'teams' bucket or similar. If not, it might fail.
-                // I will try 'teams' bucket as per plan.
+        // 6. Copy Players immediately if from existing team
+        if (existingTeamId) {
+            console.log(`[Registration] Copying players from team ${existingTeamId} to ${teamData.id}`);
+            const { data: sourcePlayers, error: fetchPlayersError } = await adminSupabase
+                .from("players")
+                .select("*")
+                .or(`team_id.eq.${existingTeamId},global_team_id.eq.${existingTeamId}`);
 
-                const logoPath = `${tournamentId}/${teamSlug}-${Date.now()}.${logoExt}`;
-                const { error: logoUploadError } = await supabase.storage
-                    .from('teams')
-                    .upload(logoPath, logoFile);
+            if (fetchPlayersError) {
+                console.error("[Registration] Error fetching source players:", fetchPlayersError);
+            } else if (sourcePlayers && sourcePlayers.length > 0) {
+                const playersToInsert = sourcePlayers.map(p => ({
+                    team_id: teamData.id,
+                    global_team_id: null,
+                    name: p.name,
+                    number: p.number,
+                    position: p.position,
+                    global_player_id: p.global_player_id,
+                    created_at: new Date().toISOString()
+                }));
 
-                if (!logoUploadError) {
-                    const { data: logoUrlData } = supabase.storage
-                        .from('teams')
-                        .getPublicUrl(logoPath);
-                    teamLogoUrl = logoUrlData.publicUrl;
+                const { error: playersInsertError } = await adminSupabase
+                    .from("players")
+                    .insert(playersToInsert);
+
+                if (playersInsertError) {
+                    console.error("[Registration] Error inserting players into tournament squad:", playersInsertError);
                 } else {
-                    console.error("Logo upload error:", logoUploadError);
+                    console.log(`[Registration] Successfully copied ${playersToInsert.length} players.`);
                 }
+            } else {
+                console.log("[Registration] Source team has no players to copy.");
             }
         }
 
-        // 6. Insert Team into Teams Table
-        const { error: teamInsertError } = await supabase
-            .from("teams")
+        // 7. Insert Registration (Using Admin Client to bypass RLS)
+        console.log("[registerTeam] Inserting registration record...");
+        const { data: regData, error: insertError } = await adminSupabase
+            .from("registrations")
             .insert({
                 tournament_id: tournamentId,
-                name: teamName,
-                created_at: new Date().toISOString(),
-                logo_url: teamLogoUrl,
-            });
+                user_id: user?.id || null,
+                team_name: teamName,
+                contact_name: contactName,
+                contact_phone: contactPhone,
+                logo_url: finalLogoUrl,
+                slip_url: publicUrl,
+                description: description || null,
+                payment_status: 'PENDING',
+                trans_ref: transRef,
+                existing_team_id: existingTeamId || null,
+                tournament_team_id: teamData.id, // Store the link
+            })
+            .select()
+            .single();
 
-        if (teamInsertError) {
-            console.error("Team insert error:", teamInsertError);
-            // We don't fail the whole request because registration/payment was successful.
+        if (insertError) {
+            console.error("Registration insert error:", insertError);
+            // Cleanup the created team if registration fails
+            await adminSupabase.from("tournament_teams").delete().eq("id", teamData.id);
+            return { success: false, error: "Failed to save registration" };
         }
 
         revalidatePath(`/register/${tournamentId}`);
-        return { success: true, message: "Team registered successfully!" };
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+
+        console.log("[registerTeam] Registration successful!");
+        return { success: true, message: "Registration submitted successfully! Please wait for manager approval." };
 
     } catch (error) {
         console.error("Registration error:", error);

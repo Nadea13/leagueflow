@@ -8,13 +8,14 @@ import {
 } from "@/components/ui/table";
 import { Goal, Team } from "@/types/index";
 import { useTranslations } from "next-intl";
-
-import { ExportToImageButton } from "@/components/ui/export-to-image-button";
-
 import { Activity } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useLocale } from "next-intl";
+import { formatDate } from "@/lib/date";
 
 export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[] }) {
     const t = useTranslations("TopScorers");
+    const locale = useLocale();
 
     // Aggregate goals by (team_id, player_name)
     const scorerStats: Record<string, { player_name: string; team_id: string; goals: number }> = {};
@@ -32,56 +33,78 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
     });
 
     const sortedScorers = Object.values(scorerStats).sort((a, b) => b.goals - a.goals);
-
     const getTeam = (teamId: string) => teams.find(t => t.id === teamId);
 
     return (
-        <div className="w-full space-y-4 ">
-            <div className="flex justify-end">
-                <ExportToImageButton targetId="top-scorers-canvas" filename="top_scorers" label={t("export") || "Export"} />
-            </div>
-            <div id="top-scorers-canvas" className="w-full overflow-x-auto rounded-none border">
-                <Table className="min-w-[400px] text-xs md:text-sm">
+        <div className="w-full">
+            <div id="top-scorers-canvas" className="w-full overflow-hidden border border-border/20 bg-card/30 backdrop-blur-sm">
+                <Table className="min-w-[400px]">
                     <TableHeader>
-                        <TableRow className="h-8 md:h-10">
-                            <TableHead className="w-8 md:w-12 text-center px-1 md:px-4">{t("rank")}</TableHead>
-                            <TableHead className="px-1 md:px-4">{t("player")}</TableHead>
-                            <TableHead className="px-1 md:px-4">{t("team") || "Team"}</TableHead>
-                            <TableHead className="text-center font-bold px-1 md:px-4">{t("goals")}</TableHead>
+                        <TableRow className="h-10 border-b border-border/20 bg-muted/5 hover:bg-muted/5">
+                            <TableHead className="w-12 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("rank")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("player")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("team") || "Team"}</TableHead>
+                            <TableHead className="text-center text-[10px] font-black uppercase tracking-widest text-secondary">{t("goals")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {sortedScorers.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
-                                    <div className="flex flex-col items-center justify-center">
-                                        <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                                            <Activity className="h-6 w-6 text-muted-foreground" />
+                            <TableRow className="hover:bg-transparent border-none">
+                                <TableCell colSpan={4} className="py-20">
+                                    <div className="flex flex-col items-center justify-center text-center">
+                                        <div className="h-12 w-12 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center mb-4">
+                                            <Activity className="h-6 w-6 text-muted-foreground/40" />
                                         </div>
-                                        <h3 className="text-sm font-medium text-muted-foreground">{t("no_goals")}</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("no_goals")}</h3>
                                     </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             sortedScorers.slice(0, 10).map((scorer, index) => {
                                 const team = getTeam(scorer.team_id);
+                                const isTop3 = index < 3;
                                 return (
-                                    <TableRow key={`${scorer.team_id}-${scorer.player_name}`} className="h-8 md:h-10">
-                                        <TableCell className="text-center font-medium px-1 md:px-4">{index + 1}</TableCell>
-                                        <TableCell className="px-1 md:px-4">{scorer.player_name}</TableCell>
-                                        <TableCell className="px-1 md:px-4">
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                {team?.logo_url ? (
-                                                    <img src={team.logo_url} alt={team.name} className="w-4 h-4 md:w-5 md:h-5 object-contain" />
-                                                ) : (
-                                                    <div className="w-4 h-4 md:w-5 md:h-5 bg-muted rounded-none flex items-center justify-center text-[8px] font-bold text-muted-foreground">
-                                                        {team?.name.charAt(0)}
-                                                    </div>
-                                                )}
-                                                <span className="text-muted-foreground truncate max-w-[80px] md:max-w-none text-xs md:text-sm">{team?.name}</span>
+                                    <TableRow 
+                                        key={`${scorer.team_id}-${scorer.player_name}`} 
+                                        className="h-12 border-b border-border/10 last:border-0 hover:bg-white/[0.02] transition-colors group/row"
+                                    >
+                                        <TableCell className="text-center px-4">
+                                            <span className={cn(
+                                                "text-[10px] font-black italic tracking-tighter",
+                                                isTop3 ? "text-secondary" : "text-muted-foreground/40"
+                                            )}>
+                                                {String(index + 1).padStart(2, '0')}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="px-4">
+                                            <span className="text-xs font-black uppercase italic tracking-tighter text-foreground group-hover/row:text-secondary transition-colors">
+                                                {scorer.player_name}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="px-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-5 h-5 bg-muted/10 border border-border/10 p-0.5 rounded-none flex items-center justify-center overflow-hidden shrink-0">
+                                                    {team?.logo_url ? (
+                                                        <img src={team.logo_url} alt="" className="w-full h-full object-contain" />
+                                                    ) : (
+                                                        <span className="text-[8px] font-black text-muted-foreground/30 capitalize">
+                                                            {team?.name.charAt(0)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] font-black uppercase italic tracking-tighter text-muted-foreground/60 group-hover/row:text-muted-foreground transition-colors truncate max-w-[120px]">
+                                                    {team?.name}
+                                                </span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-center font-bold text-sm md:text-lg px-1 md:px-4">{scorer.goals}</TableCell>
+                                        <TableCell className="text-center px-4">
+                                            <span className={cn(
+                                                "text-sm font-black italic tracking-tighter tabular-nums",
+                                                isTop3 ? "text-secondary" : "text-foreground"
+                                            )}>
+                                                {scorer.goals}
+                                            </span>
+                                        </TableCell>
                                     </TableRow>
                                 );
                             })
@@ -89,6 +112,13 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                     </TableBody>
                 </Table>
             </div>
+            {sortedScorers.length > 0 && (
+                <div className="py-2 flex justify-end">
+                    <p className="text-[8px] font-black uppercase italic tracking-widest text-muted-foreground/30">
+                        {t("showing_top_10") || "Showing TOP 10 Goal Scorers"}
+                    </p>
+                </div>
+            )}
         </div>
     );
 }

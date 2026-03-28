@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { PenaltyShot } from "@/types/index";
-import { getPenaltyShootout, addPenaltyShot, clearPenaltyShootout } from "@/app/[locale]/dashboard/tournaments/[id]/penalty-actions";
+import { getPenaltyShootout, addPenaltyShot, clearPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/penalty-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Target, Check, X, Trash2, AlertTriangle } from "lucide-react";
@@ -19,6 +19,7 @@ interface PenaltyShootoutDialogProps {
     awayTeamName: string;
     trigger?: React.ReactNode;
     onComplete?: (homeScore: number, awayScore: number) => void;
+    onUpdate?: () => void;
 }
 
 export function PenaltyShootoutDialog({
@@ -29,6 +30,7 @@ export function PenaltyShootoutDialog({
     awayTeamName,
     trigger,
     onComplete,
+    onUpdate,
 }: PenaltyShootoutDialogProps) {
     const { toast } = useToast();
     const t = useTranslations("Penalty");
@@ -96,6 +98,7 @@ export function PenaltyShootoutDialog({
         const result = await addPenaltyShot(matchId, teamId, round, scored);
         if (result.success) {
             await fetchShots();
+            onUpdate?.();
         } else {
             toast({ title: "Error", description: result.error, variant: "destructive" });
         }
@@ -106,81 +109,107 @@ export function PenaltyShootoutDialog({
         if (!confirm(t("clear_confirm"))) return;
         await clearPenaltyShootout(matchId);
         setShots([]);
+        onUpdate?.();
     };
 
-    // Determine winner
+    // Determine winner based on mathematical possibility
     const hasWinner = useMemo(() => {
         const hLen = homeShots.length;
         const aLen = awayShots.length;
-        if (hLen < 5 || aLen < 5) return null; // Regulation not complete
+        
+        // 1. Regulation Phase (5 shots each)
+        const hRemaining = Math.max(0, 5 - hLen);
+        const aRemaining = Math.max(0, 5 - aLen);
 
-        if (hLen === aLen && homeScore !== awayScore) {
-            return homeScore > awayScore ? 'home' : 'away';
+        // Check if home team has already won
+        if (homeScore > awayScore + aRemaining) return 'home';
+        // Check if away team has already won
+        if (awayScore > homeScore + hRemaining) return 'away';
+
+        // 2. Sudden Death Phase (after 5 shots each and still tied)
+        if (hLen >= 5 && aLen >= 5 && hLen === aLen) {
+            if (homeScore > awayScore) return 'home';
+            if (awayScore > homeScore) return 'away';
         }
-        return null;
-    }, [homeShots.length, awayShots.length, homeScore, awayScore]);
 
-    return (
+        return null;
+    }, [homeShots.length, awayShots.length, homeScore, awayScore]);    return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="sm">
-                        <Target className="h-4 w-4 mr-1" />
-                        Penalty Shootout
+                    <Button variant="outline" size="sm" className="h-12 border-white/5 bg-white/5 hover:bg-white/10 hover:border-secondary/50 rounded-none transition-all group">
+                        <Target className="h-4 w-4 mr-2" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Penalty Shootout</span>
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <Target className="h-5 w-5" />
+            <DialogContent className="bg-[#0A0A0B] border-white/5 p-0 overflow-hidden max-w-md rounded-none">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
+                
+                <DialogHeader className="p-8 pb-4 text-left">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-white">
+                        <div className="p-2 bg-secondary/10 border border-secondary/20">
+                            <Target className="h-6 w-6 text-secondary" />
+                        </div>
                         {t("title")}
                     </DialogTitle>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">DECISIVE SHOOTOUT SESSION</p>
                 </DialogHeader>
 
                 {isLoading ? (
-                    <div className="flex justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin" />
+                    <div className="flex justify-center py-16">
+                        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                     </div>
                 ) : (
-                    <div className="space-y-4">
-                        {/* Score Summary */}
-                        <div className="flex items-center justify-center gap-6 py-4 bg-muted/30 rounded-none">
-                            <div className="text-center">
-                                <p className="text-xs text-muted-foreground mb-1 truncate max-w-[100px]">{homeTeamName}</p>
-                                <span className={cn("text-3xl font-bold", hasWinner === 'home' && "text-green-600")}>{homeScore}</span>
+                    <div className="px-8 pb-8 space-y-8 relative">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
+
+                        {/* Score Summary Scoreboard Style */}
+                        <div className="flex items-center justify-center gap-10 py-6 bg-white/5 border border-white/5 relative z-10 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                            <div className="text-center relative z-10">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2 truncate max-w-[120px]">{homeTeamName}</p>
+                                <span className={cn(
+                                    "text-5xl font-black tracking-tighter transition-all",
+                                    hasWinner === 'home' ? "text-secondary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-white"
+                                )}>
+                                    {homeScore}
+                                </span>
                             </div>
-                            <span className="text-muted-foreground text-lg">-</span>
-                            <div className="text-center">
-                                <p className="text-xs text-muted-foreground mb-1 truncate max-w-[100px]">{awayTeamName}</p>
-                                <span className={cn("text-3xl font-bold", hasWinner === 'away' && "text-green-600")}>{awayScore}</span>
+                            <span className="text-white/20 text-3xl font-black tracking-tighter relative z-10">-</span>
+                            <div className="text-center relative z-10">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2 truncate max-w-[120px]">{awayTeamName}</p>
+                                <span className={cn(
+                                    "text-5xl font-black tracking-tighter transition-all",
+                                    hasWinner === 'away' ? "text-secondary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-white"
+                                )}>
+                                    {awayScore}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Winner Banner */}
-                        {hasWinner && (
-                            <div className="text-center py-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-none">
-                                <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+                        {/* Winner/Status Banner */}
+                        {hasWinner ? (
+                            <div className="text-center py-3 bg-secondary/10 border border-secondary/20 relative z-10 overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <p className="text-xs font-black uppercase tracking-widest text-secondary relative z-10">
                                     🏆 {t("wins_on_penalties", { team: hasWinner === 'home' ? homeTeamName : awayTeamName })}
                                 </p>
                             </div>
-                        )}
-
-                        {/* Sudden Death Indicator */}
-                        {isSuddenDeath && !hasWinner && (
-                            <div className="flex items-center justify-center gap-2">
-                                <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-950/30">
-                                    <AlertTriangle className="h-3 w-3 mr-1" />
-                                    {t("sudden_death")}
+                        ) : isSuddenDeath ? (
+                            <div className="flex items-center justify-center relative z-10">
+                                <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 rounded-none px-4 py-1 animate-pulse">
+                                    <AlertTriangle className="h-3 w-3 mr-2" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t("sudden_death")}</span>
                                 </Badge>
                             </div>
-                        )}
+                        ) : null}
 
                         {/* Shot Grid */}
-                        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 text-sm">
-                            <div className="text-center font-medium text-xs text-muted-foreground">{homeTeamName}</div>
-                            <div className="text-center text-xs text-muted-foreground">#</div>
-                            <div className="text-center font-medium text-xs text-muted-foreground">{awayTeamName}</div>
+                        <div className="grid grid-cols-[1fr_auto_1fr] gap-x-6 gap-y-4 relative z-10">
+                            <div className="text-[9px] font-black uppercase tracking-widest text-white/20 text-center">{homeTeamName}</div>
+                            <div className="w-8" />
+                            <div className="text-[9px] font-black uppercase tracking-widest text-white/20 text-center">{awayTeamName}</div>
 
                             {Array.from({ length: totalRounds }, (_, i) => {
                                 const homeShot = homeShots[i];
@@ -188,45 +217,43 @@ export function PenaltyShootoutDialog({
                                 const isSD = i >= 5;
 
                                 return (
-                                    <div key={i} className={cn("contents", isSD && "[&>div]:border-t [&>div]:pt-1")}>
+                                    <div key={i} className="contents">
                                         {/* Home Shot */}
                                         <div className="flex justify-center">
                                             {homeShot ? (
                                                 <div className={cn(
-                                                    "w-8 h-8 rounded-none flex items-center justify-center",
-                                                    homeShot.scored ? "bg-green-100 text-green-700 dark:bg-green-900/30" : "bg-red-100 text-red-700 dark:bg-red-900/30"
+                                                    "w-12 h-12 flex items-center justify-center border transition-all",
+                                                    homeShot.scored ? "bg-secondary/10 border-secondary/30 text-secondary" : "bg-red-500/10 border-red-500/30 text-red-500"
                                                 )}>
-                                                    {homeShot.scored ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                                                    {homeShot.scored ? <Check className="h-6 w-6 stroke-[3px]" /> : <X className="h-6 w-6 stroke-[3px]" />}
                                                 </div>
                                             ) : !hasWinner ? (
-                                                <div className="flex gap-1">
+                                                <div className="flex gap-2">
                                                     <button
-                                                        className="w-8 h-8 rounded-none border border-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 flex items-center justify-center disabled:opacity-50 transition-colors"
+                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-secondary hover:text-black hover:border-secondary flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => homeTeamId && handleAddShot(homeTeamId, true)}
                                                         disabled={isSaving || !homeTeamId}
-                                                        title={t("scored")}
                                                     >
-                                                        <Check className="h-3 w-3 text-green-600" />
+                                                        <Check className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
                                                     <button
-                                                        className="w-8 h-8 rounded-none border border-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 flex items-center justify-center disabled:opacity-50 transition-colors"
+                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => homeTeamId && handleAddShot(homeTeamId, false)}
                                                         disabled={isSaving || !homeTeamId}
-                                                        title={t("missed")}
                                                     >
-                                                        <X className="h-3 w-3 text-red-600" />
+                                                        <X className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="w-8 h-8" />
+                                                <div className="w-12 h-12 border border-white/2 bg-white/2 opacity-20" />
                                             )}
                                         </div>
 
                                         {/* Round Number */}
                                         <div className="flex items-center justify-center">
                                             <span className={cn(
-                                                "text-xs font-mono",
-                                                isSD ? "text-amber-600 font-bold" : "text-muted-foreground"
+                                                "text-xs font-black italic tracking-tighter",
+                                                isSD ? "text-amber-500" : "text-white/40"
                                             )}>
                                                 {isSD ? `SD${i - 4}` : i + 1}
                                             </span>
@@ -236,32 +263,30 @@ export function PenaltyShootoutDialog({
                                         <div className="flex justify-center">
                                             {awayShot ? (
                                                 <div className={cn(
-                                                    "w-8 h-8 rounded-none flex items-center justify-center",
-                                                    awayShot.scored ? "bg-green-100 text-green-700 dark:bg-green-900/30" : "bg-red-100 text-red-700 dark:bg-red-900/30"
+                                                    "w-12 h-12 flex items-center justify-center border transition-all",
+                                                    awayShot.scored ? "bg-secondary/10 border-secondary/30 text-secondary" : "bg-red-500/10 border-red-500/30 text-red-500"
                                                 )}>
-                                                    {awayShot.scored ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                                                    {awayShot.scored ? <Check className="h-6 w-6 stroke-[3px]" /> : <X className="h-6 w-6 stroke-[3px]" />}
                                                 </div>
                                             ) : !hasWinner ? (
-                                                <div className="flex gap-1">
+                                                <div className="flex gap-2">
                                                     <button
-                                                        className="w-8 h-8 rounded-none border border-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 flex items-center justify-center disabled:opacity-50 transition-colors"
+                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-secondary hover:text-black hover:border-secondary flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => awayTeamId && handleAddShot(awayTeamId, true)}
                                                         disabled={isSaving || !awayTeamId}
-                                                        title={t("scored")}
                                                     >
-                                                        <Check className="h-3 w-3 text-green-600" />
+                                                        <Check className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
                                                     <button
-                                                        className="w-8 h-8 rounded-none border border-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 flex items-center justify-center disabled:opacity-50 transition-colors"
+                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => awayTeamId && handleAddShot(awayTeamId, false)}
                                                         disabled={isSaving || !awayTeamId}
-                                                        title={t("missed")}
                                                     >
-                                                        <X className="h-3 w-3 text-red-600" />
+                                                        <X className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="w-8 h-8" />
+                                                <div className="w-12 h-12 border border-white/2 bg-white/2 opacity-20" />
                                             )}
                                         </div>
                                     </div>
@@ -270,14 +295,25 @@ export function PenaltyShootoutDialog({
                         </div>
 
                         {/* Actions */}
-                        {shots.length > 0 && (
-                            <div className="flex justify-center pt-2">
-                                <Button variant="ghost" size="sm" className="text-destructive" onClick={handleClear}>
-                                    <Trash2 className="h-3 w-3 mr-1" />
+                        <div className="flex flex-col gap-3 pt-4 border-t border-white/5 relative z-10">
+                            {shots.length > 0 && (
+                                <Button 
+                                    variant="ghost" 
+                                    className="h-10 text-[9px] font-black uppercase tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all" 
+                                    onClick={handleClear}
+                                >
+                                    <Trash2 className="h-3 w-3 mr-2" />
                                     {t("clear_all")}
                                 </Button>
-                            </div>
-                        )}
+                            )}
+                            <Button 
+                                variant="ghost" 
+                                onClick={() => setOpen(false)}
+                                className="h-10 text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-none"
+                            >
+                                CLOSE SESSION
+                            </Button>
+                        </div>
                     </div>
                 )}
             </DialogContent>

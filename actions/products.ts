@@ -11,16 +11,91 @@ export async function getProducts(): Promise<ActionResponse<Product[]>> {
         const { data, error } = await supabase
             .from('products')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('price', { ascending: true });
 
         if (error) {
-            console.error('Error fetching products:', error);
-            return { success: false, error: 'Failed to fetch products' };
+            console.error('Error fetching products from DB:', error);
+        }
+
+        // Fallback to default products if DB is empty or has error
+        if (!data || data.length === 0) {
+            console.warn('No products found in database, using fallback defaults.');
+            const fallbacks: Product[] = [
+                {
+                    id: 'fallback-starter',
+                    name: 'Starter',
+                    description: ['1 Team limit', 'League & Knockout', 'Basic Statistics', 'Community Support'],
+                    price: 0,
+                    discounted_price: null,
+                    duration: 'lifetime',
+                    teams_limit: 1,
+                    format_support: '14',
+                    invite_enabled: false,
+                    register_enabled: false,
+                    support_level: 'Community',
+                    recommended: false,
+                    target_role: 'manager',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'fallback-tournament',
+                    name: 'Per Tournament',
+                    description: ['Unlimited teams', 'All tournament formats', 'Advanced Stats & Goals', 'Standard Support', 'Custom Branding'],
+                    price: 990,
+                    discounted_price: 590,
+                    duration: 'lifetime',
+                    teams_limit: 0,
+                    format_support: 'All',
+                    invite_enabled: true,
+                    register_enabled: true,
+                    support_level: 'Standard',
+                    recommended: false,
+                    target_role: 'organizer',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'fallback-monthly',
+                    name: 'Monthly Pro',
+                    description: ['Unlimited tournaments', 'All pro features included', 'Priority 24/7 Support', 'Cancel anytime'],
+                    price: 1290,
+                    discounted_price: 890,
+                    duration: 'monthly',
+                    teams_limit: 0,
+                    format_support: 'All',
+                    invite_enabled: true,
+                    register_enabled: true,
+                    support_level: 'Priority',
+                    recommended: false,
+                    target_role: 'organizer',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'fallback-yearly',
+                    name: 'Yearly Pro',
+                    description: ['Save 2 months', 'Unlimited everything', 'VIP Priority Support', 'Advance Analytics'],
+                    price: 12900,
+                    discounted_price: 8900,
+                    duration: 'yearly',
+                    teams_limit: 0,
+                    format_support: 'All',
+                    invite_enabled: true,
+                    register_enabled: true,
+                    support_level: 'Priority',
+                    recommended: true,
+                    target_role: 'organizer',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }
+            ];
+            return { success: true, data: fallbacks };
         }
 
         return { success: true, data: data as Product[] };
     } catch (error) {
-        console.error('Unexpected error:', error);
+        console.error('Unexpected error in getProducts:', error);
         return { success: false, error: 'An unexpected error occurred' };
     }
 }

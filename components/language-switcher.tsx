@@ -23,19 +23,19 @@ export function LanguageSwitcher() {
 
     return (
         <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-                <Globe className="mr-2 h-4 w-4" />
-                <span>{t("language")}</span>
+            <DropdownMenuSubTrigger className="rounded-none focus:bg-muted focus:text-secondary py-2.5">
+                <Globe className="mr-3 h-4 w-4 opacity-70" />
+                <span className="text-xs font-bold uppercase tracking-tight">{t("language")}</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
+            <DropdownMenuSubContent className="bg-background border-border rounded-none min-w-[120px]">
                 <DropdownMenuItem onClick={() => switchLocale("en")}>
-                    <span className="mr-2 text-base">🇺🇸</span>
-                    <span>English</span>
+                    <span className="mr-2 text-base opacity-70">🇺🇸</span>
+                    <span className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">English</span>
                     {locale === "en" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => switchLocale("th")}>
-                    <span className="mr-2 text-base">🇹🇭</span>
-                    <span>ไทย</span>
+                    <span className="mr-2 text-base opacity-70">🇹🇭</span>
+                    <span className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">ไทย</span>
                     {locale === "th" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
             </DropdownMenuSubContent>

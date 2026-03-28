@@ -35,6 +35,16 @@ const productSchema = z.object({
     user_limit: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) > 0), {
         message: "user_limit_invalid",
     }),
+    teams_limit: z.string().optional().refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
+        message: "teams_limit_invalid",
+    }),
+    format_support: z.string().optional(),
+    invite_enabled: z.boolean(),
+    register_enabled: z.boolean(),
+    stats_support: z.string().optional(),
+    support_level: z.string().optional(),
+    recommended: z.boolean(),
+    target_role: z.enum(["manager", "organizer"]),
 })
 
 type ProductFormValues = z.infer<typeof productSchema>
@@ -45,6 +55,8 @@ interface ProductDialogProps {
     onOpenChange?: (open: boolean) => void
     children?: React.ReactNode
 }
+
+import { Switch } from "@/components/ui/switch"
 
 export function ProductDialog({ product, open: controlledOpen, onOpenChange: setControlledOpen, children }: ProductDialogProps) {
     const t = useTranslations("Admin");
@@ -66,6 +78,14 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
             discounted_price: "",
             duration: "",
             user_limit: "",
+            teams_limit: "0",
+            format_support: "Basic",
+            invite_enabled: false,
+            register_enabled: false,
+            stats_support: "Basic",
+            support_level: "Standard",
+            recommended: false,
+            target_role: "organizer",
         },
     })
 
@@ -84,6 +104,14 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
                     discounted_price: product.discounted_price?.toString() || "",
                     duration: product.duration || "",
                     user_limit: product.user_limit?.toString() || "",
+                    teams_limit: product.teams_limit?.toString() || "0",
+                    format_support: product.format_support || "Basic",
+                    invite_enabled: !!product.invite_enabled,
+                    register_enabled: !!product.register_enabled,
+                    stats_support: product.stats_support || "Basic",
+                    support_level: product.support_level || "Standard",
+                    recommended: !!product.recommended,
+                    target_role: (product.target_role === 'admin' ? 'organizer' : product.target_role) as 'manager' | 'organizer',
                 })
             } else {
                 form.reset({
@@ -93,6 +121,11 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
                     discounted_price: "",
                     duration: "",
                     user_limit: "",
+                    teams_limit: "0",
+                    format_support: "Basic",
+                    support_level: "Standard",
+                    recommended: false,
+                    target_role: "organizer",
                 })
             }
         }
@@ -109,6 +142,14 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
                 discounted_price: data.discounted_price ? Number(data.discounted_price) : null,
                 duration: data.duration || null,
                 user_limit: data.user_limit ? Number(data.user_limit) : null,
+                teams_limit: Number(data.teams_limit || 0),
+                format_support: data.format_support,
+                invite_enabled: data.invite_enabled,
+                register_enabled: data.register_enabled,
+                stats_support: data.stats_support,
+                support_level: data.support_level,
+                recommended: data.recommended,
+                target_role: data.target_role,
             })
 
             if (result.success) {
@@ -131,16 +172,16 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
             <DialogTrigger asChild>
                 {children || <Button><Plus className="mr-2 h-4 w-4" /> {t("add_product")}</Button>}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{product ? t("edit_product") : t("add_product")}</DialogTitle>
                     <DialogDescription>
                         {product ? tCommon("edit_desc") : tCommon("create_desc")}
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 py-4">
+                        <div className="col-span-2 grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="name" className="text-right">{t("product_name")}</Label>
                             <div className="col-span-3">
                                 <Input id="name" {...form.register("name")} />
@@ -148,7 +189,7 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 items-start gap-4">
+                        <div className="col-span-2 grid grid-cols-4 items-start gap-4">
                             <Label className="text-right pt-2">{t("description")}</Label>
                             <div className="col-span-3 space-y-2">
                                 {fields.map((field, index) => (
@@ -171,40 +212,121 @@ export function ProductDialog({ product, open: controlledOpen, onOpenChange: set
                                 >
                                     <Plus className="mr-2 h-4 w-4" /> {t("add_feature")}
                                 </Button>
-                                {form.formState.errors.description && <p className="text-sm text-red-500 mt-1">{tCommon("required")}</p>}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 items-center gap-4">
+                        {/* Pricing & Limits */}
+                        <div className="col-span-2 border-t pt-4 font-semibold text-sm">{t("pricing_and_limits")}</div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
                             <Label htmlFor="price" className="text-right">{t("price")}</Label>
-                            <div className="col-span-3">
+                            <div className="col-span-2">
                                 <Input id="price" type="number" step="0.01" {...form.register("price")} />
-                                {form.formState.errors.price && <p className="text-sm text-red-500 mt-1">{t(form.formState.errors.price.message || "")}</p>}
+                                {form.formState.errors.price && <p className="text-sm text-red-500 mt-1 text-xs">{t(form.formState.errors.price.message || "")}</p>}
                             </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="discounted_price" className="text-right">{t("discounted_price")}</Label>
-                            <div className="col-span-3">
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="discounted_price" className="text-right whitespace-nowrap">{t("discounted_price")}</Label>
+                            <div className="col-span-2">
                                 <Input id="discounted_price" type="number" step="0.01" {...form.register("discounted_price")} />
-                                {form.formState.errors.discounted_price && <p className="text-sm text-red-500 mt-1">{t(form.formState.errors.discounted_price.message || "")}</p>}
                             </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
+
+                        <div className="grid grid-cols-3 items-center gap-4">
                             <Label htmlFor="duration" className="text-right">{t("duration")}</Label>
-                            <div className="col-span-3">
+                            <div className="col-span-2">
                                 <Input id="duration" placeholder={t("duration_placeholder")} {...form.register("duration")} />
                             </div>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
+
+                        <div className="grid grid-cols-3 items-center gap-4">
                             <Label htmlFor="user_limit" className="text-right">{t("user_limit")}</Label>
-                            <div className="col-span-3">
+                            <div className="col-span-2">
                                 <Input id="user_limit" type="number" {...form.register("user_limit")} />
-                                {form.formState.errors.user_limit && <p className="text-sm text-red-500 mt-1">{t(form.formState.errors.user_limit.message || "")}</p>}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="teams_limit" className="text-right">{t("teams_limit")}</Label>
+                            <div className="col-span-2">
+                                <Input id="teams_limit" type="number" {...form.register("teams_limit")} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="target_role" className="text-right font-bold">{t("target_role")}</Label>
+                            <div className="col-span-2">
+                                <select 
+                                    id="target_role" 
+                                    {...form.register("target_role")}
+                                    className="flex h-10 w-full rounded-none border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="organizer">{t("organizer")}</option>
+                                    <option value="manager">{t("manager")}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="recommended" className="text-right">{t("recommended")}</Label>
+                            <div className="col-span-2">
+                                <Switch
+                                    id="recommended"
+                                    checked={form.watch("recommended")}
+                                    onCheckedChange={(val) => form.setValue("recommended", val)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Features & Support */}
+                        <div className="col-span-2 border-t pt-4 font-semibold text-sm">{t("features_and_support")}</div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="format_support" className="text-right">{t("format_support")}</Label>
+                            <div className="col-span-2">
+                                <Input id="format_support" {...form.register("format_support")} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="stats_support" className="text-right">{t("statistics")}</Label>
+                            <div className="col-span-2">
+                                <Input id="stats_support" {...form.register("stats_support")} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="support_level" className="text-right">{t("support")}</Label>
+                            <div className="col-span-2">
+                                <Input id="support_level" {...form.register("support_level")} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="invite_enabled" className="text-right">{t("invite_via_link")}</Label>
+                            <div className="col-span-2">
+                                <Switch
+                                    id="invite_enabled"
+                                    checked={form.watch("invite_enabled")}
+                                    onCheckedChange={(val) => form.setValue("invite_enabled", val)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="register_enabled" className="text-right">{t("open_registration")}</Label>
+                            <div className="col-span-2">
+                                <Switch
+                                    id="register_enabled"
+                                    checked={form.watch("register_enabled")}
+                                    onCheckedChange={(val) => form.setValue("register_enabled", val)}
+                                />
                             </div>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit" disabled={isLoading}>
+                        <Button type="submit" disabled={isLoading} className="w-full">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {tCommon("save")}
                         </Button>

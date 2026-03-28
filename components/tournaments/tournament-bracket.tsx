@@ -25,11 +25,11 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
 
     if (knockoutMatches.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
-                <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                    <Trophy className="h-6 w-6 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border/20 rounded-none bg-muted/5">
+                <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mb-4 border border-border/10">
+                    <Trophy className="h-6 w-6 text-muted-foreground/40" />
                 </div>
-                <h3 className="text-sm font-medium text-muted-foreground">{t("no_knockout")}</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">{t("no_knockout")}</h3>
             </div>
         );
     }
@@ -69,12 +69,6 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
 
     return (
         <div className="space-y-4">
-            {!isPublic && (
-                <div className="flex justify-end">
-                    <ExportToImageButton targetId="tournament-bracket-canvas" filename="tournament_bracket" label={t("export") || "Export Bracket"} />
-                </div>
-            )}
-
             {/* Hidden measurement card */}
             <div className="absolute opacity-0 pointer-events-none" style={{ width: CARD_W }}>
                 <div ref={measureRef}>
@@ -82,8 +76,8 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
                 </div>
             </div>
 
-            <div className="w-full overflow-auto pb-4 custom-scrollbar scroll-smooth">
-                <div id="tournament-bracket-canvas" className="inline-flex items-start py-6 pl-4 pr-8">
+            <div className="w-full overflow-auto custom-scrollbar scroll-smooth">
+                <div id="tournament-bracket-canvas" className="inline-flex items-start">
                     {activeStages.map((stage, stageIndex) => {
                         let stageMatches = matchesByStage[stage];
                         stageMatches = [...stageMatches].sort((a, b) => (a.match_index ?? 0) - (b.match_index ?? 0));
@@ -100,10 +94,10 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
                             <div key={stage} className="flex flex-col shrink-0">
                                 {/* Stage label */}
                                 <div
-                                    className="text-center mb-4"
+                                    className="text-center mb-6 pr-12"
                                     style={{ width: CARD_W + (!isLast ? CONNECTOR_W : 0) }}
                                 >
-                                    <span className="text-[10px] font-semibold uppercase text-muted-foreground/70 tracking-[0.12em] inline-block pb-1.5 border-b border-border/40">
+                                    <span className="text-[10px] font-black uppercase italic tracking-tighter text-secondary/80 bg-secondary/5 px-3 py-1 border-l-2 border-secondary">
                                         {stageLabels[stage] || stage.replace('_', ' ')}
                                     </span>
                                 </div>
@@ -173,13 +167,13 @@ function BracketSlot({
                 <div className="relative shrink-0" style={{ width: CONNECTOR_W, alignSelf: 'stretch' }}>
                     {/* Horizontal stub from card center to vertical bar position */}
                     <div
-                        className="absolute bg-border"
+                        className="absolute bg-secondary/30"
                         style={{
                             left: 0,
                             top: '50%',
                             width: CONNECTOR_W / 2,
-                            height: 1.5,
-                            transform: 'translateY(-0.75px)',
+                            height: 1,
+                            transform: 'translateY(-0.5px)',
                         }}
                     />
 
@@ -188,11 +182,11 @@ function BracketSlot({
                             {/* Vertical bar: top-of-pair extends downward, bottom-of-pair extends upward */}
                             {isTopOfPair && (
                                 <div
-                                    className="absolute bg-border"
+                                    className="absolute bg-secondary/30"
                                     style={{
-                                        left: CONNECTOR_W / 2 - 0.75,
+                                        left: CONNECTOR_W / 2 - 0.5,
                                         top: '50%',
-                                        width: 1.5,
+                                        width: 1,
                                         bottom: 0,
                                     }}
                                 />
@@ -200,22 +194,22 @@ function BracketSlot({
                             {isBottomOfPair && (
                                 <>
                                     <div
-                                        className="absolute bg-border"
+                                        className="absolute bg-secondary/30"
                                         style={{
-                                            left: CONNECTOR_W / 2 - 0.75,
+                                            left: CONNECTOR_W / 2 - 0.5,
                                             top: 0,
-                                            width: 1.5,
+                                            width: 1,
                                             height: '50%',
                                         }}
                                     />
                                     {/* Output horizontal from vertical bar to next round */}
                                     <div
-                                        className="absolute bg-border"
+                                        className="absolute bg-secondary/30"
                                         style={{
                                             left: CONNECTOR_W / 2,
                                             top: 0,
                                             width: CONNECTOR_W / 2,
-                                            height: 1.5,
+                                            height: 1,
                                         }}
                                     />
                                 </>
@@ -226,13 +220,13 @@ function BracketSlot({
                     {/* Single match (no pair): straight horizontal through */}
                     {!hasPairPartner && (
                         <div
-                            className="absolute bg-border"
+                            className="absolute bg-secondary/30"
                             style={{
                                 left: CONNECTOR_W / 2,
                                 top: '50%',
                                 width: CONNECTOR_W / 2,
-                                height: 1.5,
-                                transform: 'translateY(-0.75px)',
+                                height: 1,
+                                transform: 'translateY(-0.5px)',
                             }}
                         />
                     )}
@@ -245,37 +239,42 @@ function BracketSlot({
 function BracketMatchCard({ match, isFinal }: { match: Match; isFinal?: boolean }) {
     const t = useTranslations("Bracket");
     const isFinished = match.status === "finished";
+    const isScheduled = match.status === "scheduled";
     const homeWinner = match.winner_id && match.winner_id === match.home_team_id;
     const awayWinner = match.winner_id && match.winner_id === match.away_team_id;
-    const hasPenalties = match.penalty_home_score != null || match.penalty_away_score != null;
+    const hasPenalties = !isScheduled && ((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0);
 
     return (
         <div className={cn(
-            "flex flex-col border rounded-sm bg-card overflow-hidden text-sm relative transition-all",
-            "shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.1)] hover:border-primary/25",
-            isFinal && "ring-1 ring-amber-400/30 shadow-[0_0_12px_rgba(251,191,36,0.08)]",
-            isFinished ? "opacity-100" : "opacity-90"
+            "flex flex-col border border-border/40 bg-card rounded-none overflow-hidden text-sm relative transition-all group",
+            "shadow-lg hover:border-secondary/30",
+            isFinal && "border-secondary/40 shadow-[0_0_20px_rgba(0,196,154,0.1)]",
+            !isFinished && "opacity-95"
         )}>
+             {/* Dynamic color strip on top */}
+             <div className={cn(
+                "h-0.5 w-full",
+                isFinal ? "bg-secondary shadow-[0_0_8px_rgba(0,196,154,0.6)]" : "bg-muted/20 group-hover:bg-secondary/40"
+            )} />
+
             {/* Header */}
-            <div className="flex justify-between items-center px-2.5 py-1 bg-muted/30 border-b border-border/40">
-                <span className="text-[9px] uppercase font-semibold text-muted-foreground/60 tracking-wider flex items-center gap-1">
-                    {isFinal && <Trophy className="h-3 w-3 text-amber-500" />}
+            <div className="flex justify-between items-center px-3 py-1.5 bg-muted/10 border-b border-border/20">
+                <span className="text-[8px] font-black uppercase italic tracking-widest text-muted-foreground/50 flex items-center gap-1.5">
+                    {isFinal && <Trophy className="h-2.5 w-2.5 text-secondary" />}
                     {t("match")} {(match.match_index !== undefined && match.match_index !== null) ? `#${match.match_index}` : ""}
                 </span>
                 <div className="flex items-center gap-1">
                     {match.status === 'live' && (
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 bg-red-500 text-white rounded-sm animate-pulse leading-none">
-                            {t("live")}
-                        </span>
+                        <div className="flex items-center gap-1 bg-red-500/10 px-1.5 py-0.5 rounded-none">
+                            <span className="h-1 w-1 bg-red-500 rounded-full animate-pulse" />
+                            <span className="text-[8px] font-black uppercase italic text-red-500 tracking-tighter">
+                                {t("live")}
+                            </span>
+                        </div>
                     )}
                     {isFinished && (
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-sm leading-none">
+                        <span className="text-[8px] font-black uppercase italic text-muted-foreground/40 tracking-tighter">
                             {t("ft")}
-                        </span>
-                    )}
-                    {hasPenalties && isFinished && (
-                        <span className="text-[8px] font-medium px-1 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-sm leading-none">
-                            PEN
                         </span>
                     )}
                 </div>
@@ -285,20 +284,17 @@ function BracketMatchCard({ match, isFinal }: { match: Match; isFinal?: boolean 
             <TeamRow
                 name={match.home_team?.name}
                 logoUrl={match.home_team?.logo_url}
-                score={match.home_score}
+                score={isScheduled ? null : match.home_score}
                 penaltyScore={hasPenalties ? match.penalty_home_score : undefined}
                 isWinner={!!homeWinner}
                 tbd={t("tbd")}
             />
 
-            {/* Divider */}
-            <div className="h-px bg-border/30" />
-
             {/* Away Team */}
             <TeamRow
                 name={match.away_team?.name}
                 logoUrl={match.away_team?.logo_url}
-                score={match.away_score}
+                score={isScheduled ? null : match.away_score}
                 penaltyScore={hasPenalties ? match.penalty_away_score : undefined}
                 isWinner={!!awayWinner}
                 tbd={t("tbd")}
@@ -324,39 +320,41 @@ function TeamRow({
 }) {
     return (
         <div className={cn(
-            "flex justify-between items-center px-2.5 py-1.5 gap-2 transition-colors",
-            isWinner && "bg-emerald-50/60 dark:bg-emerald-900/10"
+            "flex justify-between items-center px-3 py-2 gap-2 transition-colors relative",
+            isWinner ? "bg-secondary/[0.03]" : ""
         )}>
-            <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
-                {isWinner && (
-                    <div className="w-0.5 h-4 bg-emerald-500 rounded-full shrink-0 -ml-1 mr-0.5" />
-                )}
-                {logoUrl ? (
-                    <img src={logoUrl} className="w-4 h-4 object-contain shrink-0" alt="" />
-                ) : (
-                    <div className="w-4 h-4 rounded-sm bg-muted/80 flex items-center justify-center shrink-0 text-[8px] font-medium text-muted-foreground/70">
-                        {name?.charAt(0) || "?"}
-                    </div>
-                )}
+            {isWinner && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4/5 bg-secondary shadow-[0_0_8px_rgba(0,196,154,0.4)]" />
+            )}
+            <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
+                <div className="w-5 h-5 bg-muted/10 border border-border/10 p-0.5 rounded-none shrink-0 flex items-center justify-center overflow-hidden">
+                    {logoUrl ? (
+                        <img src={logoUrl} className="w-full h-full object-contain" alt="" />
+                    ) : (
+                        <span className="text-[9px] font-black text-muted-foreground/30 capitalize">
+                            {name?.charAt(0) || "?"}
+                        </span>
+                    )}
+                </div>
                 <span className={cn(
-                    "truncate text-xs leading-none",
-                    isWinner ? "font-semibold text-foreground" : "text-muted-foreground"
+                    "truncate text-[11px] font-black uppercase italic tracking-tighter transition-colors",
+                    isWinner ? "text-foreground" : "text-muted-foreground/60"
                 )}>
                     {name || tbd}
                 </span>
             </div>
-            <div className="flex items-center gap-0.5 shrink-0">
-                <span className={cn(
-                    "font-mono text-xs min-w-[16px] text-center tabular-nums",
-                    isWinner ? "font-bold text-foreground" : "text-muted-foreground/70"
-                )}>
-                    {score ?? "-"}
-                </span>
+            <div className="flex items-center gap-1 shrink-0">
                 {penaltyScore != null && (
-                    <span className="text-[9px] text-muted-foreground/50 font-mono tabular-nums">
+                    <span className="text-[9px] font-black text-muted-foreground/30 italic">
                         ({penaltyScore})
                     </span>
                 )}
+                <span className={cn(
+                    "text-xs min-w-[16px] text-center font-black italic tracking-tighter",
+                    isWinner ? "text-secondary" : "text-muted-foreground/60"
+                )}>
+                    {score ?? "-"}
+                </span>
             </div>
         </div>
     );

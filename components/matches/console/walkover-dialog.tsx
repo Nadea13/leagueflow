@@ -16,30 +16,61 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle className="text-destructive flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5" /> {t("walkover")}
+            <DialogContent className="bg-[#0A0A0B] border-white/5 p-0 overflow-hidden max-w-md rounded-none">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500/50 via-red-500 to-red-500/50" />
+                
+                <DialogHeader className="p-8 pb-4">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-white">
+                        <div className="p-2 bg-red-500/10 border border-red-500/20">
+                            <AlertTriangle className="h-6 w-6 text-red-500" />
+                        </div>
+                        {t("walkover")}
                     </DialogTitle>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">SELECT WINNING TEAM FOR FORFEIT</p>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4 py-4">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="h-24 flex flex-col gap-2 border-2 hover:border-primary"
-                        onClick={() => match.home_team_id && onConfirm(match.home_team_id)}
+
+                <div className="px-8 py-6 relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
+
+                    <div className="grid grid-cols-2 gap-4 relative z-10">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-32 bg-white/5 border-white/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
+                            onClick={() => match.home_team_id && onConfirm(match.home_team_id)}
+                        >
+                            <div className="p-3 bg-white/5 group-hover:bg-black/10 transition-colors">
+                                <Trophy className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">
+                                {match.home_team?.name} <br/>
+                                <span className="text-secondary group-hover:text-black/60">{t("wins")}</span>
+                            </span>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-32 bg-white/5 border-white/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
+                            onClick={() => match.away_team_id && onConfirm(match.away_team_id)}
+                        >
+                            <div className="p-3 bg-white/5 group-hover:bg-black/10 transition-colors">
+                                <Trophy className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">
+                                {match.away_team?.name} <br/>
+                                <span className="text-secondary group-hover:text-black/60">{t("wins")}</span>
+                            </span>
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="p-4 bg-white/5 border-t border-white/5">
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => onOpenChange(false)}
+                        className="w-full text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-none"
                     >
-                        <Trophy className="w-6 h-6 mb-1" />
-                        <span className="font-bold">{match.home_team?.name} {t("wins")}</span>
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="h-24 flex flex-col gap-2 border-2 hover:border-primary"
-                        onClick={() => match.away_team_id && onConfirm(match.away_team_id)}
-                    >
-                        <Trophy className="w-6 h-6 mb-1" />
-                        <span className="font-bold">{match.away_team?.name} {t("wins")}</span>
+                        CANCEL
                     </Button>
                 </div>
             </DialogContent>

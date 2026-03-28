@@ -13,7 +13,7 @@ export function ShareButton({ tournamentId }: { tournamentId?: string }) {
     const handleShare = async () => {
         try {
             const url = tournamentId
-                ? `${window.location.origin}/view/${tournamentId}`
+                ? `${window.location.origin}/${tournamentId}`
                 : window.location.href;
 
             await navigator.clipboard.writeText(url);

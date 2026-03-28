@@ -1,68 +1,26 @@
-import { getTranslations } from "next-intl/server";
 import { createClient } from "@/utils/supabase/server";
-import { BillingPageContent } from "@/components/billing/billing-page-content";
-import { getPaymentHistory } from "./actions";
+import { redirect } from "next/navigation";
 
-import { getProducts } from "@/actions/products";
-
-export default async function BillingPage() {
-    const t = await getTranslations("Billing");
+export default async function LegacyBillingRedirect({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        return null;
+        redirect(`/${locale}/login`);
     }
 
-    // Fetch user's tournaments
-    const { data: tournaments } = await supabase
-        .from("tournaments")
-        .select("id, name, status")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-    // Fetch products
-    const { data: products } = await getProducts();
-
-    // Fetch payment history
-    const history = await getPaymentHistory();
-
-    // Check active subscription
-    let userPlan = 'free';
-    const { data: subscription } = await supabase
-        .from("payments")
-        .select("plan, subscription_expires_at")
-        .eq("user_id", user.id)
-        .eq("status", "success")
-        .in("plan", ["monthly", "yearly"])
-        .is("tournament_id", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_organizer")
+        .eq("id", user.id)
         .single();
 
-    if (subscription) {
-        const now = new Date();
-        const expiresAt = subscription.subscription_expires_at
-            ? new Date(subscription.subscription_expires_at)
-            : null;
-
-        userPlan = (expiresAt && now > expiresAt) ? 'free' : (subscription.plan || 'free');
+    if (profile?.is_organizer) {
+        redirect(`/${locale}/organizer/billing`);
+    } else {
+        redirect(`/${locale}/manager/billing`);
     }
 
-    return (
-        <div className="space-y-6">
-            <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-                <p className="text-muted-foreground">{t("description")}</p>
-            </div>
-
-            <BillingPageContent
-                tournaments={tournaments || []}
-                initialHistory={history}
-                onRefreshHistory={getPaymentHistory}
-                userPlan={userPlan}
-                products={products || []}
-            />
-        </div>
-    );
+    return null;
 }

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
 import { ActionResponse, Team, Match } from "@/types/index";
-import { createMatch, updateMatch } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { createMatch, updateMatch } from "@/app/[locale]/organizer/tournaments/[id]/actions";
 import { Loader2 } from "lucide-react";
 
 interface MatchDialogProps {

@@ -3,17 +3,27 @@ export type MatchStatus = 'scheduled' | 'live' | 'finished';
 
 export interface Tournament {
     id: string;
+    user_id: string;
     name: string;
     format: string;
     status: TournamentStatus;
+    description?: string | null;
     start_date?: string | null;
     end_date?: string | null;
     number_of_pitches?: number | null;
+    max_teams?: number | null;
+    advancing_teams?: number | null;
+    is_registration_open: boolean;
+    registration_fee?: number | null;
+    bank_name?: string | null;
+    bank_account_name?: string | null;
+    bank_account_number?: string | null;
     plan?: 'free' | 'tournament' | 'monthly' | 'yearly';
     payment_status?: string | null;
     payment_id?: string | null;
     payment_method?: string | null;
     created_at: string;
+    updated_at?: string;
 }
 
 export interface Match {
@@ -39,8 +49,8 @@ export interface Match {
     timer_status?: 'playing' | 'paused' | 'stopped';
     elapsed_before_pause?: number; // Seconds calculated before pause
     current_minute?: number | string | null;
-    home_team?: { name: string; logo_url?: string | null };
-    away_team?: { name: string; logo_url?: string | null };
+    home_team?: { id: string; name: string; logo_url?: string | null };
+    away_team?: { id: string; name: string; logo_url?: string | null };
     // Penalty Shootout (joined)
     penalty_home_score?: number | null;
     penalty_away_score?: number | null;
@@ -48,19 +58,37 @@ export interface Match {
 
 export interface Team {
     id: string;
-    tournament_id: string | null;
+    user_id: string | null;
     name: string;
+    description?: string | null;
+    logo_url?: string | null;
+    tournament_id?: string | null;
+    group_name?: string | null;
+    created_at: string;
+}
+
+export interface TournamentTeam {
+    id: string;
+    tournament_id: string | null;
+    team_id: string | null; // Link to Global Team
+    user_id: string | null;
+    name: string;
+    description?: string | null;
     group_name?: string | null;
     logo_url?: string | null;
+    is_roster_locked: boolean;
     created_at: string;
 }
 
 export interface Player {
     id: string;
-    team_id: string;
+    team_id?: string | null;
+    global_team_id?: string | null;
     name: string;
     number?: number | null;
     position?: string | null;
+    birth_date?: string | null;
+    photo_url?: string | null;
     global_player_id?: string | null;
     created_at: string;
     // Join
@@ -71,12 +99,13 @@ export interface GlobalPlayer {
     id: string;
     name: string;
     photo_url?: string | null;
+    id_card_url?: string | null;
     date_of_birth?: string | null;
     created_by?: string | null;
     created_at: string;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time';
+export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury';
 
 export interface MatchEvent {
     id: string;
@@ -170,21 +199,58 @@ export interface Payment {
     user?: { email: string; full_name?: string };
 }
 
-export interface Product {
+export interface ManagerPlan {
     id: string;
     name: string;
     description?: string[] | null;
     price: number;
     discounted_price?: number | null;
     duration?: string | null;
-    user_limit?: number | null;
-    teams_limit: number; // 0 = infinity
+    max_teams: number; // 0 = infinity
+    max_players_per_team: number; // 0 = infinity
+    support_level: string;
+    recommended: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface OrganizerPlan {
+    id: string;
+    name: string;
+    description?: string[] | null;
+    price: number;
+    discounted_price?: number | null;
+    duration?: string | null;
+    max_tournaments: number; // 0 = infinity
+    max_teams_per_tournament: number; // 0 = infinity
     format_support: string;
     invite_enabled: boolean;
     register_enabled: boolean;
     stats_support: string;
     support_level: string;
     recommended: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export type Plan = ManagerPlan | OrganizerPlan;
+
+export interface Product {
+    id: string;
+    name: string;
+    description: string[];
+    price: number;
+    discounted_price: number | null;
+    duration: string | null;
+    user_limit?: number | null;
+    teams_limit: number;
+    format_support?: string;
+    invite_enabled: boolean;
+    register_enabled: boolean;
+    stats_support?: string;
+    support_level?: string;
+    recommended: boolean;
+    target_role: 'manager' | 'organizer' | 'admin';
     created_at: string;
     updated_at: string;
 }
@@ -248,6 +314,20 @@ export interface TeamPayment {
     paid_at?: string | null;
     notes?: string | null;
     created_at: string;
-    // Join
     team?: { name: string; logo_url?: string | null };
+}
+
+export interface Registration {
+    id: string;
+    tournament_id: string;
+    team_name: string;
+    contact_name: string;
+    contact_phone: string;
+    logo_url?: string | null;
+    existing_team_id?: string | null;
+    slip_url?: string | null;
+    payment_status: 'PENDING' | 'PAID' | 'REJECTED';
+    trans_ref?: string | null;
+    description?: string | null;
+    created_at: string;
 }

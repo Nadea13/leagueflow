@@ -8,6 +8,7 @@ import { useLocale } from "next-intl";
 import { Search, CreditCard, Filter, ArrowUpRight, Check, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Table,
@@ -25,6 +26,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { approvePayment, rejectPayment } from "@/app/[locale]/admin/finance/actions";
 
 interface AdminPaymentsTableProps {
     initialPayments: Payment[];
@@ -36,6 +41,54 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
     const locale = useLocale();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 100;
+
+    const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+    const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const { toast } = useToast();
+
+    const handleVerify = (payment: Payment) => {
+        setSelectedPayment(payment);
+        setIsVerifyDialogOpen(true);
+    };
+
+    const handleApprove = async () => {
+        if (!selectedPayment) return;
+        setIsVerifying(true);
+        try {
+            const res = await approvePayment(selectedPayment.id);
+            if (res.success) {
+                toast({ title: tCommon("success"), description: t("status_success", { defaultValue: "Payment Approved" }) });
+                setIsVerifyDialogOpen(false);
+            } else {
+                toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+            }
+        } catch (error: any) {
+            toast({ title: tCommon("error"), description: error.message, variant: "destructive" });
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (!selectedPayment) return;
+        setIsVerifying(true);
+        try {
+            const res = await rejectPayment(selectedPayment.id);
+            if (res.success) {
+                toast({ title: tCommon("success"), description: t("status_failed", { defaultValue: "Payment Rejected" }) });
+                setIsVerifyDialogOpen(false);
+            } else {
+                toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+            }
+        } catch (error: any) {
+            toast({ title: tCommon("error"), description: error.message, variant: "destructive" });
+        } finally {
+            setIsVerifying(false);
+        }
+    };
 
     // Filter payments
     const filteredPayments = initialPayments.filter(payment => {
@@ -48,6 +101,9 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
 
         return matchesSearch && matchesStatus;
     });
+
+    const paginatedPayments = filteredPayments.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+    const totalPages = Math.ceil(filteredPayments.length / itemsPerPage) || 1;
 
     // Stats
     const totalAmount = initialPayments
@@ -109,10 +165,16 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         placeholder={t("search_payments")}
                         className="pl-8"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1);
+                        }}
                     />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(val) => {
+                    setStatusFilter(val);
+                    setPage(1);
+                }}>
                     <SelectTrigger className="w-full md:w-[200px]">
                         <div className="flex items-center gap-2">
                             <Filter className="h-4 w-4" />
@@ -139,6 +201,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                             <TableHead>PG ID</TableHead>
                             <TableHead>{t("amount")}</TableHead>
                             <TableHead className="text-right">{t("status")}</TableHead>
+                            <TableHead className="text-right">{t("actions", { defaultValue: "Actions" })}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -149,7 +212,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            filteredPayments.map((payment) => (
+                            paginatedPayments.map((payment) => (
                                 <TableRow key={payment.id}>
                                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                                         {formatDate(payment.created_at, "d MMM yyyy, HH:mm", locale)}
@@ -185,6 +248,13 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                             {payment.status}
                                         </Badge>
                                     </TableCell>
+                                    <TableCell className="text-right">
+                                        {payment.status === 'pending' && (
+                                            <Button variant="outline" size="sm" onClick={() => handleVerify(payment)}>
+                                                Verify
+                                            </Button>
+                                        )}
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}
@@ -192,12 +262,84 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                 </Table>
             </div>
 
-            <div className="text-xs text-muted-foreground text-center">
-                {t.rich("showing_payments", {
-                    count: filteredPayments.length,
-                    total: initialPayments.length
-                })}
-            </div>
+            {filteredPayments.length > 0 && (
+                <div className="flex items-center justify-between py-2 mt-2">
+                    <div className="text-sm text-muted-foreground hidden sm:block">
+                        Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredPayments.length)} of {filteredPayments.length} entries
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Verify Dialog */}
+            <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Verify Payment</DialogTitle>
+                        <DialogDescription>
+                            Review the uploaded slip to confirm the payment.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4">
+                        {selectedPayment?.provider_id ? (
+                            <div className="flex justify-center">
+                                {/* Parse Provider ID if it's JSON */}
+                                {(() => {
+                                    try {
+                                        const parsed = JSON.parse(selectedPayment.provider_id);
+                                        return parsed.url ? <img src={parsed.url} alt="Slip" className="max-h-[400px] object-contain rounded-md" /> : <p>No image available</p>;
+                                    } catch (e) {
+                                        // Legacy: it's not JSON
+                                        return <p className="text-muted-foreground break-all">{selectedPayment.provider_id}</p>;
+                                    }
+                                })()}
+                            </div>
+                        ) : (
+                            <p className="text-center text-muted-foreground">No slip uploaded for this payment.</p>
+                        )}
+                        <div className="mt-4 text-center">
+                            <p className="text-lg font-bold">฿{selectedPayment?.amount.toLocaleString()}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{selectedPayment?.plan}</p>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="flex justify-between sm:justify-between w-full">
+                        <Button variant="destructive" onClick={handleReject} disabled={isVerifying}>
+                            {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Reject
+                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setIsVerifyDialogOpen(false)} disabled={isVerifying}>
+                                Cancel
+                            </Button>
+                            <Button variant="default" onClick={handleApprove} disabled={isVerifying}>
+                                {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                Approve
+                            </Button>
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     );
 }

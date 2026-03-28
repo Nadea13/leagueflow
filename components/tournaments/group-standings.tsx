@@ -3,7 +3,6 @@
 import { Match, Team } from "@/types/index";
 import { StandingsTable } from "./standings-table";
 import { calculateStandings } from "@/utils/standings";
-import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import { useTranslations } from "next-intl";
 
 interface GroupStandingsProps {
@@ -28,12 +27,7 @@ export function GroupStandings({ teams, matches, isPublic = false }: GroupStandi
 
     return (
         <div className="space-y-4">
-            {!isPublic && (
-                <div className="flex justify-end">
-                    <ExportToImageButton targetId="group-standings-canvas" filename="group_standings" label={t("export") || t("export_groups")} />
-                </div>
-            )}
-            <div id="group-standings-canvas" className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-1">
+            <div id="group-standings-canvas" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {sortedGroups.map((group) => {
                     const groupTeams = teamsByGroup[group];
                     // Filter matches relevant to this group
@@ -46,9 +40,16 @@ export function GroupStandings({ teams, matches, isPublic = false }: GroupStandi
                     const groupStandings = calculateStandings(groupTeams, groupMatches);
 
                     return (
-                        <div key={group} className="space-y-3">
-                            <h3 className="font-bold text-lg px-1">{t("group_header", { group })}</h3>
-                            <StandingsTable standings={groupStandings} />
+                        <div key={group} className="flex flex-col gap-4 p-4 md:p-6 bg-card border border-border/40 relative overflow-hidden shadow-lg group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                            <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 relative z-10">
+                                <span className="w-1.5 h-1.5 bg-secondary rounded-none shadow-[0_0_8px_rgba(0,196,154,0.6)]" />
+                                {t("group_header", { group })}
+                            </h3>
+                            <div className="relative z-10">
+                                <StandingsTable standings={groupStandings} />
+                            </div>
                         </div>
                     );
                 })}

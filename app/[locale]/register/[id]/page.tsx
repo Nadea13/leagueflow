@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar, MapPin, Trophy, AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { Separator } from "@/components/ui/separator";
+import { getMyTeams } from "@/app/[locale]/organizer/teams/actions";
 
 interface RegisterPageProps {
     params: Promise<{ id: string }>;
@@ -31,7 +32,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
     // Fetch Registered Teams
     // Use admin client to bypass RLS for public view of teams
     const { data: teams } = await adminSupabase
-        .from("teams")
+        .from("tournament_teams")
         .select("id, name, logo_url")
         .eq("tournament_id", id)
         .order("created_at", { ascending: true });
@@ -197,7 +198,10 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                                         <h3 className="text-lg font-semibold text-foreground">{t("title")}</h3>
                                         <p className="text-sm text-muted-foreground">{t("fill_details")}</p>
                                     </div>
-                                    <RegistrationForm tournament={tournament} />
+                                    <RegistrationForm 
+                                        tournament={tournament} 
+                                        initialTeams={(await getMyTeams()).data || []}
+                                    />
                                 </div>
                             </div>
                         </div>

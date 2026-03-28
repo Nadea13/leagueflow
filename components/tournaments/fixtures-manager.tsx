@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MatchDialog } from "@/components/tournaments/match-dialog";
-import { deleteMatch, advanceStage } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { deleteMatch, advanceStage } from "@/app/[locale]/organizer/tournaments/[id]/actions";
 import {
     Select,
     SelectContent,
@@ -19,6 +18,16 @@ import {
 } from "@/components/ui/select";
 import { Plus, Calendar, ArrowRight } from "lucide-react";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FixturesManagerProps {
     teams: Team[];
@@ -38,6 +47,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
     const [filterRound, setFilterRound] = useState<string>("all");
     const [filterStage, setFilterStage] = useState<string>("all");
     const [isAdvancing, setIsAdvancing] = useState(false);
+    const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
 
     // Calculate Max Group Round
     const maxGroupRound = matches.reduce((max, m) => {
@@ -80,8 +90,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
     };
 
     const handleAdvance = async () => {
-        if (!confirm(tFixtures("confirm_advance_knockout"))) return;
-
+        setAdvanceDialogOpen(false);
         setIsAdvancing(true);
         try {
             const result = await advanceStage(tournamentId);
@@ -99,148 +108,194 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
-                    <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                        <Calendar className="h-6 w-6 text-muted-foreground" />
+                <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 border border-white/5 group relative overflow-hidden">
+                    <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
+                    <div className="h-16 w-16 rounded-none bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-secondary/30 transition-colors">
+                        <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                     </div>
-                    <h3 className="text-sm font-medium text-muted-foreground">{tFixtures("ready_to_start")}</h3>
-                    <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground mb-2">{tFixtures("ready_to_start")}</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
                         {tFixtures("generate_instruction")}
                     </p>
                 </div>
             ) : (
-
-                <div className="flex flex-row justify-between gap-4 rounded-none">
-                    {/* Filter */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium hidden md:inline">{tMatch("status")}:</span>
-                        <Select value={filterStage} onValueChange={setFilterStage}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={tMatch("round")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                <SelectItem value="group">{tMatch("group")}</SelectItem>
-                                <SelectItem value="Group A">{tMatch("group")} A</SelectItem>
-                                <SelectItem value="Group B">{tMatch("group")} B</SelectItem>
-                                <SelectItem value="Group C">{tMatch("group")} C</SelectItem>
-                                <SelectItem value="Group D">{tMatch("group")} D</SelectItem>
-                                <SelectItem value="round_of_16">{tMatch("round_of_16")}</SelectItem>
-                                <SelectItem value="quarter_final">{tMatch("quarter_final")}</SelectItem>
-                                <SelectItem value="semi_final">{tMatch("semi_final")}</SelectItem>
-                                <SelectItem value="final">{tMatch("final")}</SelectItem>
-                            </SelectContent>
-                        </Select>
+                <>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-4 border border-white/5">
+                    {/* Filter Area */}
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
+                            <Select value={filterStage} onValueChange={setFilterStage}>
+                                <SelectTrigger className="h-10 w-[200px] bg-[#0A0A0A] border-white/10 rounded-none focus:ring-secondary/50 font-bold uppercase italic tracking-tighter text-xs">
+                                    <SelectValue placeholder={tMatch("round")} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[#111] border-white/10 rounded-none">
+                                    <SelectItem value="all" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                    <SelectItem value="group" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")}</SelectItem>
+                                    <SelectItem value="Group A" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} A</SelectItem>
+                                    <SelectItem value="Group B" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} B</SelectItem>
+                                    <SelectItem value="Group C" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} C</SelectItem>
+                                    <SelectItem value="Group D" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} D</SelectItem>
+                                    <SelectItem value="round_of_16" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
+                                    <SelectItem value="quarter_final" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
+                                    <SelectItem value="semi_final" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("semi_final")}</SelectItem>
+                                    <SelectItem value="final" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("final")}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                            <Switch id="edit-mode" checked={isEditMode} onCheckedChange={setIsEditMode} />
-                            <Label htmlFor="edit-mode" className="font-semibold">{t("edit_mode") || "Edit Mode"}</Label>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center space-x-3">
+                            <Switch 
+                                id="edit-mode" 
+                                checked={isEditMode} 
+                                onCheckedChange={setIsEditMode}
+                                className="data-[state=checked]:bg-secondary" 
+                            />
+                            <Label htmlFor="edit-mode" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground cursor-pointer">
+                                {t("edit_mode") || "Edit Mode"}
+                            </Label>
                         </div>
-                        <ExportToImageButton targetId="fixtures-canvas" filename="fixtures" label={t("export") || "Export"} />
+                        <ExportToImageButton 
+                            targetId="fixtures-canvas" 
+                            filename="fixtures" 
+                            label={t("export") || "Export"}
+                        />
                     </div>
                 </div>
-            )}
 
-
-            <div id="fixtures-canvas" className="space-y-6 rounded-none">
-                {Object.keys(matchesByRound).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
-                        <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                            <Calendar className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-sm font-medium text-muted-foreground">{tFixtures("no_fixtures")}</h3>
-                        <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                            No match data available at this time.
-                        </p>
+            <div id="fixtures-canvas" className="space-y-12">
+                {filteredMatches.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 border border-white/5">
+                        <Calendar className="h-12 w-12 text-muted-foreground/20 mb-4" />
+                        <h3 className="text-sm font-black uppercase italic tracking-tighter text-muted-foreground/40">{tFixtures("no_fixtures")}</h3>
                     </div>
                 ) : (
-                    Object.keys(matchesByRound).map((roundKey) => {
-                        const round = Number(roundKey);
-                        const firstMatch = matchesByRound[round][0];
-                        const stage = firstMatch?.stage;
+                    (() => {
+                        const groups = filteredMatches.reduce((acc: Record<string, Match[]>, match) => {
+                            const isKnockout = match.stage !== 'group' && match.stage !== 'league';
+                            const key = isKnockout ? match.stage : 'group_stage';
+                            if (!acc[key]) acc[key] = [];
+                            acc[key].push(match);
+                            return acc;
+                        }, {});
 
-                        let headerText = `${tMatch("round")} ${round}`;
-                        if (stage === 'league' || stage === 'group') {
-                            headerText = `${tFixtures("match_day")} ${round}`;
-                        } else if (stage === 'round_of_16') {
-                            headerText = tBracket("round_of_16");
-                        } else if (stage === 'quarter_final') {
-                            headerText = tBracket("quarter_final");
-                        } else if (stage === 'semi_final') {
-                            headerText = tBracket("semi_final");
-                        } else if (stage === 'final') {
-                            headerText = tBracket("final");
-                        }
+                        const sortedKeys = Object.keys(groups).sort((a, b) => {
+                            if (a === 'group_stage') return -1;
+                            if (b === 'group_stage') return 1;
+                            
+                            const aRound = groups[a][0].round || 0;
+                            const bRound = groups[b][0].round || 0;
+                            return aRound - bRound;
+                        });
 
-                        return (
-                            <div key={round} className="rounded-none relative bg-card">
-                                <h3 className="font-semibold leading-none tracking-tight mb-4 flex items-center gap-2">
-                                    {headerText}
-                                    {stage !== 'league' && stage !== 'group' && (
-                                        <span className="text-xs font-normal text-muted-foreground border px-2 py-0.5 rounded-none capitalize">
-                                            {stage?.replace('_', ' ')}
-                                        </span>
-                                    )}
-                                </h3>
-                                <div className="grid gap-2">
-                                    {matchesByRound[round].map((match) => (
-                                        <div key={match.id} className="relative group">
-                                            <MatchCard
-                                                match={match}
-                                                tournamentId={tournamentId}
-                                                goals={goals.filter((g: any) => g.match_id === match.id)}
-                                                isEditMode={isEditMode}
-                                                teams={teams}
-                                                isPro={isPro}
-                                            />
+                        return sortedKeys.map((key) => {
+                            const stageMatches = groups[key];
+                            const firstMatch = stageMatches[0];
+                            const stage = firstMatch.stage;
+                            
+                            let headerText = "";
+                            if (key === 'group_stage') {
+                                headerText = "";
+                            } else {
+                                if (stage === 'round_of_16') headerText = tBracket("round_of_16");
+                                else if (stage === 'quarter_final') headerText = tBracket("quarter_final");
+                                else if (stage === 'semi_final') headerText = tBracket("semi_final");
+                                else if (stage === 'final') headerText = tBracket("final");
+                                else headerText = stage?.replace('_', ' ').toUpperCase() || "";
+                            }
 
-
+                            return (
+                                <div key={key} className="space-y-6">
+                                    {headerText && (
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-px bg-secondary/30 flex-1" />
+                                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-secondary">
+                                                {headerText}
+                                            </h3>
+                                            <div className="h-px bg-secondary/30 flex-1" />
                                         </div>
-                                    ))}
-                                </div>
-
-                                {/* Add Match to specific round */}
-                                {/* Add Match to specific round */}
-                                {/* {isEditMode && (
-                                <div className="mt-4 flex justify-center">
-                                    <MatchDialog
-                                        tournamentId={tournamentId}
-                                        teams={teams}
-                                        defaultRound={round}
-                                        trigger={
-                                            <Button variant="ghost" size="sm" className="text-muted-foreground">
-                                                + Add Match to Round {round}
-                                            </Button>
+                                    )}
+                                    <div className="space-y-[1px] bg-white/5 border border-white/5">
+                                        {[...stageMatches]
+                                            .sort((a, b) => {
+                                                if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
+                                                if (a.match_date !== b.match_date) return (a.match_date || "") > (b.match_date || "") ? 1 : -1;
+                                                if (a.match_time !== b.match_time) return (a.match_time || "") > (b.match_time || "") ? 1 : -1;
+                                                return 0;
+                                            })
+                                            .map((match) => (
+                                                <div key={match.id} className="relative group overflow-hidden">
+                                                    <MatchCard
+                                                        match={match}
+                                                        tournamentId={tournamentId}
+                                                        goals={goals.filter((g: any) => g.match_id === match.id)}
+                                                        isEditMode={isEditMode}
+                                                        teams={teams}
+                                                        isPro={isPro}
+                                                    />
+                                                </div>
+                                            ))
                                         }
-                                    />
-                                </div>
-                            )} */}
-
-                                {/* Proceed to Knockout Button - Only show on Max Group Round */}
-                                {round === maxGroupRound && stage === 'group' && (
-                                    <div className="mt-6">
-                                        <Button
-                                            onClick={handleAdvance}
-                                            disabled={isAdvancing}
-                                            className="w-full md:w-auto bg-primary hover:bg-primary/90 text-white"
-                                        >
-                                            {isAdvancing ? tFixtures("generating") : (
-                                                <>
-                                                    {tFixtures("proceed_knockout")} <ArrowRight className="ml-2 h-4 w-4" />
-                                                </>
-                                            )}
-                                        </Button>
                                     </div>
-                                )}
-                            </div>
-                        );
-                    })
+                                    
+                                    {/* Proceed to Knockout Button - Styled for Sidebar potentially, but keep here for now if matches are listed */}
+                                    {key === 'group_stage' && matches.some(m => m.stage === 'group') && !matches.some(m => m.stage !== 'group' && m.stage !== 'league') && (
+                                        <div className="flex justify-center pt-8">
+                                            <Button
+                                                onClick={() => setAdvanceDialogOpen(true)}
+                                                disabled={isAdvancing}
+                                                className="h-14 px-8 bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 shadow-lg shadow-secondary/10 group transition-all"
+                                            >
+                                                {isAdvancing ? tFixtures("generating") : (
+                                                    <span className="flex items-center gap-3">
+                                                        {tFixtures("proceed_knockout")} 
+                                                        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                                    </span>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        });
+                    })()
                 )}
             </div>
+            </>
+            )}
+
+            <AlertDialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
+                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                            <ArrowRight className="h-5 w-5 text-secondary" />
+                            {tFixtures("proceed_knockout")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                            {tFixtures("confirm_advance_knockout")}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                            {t("cancel") || "Cancel"}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleAdvance();
+                            }}
+                            className="rounded-none border border-secondary/20 bg-secondary/90 text-secondary-foreground hover:bg-secondary hover:shadow-[0_0_15_rgba(0,255,157,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                        >
+                            <ArrowRight className="h-3.5 w-3.5 mr-2" />
+                            {tFixtures("proceed") || "Proceed"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

@@ -25,8 +25,8 @@ export function calculateStandings(teams: Team[], matches: Match[]): Standing[] 
 
     // Process matches
     matches.forEach((match) => {
-        // Skip if no score
-        if (match.home_score === null || match.away_score === null) return;
+        // Skip if not finished/live or no score
+        if (!['finished', 'live'].includes(match.status) || match.home_score === null || match.away_score === null) return;
 
         // Skip if team IDs are missing
         if (!match.home_team_id || !match.away_team_id) return;
