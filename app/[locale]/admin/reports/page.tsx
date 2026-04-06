@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { getBugReports } from "@/app/[locale]/actions/bug-reports"
 import { BugReportList } from "./_components/bug-report-list"
-import { AlertCircle } from "lucide-react"
 
 export const metadata = {
     title: "รายงานปัญหา | LeagueFlow Admin",
@@ -16,9 +15,14 @@ export default async function AdminReportsPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    {t("reports_feedback")}
-                </h1>
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-foreground">
+                        {t("reports_feedback")}
+                    </h1>
+                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                        Bug Reports & Feedback
+                    </p>
+                </div>
             </div>
             <BugReportList initialReports={reports} />
         </div>

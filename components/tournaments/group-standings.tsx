@@ -26,8 +26,8 @@ export function GroupStandings({ teams, matches, isPublic = false }: GroupStandi
     const t = useTranslations("Tournament");
 
     return (
-        <div className="space-y-4">
-            <div id="group-standings-canvas" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="space-y-4 md:space-y-6">
+            <div id="group-standings-canvas" className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
                 {sortedGroups.map((group) => {
                     const groupTeams = teamsByGroup[group];
                     // Filter matches relevant to this group
@@ -40,15 +40,20 @@ export function GroupStandings({ teams, matches, isPublic = false }: GroupStandi
                     const groupStandings = calculateStandings(groupTeams, groupMatches);
 
                     return (
-                        <div key={group} className="flex flex-col gap-4 p-4 md:p-6 bg-card border border-border/40 relative overflow-hidden shadow-lg group">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                            <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 relative z-10">
-                                <span className="w-1.5 h-1.5 bg-secondary rounded-none shadow-[0_0_8px_rgba(0,196,154,0.6)]" />
-                                {t("group_header", { group })}
-                            </h3>
-                            <div className="relative z-10">
-                                <StandingsTable standings={groupStandings} />
+                        <div key={group} className="space-y-4 md:space-y-6">
+                            <div className="flex flex-col gap-1">
+                                <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3 relative z-10">
+                                    <span className="w-2 h-2 bg-secondary rounded-none shadow-[0_0_10px_rgba(0,196,154,0.4)]" />
+                                    {t("group_header", { group })}
+                                </h3>
+                                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Group Stage Standings</p>
+                            </div>
+                            
+                            <div className="bg-background border border-border/10 rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                <div className="p-0">
+                                    <StandingsTable standings={groupStandings} />
+                                </div>
                             </div>
                         </div>
                     );

@@ -53,20 +53,20 @@ export default async function MyRegistrationsPage() {
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-secondary/20 pb-6">
+        <div className="flex flex-col gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-5xl font-black italic tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
+                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
                         {tNav("my_registrations")}
                     </h1>
-                    <p className="text-muted-foreground/60 text-xs font-bold uppercase tracking-widest max-w-xl">
+                    <p className="text-muted-foreground/60 text-[10px] md:text-xs font-bold uppercase tracking-widest max-w-xl">
                         {t("my_registrations_desc") || "Track your team registration applications and their approval status."}
                     </p>
                 </div>
             </div>
 
             <div className="grid gap-3 grid-cols-3 md:gap-6 md:grid-cols-3">
-                <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-secondary/50">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -83,7 +83,7 @@ export default async function MyRegistrationsPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-green-500/50">
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-green-500/50">
                     <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-green-500/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -100,7 +100,7 @@ export default async function MyRegistrationsPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-yellow-500/50">
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-yellow-500/50">
                     <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-yellow-500/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -119,24 +119,24 @@ export default async function MyRegistrationsPage() {
                 </Card>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
                 {(!registrations || registrations.length === 0) ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center border-b-4 border-dashed border-secondary/10 bg-muted/5">
-                        <div className="h-16 w-16 bg-secondary/10 flex items-center justify-center mb-6 border border-secondary/20 rotate-3">
-                            <FileText className="h-8 w-8 text-secondary/60" />
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                        <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
+                            <FileText className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                         </div>
-                        <h3 className="text-xl font-black italic uppercase tracking-tighter text-foreground mb-2">
+                        <h3 className="text-2xl font-black uppercase italic tracking-tight relative z-10">
                             {t("no_registrations_yet") || "No Applications Found"}
                         </h3>
-                        <p className="text-muted-foreground text-xs uppercase tracking-widest font-bold mb-8 opacity-60">
+                        <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10 mx-auto">
+                            <span className="w-4 h-[1px] bg-muted-foreground/30" />
                             {tCommon("browse_tournaments_desc") || "Start your competitive journey today"}
+                            <span className="w-4 h-[1px] bg-muted-foreground/30" />
                         </p>
-                        <Button asChild variant="outline" className="border-2 font-bold uppercase tracking-widest text-xs px-8 py-6 hover:bg-secondary hover:text-secondary-foreground transition-all">
-                            <Link href="/tournaments">{tCommon("browse_tournaments") || "Browse Tournaments"}</Link>
-                        </Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {registrations.map((reg) => (
                             <Card key={reg.id} className="flex flex-col bg-card border border-border transition-all hover:border-secondary/50 group overflow-hidden relative shadow-lg min-h-[300px]">
                                 <div className={cn(
@@ -164,7 +164,7 @@ export default async function MyRegistrationsPage() {
                                     </div>
                                 </CardHeader>
 
-                                <CardContent className="flex-1 relative z-10 px-6">
+                                <CardContent className="flex-1 relative z-10 px-4 md:px-6">
                                     <div className="flex flex-col gap-4">
                                         <div className="space-y-1">
                                             <span className="text-[8px] uppercase font-black text-muted-foreground/40 tracking-[0.2em] italic">{tCommon("tournament") || "Tournament"}</span>

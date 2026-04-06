@@ -102,7 +102,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                         </svg>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xl font-black italic leading-[0.8] uppercase tracking-tighter text-foreground">LeagueFlow</span>
+                        <span className="text-xl font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
                         <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-secondary/80 ml-0.5">
                             {mode === 'organizer' ? 'Organizer' : 'Manager'}
                         </span>

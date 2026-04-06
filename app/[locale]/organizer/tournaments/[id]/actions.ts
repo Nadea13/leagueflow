@@ -6,6 +6,9 @@ import { redirect } from "next/navigation";
 import { ActionResponse, Match } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { initTournamentStructure } from "@/lib/fixture-utils";
+import { validateTournamentAccess } from "@/lib/security";
+import { deleteFileFromUrl } from "@/utils/supabase/storage";
+import { validateUploadedFile } from "@/lib/file-validation";
 
 export async function addTeam(
     tournamentId: string,
@@ -22,9 +25,10 @@ export async function addTeam(
         return { success: false, error: "Team name is required" };
     }
 
-    // Check Pro Status for Team Limit
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
+    // Security Check: Ensure user is authorized
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+    const user = access.user;
 
     // Check global plan
     const { data: globalSubscription } = await supabase
@@ -60,6 +64,9 @@ export async function addTeam(
 
     // Handle File Upload if URL is not provided
     if (!logo_url && logoFile && logoFile.size > 0) {
+        const fileCheck = validateUploadedFile(logoFile);
+        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
         const fileExt = logoFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `${tournamentId}/${fileName}`;
@@ -125,8 +132,11 @@ export async function assignTeamGroup(
     groupName: string | null,
     tournamentId: string
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
 
+    const supabase = await createClient();
     const { error } = await supabase
         .from("tournament_teams")
         .update({ group_name: groupName })
@@ -145,6 +155,10 @@ export async function updateTeam(
     formData: FormData,
     tournamentId: string
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+    
     const supabase = await createClient();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -155,6 +169,9 @@ export async function updateTeam(
 
     // Handle File Upload
     if (logoFile && logoFile.size > 0) {
+        const fileCheck = validateUploadedFile(logoFile);
+        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
         const fileExt = logoFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `${tournamentId}/${fileName}`;
@@ -192,7 +209,22 @@ export async function updateTeam(
 }
 
 export async function deleteTeam(teamId: string, tournamentId: string): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+    
     const supabase = await createClient();
+
+    // Fetch logo_url for cleanup
+    const { data: team } = await supabase
+        .from("tournament_teams")
+        .select("logo_url")
+        .eq("id", teamId)
+        .single();
+    
+    if (team?.logo_url) {
+        await deleteFileFromUrl(team.logo_url, 'team-logos');
+    }
 
     const { error } = await supabase
         .from("tournament_teams")
@@ -221,6 +253,10 @@ async function getLastRound(tournamentId: string, supabase: any): Promise<number
 
 
 export async function generateFixtures(tournamentId: string): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+    
     const supabase = await createClient();
 
     // 1. Fetch tournament format
@@ -281,6 +317,10 @@ export async function generateKnockoutRound(
     stage: string,
     matchCount: number
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const lastRound = await getLastRound(tournamentId, supabase);
@@ -314,6 +354,10 @@ export async function updateMatchScore(
     awayScore: number,
     tournamentId: string
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     // 1. Update Scores & Fetch Updated Record
@@ -369,12 +413,16 @@ export async function updateTournament(
     prevState: any,
     formData: FormData
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+    const user = access.user;
+
     const supabase = await createClient();
     const formType = formData.get("form_type") as string;
     const updateData: any = {};
 
     // 1. Determine Pro Status once
-    const { data: { user } } = await supabase.auth.getUser();
     let isPro = false;
     if (user) {
         const { data: globalSub } = await supabase
@@ -455,6 +503,10 @@ export async function updateTournament(
 }
 
 export async function resetFixtures(tournamentId: string): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     // 1. Delete all matches (Hard Delete)
@@ -482,6 +534,10 @@ export async function resetFixtures(tournamentId: string): Promise<ActionRespons
 }
 
 export async function deleteTournament(tournamentId: string) {
+    // Security Check: Only the tournament owner (Admin) can delete the tournament
+    const access = await validateTournamentAccess(tournamentId, 'admin');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -508,6 +564,10 @@ export async function createMatch(
     match_time?: string,
     venue?: string
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { error } = await supabase.from('matches').insert({
@@ -551,6 +611,10 @@ export async function updateMatch(
     },
     tournamentId: string
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     console.log("Updating match:", matchId, data);
@@ -633,6 +697,10 @@ export async function confirmPayment(
     paymentId: string,
     paymentMethod: string
 ): Promise<ActionResponse> {
+    // Security Check: Only tournament owner/editors can confirm payment
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     // 1. Verify Payment Server-Side
@@ -685,6 +753,10 @@ export async function confirmPayment(
 }
 
 export async function deleteMatch(matchId: string, tournamentId: string): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -701,6 +773,10 @@ export async function deleteMatch(matchId: string, tournamentId: string): Promis
 }
 
 export async function advanceStage(tournamentId: string): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     // 1. Fetch all matches and teams

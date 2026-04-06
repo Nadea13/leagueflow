@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Upload } from "lucide-react";
-import { createTeamGlobal } from "@/app/[locale]/organizer/teams/actions";
+import { createTeam } from "@/app/[locale]/manager/my-teams/actions";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -40,7 +40,7 @@ export function CreateTeamDialog() {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
     const [open, setOpen] = useState(false);
-    const [state, formAction] = useActionState(createTeamGlobal, initialState);
+    const [state, formAction] = useActionState(createTeam, initialState);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     // Close dialog on success
@@ -60,13 +60,13 @@ export function CreateTeamDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="gap-3 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:shadow-[0_0_30px_rgba(0,196,154,0.4)] transition-all">
+                <Button className="gap-3 w-8 h-8 md:w-auto md:h-auto shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:shadow-[0_0_30px_rgba(0,196,154,0.4)] transition-all">
                     <Plus className="h-5 w-5" />
                     <span className="hidden sm:inline">{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
-                <div className="bg-gradient-to-r from-secondary/20 to-background px-8 py-6 border-b border-border relative">
+                <div className="bg-gradient-to-r from-secondary/20 to-background p-6 border-b border-border relative">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-foreground">{t("add_team")}</DialogTitle>
@@ -76,7 +76,7 @@ export function CreateTeamDialog() {
                     </DialogHeader>
                 </div>
                 
-                <form action={formAction} className="px-8 py-8 space-y-8">
+                <form action={formAction} className="p-6 space-y-6">
                     <div className="space-y-3">
                         <Label htmlFor="name" className="text-[10px] font-black uppercase italic tracking-widest text-secondary">
                             {t("team_name")}
@@ -90,7 +90,7 @@ export function CreateTeamDialog() {
                         />
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                         <Label htmlFor="logo" className="text-[10px] font-black uppercase italic tracking-widest text-secondary">
                             {t("upload_logo")}
                         </Label>
@@ -138,7 +138,7 @@ export function CreateTeamDialog() {
                         </div>
                     )}
 
-                    <DialogFooter className="pt-4">
+                    <DialogFooter>
                         <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)]">{tCommon("create_btn")}</SubmitButton>
                     </DialogFooter>
                 </form>

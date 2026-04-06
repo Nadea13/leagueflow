@@ -28,6 +28,8 @@ import { Pencil, Loader2, Users, Upload, ImageIcon, Trash2, Edit2 } from "lucide
 import { useTranslations } from "next-intl";
 import { RosterDialog } from "./roster-dialog";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface TeamListProps {
     teams: any[];
@@ -42,20 +44,25 @@ export function TeamList({ teams, tournamentId, isPro = false, showGroupSelector
 
     if (!teams || teams.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-center border border-border/10 rounded-none bg-white/2 italic">
-                <div className="h-12 w-12 rounded-none bg-white/5 flex items-center justify-center mb-4">
-                    <Users className="h-6 w-6 text-muted-foreground/20" />
+            <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/5 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                <div className="p-6 bg-background border border-border/10 rotate-12 transition-transform group-hover:rotate-0 shadow-lg mb-4 relative z-10">
+                    <Users className="h-8 w-8 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                 </div>
-                <h3 className="text-sm font-black uppercase tracking-tighter text-muted-foreground/40">{t("no_teams")}</h3>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground/20 mt-1 max-w-sm">
+                <h3 className="text-xl font-black uppercase italic tracking-tight text-foreground/40 relative z-10">
+                    {t("no_teams")}
+                </h3>
+                <p className="text-[10px] uppercase font-black text-muted-foreground/20 mt-2 flex items-center gap-2 relative z-10">
+                    <span className="w-3 h-[1px] bg-muted-foreground/10" />
                     {t("no_teams_desc")}
+                    <span className="w-3 h-[1px] bg-muted-foreground/10" />
                 </p>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col divide-y divide-border/10">
             {teams.map((team) => (
                 <TeamItem
                     key={team.id}
@@ -144,50 +151,53 @@ function TeamItem({
     };
 
     return (
-        <div className="flex items-center justify-between p-4 bg-white/5 border border-border/10 hover:border-secondary/30 transition-all group relative overflow-hidden">
-            <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-300" />
+        <div className="flex items-center justify-between px-2 py-4 md:p-6 hover:bg-muted/5 transition-all group relative overflow-hidden">
+            {/* Standardized Accent Bar */}
+            <div className="absolute left-0 top-0 w-1 h-full bg-secondary opacity-0 group-hover:opacity-100 transition-opacity z-30" />
             
             <div className="flex items-center flex-1 min-w-0 z-10">
-                <div className="h-10 w-10 rounded-none bg-white/10 flex items-center justify-center mr-4 shrink-0 overflow-hidden border border-white/5">
+                <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mr-2 md:mr-3 shrink-0 overflow-hidden border border-white/5 relative">
                     {team.logo_url ? (
-                        <img src={team.logo_url} alt={team.name} className="h-full w-full object-contain" />
+                        <img src={team.logo_url} alt={team.name} className="h-full w-full object-contain p-1" />
                     ) : (
                         <span className="text-[10px] font-black text-muted-foreground/40">
                             {team.name.substring(0, 2).toUpperCase()}
                         </span>
                     )}
                 </div>
-                <div className="flex flex-col min-w-0 mr-2">
-                            <h3 className="font-black uppercase italic tracking-tighter text-lg leading-none truncate group-hover:text-primary transition-colors">{team.name}</h3>
-                            {team.description && (
-                                <p className="text-[10px] font-medium text-muted-foreground/40 mt-1 line-clamp-1">{team.description}</p>
-                            )}
-                    {(!showGroupSelector && team.group_name) ? (
-                        <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[9px] font-bold uppercase text-secondary tracking-widest leading-none bg-secondary/10 px-1 border border-secondary/20">{t("group")} {team.group_name}</span>
-                        </div>
-                    ) : (
-                        <span className="text-[9px] font-bold uppercase text-muted-foreground/40 italic tracking-tight">{t("participating_team")}</span>
+                <div className="flex flex-col min-w-0 mr-2 md:mr-3">
+                    <h3 className="font-black uppercase italic tracking-tighter text-lg md:text-xl leading-none truncate group-hover:text-primary transition-colors">{team.name}</h3>
+                    {team.description && (
+                        <p className="text-[10px] font-bold uppercase text-muted-foreground/40 mt-1.5 line-clamp-1 tracking-wider">{team.description}</p>
                     )}
+                    <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
+                        {(!showGroupSelector && team.group_name) ? (
+                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary bg-secondary/5 text-[9px] font-black uppercase italic px-2">
+                                {t("group")} {team.group_name}
+                            </Badge>
+                        ) : (
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground/20 italic tracking-tight">{t("participating_team")}</span>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-3 z-10">
+            <div className="flex items-center gap-2 md:gap-3 z-10">
                 {showGroupSelector && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                         {isGroupLoading && <Loader2 className="h-3 w-3 animate-spin text-secondary" />}
                         <Select
                             defaultValue={team.group_name || "none"}
                             onValueChange={handleGroupChange}
                             disabled={isGroupLoading}
                         >
-                            <SelectTrigger className="w-[100px] h-8 text-[10px] bg-white/5 border-border/10 rounded-none font-black uppercase tracking-widest focus:ring-secondary/20 transition-all">
+                            <SelectTrigger className="w-[110px] h-9 text-[10px] bg-muted/5 border-border/10 rounded-none font-black uppercase tracking-widest focus:ring-secondary/20 transition-all hover:bg-muted/10">
                                 <SelectValue placeholder={tGroup("group")} />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-border/10 rounded-none shadow-2xl">
-                                <SelectItem value="none" className="text-[10px] font-bold uppercase">{tCommon("none") || "None"}</SelectItem>
+                                <SelectItem value="none" className="text-[10px] font-bold uppercase opacity-40">{tCommon("none") || "None"}</SelectItem>
                                 {["A", "B", "C", "D", "E", "F", "G", "H"].map((g) => (
-                                    <SelectItem key={g} value={g} className="text-[10px] font-bold uppercase">
+                                    <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">
                                         {tGroup("group")} {g}
                                     </SelectItem>
                                 ))}
@@ -202,8 +212,8 @@ function TeamItem({
                     {!isReadOnly && (
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-8 w-8 rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
-                                    <Pencil className="h-3.5 w-3.5" />
+                                <Button variant="outline" size="icon" className="h-9 w-9 rounded-none border-border/10 bg-muted/5 hover:bg-white/5 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
+                                    <Pencil className="h-4 w-4" />
                                 </Button>
                             </DialogTrigger>
                         <DialogContent className="bg-card border-border/10 rounded-none max-w-md shadow-2xl">

@@ -9,7 +9,7 @@ import { BillingHistory } from "@/components/billing/billing-history";
 import { Separator } from "@/components/ui/separator";
 import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
 import { Plan } from "@/types";
-import { CreditCard, AlertCircle } from "lucide-react";
+import { CreditCard, AlertCircle, Trophy } from "lucide-react";
 
 interface BillingPageContentProps {
     tournaments: { id: string; name: string; status: string; plan?: string | null; }[] | null;
@@ -56,10 +56,10 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
     // Let's assume for this step we just render the PricingCards.
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4 md:space-y-6">
             <section>
                 {(isExpired || (daysRemaining !== null && daysRemaining !== undefined && daysRemaining <= 7 && daysRemaining > 0)) && (
-                    <div className="mb-6 p-4 rounded-xl border flex gap-3 items-start bg-red-50 text-red-900 border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-900">
+                    <div className="mb-4 md:mb-6 p-4 rounded-xl border flex gap-3 items-start bg-red-50 text-red-900 border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-900">
                         <AlertCircle className="h-5 w-5 mt-0.5 shrink-0 text-red-600 dark:text-red-500" />
                         <div className="flex flex-col gap-1">
                             <h5 className="font-semibold leading-none tracking-tight">
@@ -73,10 +73,15 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
                         </div>
                     </div>
                 )}
-                <h4 className="text-md font-semibold mb-4">{t("plansTitle")}</h4>
+                <div className="flex items-center gap-3 mb-4 md:mb-6">
+                    <Trophy className="h-5 w-5 text-secondary" />
+                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                        {t("plansTitle")}
+                    </h3>
+                </div>
                 
-                <div className="space-y-10">
-                    <div className="space-y-4">
+                <div className="space-y-4 md:space-y-6">
+                    <div className="space-y-2 md:space-y-3">
                         <PricingCards
                             plans={plans}
                             onSelectPlan={handleSelectPlan}
@@ -90,13 +95,16 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
                 </div>
             </section>
 
-            <Separator />
+            <Separator className="bg-border/40" />
 
-            <div className="grid gap-10 md:grid-cols-2">
+            <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                 <section id="payment-section">
-                    <h4 className="text-md font-semibold mb-4">
-                        {selectedPlanId ? t("payment_details") : t("paymentMethodTitle")}
-                    </h4>
+                    <div className="flex items-center gap-3 mb-4 md:mb-6">
+                        <CreditCard className="h-5 w-5 text-secondary" />
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                            {selectedPlanId ? t("payment_details") : t("paymentMethodTitle")}
+                        </h3>
+                    </div>
                     {selectedPlanId && plans.find(p => p.id === selectedPlanId) ? (
                         <PaymentSection
                             plan={plans.find(p => p.id === selectedPlanId)!}
@@ -106,16 +114,25 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
                             externalSelectedTournament={selectedTournamentId}
                         />
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
-                            <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                                <CreditCard className="h-6 w-6 text-muted-foreground" />
+                        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-4 md:p-6 text-center animate-in fade-in-50 relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                            
+                            <div className="p-4 md:p-6 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
+                                <CreditCard className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                             </div>
-                            <h3 className="text-sm font-medium text-muted-foreground">{t("select_plan_prompt")}</h3>
+
+                            <h3 className="text-xl font-black uppercase italic tracking-tight mb-2 relative z-10">
+                                {t("select_plan_title", { defaultValue: "Select a Plan" })}
+                            </h3>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground/60 max-w-[200px] flex items-center gap-2 relative z-10 mx-auto">
+                                <span className="w-4 h-[1px] bg-muted-foreground/30" />
+                                {t("select_plan_prompt")}
+                                <span className="w-4 h-[1px] bg-muted-foreground/30" />
+                            </p>
                         </div>
                     )}
                 </section>
                 <section>
-                    <h4 className="text-md font-semibold mb-4">{t("historyTitle")}</h4>
                     <BillingHistory history={history} />
                 </section>
             </div>

@@ -17,14 +17,25 @@ export default async function AdminPricingPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">{t("plan_management")}</h1>
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-foreground">
+                        {t("plan_management")}
+                    </h1>
+                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                        Pricing Administration
+                    </p>
+                </div>
             </div>
 
             <Tabs defaultValue="organizer" className="w-full">
                 <div className="flex items-center justify-between mb-4">
-                    <TabsList>
-                        <TabsTrigger value="organizer">{t("organizer_plans")}</TabsTrigger>
-                        <TabsTrigger value="manager">{t("manager_plans")}</TabsTrigger>
+                    <TabsList className="bg-muted/30 border border-border rounded-none p-1 h-auto">
+                        <TabsTrigger value="organizer" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                            {t("organizer_plans")}
+                        </TabsTrigger>
+                        <TabsTrigger value="manager" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                            {t("manager_plans")}
+                        </TabsTrigger>
                     </TabsList>
                     
                     <div className="flex gap-2">

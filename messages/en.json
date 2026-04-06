@@ -69,8 +69,11 @@
         "no_results": "No Results",
         "overview": "Overview",
         "description": "Description",
+        "copy": "Copy",
         "full": "Full",
-        "closed": "Registration Closed"
+        "closed": "Registration Closed",
+        "generate_qr": "Generate QR Code",
+        "browse_tournaments_desc": "Start your competitive journey today"
     },
     "Dashboard": {
         "title": "Dashboard",
@@ -122,6 +125,7 @@
         "team_mode": "Manager"
     },
     "Tournament": {
+        "format": "Format",
         "create_new": "Create Tournament",
         "add_team": "Add Team",
         "generate_fixtures": "Generate Fixtures",
@@ -137,6 +141,7 @@
         "bracket_desc": "Knockout stage progress",
         "top_scorers": "Top Scorers",
         "top_scorers_desc": "Track the golden boot race and top performers",
+        "player_stats": "Player Statistics",
         "match_schedule": "Match Schedule",
         "manage_fixtures": "Manage Fixtures & Results",
         "manage_teams": "Manage Participating Teams",
@@ -150,6 +155,9 @@
         "yellow_cards": "Yellow Cards",
         "no_data": "No data available",
         "public_link": "Public Registration Link",
+        "actions": "Tournament Actions",
+        "actions_desc": "Management and registration tools",
+        "registration": "Registration",
         "upsell_pro_required": "Upgrade to Pro to view Top Scorers",
         "upsell_view_plans": "View Plans",
         "upsell_pro_feature": "Pro Feature",
@@ -161,7 +169,15 @@
         "stats_matches_played": "Matches played",
         "stats_total_goals": "Total Goals",
         "stats_goals_scored": "Goals scored",
-        "cancel": "Cancel"
+        "description": "Tournament Description",
+        "cancel": "Cancel",
+        "danger_zone": "Danger Zone",
+        "delete_tournament": "Delete Tournament",
+        "delete_desc": "Once you delete a tournament, there is no going back. Please be certain.",
+        "reset_fixtures": "Reset Fixtures",
+        "reset_desc": "This will remove all matches and standings data. This action cannot be undone.",
+        "type_to_confirm": "Please type \"{text}\" to confirm:",
+        "active": "Active"
     },
     "Registration": {
         "title": "Tournament Registration",
@@ -302,6 +318,8 @@
         "full_time": "Full Time"
     },
     "Console": {
+        "tournament": "Tournament",
+        "stage": "Stage",
         "console": "Console",
         "match_console": "Match Console",
         "set_time": "Set Time",
@@ -375,6 +393,8 @@
         "second_yellow_warning": "Player already has a yellow card. This will be recorded as a Second Yellow (Red Card). Proceed?"
     },
     "Team": {
+        "dashboard": "Dashboard",
+        "dashboard_desc": "Manage your teams and tournament participations.",
         "create": "Create Team",
         "tournaments_folder": "Tournaments",
         "teams_folder_desc": "Teams Folder",
@@ -406,7 +426,9 @@
         "team_logo": "Team Logo",
         "add_team_button": "Add Team",
         "no_description": "No description available",
-        "team_description": "Team Description"
+        "team_description": "Team Description",
+        "updated_successfully": "Team updated successfully",
+        "created_successfully": "Team created successfully"
     },
     "Dialog": {
         "create_tournament": "Create Tournament",
@@ -601,6 +623,7 @@
         "team": "Team",
         "goals": "Goals",
         "no_goals": "No goals recorded yet",
+        "showing_top_10": "Showing TOP 10 Goal Scorers",
         "export": "Export"
     },
     "Fixtures": {
@@ -670,6 +693,9 @@
         "position_placeholder": "e.g. Forward, GK",
         "no_players": "No players found",
         "no_players_desc": "Add players to this team to track stats.",
+        "connect_global": "Connect Global Player",
+        "get_started_by_adding_your_first_player_above": "Get started by adding your first player above",
+        "remove_player": "Remove Player",
         "delete_confirm": "Remove player?",
         "delete_desc": "This action cannot be undone.",
         "added_success": "Player added successfully",
@@ -681,12 +707,17 @@
         "defender": "Defender",
         "midfielder": "Midfielder",
         "forward": "Forward",
+        "gk": "GK",
+        "df": "DF",
+        "mf": "MF",
+        "fw": "FW",
         "import_roster": "Import Roster",
         "import_description": "Import players from another one of your teams.",
         "import_from_team": "Import from Team",
         "import_btn": "Import Players",
         "deadline_passed": "Document submission deadline has passed. Roster is now locked.",
         "deadline_expired": "Deadline Expired",
+        "squad_secured": "Squad Secured",
         "deadline_locked_desc": "{date} has passed. Roster is now locked and cannot be edited.",
         "unlock_roster": "Unlock Roster",
         "submit_lock": "Submit & Lock",
@@ -700,6 +731,14 @@
         "scanning_database": "Scanning Database",
         "no_records_found": "No Records Found",
         "create_global_id_sync": "Create Global ID & Sync",
+        "syncs_across_all_tournament_rosters": "Syncs across all tournament rosters",
+        "player_identification": "PLAYER IDENTIFICATION",
+        "no_documents_uploaded": "No Documents Uploaded",
+        "fullscreen": "Fullscreen",
+        "profile_must_be_connected_to_a_global_identity_to_manage_documents": "Profile must be connected to a global identity to manage documents.",
+        "initialize_global_profile": "Initialize Global Profile",
+        "verified": "VERIFIED",
+        "local_only": "LOCAL ONLY",
         "team_details_locked": "Team Details Locked",
         "import_roster_desc": "Add players to this team by copying from another team or uploading a file.",
         "from_my_teams": "From My Teams",
@@ -717,20 +756,7 @@
         "importing": "Importing...",
         "profile_management": "Profile Management",
         "global_identity_for": "Global identity for",
-        "global_profile_photo": "GLOBAL PROFILE PHOTO",
-        "syncs_across_all_tournament_rosters": "Syncs across all tournament rosters",
-        "player_identification": "PLAYER IDENTIFICATION",
-        "no_documents_uploaded": "No Documents Uploaded",
-        "fullscreen": "Fullscreen",
-        "profile_must_be_connected_to_a_global_identity_to_manage_documents": "Profile must be connected to a global identity to manage documents.",
-        "initialize_global_profile": "Initialize Global Profile",
-        "verified": "VERIFIED",
-        "local_only": "LOCAL ONLY",
-        "gk": "GK",
-        "df": "DF",
-        "mf": "MF",
-        "fw": "FW",
-        "get_started_by_adding_your_first_player_above": "Get started by adding your first player above"
+        "global_profile_photo": "GLOBAL PROFILE PHOTO"
     },
     "Landing": {
         "nav_features": "Features",
@@ -970,7 +996,8 @@
         "analytics_desc": "Help us understand how you use our site.",
         "marketing": "Marketing",
         "marketing_desc": "Used for relevant advertising.",
-        "save": "Save Preferences"
+        "save": "Save Preferences",
+        "cancel": "Cancel"
     },
     "Legal": {
         "title": "Legal Documents",
@@ -982,6 +1009,8 @@
         "title": "Settings",
         "subtitle": "Manage application settings.",
         "preferences": "Preferences",
+        "language_desc": "Select your preferred language",
+        "theme_desc": "Choose between light and dark mode",
         "legal": "Legal & Compliance",
         "legal_desc": "Review our policies and terms.",
         "danger_zone": "Danger Zone",
@@ -1004,6 +1033,8 @@
         "invite_sent_desc": "An invitation has been sent to the email address.",
         "no_collaborators": "No collaborators yet. Invite someone to help!",
         "confirm_remove": "Remove this collaborator?",
+        "remove_collaborator": "Remove Collaborator",
+        "remove": "Remove",
         "removed": "Collaborator Removed",
         "removed_desc": "The collaborator has been removed from this tournament.",
         "status_accepted": "Accepted",
@@ -1207,6 +1238,7 @@
         "expires_at": "Expires At",
         "amount_col": "Amount",
         "no_history": "No payment history found.",
+        "select_plan_title": "Select a Plan",
         "select_plan_prompt": "Select a plan above to view payment options.",
         "payment_details": "Payment Details",
         "payment_pending": "Payment Pending",
@@ -1220,7 +1252,16 @@
         "status_pending": "Pending",
         "status_failed": "Failed",
         "method_promptpay": "PromptPay",
-        "method_credit_card": "Credit Card"
+        "method_credit_card": "Credit Card",
+        "no_payment_records": "No payment records found",
+        "paid_instruction": "Please scan the QR code to pay, then upload your transfer slip to complete.",
+        "upload_slip": "Upload Payment Slip",
+        "payment_pending_title": "Verification Pending",
+        "yearly": { "title": "Yearly Pro" },
+        "monthly": { "title": "Monthly Pro" },
+        "tournament": { "title": "Per Tournament" },
+        "free": { "title": "Starter" },
+        "manager_pro": { "title": "Manager Pro" }
     },
     "PublicView": {
         "overview": "Overview",
@@ -1246,7 +1287,13 @@
         "teams": "Teams",
         "matches_played": "Played",
         "total_goals": "Goals",
-        "about_tournament": "About Tournament"
+        "about_tournament": "About Tournament",
+        "tournament_stats": "Tournament Stats",
+        "top_scorers": "Top Scorers",
+        "top_scorers_desc": "Golden boot race.",
+        "player_stats": "Player Stats",
+        "player_stats_desc": "Comprehensive performance tracking.",
+        "banned_players": "Banned Players"
     },
     "Venue": {
         "title": "Venues",
@@ -1305,6 +1352,8 @@
         "posted_success": "Announcement posted",
         "delete_confirm": "Delete this announcement?",
         "pinned": "Pinned",
+        "pin": "Pin",
+        "unpin": "Unpin",
         "delete_announcement": "Delete Announcement"
     },
     "BannedPlayers": {
@@ -1343,9 +1392,14 @@
         "description": "Goals, assists, and disciplinary records",
         "player": "Player",
         "team": "Team",
-        "mp": "MP",
+        "mp": "Match",
+        "goals": "Goals",
+        "assists": "Assists",
+        "yellow_cards": "Yellow",
+        "red_cards": "Red",
         "status": "Status",
         "banned": "Banned",
+        "showing_top_10": "Showing TOP 10 Goal Scorers",
         "no_stats": "No player statistics available yet"
     },
     "Home": {

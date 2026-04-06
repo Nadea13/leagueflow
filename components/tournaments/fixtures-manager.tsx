@@ -108,9 +108,9 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4 md:space-y-6">
             {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 border border-white/5 group relative overflow-hidden">
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 border border-white/5 group relative overflow-hidden">
                     <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
                     <div className="h-16 w-16 rounded-none bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-secondary/30 transition-colors">
                         <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
@@ -122,9 +122,9 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                 </div>
             ) : (
                 <>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/5 p-4 border border-white/5">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-white/5 p-4 md:p-6 border border-white/5">
                     {/* Filter Area */}
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <div className="space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
                             <Select value={filterStage} onValueChange={setFilterStage}>
@@ -147,8 +147,8 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="flex items-center gap-2 md:gap-3">
                             <Switch 
                                 id="edit-mode" 
                                 checked={isEditMode} 
@@ -167,9 +167,9 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                     </div>
                 </div>
 
-            <div id="fixtures-canvas" className="space-y-12">
+            <div id="fixtures-canvas" className="space-y-4 md:space-y-6">
                 {filteredMatches.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center bg-white/5 border border-white/5">
+                    <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 border border-white/5">
                         <Calendar className="h-12 w-12 text-muted-foreground/20 mb-4" />
                         <h3 className="text-sm font-black uppercase italic tracking-tighter text-muted-foreground/40">{tFixtures("no_fixtures")}</h3>
                     </div>
@@ -209,9 +209,9 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                             }
 
                             return (
-                                <div key={key} className="space-y-6">
+                                <div key={key} className="space-y-4 md:space-y-6">
                                     {headerText && (
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2 md:gap-3">
                                             <div className="h-px bg-secondary/30 flex-1" />
                                             <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-secondary">
                                                 {headerText}
@@ -244,11 +244,11 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                                     
                                     {/* Proceed to Knockout Button - Styled for Sidebar potentially, but keep here for now if matches are listed */}
                                     {key === 'group_stage' && matches.some(m => m.stage === 'group') && !matches.some(m => m.stage !== 'group' && m.stage !== 'league') && (
-                                        <div className="flex justify-center pt-8">
+                                        <div className="flex justify-center pt-4 md:pt-6">
                                             <Button
                                                 onClick={() => setAdvanceDialogOpen(true)}
                                                 disabled={isAdvancing}
-                                                className="h-14 px-8 bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 shadow-lg shadow-secondary/10 group transition-all"
+                                                className="h-14 px-4 md:px-6 bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 shadow-lg shadow-secondary/10 group transition-all"
                                             >
                                                 {isAdvancing ? tFixtures("generating") : (
                                                     <span className="flex items-center gap-3">

@@ -2,6 +2,8 @@
 
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { ActionResponse, GlobalPlayer } from "@/types/index";
+import { deleteFileFromUrl } from "@/utils/supabase/storage";
+import { validateUploadedFile } from "@/lib/file-validation";
 
 async function isAuthorizedForPlayer(playerId: string, userId: string) {
     const supabase = await createClient();
@@ -172,6 +174,7 @@ export async function createGlobalPlayer(
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
 
     const { data, error } = await adminSupabase
         .from("global_players")
@@ -304,6 +307,9 @@ export async function updateGlobalPlayerIdCard(
 
     if (!file) return { success: false, error: "No file provided" };
 
+    const fileCheck = validateUploadedFile(file);
+    if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${globalPlayerId}/id_card_${Date.now()}.${fileExt}`;
 
@@ -322,6 +328,17 @@ export async function updateGlobalPlayerIdCard(
     const { data: { publicUrl } } = supabase.storage
         .from('player-docs')
         .getPublicUrl(fileName);
+
+    // Cleanup old ID card if exists
+    const { data: existingPlayer } = await adminSupabase
+        .from("global_players")
+        .select("id_card_url")
+        .eq("id", globalPlayerId)
+        .single();
+    
+    if (existingPlayer?.id_card_url) {
+        await deleteFileFromUrl(existingPlayer.id_card_url, 'player-docs');
+    }
 
     const { error: updateError } = await adminSupabase
         .from("global_players")
@@ -351,6 +368,9 @@ export async function updateGlobalPlayerPhoto(
 
     if (!file) return { success: false, error: "No file provided" };
 
+    const fileCheck = validateUploadedFile(file);
+    if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${globalPlayerId}/photo_${Date.now()}.${fileExt}`;
 
@@ -370,6 +390,17 @@ export async function updateGlobalPlayerPhoto(
         .from('player-photos')
         .getPublicUrl(fileName);
 
+    // Cleanup old photo if exists
+    const { data: existingPlayer } = await adminSupabase
+        .from("global_players")
+        .select("photo_url")
+        .eq("id", globalPlayerId)
+        .single();
+    
+    if (existingPlayer?.photo_url) {
+        await deleteFileFromUrl(existingPlayer.photo_url, 'player-photos');
+    }
+
     const { error: updateError } = await adminSupabase
         .from("global_players")
         .update({ photo_url: publicUrl })
@@ -377,6 +408,43 @@ export async function updateGlobalPlayerPhoto(
 
     if (updateError) {
         return { success: false, error: updateError.message };
+    }
+
+    return { success: true };
+}
+
+export async function deleteGlobalPlayer(globalPlayerId: string): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to delete this global player" };
+
+    // Fetch photo and ID card URLs for cleanup
+    const { data: player } = await adminSupabase
+        .from("global_players")
+        .select("photo_url, id_card_url")
+        .eq("id", globalPlayerId)
+        .single();
+    
+    if (player) {
+        if (player.photo_url) {
+            await deleteFileFromUrl(player.photo_url, 'player-photos');
+        }
+        if (player.id_card_url) {
+            await deleteFileFromUrl(player.id_card_url, 'player-docs');
+        }
+    }
+
+    const { error } = await adminSupabase
+        .from("global_players")
+        .delete()
+        .eq("id", globalPlayerId);
+
+    if (error) {
+        return { success: false, error: error.message };
     }
 
     return { success: true };

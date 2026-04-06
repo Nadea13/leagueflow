@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { UserNav } from "@/components/dashboard/user-nav";
+import { AdminDashboardHeader } from "@/components/admin/admin-dashboard-header";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
     const supabase = await createClient();
@@ -32,17 +32,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 </div>
             </div>
             <div className="flex flex-col">
-                <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-                    {/* Mobile sidebar trigger could go here */}
-                    <div className="md:hidden">
-                        <AdminSidebar className="block static h-auto w-auto border-none bg-transparent" />
-                    </div>
-
-                    <div className="w-full flex-1"></div>
-
-                    <UserNav email={user.email} />
-                </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+                <AdminDashboardHeader userEmail={user?.email || undefined} />
+                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>
             </div>

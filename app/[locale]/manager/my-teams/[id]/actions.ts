@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
+import { deleteFileFromUrl } from "@/utils/supabase/storage";
 
 async function isAuthorizedForTeam(teamId: string, userId: string) {
     const supabase = await createClient();
@@ -115,8 +116,16 @@ export async function getTeam(teamId: string) {
 }
 
 export async function toggleRosterLock(teamId: string, isLocked: boolean): Promise<ActionResponse> {
+    const supabase = await createClient();
     const adminSupabase = createAdminClient();
     
+    // Authorization Check
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const authorized = await isAuthorizedForTeam(teamId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to manage this team" };
+
     // Check which table to update (Use Admin to avoid RLS)
     const { data: globalTeam } = await adminSupabase.from("teams").select("id").eq("id", teamId).single();
     const { data: participation } = await adminSupabase.from("tournament_teams").select("id").eq("id", teamId).single();
@@ -178,31 +187,9 @@ export async function addPlayer(
     const number = formData.get("number") as string;
     const position = formData.get("position") as string;
     const birthDate = formData.get("birthDate") as string;
-    const photoFile = formData.get("photo") as File;
+    const globalPlayerId = formData.get("global_player_id") as string;
 
     if (!name) return { success: false, error: "Name is required" };
-
-    let photo_url = null;
-
-    // Handle Photo Upload
-    if (photoFile && photoFile.size > 0) {
-        const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${teamId}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('player-photos')
-            .upload(filePath, photoFile);
-
-        if (uploadError) {
-            console.error("Photo upload failed", uploadError);
-        } else {
-            const { data: { publicUrl } } = supabase.storage
-                .from('player-photos')
-                .getPublicUrl(filePath);
-            photo_url = publicUrl;
-        }
-    }
 
     // Determine context (Tournament Participation vs. Global Team)
     // We check participation first to prioritize tournament rosters
@@ -224,9 +211,10 @@ export async function addPlayer(
         number: number ? parseInt(number) : null,
         position: position || null,
         birth_date: birthDate || null,
-        photo_url: photo_url || null,
+        photo_url: null,
         team_id: participation ? teamId : null,
         global_team_id: globalTeam ? teamId : null,
+        global_player_id: globalPlayerId || null,
         created_at: new Date().toISOString(),
     };
 
@@ -301,8 +289,11 @@ export async function importRoster(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
 
-    const authorized = await isAuthorizedForTeam(targetTeamId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+    const authorizedTarget = await isAuthorizedForTeam(targetTeamId, user.id);
+    if (!authorizedTarget) return { success: false, error: "Unauthorized to manage target roster" };
+
+    const authorizedSource = await isAuthorizedForTeam(sourceTeamId, user.id);
+    if (!authorizedSource) return { success: false, error: "Unauthorized to read from source roster" };
 
     const { data: sourcePlayers, error: fetchError } = await supabase
         .from("players")

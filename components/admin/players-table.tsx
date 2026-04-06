@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Search, Plus, User, MoreHorizontal, Trash } from "lucide-react";
+import { Search, Plus, User, MoreHorizontal, Trash, Calendar, Shield } from "lucide-react";
 import { createGlobalPlayer } from "@/app/[locale]/admin/actions";
 import { toast } from "sonner";
 
@@ -62,7 +62,6 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
             setNewPlayerPhoto("");
             setNewPlayerDOB("");
             setIsAddDialogOpen(false);
-            // In a real app, we should refresh data from server
             window.location.reload();
         } else {
             toast.error(result.error || "Failed to add player");
@@ -75,7 +74,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                 <div className="relative w-full md:w-[300px]">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder={t("search_players") || "Search players..."}
+                        placeholder={t("search_players")}
                         className="pl-8"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -84,63 +83,99 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
 
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="flex items-center gap-2">
-                            <Plus className="h-4 w-4" />
-                            {t("add_player") || "Add Player"}
+                        <Button className="rounded-none text-[10px] font-black uppercase tracking-wider h-10 px-6">
+                            <Plus className="mr-2 h-4 w-4" />
+                            {t("add_player")}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{t("add_player") || "Add Player"}</DialogTitle>
-                            <DialogDescription>
-                                Create a new player record in the global database.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
+                    <DialogContent className="sm:max-w-[500px] rounded-none border-border p-0 overflow-hidden">
+                        <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                            <DialogHeader>
+                                <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                    <Shield className="h-5 w-5 text-secondary" />
+                                    {t("add_player")}
+                                </DialogTitle>
+                                <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
+                                    Create a new player record in the global database.
+                                </DialogDescription>
+                            </DialogHeader>
+                        </div>
+
+                        <div className="px-6 py-6 space-y-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="name">{t("player_name") || "Full Name"}</Label>
+                                <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-wider">
+                                    {t("player_name")}
+                                </Label>
                                 <Input
                                     id="name"
                                     value={newPlayerName}
                                     onChange={(e) => setNewPlayerName(e.target.value)}
-                                    placeholder={t("player_name_placeholder") || "Enter player's full name"}
+                                    placeholder={t("player_name_placeholder")}
+                                    className="rounded-none border-muted-foreground/20 focus:border-secondary focus:ring-secondary/20"
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="photo">{t("photo_url") || "Photo URL"}</Label>
+                                <Label htmlFor="photo" className="text-[10px] font-black uppercase tracking-wider">
+                                    {t("photo_url")}
+                                </Label>
                                 <Input
                                     id="photo"
                                     value={newPlayerPhoto}
                                     onChange={(e) => setNewPlayerPhoto(e.target.value)}
                                     placeholder="https://..."
+                                    className="rounded-none border-muted-foreground/20 focus:border-secondary focus:ring-secondary/20"
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="dob">{t("date_of_birth") || "Date of Birth"}</Label>
+                                <Label htmlFor="dob" className="text-[10px] font-black uppercase tracking-wider">
+                                    {t("date_of_birth")}
+                                </Label>
                                 <Input
                                     id="dob"
                                     type="date"
                                     value={newPlayerDOB}
                                     onChange={(e) => setNewPlayerDOB(e.target.value)}
+                                    className="rounded-none border-muted-foreground/20 focus:border-secondary focus:ring-secondary/20"
                                 />
                             </div>
                         </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>{commonT("cancel")}</Button>
-                            <Button onClick={handleAddPlayer}>{t("add_player")}</Button>
+
+                        <DialogFooter className="px-6 py-4 border-t border-border bg-muted/30">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsAddDialogOpen(false)}
+                                className="rounded-none text-[10px] font-black uppercase tracking-wider"
+                            >
+                                {commonT("cancel")}
+                            </Button>
+                            <Button 
+                                onClick={handleAddPlayer}
+                                className="rounded-none text-[10px] font-black uppercase tracking-wider"
+                            >
+                                {t("add_player")}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </div>
 
-            <div className="rounded-none border bg-card overflow-hidden">
+            <div className="rounded-none border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
-                        <TableRow>
-                            <TableHead>{commonT("user")}</TableHead>
-                            <TableHead>{t("date_of_birth") || "DOB"}</TableHead>
-                            <TableHead>{t("created_at")}</TableHead>
-                            <TableHead className="text-right">{t("actions")}</TableHead>
+                        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                                {commonT("user")}
+                            </TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                                {t("date_of_birth")}
+                            </TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                                {t("created_at")}
+                            </TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                                {t("actions")}
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -152,27 +187,33 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                             </TableRow>
                         ) : (
                             filteredPlayers.map((player) => (
-                                <TableRow key={player.id}>
+                                <TableRow key={player.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                     <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-10 h-10 rounded-none bg-muted flex items-center justify-center overflow-hidden border">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-muted/50 flex items-center justify-center border border-border overflow-hidden shrink-0">
                                                 {player.photo_url ? (
                                                     <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <User className="h-5 w-5 text-muted-foreground" />
                                                 )}
                                             </div>
-                                            <span className="font-medium text-sm">{player.name}</span>
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-sm uppercase tracking-tight">{player.name}</span>
+                                                <span className="text-[10px] font-medium text-muted-foreground tracking-wider -mt-0.5">PLAYER</span>
+                                            </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-sm">
-                                        {player.date_of_birth || "-"}
+                                    <TableCell>
+                                        <div className="flex items-center gap-2 text-xs font-medium">
+                                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                                            {player.date_of_birth || "-"}
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="text-muted-foreground text-xs">
+                                    <TableCell className="text-muted-foreground text-[10px] font-bold uppercase tracking-tight">
                                         {player.created_at ? new Date(player.created_at).toLocaleDateString() : "-"}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/30">
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                     </TableCell>

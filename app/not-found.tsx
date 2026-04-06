@@ -3,6 +3,7 @@
 import Link from "next/link";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Button } from "@/components/ui/button";
 
 // Render the default Next.js 404 page when a route
 // is requested that doesn't match the middleware and
@@ -10,29 +11,19 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export default function NotFound() {
   return (
-    <html lang="th" suppressHydrationWarning>
-      <body className="antialiased font-sans">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex flex-col items-center justify-center min-h-screen text-center px-4 bg-background text-foreground">
-            <h1 className="text-6xl font-bold mb-4 text-primary">404</h1>
-            <h2 className="text-2xl font-semibold mb-6">Page Not Found</h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-              Sorry, we couldn't find the page you're looking for. It might have been moved or deleted.
-            </p>
-            <Link
-              href="/"
-              className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-none hover:bg-primary/90 transition-colors shadow-sm"
-            >
-              Go back home
-            </Link>
-          </div>
-        </ThemeProvider>
-      </body>
-    </html>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
+      <h1 className="text-9xl font-black italic tracking-tighter text-primary/20 absolute select-none">404</h1>
+      <div className="relative z-10 space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">Page Not Found</h2>
+          <p className="text-muted-foreground font-medium max-w-md mx-auto">
+            The page you're looking for doesn't exist or has been moved.
+          </p>
+        </div>
+        <Button asChild variant="secondary" className="h-12 px-8 font-black uppercase italic tracking-widest shadow-[0_0_20px_rgba(0,196,154,0.2)]">
+          <Link href="/">Return Home</Link>
+        </Button>
+      </div>
+    </div>
   );
 }

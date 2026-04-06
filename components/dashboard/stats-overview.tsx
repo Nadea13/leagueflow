@@ -12,7 +12,7 @@ export function StatsOverview({ totalTournaments, activeTournaments, completedTo
     const t = useTranslations("Dashboard");
     return (
         <div className="grid gap-3 grid-cols-3 md:gap-6 md:grid-cols-3">
-            <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+            <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                 <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -31,7 +31,7 @@ export function StatsOverview({ totalTournaments, activeTournaments, completedTo
                     </p>
                 </CardContent>
             </Card>
-            <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-primary/50">
+            <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-primary/50">
                 <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
                 <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -50,7 +50,7 @@ export function StatsOverview({ totalTournaments, activeTournaments, completedTo
                     </p>
                 </CardContent>
             </Card>
-            <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/30">
+            <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-secondary/30">
                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary/40" />
                 <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">

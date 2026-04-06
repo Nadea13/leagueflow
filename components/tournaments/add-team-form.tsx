@@ -41,15 +41,15 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <form
                 ref={formRef}
                 action={formAction}
-                className="flex flex-col gap-4"
+                className="flex flex-col gap-2 md:gap-3"
             >
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2 md:gap-3">
                     {/* Circular Logo Upload */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-3">
                         <label htmlFor="add-logo-upload" className={`cursor-pointer group relative shrink-0 ${isLimitReached ? 'pointer-events-none opacity-50' : ''}`}>
                             <div className="h-16 w-16 rounded-none border border-muted-foreground/20 flex items-center justify-center overflow-hidden bg-white/5 hover:bg-white/10 transition-colors relative">
                                 {preview ? (
@@ -80,8 +80,8 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="space-y-1.5">
+                    <div className="space-y-2 md:space-y-3">
+                        <div className="space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("team_name")}</Label>
                             <Input
                                 type="text"
@@ -93,7 +93,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                             />
                         </div>
 
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("team_description") || "Team Description"}</Label>
                             <Textarea
                                 name="description"

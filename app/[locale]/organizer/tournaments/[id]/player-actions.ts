@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
+import { deleteFileFromUrl } from "@/utils/supabase/storage";
 
 async function isAuthorizedOrganizer(tournamentId: string, userId: string) {
     const supabase = await createClient();
@@ -58,22 +59,9 @@ export async function addPlayer(
     const number = formData.get("number") as string;
     const position = formData.get("position") as string;
     const birthDate = formData.get("birthDate") as string;
-    const photoFile = formData.get("photo") as File;
 
     if (!name) {
         return { success: false, error: "Player name is required" };
-    }
-
-    let photo_url = null;
-    if (photoFile && photoFile.size > 0) {
-        const fileExt = photoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${teamId}/${fileName}`;
-        const { error: uploadError } = await supabase.storage.from('player-photos').upload(filePath, photoFile);
-        if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage.from('player-photos').getPublicUrl(filePath);
-            photo_url = publicUrl;
-        }
     }
 
     // Check if this is a global team or a tournament participation (Use Admin to avoid RLS)
@@ -92,7 +80,7 @@ export async function addPlayer(
         number: number ? parseInt(number) : null,
         position: position || null,
         birth_date: birthDate || null,
-        photo_url: photo_url || null,
+        photo_url: null,
         created_at: new Date().toISOString(),
     });
 

@@ -1,8 +1,12 @@
 "use server";
 
 import { createAdminClient } from "@/utils/supabase/server";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function getAllPayments() {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return [];
+
     // Use Admin Client to bypass RLS
     const supabase = createAdminClient();
 
@@ -36,6 +40,9 @@ export async function getAllPayments() {
 import { revalidatePath } from "next/cache";
 
 export async function approvePayment(paymentId: string) {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
     const supabase = createAdminClient();
 
     const { data: payment, error: fetchError } = await supabase
@@ -94,6 +101,9 @@ export async function approvePayment(paymentId: string) {
 }
 
 export async function rejectPayment(paymentId: string) {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
     const supabase = createAdminClient();
 
     const { error } = await supabase

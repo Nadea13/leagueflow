@@ -60,6 +60,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
     const [newName, setNewName] = useState("");
     const [newNumber, setNewNumber] = useState("");
     const [newPosition, setNewPosition] = useState("");
+    const [newBirthDate, setNewBirthDate] = useState("");
 
     // Global Player Search State
     const [linkingPlayerId, setLinkingPlayerId] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
     const [editName, setEditName] = useState<string>("");
     const [editNumber, setEditNumber] = useState<string>("");
     const [editPosition, setEditPosition] = useState<string>("");
+    const [editBirthDate, setEditBirthDate] = useState<string>("");
 
     const fetchPlayers = async () => {
         setIsLoading(true);
@@ -119,6 +121,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
         formData.append("name", newName);
         formData.append("number", newNumber);
         formData.append("position", newPosition);
+        formData.append("birthDate", newBirthDate);
 
         const result = await addPlayer(teamId, null, formData);
 
@@ -131,6 +134,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
             setNewName("");
             setNewNumber("");
             setNewPosition("");
+            setNewBirthDate("");
             fetchPlayers();
         } else {
             toast({
@@ -164,9 +168,10 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
     const handleUpdatePlayer = async (playerId: string) => {
         setIsSaving(true);
         const result = await updatePlayer(playerId, {
-            name: editName || undefined,
+            name: !players.find(p => p.id === playerId)?.global_player_id ? (editName || undefined) : undefined,
             number: editNumber ? parseInt(editNumber) : null,
             position: editPosition || null,
+            birth_date: editBirthDate || null,
         });
         setIsSaving(false);
 
@@ -253,6 +258,16 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("birth_date") || "Birth Date"}</label>
+                                        <Input
+                                            value={newBirthDate}
+                                            onChange={e => setNewBirthDate(e.target.value)}
+                                            type="date"
+                                            lang={locale === 'th' ? 'th-TH' : 'en-US'}
+                                            className="h-10 rounded-none bg-background/50 border-input/50 focus-visible:ring-secondary/20 focus-visible:border-secondary transition-all"
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-2">
                                         <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("number")}</label>
                                         <Input
                                             value={newNumber}
@@ -262,7 +277,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                             className="h-10 rounded-none bg-background/50 border-input/50 focus-visible:ring-secondary/20 focus-visible:border-secondary transition-all text-center font-bold"
                                         />
                                     </div>
-                                    <div className="sm:col-span-3 space-y-2">
+                                    <div className="sm:col-span-2 space-y-2">
                                         <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("position")}</label>
                                         <Select value={newPosition} onValueChange={setNewPosition}>
                                             <SelectTrigger className="h-10 rounded-none bg-background/50 border-input/50 focus-visible:ring-secondary/20 focus-visible:border-secondary transition-all">
@@ -348,7 +363,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                             {/* Player Name & Connection */}
                                              <div className="flex-1 min-w-0 pr-12 md:pr-0">
                                                 <div className="flex items-center flex-wrap gap-3 mb-1">
-                                                    {editingPlayerId === player.id ? (
+                                                    {(editingPlayerId === player.id && !player.global_player_id) ? (
                                                         <Input
                                                             value={editName}
                                                             onChange={e => setEditName(e.target.value)}
@@ -380,9 +395,6 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                     <SelectValue placeholder="POS" />
                                                                 </SelectTrigger>
                                                                 <SelectContent className="rounded-none border-border">
-                                                                    <SelectItem value="GK" className="text-[9px] font-black uppercase tracking-widest">{t("goalkeeper") || "GK"}</SelectItem>
-                                                                    <SelectItem value="DF" className="text-[9px] font-black uppercase tracking-widest">{t("defender") || "DF"}</SelectItem>
-                                                                    <SelectItem value="MF" className="text-[9px] font-black uppercase tracking-widest">{t("midfielder") || "MF"}</SelectItem>
                                                                     <SelectItem value="FW" className="text-[9px] font-black uppercase tracking-widest">{t("forward") || "FW"}</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
@@ -391,11 +403,21 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                 {player.position || "N/A"}
                                                             </Badge>
                                                         )}
-                                                        
-                                                        {player.birth_date && (
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 font-mono">
-                                                                {formatDate(player.birth_date)}
-                                                            </span>
+
+                                                        {(editingPlayerId === player.id && !player.global_player_id) ? (
+                                                            <Input
+                                                                value={editBirthDate}
+                                                                onChange={e => setEditBirthDate(e.target.value)}
+                                                                type="date"
+                                                                lang={locale === 'th' ? 'th-TH' : 'en-US'}
+                                                                className="h-7 w-28 border-t-0 border-x-0 border-border/40 bg-muted/10 text-[9px] font-black p-1 focus-visible:ring-0 uppercase shadow-none"
+                                                            />
+                                                        ) : (
+                                                            player.birth_date && (
+                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 font-mono">
+                                                                    {formatDate(player.birth_date)}
+                                                                </span>
+                                                            )
                                                         )}
                                                     </div>
                                                 </div>
@@ -478,7 +500,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                                     className="rounded-none w-full h-10 text-[9px] font-black uppercase tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
                                                                                     onClick={async () => {
                                                                                         const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                        const res = await createGlobalPlayer(searchQuery);
+                                                                                        const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
                                                                                         if (res.success && res.data) {
                                                                                             await handleLinkPlayer(player.id, res.data);
                                                                                         } else {
@@ -500,7 +522,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                             className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
                                                                             onClick={async () => {
                                                                                 const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                const res = await createGlobalPlayer(player.name);
+                                                                                const res = await createGlobalPlayer(player.name, null, player.birth_date);
                                                                                 if (res.success && res.data) {
                                                                                     await handleLinkPlayer(player.id, res.data);
                                                                                 } else {
@@ -581,6 +603,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                         setEditName(player.name || "");
                                                                         setEditNumber(player.number?.toString() || "");
                                                                         setEditPosition(player.position || "");
+                                                                        setEditBirthDate(player.birth_date || "");
                                                                     }}
                                                                 >
                                                                     <Edit2 className="mr-3 h-4 w-4" />

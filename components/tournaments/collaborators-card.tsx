@@ -103,98 +103,98 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
     };
 
     return (
-        <div className="bg-white/5 border border-white/5 p-6 relative overflow-hidden group transition-all duration-500 hover:bg-white/[0.07]">
-            <div className="absolute top-0 left-0 w-1 h-full bg-secondary translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-            <div className="absolute -right-4 -top-4 w-32 h-32 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-            
-            <div className="relative z-10 space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-1">
-                        <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
-                            <Users className="h-6 w-6 text-secondary" />
-                            {t("title")}
-                        </h3>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("description")}</p>
-                    </div>
-
-                    <Dialog open={isPro && dialogOpen} onOpenChange={setDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button 
-                                size="sm" 
-                                disabled={!isPro}
-                                onClick={() => !isPro && togglePayment?.()}
-                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/btn overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-                                <span className="relative z-10 flex items-center gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    {t("invite")}
-                                </span>
-                            </Button>
-                        </DialogTrigger>
-                        {isPro && (
-                            <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-white/5 rounded-none p-0 overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
-                                <DialogHeader className="p-8 pb-4">
-                                    <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
-                                        <Mail className="h-8 w-8 text-secondary" />
-                                        {t("invite_title")}
-                                    </DialogTitle>
-                                    <DialogDescription className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 pt-2">
-                                        {t("invite_desc")}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="px-8 py-6 space-y-6">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-black uppercase italic tracking-widest text-muted-foreground/60">{t("email_placeholder")}</Label>
-                                        <Input
-                                            type="email"
-                                            placeholder="collaborator@example.com"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-                                            className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
-                                        />
-                                    </div>
-                                    <div className="flex justify-end gap-4">
-                                        <Button 
-                                            variant="ghost" 
-                                            onClick={() => setDialogOpen(false)}
-                                            className="h-12 rounded-none border-white/10 font-black uppercase italic tracking-tighter px-8 hover:bg-white/5"
-                                        >
-                                            {tCommon("cancel")}
-                                        </Button>
-                                        <Button 
-                                            onClick={handleInvite} 
-                                            disabled={isInviting || !email.trim()}
-                                            className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/save overflow-hidden"
-                                        >
-                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
-                                            <span className="relative z-10 flex items-center gap-2">
-                                                {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-secondary-foreground" /> : <Mail className="h-4 w-4" />}
-                                                {t("send_invite")}
-                                            </span>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </DialogContent>
-                        )}
-                    </Dialog>
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="flex flex-col gap-1">
+                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                        <Users className="h-5 w-5 text-secondary" />
+                        {t("title")}
+                    </h3>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("description")}</p>
                 </div>
 
+                <Dialog open={isPro && dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button 
+                            size="sm" 
+                            disabled={!isPro}
+                            onClick={() => !isPro && togglePayment?.()}
+                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/btn overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                            <span className="relative z-10 flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                {t("invite")}
+                            </span>
+                        </Button>
+                    </DialogTrigger>
+                    {isPro && (
+                        <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-white/5 rounded-none p-0 overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
+                            <DialogHeader className="p-8 pb-4">
+                                <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                                    <Mail className="h-8 w-8 text-secondary" />
+                                    {t("invite_title")}
+                                </DialogTitle>
+                                <DialogDescription className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 pt-2">
+                                    {t("invite_desc")}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="px-8 py-6 space-y-6">
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
+                                    <Input
+                                        type="email"
+                                        placeholder="collaborator@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-4">
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => setDialogOpen(false)}
+                                        className="h-12 rounded-none border-white/10 font-black uppercase italic tracking-tighter px-8 hover:bg-white/5"
+                                    >
+                                        {tCommon("cancel")}
+                                    </Button>
+                                    <Button 
+                                        onClick={handleInvite} 
+                                        disabled={isInviting || !email.trim()}
+                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/save overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
+                                        <span className="relative z-10 flex items-center gap-2">
+                                            {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-secondary-foreground" /> : <Mail className="h-4 w-4" />}
+                                            {t("send_invite")}
+                                        </span>
+                                    </Button>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    )}
+                </Dialog>
+            </div>
+
+            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
+                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                
+                <div className="relative z-10 space-y-6">
+
                 {!isPro && (
-                    <div className="p-6 bg-secondary/5 border border-secondary/20 relative overflow-hidden group/upsell">
-                        <div className="absolute right-0 top-0 w-24 h-24 bg-secondary/10 rotate-12 translate-x-12 -translate-y-12 transition-transform group-hover/upsell:scale-110" />
+                    <div className="p-4 bg-secondary/[0.03] border border-secondary/10 relative overflow-hidden group/upsell">
                         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                             <div className="space-y-1">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary">{t("title")} (PRO)</h4>
-                                <p className="text-sm font-black uppercase italic tracking-tight text-foreground/60 max-w-sm">
-                                    Collaborate with your team to manage this tournament.
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/80">{t("title")} (PRO)</h4>
+                                <p className="text-xs font-medium text-muted-foreground/60 max-w-sm">
+                                    {t("upgrade_desc") || "Collaborate with your team to manage this tournament."}
                                 </p>
                             </div>
                             <Button
                                 onClick={togglePayment}
-                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/upbtn overflow-hidden"
+                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/upbtn overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center gap-2">
@@ -212,10 +212,10 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                         </div>
                     ) : collaborators.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center border border-white/5 bg-white/[0.02]">
-                            <div className="h-16 w-16 bg-white/5 flex items-center justify-center mb-6 relative group/icon">
+                        <div className="flex flex-col items-center justify-center py-16 text-center border border-white/5 bg-background/50">
+                            <div className="h-16 w-16 bg-muted/20 flex items-center justify-center mb-6 relative group/icon">
                                 <div className="absolute inset-0 bg-secondary/10 scale-0 group-hover/icon:scale-100 transition-transform" />
-                                <Users className="h-8 w-8 text-muted-foreground/30 relative z-10" />
+                                <Users className="h-8 w-8 text-secondary/40 relative z-10" />
                             </div>
                             <h3 className="text-xl font-black uppercase italic tracking-tighter text-muted-foreground/40">{t("no_collaborators")}</h3>
                         </div>
@@ -224,10 +224,10 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             {collaborators.map((collab) => (
                                 <div
                                     key={collab.id}
-                                    className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors group/item"
+                                    className="flex items-center justify-between p-4 bg-muted/20 border border-white/5 hover:bg-muted/30 transition-colors group/item"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-white/5 flex items-center justify-center group-hover/item:bg-secondary/10 transition-colors">
+                                        <div className="w-10 h-10 bg-muted/20 flex items-center justify-center group-hover/item:bg-secondary/10 transition-colors">
                                             {collab.status === 'accepted' ? (
                                                 <UserCheck className="h-5 w-5 text-secondary" />
                                             ) : (
@@ -237,7 +237,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                         <div>
                                             <div className="flex items-center gap-3">
                                                 <span className="text-sm font-black uppercase italic tracking-tight text-foreground">{collab.email}</span>
-                                                <Badge variant="outline" className="rounded-none border-white/10 bg-white/5 text-[9px] font-black uppercase italic tracking-widest px-2 py-0 text-muted-foreground/60">
+                                                <Badge variant="outline" className="rounded-none border-secondary/20 bg-secondary/5 text-[9px] font-black uppercase italic tracking-widest px-2 py-0 text-secondary/70">
                                                     {collab.role}
                                                 </Badge>
                                             </div>
@@ -290,6 +290,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+            </div>
         </div>
     );
 }

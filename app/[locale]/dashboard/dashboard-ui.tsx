@@ -74,14 +74,14 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
 
     if (mode === 'team') {
         return (
-            <div className="flex flex-col gap-6">
-                <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-6">
+            <div className="flex flex-col gap-4 md:gap-6">
+                <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
                     <div>
-                        <h1 className="text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
-                            {tTeam("my_teams") || "My Teams"}
+                        <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
+                            {tTeam("dashboard")}
                         </h1>
-                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
-                            {tTeam("my_teams_desc")}
+                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                            {tTeam("dashboard_desc")}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -89,8 +89,8 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                     </div>
                 </div>
 
-                <div className="grid gap-3 grid-cols-3 md:gap-6 md:grid-cols-3">
-                    <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+                <div className="grid gap-4 grid-cols-3 md:gap-6 md:grid-cols-3">
+                    <Card className="border border-border bg-card shadow-none py-2 md:py-6 overflow-hidden relative group transition-all hover:border-secondary/50">
                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                         <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -107,7 +107,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             </p>
                         </CardContent>
                     </Card>
-                    <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-primary/50">
+                    <Card className="border border-border bg-card shadow-none py-2 md:py-6 overflow-hidden relative group transition-all hover:border-primary/50">
                         <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
                         <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -124,7 +124,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             </p>
                         </CardContent>
                     </Card>
-                    <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-orange-500/50">
+                    <Card className="border border-border bg-card shadow-none py-2 md:py-6 overflow-hidden relative group transition-all hover:border-orange-500/50">
                         <div className="absolute top-0 left-0 w-1 h-full bg-orange-500/60" />
                         <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-orange-500/5 rotate-12 transition-transform group-hover:scale-110" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -143,10 +143,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                     </Card>
                 </div>
 
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b-4 border-secondary/20 pb-6">
-                        <h2 className="text-2xl font-bold tracking-tight uppercase italic leading-none">{t("my_teams")}</h2>
-                    </div>
+                <div className="space-y-4 md:space-y-6">
                     {(!teams || teams.length === 0) ? (
                         <EmptyState
                             type="team"
@@ -154,58 +151,53 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             tournaments={tournaments.map(t => ({ id: t.id, name: t.name }))}
                         />
                     ) : (
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {teams.slice(0, 3).map((team) => (
-                                <Card key={team.id} className="flex flex-col bg-card border border-border transition-all hover:border-secondary/50 group overflow-hidden relative shadow-lg">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                                    <CardHeader className="pb-4 pt-6 relative z-10">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-4 overflow-hidden">
-                                                <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                    <AvatarImage src={team.logo_url} alt={team.name} className="object-contain" />
-                                                    <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black italic">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="grid gap-1">
-                                                    <CardTitle className="text-lg font-black leading-none tracking-tight uppercase italic group-hover:text-secondary transition-colors truncate">
-                                                        {team.name}
-                                                    </CardTitle>
-                                                    <div className="flex items-center gap-2">
-                                                        {team.tournament ? (
-                                                            <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase italic rounded-none shrink-0">
-                                                                {tCommon("active")}
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase italic rounded-none shrink-0 opacity-70">
-                                                                {tTeam("unassigned_badge")}
-                                                            </Badge>
-                                                        )}
+                                <Link key={team.id} href={`/${(mode as string) === 'organizer' ? 'organizer/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
+                                    <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-secondary/50 overflow-hidden relative shadow-lg cursor-pointer">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                                        <CardHeader className="pt-4 md:pt-6 relative z-10">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
+                                                    <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
+                                                        <AvatarImage src={team.logo_url} alt={team.name} className="object-contain" />
+                                                        <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black italic">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="grid gap-1">
+                                                        <CardTitle className="text-lg font-black leading-none tracking-tight uppercase italic group-hover:text-secondary transition-colors truncate">
+                                                            {team.name}
+                                                        </CardTitle>
+                                                        <div className="flex items-center gap-2">
+                                                            {team.tournament ? (
+                                                                <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase italic rounded-none shrink-0">
+                                                                    {tCommon("active")}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase italic rounded-none shrink-0 opacity-70">
+                                                                    {tTeam("unassigned_badge")}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="flex-1 pb-6 pt-2 text-sm relative z-10">
-                                        <div className="grid gap-4">
-                                            <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2 border-l-2 border-secondary/30">
-                                                <Trophy className="h-3.5 w-3.5 text-secondary shadow-[0_0_10px_rgba(0,196,154,0.3)]" />
-                                                <span className="truncate uppercase tracking-tight">
-                                                    {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
-                                                </span>
+                                        </CardHeader>
+                                        <CardContent className="pb-4 md:pb-6 text-sm relative z-10">
+                                            <div className="grid gap-4">
+                                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2 border-l-2 border-secondary/30">
+                                                    <Trophy className="h-3.5 w-3.5 text-secondary shadow-[0_0_10px_rgba(0,196,154,0.3)]" />
+                                                    <span className="truncate uppercase tracking-tight">
+                                                        {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 italic leading-relaxed">
+                                                    {team.description || tTeam("no_description")}
+                                                </p>
                                             </div>
-                                            <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 italic leading-relaxed">
-                                                {team.description || tTeam("no_description")}
-                                            </p>
-                                        </div>
-                                    </CardContent>
-                                    <CardFooter className="p-0 border-t border-border mt-2 bg-muted/5 group-hover:bg-muted/10 transition-all">
-                                        <Button className="w-full rounded-none h-12 font-black uppercase italic tracking-wider text-xs hover:bg-secondary hover:text-secondary-foreground transition-all" asChild variant="ghost">
-                                            <Link href={`/${(mode as string) === 'organizer' ? 'organizer/teams' : 'manager/my-teams'}/${team.id}`}>
-                                                {tCommon("manage")}
-                                            </Link>
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
                             ))}
                             {teams.length > 3 && (
                                 <Link
@@ -230,11 +222,11 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
     }
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-6">
+        <div className="flex flex-col gap-4 md:gap-6">
+            <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-5xl font-bold tracking-[calc(-0.05em)] uppercase italic leading-none">{t("title")}</h1>
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">{t("title")}</h1>
+                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
                         {t("welcome")}
                     </p>
                 </div>
@@ -252,12 +244,12 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
             {!hasTournaments ? (
                 <EmptyState isPro={isPro} />
             ) : (
-                <div className="space-y-12">
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b-4 border-secondary/20 pb-6">
-                            <h2 className="text-2xl font-bold tracking-tight uppercase italic leading-none">{t("my_tournaments")}</h2>
+                <div>
+                    <div className="space-y-4 md:space-y-6">
+                        <div className="flex items-center justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
+                            <h2 className="text-xl md:text-2xl font-bold tracking-tight uppercase italic leading-none">{t("my_tournaments")}</h2>
                         </div>
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {recentTournaments.map((tournament: any) => (
                                 <TournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
                             ))}

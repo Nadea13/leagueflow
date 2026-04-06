@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import { Plus, Trophy } from "lucide-react";
 import { createTournament } from "@/app/[locale]/dashboard/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,70 +47,87 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
         }
     }, [state.success, open]);
 
+    const labelStyle = "text-[10px] font-black uppercase italic tracking-widest text-secondary";
+    const inputStyle = "bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter";
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="gap-2">
+                <Button className="sm:gap-2 h-8 w-8 md:h-full md:w-full shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:shadow-[0_0_30px_rgba(0,196,154,0.4)] transition-all">
                     <Plus className="h-4 w-4" />
-                    {t("create_button")}
+                    <span className="hidden sm:inline">{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{t("create_title")}</DialogTitle>
-                    <DialogDescription>
-                        {t("create_desc")}
-                    </DialogDescription>
-                </DialogHeader>
-                <form action={formAction} className="space-y-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="name">{t("name")}</Label>
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col bg-background border-border rounded-none p-0 shadow-2xl">
+                {/* Premium Header */}
+                <div className="bg-gradient-to-r from-secondary/20 to-background p-6 border-b border-border relative shrink-0">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                    <DialogHeader>
+                        <div className="flex items-center gap-3 mb-1">
+                            <Trophy className="h-5 w-5 text-secondary" />
+                            <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-foreground">
+                                {t("create_title")}
+                            </DialogTitle>
+                        </div>
+                        <DialogDescription className="text-muted-foreground font-medium text-xs">
+                            {t("create_desc")}
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+
+                <form action={formAction} className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                    <div className="space-y-3">
+                        <Label htmlFor="name" className={labelStyle}>
+                            {t("name")}
+                        </Label>
                         <Input
                             id="name"
                             name="name"
                             placeholder={t("name_placeholder")}
+                            className={inputStyle}
                             required
                         />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="format">{t("format")}</Label>
+                    <div className="space-y-3">
+                        <Label htmlFor="format" className={labelStyle}>{t("format")}</Label>
                         <Select
                             name="format"
                             defaultValue="league"
                             onValueChange={(v) => setFormat(v)}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
                                 <SelectValue placeholder={t("select_format")} />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="league">{tFormat("league")}</SelectItem>
-                                <SelectItem value="league_ha">{tFormat("league_ha")}</SelectItem>
-                                <SelectItem value="knockout">{tFormat("knockout")}</SelectItem>
-                                <SelectItem value="group_knockout" disabled={!isPro}>
+                            <SelectContent className="rounded-none border-border">
+                                <SelectItem value="league" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">{tFormat("league")}</SelectItem>
+                                <SelectItem value="league_ha" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
+                                <SelectItem value="knockout" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
+                                <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
                                     {tFormat("group_knockout")} {!isPro && "(PRO)"}
                                 </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="number_of_pitches">{t("pitches")}</Label>
+                    <div className="grid grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <Label htmlFor="number_of_pitches" className={labelStyle}>{t("pitches")}</Label>
                             <Input
                                 id="number_of_pitches"
                                 name="number_of_pitches"
                                 type="number"
                                 defaultValue={1}
                                 min={1}
+                                className={inputStyle}
                                 required
                             />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="max_teams" className="flex items-center justify-between">
+                        <div className="space-y-3">
+                            <Label htmlFor="max_teams" className={`flex items-center justify-between ${labelStyle}`}>
                                 {t("max_teams")}
                                 {!isPro && (
-                                    <span className="text-[10px] text-primary font-bold uppercase tracking-tighter bg-primary/10 px-1 rounded">
+                                    <span className="text-[10px] text-primary font-bold uppercase tracking-tighter bg-primary/10 px-1 rounded not-italic">
                                         Max 8
                                     </span>
                                 )}
@@ -122,61 +139,64 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                                 defaultValue={8}
                                 min={2}
                                 max={isPro ? 128 : 8}
+                                className={inputStyle}
                                 required
                             />
                         </div>
                     </div>
 
                     {format === "group_knockout" && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="advancing_teams">{t("advancing_teams")}</Label>
+                        <div className="space-y-3">
+                            <Label htmlFor="advancing_teams" className={labelStyle}>{t("advancing_teams")}</Label>
                             <Select name="advancing_teams" defaultValue="2">
-                                <SelectTrigger>
+                                <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1">1</SelectItem>
-                                    <SelectItem value="2">2</SelectItem>
+                                <SelectContent className="rounded-none border-border">
+                                    <SelectItem value="1" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs">1</SelectItem>
+                                    <SelectItem value="2" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs">2</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="start_date">{t("start_date")}</Label>
-                            <Input id="start_date" name="start_date" type="date" required />
+                    <div className="grid grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <Label htmlFor="start_date" className={labelStyle}>{t("start_date")}</Label>
+                            <Input id="start_date" name="start_date" type="date" className={inputStyle} required />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="end_date">{t("end_date")}</Label>
-                            <Input id="end_date" name="end_date" type="date" required />
+                        <div className="space-y-3">
+                            <Label htmlFor="end_date" className={labelStyle}>{t("end_date")}</Label>
+                            <Input id="end_date" name="end_date" type="date" className={inputStyle} required />
                         </div>
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="document_deadline">{t("document_deadline")}</Label>
-                        <Input id="document_deadline" name="document_deadline" type="date" required />
+                    <div className="space-y-3">
+                        <Label htmlFor="document_deadline" className={labelStyle}>{t("document_deadline")}</Label>
+                        <Input id="document_deadline" name="document_deadline" type="date" className={inputStyle} required />
                     </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="description">{t("description")}</Label>
-                        <Textarea 
-                            id="description" 
-                            name="description" 
+                    <div className="space-y-3">
+                        <Label htmlFor="description" className={labelStyle}>{t("description")}</Label>
+                        <Textarea
+                            id="description"
+                            name="description"
                             placeholder={t("description_placeholder")}
-                            className="min-h-[100px] resize-none"
+                            className="min-h-[100px] bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm p-4 w-full"
                         />
                     </div>
 
                     {state.error && (
-                        <p className="text-sm font-medium text-destructive">{state.error}</p>
+                        <div className="text-xs font-bold text-red-500 bg-red-500/10 p-4 border-l-4 border-red-500 uppercase italic">
+                            {state.error}
+                        </div>
                     )}
 
-                    <DialogFooter className="pt-4">
-                        <SubmitButton className="w-full">
+                    <div>
+                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-secondary/90 transition-all rounded-none bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter">
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>
-                    </DialogFooter>
+                    </div>
                 </form>
             </DialogContent>
         </Dialog>

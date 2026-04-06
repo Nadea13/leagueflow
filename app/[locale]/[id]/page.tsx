@@ -1,20 +1,11 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
-import { Trophy, Users, Calendar, Goal } from "lucide-react";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StandingsTable } from "@/components/tournaments/standings-table";
-import { PublicMatchList } from "@/components/tournaments/public-match-list";
-import { ShareButton } from "@/components/tournaments/share-button";
-import { PrintButton } from "@/components/tournaments/print-button";
-import { GroupStandings } from "@/components/tournaments/group-standings";
-import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
-import { Match, MatchEvent } from "@/types/index";
-import { calculateStandings } from "@/utils/standings";
+import { Match, MatchEvent, Goal } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
+import { PublicTournamentView } from "@/components/tournaments/public-tournament-view";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
@@ -30,8 +21,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         },
     };
 }
-
-import { PublicTournamentView } from "@/components/tournaments/public-tournament-view";
 
 export default async function PublicViewPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -88,6 +77,26 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         player_name: event.players?.name || "Unknown"
     })) || [];
 
+    // 5. Fetch Goals for Stats (Admin Client)
+    let initialGoals: Goal[] = [];
+    if (matchIds.length > 0) {
+        const { data: goalsData } = await adminSupa
+            .from("goals")
+            .select("*")
+            .in("match_id", matchIds);
+        initialGoals = (goalsData as Goal[]) || [];
+    }
+
+    // 6. Fetch Players for Stats (Admin Client)
+    let initialPlayers: any[] = [];
+    if (teams && teams.length > 0) {
+        const { data: playersData } = await adminSupa
+            .from("players")
+            .select("id, name, team_id")
+            .in("team_id", teams.map(t => t.id));
+        initialPlayers = playersData || [];
+    }
+
     const t = await getTranslations("PublicView");
 
     return (
@@ -104,7 +113,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                             <path d="M137.211 24.5986C138.191 27.5371 137.739 28.1896 136.565 30.983C136.234 31.7759 135.904 32.5688 135.563 33.3857C135.2 34.2315 134.836 35.0773 134.461 35.9486C133.908 37.2513 133.908 37.2513 133.343 38.5803C119.694 70.3639 98.4172 99.4369 70.8115 120.599C69.8872 121.334 68.9644 122.072 68.0427 122.811C53.7988 134.199 53.7988 134.199 50.8115 134.199C50.2508 132.803 49.7033 131.402 49.1615 129.999C48.8552 129.219 48.5489 128.439 48.2334 127.636C47.3033 124.29 47.3033 124.29 48.4115 122.199C50.0305 120.986 51.5772 119.968 53.3115 118.949C72.4474 107.16 90.9969 91.6468 105.002 74.0486C106.187 72.5746 107.402 71.1232 108.646 69.6986C120.381 56.2213 129.292 40.5486 137.211 24.5986Z" fill="#00C49A" />
                             <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
                         </svg>
-                        <span>LeagueFlow</span>
+                        <span className="font-black text-foreground text-xl italic tracking-tighter">LeagueFlow</span>
                     </Link>
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{t("public_view")}</span>
@@ -118,6 +127,8 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                 initialTeams={teams || []}
                 initialMatches={matches as Match[] || []}
                 initialEvents={allEvents as MatchEvent[]}
+                initialGoals={initialGoals}
+                initialPlayers={initialPlayers}
             />
         </div>
     );

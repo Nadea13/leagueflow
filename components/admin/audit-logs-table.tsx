@@ -73,62 +73,102 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
     const suspiciousLogs = initialLogs.filter(l => l.action.includes('DELETE') || l.action.includes('REMOVE')).length;
 
     const getActionColor = (action: string) => {
-        if (action.includes("CREATE") || action.includes("ADD") || action.includes("PAYMENT")) return "default"; // typically black/primary
-        if (action.includes("UPDATE") || action.includes("INVITE")) return "secondary"; // gray
-        if (action.includes("DELETE") || action.includes("REMOVE")) return "destructive"; // red
+        if (action.includes("CREATE") || action.includes("ADD") || action.includes("PAYMENT")) return "default";
+        if (action.includes("UPDATE") || action.includes("INVITE")) return "secondary";
+        if (action.includes("DELETE") || action.includes("REMOVE")) return "destructive";
         return "outline";
     };
 
     return (
         <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("total_activity")}</CardTitle>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-3 grid-cols-2 md:gap-4 lg:grid-cols-4">
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("total_activity")}
+                        </CardTitle>
+                        <FileText className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalLogs}</div>
-                        <p className="text-xs text-muted-foreground">{t("recorded_actions")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            {totalLogs}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-secondary/40" />
+                            {t("recorded_actions")}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("tournament_actions")}</CardTitle>
-                        <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-primary/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("tournament_actions")}
+                        </CardTitle>
+                        <ShieldAlert className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{tournamentLogs}</div>
-                        <p className="text-xs text-muted-foreground">{t("creates_updates_deletes")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            {tournamentLogs}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-primary/40" />
+                            {t("creates_updates_deletes")}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("payments")}</CardTitle>
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-secondary/30">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary/40" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("payments")}
+                        </CardTitle>
+                        <CreditCard className="h-4 w-4 text-secondary/70 opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{paymentLogs}</div>
-                        <p className="text-xs text-muted-foreground">{t("transactions_recorded")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            {paymentLogs}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-secondary/30" />
+                            {t("transactions_recorded")}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("critical_actions")}</CardTitle>
-                        <ShieldAlert className="h-4 w-4 text-destructive" />
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-destructive/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-destructive" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-destructive/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("critical_actions")}
+                        </CardTitle>
+                        <ShieldAlert className="h-4 w-4 text-destructive opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-destructive">{suspiciousLogs}</div>
-                        <p className="text-xs text-muted-foreground">{t("deletions_removals")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none text-destructive">
+                            {suspiciousLogs}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-destructive/40" />
+                            {t("deletions_removals")}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
 
             <Tabs defaultValue="system" className="w-full">
-                <TabsList className="mb-4">
-                    <TabsTrigger value="system">System Logs</TabsTrigger>
-                    <TabsTrigger value="auth">Auth Logs</TabsTrigger>
+                <TabsList className="mb-4 bg-muted/30 border border-border rounded-none p-1 h-auto">
+                    <TabsTrigger value="system" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                        System Logs
+                    </TabsTrigger>
+                    <TabsTrigger value="auth" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                        Auth Logs
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="system" className="space-y-4">
@@ -166,16 +206,16 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                     </div>
 
                     {/* Table */}
-                    <div className="rounded-none border bg-card">
+                    <div className="rounded-none border border-border bg-card overflow-hidden">
                         <Table>
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[180px]">{t("time")}</TableHead>
-                                    <TableHead className="w-[180px]">{t("user")}</TableHead>
-                                    <TableHead className="w-[120px]">IP Address</TableHead>
-                                    <TableHead className="w-[130px]">{t("action")}</TableHead>
-                                    <TableHead className="w-[130px]">{t("target")}</TableHead>
-                                    <TableHead>{t("details")}</TableHead>
+                                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                                    <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("time")}</TableHead>
+                                    <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                                    <TableHead className="w-[120px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">IP Address</TableHead>
+                                    <TableHead className="w-[130px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("action")}</TableHead>
+                                    <TableHead className="w-[130px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("target")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -187,14 +227,14 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                     </TableRow>
                                 ) : (
                                     paginatedSystemLogs.map((log) => (
-                                        <TableRow key={log.id}>
+                                        <TableRow key={log.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                             <TableCell className="font-medium text-xs text-muted-foreground whitespace-nowrap">
                                                 {formatDate(log.created_at, "d MMM yyyy, HH:mm", locale)}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                                                        <User className="h-3 w-3 text-primary" />
+                                                    <div className="h-6 w-6 bg-secondary/10 flex items-center justify-center border border-secondary/20">
+                                                        <User className="h-3 w-3 text-secondary" />
                                                     </div>
                                                     <span className="text-sm truncate max-w-[120px]" title={log.user?.email || 'Unknown'}>
                                                         {log.user?.email || t("system")}
@@ -205,20 +245,20 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                                 {log.ip_address || '-'}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={getActionColor(log.action)} className="text-[10px] px-1 py-0 h-4">
+                                                <Badge variant={getActionColor(log.action)} className="text-[10px] px-1.5 py-0.5 h-auto rounded-none font-black uppercase">
                                                     {log.action}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="text-sm font-medium capitalize">{log.target_type}</span>
+                                                    <span className="text-sm font-bold capitalize">{log.target_type}</span>
                                                     <span className="text-xs text-muted-foreground font-mono truncate max-w-[100px]">
                                                         {log.target_id.split('-')[0]}
                                                     </span>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <code className="relative bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xs text-muted-foreground block max-w-[300px] truncate" title={JSON.stringify(log.details, null, 2)}>
+                                                <code className="relative bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground block max-w-[300px] truncate border border-border/50" title={JSON.stringify(log.details, null, 2)}>
                                                     {JSON.stringify(log.details)}
                                                 </code>
                                             </TableCell>
@@ -231,22 +271,24 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
 
                     {filteredLogs.length > 0 && (
                         <div className="flex items-center justify-between py-2 mt-2">
-                            <div className="text-sm text-muted-foreground hidden sm:block">
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
                                 Showing {(systemPage - 1) * itemsPerPage + 1} to {Math.min(systemPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length} entries
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    className="rounded-none text-[10px] font-black uppercase"
                                     onClick={() => setSystemPage(p => Math.max(1, p - 1))}
                                     disabled={systemPage === 1}
                                 >
                                     Previous
                                 </Button>
-                                <span className="text-sm text-muted-foreground px-2">Page {systemPage} of {totalSystemPages}</span>
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {systemPage} of {totalSystemPages}</span>
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    className="rounded-none text-[10px] font-black uppercase"
                                     onClick={() => setSystemPage(p => Math.min(totalSystemPages, p + 1))}
                                     disabled={systemPage === totalSystemPages}
                                 >
@@ -258,13 +300,13 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                 </TabsContent>
 
                 <TabsContent value="auth" className="space-y-4">
-                    <div className="rounded-none border bg-card">
+                    <div className="rounded-none border border-border bg-card overflow-hidden">
                         <Table>
                             <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[180px]">{t("time")}</TableHead>
-                                    <TableHead className="w-[200px]">IP Address</TableHead>
-                                    <TableHead>Event Payload</TableHead>
+                                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                                    <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("time")}</TableHead>
+                                    <TableHead className="w-[200px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">IP Address</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">Event Payload</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -276,15 +318,15 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                     </TableRow>
                                 ) : (
                                     paginatedAuthLogs.map((log: any) => (
-                                        <TableRow key={log.id}>
+                                        <TableRow key={log.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                             <TableCell className="font-medium text-xs text-muted-foreground whitespace-nowrap">
                                                 {formatDate(log.created_at, "d MMM yyyy, HH:mm", locale)}
                                             </TableCell>
-                                            <TableCell className="font-mono text-xs">
+                                            <TableCell className="font-mono text-xs text-muted-foreground">
                                                 {log.ip_address || 'Unknown'}
                                             </TableCell>
                                             <TableCell>
-                                                <code className="relative bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xs text-muted-foreground block max-w-full overflow-x-auto whitespace-pre-wrap" title={JSON.stringify(log.payload, null, 2)}>
+                                                <code className="relative bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground block max-w-full overflow-x-auto whitespace-pre-wrap border border-border/50" title={JSON.stringify(log.payload, null, 2)}>
                                                     {log.payload ? JSON.stringify(log.payload) : '{}'}
                                                 </code>
                                             </TableCell>
@@ -297,22 +339,24 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
 
                     {authLogs.length > 0 && (
                         <div className="flex items-center justify-between py-2 mt-2">
-                            <div className="text-sm text-muted-foreground hidden sm:block">
+                            <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
                                 Showing {(authPage - 1) * itemsPerPage + 1} to {Math.min(authPage * itemsPerPage, authLogs.length)} of {authLogs.length} entries
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    className="rounded-none text-[10px] font-black uppercase"
                                     onClick={() => setAuthPage(p => Math.max(1, p - 1))}
                                     disabled={authPage === 1}
                                 >
                                     Previous
                                 </Button>
-                                <span className="text-sm text-muted-foreground px-2">Page {authPage} of {totalAuthPages}</span>
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {authPage} of {totalAuthPages}</span>
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    className="rounded-none text-[10px] font-black uppercase"
                                     onClick={() => setAuthPage(p => Math.min(totalAuthPages, p + 1))}
                                     disabled={authPage === totalAuthPages}
                                 >

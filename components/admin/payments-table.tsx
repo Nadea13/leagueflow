@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Payment } from "@/types";
 import { formatDate } from "@/lib/date";
 import { useLocale } from "next-intl";
-import { Search, CreditCard, Filter, ArrowUpRight, Check, X } from "lucide-react";
+import { Search, CreditCard, Filter, ArrowUpRight, Check, X, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -114,9 +114,9 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'success': return "default"; // black/primary
-            case 'pending': return "secondary"; // gray
-            case 'failed': return "destructive"; // red
+            case 'success': return "default";
+            case 'pending': return "secondary";
+            case 'failed': return "destructive";
             default: return "outline";
         }
     };
@@ -124,35 +124,62 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
     return (
         <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("total_revenue")}</CardTitle>
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-3 grid-cols-3 md:gap-4">
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("total_revenue")}
+                        </CardTitle>
+                        <CreditCard className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">฿{totalAmount.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground">{t("all_time_earnings")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            ฿{totalAmount.toLocaleString()}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-secondary/40" />
+                            {t("all_time_earnings")}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("recent_transactions")}</CardTitle>
-                        <Check className="h-4 w-4 text-green-500" />
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-emerald-500/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-emerald-500/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("recent_transactions")}
+                        </CardTitle>
+                        <Check className="h-4 w-4 text-emerald-500 opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{successfulPayments}</div>
-                        <p className="text-xs text-muted-foreground">{t("transactions_recorded")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            {successfulPayments}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-emerald-500/40" />
+                            {t("transactions_recorded")}
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{t("total_activity")}</CardTitle>
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-primary/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
+                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            {t("total_activity")}
+                        </CardTitle>
+                        <ArrowUpRight className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{initialPayments.length}</div>
-                        <p className="text-xs text-muted-foreground">{t("recorded_actions")}</p>
+                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            {initialPayments.length}
+                        </div>
+                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                            <span className="w-2 h-[1px] bg-primary/40" />
+                            {t("recorded_actions")}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -191,66 +218,79 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             </div>
 
             {/* Table */}
-            <div className="rounded-none border bg-card">
+            <div className="rounded-none border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[180px]">{t("date")}</TableHead>
-                            <TableHead>{t("user")}</TableHead>
-                            <TableHead>{t("details")}</TableHead>
-                            <TableHead>PG ID</TableHead>
-                            <TableHead>{t("amount")}</TableHead>
-                            <TableHead className="text-right">{t("status")}</TableHead>
-                            <TableHead className="text-right">{t("actions", { defaultValue: "Actions" })}</TableHead>
+                        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("date")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">PG ID</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("amount")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("actions", { defaultValue: "Actions" })}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredPayments.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                                     {t("no_results")}
                                 </TableCell>
                             </TableRow>
                         ) : (
                             paginatedPayments.map((payment) => (
-                                <TableRow key={payment.id}>
-                                    <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                                <TableRow key={payment.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
+                                    <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                                         {formatDate(payment.created_at, "d MMM yyyy, HH:mm", locale)}
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">{payment.user?.email || t("unknown")}</span>
-                                            <span className="text-xs text-muted-foreground">{payment.user?.full_name}</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-7 w-7 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
+                                                <User className="h-3.5 w-3.5 text-secondary" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="font-bold text-sm truncate">{payment.user?.email || t("unknown")}</span>
+                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{payment.user?.full_name}</span>
+                                            </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="text-sm font-medium capitalize">
+                                            <span className="text-sm font-bold capitalize">
                                                 {payment.plan ? t("plan_label", { plan: payment.plan }) : t("one_time")}
                                             </span>
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                                                 {payment.tournament_id ? t("tournament_upgrade") : t("subscription")}
                                             </span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="font-mono text-xs text-muted-foreground" title={payment.provider_id || ''}>
+                                        <code className="font-mono text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 border border-border/50" title={payment.provider_id || ''}>
                                             {payment.provider_id ?
                                                 (payment.provider_id.length > 20 ? payment.provider_id.substring(0, 20) + '...' : payment.provider_id)
                                                 : '-'}
-                                        </span>
+                                        </code>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="font-bold">฿{payment.amount.toLocaleString()}</span>
+                                        <span className="font-black text-sm italic">฿{payment.amount.toLocaleString()}</span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Badge variant={getStatusColor(payment.status)}>
+                                        <Badge
+                                            variant={getStatusColor(payment.status)}
+                                            className="rounded-none text-[10px] font-black uppercase"
+                                        >
                                             {payment.status}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         {payment.status === 'pending' && (
-                                            <Button variant="outline" size="sm" onClick={() => handleVerify(payment)}>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleVerify(payment)}
+                                                className="rounded-none text-[10px] font-black uppercase"
+                                            >
                                                 Verify
                                             </Button>
                                         )}
@@ -264,22 +304,24 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
 
             {filteredPayments.length > 0 && (
                 <div className="flex items-center justify-between py-2 mt-2">
-                    <div className="text-sm text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredPayments.length)} of {filteredPayments.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-none text-[10px] font-black uppercase"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-sm text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-none text-[10px] font-black uppercase"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >
@@ -291,47 +333,65 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
 
             {/* Verify Dialog */}
             <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Verify Payment</DialogTitle>
-                        <DialogDescription>
-                            Review the uploaded slip to confirm the payment.
-                        </DialogDescription>
-                    </DialogHeader>
+                <DialogContent className="sm:max-w-[425px] rounded-none border-border p-0 overflow-hidden">
+                    <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground">
+                                Verify Payment
+                            </DialogTitle>
+                            <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
+                                Review the uploaded slip to confirm the payment.
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
 
-                    <div className="py-4">
+                    <div className="px-6 py-6">
                         {selectedPayment?.provider_id ? (
                             <div className="flex justify-center">
-                                {/* Parse Provider ID if it's JSON */}
                                 {(() => {
                                     try {
                                         const parsed = JSON.parse(selectedPayment.provider_id);
-                                        return parsed.url ? <img src={parsed.url} alt="Slip" className="max-h-[400px] object-contain rounded-md" /> : <p>No image available</p>;
+                                        return parsed.url ? <img src={parsed.url} alt="Slip" className="max-h-[400px] object-contain" /> : <p>No image available</p>;
                                     } catch (e) {
-                                        // Legacy: it's not JSON
-                                        return <p className="text-muted-foreground break-all">{selectedPayment.provider_id}</p>;
+                                        return <p className="text-muted-foreground break-all font-mono text-xs">{selectedPayment.provider_id}</p>;
                                     }
                                 })()}
                             </div>
                         ) : (
                             <p className="text-center text-muted-foreground">No slip uploaded for this payment.</p>
                         )}
-                        <div className="mt-4 text-center">
-                            <p className="text-lg font-bold">฿{selectedPayment?.amount.toLocaleString()}</p>
-                            <p className="text-sm text-muted-foreground capitalize">{selectedPayment?.plan}</p>
+                        <div className="mt-6 text-center border-t border-border pt-4">
+                            <p className="text-3xl font-black italic tracking-tighter">฿{selectedPayment?.amount.toLocaleString()}</p>
+                            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground mt-1 capitalize">{selectedPayment?.plan}</p>
                         </div>
                     </div>
 
-                    <DialogFooter className="flex justify-between sm:justify-between w-full">
-                        <Button variant="destructive" onClick={handleReject} disabled={isVerifying}>
+                    <DialogFooter className="flex justify-between sm:justify-between w-full px-6 pb-6">
+                        <Button
+                            variant="destructive"
+                            onClick={handleReject}
+                            disabled={isVerifying}
+                            className="rounded-none text-[10px] font-black uppercase"
+                        >
                             {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Reject
                         </Button>
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setIsVerifyDialogOpen(false)} disabled={isVerifying}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsVerifyDialogOpen(false)}
+                                disabled={isVerifying}
+                                className="rounded-none text-[10px] font-black uppercase"
+                            >
                                 Cancel
                             </Button>
-                            <Button variant="default" onClick={handleApprove} disabled={isVerifying}>
+                            <Button
+                                variant="default"
+                                onClick={handleApprove}
+                                disabled={isVerifying}
+                                className="rounded-none text-[10px] font-black uppercase"
+                            >
                                 {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 Approve
                             </Button>

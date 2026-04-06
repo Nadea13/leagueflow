@@ -27,7 +27,7 @@ export default async function Home() {
   const tLanding = await getTranslations('Landing');
   const tPricing = await getTranslations('Pricing');
   const tBilling = await getTranslations('Billing');
-  
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -45,7 +45,7 @@ export default async function Home() {
               <path d="M137.211 24.5986C138.191 27.5371 137.739 28.1896 136.565 30.983C136.234 31.7759 135.904 32.5688 135.563 33.3857C135.2 34.2315 134.836 35.0773 134.461 35.9486C133.908 37.2513 133.908 37.2513 133.343 38.5803C119.694 70.3639 98.4172 99.4369 70.8115 120.599C69.8872 121.334 68.9644 122.072 68.0427 122.811C53.7988 134.199 53.7988 134.199 50.8115 134.199C50.2508 132.803 49.7033 131.402 49.1615 129.999C48.8552 129.219 48.5489 128.439 48.2334 127.636C47.3033 124.29 47.3033 124.29 48.4115 122.199C50.0305 120.986 51.5772 119.968 53.3115 118.949C72.4474 107.16 90.9969 91.6468 105.002 74.0486C106.187 72.5746 107.402 71.1232 108.646 69.6986C120.381 56.2213 129.292 40.5486 137.211 24.5986Z" fill="#00C49A" />
               <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
             </svg>
-            <span>LeagueFlow</span>
+            <span className="font-black text-foreground text-xl italic tracking-tighter">LeagueFlow</span>
           </Link>
           <div className="flex items-center gap-4">
             {user ? (
@@ -70,26 +70,14 @@ export default async function Home() {
         {/* Results Section */}
         <section id="results" className="py-6">
           <div className="container mx-auto px-4">
-            
             <PublicMatchListHome />
-            
-            <div className="mt-6 text-center pt-6 border-t-2 border-dashed">
-                <h3 className="text-2xl font-bold mb-4">{t('organize_title')}</h3>
-                <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-                    {t('organize_desc')}
-                </p>
-                <Button size="lg" asChild className="rounded-none h-12 px-8">
-                    <Link href={user ? "/dashboard" : "/signup"}>
-                        {tPricing('get_started')} <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                </Button>
-            </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */} <footer className="py-10 border-t" id="pricing">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
+      {/* Footer */}
+      <footer className="py-10 border-t" id="pricing">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
           <div className="flex flex-col items-start gap-4 mb-8 md:mb-0">
             <div className="flex items-center gap-3">
               <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
@@ -100,11 +88,18 @@ export default async function Home() {
                 <path d="M137.211 24.5986C138.191 27.5371 137.739 28.1896 136.565 30.983C136.234 31.7759 135.904 32.5688 135.563 33.3857C135.2 34.2315 134.836 35.0773 134.461 35.9486C133.908 37.2513 133.908 37.2513 133.343 38.5803C119.694 70.3639 98.4172 99.4369 70.8115 120.599C69.8872 121.334 68.9644 122.072 68.0427 122.811C53.7988 134.199 53.7988 134.199 50.8115 134.199C50.2508 132.803 49.7033 131.402 49.1615 129.999C48.8552 129.219 48.5489 128.439 48.2334 127.636C47.3033 124.29 47.3033 124.29 48.4115 122.199C50.0305 120.986 51.5772 119.968 53.3115 118.949C72.4474 107.16 90.9969 91.6468 105.002 74.0486C106.187 72.5746 107.402 71.1232 108.646 69.6986C120.381 56.2213 129.292 40.5486 137.211 24.5986Z" fill="#00C49A" />
                 <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
               </svg>
-              <span className="font-black text-foreground text-xl italic uppercase tracking-tighter">LeagueFlow</span>
+              <span className="font-black text-foreground text-xl italic tracking-tighter">LeagueFlow</span>
             </div>
             <div className="flex flex-col items-start gap-2 ml-1 text-[10px] font-black italic uppercase tracking-[0.2em] text-muted-foreground/60 transition-all">
               <PricingFooter managerPlans={safeManagerPlans} organizerPlans={safeOrganizerPlans} />
               <Link href="#results" className="hover:text-primary transition-colors hover:opacity-100">{t('matches')}</Link>
+            </div>
+            <div>
+              <Button size="lg" asChild className="rounded-none h-12 px-8 font-black uppercase italic tracking-widest text-xs hover:bg-secondary hover:text-secondary-foreground transition-all">
+                <Link href={user ? "/dashboard" : "/signup"}>
+                  {tPricing('get_started')} <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
           <p className="md:self-end text-[10px] font-black italic tracking-[0.2em] opacity-40">

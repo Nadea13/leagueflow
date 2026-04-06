@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
-import { ChevronLeft, Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BarChart3, BookOpen, AlertTriangle, ArrowLeft, ChevronRight, Search, Settings, Users, Bell, Lock, Unlock, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, Plus } from "lucide-react";
+import { ChevronLeft, Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BarChart3, BookOpen, AlertTriangle, ArrowLeft, ChevronRight, Search, Settings, Users, Bell, Lock, Unlock, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, Plus, ClipboardEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/utils/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,8 @@ import { BannedPlayersCard } from "@/components/tournaments/banned-players-card"
 import { AnnouncementsCard } from "@/components/tournaments/announcements-card";
 import { RegistrationsTable } from "@/components/tournaments/registrations-table";
 import { calculatePlayerStats, getBannedPlayers } from "@/utils/player-stats";
+import { RegistrationSettingsCard } from "@/components/tournaments/registration-settings-card";
+
 
 interface TournamentContentProps {
     tournament: any;
@@ -59,6 +62,7 @@ export function TournamentContent({
     const t = useTranslations("Tournament");
     const tCommon = useTranslations("Common");
     const tSettings = useTranslations("Settings");
+    const tRegistrations = useTranslations("Registrations");
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -72,6 +76,11 @@ export function TournamentContent({
     const [goals, setGoals] = useState<Goal[]>(initialGoals);
     const [fixtureView, setFixtureView] = useState<'list' | 'calendar'>('list');
     const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const currentTab = searchParams.get('tab') || 'overview';
 
@@ -212,81 +221,108 @@ export function TournamentContent({
     const playerStats = calculatePlayerStats(matchEvents, allPlayersForStats, null);
     const bannedPlayers = getBannedPlayers(matchEvents, allPlayersForStats, null);
 
+    const registrationUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/register/${id}`
+        : `/register/${id}`;
+
+    const copyRegistrationLink = () => {
+        navigator.clipboard.writeText(registrationUrl);
+        toast({
+            title: tCommon("copied"),
+            description: tCommon("copied_desc"),
+            className: "rounded-none border-secondary font-bold uppercase italic"
+        });
+    };
+
     return (
-        <div className="flex flex-col gap-6">
-            {/* Top Navigation & Action Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 border border-border/50 hover:bg-secondary hover:text-black transition-all">
+        <div className="flex flex-col gap-4 md:gap-6">
+            {/* Unified Header Block */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6 relative group">
+                <div className="flex items-start gap-2 md:gap-6 w-full">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        asChild
+                        className="rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border border-border/50 hover:bg-secondary hover:text-black transition-all shadow-lg shadow-black/20"
+                    >
                         <Link href="/dashboard">
-                            <ArrowLeft className="h-5 w-5" />
+                            <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
                         </Link>
                     </Button>
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
-                        <span>{tCommon("tournaments")}</span>
-                        <ChevronRight className="h-3 w-3" />
-                        <span className="text-foreground">{tournament?.name}</span>
+
+                    <div className="flex flex-col flex-1 gap-1 md:gap-2 text-[9px] md:text-[10px] text-muted-foreground/40 min-w-0">
+                        {/* Breadcrumbs */}
+                        <div className="flex items-center gap-2 font-black tracking-[0.2em] flex-wrap">
+                            {/* Metadata Badges */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge variant="outline" className="rounded-none font-black italic text-[9px] border-none text-muted-foreground">
+                                    {tournament?.format?.replace('_', ' ')}
+                                </Badge>
+
+                                <span className="text-[10px] font-black tracking-widest text-secondary italic">
+                                    {teams.length} {tCommon("teams")}
+                                </span>
+
+                                <Badge className={cn(
+                                    "font-black italic border-none px-3 py-1 shadow-lg h-4 md:h-5",
+                                    tournament?.status === 'active' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
+                                    tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
+                                    (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
+                                )}>
+                                    {tSettings(tournament?.status || 'draft')}
+                                </Badge>
+
+                                {isPro && (
+                                    <Badge variant="default" className="h-4 md:h-5 px-3 py-1 font-black tracking-widest bg-primary text-primary-foreground border-none shadow-[0_0_10px_rgba(0,196,154,0.2)]">
+                                        PRO
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Title Section */}
+                        <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                            <h1 className="text-2xl md:text-5xl font-black italic tracking-tighter uppercase leading-[0.9] text-foreground">
+                                {tournament?.name}
+                            </h1>
+                        </div>
+                    </div>
+
+                    <div className="md:hidden shrink-0 pt-1">
+                        <ShareButton tournamentId={id} />
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3 self-end md:self-start pt-2 md:pt-0">
                     <ShareButton tournamentId={id} />
                 </div>
             </div>
 
-            {/* Main Title Area */}
-            <div className="pb-6 border-b-4 border-secondary/20 relative flex flex-wrap items-baseline justify-between gap-4">
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-baseline gap-3">
-                        <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-none text-foreground flex items-baseline gap-3">
-                            {tournament?.name}
-                            {isPro && (
-                                <Badge variant="default" className="text-[10px] h-4 px-1.5 uppercase font-black tracking-widest bg-primary text-primary-foreground border-none">
-                                    PRO
-                                </Badge>
-                            )}
-                            <span className="text-xs font-black uppercase tracking-[0.2em] text-secondary">
-                                {teams.length} {tCommon("teams") || "Teams"}
-                            </span>
-                        </h1>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="rounded-none uppercase font-black italic text-[10px] border-secondary/30">{tournament?.format}</Badge>
-                        <Badge className={cn(
-                            "rounded-none uppercase font-black italic text-[10px] border-none",
-                            tournament?.status === 'active' && "bg-green-600 hover:bg-green-700",
-                            tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600",
-                            (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black"
-                        )}>
-                            {tSettings(tournament?.status || 'draft')}
-                        </Badge>
-                    </div>
-                </div>
-            </div>
-
             {/* Stats Overview */}
-            <TournamentStats teams={teams} matches={matches} goals={goals} />
+            <div className="hidden md:block">
+                <TournamentStats teams={teams} matches={matches} goals={goals} />
+            </div>
 
             {/* Tabs */}
             <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max">
                     <TabsTrigger
                         value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
                     >
                         <Trophy className="h-3.5 w-3.5" />
                         {t("overview")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="teams"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
                     >
                         <Users className="h-3.5 w-3.5" />
                         {t("teams")} ({teams?.length || 0})
                     </TabsTrigger>
                     <TabsTrigger
                         value="fixtures"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
                     >
                         <Calendar className="h-3.5 w-3.5" />
                         {t("fixtures")}
@@ -294,7 +330,7 @@ export function TournamentContent({
                     {userRole === 'admin' && (
                         <TabsTrigger
                             value="settings"
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
                         >
                             <Settings className="h-3.5 w-3.5" />
                             {t("settings")}
@@ -303,48 +339,56 @@ export function TournamentContent({
                 </TabsList>
 
                 {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <TabsContent value="overview" className="space-y-4 md:space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Left Column: Main Tournament Data (Spans 2) */}
-                        <div className="lg:col-span-2 space-y-8">
-                            {/* 0. Tournament Description (Added) */}
+                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
+                            {/* 0. Tournament Description */}
                             {tournament?.description && (
-                                <Card className="bg-card border border-border/40 relative overflow-hidden rounded-none shadow-lg group">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
-                                    <CardHeader className="pb-2 pt-6">
-                                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t("overview")}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div
-                                            className="prose prose-invert prose-sm max-w-none text-muted-foreground/80 font-medium leading-relaxed"
-                                            dangerouslySetInnerHTML={{ __html: tournament.description }}
-                                        />
-                                    </CardContent>
-                                </Card>
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                                            <BookOpen className="h-5 w-5 text-secondary" />
+                                            {t("description")}
+                                        </h2>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("overview")}</p>
+                                    </div>
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all duration-500 p-4 md:p-6 shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                                        <CardContent className="p-0">
+                                            <div
+                                                className="prose prose-invert prose-sm md:prose-base max-w-none text-foreground/70 font-medium leading-relaxed italic"
+                                                dangerouslySetInnerHTML={{ __html: tournament.description }}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                </div>
                             )}
 
                             {/* 1. League Table (For 'league' AND 'league_ha') */}
-                           {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                <Card className="bg-card border border-border/40 relative overflow-hidden rounded-none shadow-lg group">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                                    <CardHeader className="pb-4 pt-6 relative z-10">
-                                        <CardTitle className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                            {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Trophy className="h-5 w-5 text-secondary" />
                                             {t("standings")}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="relative z-10">
-                                        <StandingsTable standings={calculatedStandings} />
-                                    </CardContent>
-                                </Card>
+                                        </h2>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("group_standings_desc") || "League table"}</p>
+                                    </div>
+                                    <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                        <CardContent className="p-0 z-0">
+                                            <StandingsTable standings={calculatedStandings} />
+                                        </CardContent>
+                                    </Card>
+                                </div>
                             )}
 
                             {/* 2. Group Standings (Only for 'group_knockout') */}
                             {tournament?.format === 'group_knockout' && (
-                                <div className="space-y-6">
-                                    <div className="relative z-10">
-                                        <h2 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Trophy className="h-5 w-5 text-secondary" />
                                             {t("group_standings")}
                                         </h2>
@@ -358,9 +402,9 @@ export function TournamentContent({
 
                             {/* 3. Knockout Bracket (For 'knockout' OR 'group_knockout') */}
                             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
-                                <div className="space-y-6">
-                                    <div className="relative z-10">
-                                        <h2 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <GitBranch className="h-5 w-5 text-secondary" />
                                             {t("bracket")}
                                         </h2>
@@ -373,33 +417,37 @@ export function TournamentContent({
                             )}
 
                             {/* 4. Top Scorers */}
-                            <div className="space-y-6">
-                                <div className="relative z-10 flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <h2 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                            <div className="space-y-4 md:space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Award className="h-5 w-5 text-secondary" />
                                             {t("top_scorers")}
                                         </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
+                                        {!isPro && (
+                                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary text-[10px] uppercase font-black italic shadow-[0_0_10px_rgba(0,196,154,0.1)] px-3 py-1 bg-secondary/5">
+                                                {t("pro_badge")}
+                                            </Badge>
+                                        )}
                                     </div>
-                                    {!isPro && (
-                                        <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary text-[10px] uppercase font-black italic shadow-[0_0_10px_rgba(0,196,154,0.1)]">
-                                            {t("pro_badge")}
-                                        </Badge>
-                                    )}
+                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
                                 </div>
 
                                 {isPro ? (
-                                    <div className="relative z-10">
-                                        <TopScorersTable goals={goals} teams={teams} />
-                                    </div>
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                        <CardContent className="p-0 z-0">
+                                            <TopScorersTable goals={goals} teams={teams} />
+                                        </CardContent>
+                                    </Card>
                                 ) : (
-                                    <div className="relative z-10 border border-border/20 bg-muted/5 p-12 rounded-none text-center">
-                                        <div className="space-y-4">
-                                            <p className="text-xs font-bold uppercase text-muted-foreground/60 tracking-wider leading-relaxed max-w-sm mx-auto">
+                                    <div className="relative border border-border/20 bg-muted/5 p-12 rounded-none text-center group overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-muted/20" />
+                                        <div className="space-y-5 relative z-10">
+                                            <p className="text-xs md:text-sm font-bold uppercase text-muted-foreground/60 tracking-wider leading-relaxed max-w-sm mx-auto">
                                                 {t("upsell_pro_required")}
                                             </p>
-                                            <Button variant="ghost" asChild className="rounded-none border border-secondary/20 hover:bg-secondary/10 font-black uppercase italic text-[10px] tracking-widest text-secondary transition-all hover:-translate-y-0.5 shadow-[0_4px_10px_rgba(0,196,154,0.1)]">
+                                            <Button variant="secondary" asChild className="rounded-none font-black uppercase italic text-[11px] tracking-widest px-8 shadow-xl shadow-secondary/20 hover:-translate-y-0.5 transition-all">
                                                 <Link href="/dashboard/billing">{t("upsell_view_plans")}</Link>
                                             </Button>
                                         </div>
@@ -409,149 +457,239 @@ export function TournamentContent({
 
                             {/* 5. Player Stats */}
                             {isPro && playerStats.length > 0 && (
-                                <Card className="bg-card border border-border/40 relative overflow-hidden rounded-none shadow-lg group">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                    <CardHeader className="pb-4 pt-6 relative z-10">
-                                        <CardTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
-                                            <Trophy className="h-5 w-5 text-secondary" />
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <Users className="h-5 w-5 text-secondary" />
                                             {t("player_stats")}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="relative z-10 p-0">
-                                        <div className="overflow-x-auto">
-                                            <PlayerStatsTable stats={playerStats} />
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                        </h2>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Comprehensive performance tracking</p>
+                                    </div>
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors p-0 shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                        <CardContent className="p-0 z-0">
+                                            <div className="overflow-x-auto">
+                                                <PlayerStatsTable stats={playerStats} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
                             )}
                             {/* 6. Banned Players Alert */}
                             <BannedPlayersCard bannedPlayers={bannedPlayers} />
                         </div>
 
-                        {/* Right Column: Announcements (Spans 1) */}
-                        <div className="lg:col-span-1">
-                            <AnnouncementsCard
-                                tournamentId={id}
-                                isEditable={userRole === 'admin' || userRole === 'editor'}
-                            />
+                        {/* Right Column: Sidebar (Actions & Announcements) */}
+                        <div className="lg:col-span-1 space-y-4 md:space-y-6">
+                            {/* Action Bar Header */}
+                            <div className="flex flex-col gap-1">
+                                <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <Settings className="h-5 w-5 text-secondary" />
+                                    {t("actions")}
+                                </h2>
+                                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("actions_desc")}</p>
+                            </div>
+
+                            {/* Public Link Card */}
+                            <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                                <div className="space-y-2 md:space-y-3">
+                                    <div className="space-y-2 md:space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
+                                            <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                        </div>
+                                        <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                            {mounted ? registrationUrl : tCommon("loading") || "..."}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                        <Button
+                                            variant="secondary"
+                                            size="default"
+                                            className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                            onClick={copyRegistrationLink}
+                                        >
+                                            <Copy className="h-4 w-4 mr-2" />
+                                            {tCommon("copy_link")}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="default"
+                                            className="rounded-none w-full border-border hover:bg-white/5 hover:text-white transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                            onClick={() => window.open(registrationUrl, '_blank')}
+                                        >
+                                            <ExternalLink className="h-4 w-4 mr-2" />
+                                            {tCommon("open_link")}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            {/* Announcements Section */}
+                            <div className="space-y-4 md:space-y-6">
+                                <AnnouncementsCard
+                                    tournamentId={id}
+                                    isEditable={userRole === 'admin' || userRole === 'editor'}
+                                />
+                            </div>
                         </div>
                     </div>
                 </TabsContent>
 
                 {/* Teams Tab */}
-                <TabsContent value="teams" className="space-y-8 outline-none">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <TabsContent value="teams" className="space-y-4 md:space-y-6 outline-none">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Content: Registrations & Teams List */}
-                        <div className="lg:col-span-2 space-y-8">
+                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Registrations Section (Admin Only) */}
                             {userRole === 'admin' && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                                 <BookOpen className="h-5 w-5 text-primary" />
-                                                {useTranslations("Registrations")("title")}
+                                                {tRegistrations("title")}
                                             </h3>
-                                            <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{tSettings("registration_settings_desc")}</p>
+                                            {!isPro && (
+                                                <Badge variant="secondary" className="rounded-none bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 uppercase tracking-wider">
+                                                    {tSettings("plan_pro_badge")}
+                                                </Badge>
+                                            )}
                                         </div>
-                                        {!isPro && (
-                                            <Badge variant="secondary" className="rounded-none bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider">
-                                                {tSettings("plan_pro_badge")}
-                                            </Badge>
-                                        )}
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{tSettings("registration_settings_desc")}</p>
                                     </div>
 
                                     {!isPro && (
-                                        <div className="p-4 bg-primary/5 border border-primary/10 flex items-center gap-3">
-                                            <AlertTriangle className="h-4 w-4 text-primary" />
-                                            <p className="text-[11px] text-primary font-bold uppercase tracking-tight">
-                                                {t("upsell_pro_feature")} 
-                                                <Button variant="link" asChild className="p-0 h-auto font-black underline text-primary ml-2 uppercase">
+                                        <div className="relative border-l-4 border-primary bg-primary/5 p-5 flex items-center gap-2 md:gap-3 group overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+                                            <AlertTriangle className="h-5 w-5 text-primary shrink-0" />
+                                            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
+                                                <p className="text-[11px] text-primary font-black uppercase tracking-tight">
+                                                    {t("upsell_pro_feature")}
+                                                </p>
+                                                <Button variant="link" asChild className="p-0 h-auto font-black underline text-primary uppercase text-[10px] tracking-widest hover:text-primary/80 transition-colors">
                                                     <Link href="/dashboard/billing">{tSettings("upgrade_button")}</Link>
                                                 </Button>
-                                            </p>
+                                            </div>
                                         </div>
                                     )}
 
-                                    <div className={cn(!isPro && "opacity-40 grayscale pointer-events-none")}>
-                                        <RegistrationsTable tournamentId={id} />
-                                    </div>
+                                    <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-primary" />
+                                        <CardContent className="p-0 z-0">
+                                            <div className={cn(!isPro && "opacity-40 grayscale pointer-events-none")}>
+                                                <RegistrationsTable tournamentId={id} />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
                                 </div>
                             )}
 
                             {/* Participating Teams */}
-                            <div className="space-y-6">
-                                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
-                                    <Users className="h-5 w-5 text-secondary" />
-                                    {t("participating_teams")} <span className="text-muted-foreground/40 ml-1">[{teams?.length || 0}]</span>
-                                </h3>
-                                <TeamList
-                                    teams={teams}
-                                    tournamentId={id}
-                                    isPro={isPro}
-                                    showGroupSelector={tournament?.format?.includes("group")}
-                                    organizerId={tournament?.user_id}
-                                />
+                            <div className="space-y-4 md:space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <Users className="h-5 w-5 text-secondary" />
+                                        {t("participating_teams")} <span className="text-muted-foreground/40 ml-1">[{teams?.length || 0}]</span>
+                                    </h3>
+                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Confirmed tournament entries</p>
+                                </div>
+                                <Card className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                    <CardContent className="p-0 z-0">
+                                        <TeamList
+                                            teams={teams}
+                                            tournamentId={id}
+                                            isPro={isPro}
+                                            showGroupSelector={tournament?.format?.includes("group")}
+                                            organizerId={tournament?.user_id}
+                                        />
+                                    </CardContent>
+                                </Card>
                             </div>
                         </div>
 
                         {/* Management Sidebar */}
-                        <div className="lg:col-span-1 space-y-8">
+                        <div className="lg:col-span-1 space-y-4 md:space-y-6">
+                            {/* Registration Settings (Administrative) */}
+                            {userRole === 'admin' && (
+                                <RegistrationSettingsCard
+                                    tournament={tournament}
+                                    isPro={isPro}
+                                    onUpgrade={() => router.push(`${pathname}?tab=settings&action=upgrade`)}
+                                />
+                            )}
+
                             {/* Add Team Section */}
-                            <div className="space-y-6 group">
-                                <div className="space-y-1">
-                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                            <div className="space-y-4 md:space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Plus className="h-5 w-5 text-secondary" />
                                         {t("add_team")}
                                     </h3>
-                                    <p className="text-[9px] font-bold uppercase text-muted-foreground/40 italic">Manual Entry Management</p>
+                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Manual Entry Management</p>
                                 </div>
 
-                                <AddTeamForm 
-                                    tournamentId={id} 
-                                    isLimitReached={!isPro && (teams?.length || 0) >= 8} 
-                                />
+                                <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                    <AddTeamForm
+                                        tournamentId={id}
+                                        isLimitReached={!isPro && (teams?.length || 0) >= 8}
+                                    />
+                                </Card>
 
                                 {/* Public Registration Link - Only for Pro */}
                                 {isPro && (
-                                    <div className="pt-6 space-y-4">
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("public_link")}</Label>
-                                            <p className="text-[9px] text-muted-foreground/40 italic">Share this link for teams to register</p>
+                                    <div className="space-y-4 md:space-y-6">
+                                        <div className="flex flex-col gap-1">
+                                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                                <ExternalLink className="h-5 w-5 text-primary" />
+                                                {t("public_link")}
+                                            </h3>
+                                            <p className="text-[10px] font-bold uppercase text-muted-foreground/60 italic">Direct access for teams</p>
                                         </div>
-                                        <div className="flex items-center gap-2 bg-white/5 p-1">
-                                            <Input
-                                                readOnly
-                                                value={typeof window !== 'undefined' ? `${window.location.origin}/register/${id}` : `/register/${id}`}
-                                                className="bg-transparent border-none font-mono text-[10px] h-8 focus-visible:ring-0 text-muted-foreground"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 hover:bg-primary/20 hover:text-primary transition-all shrink-0 rounded-none"
-                                                onClick={() => {
-                                                    const url = `${window.location.origin}/register/${id}`;
-                                                    navigator.clipboard.writeText(url);
-                                                    toast({ title: tCommon("copied"), description: tCommon("copied_desc") });
-                                                }}
-                                                title={tCommon("copy_link")}
-                                            >
-                                                <Copy className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                asChild
-                                                className="h-8 w-8 hover:bg-secondary/20 hover:text-secondary transition-all shrink-0 rounded-none"
-                                                title={tCommon("open_link")}
-                                            >
-                                                <a href={`/register/${id}`} target="_blank" rel="noopener noreferrer">
-                                                    <ExternalLink className="h-3 w-3" />
-                                                </a>
-                                            </Button>
-                                        </div>
+
+                                        <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                            <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                            <div className="space-y-2 md:space-y-3">
+                                                <div className="space-y-2 md:space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t("public_link")}</label>
+                                                        <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                                    </div>
+                                                    <div className="p-4 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                                        {mounted ? registrationUrl : "..."}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        size="default"
+                                                        className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                        onClick={copyRegistrationLink}
+                                                    >
+                                                        <Copy className="h-4 w-4 mr-2" />
+                                                        {tCommon("copy_link")}
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="default"
+                                                        asChild
+                                                        className="rounded-none w-full border-border hover:bg-white/5 hover:text-white transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                    >
+                                                        <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
+                                                            <ExternalLink className="h-4 w-4 mr-2" />
+                                                            {tCommon("open_link")}
+                                                        </a>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </Card>
                                     </div>
                                 )}
                             </div>
@@ -560,18 +698,18 @@ export function TournamentContent({
                 </TabsContent>
 
                 {/* Fixtures Tab */}
-                <TabsContent value="fixtures" className="space-y-8 outline-none">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <TabsContent value="fixtures" className="space-y-4 md:space-y-6 outline-none">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Schedule Column */}
-                        <div className="lg:col-span-2 space-y-8">
+                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Unwrapped Header */}
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
-                                <div className="space-y-1">
-                                    <h3 className="text-4xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
-                                        <Calendar className="h-8 w-8 text-secondary" />
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 pb-4 md:pb-6 border-b border-white/5">
+                                <div className="flex flex-col gap-1">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <Calendar className="h-5 w-5 text-secondary" />
                                         {t("match_schedule")}
                                     </h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 ml-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
                                         {t("manage_fixtures")}
                                     </p>
                                 </div>
@@ -622,39 +760,65 @@ export function TournamentContent({
                         </div>
 
                         {/* Sidebar Management Column */}
-                        <div className="lg:col-span-1 space-y-8">
+                        <div className="lg:col-span-1 space-y-4 md:space-y-6">
                             {/* Generation Controls Block */}
-                            <div className="space-y-4">
-                                <div className="space-y-1 pb-4 border-b border-white/5">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary">Control Center</h4>
-                                    <p className="text-[9px] text-muted-foreground italic">Generate and manage tournament stages</p>
+                            <div className="space-y-4 md:space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <Settings className="h-5 w-5 text-secondary" />
+                                        Control Center
+                                    </h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+                                        Fixture generation & tools
+                                    </p>
                                 </div>
-                                
-                                <FixtureGenerator 
-                                    tournamentId={id} 
-                                    hasFixtures={hasFixtures} 
-                                    format={tournament?.format}
-                                    className="h-14 font-black uppercase italic tracking-tighter text-sm"
-                                />
 
-                                {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                    <NextRoundButton
-                                        tournamentId={id}
-                                        matches={matches}
-                                        format={tournament?.format || 'league'}
-                                        // NextRoundButton likely needs high visibility if it's the primary "advance" action
-                                    />
-                                )}
+                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary/20 group-hover:bg-secondary/40 transition-colors" />
+                                    <div className="space-y-2 md:space-y-3">
+                                        <FixtureGenerator
+                                            tournamentId={id}
+                                            hasFixtures={hasFixtures}
+                                            format={tournament?.format}
+                                            className="h-14 font-black uppercase italic tracking-tighter text-sm shadow-lg shadow-secondary/10"
+                                        />
+
+                                        {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
+                                            <NextRoundButton
+                                                tournamentId={id}
+                                                matches={matches}
+                                                format={tournament?.format || 'league'}
+                                            />
+                                        )}
+                                    </div>
+                                </Card>
 
                                 {/* Extra Information / Status */}
-                                <div className="p-4 bg-white/5 border-l-2 border-secondary/30 space-y-2">
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60 leading-tight">
-                                        Current Format: <span className="text-foreground">{tournament?.format?.replace('_', ' ').toUpperCase()}</span>
-                                    </p>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60 leading-tight">
-                                        Teams: <span className="text-foreground">{teams.length}</span>
-                                    </p>
-                                </div>
+                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
+                                    <div className="space-y-2 md:space-y-3">
+                                        <div className="space-y-1 border-b border-white/5 pb-2 md:pb-3">
+                                            <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest flex justify-between items-center">
+                                                Status:
+                                                <Badge className="rounded-none bg-white/5 text-foreground border-white/10 text-[9px] font-black uppercase px-3 py-1">
+                                                    {tournament?.status?.toUpperCase()}
+                                                </Badge>
+                                            </p>
+                                        </div>
+                                        <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("format")}</span>
+                                            <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
+                                                {tournament?.format?.replace('_', ' ').toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Total Teams</span>
+                                            <span className="text-[11px] font-black uppercase tracking-widest text-secondary italic">
+                                                {teams.length}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Card>
                             </div>
                         </div>
                     </div>
@@ -663,53 +827,62 @@ export function TournamentContent({
                 {/* Settings Tab */}
                 {userRole === 'admin' && (
                     <TabsContent value="settings" className="outline-none focus-visible:ring-0">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                             {/* Main Settings Column */}
                             <div className="lg:col-span-2">
-                                <SettingsTab tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} />
+                                <SettingsTab tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} teams={teams} />
                             </div>
 
                             {/* Sidebar Info Column */}
-                            <div className="lg:col-span-1 space-y-6">
-                                <div className="space-y-4">
-                                    <div className="space-y-1 pb-4 border-b border-white/5">
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary">Configuration Overview</h4>
-                                        <p className="text-[9px] text-muted-foreground italic">Quick status and tournament details</p>
-                                    </div>
-                                    
-                                    <div className="p-4 bg-white/5 border-l-2 border-secondary/30 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
-                                            <Badge className="rounded-none bg-white/5 text-foreground border-white/10 text-[9px] font-black uppercase px-2 py-0.5">
-                                                {tournament?.status?.toUpperCase()}
-                                            </Badge>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Plan</span>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-secondary italic">
-                                                {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Team Slots</span>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">
-                                                {teams.length} / {tournament?.max_teams || 8}
-                                            </span>
-                                        </div>
-                                        <div className="pt-2 border-t border-white/5">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
-                                            <p className="text-[10px] font-black text-foreground italic">
-                                                {new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
+                            <div className="lg:col-span-1 space-y-4 md:space-y-6 hidden lg:block">
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <ClipboardEdit className="h-5 w-5 text-secondary" />
+                                            Configuration Overview
+                                        </h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Update details and status</p>
                                     </div>
 
-                                    <div className="p-4 border-l-2 border-white/10 bg-white/5 space-y-2">
-                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Quick Help</h5>
-                                        <p className="text-[11px] text-muted-foreground/60 leading-relaxed italic">
-                                            Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
-                                        </p>
-                                    </div>
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
+                                        <div className="space-y-4 md:space-y-6">
+                                            <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
+                                                <Badge className="rounded-none bg-white/5 text-foreground border-white/10 text-[9px] font-black uppercase px-3 py-1">
+                                                    {tournament?.status?.toUpperCase()}
+                                                </Badge>
+                                            </div>
+                                            <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Plan</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-secondary italic">
+                                                    {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Team Slots</span>
+                                                <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
+                                                    {teams.length} / {tournament?.max_teams || 8}
+                                                </span>
+                                            </div>
+                                            <div className="pt-2 md:pt-3">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
+                                                <p className="text-[11px] font-black text-foreground italic">
+                                                    {mounted ? new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </Card>
+
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15_rgba(0,196,154,0.1)]" />
+                                        <div className="space-y-3">
+                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary italic">Quick Help</h5>
+                                            <p className="text-[11px] text-muted-foreground/80 leading-relaxed italic font-medium">
+                                                Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
+                                            </p>
+                                        </div>
+                                    </Card>
                                 </div>
                             </div>
                         </div>

@@ -526,7 +526,7 @@ CREATE POLICY "Users can view own registrations" ON registrations FOR SELECT USI
 
 -- Team Payments
 DROP POLICY IF EXISTS "Authenticated users can see team payments" ON team_payments;
-CREATE POLICY "Authenticated users can see team payments" ON team_payments FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Authenticated users can see team payments" ON team_payments FOR SELECT TO authenticated USING (is_tournament_manager(tournament_id));
 DROP POLICY IF EXISTS "Managers can handle team payments" ON team_payments;
 CREATE POLICY "Managers can handle team payments" ON team_payments FOR ALL USING (is_tournament_manager(tournament_id));
 
@@ -534,7 +534,7 @@ CREATE POLICY "Managers can handle team payments" ON team_payments FOR ALL USING
 DROP POLICY IF EXISTS "Users can view their own payments" ON payments;
 CREATE POLICY "Users can view their own payments" ON payments FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Users can insert their own payments" ON payments;
-CREATE POLICY "Users can insert their own payments" ON payments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own payments" ON payments FOR INSERT WITH CHECK (auth.uid() = user_id AND status = 'pending');
 
 -- TRIGGER FOR UPDATED_AT
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -725,7 +725,12 @@ BEGIN
         a.id,
         a.payload,
         a.created_at,
-        a.ip_address::VARCHAR
+        -- Attempt to find IP in sessions if it's missing in audit_log_entries
+        COALESCE(
+            a.ip_address::VARCHAR, 
+            (SELECT s.ip_address::VARCHAR FROM auth.sessions s WHERE s.id = (a.payload->>'session_id')::UUID LIMIT 1),
+            'System'
+        ) as ip_address
     FROM auth.audit_log_entries a
     ORDER BY a.created_at DESC;
 END;
@@ -733,6 +738,8 @@ $$;
 
 -- RLS for Tournament Rules
 ALTER TABLE public.tournament_rules ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Tournament rules viewable by everyone" ON public.tournament_rules;
+CREATE POLICY "Tournament rules viewable by everyone" ON public.tournament_rules FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Managers can manage tournament rules" ON public.tournament_rules;
 CREATE POLICY "Managers can manage tournament rules" ON public.tournament_rules FOR ALL USING (
     EXISTS (

@@ -3,8 +3,13 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, TeamPayment } from "@/types/index";
+import { validateTournamentAccess } from "@/lib/security";
 
 export async function getTeamPayments(tournamentId: string): Promise<ActionResponse<TeamPayment[]>> {
+    // Security Check: Only tournament managers can view financial data
+    const access = await validateTournamentAccess(tournamentId, 'viewer');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -35,6 +40,10 @@ export async function updateTeamPayment(
     amount?: number,
     notes?: string
 ): Promise<ActionResponse> {
+    // Security Check: Only editors+ can modify financial data
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -66,6 +75,10 @@ export async function getFinancialSummary(tournamentId: string): Promise<ActionR
     totalExpected: number;
     totalReceived: number;
 }>> {
+    // Security Check: Only tournament managers can view financial summary
+    const access = await validateTournamentAccess(tournamentId, 'viewer');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { data, error } = await supabase

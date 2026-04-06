@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, TournamentMember } from "@/types";
 import { logActivity } from "@/lib/audit";
+import { validateTournamentAccess } from "@/lib/security";
 
 /**
  * Invite a collaborator to a tournament by email.
@@ -16,22 +17,10 @@ export async function inviteCollaborator(
 ): Promise<ActionResponse<TournamentMember>> {
     const supabase = await createClient();
 
-    // Verify the current user is the owner (admin) of the tournament
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Unauthorized" };
-    }
-
-    // Check if the current user owns this tournament
-    const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("user_id")
-        .eq("id", tournamentId)
-        .single();
-
-    if (!tournament || tournament.user_id !== user.id) {
-        return { success: false, error: "Only the tournament owner can invite collaborators" };
-    }
+    // Security Check: Only the tournament owner (Admin) can invite collaborators
+    const access = await validateTournamentAccess(tournamentId, 'admin');
+    if (!access.success) return { success: false, error: access.error };
+    const user = access.user;
 
     // Check if the email is already invited
     const { data: existing } = await supabase
@@ -79,6 +68,10 @@ export async function inviteCollaborator(
 export async function getCollaborators(
     tournamentId: string
 ): Promise<ActionResponse<TournamentMember[]>> {
+    // Security Check: Only collaborators or owner can see the member list
+    const access = await validateTournamentAccess(tournamentId, 'viewer');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -104,21 +97,9 @@ export async function removeCollaborator(
 ): Promise<ActionResponse> {
     const supabase = await createClient();
 
-    // Verify the current user is the owner
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return { success: false, error: "Unauthorized" };
-    }
-
-    const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("user_id")
-        .eq("id", tournamentId)
-        .single();
-
-    if (!tournament || tournament.user_id !== user.id) {
-        return { success: false, error: "Only the tournament owner can remove collaborators" };
-    }
+    // Security Check: Only the tournament owner (Admin) can remove collaborators
+    const access = await validateTournamentAccess(tournamentId, 'admin');
+    if (!access.success) return { success: false, error: access.error };
 
     const { error } = await supabase
         .from("tournament_members")

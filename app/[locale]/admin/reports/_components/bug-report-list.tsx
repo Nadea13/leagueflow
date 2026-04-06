@@ -14,7 +14,7 @@ import { format } from "date-fns"
 import { th } from "date-fns/locale"
 import { markBugReportAsRead, resolveBugReport } from "@/app/[locale]/actions/bug-reports"
 import { toast } from "sonner"
-import { Search } from "lucide-react"
+import { Search, AlertCircle, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useTranslations } from "next-intl"
@@ -62,7 +62,6 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
         if (report.status === 'unread') {
             const res = await markBugReportAsRead(report.id)
             if (res.success) {
-                // Update local state to reflect 'read' status
                 setReports(prev =>
                     prev.map(r => r.id === report.id ? { ...r, status: 'read' } : r)
                 )
@@ -85,7 +84,15 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
         }
     }
 
-
+    const getStatusBadge = (status: string) => {
+        if (status === 'unread') {
+            return <Badge variant="destructive" className="rounded-none text-[10px] font-black uppercase">{t("report_status_new")}</Badge>
+        }
+        if (status === 'read') {
+            return <Badge variant="secondary" className="rounded-none text-[10px] font-black uppercase">{t("report_status_read")}</Badge>
+        }
+        return <Badge variant="outline" className="rounded-none text-[10px] font-black uppercase">{t("report_status_resolved")}</Badge>
+    }
 
     return (
         <div className="space-y-4">
@@ -102,14 +109,14 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
                 />
             </div>
 
-            <div className="rounded-none border bg-card">
+            <div className="rounded-none border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[100px]">{t("status")}</TableHead>
-                            <TableHead>{t("report_date")}</TableHead>
-                            <TableHead>{t("reporter")}</TableHead>
-                            <TableHead>{t("report_message")}</TableHead>
+                        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-[100px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("report_date")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("reporter")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("report_message")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -123,22 +130,27 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
                             paginatedReports.map((report) => (
                                 <TableRow
                                     key={report.id}
-                                    className={`cursor-pointer transition-colors hover:bg-muted/50 ${report.status === 'unread' ? 'bg-muted/20 font-medium' : ''}`}
+                                    className={`cursor-pointer transition-colors hover:bg-muted/10 border-b border-border/50 ${report.status === 'unread' ? 'bg-destructive/5' : ''}`}
                                     onClick={() => handleViewReport(report)}
                                 >
                                     <TableCell>
-                                        {report.status === 'unread' ? (
-                                            <Badge variant="destructive">{t("report_status_new")}</Badge>
-                                        ) : report.status === 'read' ? (
-                                            <Badge variant="secondary">{t("report_status_read")}</Badge>
-                                        ) : (
-                                            <Badge variant="outline">{t("report_status_resolved")}</Badge>
-                                        )}
+                                        {getStatusBadge(report.status)}
                                     </TableCell>
-                                    <TableCell>{format(new Date(report.created_at), "dd MMM yyyy HH:mm", { locale: th })}</TableCell>
-                                    <TableCell>{report.user_email || t("anonymous")}</TableCell>
-                                    <TableCell className="max-w-md truncate">
-                                        {report.message}
+                                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                        {format(new Date(report.created_at), "dd MMM yyyy HH:mm", { locale: th })}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-6 w-6 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
+                                                <User className="h-3 w-3 text-secondary" />
+                                            </div>
+                                            <span className="text-sm truncate max-w-[150px]">
+                                                {report.user_email || t("anonymous")}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="max-w-md">
+                                        <span className="text-sm truncate block">{report.message}</span>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -148,23 +160,25 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
             </div>
 
             {filteredReports.length > 0 && (
-                <div className="flex items-center justify-between py-2 border-t px-4 mt-2">
-                    <div className="text-sm text-muted-foreground hidden sm:block">
+                <div className="flex items-center justify-between py-2">
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredReports.length)} of {filteredReports.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-none text-[10px] font-black uppercase"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-sm text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-none text-[10px] font-black uppercase"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >
@@ -175,34 +189,53 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
             )}
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="sm:max-w-[525px]">
-                    <DialogHeader>
-                        <DialogTitle>{t("report_details")}</DialogTitle>
-                        <DialogDescription>
-                            {t("reported_at")}: {selectedReport ? format(new Date(selectedReport.created_at), "dd MMMM yyyy HH:mm", { locale: th }) : ''}
-                            <br />
-                            {t("reporter")}: {selectedReport?.user_email || t("anonymous")}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="mt-4 p-4 bg-muted rounded-md whitespace-pre-wrap leading-relaxed text-sm">
-                        {selectedReport?.message}
+                <DialogContent className="sm:max-w-[525px] rounded-none border-border p-0 overflow-hidden">
+                    <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                        <DialogHeader>
+                            <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-secondary" />
+                                {t("report_details")}
+                            </DialogTitle>
+                            <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
+                                {t("reported_at")}: {selectedReport ? format(new Date(selectedReport.created_at), "dd MMMM yyyy HH:mm", { locale: th }) : ''}
+                                <br />
+                                {t("reporter")}: {selectedReport?.user_email || t("anonymous")}
+                            </DialogDescription>
+                        </DialogHeader>
                     </div>
 
-                    <div className="flex justify-end gap-2 mt-4">
-                        <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                            {t("close")}
-                        </Button>
-                        {selectedReport && selectedReport.status === 'unread' && (
-                            <Button variant="secondary" onClick={() => handleMarkAsRead(selectedReport.id)}>
-                                {t("mark_as_read")}
+                    <div className="px-6 py-6">
+                        <div className="p-4 bg-muted/30 border border-border whitespace-pre-wrap leading-relaxed text-sm">
+                            {selectedReport?.message}
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-6">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDialogOpen(false)}
+                                className="rounded-none text-[10px] font-black uppercase"
+                            >
+                                {t("close")}
                             </Button>
-                        )}
-                        {selectedReport && selectedReport.status !== 'resolved' && (
-                            <Button onClick={() => handleResolve(selectedReport.id)}>
-                                {t("mark_as_resolved")}
-                            </Button>
-                        )}
+                            {selectedReport && selectedReport.status === 'unread' && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => handleMarkAsRead(selectedReport.id)}
+                                    className="rounded-none text-[10px] font-black uppercase"
+                                >
+                                    {t("mark_as_read")}
+                                </Button>
+                            )}
+                            {selectedReport && selectedReport.status !== 'resolved' && (
+                                <Button
+                                    onClick={() => handleResolve(selectedReport.id)}
+                                    className="rounded-none text-[10px] font-black uppercase"
+                                >
+                                    {t("mark_as_resolved")}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>

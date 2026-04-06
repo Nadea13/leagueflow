@@ -72,7 +72,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'active': return 'default'; // success/green ish typically or primary
+            case 'active': return 'default';
             case 'completed': return 'secondary';
             default: return 'outline';
         }
@@ -93,15 +93,15 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 />
             </div>
 
-            <div className="rounded-none border bg-card">
+            <div className="rounded-none border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
-                        <TableRow>
-                            <TableHead>{t("tournaments")}</TableHead>
-                            <TableHead>{t("owner")}</TableHead>
-                            <TableHead>{t("status")}</TableHead>
-                            <TableHead>{t("created_at")}</TableHead>
-                            <TableHead className="text-right">{t("actions")}</TableHead>
+                        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("tournaments")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("owner")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -113,50 +113,61 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                             </TableRow>
                         ) : (
                             paginatedTournaments.map((tournament) => (
-                                <TableRow key={tournament.id}>
+                                <TableRow key={tournament.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                     <TableCell>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">{tournament.name}</span>
-                                            <span className="text-xs text-muted-foreground capitalize">{tournament.format}</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-8 w-8 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
+                                                <Trophy className="h-4 w-4 text-secondary" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="font-bold text-sm truncate">{tournament.name}</span>
+                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{tournament.format}</span>
+                                            </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-muted-foreground">
+                                    <TableCell className="text-sm text-muted-foreground">
                                         {tournament.owner_email}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={getStatusColor(tournament.status)} className="capitalize">
+                                        <Badge
+                                            variant={getStatusColor(tournament.status)}
+                                            className="rounded-none text-[10px] font-black uppercase"
+                                        >
                                             {tournament.status}
                                         </Badge>
                                     </TableCell>
-
-                                    <TableCell className="text-muted-foreground text-xs">
+                                    <TableCell className="text-xs text-muted-foreground">
                                         {formatDate(tournament.created_at, "d MMM yyyy", locale)}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
+                                        <div className="flex justify-end gap-1">
                                             <Link href={`/organizer/tournaments/${tournament.id}`} target="_blank">
-                                                <Button variant="ghost" size="icon" title={tCommon("manage")}>
+                                                <Button variant="ghost" size="icon" title={tCommon("manage")} className="hover:bg-muted/30">
                                                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
                                             </Link>
 
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="icon" title={tCommon("delete")}>
+                                                    <Button variant="ghost" size="icon" title={tCommon("delete")} className="hover:bg-destructive/10">
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </AlertDialogTrigger>
-                                                <AlertDialogContent>
+                                                <AlertDialogContent className="rounded-none border-border">
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle>{tSettings("delete_tournament")}?</AlertDialogTitle>
+                                                        <AlertDialogTitle className="font-black italic uppercase tracking-tighter">
+                                                            {tSettings("delete_tournament")}?
+                                                        </AlertDialogTitle>
                                                         <AlertDialogDescription>
                                                             {tSettings("delete_desc")}. {t("deletions_removals")} <b>{tournament.name}</b>.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
+                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black uppercase">
+                                                            {tCommon("cancel")}
+                                                        </AlertDialogCancel>
                                                         <AlertDialogAction
-                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-none text-[10px] font-black uppercase"
                                                             onClick={() => handleDelete(tournament.id, tournament.name)}
                                                         >
                                                             {tCommon("delete")}
@@ -174,22 +185,24 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
             </div>
             {filteredTournaments.length > 0 && (
                 <div className="flex items-center justify-between py-2">
-                    <div className="text-sm text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredTournaments.length)} of {filteredTournaments.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-none text-[10px] font-black uppercase"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-sm text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-none text-[10px] font-black uppercase"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >

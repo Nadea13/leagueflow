@@ -9,7 +9,14 @@ export default async function AdminUsersPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold tracking-tight">{t("users_management")}</h1>
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-foreground">
+                        {t("users_management")}
+                    </h1>
+                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                        User Administration
+                    </p>
+                </div>
             </div>
             <AdminUsersTable initialUsers={users || []} />
         </div>

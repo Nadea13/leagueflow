@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/routing";
@@ -7,6 +6,7 @@ import { LanguageSelect } from "@/components/language-select";
 import { ModeToggle } from "@/components/mode-toggle";
 import { DeleteAccountButton } from "./delete-account-button";
 import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriangle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 import { createClient } from "@/utils/supabase/server";
 import { ProfileForm } from "@/components/dashboard/profile-form";
@@ -21,104 +21,107 @@ export default async function SettingsPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     return (
-        <div className="flex flex-col gap-10 pb-20">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-border pb-10">
+        <div className="flex flex-col gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <Badge variant="secondary" className="mb-4">Account Control</Badge>
-                    <h1 className="text-5xl font-black italic tracking-tighter uppercase text-foreground leading-none">{t("title")}</h1>
-                    <p className="text-muted-foreground mt-3 text-sm max-w-xl font-medium tracking-tight">
-                        {t("subtitle") || "Manage your account preferences, profile, and security settings."}
-                    </p>
+                    <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-foreground leading-none">{t("title")}</h1>
+                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">{t("subtitle")}</p>
                 </div>
             </div>
 
             {/* Profile Settings */}
-            <div className="relative group transition-all duration-500">
-                <div className="absolute -inset-1 bg-secondary/5 blur-xl group-hover:bg-secondary/10 transition-all" />
-                <ProfileForm user={user} />
-            </div>
+            <ProfileForm user={user} />
 
-            {/* Preferences */}
-            <div className="space-y-8 border border-border rounded-none p-10 bg-muted/10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-secondary/20" />
-                <div>
-                    <h3 className="text-xl font-black italic tracking-tighter uppercase text-foreground mb-2 flex flex-row items-center gap-3">
-                        <div className="p-1.5 bg-muted border border-border">
-                            <Sliders className="h-5 w-5 text-secondary" />
-                        </div>
-                        {t("preferences")}
-                    </h3>
-                </div>
-                <div className="grid gap-8 sm:grid-cols-2">
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase italic tracking-widest text-muted-foreground/40">{tCommon("language")}</Label>
-                        <LanguageSelect />
+            <div className="flex flex-col">
+                {/* Preferences */}
+                <div className="space-y-4 md:space-y-6">
+                    <div className="flex items-center gap-3 mb-4 md:mb-6">
+                        <Sliders className="h-5 w-5 text-secondary" />
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                            {t("preferences")}
+                        </h3>
                     </div>
-                    <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase italic tracking-widest text-muted-foreground/40">{tCommon("theme")}</Label>
-                        <ModeToggle />
+                    
+                    <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                        <div className="space-y-4 md:space-y-6">
+                            <div className="flex items-center justify-between gap-6">
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{tCommon("language")}</Label>
+                                    <p className="text-[11px] text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
+                                </div>
+                                <LanguageSelect />
+                            </div>
+                            <div className="flex items-center justify-between gap-6">
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{tCommon("theme")}</Label>
+                                    <p className="text-[11px] text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
+                                </div>
+                                <ModeToggle />
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Legal Links */}
-            <div className="space-y-8 border border-border rounded-none p-10 bg-muted/10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-secondary/20" />
-                <div>
-                    <h3 className="text-xl font-black italic tracking-tighter uppercase text-foreground mb-2 flex flex-row items-center gap-3">
-                        <div className="p-1.5 bg-muted border border-border">
-                            <Scale className="h-5 w-5 text-secondary" />
+                {/* Legal Links */}
+                <div className="space-y-4 md:space-y-6">
+                    <div className="flex items-center gap-3 my-4 md:my-6">
+                        <Scale className="h-5 w-5 text-secondary" />
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                            {t("legal")}
+                        </h3>
+                    </div>
+                    
+                    <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors shadow-sm">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                        <div className="grid gap-2">
+                            <Link href="/privacy-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
+                                <div className="flex items-center gap-4">
+                                    <Shield className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
+                                    <span className="font-black uppercase italic text-xs tracking-tight">{tLegal("privacy")}</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
+                            </Link>
+                            <Link href="/terms-of-service" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
+                                <div className="flex items-center gap-4">
+                                    <FileText className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
+                                    <span className="font-black uppercase italic text-xs tracking-tight">{tLegal("terms")}</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
+                            </Link>
+                            <Link href="/refund-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
+                                <div className="flex items-center gap-4">
+                                    <CreditCard className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
+                                    <span className="font-black uppercase italic text-xs tracking-tight">{tLegal("refund")}</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
+                            </Link>
                         </div>
-                        {t("legal")}
-                    </h3>
-                    <p className="text-sm text-muted-foreground/60 font-medium">{t("legal_desc")}</p>
+                    </div>
                 </div>
-                <div className="grid gap-2">
-                    <Link href="/privacy-policy" className="flex items-center justify-between p-5 border border-border bg-muted/20 hover:bg-secondary/10 hover:border-secondary/30 transition-all group/link">
-                        <div className="flex items-center gap-4">
-                            <Shield className="h-5 w-5 text-muted-foreground/40 group-hover/link:text-secondary transition-colors" />
-                            <span className="font-black italic uppercase tracking-widest text-[11px] text-foreground/80">{tLegal("privacy")}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/20 group-hover/link:text-secondary group-hover/link:translate-x-1 transition-all" />
-                    </Link>
-                    <Link href="/terms-of-service" className="flex items-center justify-between p-5 border border-border bg-muted/20 hover:bg-secondary/10 hover:border-secondary/30 transition-all group/link">
-                        <div className="flex items-center gap-4">
-                            <FileText className="h-5 w-5 text-muted-foreground/40 group-hover/link:text-secondary transition-colors" />
-                            <span className="font-black italic uppercase tracking-widest text-[11px] text-foreground/80">{tLegal("terms")}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/20 group-hover/link:text-secondary group-hover/link:translate-x-1 transition-all" />
-                    </Link>
-                    <Link href="/refund-policy" className="flex items-center justify-between p-5 border border-border bg-muted/20 hover:bg-secondary/10 hover:border-secondary/30 transition-all group/link">
-                        <div className="flex items-center gap-4">
-                            <CreditCard className="h-5 w-5 text-muted-foreground/40 group-hover/link:text-secondary transition-colors" />
-                            <span className="font-black italic uppercase tracking-widest text-[11px] text-foreground/80">{tLegal("refund")}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/20 group-hover/link:text-secondary group-hover/link:translate-x-1 transition-all" />
-                    </Link>
-                </div>
-            </div>
 
-            {/* Danger Zone */}
-            <Card className="border-red-500/20 bg-red-500/[0.02] p-0 overflow-hidden">
-                <div className="bg-red-500/10 px-10 py-6 border-b border-red-500/10">
-                    <CardHeader className="p-0">
-                        <CardTitle className="text-red-500 flex items-center gap-3 text-xl font-black italic uppercase tracking-tighter">
-                            <AlertTriangle className="h-6 w-6" />
+                {/* Danger Zone */}
+                <div className="space-y-4 md:space-y-6">
+                    <div className="flex items-center gap-3 my-4 md:my-6">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-destructive">
                             {t("danger_zone")}
-                        </CardTitle>
-                        <CardDescription className="text-red-500/50 font-medium">{t("delete_account_desc")}</CardDescription>
-                    </CardHeader>
-                </div>
-                <CardContent className="p-10">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
-                        <div>
-                            <h4 className="font-black italic uppercase tracking-widest text-xs text-red-500/80 mb-1">{t("delete_account")}</h4>
-                            <p className="text-sm text-muted-foreground/60 font-medium">Permanently remove all your data and access.</p>
-                        </div>
-                        <DeleteAccountButton email={user?.email || ""} />
+                        </h3>
                     </div>
-                </CardContent>
-            </Card>
+                    
+                    <div className="bg-destructive/[0.02] border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-4 md:p-6">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-destructive/20 group-hover:bg-destructive/40 transition-colors" />
+                        
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                            <div className="space-y-2">
+                                <h4 className="text-lg font-black uppercase italic tracking-tight text-destructive/90">{t("delete_account")}</h4>
+                                <p className="text-xs font-medium text-muted-foreground max-w-md">{t("delete_account_desc")}</p>
+                            </div>
+                            <DeleteAccountButton email={user?.email || ""} />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

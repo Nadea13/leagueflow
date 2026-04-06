@@ -104,7 +104,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
     }, [matchId, isReadOnly]);
 
     const addEvent = async (
-        teamId: string,
+        teamId: string | null,
         type: EventType,
         minute: number,
         playerId: string | null = null,

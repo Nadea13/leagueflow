@@ -5,9 +5,14 @@ import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types";
 import { logActivity } from "@/lib/audit";
 
+import { requireAdminAuth } from "@/lib/admin-auth";
+
 // --- Users ---
 
 export async function getAdminStats() {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { totalUsers: 0, activeTournaments: 0, totalRevenue: 0, proUsers: 0 };
+
     const supabase = createAdminClient();
 
     // Total Users
@@ -33,6 +38,9 @@ export async function getAdminStats() {
 }
 
 export async function getUsers() {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return [];
+
     // Use Admin Client to bypass RLS
     const supabase = createAdminClient();
 
@@ -50,23 +58,10 @@ export async function getUsers() {
 }
 
 export async function updateUserRole(userId: string, newRole: string): Promise<ActionResponse> {
-    const supabase = await createClient();
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
-    // Check if current user is admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Unauthorized" };
-
-    const { data: currentProfile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-    if (currentProfile?.role !== 'admin') {
-        return { success: false, error: "Forbidden: Admins only" };
-    }
-
-    const { error } = await supabase
+    const { error } = await auth.supabase
         .from("profiles")
         .update({ role: newRole })
         .eq("id", userId);
@@ -75,12 +70,15 @@ export async function updateUserRole(userId: string, newRole: string): Promise<A
         return { success: false, error: error.message };
     }
 
-    await logActivity('UPDATE_USER_ROLE', 'user', userId, { new_role: newRole, by_admin: user.id });
+    await logActivity('UPDATE_USER_ROLE', 'user', userId, { new_role: newRole, by_admin: auth.user.id });
     revalidatePath("/admin");
     return { success: true };
 }
 
 export async function getGlobalPlayers() {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return [];
+
     // Use Admin Client to bypass RLS
     const supabase = createAdminClient();
     const { data: players, error } = await supabase
@@ -98,27 +96,15 @@ export async function getGlobalPlayers() {
 }
 
 export async function createGlobalPlayer(name: string, data: any = {}): Promise<ActionResponse> {
-    const supabase = await createClient();
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Unauthorized" };
-
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-    if (profile?.role !== 'admin') {
-        return { success: false, error: "Forbidden" };
-    }
-
-    const { data: player, error } = await supabase
+    const { data: player, error } = await auth.supabase
         .from("global_players")
         .insert({
             name,
             ...data,
-            created_by: user.id
+            created_by: auth.user.id
         })
         .select()
         .single();
@@ -133,9 +119,10 @@ export async function createGlobalPlayer(name: string, data: any = {}): Promise<
 }
 
 export async function getAuditLogsWithUsers() {
-    const supabase = await createClient();
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return [];
 
-    const { data: logs, error } = await supabase
+    const { data: logs, error } = await auth.supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
@@ -158,11 +145,13 @@ export async function getAuditLogsWithUsers() {
 }
 
 export async function getSupabaseAuthAuditLogs() {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return [];
+
     console.log("[DEBUG] Fetching Auth Audit Logs...");
-    const supabase = await createClient();
 
     // Call the RPC function we added to the database
-    const { data: logs, error } = await supabase.rpc('admin_get_auth_logs').limit(5000);
+    const { data: logs, error } = await auth.supabase.rpc('admin_get_auth_logs').limit(5000);
 
     if (error) {
         console.error("[ERROR] fetching Supabase auth audit logs:", error);
@@ -183,6 +172,9 @@ export async function getSupabaseAuthAuditLogs() {
 // --- Tournaments ---
 
 export async function getAllTournaments() {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return [];
+
     // Use Admin Client to bypass RLS
     const supabase = createAdminClient();
 
@@ -216,23 +208,10 @@ export async function getAllTournaments() {
 }
 
 export async function deleteTournamentAsAdmin(tournamentId: string): Promise<ActionResponse> {
-    const supabase = await createClient();
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
 
-    // Check admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Unauthorized" };
-
-    const { data: currentProfile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-    if (currentProfile?.role !== 'admin') {
-        return { success: false, error: "Forbidden: Admins only" };
-    }
-
-    const { error } = await supabase
+    const { error } = await auth.supabase
         .from("tournaments")
         .delete()
         .eq("id", tournamentId);
@@ -241,7 +220,7 @@ export async function deleteTournamentAsAdmin(tournamentId: string): Promise<Act
         return { success: false, error: error.message };
     }
 
-    await logActivity('DELETE_TOURNAMENT_ADMIN', 'tournament', tournamentId, { by_admin: user.id });
+    await logActivity('DELETE_TOURNAMENT_ADMIN', 'tournament', tournamentId, { by_admin: auth.user.id });
     revalidatePath("/admin");
     return { success: true };
 }

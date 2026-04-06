@@ -3,7 +3,7 @@ import { getDashboardTournaments, getUserSubscriptionPlan } from "../../dashboar
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { TournamentCard } from "@/components/dashboard/tournament-card";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,15 +24,16 @@ export default async function TournamentsPage({
     const userPlan = await getUserSubscriptionPlan();
     const isPro = userPlan !== 'free';
     const t = await getTranslations("Dashboard");
+    const tCommon = await getTranslations("Common");
 
     return (
-        <div className="flex flex-col gap-10">
-            <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-6 relative">
+        <div className="flex flex-col gap-4 md:gap-6">
+            <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6 relative">
                 <div>
-                    <h1 className="text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
                         {t("my_tournaments")}
                     </h1>
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
                         {t("my_tournaments_desc")}
                     </p>
                 </div>
@@ -59,19 +60,21 @@ export default async function TournamentsPage({
 
             {tournaments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                    <div className="p-8 bg-background border border-border rotate-3 transition-transform group-hover:rotate-0 shadow-xl mb-6">
-                        <Search className="h-12 w-12 text-muted-foreground opacity-30 group-hover:scale-110 transition-transform" />
+                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                    <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
+                        <Trophy className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                     </div>
-                    <h3 className="text-2xl font-black uppercase italic tracking-tight">No tournaments found</h3>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 flex items-center gap-2">
+                    <h3 className="text-2xl font-black uppercase italic tracking-tight relative z-10">
+                        {query ? "No tournaments found" : tCommon("no_tournaments")}
+                    </h3>
+                    <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10">
                          <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                        {query ? `Search query: "${query}"` : "You haven't created any tournaments yet."}
+                        {query ? `Search query: "${query}"` : tCommon("no_tournaments_desc")}
                          <span className="w-4 h-[1px] bg-muted-foreground/30" />
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tournaments.map((tournament: any) => (
                         <TournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
                     ))}

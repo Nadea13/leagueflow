@@ -34,7 +34,7 @@ export function PublicTournamentList({ onlyActive = false, isManager = false }: 
     const completedTournaments = tournaments.filter(t => t.status === "completed");
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <div className="relative max-w-2xl ml-0 group">
                 <div className="relative">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-secondary group-focus-within:scale-110 transition-all duration-300" />
@@ -75,7 +75,7 @@ export function PublicTournamentList({ onlyActive = false, isManager = false }: 
                                     <div className="h-px flex-1 bg-gradient-to-r from-secondary/40 to-transparent" />
                                 </div>
                             )}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                                 {activeTournaments.map((tournament) => (
                                     <PublicTournamentCard key={tournament.id} tournament={tournament} isManager={isManager} />
                                 ))}
@@ -84,12 +84,12 @@ export function PublicTournamentList({ onlyActive = false, isManager = false }: 
                     )}
 
                     {!onlyActive && completedTournaments.length > 0 && (
-                        <div className="space-y-8">
-                            <div className="flex items-center gap-6">
+                        <div className="space-y-4 md:space-y-6">
+                            <div className="flex items-center gap-4 md:gap-6">
                                 <h2 className="text-3xl font-black italic uppercase tracking-tighter text-muted-foreground/40">{t("completed_tournaments")}</h2>
                                 <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
                                 {completedTournaments.map((tournament) => (
                                     <PublicTournamentCard key={tournament.id} tournament={tournament} isManager={isManager} />
                                 ))}

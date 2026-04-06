@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ActionResponse, Player, GlobalPlayer, Team } from "@/types/index";
 import { getPlayers, addPlayer, updatePlayer, deletePlayer, importRoster, toggleRosterLock } from "@/app/[locale]/manager/my-teams/[id]/actions";
-import { updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/app/[locale]/organizer/teams/actions";
+import { updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/app/[locale]/manager/my-teams/actions";
 import Papa from "papaparse";
 import * as xlsx from "xlsx";
 import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers } from "@/app/[locale]/organizer/tournaments/[id]/global-player-actions";
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Settings, Upload, Copy, AlertCircle, Bell, Lock, Unlock, ExternalLink, CalendarDays, Trophy, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Settings, Upload, Copy, AlertCircle, Bell, Lock, Unlock, ExternalLink, CalendarDays, Trophy, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft, Plus } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -85,19 +85,19 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const [newNumber, setNewNumber] = useState("");
     const [newPosition, setNewPosition] = useState("");
     const [newBirthDate, setNewBirthDate] = useState("");
-    const [newPhoto, setNewPhoto] = useState<File | null>(null);
-    const [newPhotoUrl, setNewPhotoUrl] = useState<string | null>(null);
+
+    // Global Player Search State (shared with Add Player form)
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<GlobalPlayer[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedGlobalPlayerId, setSelectedGlobalPlayerId] = useState<string | null>(null);
 
     // Team Edit State
     const [teamName, setTeamName] = useState(team.name);
     const [previewUrl, setPreviewUrl] = useState<string | null>(team.logo_url || null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-    // Global Player Search State
     const [linkingPlayerId, setLinkingPlayerId] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<GlobalPlayer[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const pageSize = 10;
@@ -107,6 +107,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const [editNumber, setEditNumber] = useState<string>("");
     const [editPosition, setEditPosition] = useState<string>("");
     const [editBirthDate, setEditBirthDate] = useState<string>("");
+    const [editName, setEditName] = useState<string>("");
 
     // Import Roster State
     const [myTeams, setMyTeams] = useState<Team[]>([]);
@@ -301,13 +302,13 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             setPreviewUrl(url);
         }
     };
-    const handlePlayerPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setNewPhoto(file);
-            const url = URL.createObjectURL(file);
-            setNewPhotoUrl(url);
-        }
+
+    const handleSelectGlobalPlayer = (gp: any) => {
+        setNewName(gp.name);
+        setNewBirthDate(gp.date_of_birth || "");
+        setSelectedGlobalPlayerId(gp.id);
+        setSearchQuery("");
+        setSearchResults([]);
     };
 
     const handleUpdateTeam = async (e: React.FormEvent) => {
@@ -358,8 +359,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         formData.append("number", newNumber);
         formData.append("position", newPosition);
         formData.append("birthDate", newBirthDate);
-        if (newPhoto) {
-            formData.append("photo", newPhoto);
+        if (selectedGlobalPlayerId) {
+            formData.append("global_player_id", selectedGlobalPlayerId);
         }
 
         const result = await addPlayer(team.id, formData);
@@ -371,8 +372,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             setNewNumber("");
             setNewPosition("");
             setNewBirthDate("");
-            setNewPhoto(null);
-            setNewPhotoUrl(null);
+            setSelectedGlobalPlayerId(null);
             // Refresh players list
             const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
             const res = await getPlayers(team.id);
@@ -399,6 +399,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const handleUpdatePlayer = async (playerId: string) => {
         setIsSaving(true);
         const result = await updatePlayer(playerId, team.id, {
+            name: !players.find(p => p.id === playerId)?.global_player_id ? (editName || undefined) : undefined,
             number: editNumber ? parseInt(editNumber) : null,
             position: editPosition || null,
             birth_date: editBirthDate || null,
@@ -577,43 +578,80 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     <div className="bg-card border border-border/40 relative overflow-hidden">
                         <div className="absolute left-0 w-1 h-full bg-secondary" />
                         <div className="p-6">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                            <div className="flex items-center justify-between mb-6">
                                 <div className="space-y-1">
-                                    <h2 className="text-2xl font-black uppercase italic tracking-tighter text-foreground">
+                                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                                        <Plus className="h-4 w-4 text-secondary" />
                                         {t("add_player")}
-                                    </h2>
-                                    <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground/60">
-                                        {t("add_player_desc")}
-                                    </p>
+                                    </h3>
                                 </div>
-                                <div className="h-px flex-1 bg-gradient-to-r from-secondary/20 to-transparent hidden md:block" />
+
+                                <Popover
+                                    onOpenChange={(isOpen) => {
+                                        if (isOpen) {
+                                            handleSearch("");
+                                        }
+                                    }}
+                                >
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" size="sm" className="h-9 rounded-none bg-white/5 border-secondary/20 hover:bg-secondary/10 hover:border-secondary/40 transition-all font-black uppercase italic tracking-widest text-[10px] gap-2">
+                                            <Search className="h-3.5 w-3.5" />
+                                            {t("connect_global") || "Search Global"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="end">
+                                        <div className="p-0 border-b border-border/40">
+                                            <div className="relative">
+                                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
+                                                <Input
+                                                    placeholder="Search database..."
+                                                    value={searchQuery}
+                                                    onChange={(e) => handleSearch(e.target.value)}
+                                                    className="pl-11 h-12 border-none rounded-none bg-transparent font-black uppercase italic tracking-widest text-[11px] focus-visible:ring-0"
+                                                    autoFocus
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="max-h-[300px] overflow-y-auto">
+                                            {isSearching ? (
+                                                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                                    <Loader2 className="h-5 w-5 animate-spin text-secondary" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Searching...</span>
+                                                </div>
+                                            ) : searchResults.length > 0 ? (
+                                                <div className="py-1">
+                                                    {searchResults.map((gp) => (
+                                                        <button
+                                                            key={gp.id}
+                                                            className="w-full text-left px-4 py-3 hover:bg-secondary/10 group flex items-center justify-between transition-colors border-b border-white/5 last:border-0"
+                                                            onClick={() => handleSelectGlobalPlayer(gp)}
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="font-black uppercase italic text-xs tracking-tight group-hover:text-secondary">{gp.name}</span>
+                                                                {gp.date_of_birth && (
+                                                                    <span className="text-[9px] font-mono font-bold text-muted-foreground/40 uppercase mt-0.5">
+                                                                        {gp.date_of_birth}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="p-8 text-center">
+                                                    <div className="h-10 w-10 bg-white/5 border border-white/5 flex items-center justify-center mx-auto mb-3">
+                                                        <FileText className="h-5 w-5 text-muted-foreground/20" />
+                                                    </div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No records found</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-6">
-                                <div className="space-y-2 flex flex-col items-center justify-center pt-2">
-                                    <div className="relative group">
-                                        <div className="h-12 w-12 rounded-none border-2 border-dashed border-secondary/20 bg-muted/20 flex items-center justify-center overflow-hidden transition-all group-hover:border-secondary/50">
-                                            {newPhotoUrl ? (
-                                                <img src={newPhotoUrl} alt="Preview" className="h-full w-full object-cover" />
-                                            ) : (
-                                                <Camera className="h-6 w-6 text-muted-foreground/20" />
-                                            )}
-                                        </div>
-                                        <Label
-                                            htmlFor="player-photo-upload"
-                                            className="absolute inset-0 flex items-center justify-center bg-secondary/80 text-black opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                        >
-                                            <Upload className="h-4 w-4" />
-                                        </Label>
-                                        <Input
-                                            id="player-photo-upload"
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handlePlayerPhotoChange}
-                                        />
-                                    </div>
-                                </div>
 
                                 <div className="space-y-2 w-[80px] shrink-0">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("number")}</Label>
@@ -626,11 +664,29 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                     />
                                 </div>
 
-                                <div className="space-y-2 flex-1 min-w-[200px]">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("player_name")} *</Label>
+                                <div className="space-y-2 flex-1 min-w-[200px] relative transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("player_name")} *</Label>
+                                        {selectedGlobalPlayerId && (
+                                            <Badge variant="secondary" className="h-5 rounded-none bg-secondary/10 text-secondary border-none text-[8px] font-black uppercase tracking-widest px-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
+                                                <Link2 className="h-2.5 w-2.5" />
+                                                Connected
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setSelectedGlobalPlayerId(null)}
+                                                    className="ml-0.5 hover:text-white transition-colors"
+                                                >
+                                                    <X className="h-2.5 w-2.5" />
+                                                </button>
+                                            </Badge>
+                                        )}
+                                    </div>
                                     <Input
                                         value={newName}
-                                        onChange={e => setNewName(e.target.value)}
+                                        onChange={e => {
+                                            setNewName(e.target.value);
+                                            if (selectedGlobalPlayerId) setSelectedGlobalPlayerId(null);
+                                        }}
                                         placeholder={t("player_name")}
                                         required
                                         className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black uppercase italic tracking-tight transition-all p-0"
@@ -960,7 +1016,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                         className="w-full rounded-none bg-secondary text-black font-black uppercase italic tracking-widest text-[10px] h-11"
                                                                                         onClick={async () => {
                                                                                             const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                            const res = await createGlobalPlayer(player.name);
+                                                                                            const res = await createGlobalPlayer(player.name, null, player.birth_date);
                                                                                             if (res.success && res.data) {
                                                                                                 await handleLinkPlayer(player.id, res.data);
                                                                                             } else {
@@ -984,9 +1040,19 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                             {/* Player Name & Connection */}
                                             <div className="flex-1 min-w-0 pr-12 md:pr-0">
                                                 <div className="flex items-center flex-wrap gap-3 mb-1">
-                                                    <h4 className="text-xl font-black uppercase italic tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
-                                                        {player.name}
-                                                    </h4>
+                                                    {(editingPlayerId === player.id && !player.global_player_id) ? (
+                                                        <Input
+                                                            value={editName}
+                                                            onChange={e => setEditName(e.target.value)}
+                                                            className="h-9 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black uppercase italic tracking-tighter text-secondary focus-visible:ring-0"
+                                                            placeholder={t("player_name")}
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <h4 className="text-xl font-black uppercase italic tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
+                                                            {player.name}
+                                                        </h4>
+                                                    )}
 
                                                     {player.global_player_id ? (
                                                         <Badge variant="secondary" className="rounded-none bg-secondary/10 text-secondary border-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
@@ -1018,7 +1084,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                             </Badge>
                                                         )}
 
-                                                        {editingPlayerId === player.id ? (
+                                                        {(editingPlayerId === player.id && !player.global_player_id) ? (
                                                             <Input
                                                                 value={editBirthDate}
                                                                 onChange={e => setEditBirthDate(e.target.value)}
@@ -1113,7 +1179,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     className="rounded-none w-full h-10 text-[9px] font-black uppercase tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
                                                                                     onClick={async () => {
                                                                                         const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                        const res = await createGlobalPlayer(searchQuery);
+                                                                                        const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
                                                                                         if (res.success && res.data) {
                                                                                             await handleLinkPlayer(player.id, res.data);
                                                                                         } else {
@@ -1162,7 +1228,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                             className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
                                                                             onClick={async () => {
                                                                                 const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                const res = await createGlobalPlayer(player.name);
+                                                                                const res = await createGlobalPlayer(player.name, null, player.birth_date);
                                                                                 if (res.success && res.data) {
                                                                                     await handleLinkPlayer(player.id, res.data);
                                                                                 } else {
@@ -1243,6 +1309,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                     setEditNumber(player.number?.toString() || "");
                                                                     setEditPosition(player.position || "");
                                                                     setEditBirthDate(player.birth_date || "");
+                                                                    setEditName(player.name || "");
                                                                 }}
                                                             >
                                                                 <Edit2 className="mr-3 h-4 w-4" />

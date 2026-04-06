@@ -54,7 +54,7 @@ export async function recordPayment(data: {
     const insertData: any = {
         user_id: user.id,
         amount: data.amount,
-        status: data.status,
+        status: 'pending', // FORCE status to pending for manual verification
         payment_method: data.payment_method,
         provider_id: data.charge_id,
         plan: data.plan_type,

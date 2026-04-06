@@ -90,113 +90,123 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="border border-border/10 rounded-none overflow-hidden bg-white/5">
-                <Table>
-                    <TableHeader className="bg-white/5">
-                        <TableRow className="border-none hover:bg-transparent">
-                            <TableHead className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 h-10">{t("team_name")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 h-10">{t("contact_info")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 h-10 text-center">{t("payment_status")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 h-10 text-center">{t("slip")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 h-10 text-center">Actions</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 h-10 text-right">{t("date")}</TableHead>
+        <div className="w-full">
+            <div className="w-full overflow-x-auto rounded-none">
+                <Table className="min-w-[800px] border-separate border-spacing-0">
+                    <TableHeader className="bg-muted/5">
+                        <TableRow className="h-10 border-b border-border/10 hover:bg-muted/5 transition-colors">
+                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("team_name")}</TableHead>
+                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("contact_info")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("payment_status")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("slip")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">Actions</TableHead>
+                            <TableHead className="text-right px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("date")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {registrations.length > 0 ? (
                             registrations.map((reg) => (
-                                <TableRow key={reg.id} className="border-none hover:bg-white/5 transition-colors group">
-                                    <TableCell className="py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 rounded-none bg-white/10 flex items-center justify-center">
+                                <TableRow key={reg.id} className="h-16 border-b border-border/5 hover:bg-muted/5 transition-colors group">
+                                    <TableCell className="px-6 border-b border-border/5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-9 w-9 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center shrink-0">
                                                 <Home className="h-4 w-4 text-primary" />
                                             </div>
-                                            <span className="font-black uppercase italic tracking-tighter text-sm">{reg.team_name}</span>
+                                            <span className="font-black uppercase italic tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="py-4">
+                                    <TableCell className="px-6 border-b border-border/5">
                                         <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-muted-foreground/80">
+                                            <div className="flex items-center gap-2 text-[11px] font-black uppercase italic tracking-tight text-foreground/80">
                                                 <User className="h-3 w-3 text-primary" />
                                                 {reg.contact_name}
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[9px] font-medium text-muted-foreground/40">
+                                            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/40 tabular-nums uppercase">
                                                 <Phone className="h-3 w-3" />
                                                 {reg.contact_phone}
                                             </div>
                                             {reg.description && (
-                                                <div className="flex items-center gap-1.5 text-[9px] font-bold text-secondary/70 mt-1 uppercase italic tracking-tight bg-secondary/5 px-1 py-0.5 border border-secondary/10 w-fit">
-                                                    <FileText className="h-2.5 w-2.5" />
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-widest text-secondary/60 mt-1">
+                                                    <FileText className="h-3 w-3" />
                                                     {reg.description}
                                                 </div>
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center py-4">
+                                    <TableCell className="text-center px-4 border-b border-border/5">
                                         <Badge variant="outline" className={cn(
-                                            "rounded-none border-none text-[9px] font-black uppercase px-2 py-0.5",
-                                            reg.payment_status === 'PAID' ? "bg-secondary text-secondary-foreground" :
-                                            reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground" : "bg-white/10 text-muted-foreground"
+                                            "rounded-none border-none text-[10px] font-black uppercase px-2.5 py-1 tracking-widest",
+                                            reg.payment_status === 'PAID' ? "bg-secondary text-secondary-foreground shadow-[0_0_10px_rgba(0,196,154,0.2)]" :
+                                            reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"
                                         )}>
                                             {reg.payment_status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-center py-4">
+                                    <TableCell className="text-center px-4 border-b border-border/5">
                                         {reg.slip_url ? (
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-8 px-2 text-[10px] font-black uppercase italic tracking-tight text-primary hover:text-primary hover:bg-primary/10 rounded-none"
+                                                className="h-9 px-3 text-[10px] font-black uppercase italic tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
                                                 onClick={() => window.open(reg.slip_url!, "_blank")}
                                             >
-                                                <ExternalLink className="h-3 w-3 mr-1" />
+                                                <ExternalLink className="h-3.5 w-3.5 mr-2" />
                                                 {t("view_slip")}
                                             </Button>
                                         ) : (
-                                            <span className="text-[10px] font-bold text-muted-foreground/20 italic">No Slip</span>
+                                            <span className="text-[10px] font-black uppercase italic text-muted-foreground/20 tracking-tighter">No Slip</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-center py-4">
+                                    <TableCell className="text-center px-4 border-b border-border/5">
                                         {reg.payment_status === 'PENDING' && (
                                             <div className="flex items-center justify-center gap-2">
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-8 w-8 p-0 rounded-none border-none bg-secondary/20 text-secondary hover:bg-secondary hover:text-secondary-foreground transition-all"
+                                                    className="h-9 w-9 p-0 rounded-none border-none bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground transition-all shadow-sm"
                                                     disabled={isActing !== null}
                                                     onClick={() => handleApprove(reg.id)}
                                                     title="Approve"
                                                 >
-                                                    {isActing === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                                    {isActing === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-5 w-5" />}
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-8 w-8 p-0 rounded-none border-none bg-destructive/20 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all"
+                                                    className="h-9 w-9 p-0 rounded-none border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-all shadow-sm"
                                                     disabled={isActing !== null}
                                                     onClick={() => setRegistrationToReject(reg.id)}
                                                     title="Reject"
                                                 >
-                                                    <X className="h-4 w-4" />
+                                                    <X className="h-5 w-5" />
                                                 </Button>
                                             </div>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-right py-4 text-[9px] font-bold text-muted-foreground/40 uppercase whitespace-nowrap">
+                                    <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 uppercase italic tabular-nums whitespace-nowrap">
                                         {new Date(reg.created_at).toLocaleString('en-US', { 
                                             day: '2-digit', 
                                             month: 'short', 
                                             hour: '2-digit', 
-                                            minute: '2-digit' 
-                                        })}
+                                            minute: '2-digit',
+                                            hour12: false
+                                        }).replace(',', '')}
                                     </TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic text-[11px] border-none bg-white/2">
-                                    {t("no_registrations")}
+                                <TableCell colSpan={6} className="py-24 bg-muted/2">
+                                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                                        <div className="h-16 w-16 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center relative group">
+                                            <div className="absolute top-0 left-0 w-1 h-full bg-muted/20" />
+                                            <FileText className="h-8 w-8 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h3 className="text-sm font-black uppercase italic tracking-widest text-muted-foreground/40">{t("no_registrations")}</h3>
+                                            <p className="text-[10px] font-bold uppercase text-muted-foreground/20">Waiting for first signup</p>
+                                        </div>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}

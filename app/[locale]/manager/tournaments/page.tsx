@@ -17,20 +17,20 @@ export default async function ManagerTournamentsPage() {
     const completedCount = tournaments.filter((t: any) => t.status === "completed").length;
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-secondary/20 pb-6">
+        <div className="flex flex-col gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-5xl font-black italic tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
+                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
                         {tNav("tournaments")}
                     </h1>
-                    <p className="text-muted-foreground/60 text-xs font-bold uppercase tracking-widest max-w-xl">
+                    <p className="text-muted-foreground/60 text-[10px] md:text-xs font-bold uppercase tracking-widest max-w-xl">
                         {t("subtitle") || "Browse and search for active football tournaments to register your team."}
                     </p>
                 </div>
             </div>
 
-            <div className="grid gap-3 grid-cols-3 md:gap-6 md:grid-cols-3">
-                <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+            <div className="grid gap-2 grid-cols-3 md:gap-3 md:grid-cols-3">
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-secondary/50">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -47,7 +47,7 @@ export default async function ManagerTournamentsPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-secondary/50">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary/60" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -64,7 +64,7 @@ export default async function ManagerTournamentsPage() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card className="border border-border bg-card shadow-none overflow-hidden relative group transition-all hover:border-secondary/30">
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-secondary/30">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary/40" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
@@ -83,9 +83,12 @@ export default async function ManagerTournamentsPage() {
                 </Card>
             </div>
 
-            <div className="space-y-6">
-                <div className="flex items-center justify-between border-b-4 border-secondary/20 pb-6">
-                    <h2 className="text-2xl font-bold tracking-tight uppercase italic leading-none">{t("available_competitions")}</h2>
+            <div className="space-y-4 md:space-y-6">
+                <div className="flex items-center gap-3 mb-4 md:mb-6">
+                    <Trophy className="h-5 w-5 text-secondary" />
+                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                        {t("available_competitions")}
+                    </h3>
                 </div>
                 <PublicTournamentList onlyActive={true} isManager={true} />
             </div>

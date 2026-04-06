@@ -6,7 +6,13 @@ import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnounceme
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff } from "lucide-react";
+import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -107,10 +113,10 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
     if (!isEditable && announcements.length === 0) return null;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-1">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Megaphone className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
@@ -192,21 +198,21 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("no_announcements")}</h3>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-2 md:gap-3">
                     {announcements.map(ann => (
                         <div
                             key={ann.id}
                             className={cn(
                                 "p-4 md:p-6 rounded-none border border-border/20 transition-all relative overflow-hidden group/item",
-                                ann.is_pinned ? "bg-secondary/[0.03] border-secondary/20 shadow-[0_0_20px_rgba(0,196,154,0.05)]" : "bg-card hover:bg-white/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-secondary/[0.03] border-secondary/20" : "bg-card hover:bg-white/[0.02] hover:border-border/40"
                             )}
                         >
                             {ann.is_pinned && (
-                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[0_0_8px_rgba(0,196,154,0.6)]" />
+                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                             )}
                             
-                            <div className="flex items-start justify-between gap-4 relative z-10">
-                                <div className="flex-1 space-y-2">
+                            <div className="flex items-start justify-between gap-2 md:gap-3 relative z-10">
+                                <div className="flex-1 space-y-2 md:space-y-3">
                                     <div className="flex items-center gap-3">
                                         {ann.is_pinned && (
                                             <div className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-none shadow-[0_0_10px_rgba(0,196,154,0.3)]">
@@ -226,7 +232,6 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                     )}
                                     
                                     <div className="flex items-center gap-2 pt-2">
-                                        <div className="h-px w-4 bg-border/20" />
                                         <p className="text-[9px] font-black uppercase italic tracking-widest text-muted-foreground/40">
                                             {formatDate(ann.created_at, "MMM d, yyyy · HH:mm", locale)}
                                         </p>
@@ -234,23 +239,64 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                 </div>
 
                                 {isEditable && (
-                                    <div className="flex gap-2 shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 rounded-none border border-border/20 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/30 transition-all"
-                                            onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                        >
-                                            {ann.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 rounded-none border border-border/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
-                                            onClick={() => setDeleteId(ann.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {/* Desktop Actions */}
+                                        <div className="hidden md:flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 rounded-none border border-border/20 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/30 transition-all"
+                                                onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
+                                                title={ann.is_pinned ? t("unpin") : t("pin")}
+                                            >
+                                                {ann.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 rounded-none border border-border/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
+                                                onClick={() => setDeleteId(ann.id)}
+                                                title={tCommon("delete")}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+
+                                        {/* Mobile Actions (3 dots) */}
+                                        <div className="md:hidden">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border border-border/20">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="rounded-none border-border/40">
+                                                    <DropdownMenuItem 
+                                                        onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
+                                                        className="font-bold uppercase italic text-[10px] tracking-widest"
+                                                    >
+                                                        {ann.is_pinned ? (
+                                                            <>
+                                                                <PinOff className="h-3.5 w-3.5 mr-2" />
+                                                                {t("unpin")}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Pin className="h-3.5 w-3.5 mr-2" />
+                                                                {t("pin")}
+                                                            </>
+                                                        )}
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem 
+                                                        onClick={() => setDeleteId(ann.id)}
+                                                        className="font-bold uppercase italic text-[10px] tracking-widest text-destructive focus:text-destructive"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5 mr-2" />
+                                                        {tCommon("delete")}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </div>
                                 )}
                             </div>

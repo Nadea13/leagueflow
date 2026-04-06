@@ -61,7 +61,7 @@ export function CookieBanner() {
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                         <div className="space-y-2 flex-1">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
-                                🍪 {t("title")}
+                                {t("title")}
                             </h3>
                             <p className="text-sm text-muted-foreground">
                                 {t("description")}

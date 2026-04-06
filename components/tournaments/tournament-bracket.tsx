@@ -68,7 +68,7 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
     const baseSlotH = cardHeight + MATCH_GAP;
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 md:space-y-6">
             {/* Hidden measurement card */}
             <div className="absolute opacity-0 pointer-events-none" style={{ width: CARD_W }}>
                 <div ref={measureRef}>
@@ -94,7 +94,7 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
                             <div key={stage} className="flex flex-col shrink-0">
                                 {/* Stage label */}
                                 <div
-                                    className="text-center mb-6 pr-12"
+                                    className="text-center mb-4 md:mb-6 pr-12"
                                     style={{ width: CARD_W + (!isLast ? CONNECTOR_W : 0) }}
                                 >
                                     <span className="text-[10px] font-black uppercase italic tracking-tighter text-secondary/80 bg-secondary/5 px-3 py-1 border-l-2 border-secondary">

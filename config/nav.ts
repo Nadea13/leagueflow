@@ -29,11 +29,6 @@ export const organizerNavItems: NavItem[] = [
         icon: Mail,
     },
     {
-        titleKey: "teams",
-        href: "/organizer/teams",
-        icon: Users,
-    },
-    {
         titleKey: "billing",
         href: "/organizer/billing",
         icon: CreditCard,
@@ -99,11 +94,6 @@ export const bottomNavItems: NavItem[] = [
         titleKey: "leagues",
         href: "/dashboard/tournaments",
         icon: Trophy,
-    },
-    {
-        titleKey: "teams",
-        href: "/manager/my-teams",
-        icon: Users,
     },
     {
         titleKey: "settings",

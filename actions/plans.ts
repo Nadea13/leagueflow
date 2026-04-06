@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { Plan, ActionResponse } from "@/types";
 import { revalidatePath } from "next/cache";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function getPlans(options?: { role?: 'organizer' | 'manager' }): Promise<ActionResponse<Plan[]>> {
     const supabase = await createClient();
@@ -125,22 +126,11 @@ export async function getPlans(options?: { role?: 'organizer' | 'manager' }): Pr
 }
 
 export async function upsertPlan(plan: Partial<Plan>, role: 'organizer' | 'manager'): Promise<ActionResponse<Plan>> {
-    const supabase = await createClient();
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
+    const supabase = auth.supabase;
     const tableName = role === 'manager' ? 'manager_plans' : 'organizer_plans';
-
-    // Verify admin access
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Unauthorized' };
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') {
-        return { success: false, error: 'Unauthorized access' };
-    }
 
     try {
         const { data, error } = await supabase
@@ -167,22 +157,11 @@ export async function upsertPlan(plan: Partial<Plan>, role: 'organizer' | 'manag
 }
 
 export async function deletePlan(id: string, role: 'organizer' | 'manager'): Promise<ActionResponse> {
-    const supabase = await createClient();
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
+    const supabase = auth.supabase;
     const tableName = role === 'manager' ? 'manager_plans' : 'organizer_plans';
-
-    // Verify admin access
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Unauthorized' };
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-    if (profile?.role !== 'admin') {
-        return { success: false, error: 'Unauthorized access' };
-    }
 
     try {
         const { error } = await supabase

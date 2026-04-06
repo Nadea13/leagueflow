@@ -31,7 +31,7 @@ export default async function DashboardLayout({ children, params }: { children: 
             </div>
             <div className="flex flex-col">
                 <DashboardHeader userEmail={user?.email || undefined} role={userRole} isOrganizer={isOrganizer} />
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-6">
+                <main className="flex flex-1 flex-col gap-4 p-2 md:p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>
             </div>

@@ -110,7 +110,7 @@ export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' 
 export interface MatchEvent {
     id: string;
     match_id: string;
-    team_id: string;
+    team_id: string | null;
     player_id?: string | null;
     event_type: EventType;
     minute: number;

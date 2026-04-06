@@ -66,8 +66,11 @@
         "no_results": "ไม่พบข้อมูล",
         "overview": "ภาพรวม",
         "description": "คำอธิบาย",
+        "copy": "คัดลอก",
         "full": "เต็มแล้ว",
-        "closed": "ปิดรับสมัคร"
+        "closed": "ปิดรับสมัคร",
+        "generate_qr": "สร้าง QR Code",
+        "browse_tournaments_desc": "เริ่มต้นการเดินทางแข่งขันของคุณวันนี้"
     },
     "Dashboard": {
         "title": "แดชบอร์ด",
@@ -96,8 +99,7 @@
         "title": "404",
         "heading": "ไม่พบหน้านี้",
         "desc": "ขออภัย เราไม่พบหน้าที่คุณกำลังค้นหา มันอาจจะถูกย้ายหรือลบไปแล้ว",
-        "button": "กลับหน้าหลัก",
-        "generate_qr": "สร้าง QR Code"
+        "button": "กลับหน้าหลัก"
     },
     "Nav": {
         "dashboard": "แดชบอร์ด",
@@ -205,6 +207,7 @@
         "register_desc": "กรอกรายละเอียดด้านล่างเพื่อลงทะเบียนทีมของคุณเข้าร่วมการแข่งขันนี้"
     },
     "Tournament": {
+        "format": "รูปแบบ",
         "create_new": "สร้างทัวร์นาเมนต์",
         "add_team": "เพิ่มทีม",
         "generate_fixtures": "สร้างตารางการแข่งขัน",
@@ -220,6 +223,7 @@
         "bracket_desc": "ความคืบหน้ารอบน็อคเอาท์",
         "top_scorers": "ดาวซัลโว",
         "top_scorers_desc": "ติดตามอันดับผู้ทำประตูสูงสุดและนักเตะยอดเยี่ยม",
+        "player_stats": "สถิติผู้เล่น",
         "match_schedule": "ตารางการแข่งขัน",
         "manage_fixtures": "จัดการตารางและผลการแข่งขัน",
         "manage_teams": "จัดการทีมที่เข้าร่วม",
@@ -233,18 +237,25 @@
         "yellow_cards": "ใบเหลือง",
         "no_data": "ไม่มีข้อมูล",
         "public_link": "ลิงก์รับสมัครสาธารณะ",
-        "upsell_pro_required": "อัปเกรดเป็น Pro เพื่อดูดาวซัลโว",
-        "upsell_view_plans": "ดูแพ็คเกจ",
-        "upsell_pro_feature": "ฟีเจอร์ Pro",
-        "export_groups": "ส่งออกกลุ่ม",
+        "actions": "การจัดการทัวร์นาเมนต์",
+        "actions_desc": "เครื่องมือจัดการและการลงทะเบียน",
+        "registration": "การลงทะเบียน",
+        "description": "รายละเอียดทัวร์นาเมนต์",
+        "cancel": "ยกเลิก",
+        "danger_zone": "พื้นที่อันตราย",
+        "delete_tournament": "ลบทัวร์นาเมนต์",
+        "delete_desc": "เมื่อคุณลบทัวร์นาเมนต์แล้ว จะไม่สามารถย้อนกลับได้ โปรดแน่ใจก่อนดำเนินการ",
+        "reset_fixtures": "รีเซ็ตตารางแข่ง",
+        "reset_desc": "การดำเนินการนี้จะลบการแข่งขันและข้อมูลตารางคะแนนทั้งหมด และไม่สามารถยกเลิกได้",
+        "type_to_confirm": "โปรดพิมพ์ \"{text}\" เพื่อยืนยัน:",
+        "active": "กำลังแข่งขัน",
         "group_header": "กลุ่ม {group}",
         "stats_participating_teams": "ทีมที่เข้าร่วม",
         "stats_teams_registered": "ทีมที่ลงทะเบียน",
-        "stats_matches": "การแข่งขัน",
-        "stats_matches_played": "แข่งขันไปแล้ว",
-        "stats_total_goals": "ประตูรวม",
-        "stats_goals_scored": "ประตูที่ยิงได้",
-        "cancel": "ยกเลิก"
+        "stats_matches": "แมตช์",
+        "stats_matches_played": "แมตช์ที่แข่งแล้ว",
+        "stats_total_goals": "ประตูทั้งหมด",
+        "stats_goals_scored": "ประตูที่ทำได้"
     },
     "Format": {
         "league": "ลีก",
@@ -303,6 +314,8 @@
         "full_time": "จบการแข่งขัน"
     },
     "Console": {
+        "tournament": "รายการแข่งขัน",
+        "stage": "รอบการแข่งขัน",
         "console": "คอนโซล",
         "match_console": "คอนโซลการแข่งขัน",
         "set_time": "ตั้งเวลา",
@@ -376,6 +389,8 @@
         "second_yellow_warning": "ผู้เล่นมีใบเหลืองอยู่แล้ว เหตุการณ์นี้จะถูกบันทึกเป็นใบเหลืองที่สอง (ใบแดง) ต้องการดำเนินการต่อหรือไม่?"
     },
     "Team": {
+        "dashboard": "แดชบอร์ด",
+        "dashboard_desc": "จัดการทีมของคุณและการเข้าร่วมการแข่งขัน",
         "create": "สร้างทีม",
         "tournaments_folder": "ทัวร์นาเมนต์",
         "teams_folder_desc": "โฟลเดอร์ทีม",
@@ -407,7 +422,9 @@
         "team_logo": "โลโก้ทีม",
         "add_team_button": "เพิ่มทีม",
         "no_description": "ไม่มีคำอธิบาย",
-        "team_description": "รายละเอียดทีม"
+        "team_description": "รายละเอียดทีม",
+        "updated_successfully": "อัปเดตข้อมูลทีมเรียบร้อยแล้ว",
+        "created_successfully": "สร้างทีมเรียบร้อยแล้ว"
     },
     "Dialog": {
         "create_tournament": "สร้างทัวร์นาเมนต์",
@@ -602,6 +619,7 @@
         "team": "ทีม",
         "goals": "ประตู",
         "no_goals": "ยังไม่มีการทำประตู",
+        "showing_top_10": "แสดงผู้เล่นที่ทำประตูสูงสุด 10 อันดับแรก",
         "export": "บันทึก"
     },
     "Fixtures": {
@@ -670,7 +688,10 @@
         "upload_photo": "อัปโหลดรูป",
         "position_placeholder": "เช่น กองหน้า, ผู้รักษาประตู",
         "no_players": "ยังไม่มีผู้เล่น",
-        "no_players_desc": "เพิ่มผู้เล่นในทีมนี้เพื่อติดตามสถิติ",
+        "no_players_desc": "ยังไม่มีรายชื่อนักกีฬาในทีมนี้",
+        "connect_global": "ดึงข้อมูลจากฐานข้อมูลกลาง",
+        "get_started_by_adding_your_first_player_above": "เริ่มโดยการเพิ่มผู้เล่นคนแรกของคุณที่ด้านบน",
+        "remove_player": "ลบผู้เล่น",
         "delete_confirm": "ลบผู้เล่น?",
         "delete_desc": "การดำเนินการนี้ไม่สามารถย้อนกลับได้",
         "added_success": "เพิ่มผู้เล่นเรียบร้อยแล้ว",
@@ -682,12 +703,17 @@
         "defender": "กองหลัง",
         "midfielder": "กองกลาง",
         "forward": "กองหน้า",
+        "gk": "GK",
+        "df": "DF",
+        "mf": "MF",
+        "fw": "FW",
         "import_roster": "นำเข้ารายชื่อ",
         "import_description": "นำเข้าผู้เล่นจากทีมอื่นของคุณ",
         "import_from_team": "นำเข้าจากทีม",
         "import_btn": "นำเข้าผู้เล่น",
         "deadline_passed": "ครบกำหนดระยะเวลาส่งเอกสารแล้ว ไม่สามารถแก้ไขรายชื่อได้",
         "deadline_expired": "หมดเขตแล้ว",
+        "squad_secured": "รายชื่อถูกล็อกแล้ว",
         "deadline_locked_desc": "{date} ได้ผ่านพ้นไปแล้ว รายชื่อนักกีฬาถูกล็อคและไม่สามารถแก้ไขได้",
         "unlock_roster": "ปลดล็อกรายชื่อ",
         "submit_lock": "ยืนยันและล็อกรายชื่อ",
@@ -701,6 +727,14 @@
         "scanning_database": "กำลังค้นหาในฐานข้อมูล",
         "no_records_found": "ไม่พบข้อมูล",
         "create_global_id_sync": "สร้าง Global ID และซิงค์",
+        "syncs_across_all_tournament_rosters": "ซิงค์ข้อมูลกับรายชื่อในรายการแข่งขันอื่นๆ ทั้งหมด",
+        "player_identification": "เอกสารยืนยันตัวตนนักกีฬา",
+        "no_documents_uploaded": "ยังไม่ได้อัปโหลดเอกสาร",
+        "fullscreen": "ดูแบบเต็มหน้าจอ",
+        "profile_must_be_connected_to_a_global_identity_to_manage_documents": "โปรไฟล์ต้องเชื่อมต่อกับตัวตนส่วนกลางเพื่อจัดการเอกสาร",
+        "initialize_global_profile": "เริ่มสร้างโปรไฟล์ส่วนกลาง",
+        "verified": "ยืนยันแล้ว",
+        "local_only": "ข้อมูลในเครื่องเท่านั้น",
         "team_details_locked": "ข้อมูลทีมถูกล็อกแล้ว",
         "import_roster_desc": "เพิ่มนักกีฬาเข้าทีมของคุณโดยคัดลอกมาจากทีมอื่นหรืออัปโหลดจากไฟล์",
         "from_my_teams": "จากทีมของฉัน",
@@ -718,20 +752,7 @@
         "importing": "กำลังนำเข้า...",
         "profile_management": "การจัดการโปรไฟล์",
         "global_identity_for": "ข้อมูลตัวตนส่วนกลางของ",
-        "global_profile_photo": "รูปประจำตัวระดับสากล",
-        "syncs_across_all_tournament_rosters": "ข้อมูลนี้จะซิงค์กับทุกทัวร์นาเมนต์ที่เข้าร่วม",
-        "player_identification": "การยืนยันตัวตนนักกีฬา",
-        "no_documents_uploaded": "ยังไม่ได้อัปโหลดเอกสาร",
-        "fullscreen": "ดูแบบเต็มหน้าจอ",
-        "profile_must_be_connected_to_a_global_identity_to_manage_documents": "ต้องเชื่อมต่อโปรไฟล์กับ Global Identity ก่อนจึงจะสามารถจัดการเอกสารได้",
-        "initialize_global_profile": "ตั้งค่าโปรไฟล์สากล",
-        "verified": "ยืนยันแล้ว",
-        "local_only": "ข้อมูลในเครื่องเท่านั้น",
-        "gk": "GK",
-        "df": "DF",
-        "mf": "MF",
-        "fw": "FW",
-        "get_started_by_adding_your_first_player_above": "เริ่มเพิ่มผู้เล่นคนแรกของคุณได้ที่ปุ่มด้านบน"
+        "global_profile_photo": "รูปประจำตัวระดับสากล"
     },
     "Landing": {
         "nav_features": "ฟีเจอร์",
@@ -967,7 +988,8 @@
         "analytics_desc": "ช่วยให้เราเข้าใจการใช้งานเว็บไซต์ของคุณเพื่อนำไปปรับปรุงให้ดียิ่งขึ้น",
         "marketing": "เพื่อการตลาด (Marketing)",
         "marketing_desc": "ใช้สำหรับนำเสนอโฆษณาที่เกี่ยวข้องกับคุณ",
-        "save": "บันทึกการตั้งค่า"
+        "save": "บันทึกการตั้งค่า",
+        "cancel": "ยกเลิก"
     },
     "Legal": {
         "title": "เอกสารทางกฎหมาย",
@@ -979,6 +1001,8 @@
         "title": "การตั้งค่า",
         "subtitle": "จัดการการตั้งค่าแอปพลิเคชัน",
         "preferences": "ความชอบ",
+        "language_desc": "เลือกภาษาที่คุณต้องการใช้งาน",
+        "theme_desc": "เลือกโหมดการแสดงผล (สว่าง/มืด)",
         "legal": "กฎหมายและการปฏิบัติตามข้อกำหนด",
         "legal_desc": "ตรวจสอบนโยบายและข้อตกลงของเรา",
         "danger_zone": "พื้นที่อันตราย",
@@ -1001,6 +1025,8 @@
         "invite_sent_desc": "ส่งคำเชิญไปยังอีเมลที่ระบุเรียบร้อยแล้ว",
         "no_collaborators": "ยังไม่มีผู้ช่วยจัดการ เชิญเพื่อนมาช่วยสิ!",
         "confirm_remove": "ลบผู้ช่วยจัดการคนนี้?",
+        "remove_collaborator": "ลบผู้ช่วยจัดการ",
+        "remove": "ลบ",
         "removed": "ลบผู้ช่วยจัดการแล้ว",
         "removed_desc": "ผู้ช่วยจัดการถูกลบออกจากทัวร์นาเมนต์นี้แล้ว",
         "status_accepted": "เข้าร่วมแล้ว",
@@ -1203,6 +1229,7 @@
         "expires_at": "หมดอายุ",
         "amount_col": "จำนวนเงิน",
         "no_history": "ไม่พบประวัติการชำระเงิน",
+        "select_plan_title": "เลือกแผน",
         "select_plan_prompt": "เลือกแผนด้านบนเพื่อดูช่องทางการชำระเงิน",
         "payment_details": "รายละเอียดการชำระเงิน",
         "payment_pending": "กำลังดำเนินการ",
@@ -1218,7 +1245,15 @@
         "method_promptpay": "พร้อมเพย์",
         "method_credit_card": "บัตรเครดิต",
         "upload_slip": "อัปโหลดสลิปโอนเงิน",
-        "select_file": "เลือกไฟล์สลิป"
+        "select_file": "เลือกไฟล์สลิป",
+        "no_payment_records": "ไม่พบข้อมูลการชำระเงิน",
+        "paid_instruction": "กรุณาสแกน QR Code เพื่อชำระเงิน จากนั้นอัปโหลดสลิปเพื่อแจ้งโอนเงิน",
+        "payment_pending_title": "กำลังรอการตรวจสอบ",
+        "yearly": { "title": "แพ็คเกจรายปี (Pro)" },
+        "monthly": { "title": "แพ็คเกจรายเดือน (Pro)" },
+        "tournament": { "title": "รายทัวร์นาเมนต์ (Pro)" },
+        "free": { "title": "เริ่มต้น (Starter)" },
+        "manager_pro": { "title": "ตัวจัดการ (Manager Pro)" }
     },
     "PublicView": {
         "overview": "ภาพรวม",
@@ -1244,7 +1279,13 @@
         "teams": "ทีม",
         "matches_played": "แข่งแล้ว",
         "total_goals": "ประตู",
-        "about_tournament": "เกี่ยวกับทัวร์นาเมนต์"
+        "about_tournament": "เกี่ยวกับทัวร์นาเมนต์",
+        "tournament_stats": "สถิติทัวร์นาเมนต์",
+        "top_scorers": "ดาวซัลโว",
+        "top_scorers_desc": "การแข่งขันชิงรองเท้าทองคำ",
+        "player_stats": "สถิติผู้เล่น",
+        "player_stats_desc": "การติดตามผลงานอย่างครอบคลุม",
+        "banned_players": "ผู้เล่นที่ติดโทษแบน"
     },
     "Venue": {
         "title": "สนามแข่งขัน",
@@ -1298,6 +1339,8 @@
         "post": "โพสต์",
         "no_announcements": "ยังไม่มีประกาศ",
         "pinned": "ปักหมุด",
+        "pin": "ปักหมุด",
+        "unpin": "เลิกปักหมุด",
         "delete_announcement": "ลบประกาศ",
         "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบประกาศนี้?",
         "title_placeholder": "หัวข้อประกาศ",
@@ -1341,8 +1384,13 @@
         "player": "ผู้เล่น",
         "team": "ทีม",
         "mp": "ลงเล่น",
+        "goals": "ประตู",
+        "assists": "แอสซิสต์",
+        "yellow_cards": "ใบเหลือง",
+        "red_cards": "ใบแดง",
         "status": "สถานะ",
         "banned": "ถูกแบน",
+        "showing_top_10": "แสดงผู้เล่นที่ทำประตูสูงสุด 10 อันดับแรก",
         "no_stats": "ยังไม่มีสถิติผู้เล่น"
     },
     "Home": {

@@ -126,7 +126,6 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
             if (values.logoFile?.[0]) {
                 formData.append("logoFile", values.logoFile[0]);
             } else if (logoPreviewUrl && !logoPreviewUrl.startsWith('data:')) {
-                // It's an existing URL
                 formData.append("logoUrl", logoPreviewUrl);
             }
 
@@ -249,7 +248,6 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                         )}
                     />
 
-                    {/* Separate Logo Upload Field */}
                     <FormField
                         control={form.control}
                         name="logoFile"
@@ -361,16 +359,20 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                     <>
                         <Separator />
 
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div>
-                                    <h3 className="text-lg font-semibold text-foreground">{t("payment_details")}</h3>
-                                    <p className="text-sm text-muted-foreground">{t("scan_or_transfer")}</p>
-                                </div>
+                        <div className="bg-card border border-border/10 shadow-2xl rounded-none p-6 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-8 bg-secondary" />
+                            <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-4 border-b border-border/10 relative -mx-6 -mt-6 mb-6">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                                <h3 className="text-sm font-black italic uppercase tracking-widest text-secondary flex items-center gap-2">
+                                    <Smartphone className="w-4 h-4" />
+                                    {t("payment_details")}
+                                </h3>
                             </div>
+                            <p className="text-xs font-bold uppercase italic tracking-tighter text-muted-foreground/60 mb-6">
+                                {t("scan_or_transfer")}
+                            </p>
 
                             <div className="grid md:grid-cols-2 gap-8 items-stretch">
-                                {/* QR Code Section */}
                                 {tournament.bank_account_number && (
                                     <div className="rounded-none shadow-sm border">
                                         <PromptPayQR
@@ -380,20 +382,20 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                     </div>
                                 )}
 
-                                {/* Bank Details & Upload */}
                                 <div className="flex flex-col h-full gap-6">
-                                    <div className="bg-muted/50 rounded-none p-5 space-y-3 text-sm">
-                                        <div className="flex justify-between items-center pb-2 border-b border-border/50">
-                                            <span className="text-muted-foreground">{t("bank_label")}</span>
-                                            <span className="font-medium text-foreground">{tournament.bank_name || "-"}</span>
+                                    <div className="bg-card border border-border/10 shadow-xl rounded-none p-6 space-y-4 text-sm relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-8 bg-secondary/30" />
+                                        <div className="flex justify-between items-center pb-3 border-b border-border/5">
+                                            <span className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40">{t("bank_label")}</span>
+                                            <span className="font-black italic uppercase text-foreground">{tournament.bank_name || "-"}</span>
                                         </div>
-                                        <div className="flex justify-between items-center pb-2 border-b border-border/50">
-                                            <span className="text-muted-foreground">{t("account_name_label")}</span>
-                                            <span className="font-medium text-foreground">{tournament.bank_account_name || "-"}</span>
+                                        <div className="flex justify-between items-center pb-3 border-b border-border/5">
+                                            <span className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40">{t("account_name_label")}</span>
+                                            <span className="font-black italic uppercase text-foreground">{tournament.bank_account_name || "-"}</span>
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-muted-foreground">{t("account_no_label")}</span>
-                                            <span className="font-mono font-medium text-primary text-base">{tournament.bank_account_number || "-"}</span>
+                                        <div className="flex justify-between items-center pt-1">
+                                            <span className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40">{t("account_no_label")}</span>
+                                            <span className="font-mono font-bold text-secondary text-lg leading-none tracking-tighter">{tournament.bank_account_number || "-"}</span>
                                         </div>
                                     </div>
 
@@ -424,14 +426,14 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                                                     {...rest}
                                                                 />
                                                                 <div className="flex flex-col items-center gap-4">
-                                                                    <div className="p-4 bg-primary/10 rounded-none text-primary group-hover:scale-110 transition-transform">
+                                                                    <div className="p-4 bg-secondary/10 rounded-none text-secondary group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(var(--secondary),0.1)]">
                                                                         <Upload className="w-8 h-8" />
                                                                     </div>
                                                                     <div className="space-y-1">
-                                                                        <div className="text-base font-semibold text-foreground">
+                                                                        <div className="text-sm font-black italic uppercase tracking-widest text-foreground">
                                                                             {t("click_to_upload")}
                                                                         </div>
-                                                                        <p className="text-sm text-muted-foreground">
+                                                                        <p className="text-[10px] font-bold uppercase italic tracking-widest text-muted-foreground/40">
                                                                             {t("file_types_hint")}
                                                                         </p>
                                                                     </div>
@@ -441,7 +443,6 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                                             <div className="relative rounded-none overflow-hidden border bg-muted/30 p-4">
                                                                 <div className="flex flex-col gap-4">
                                                                     <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-white flex items-center justify-center">
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                         <img
                                                                             src={slipPreviewUrl}
                                                                             alt="Slip preview"

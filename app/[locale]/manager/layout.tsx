@@ -31,7 +31,7 @@ export default async function ManagerLayout({ children, params }: { children: Re
             </div>
             <div className="flex flex-col">
                 <DashboardHeader userEmail={user?.email || undefined} role={userRole} isOrganizer={isOrganizer} forcedMode="team" />
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-6">
+                <main className="flex flex-1 flex-col gap-4 p-2 md:p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>
             </div>

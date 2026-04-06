@@ -11,11 +11,15 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
 
     if (!matches || matches.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
-                <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                    <Calendar className="h-6 w-6 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 border border-white/5 group relative overflow-hidden">
+                <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
+                <div className="h-16 w-16 rounded-none bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-secondary/30 transition-colors">
+                    <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                 </div>
-                <h3 className="text-sm font-medium text-muted-foreground">{t("no_matches")}</h3>
+                <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
+                    Stay tuned for match updates and schedules.
+                </p>
             </div>
         );
     }
@@ -55,47 +59,42 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
                     else headerText = stage?.replace('_', ' ').toUpperCase() || "";
                 }
 
-                const MatchList = (
-                    <div className="grid gap-3">
-                        {[...stageMatches]
-                            .sort((a, b) => {
-                                if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
-                                if (a.match_date !== b.match_date) return (a.match_date || '') > (b.match_date || '') ? 1 : -1;
-                                if (a.match_time !== b.match_time) return (a.match_time || '') > (b.match_time || '') ? 1 : -1;
-                                return (a.venue || '').localeCompare(b.venue || '', undefined, { numeric: true });
-                            })
-                            .map((match: any) => {
-                                const matchEvents = events.filter((e: any) => e.match_id === match.id);
-                                return (
-                                    <MatchCard
-                                        key={match.id}
-                                        match={match}
-                                        tournamentId={tournamentId}
-                                        goals={[]}
-                                        initialEvents={matchEvents}
-                                        isPublic={true}
-                                    />
-                                );
-                            })
-                        }
-                    </div>
-                );
-
-                if (key === 'group_stage') {
-                    return <div key={key}>{MatchList}</div>;
-                }
-
                 return (
-                    <Card key={key} className="overflow-hidden border-none shadow-sm ring-1 ring-border/50">
-                        <CardHeader className="py-3">
-                            <CardTitle className="text-md font-medium">
-                                {headerText}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-2 sm:p-4">
-                            {MatchList}
-                        </CardContent>
-                    </Card>
+                    <div key={key} className="space-y-4 md:space-y-6">
+                        {headerText && (
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <div className="h-px bg-secondary/30 flex-1" />
+                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-secondary">
+                                    {headerText}
+                                </h3>
+                                <div className="h-px bg-secondary/30 flex-1" />
+                            </div>
+                        )}
+                        <div className="space-y-[1px] bg-white/5 border border-white/5">
+                            {[...stageMatches]
+                                .sort((a, b) => {
+                                    if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
+                                    if (a.match_date !== b.match_date) return (a.match_date || '') > (b.match_date || '') ? 1 : -1;
+                                    if (a.match_time !== b.match_time) return (a.match_time || '') > (b.match_time || '') ? 1 : -1;
+                                    return (a.venue || '').localeCompare(b.venue || '', undefined, { numeric: true });
+                                })
+                                .map((match: any) => {
+                                    const matchEvents = events.filter((e: any) => e.match_id === match.id);
+                                    return (
+                                        <div key={match.id} className="relative group overflow-hidden">
+                                            <MatchCard
+                                                match={match}
+                                                tournamentId={tournamentId}
+                                                goals={[]}
+                                                initialEvents={matchEvents}
+                                                isPublic={true}
+                                            />
+                                        </div>
+                                    );
+                                })
+                            }
+                        </div>
+                    </div>
                 );
             })}
         </div>

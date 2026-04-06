@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { ActionResponse } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { validateUploadedFile } from "@/lib/file-validation";
 
 // Zod Schema for Validation (Basic fields, slip validated conditionally)
 const registrationSchema = z.object({
@@ -119,6 +120,9 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
 
         // Handle Logo Upload if provided as file
         if (logoFile && logoFile instanceof File && logoFile.size > 0) {
+            const fileCheck = validateUploadedFile(logoFile);
+            if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
             const fileExt = logoFile.name.split('.').pop();
             const fileName = `${tournamentId}/logo-${Date.now()}.${fileExt}`;
             const { error: logoUploadError } = await supabase.storage

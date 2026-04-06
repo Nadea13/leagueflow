@@ -177,7 +177,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col md:grid md:grid-cols-[160px_1fr_120px] items-center p-4 md:p-6 transition-all cursor-pointer group relative overflow-hidden",
+                "flex flex-col md:grid md:grid-cols-[160px_1fr_120px] items-center px-4 md:px-6 py-2 md:py-4 transition-all cursor-pointer group relative overflow-hidden",
                 isFinished ? "bg-[#050505]/60" : "bg-transparent hover:bg-white/5",
                 "gap-4",
                 isLive && "bg-secondary/5"
@@ -305,9 +305,9 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                 {/* Score Box */}
                 <div className="flex items-center justify-center shrink-0">
                     <div className={cn(
-                        "flex flex-col items-center justify-center min-w-[70px] md:min-w-[100px] py-2 px-3 border transition-all duration-300",
-                        isLive ? "bg-secondary text-secondary-foreground border-secondary shadow-lg shadow-secondary/20 scale-110" : 
-                        isFinished ? "bg-white/10 border-white/5 text-foreground" : "bg-white/5 border-white/5 text-muted-foreground/40"
+                        "flex flex-col items-center justify-center transition-all duration-300",
+                        isLive ? " text-secondary-foreground shadow-lg shadow-secondary/20 scale-110" : 
+                        isFinished ? " text-foreground" : " text-muted-foreground/40"
                     )}>
                         {isLive || isFinished ? (
                             <div className="flex flex-col items-center leading-none">

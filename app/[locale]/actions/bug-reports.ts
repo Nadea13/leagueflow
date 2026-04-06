@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { ActionResponse } from "@/types"
+import { requireAdminAuth } from "@/lib/admin-auth"
 
 export async function submitBugReport(message: string): Promise<ActionResponse<null>> {
     try {
@@ -42,8 +43,11 @@ export async function submitBugReport(message: string): Promise<ActionResponse<n
 }
 
 export async function getBugReports(): Promise<ActionResponse<any[]>> {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
     try {
-        const supabase = await createClient()
+        const supabase = auth.supabase;
 
         const { data, error } = await supabase
             .from("bug_reports")
@@ -73,8 +77,11 @@ export async function getBugReports(): Promise<ActionResponse<any[]>> {
 }
 
 export async function markBugReportAsRead(id: string): Promise<ActionResponse<null>> {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
     try {
-        const supabase = await createClient()
+        const supabase = auth.supabase;
 
         const { error } = await supabase
             .from("bug_reports")
@@ -102,8 +109,11 @@ export async function markBugReportAsRead(id: string): Promise<ActionResponse<nu
 }
 
 export async function resolveBugReport(id: string): Promise<ActionResponse<null>> {
+    const auth = await requireAdminAuth();
+    if (!auth.authorized) return { success: false, error: auth.error };
+
     try {
-        const supabase = await createClient()
+        const supabase = auth.supabase;
 
         const { error } = await supabase
             .from("bug_reports")

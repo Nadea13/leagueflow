@@ -29,28 +29,28 @@ export function PlayerStatsTable({ stats }: PlayerStatsTableProps) {
             <Table className="min-w-[600px] text-xs md:text-sm">
                 <TableHeader>
                     <TableRow className="h-8 md:h-10">
-                        <TableHead className="w-8 text-center px-1 md:px-4">#</TableHead>
-                        <TableHead className="px-1 md:px-4">{t("player")}</TableHead>
-                        <TableHead className="px-1 md:px-4">{t("team")}</TableHead>
-                        <TableHead className="text-center px-1 md:px-4">{t("mp")}</TableHead>
-                        <TableHead className="text-center px-1 md:px-4">⚽</TableHead>
-                        <TableHead className="text-center px-1 md:px-4">🅰️</TableHead>
-                        <TableHead className="text-center px-1 md:px-4">🟨</TableHead>
-                        <TableHead className="text-center px-1 md:px-4">🟥</TableHead>
-                        <TableHead className="text-center px-1 md:px-4">{t("status")}</TableHead>
+                        <TableHead className="w-8 text-center px-0">#</TableHead>
+                        <TableHead className="px-0">{t("player")}</TableHead>
+                        <TableHead className="px-0">{t("team")}</TableHead>
+                        <TableHead className="text-center px-0">{t("mp")}</TableHead>
+                        <TableHead className="text-center px-0">{t("goals")}</TableHead>
+                        <TableHead className="text-center px-0">{t("assists")}</TableHead>
+                        <TableHead className="text-center px-0">{t("yellow_cards")}</TableHead>
+                        <TableHead className="text-center px-0">{t("red_cards")}</TableHead>
+                        <TableHead className="text-center px-0">{t("status")}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {stats.map((stat, index) => (
                         <TableRow key={stat.playerId} className="h-8 md:h-10">
-                            <TableCell className="text-center font-medium px-1 md:px-4">{index + 1}</TableCell>
-                            <TableCell className="px-1 md:px-4 font-medium">
+                            <TableCell className="text-center font-medium px-0">{index + 1}</TableCell>
+                            <TableCell className="px-0 font-medium">
                                 <div className="flex items-center gap-1">
                                     {stat.playerName}
                                     {stat.isBanned && <AlertTriangle className="h-3 w-3 text-red-500" />}
                                 </div>
                             </TableCell>
-                            <TableCell className="px-1 md:px-4">
+                            <TableCell className="px-0">
                                 <div className="flex items-center gap-1">
                                     {stat.teamLogoUrl ? (
                                         <img src={stat.teamLogoUrl} alt="" className="w-4 h-4 object-contain" />
@@ -64,12 +64,12 @@ export function PlayerStatsTable({ stats }: PlayerStatsTableProps) {
                                     </span>
                                 </div>
                             </TableCell>
-                            <TableCell className="text-center px-1 md:px-4">{stat.matchesPlayed}</TableCell>
-                            <TableCell className="text-center px-1 md:px-4 font-bold">{stat.goals}</TableCell>
-                            <TableCell className="text-center px-1 md:px-4">{stat.assists}</TableCell>
-                            <TableCell className="text-center px-1 md:px-4">{stat.yellowCards || "-"}</TableCell>
-                            <TableCell className="text-center px-1 md:px-4">{stat.redCards || "-"}</TableCell>
-                            <TableCell className="text-center px-1 md:px-4">
+                            <TableCell className="text-center px-0">{stat.matchesPlayed}</TableCell>
+                            <TableCell className="text-center px-0 font-bold">{stat.goals}</TableCell>
+                            <TableCell className="text-center px-0">{stat.assists}</TableCell>
+                            <TableCell className="text-center px-0">{stat.yellowCards || "-"}</TableCell>
+                            <TableCell className="text-center px-0">{stat.redCards || "-"}</TableCell>
+                            <TableCell className="text-center px-0">
                                 {stat.isBanned ? (
                                     <Badge variant="destructive" className="text-[10px] h-5">
                                         <Shield className="h-3 w-3 mr-0.5" />

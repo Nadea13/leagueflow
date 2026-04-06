@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, MatchEvent } from "@/types";
 import { addGoal, deleteGoal, updateMatchScore } from "./actions";
+import { validateTournamentAccess } from "@/lib/security";
 
 export async function getMatchEvents(matchId: string): Promise<ActionResponse<MatchEvent[]>> {
     const supabase = await createClient();
@@ -39,13 +40,17 @@ export async function getMatchEvents(matchId: string): Promise<ActionResponse<Ma
 
 export async function addMatchEvent(
     matchId: string,
-    teamId: string,
+    teamId: string | null,
     eventType: string,
     minute: number,
     playerId: string | null,
     extraInfo: any = null,
     tournamentId: string
 ): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     // 1. Create the Event
@@ -74,7 +79,7 @@ export async function addMatchEvent(
     // --- Database Healing & Admin Retry ---
     const adminSupabase = createAdminClient();
     
-    if (error?.code === '23503' || error?.code === '23502') {
+    if (teamId && (error?.code === '23503' || error?.code === '23502')) {
         // Fetch source of truth for match and team context
         const { data: mTruth } = await adminSupabase.from("matches").select("*").eq("id", matchId).single();
         const { data: tTruth } = await adminSupabase.from("tournament_teams").select("*").eq("id", teamId).single();
@@ -137,7 +142,7 @@ export async function addMatchEvent(
         // For simplicity, we just add it. The delete logic will be tricky.
         // IMPROVEMENT: We store the 'goal_id' in the match_event's extra_info
 
-        const goalRes = await addGoal(matchId, teamId, playerName, tournamentId, minute);
+        const goalRes = await addGoal(matchId, teamId as string, playerName, tournamentId, minute);
 
         if (goalRes.success && goalRes.data) {
             // Update the event with the linked goal_id
@@ -153,6 +158,10 @@ export async function addMatchEvent(
 }
 
 export async function deleteMatchEvent(eventId: string, tournamentId: string): Promise<ActionResponse> {
+    // Security Check
+    const access = await validateTournamentAccess(tournamentId, 'editor');
+    if (!access.success) return { success: false, error: access.error };
+
     const supabase = await createClient();
 
     // 1. Get the event first to check for linked stuff

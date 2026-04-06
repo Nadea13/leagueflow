@@ -15,7 +15,8 @@ export async function logActivity(
         const headerList = await headers();
         const ipAddress = headerList.get("x-forwarded-for")?.split(',')[0] || 
                          headerList.get("x-real-ip") || 
-                         "Unknown";
+                         headerList.get("remote-addr") || 
+                         (process.env.NODE_ENV === 'development' ? "127.0.0.1" : "Unknown");
 
         await supabase.from('audit_logs').insert({
             user_id: user?.id || null,
