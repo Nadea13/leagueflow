@@ -69,7 +69,7 @@ export function calculatePlayerStats(
             stat = {
                 playerId: event.player_id,
                 playerName: event.player_name || 'Unknown',
-                teamId: event.team_id,
+                teamId: event.team_id || '',
                 matchesPlayed: 0,
                 goals: 0,
                 assists: 0,
