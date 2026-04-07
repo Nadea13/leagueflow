@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ExternalLink, Phone, User, Home, Check, X, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/utils/supabase/client";
-import { approveRegistration, rejectRegistration } from "@/app/[locale]/organizer/tournaments/[id]/registration-actions";
+import { createClient } from "@/lib/supabase/client";
+import { approveRegistration, rejectRegistration } from "@/actions/organizer/tournaments/registration";
 import { toast } from "sonner";
 import {
     AlertDialog,

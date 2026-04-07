@@ -21,15 +21,17 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { signOut } from "@/app/[locale]/dashboard/actions"
-import { LanguageSwitcher } from "@/components/language-switcher"
+import { signOut } from "@/actions/common/auth"
+import { LanguageSwitcher } from "@/components/layout/language-switcher"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
-export function UserNav({ email }: { email: string | undefined }) {
+export function UserNav({ email, mode = 'team' }: { email: string | undefined, mode?: 'organizer' | 'team' }) {
     const { setTheme } = useTheme()
     const t = useTranslations("Nav")
     const tCommon = useTranslations("Common")
+
+    const profileHref = mode === 'organizer' ? '/organizer/settings' : '/manager/settings'
 
     return (
         <DropdownMenu>
@@ -53,7 +55,7 @@ export function UserNav({ email }: { email: string | undefined }) {
                 <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuGroup className="space-y-1">
                     <DropdownMenuItem asChild className="rounded-none focus:bg-muted focus:text-secondary transition-colors cursor-pointer py-2.5">
-                        <Link href="/dashboard/settings" className="w-full flex items-center">
+                        <Link href={profileHref} className="w-full flex items-center">
                             <User className="mr-3 h-4 w-4 opacity-70" />
                             <span className="text-xs font-bold uppercase tracking-tight">{t("profile")}</span>
                         </Link>

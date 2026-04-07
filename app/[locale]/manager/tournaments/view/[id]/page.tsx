@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { Trophy, Calendar, Users, Info, ArrowLeft, Shield, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Link } from "@/i18n/routing";

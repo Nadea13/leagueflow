@@ -1,4 +1,6 @@
-import { getDashboardTournaments, getUserSubscriptionPlan, getUserTeams, getUserDashboardMetrics, getUserProfile } from "../../dashboard/actions";
+import { getDashboardTournaments } from "@/actions/organizer/dashboard";
+import { getUserSubscriptionPlan, getUserDashboardMetrics, getUserProfile } from "@/actions/common/user";
+import { getUserTeams } from "@/actions/manager/dashboard";
 import { DashboardUI } from "../../dashboard/dashboard-ui";
 import type { Metadata } from "next";
 

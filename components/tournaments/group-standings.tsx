@@ -2,7 +2,7 @@
 
 import { Match, Team } from "@/types/index";
 import { StandingsTable } from "./standings-table";
-import { calculateStandings } from "@/utils/standings";
+import { calculateStandings } from "@/lib/standings";
 import { useTranslations } from "next-intl";
 
 interface GroupStandingsProps {

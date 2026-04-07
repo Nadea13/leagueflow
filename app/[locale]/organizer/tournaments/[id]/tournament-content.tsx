@@ -6,7 +6,7 @@ import { ChevronLeft, Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Awa
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -22,7 +22,7 @@ import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
 import { Match, Team, Goal, MatchEvent } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
-import { calculateStandings } from "@/utils/standings";
+import { calculateStandings } from "@/lib/standings";
 import { SettingsTab } from "@/components/tournaments/settings-tab";
 import { FixturesManager } from "@/components/tournaments/fixtures-manager";
 import { FixturesCalendar } from "@/components/tournaments/fixtures-calendar";
@@ -34,7 +34,7 @@ import { PlayerStatsTable } from "@/components/tournaments/player-stats-table";
 import { BannedPlayersCard } from "@/components/tournaments/banned-players-card";
 import { AnnouncementsCard } from "@/components/tournaments/announcements-card";
 import { RegistrationsTable } from "@/components/tournaments/registrations-table";
-import { calculatePlayerStats, getBannedPlayers } from "@/utils/player-stats";
+import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 import { RegistrationSettingsCard } from "@/components/tournaments/registration-settings-card";
 
 

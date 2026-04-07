@@ -2,7 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlayerStat } from "@/utils/player-stats";
+import { PlayerStat } from "@/lib/player-stats";
 import { AlertTriangle, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
 

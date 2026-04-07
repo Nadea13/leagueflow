@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 import { serverSideSignup } from "@/app/[locale]/auth/auth-actions";

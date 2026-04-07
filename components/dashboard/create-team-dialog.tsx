@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Upload } from "lucide-react";
-import { createTeam } from "@/app/[locale]/manager/my-teams/actions";
+import { createTeam } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -23,7 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionResponse } from "@/types/index";
 
 const initialState: ActionResponse = {

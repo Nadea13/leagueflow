@@ -13,8 +13,8 @@ import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { PrintButton } from "@/components/tournaments/print-button";
 import { Match, MatchEvent, Team, Goal } from "@/types";
-import { calculateStandings } from "@/utils/standings";
-import { createClient } from "@/utils/supabase/client";
+import { calculateStandings } from "@/lib/standings";
+import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
@@ -24,7 +24,7 @@ import { TournamentStats } from "@/components/tournaments/tournament-stats";
 import { PlayerStatsTable } from "@/components/tournaments/player-stats-table";
 import { BannedPlayersCard } from "@/components/tournaments/banned-players-card";
 import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
-import { calculatePlayerStats, getBannedPlayers } from "@/utils/player-stats";
+import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 
 interface PublicTournamentViewProps {
     tournament: any;

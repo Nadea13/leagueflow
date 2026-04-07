@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Match, Team, Goal } from "@/types/index";
 import { TournamentContent } from "./tournament-content";
-import { getUserRole } from "./collaborator-actions";
-import { getUserSubscriptionPlan } from "../../../dashboard/actions";
+import { getUserRole } from "@/actions/organizer/tournaments/collaborator";
+import { getUserSubscriptionPlan } from "@/actions/common/user";
 
 export default async function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;

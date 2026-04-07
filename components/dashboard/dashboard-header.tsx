@@ -11,7 +11,7 @@ import { useState, useEffect } from "react"
 import { getNavItems, adminNavItem } from "@/config/nav"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, CheckCircle2, Loader2, LayoutGrid, Users as UsersIcon } from "lucide-react"
-import { registerAsOrganizer } from "@/app/[locale]/dashboard/settings/profile-actions"
+import { registerAsOrganizer } from "@/actions/organizer/dashboard"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
@@ -213,7 +213,7 @@ export function DashboardHeader({ userEmail, role, isOrganizer: initialIsOrganiz
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserNav email={userEmail} />
+                <UserNav email={userEmail} mode={mode} />
             </div>
 
             <Dialog open={showRegDialog} onOpenChange={setShowRegDialog}>

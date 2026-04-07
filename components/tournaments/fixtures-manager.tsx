@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { deleteMatch, advanceStage } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { deleteMatch, advanceStage } from "@/actions/organizer/tournaments/general";
 import {
     Select,
     SelectContent,

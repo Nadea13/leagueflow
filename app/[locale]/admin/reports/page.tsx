@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { getBugReports } from "@/app/[locale]/actions/bug-reports"
+import { getBugReports } from "@/actions/common/bug-reports"
 import { BugReportList } from "./_components/bug-report-list"
 
 export const metadata = {

@@ -1,7 +1,7 @@
 "use server";
 
 import { ActionResponse } from "@/types/index";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function verifySlip(formData: FormData): Promise<ActionResponse<{ amount: number, referenceNo: string, publicUrl: string }>> {
     try {

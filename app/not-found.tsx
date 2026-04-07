@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 
 // Render the default Next.js 404 page when a route

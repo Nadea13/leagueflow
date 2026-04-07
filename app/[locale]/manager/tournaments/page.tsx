@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Trophy, Activity, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PublicTournamentList } from "@/components/tournaments/public-tournament-list";
-import { getPublicTournaments } from "@/app/[locale]/actions/public-tournaments";
+import { getPublicTournaments } from "@/actions/public/public-tournaments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function ManagerTournamentsPage() {

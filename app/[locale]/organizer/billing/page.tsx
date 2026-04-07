@@ -1,9 +1,9 @@
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { BillingPageContent } from "@/components/billing/billing-page-content";
-import { getPaymentHistory } from "./actions";
-import { getDashboardTournaments } from "@/app/[locale]/dashboard/actions";
-import { getPlans } from "@/actions/plans";
+import { getPaymentHistory } from "@/actions/common/billing/general";
+import { getDashboardTournaments } from "@/actions/organizer/dashboard";
+import { getPlans } from "@/actions/admin/plans";
 import type { Metadata } from "next";
 
 export const dynamic = 'force-dynamic';

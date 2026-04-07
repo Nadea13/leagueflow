@@ -10,7 +10,7 @@ import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
 import { Button } from "@/components/ui/button"
 import { LayoutGrid, Users as UsersIcon, Trophy, CheckCircle2, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { registerAsOrganizer } from "@/app/[locale]/dashboard/settings/profile-actions"
+import { registerAsOrganizer } from "@/actions/organizer/dashboard"
 import { useToast } from "@/hooks/use-toast"
 
 export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team' }) {

@@ -2,8 +2,8 @@
 
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
-import { updateTournament, resetFixtures, deleteTournament, confirmPayment } from "@/app/[locale]/organizer/tournaments/[id]/actions";
-import { getPlans } from "@/actions/plans";
+import { updateTournament, resetFixtures, deleteTournament, confirmPayment } from "@/actions/organizer/tournaments/general";
+import { getPlans } from "@/actions/admin/plans";
 import { PaymentSection } from "@/components/billing/payment-section";
 import { Plan } from "@/types";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Check, X, Loader2, RefreshCw, Clock, Settings, MapPin, BookOpen, UserPlus, Users, CreditCard, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
-import { createPromptPayCharge } from "@/app/[locale]/actions/payment";
+import { createPromptPayCharge } from "@/actions/manager/payment";
 import { CollaboratorsCard } from "@/components/tournaments/collaborators-card";
 import { VenueManager } from "@/components/tournaments/venue-manager";
 import { RulesConfig } from "@/components/tournaments/rules-config";

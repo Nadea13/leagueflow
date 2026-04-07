@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { ActionResponse } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";

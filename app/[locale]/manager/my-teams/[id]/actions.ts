@@ -1,9 +1,9 @@
 'use server';
 
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
-import { deleteFileFromUrl } from "@/utils/supabase/storage";
+import { deleteFileFromUrl } from "@/lib/supabase/storage";
 
 async function isAuthorizedForTeam(teamId: string, userId: string) {
     const supabase = await createClient();

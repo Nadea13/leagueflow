@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { th } from "date-fns/locale"
-import { markBugReportAsRead, resolveBugReport } from "@/app/[locale]/actions/bug-reports"
+import { markBugReportAsRead, resolveBugReport } from "@/actions/common/bug-reports"
 import { toast } from "sonner"
 import { Search, AlertCircle, User } from "lucide-react"
 import { Input } from "@/components/ui/input"

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { getPlayers } from "@/app/[locale]/organizer/tournaments/[id]/player-actions";
 import { updateMatch } from "@/app/[locale]/organizer/tournaments/[id]/actions";
 import { getPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/penalty-actions";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

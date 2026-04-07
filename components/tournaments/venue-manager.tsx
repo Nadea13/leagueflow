@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Venue } from "@/types/index";
-import { getVenues, addVenue, deleteVenue } from "@/app/[locale]/organizer/tournaments/[id]/venue-actions";
+import { getVenues, addVenue, deleteVenue } from "@/actions/organizer/tournaments/venue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

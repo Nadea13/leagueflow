@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { getTeam, getPlayers } from "../../my-teams/[id]/actions";
+import { getTeam, getPlayers } from "@/actions/manager/team";
 import { SquadManagement } from "@/components/teams/squad-management";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function RegistrationTeamManagementPage({
     params,

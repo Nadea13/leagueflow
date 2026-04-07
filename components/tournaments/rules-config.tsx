@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { TournamentRules } from "@/types/index";
-import { getTournamentRules, updateTournamentRules } from "@/app/[locale]/organizer/tournaments/[id]/rules-actions";
+import { getTournamentRules, updateTournamentRules } from "@/actions/organizer/tournaments/rules";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

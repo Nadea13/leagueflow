@@ -1,6 +1,6 @@
 "use client";
 
-import { PlayerStat } from "@/utils/player-stats";
+import { PlayerStat } from "@/lib/player-stats";
 import { AlertTriangle, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";

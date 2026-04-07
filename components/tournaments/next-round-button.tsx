@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Match } from "@/types/index";
-import { advanceStage } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { advanceStage } from "@/actions/organizer/tournaments/general";
 import { startTransition } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowRight, Trophy } from "lucide-react";

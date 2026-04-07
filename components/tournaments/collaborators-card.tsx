@@ -13,7 +13,7 @@ import {
     inviteCollaborator,
     getCollaborators,
     removeCollaborator
-} from "@/app/[locale]/organizer/tournaments/[id]/collaborator-actions";
+} from "@/actions/organizer/tournaments/collaborator";
 import {
     Dialog,
     DialogContent,

@@ -2,11 +2,10 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { ActionResponse, Player, GlobalPlayer, Team } from "@/types/index";
-import { getPlayers, addPlayer, updatePlayer, deletePlayer, importRoster, toggleRosterLock } from "@/app/[locale]/manager/my-teams/[id]/actions";
-import { updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/app/[locale]/manager/my-teams/actions";
+import { getPlayers, addPlayer, updatePlayer, deletePlayer, importRoster, toggleRosterLock, updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/actions/manager/team";
 import Papa from "papaparse";
 import * as xlsx from "xlsx";
-import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers } from "@/app/[locale]/organizer/tournaments/[id]/global-player-actions";
+import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers } from "@/actions/organizer/tournaments/global-player";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -246,7 +245,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 setImportFile(null);
                 importFileRef.current && (importFileRef.current.value = '');
 
-                const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+                const { getPlayers } = await import("@/actions/manager/team");
                 const res = await getPlayers(team.id);
                 if (res.success && res.data) setPlayers(res.data);
 
@@ -374,7 +373,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             setNewBirthDate("");
             setSelectedGlobalPlayerId(null);
             // Refresh players list
-            const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+            const { getPlayers } = await import("@/actions/manager/team");
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         } else {
@@ -409,7 +408,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         if (result.success) {
             toast({ title: tCommon("success"), description: t("updated_success") });
             setEditingPlayerId(null);
-            const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+            const { getPlayers } = await import("@/actions/manager/team");
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         } else {
@@ -445,7 +444,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             setLinkingPlayerId(null);
             setSearchQuery("");
             setSearchResults([]);
-            const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+            const { getPlayers } = await import("@/actions/manager/team");
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         } else {
@@ -457,7 +456,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         const result = await unlinkPlayerFromGlobal(playerId);
         if (result.success) {
             toast({ title: tCommon("success"), description: "Player unlinked" });
-            const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+            const { getPlayers } = await import("@/actions/manager/team");
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         } else {
@@ -472,7 +471,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         setIsSaving(true);
         if (result.success) {
             toast({ title: tCommon("success"), description: "Global photo updated" });
-            const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+            const { getPlayers } = await import("@/actions/manager/team");
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         } else {
@@ -489,7 +488,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         if (result.success) {
             toast({ title: tCommon("success"), description: "ID card uploaded" });
             // Refresh players list to get the new id_card_url
-            const { getPlayers } = await import("@/app/[locale]/manager/my-teams/[id]/actions");
+            const { getPlayers } = await import("@/actions/manager/team");
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         } else {

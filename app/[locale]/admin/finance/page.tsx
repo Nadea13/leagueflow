@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { getAllPayments } from "./actions";
+import { getAllPayments } from "@/actions/admin/finance";
 import { AdminPaymentsTable } from "@/components/admin/payments-table";
 
 export default async function AdminFinancePage() {

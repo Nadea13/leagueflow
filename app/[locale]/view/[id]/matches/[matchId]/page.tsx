@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createAdminClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/components/matches/match-console-page";
 
 export default async function PublicMatchConsole(props: {

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { getDashboardTournaments, getUserSubscriptionPlan } from "../../dashboard/actions";
+import { getDashboardTournaments } from "@/actions/organizer/dashboard";
+import { getUserSubscriptionPlan } from "@/actions/common/user";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { TournamentCard } from "@/components/dashboard/tournament-card";
 import { Input } from "@/components/ui/input";

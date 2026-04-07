@@ -7,12 +7,12 @@ import { Check, Loader2, RefreshCw, X, UploadCloud, CreditCard, Smartphone, Trop
 import { useState, useEffect, useCallback, useRef } from "react";
 import generatePayload from "promptpay-qr";
 import { QRCodeSVG } from "qrcode.react";
-import { recordPayment, updateProfilePaymentStatus } from "@/app/[locale]/dashboard/billing/actions";
+import { recordPayment, updateProfilePaymentStatus } from "@/actions/common/billing/general";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { confirmPayment } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { confirmPayment } from "@/actions/organizer/tournaments/general";
 import { Input } from "@/components/ui/input";
-import { verifySlip } from "@/app/[locale]/dashboard/billing/slip-actions";
+import { verifySlip } from "@/actions/common/billing/slip";
 
 interface PaymentSectionProps {
     plan: Plan;

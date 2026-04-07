@@ -6,7 +6,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ActionResponse, Plan, ManagerPlan, OrganizerPlan } from "@/types"
-import { upsertPlan } from "@/actions/plans"
+import { upsertPlan } from "@/actions/admin/plans"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,

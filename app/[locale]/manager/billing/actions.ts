@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResponse } from "@/types/index";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/audit";

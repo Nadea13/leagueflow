@@ -1,13 +1,13 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ActionResponse, Match } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { initTournamentStructure } from "@/lib/fixture-utils";
 import { validateTournamentAccess } from "@/lib/security";
-import { deleteFileFromUrl } from "@/utils/supabase/storage";
+import { deleteFileFromUrl } from "@/lib/supabase/storage";
 import { validateUploadedFile } from "@/lib/file-validation";
 
 export async function addTeam(

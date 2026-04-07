@@ -3,12 +3,12 @@
 import { useActionState, useState, useEffect, useRef } from "react";
 import { Plus, Image as ImageIcon, Camera, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { addTeam } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { addTeam } from "@/actions/organizer/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { SubmitButton } from "@/components/submit-button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionResponse } from "@/types/index";
 
 const initialState: ActionResponse = {

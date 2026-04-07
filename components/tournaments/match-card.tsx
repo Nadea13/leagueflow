@@ -6,14 +6,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { CalendarIcon, MapPin, Clock, Trophy, Eraser, ChevronRight } from "lucide-react";
 import { Match, Goal, Team, MatchEvent } from "@/types/index";
-import { updateMatch, deleteMatch } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { updateMatch, deleteMatch } from "@/actions/organizer/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/routing";
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import {
     AlertDialog,
     AlertDialogAction,

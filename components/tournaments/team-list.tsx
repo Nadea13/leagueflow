@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Team } from "@/types/index";
-import { updateTeam, deleteTeam, assignTeamGroup } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { updateTeam, deleteTeam, assignTeamGroup } from "@/actions/organizer/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";

@@ -13,7 +13,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { submitBugReport } from "@/app/[locale]/actions/bug-reports"
+import { submitBugReport } from "@/actions/common/bug-reports"
 import { toast } from "sonner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { RegistrationForm } from "@/components/registrations/registration-form";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar, MapPin, Trophy, AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { Separator } from "@/components/ui/separator";
-import { getMyTeams } from "@/app/[locale]/manager/my-teams/actions";
+import { getMyTeams } from "@/actions/manager/team";
 
 interface RegisterPageProps {
     params: Promise<{ id: string }>;

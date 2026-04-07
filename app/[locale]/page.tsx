@@ -4,10 +4,10 @@ import { Trophy, Zap, List, Share2, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PricingCards } from "@/components/pricing/pricing-cards";
 import { PricingFooter } from "@/components/pricing/pricing-footer";
-import { getPlans } from "@/actions/plans";
+import { getPlans } from "@/actions/admin/plans";
 import { PublicTournamentList } from "@/components/tournaments/public-tournament-list";
 import { PublicMatchListHome } from "@/components/tournaments/public-match-list-home";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Trophy as TrophyIcon } from "lucide-react";
 

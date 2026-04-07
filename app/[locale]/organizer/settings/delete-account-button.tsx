@@ -9,7 +9,7 @@ import { Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { deleteAccount } from "./actions";
+import { deleteAccount } from "@/actions/common/user";
 
 export function DeleteAccountButton({ email }: { email: string }) {
     const t = useTranslations("DashboardSettings");

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Player, GlobalPlayer } from "@/types/index";
-import { addPlayer, getPlayers, deletePlayer, updatePlayer } from "@/app/[locale]/organizer/tournaments/[id]/player-actions";
-import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal } from "@/app/[locale]/organizer/tournaments/[id]/global-player-actions";
+import { addPlayer, getPlayers, deletePlayer, updatePlayer } from "@/actions/organizer/tournaments/player";
+import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal } from "@/actions/organizer/tournaments/global-player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,7 +101,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
     const handleSearch = useCallback(async (query: string) => {
         setSearchQuery(query);
         setIsSearching(true);
-        const { searchGlobalPlayers } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
+        const { searchGlobalPlayers } = await import("@/actions/organizer/tournaments/global-player");
         const result = await searchGlobalPlayers(query);
         if (result.success && result.data) {
             setSearchResults(result.data);
@@ -499,7 +499,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                                     variant="outline"
                                                                                     className="rounded-none w-full h-10 text-[9px] font-black uppercase tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
                                                                                     onClick={async () => {
-                                                                                        const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
+                                                                                        const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
                                                                                         const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
                                                                                         if (res.success && res.data) {
                                                                                             await handleLinkPlayer(player.id, res.data);
@@ -521,7 +521,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                             variant="ghost"
                                                                             className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
                                                                             onClick={async () => {
-                                                                                const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
+                                                                                const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
                                                                                 const res = await createGlobalPlayer(player.name, null, player.birth_date);
                                                                                 if (res.success && res.data) {
                                                                                     await handleLinkPlayer(player.id, res.data);

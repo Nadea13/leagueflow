@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function getAllPayments() {

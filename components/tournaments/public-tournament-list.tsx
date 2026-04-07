@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PublicTournamentCard } from "./public-tournament-card";
-import { getPublicTournaments } from "@/app/[locale]/actions/public-tournaments";
+import { getPublicTournaments } from "@/actions/public/public-tournaments";
 
 export function PublicTournamentList({ onlyActive = false, isManager = false }: { onlyActive?: boolean, isManager?: boolean }) {
     const t = useTranslations("Home");

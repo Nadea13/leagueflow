@@ -1,4 +1,4 @@
-import { getUserProfile } from "./actions";
+import { getUserProfile } from "@/actions/common/user";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 

@@ -1,4 +1,4 @@
-import { getPlans } from "@/actions/plans";
+import { getPlans } from "@/actions/admin/plans";
 import { getTranslations } from "next-intl/server";
 import { PlanDialog } from "@/components/admin/plan-dialog";
 import { PlansTable } from "@/components/admin/plans-table";

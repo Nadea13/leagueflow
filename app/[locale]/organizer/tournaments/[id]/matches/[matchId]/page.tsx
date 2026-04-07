@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { createAdminClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/components/matches/match-console-page";
-import { getUserSubscriptionPlan } from "@/app/[locale]/dashboard/actions";
+import { getUserSubscriptionPlan } from "@/actions/common/user";
 
 export default async function AdminMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,
