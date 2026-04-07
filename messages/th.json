@@ -962,7 +962,7 @@
         "manager_teams_limit": "สามารถสร้างได้ทั้งหมด เริ่มต้น 1 ทีม",
         "unlimited": "ไม่จำกัด",
         "format_support": "รูปแบบที่รองรับ",
-        "manager_format_support": "รายชื่อนักกีฬาสูงสุดที่สร้างได้ เริ่มต้น 14 ชื่อ",
+        "manager_format_support": "รายชื่อนักกีฬาสูงสุดที่สร้างได้",
         "invite_via_link": "เชิญทีมผ่านลิงก์",
         "open_registration": "เปิดรับสมัคร",
         "statistics": "สถิติ",

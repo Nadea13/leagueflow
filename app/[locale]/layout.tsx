@@ -27,25 +27,36 @@ const chakraPetch = Chakra_Petch({
 
 export const metadata: Metadata = {
   title: {
-    default: "LeagueFlow | Tournament Management Platform",
+    default: "LeagueFlow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
     template: "%s | LeagueFlow",
   },
-  description: "Create, manage, and run professional football tournaments with real-time scoring, automated fixtures, team registrations, and PromptPay billing. Multilingual (EN/TH).",
-  keywords: ["tournament management", "football league", "match scoring", "fixtures", "standings", "PromptPay", "team registration", "เครื่องมือจัดการทัวร์นาเมนต์"],
+  description: "LeagueFlow - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร ช่วยให้คุณสร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ จัดการทีม และระบบชำระเงิน PromptPay รองรับทั้งภาษาไทยและอังกฤษ",
+  keywords: [
+    "จัดการแข่งขันฟุตบอล", 
+    "จัดการทัวร์นาเมนต์", 
+    "สร้างตารางแข่ง", 
+    "โปรแกรมการแข่งขัน", 
+    "ระบบจัดการลีก", 
+    "สมัครแข่งบอล", 
+    "LeagueFlow", 
+    "Tournament Management", 
+    "Football League", 
+    "Match Scoring"
+  ],
   authors: [{ name: "LeagueFlow" }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://leagueflow.app"),
   openGraph: {
     type: "website",
-    locale: "en_US",
-    alternateLocale: "th_TH",
-    title: "LeagueFlow | Tournament Management Platform",
-    description: "Create, manage, and run professional football tournaments with real-time scoring, automated fixtures, and PromptPay billing.",
+    locale: "th_TH",
+    alternateLocale: "en_US",
+    title: "LeagueFlow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
+    description: "สร้างและจัดการการแข่งขันฟุตบอลของคุณแบบมืออาชีพ ด้วยระบบตารางแข่งอัตโนมัติและผลคะแนนเรียลไทม์",
     siteName: "LeagueFlow",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LeagueFlow | Tournament Management Platform",
-    description: "Create, manage, and run professional football tournaments.",
+    title: "LeagueFlow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
+    description: "จัดการแข่งขันฟุตบอลและกีฬาครบวงจร บันทึกผลเรียลไทม์ และระบบสมัครทีมออนไลน์",
   },
   robots: {
     index: true,
