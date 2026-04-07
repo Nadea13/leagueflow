@@ -1,27 +1,175 @@
-export default function TermsOfServicePage() {
+import { getTranslations } from "next-intl/server";
+import { BackButton } from "@/components/legal/back-button";
+
+export default async function TermsOfServicePage() {
+    const t = await getTranslations("TermsOfService");
+    
     return (
-        <div className="container max-w-4xl py-8 space-y-8">
-            <h1 className="text-3xl font-bold">Terms of Service</h1>
-            <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+        <div className="container mx-auto max-w-4xl py-8 space-y-8 md:py-12">
+            <BackButton />
+            <div className="space-y-2 border-b-2 border-secondary/20 pb-6">
+                <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground leading-none">
+                    {t("title")}
+                </h1>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-70">
+                    {t("last_updated")}: {new Date().toLocaleDateString()}
+                </p>
+            </div>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">1. Acceptance of Terms</h2>
-                <p>By accessing or using LeagueFlow, you agree to be bound by these Terms of Service.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("acceptance_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("acceptance_desc")}
+                    </p>
+                </div>
             </section>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">2. Description of Service</h2>
-                <p>LeagueFlow provides tournament management tools for organizers. We reserve the right to modify or discontinue the service at any time.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("service_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("service_desc")}
+                    </p>
+                </div>
             </section>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">3. User Accounts</h2>
-                <p>You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("accounts_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("accounts_desc")}
+                    </p>
+                </div>
             </section>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">4. Content</h2>
-                <p>User-generated content (tournament names, team names) must not be illegal, obscene, or threatening.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("content_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("content_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("payments_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("payments_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("ip_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("ip_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("liability_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("liability_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("termination_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("termination_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("law_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("law_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("accuracy_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("accuracy_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("fair_play_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("fair_play_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("availability_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("availability_desc")}
+                    </p>
+                </div>
+            </section>
+
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("comm_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("comm_desc")}
+                    </p>
+                </div>
             </section>
         </div>
     );

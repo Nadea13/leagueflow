@@ -1,27 +1,67 @@
-export default function RefundPolicyPage() {
+import { getTranslations } from "next-intl/server";
+import { BackButton } from "@/components/legal/back-button";
+
+export default async function RefundPolicyPage() {
+    const t = await getTranslations("RefundPolicy");
+    
     return (
-        <div className="container max-w-4xl py-8 space-y-8">
-            <h1 className="text-3xl font-bold">Refund Policy</h1>
-            <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+        <div className="container mx-auto max-w-4xl py-8 space-y-8 md:py-12">
+            <BackButton />
+            <div className="space-y-2 border-b-2 border-secondary/20 pb-6">
+                <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground leading-none">
+                    {t("title")}
+                </h1>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-70">
+                    {t("last_updated")}: {new Date().toLocaleDateString()}
+                </p>
+            </div>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">1. Subscription Cancellations</h2>
-                <p>You may cancel your Monthly or Yearly subscription at any time. Your access will continue until the end of the current billing period.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("subscription_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("subscription_desc")}
+                    </p>
+                </div>
             </section>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">2. Refund Eligibility</h2>
-                <p>We generally do not offer refunds for partial subscription periods. However, exceptions may be made in cases of technical failure or billing errors.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("eligibility_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("eligibility_desc")}
+                    </p>
+                </div>
             </section>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">3. Per-Tournament Purchases (Lifetime)</h2>
-                <p>Purchases for Lifetime Tournament Access (590 THB) are non-refundable once the tournament has started or matches have been generated.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("tournament_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("tournament_desc")}
+                    </p>
+                </div>
             </section>
 
-            <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">4. Contact Us</h2>
-                <p>If you believe you were charged in error, please contact our support team immediately.</p>
+            <section className="space-y-4 group">
+                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                    <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                    {t("contact_title")}
+                </h2>
+                <div className="pl-5">
+                    <p className="text-sm font-medium text-muted-foreground leading-relaxed border-l-2 border-border/40 pl-4 py-1">
+                        {t("contact_desc")}
+                    </p>
+                </div>
             </section>
         </div>
     );

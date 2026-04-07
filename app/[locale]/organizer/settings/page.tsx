@@ -121,6 +121,13 @@ export default async function SettingsPage() {
                     </div>
                 </div>
             </div>
+            
+            {/* Version Info */}
+            <div className="mt-8 mb-4 flex justify-center items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">
+                    {t("version")} 0.1.0
+                </span>
+            </div>
         </div>
     );
 }
