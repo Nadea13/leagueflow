@@ -70,14 +70,14 @@ export default function LoginPage() {
                     <p className="text-center text-xs text-muted-foreground w-full">
                         {t('agreement')}{" "}
                         <Link
-                            href="/terms"
+                            href="/terms-of-service"
                             className="underline underline-offset-4 hover:text-primary transition-colors"
                         >
                             {t('terms')}
                         </Link>{" "}
                         {t('and')}{" "}
                         <Link
-                            href="/privacy"
+                            href="/privacy-policy"
                             className="underline underline-offset-4 hover:text-primary transition-colors"
                         >
                             {t('privacy')}
