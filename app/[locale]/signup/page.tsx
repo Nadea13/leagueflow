@@ -57,23 +57,6 @@ export default function SignUpPage() {
                     </div>
 
                     <div className="flex flex-col gap-4">
-                        <div className="flex border p-1 bg-muted/50 rounded-none">
-                            <button
-                                className="flex-1 py-1.5 text-xs font-medium bg-background shadow-sm border"
-                            >
-                                Individual
-                            </button>
-                            <button
-                                className="flex-1 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                                onClick={() => {
-                                    // Just for the test to see the text
-                                    toast.info("Team Registration mode activated");
-                                }}
-                            >
-                                Team Registration
-                            </button>
-                        </div>
-
                         <SignUpForm />
                     </div>
 
