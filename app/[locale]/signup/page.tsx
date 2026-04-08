@@ -75,14 +75,14 @@ export default function SignUpPage() {
                     <p className="text-center text-xs text-muted-foreground w-full">
                         By clicking continue, you agree to our{" "}
                         <Link
-                            href="/terms"
+                            href="/terms-of-service"
                             className="underline underline-offset-4 hover:text-primary transition-colors"
                         >
                             Terms of Service
                         </Link>{" "}
                         and{" "}
                         <Link
-                            href="/privacy"
+                            href="/privacy-policy"
                             className="underline underline-offset-4 hover:text-primary transition-colors"
                         >
                             Privacy Policy
