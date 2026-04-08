@@ -9,7 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { ActionResponse } from "@/types/index";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { ActionResponse, SportType } from "@/types/index";
 
 const initialState: ActionResponse = {
     success: false,
@@ -18,6 +25,9 @@ const initialState: ActionResponse = {
 
 export function AddTeamForm({ tournamentId, isLimitReached = false }: { tournamentId: string; isLimitReached?: boolean }) {
     const t = useTranslations("Team");
+    const tCommon = useTranslations("Common");
+    const tSports = useTranslations("Sports");
+    const tDialog = useTranslations("Dialog");
     const addTeamWithId = addTeam.bind(null, tournamentId);
     const [state, formAction] = useActionState(addTeamWithId, initialState);
     const formRef = useRef<HTMLFormElement>(null);
@@ -91,6 +101,22 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                                 className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
                                 disabled={isLimitReached}
                             />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tCommon("sport")}</Label>
+                            <Select name="sport" defaultValue="football">
+                                <SelectTrigger className="h-12 bg-foreground/5 border-none rounded-none focus:ring-0 px-3 font-bold uppercase italic tracking-tighter text-left">
+                                    <SelectValue placeholder={tDialog("select_sport")} />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-none border-border">
+                                    {['football'].map((sportKey) => (
+                                        <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
+                                            {tSports(sportKey)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-1">

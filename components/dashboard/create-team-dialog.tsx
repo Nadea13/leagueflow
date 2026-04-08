@@ -24,7 +24,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { ActionResponse } from "@/types/index";
+import { ActionResponse, SportType } from "@/types/index";
 
 const initialState: ActionResponse = {
     success: false,
@@ -39,6 +39,7 @@ interface TournamentOption {
 export function CreateTeamDialog() {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
+    const tSports = useTranslations("Sports");
     const [open, setOpen] = useState(false);
     const [state, formAction] = useActionState(createTeam, initialState);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -88,6 +89,24 @@ export function CreateTeamDialog() {
                             className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0"
                             required
                         />
+                    </div>
+
+                    <div className="space-y-3">
+                        <Label htmlFor="sport" className="text-[10px] font-black uppercase italic tracking-widest text-secondary">
+                            {tCommon("sport") || "Sport"}
+                        </Label>
+                        <Select name="sport" defaultValue="football">
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
+                                <SelectValue placeholder={t("select_sport") || "Select Sport"} />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-none border-border">
+                                {(['football'] as SportType[]).map((sportKey) => (
+                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
+                                        {tSports(sportKey)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="space-y-2 md:space-y-3">

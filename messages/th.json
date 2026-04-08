@@ -22,6 +22,7 @@
         "format": "รูปแบบ",
         "teams": "ทีม",
         "players": "ผู้เล่น",
+        "sport": "กีฬา",
         "error": "เกิดข้อผิดพลาด",
         "success": "สำเร็จ",
         "dashboard": "แดชบอร์ด",
@@ -448,7 +449,18 @@
         "description_placeholder": "ข้อมูลกติกา รางวัล และรายละเอียดอื่นๆ...",
         "document_deadline": "ระยะเวลาส่งเอกสาร",
         "create_button": "สร้างทัวร์นาเมนต์",
-        "create_title": "สร้างทัวร์นาเมนต์ใหม่"
+        "create_title": "สร้างทัวร์นาเมนต์ใหม่",
+        "select_sport": "เลือกชนิดกีฬา"
+    },
+    "Sports": {
+        "football": "ฟุตบอล",
+        "basketball": "บาสเกตบอล",
+        "volleyball": "วอลเลย์บอล",
+        "futsal": "ฟุตซอล",
+        "badminton": "แบดมินตัน",
+        "tennis": "เทนนิส",
+        "table_tennis": "เทเบิลเทนนิส",
+        "other": "อื่นๆ"
     },
     "Group": {
         "group_assignment": "การจัดกลุ่ม",
@@ -677,6 +689,7 @@
         "title": "รายชื่อนักกีฬา",
         "view_squad": "รายชื่อนักกีฬา",
         "manage_squad": "จัดการผู้เล่น",
+        "athlete_types": "ประเภทกี่ฬา (เล่นเป็นนักกีฬา...)",
         "add_player": "เพิ่มผู้เล่น",
         "add": "เพิ่ม",
         "player_name": "ชื่อผู้เล่น",

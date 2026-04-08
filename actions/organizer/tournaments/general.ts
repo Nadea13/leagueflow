@@ -17,6 +17,7 @@ export async function addTeam(
 ): Promise<ActionResponse> {
     const supabase = await createClient();
     const name = formData.get("name") as string;
+    const sport = (formData.get("sport") as string) || 'football';
     const description = formData.get("description") as string;
     const logoFile = formData.get("logo") as File;
     const logoUrlInput = formData.get("logo_url") as string;
@@ -88,8 +89,9 @@ export async function addTeam(
 
     const { data: teamData, error } = await supabase.from("tournament_teams").insert({
         tournament_id: tournamentId,
-        team_id: null, // Manually added teams can link to global teams later if needed
+        team_id: null,
         name,
+        sport,
         description: description || null,
         logo_url,
         created_at: new Date().toISOString(),
@@ -161,6 +163,7 @@ export async function updateTeam(
     
     const supabase = await createClient();
     const name = formData.get("name") as string;
+    const sport = formData.get("sport") as string;
     const description = formData.get("description") as string;
     const logoFile = formData.get("logo") as File;
     const existingLogoUrl = formData.get("existing_logo_url") as string;
@@ -195,6 +198,7 @@ export async function updateTeam(
         .from("tournament_teams")
         .update({
             name,
+            sport: sport || undefined,
             description: description || null,
             logo_url: logo_url || null
         })

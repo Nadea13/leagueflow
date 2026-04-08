@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from "react";
-import { ActionResponse, Player, GlobalPlayer, Team } from "@/types/index";
+import { ActionResponse, Player, GlobalPlayer, Team, SportType } from "@/types/index";
 import { getPlayers, addPlayer, updatePlayer, deletePlayer, importRoster, toggleRosterLock, updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/actions/manager/team";
 import Papa from "papaparse";
 import * as xlsx from "xlsx";
-import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers } from "@/actions/organizer/tournaments/global-player";
+import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers, updateGlobalPlayerAthleteTypes, createGlobalPlayer } from "@/actions/organizer/tournaments/global-player";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
     const tTeam = useTranslations("Team");
+    const tSports = useTranslations("Sports");
     const locale = useLocale();
     const { toast } = useToast();
 
@@ -435,6 +436,20 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const handlePageChange = (newPage: number) => {
         setCurrentPage(newPage);
         fetchGlobalPlayersData(newPage, searchQuery);
+    };
+
+    const handleGlobalAthleteTypesUpdate = async (globalPlayerId: string, sports: string[]) => {
+        setIsSaving(true);
+        const result = await updateGlobalPlayerAthleteTypes(globalPlayerId, sports);
+        setIsSaving(false);
+        if (result.success) {
+            toast({ title: tCommon("success"), description: "Sports profile updated" });
+            // Refresh players list
+            const res = await getPlayers(team.id);
+            if (res.success && res.data) setPlayers(res.data);
+        } else {
+            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        }
     };
 
     const handleLinkPlayer = async (playerId: string, globalPlayer: GlobalPlayer) => {
@@ -1014,8 +1029,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     <Button
                                                                                         className="w-full rounded-none bg-secondary text-black font-black uppercase italic tracking-widest text-[10px] h-11"
                                                                                         onClick={async () => {
-                                                                                            const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                            const res = await createGlobalPlayer(player.name, null, player.birth_date);
+                                                                                            const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
                                                                                             if (res.success && res.data) {
                                                                                                 await handleLinkPlayer(player.id, res.data);
                                                                                             } else {
@@ -1026,6 +1040,41 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                         {t("initialize_global_profile") || "Initialize Global Profile"}
                                                                                     </Button>
                                                                                 </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {player.global_player_id && (
+                                                                            <div className="space-y-4 pt-4 border-t border-border/20">
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                                                                        {tSports("title") || "Sports Profile"}
+                                                                                    </Label>
+                                                                                </div>
+                                                                                <div className="flex flex-wrap gap-2">
+                                                                                    {(['football'] as SportType[]).map((sportKey) => {
+                                                                                        const isActive = player.global_player?.athlete_types?.includes(sportKey);
+                                                                                        return (
+                                                                                            <Badge
+                                                                                                key={sportKey}
+                                                                                                variant={isActive ? "default" : "outline"}
+                                                                                                className={`rounded-none cursor-pointer pr-1 transition-all text-[9px] font-black uppercase tracking-widest h-7 ${isActive ? "bg-secondary text-black hover:bg-secondary/80" : "border-muted-foreground/20 text-muted-foreground/40 hover:border-secondary hover:text-secondary"}`}
+                                                                                                onClick={() => {
+                                                                                                    const currentTypes = player.global_player?.athlete_types || [];
+                                                                                                    const newTypes = isActive 
+                                                                                                        ? currentTypes.filter(t => t !== sportKey)
+                                                                                                        : [...currentTypes, sportKey];
+                                                                                                    handleGlobalAthleteTypesUpdate(player.global_player_id!, newTypes);
+                                                                                                }}
+                                                                                            >
+                                                                                                {tSports(sportKey)}
+                                                                                                {isActive && <X className="ml-1 h-3 w-3" />}
+                                                                                            </Badge>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                                <p className="text-[9px] text-muted-foreground/60 italic uppercase tracking-wider">
+                                                                                    {t("multi_sport_athlete_desc") || "Select all sports this athlete participates in."}
+                                                                                </p>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -1177,8 +1226,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     variant="outline"
                                                                                     className="rounded-none w-full h-10 text-[9px] font-black uppercase tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
                                                                                     onClick={async () => {
-                                                                                        const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                        const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
+                                                                                        const res = await createGlobalPlayer(searchQuery, null, player.birth_date, [team.sport]);
                                                                                         if (res.success && res.data) {
                                                                                             await handleLinkPlayer(player.id, res.data);
                                                                                         } else {
@@ -1221,23 +1269,22 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                 )}
                                                                 <div className="p-4 border-t border-border/40 bg-muted/5">
                                                                     {!searchQuery && (
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
-                                                                            onClick={async () => {
-                                                                                const { createGlobalPlayer } = await import("@/app/[locale]/organizer/tournaments/[id]/global-player-actions");
-                                                                                const res = await createGlobalPlayer(player.name, null, player.birth_date);
-                                                                                if (res.success && res.data) {
-                                                                                    await handleLinkPlayer(player.id, res.data);
-                                                                                } else {
-                                                                                    toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            <UserPlus className="h-4 w-4 mr-3 opacity-40" />
-                                                                            {t("create_global_id")}
-                                                                        </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
+                                                                                onClick={async () => {
+                                                                                    const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
+                                                                                    if (res.success && res.data) {
+                                                                                        await handleLinkPlayer(player.id, res.data);
+                                                                                    } else {
+                                                                                        toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <UserPlus className="h-4 w-4 mr-3 opacity-40" />
+                                                                                {t("create_global_id")}
+                                                                            </Button>
                                                                     )}
                                                                 </div>
                                                             </PopoverContent>

@@ -220,6 +220,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 name: teamName,
                 description: description || null,
                 logo_url: finalLogoUrl,
+                sport: tournament.sport,
                 created_at: new Date().toISOString(),
             })
             .select()

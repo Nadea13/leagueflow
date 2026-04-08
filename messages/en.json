@@ -25,6 +25,7 @@
         "period": "Tournament Period",
         "teams": "Teams",
         "players": "Players",
+        "sport": "Sport",
         "error": "Error",
         "success": "Success",
         "dashboard": "Dashboard",
@@ -452,7 +453,18 @@
         "description_placeholder": "Tournament rules, prizes, and general information...",
         "document_deadline": "Document Submission Deadline",
         "create_button": "Create Tournament",
-        "create_title": "Create New Tournament"
+        "create_title": "Create New Tournament",
+        "select_sport": "Select Sport"
+    },
+    "Sports": {
+        "football": "Football",
+        "basketball": "Basketball",
+        "volleyball": "Volleyball",
+        "futsal": "Futsal",
+        "badminton": "Badminton",
+        "tennis": "Tennis",
+        "table_tennis": "Table Tennis",
+        "other": "Other"
     },
     "Group": {
         "group_assignment": "Group Assignment",
@@ -681,6 +693,7 @@
         "title": "Squad List",
         "view_squad": "View Squad",
         "manage_squad": "Manage Squad",
+        "athlete_types": "Athlete Types (Plays as...)",
         "add_player": "Add Player",
         "add": "Add",
         "player_name": "Player Name",

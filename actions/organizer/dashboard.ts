@@ -13,6 +13,7 @@ export async function createTournament(prevState: ActionResponse, formData: Form
         const supabase = await createClient();
         const name = formData.get("name") as string;
         const format = formData.get("format") as string;
+        const sport = (formData.get("sport") as string) || 'football';
         const description = formData.get("description") as string;
         const start_date = formData.get("start_date") as string;
         const end_date = formData.get("end_date") as string;
@@ -49,6 +50,7 @@ export async function createTournament(prevState: ActionResponse, formData: Form
             user_id: user.id,
             name,
             format,
+            sport,
             description: description || null,
             start_date: start_date || null,
             end_date: end_date || null,

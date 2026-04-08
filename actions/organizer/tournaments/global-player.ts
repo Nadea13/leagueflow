@@ -169,7 +169,8 @@ export async function searchGlobalPlayers(query: string): Promise<ActionResponse
 export async function createGlobalPlayer(
     name: string,
     photoUrl?: string | null,
-    dateOfBirth?: string | null
+    dateOfBirth?: string | null,
+    athleteTypes?: string[]
 ): Promise<ActionResponse<GlobalPlayer>> {
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
@@ -182,6 +183,7 @@ export async function createGlobalPlayer(
             name,
             photo_url: photoUrl || null,
             date_of_birth: dateOfBirth || null,
+            athlete_types: athleteTypes || [],
             created_by: user?.id || null,
         })
         .select()
@@ -192,6 +194,30 @@ export async function createGlobalPlayer(
     }
 
     return { success: true, data: data as GlobalPlayer };
+}
+
+export async function updateGlobalPlayerAthleteTypes(
+    globalPlayerId: string,
+    athleteTypes: string[]
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to update this global player" };
+
+    const { error } = await adminSupabase
+        .from("global_players")
+        .update({ athlete_types: athleteTypes })
+        .eq("id", globalPlayerId);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
 }
 
 export async function linkPlayerToGlobal(

@@ -19,7 +19,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
 
     const [tournamentResult, userPlan, roleRes] = await Promise.all([
         supabase.from("tournaments").select(`
-            id, name, format, description, status, start_date, end_date, number_of_pitches, user_id, created_at,
+            id, name, format, description, status, start_date, end_date, number_of_pitches, user_id, created_at, sport,
             max_teams, advancing_teams, is_registration_open, registration_fee, bank_name, bank_account_name, bank_account_number,
             document_deadline,
             payments(plan, status)

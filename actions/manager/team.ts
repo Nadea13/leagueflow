@@ -76,6 +76,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
 
         const name = formData.get("name") as string;
         const logoFile = formData.get("logo") as File;
+        const sport = (formData.get("sport") as string) || "football";
         const description = formData.get("description") as string;
 
         if (!name) {
@@ -115,6 +116,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             .insert({
                 name,
                 logo_url: logoUrl,
+                sport,
                 description: description || null,
                 user_id: user.id,
                 created_at: new Date().toISOString(),
@@ -243,6 +245,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, tourn
 
         const name = formData.get("name") as string;
         const logoFile = formData.get("logo") as File;
+        const sport = formData.get("sport") as string;
         const description = formData.get("description") as string;
         const existingLogoUrl = formData.get("existing_logo_url") as string;
 
@@ -281,6 +284,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, tourn
             .update({
                 name,
                 logo_url: logoUrl,
+                sport: sport || undefined,
                 description: description || null,
             })
             .eq("id", teamId)
@@ -442,6 +446,38 @@ export async function addPlayer(
     if (error) {
         console.error("[addPlayer] Insert failed:", error);
         return { success: false, error: error.message };
+    }
+
+    // Auto-update Global Profile with Team Sport
+    if (globalPlayerId) {
+        // Fetch team's sport
+        const table = participation ? "tournament_teams" : "teams";
+        const { data: teamData } = await adminSupabase
+            .from(table)
+            .select("sport")
+            .eq("id", teamId)
+            .single();
+
+        if (teamData?.sport) {
+            // Get current athlete types
+            const { data: gp } = await adminSupabase
+                .from("global_players")
+                .select("athlete_types")
+                .eq("id", globalPlayerId)
+                .single();
+
+            if (gp) {
+                const currentTypes = gp.athlete_types || [];
+                if (!currentTypes.includes(teamData.sport)) {
+                    await adminSupabase
+                        .from("global_players")
+                        .update({ 
+                            athlete_types: [...currentTypes, teamData.sport] 
+                        })
+                        .eq("id", globalPlayerId);
+                }
+            }
+        }
     }
 
     revalidatePath(`/manager/my-teams/${teamId}`);

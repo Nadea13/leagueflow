@@ -1,5 +1,6 @@
 export type TournamentStatus = 'draft' | 'active' | 'completed';
 export type MatchStatus = 'scheduled' | 'live' | 'finished';
+export type SportType = 'football';
 
 export interface Tournament {
     id: string;
@@ -22,6 +23,7 @@ export interface Tournament {
     payment_status?: string | null;
     payment_id?: string | null;
     payment_method?: string | null;
+    sport: SportType;
     created_at: string;
     updated_at?: string;
 }
@@ -64,6 +66,7 @@ export interface Team {
     logo_url?: string | null;
     tournament_id?: string | null;
     group_name?: string | null;
+    sport: SportType;
     created_at: string;
 }
 
@@ -77,6 +80,7 @@ export interface TournamentTeam {
     group_name?: string | null;
     logo_url?: string | null;
     is_roster_locked: boolean;
+    sport: SportType;
     created_at: string;
 }
 
@@ -101,6 +105,7 @@ export interface GlobalPlayer {
     photo_url?: string | null;
     id_card_url?: string | null;
     date_of_birth?: string | null;
+    athlete_types: SportType[];
     created_by?: string | null;
     created_at: string;
 }

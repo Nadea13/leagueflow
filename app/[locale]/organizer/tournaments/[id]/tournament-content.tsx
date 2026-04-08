@@ -63,6 +63,7 @@ export function TournamentContent({
     const tCommon = useTranslations("Common");
     const tSettings = useTranslations("Settings");
     const tRegistrations = useTranslations("Registrations");
+    const tSports = useTranslations("Sports");
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -255,6 +256,10 @@ export function TournamentContent({
                         <div className="flex items-center gap-2 font-black tracking-[0.2em] flex-wrap">
                             {/* Metadata Badges */}
                             <div className="flex flex-wrap items-center gap-2">
+                                <Badge variant="secondary" className="rounded-none font-black italic text-[9px] bg-secondary text-black px-2 shadow-[0_0_10px_rgba(0,196,154,0.3)]">
+                                    {tSports(tournament?.sport || 'football')}
+                                </Badge>
+
                                 <Badge variant="outline" className="rounded-none font-black italic text-[9px] border-none text-muted-foreground">
                                     {tournament?.format?.replace('_', ' ')}
                                 </Badge>
