@@ -168,7 +168,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                         type="button" 
                                         variant="ghost" 
                                         size="sm" 
-                                        className="text-[10px] font-black uppercase italic tracking-widest rounded-none hover:bg-white/5 h-10 px-6"
+                                        className="text-[10px] font-black uppercase italic tracking-widest rounded-none hover:bg-foreground/5 h-10 px-6"
                                         onClick={() => setIsDialogOpen(false)}
                                     >
                                         {tCommon("cancel")}
@@ -204,7 +204,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                             key={ann.id}
                             className={cn(
                                 "p-4 md:p-6 rounded-none border border-border/20 transition-all relative overflow-hidden group/item",
-                                ann.is_pinned ? "bg-secondary/[0.03] border-secondary/20" : "bg-card hover:bg-white/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-secondary/[0.03] border-secondary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >
                             {ann.is_pinned && (
@@ -317,7 +317,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -325,7 +325,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                 e.preventDefault();
                                 confirmDelete();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {tCommon("delete") || "Delete"}

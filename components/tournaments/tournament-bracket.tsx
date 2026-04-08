@@ -6,6 +6,7 @@ import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
+import { Link } from "@/i18n/routing";
 
 interface TournamentBracketProps {
     matches: Match[];
@@ -72,7 +73,7 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
             {/* Hidden measurement card */}
             <div className="absolute opacity-0 pointer-events-none" style={{ width: CARD_W }}>
                 <div ref={measureRef}>
-                    <BracketMatchCard match={knockoutMatches[0]} />
+                    <BracketMatchCard match={knockoutMatches[0]} isPublic={isPublic} />
                 </div>
             </div>
 
@@ -114,6 +115,7 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
                                             isTopOfPair={idx % 2 === 0}
                                             isBottomOfPair={idx % 2 === 1}
                                             hasPairPartner={!isFinal && stageMatches.length > 1}
+                                            isPublic={isPublic}
                                         />
                                     ))}
                                 </div>
@@ -143,6 +145,7 @@ function BracketSlot({
     isTopOfPair,
     isBottomOfPair,
     hasPairPartner,
+    isPublic,
 }: {
     match: Match;
     slotHeight: number;
@@ -151,6 +154,7 @@ function BracketSlot({
     isTopOfPair: boolean;
     isBottomOfPair: boolean;
     hasPairPartner: boolean;
+    isPublic?: boolean;
 }) {
     return (
         <div
@@ -159,7 +163,7 @@ function BracketSlot({
         >
             {/* Match card */}
             <div style={{ width: CARD_W }} className="shrink-0">
-                <BracketMatchCard match={match} isFinal={isFinal} />
+                <BracketMatchCard match={match} isFinal={isFinal} isPublic={isPublic} />
             </div>
 
             {/* Connector lines */}
@@ -236,21 +240,29 @@ function BracketSlot({
     );
 }
 
-function BracketMatchCard({ match, isFinal }: { match: Match; isFinal?: boolean }) {
+function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?: boolean; isPublic?: boolean }) {
     const t = useTranslations("Bracket");
+    const tournamentId = match.tournament_id;
     const isFinished = match.status === "finished";
     const isScheduled = match.status === "scheduled";
     const homeWinner = match.winner_id && match.winner_id === match.home_team_id;
     const awayWinner = match.winner_id && match.winner_id === match.away_team_id;
     const hasPenalties = !isScheduled && ((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0);
 
+    const url = isPublic 
+        ? `/${tournamentId}/matches/${match.id}`
+        : `/organizer/tournaments/${tournamentId}/matches/${match.id}`;
+
     return (
-        <div className={cn(
-            "flex flex-col border border-border/40 bg-card rounded-none overflow-hidden text-sm relative transition-all group",
-            "shadow-lg hover:border-secondary/30",
-            isFinal && "border-secondary/40 shadow-[0_0_20px_rgba(0,196,154,0.1)]",
-            !isFinished && "opacity-95"
-        )}>
+        <Link 
+            href={url}
+            className={cn(
+                "flex flex-col border border-border/40 bg-card rounded-none overflow-hidden text-sm relative transition-all group",
+                "shadow-lg hover:border-secondary/30",
+                isFinal && "border-secondary/40 shadow-[0_0_20px_rgba(0,196,154,0.1)]",
+                !isFinished && "opacity-95"
+            )}
+        >
              {/* Dynamic color strip on top */}
              <div className={cn(
                 "h-0.5 w-full",
@@ -299,7 +311,7 @@ function BracketMatchCard({ match, isFinal }: { match: Match; isFinal?: boolean 
                 isWinner={!!awayWinner}
                 tbd={t("tbd")}
             />
-        </div>
+        </Link>
     );
 }
 

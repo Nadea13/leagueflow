@@ -74,7 +74,7 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
 
             <div className="p-8 flex flex-col items-center gap-8">
                 {/* QR Code */}
-                <div className="p-2 bg-white rounded-none shadow-inner border border-border/50 relative group">
+                <div className="p-2 bg-foreground rounded-none shadow-inner border border-border/50 relative group">
                     <img
                         src={qrCodeUrl}
                         alt="PromptPay QR Code"

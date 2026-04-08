@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { Match, Team } from "@/types/index";
 import { MatchCard } from "@/components/tournaments/match-card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { deleteMatch, advanceStage } from "@/actions/organizer/tournaments/general";
@@ -16,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Plus, Calendar, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import {
     AlertDialog,
@@ -110,9 +109,9 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
     return (
         <div className="space-y-4 md:space-y-6">
             {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 border border-white/5 group relative overflow-hidden">
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5 group relative overflow-hidden">
                     <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
-                    <div className="h-16 w-16 rounded-none bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-secondary/30 transition-colors">
+                    <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
                         <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                     </div>
                     <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground mb-2">{tFixtures("ready_to_start")}</h3>
@@ -122,26 +121,26 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                 </div>
             ) : (
                 <>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-white/5 p-4 md:p-6 border border-white/5">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-foreground/5 p-4 md:p-6 border border-foreground/5">
                     {/* Filter Area */}
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <div className="space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
                             <Select value={filterStage} onValueChange={setFilterStage}>
-                                <SelectTrigger className="h-10 w-[200px] bg-[#0A0A0A] border-white/10 rounded-none focus:ring-secondary/50 font-bold uppercase italic tracking-tighter text-xs">
+                                <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold uppercase italic tracking-tighter text-xs">
                                     <SelectValue placeholder={tMatch("round")} />
                                 </SelectTrigger>
-                                <SelectContent className="bg-[#111] border-white/10 rounded-none">
-                                    <SelectItem value="all" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                    <SelectItem value="group" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")}</SelectItem>
-                                    <SelectItem value="Group A" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} A</SelectItem>
-                                    <SelectItem value="Group B" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} B</SelectItem>
-                                    <SelectItem value="Group C" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} C</SelectItem>
-                                    <SelectItem value="Group D" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("group")} D</SelectItem>
-                                    <SelectItem value="round_of_16" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
-                                    <SelectItem value="quarter_final" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
-                                    <SelectItem value="semi_final" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("semi_final")}</SelectItem>
-                                    <SelectItem value="final" className="hover:bg-white/5 focus:bg-white/5 uppercase italic font-bold text-xs">{tMatch("final")}</SelectItem>
+                                <SelectContent className="bg-card border-foreground/10 rounded-none">
+                                    <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                    <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")}</SelectItem>
+                                    <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} A</SelectItem>
+                                    <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} B</SelectItem>
+                                    <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} C</SelectItem>
+                                    <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} D</SelectItem>
+                                    <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
+                                    <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
+                                    <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("semi_final")}</SelectItem>
+                                    <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("final")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -169,7 +168,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
 
             <div id="fixtures-canvas" className="space-y-4 md:space-y-6">
                 {filteredMatches.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 border border-white/5">
+                    <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5">
                         <Calendar className="h-12 w-12 text-muted-foreground/20 mb-4" />
                         <h3 className="text-sm font-black uppercase italic tracking-tighter text-muted-foreground/40">{tFixtures("no_fixtures")}</h3>
                     </div>
@@ -219,7 +218,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                                             <div className="h-px bg-secondary/30 flex-1" />
                                         </div>
                                     )}
-                                    <div className="space-y-[1px] bg-white/5 border border-white/5">
+                                    <div className="space-y-[1px] bg-foreground/5 border border-foreground/5">
                                         {[...stageMatches]
                                             .sort((a, b) => {
                                                 if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
@@ -280,7 +279,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             {t("cancel") || "Cancel"}
                         </AlertDialogCancel>
                         <AlertDialogAction

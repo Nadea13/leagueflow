@@ -155,7 +155,7 @@ export function PublicTournamentView({
                         variant="ghost"
                         size="icon"
                         asChild
-                        className="rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border border-white/10 bg-white/5 hover:bg-secondary hover:text-black transition-all shadow-xl shadow-black/40"
+                        className="rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border border-foreground/10 bg-foreground/5 hover:bg-secondary hover:text-black transition-all shadow-xl shadow-black/40"
                     >
                         <Link href="/">
                             <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
@@ -169,7 +169,7 @@ export function PublicTournamentView({
                                 {tournament?.format?.replace('_', ' ')}
                             </Badge>
 
-                            <span className="text-[10px] font-black tracking-widest text-muted-foreground italic px-2 border-l border-white/10 uppercase">
+                            <span className="text-[10px] font-black tracking-widest text-muted-foreground italic px-2 border-l border-foreground/10 uppercase">
                                 {initialTeams.length} {tTournament("teams")}
                             </span>
 
@@ -182,7 +182,7 @@ export function PublicTournamentView({
                                 {tTournament(tournament?.status || 'draft')}
                             </Badge>
 
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 border-none font-black italic uppercase tracking-tighter bg-white/5 text-muted-foreground/60">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 border-none font-black italic uppercase tracking-tighter bg-foreground/5 text-muted-foreground/60">
                                 {t("beta")}
                             </Badge>
                         </div>
@@ -218,14 +218,14 @@ export function PublicTournamentView({
                 <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max print:hidden backdrop-blur-sm">
                     <TabsTrigger
                         value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Trophy className="h-3.5 w-3.5" />
                         {t("overview")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="matches"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Calendar className="h-3.5 w-3.5" />
                         {t("matches")}
@@ -286,7 +286,7 @@ export function PublicTournamentView({
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-8 border-t border-white/5">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-8 border-t border-foreground/5">
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex flex-col gap-1">
                                 <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">

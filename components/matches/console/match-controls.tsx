@@ -78,11 +78,11 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     disabled
-                    className="flex-1 w-12 md:w-full h-12 md:h-14 bg-white/5 border-white/10 rounded-none opacity-50 cursor-not-allowed"
+                    className="flex-1 w-12 md:w-full h-12 md:h-14 bg-foreground/5 border-foreground/10 rounded-none opacity-50 cursor-not-allowed"
                 >
                     <div className="flex items-center gap-3">
-                        <Play className="h-4 w-4 text-white/20" /> 
-                        <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-white/20">{t("match_finished")}</span>
+                        <Play className="h-4 w-4 text-foreground/20" /> 
+                        <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-foreground/20">{t("match_finished")}</span>
                     </div>
                 </Button>
             )}
@@ -107,11 +107,11 @@ export function MatchControls({
                     <Button 
                         variant="outline"
                         onClick={onSetTime}
-                        className="h-12 bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 rounded-none transition-all group"
+                        className="h-12 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 rounded-none transition-all group"
                     >
                         <div className="flex items-center gap-3">
-                            <Clock className="h-4 w-4 text-white/40 group-hover:text-white transition-colors" />
-                            <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-white/60 group-hover:text-white transition-colors">{t("set_time")}</span>
+                            <Clock className="h-4 w-4 text-foreground/40 group-hover:text-foreground transition-colors" />
+                            <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-foreground/60 group-hover:text-foreground transition-colors">{t("set_time")}</span>
                         </div>
                     </Button>
                 )}
@@ -120,11 +120,11 @@ export function MatchControls({
                     <Button 
                         variant="outline"
                         onClick={onAddTime}
-                        className="h-12 bg-white/5 border-white/5 hover:bg-white/10 hover:border-secondary/40 rounded-none transition-all group"
+                        className="h-12 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-secondary/40 rounded-none transition-all group"
                     >
                         <div className="flex items-center gap-3">
                             <Plus className="h-4 w-4 text-secondary group-hover:scale-110 transition-transform" />
-                            <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-white/60 group-hover:text-secondary transition-colors">{t("add_time")}</span>
+                            <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-foreground/60 group-hover:text-secondary transition-colors">{t("add_time")}</span>
                         </div>
                     </Button>
                 )}

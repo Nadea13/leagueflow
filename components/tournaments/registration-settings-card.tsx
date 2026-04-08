@@ -83,7 +83,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                             <AlertTriangle className="h-4 w-4" />
                             <span>
                                 {t("upsell_pro_feature", { defaultValue: "Tournament registrations are a Pro feature." })} 
-                                <button onClick={onUpgrade} className="underline ml-2 hover:text-white transition-colors">{t("upgrade_button")}</button>
+                                <button onClick={onUpgrade} className="underline ml-2 hover:text-foreground transition-colors">{t("upgrade_button")}</button>
                             </span>
                         </div>
                     )}
@@ -95,7 +95,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                         <input type="hidden" name="format" value={tournament.format || "league"} />
                         <input type="hidden" name="max_teams" value={tournament.max_teams || 8} />
 
-                        <div className="flex items-center justify-between p-4 md:p-6 bg-white/5 border-none rounded-none">
+                        <div className="flex items-center justify-between p-4 md:p-6 bg-foreground/5 border-none rounded-none">
                             <div className="space-y-1">
                                 <Label htmlFor="is_registration_open" className="text-sm md:text-lg font-black uppercase italic tracking-tight text-foreground">
                                     {t("allow_registration")}
@@ -126,7 +126,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                     min="0"
                                     step="0.01"
                                     disabled={!isPro}
-                                    className="h-12 bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -138,17 +138,17 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                     defaultValue={tournament.bank_account_number}
                                     placeholder="08xxxxxxxx or ID Card"
                                     disabled={!isPro}
-                                    className="h-12 bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                                 <div className="space-y-1">
                                     <Label htmlFor="bank_name" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("bank_name")}</Label>
                                     <Select name="bank_name" defaultValue={tournament.bank_name || "PromptPay"} disabled={!isPro}>
-                                        <SelectTrigger id="bank_name" className="h-12 bg-white/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold uppercase italic tracking-tighter">
+                                        <SelectTrigger id="bank_name" className="h-12 bg-foreground/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold uppercase italic tracking-tighter">
                                             <SelectValue placeholder={t("select_bank")} />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-neutral-950 border-white/10 rounded-none">
+                                        <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
                                             <SelectItem value="PromptPay">PromptPay</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -162,7 +162,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                         defaultValue={tournament.bank_account_name}
                                         placeholder={t("account_name")}
                                         disabled={!isPro}
-                                        className="h-12 bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                        className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
                                     />
                                 </div>
                             </div>
@@ -172,7 +172,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                 disabled={!isPro || isPending}
                                 className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 transition-all relative group overflow-hidden"
                             >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center justify-center gap-2">
                                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                     {tCommon("save")}

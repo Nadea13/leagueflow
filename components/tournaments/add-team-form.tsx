@@ -51,7 +51,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                     {/* Circular Logo Upload */}
                     <div className="flex items-center gap-2 md:gap-3">
                         <label htmlFor="add-logo-upload" className={`cursor-pointer group relative shrink-0 ${isLimitReached ? 'pointer-events-none opacity-50' : ''}`}>
-                            <div className="h-16 w-16 rounded-none border border-muted-foreground/20 flex items-center justify-center overflow-hidden bg-white/5 hover:bg-white/10 transition-colors relative">
+                            <div className="h-16 w-16 rounded-none border border-muted-foreground/20 flex items-center justify-center overflow-hidden bg-foreground/5 hover:bg-foreground/10 transition-colors relative">
                                 {preview ? (
                                     <img src={preview} alt="Preview" className="h-full w-full object-cover" />
                                 ) : (
@@ -88,7 +88,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                                 name="name"
                                 placeholder={isLimitReached ? t("limit_reached") : t("team_name_placeholder")}
                                 required
-                                className="h-12 bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
                                 disabled={isLimitReached}
                             />
                         </div>
@@ -98,7 +98,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                             <Textarea
                                 name="description"
                                 placeholder={t("no_description") || "No description"}
-                                className="min-h-[80px] bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm"
+                                className="min-h-[80px] bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm"
                                 disabled={isLimitReached}
                             />
                         </div>

@@ -182,7 +182,7 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                             id="description"
                             name="description"
                             placeholder={t("description_placeholder")}
-                            className="min-h-[100px] bg-white/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm p-4 w-full"
+                            className="min-h-[100px] bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm p-4 w-full"
                         />
                     </div>
 

@@ -178,7 +178,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
         <div
             className={cn(
                 "flex flex-col md:grid md:grid-cols-[160px_1fr_120px] items-center px-4 md:px-6 py-2 md:py-4 transition-all cursor-pointer group relative overflow-hidden",
-                isFinished ? "bg-[#050505]/60" : "bg-transparent hover:bg-white/5",
+                isFinished ? "bg-[#050505]/60" : "bg-transparent hover:bg-foreground/5",
                 "gap-4",
                 isLive && "bg-secondary/5"
             )}
@@ -216,40 +216,23 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                     </div>
                 )}
 
-                {/* Date/Time Info */}
-                {!isFinished && !isLive && (
+                {/* Date/Time Info (Edit Mode only) */}
+                {!isFinished && !isLive && !isPublic && isEditMode && (
                     <div className="w-full">
-                        {isPublic || !isEditMode ? (
-                            <div className="flex flex-row md:flex-col items-center justify-center md:items-start gap-3 md:gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">
-                                {match.match_date && (
-                                    <div className="flex items-center gap-2">
-                                        <CalendarIcon className="w-3 h-3 text-secondary/40" />
-                                        <span>{formatDate(match.match_date, "d MMM", locale)}</span>
-                                    </div>
-                                )}
-                                {match.match_time && (
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-3 h-3 text-secondary/40" />
-                                        <span>{formatTime(match.match_time)}</span>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-                                <Input
-                                    type="date"
-                                    className="h-8 bg-[#0A0A0A] border-white/5 rounded-none text-[10px] font-black uppercase italic tracking-tighter"
-                                    value={matchDate}
-                                    onChange={(e) => handleDateUpdate(e.target.value)}
-                                />
-                                <Input
-                                    type="time"
-                                    className="h-8 bg-[#0A0A0A] border-white/5 rounded-none text-[10px] font-black uppercase italic tracking-tighter"
-                                    value={formatTime(matchTime) || ""}
-                                    onChange={(e) => handleTimeUpdate(e.target.value)}
-                                />
-                            </div>
-                        )}
+                        <div className="flex flex-col gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+                            <Input
+                                type="date"
+                                className="h-8 bg-[#0A0A0A] border-foreground/5 rounded-none text-[10px] font-black uppercase italic tracking-tighter"
+                                value={matchDate}
+                                onChange={(e) => handleDateUpdate(e.target.value)}
+                            />
+                            <Input
+                                type="time"
+                                className="h-8 bg-[#0A0A0A] border-foreground/5 rounded-none text-[10px] font-black uppercase italic tracking-tighter"
+                                value={formatTime(matchTime) || ""}
+                                onChange={(e) => handleTimeUpdate(e.target.value)}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
@@ -269,10 +252,10 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                     value={match.home_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-white/5 rounded-none focus:ring-secondary/50 font-black uppercase italic tracking-tighter text-xs">
+                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-secondary/50 font-black uppercase italic tracking-tighter text-xs">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-[#111] border-white/5">
+                                    <SelectContent className="bg-[#111] border-foreground/5">
                                         <SelectItem value="tbd" className="font-black italic uppercase text-xs">{tMatch("tbd")}</SelectItem>
                                         {teams.map((t) => (
                                             <SelectItem key={t.id} value={t.id} className="font-black italic uppercase text-xs">{t.name}</SelectItem>
@@ -283,15 +266,15 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                         ) : (
                             <>
                                 <span className={cn(
-                                    "line-clamp-1 py-1 px-2",
+                                    "line-clamp-1 py-1 px-2 text-foreground",
                                     (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) && "bg-secondary/10"
                                 )}>
                                     {match.home_team?.name || tMatch("tbd")}
                                 </span>
                                 {match.home_team?.logo_url ? (
-                                    <img src={match.home_team.logo_url} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all shadow-xl shadow-black/10" alt="" />
+                                    <img src={match.home_team.logo_url} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/5">
                                         <span className="text-[10px] md:text-xs font-black text-muted-foreground/40">
                                             {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
@@ -306,17 +289,17 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                 <div className="flex items-center justify-center shrink-0">
                     <div className={cn(
                         "flex flex-col items-center justify-center transition-all duration-300",
-                        isLive ? " text-secondary-foreground shadow-lg shadow-secondary/20 scale-110" : 
+                        isLive ? " text-secondary-foreground scale-110" : 
                         isFinished ? " text-foreground" : " text-muted-foreground/40"
                     )}>
                         {isLive || isFinished ? (
-                            <div className="flex flex-col items-center leading-none">
+                            <div className="flex flex-col w-[5rem] items-center leading-none">
                                 <div className="flex items-center gap-1 md:gap-3">
-                                    <span className="text-xl md:text-3xl font-black italic tracking-tighter">
+                                    <span className="text-xl md:text-3xl font-black text-foreground italic tracking-tighter">
                                         {match.home_score ?? 0}
                                     </span>
-                                    <span className="text-muted-foreground/20 font-black italic">/</span>
-                                    <span className="text-xl md:text-3xl font-black italic tracking-tighter">
+                                    <span className="text-muted-foreground/20 font-black italic">-</span>
+                                    <span className="text-xl md:text-3xl font-black text-foreground italic tracking-tighter">
                                         {match.away_score ?? 0}
                                     </span>
                                 </div>
@@ -327,7 +310,16 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                 )}
                             </div>
                         ) : (
-                            <span className="text-[10px] font-black uppercase italic tracking-[0.2em]">{tMatch("vs") || "VS"}</span>
+                            <div className="flex flex-col items-center justify-center min-w-[5rem] group-hover:scale-110 transition-transform duration-300">
+                                <span className="text-lg md:text-xl font-black text-foreground italic tracking-tighter leading-none hover:text-secondary transition-colors">
+                                    {formatTime(match.match_time) || "--:--"}
+                                </span>
+                                {match.match_date && (
+                                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.1em] mt-1 leading-none">
+                                        {formatDate(match.match_date, "d MMM", locale)}
+                                    </span>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -344,10 +336,10 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                     value={match.away_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-white/5 rounded-none focus:ring-secondary/50 font-black uppercase italic tracking-tighter text-xs">
+                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-secondary/50 font-black uppercase italic tracking-tighter text-xs">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-[#111] border-white/5">
+                                    <SelectContent className="bg-[#111] border-foreground/5">
                                         <SelectItem value="tbd" className="font-black italic uppercase text-xs">{tMatch("tbd")}</SelectItem>
                                         {teams.map((t) => (
                                             <SelectItem key={t.id} value={t.id} className="font-black italic uppercase text-xs">{t.name}</SelectItem>
@@ -358,16 +350,16 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                         ) : (
                             <>
                                 {match.away_team?.logo_url ? (
-                                    <img src={match.away_team.logo_url} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all shadow-xl shadow-black/10" alt="" />
+                                    <img src={match.away_team.logo_url} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/5">
                                         <span className="text-[10px] md:text-xs font-black text-muted-foreground/40">
                                             {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
                                     </div>
                                 )}
                                 <span className={cn(
-                                    "line-clamp-1 py-1 px-2",
+                                    "line-clamp-1 py-1 px-2 text-foreground",
                                     (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) && "bg-secondary/10"
                                 )}>
                                     {match.away_team?.name || tMatch("tbd")}
@@ -429,7 +421,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -437,7 +429,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                 e.preventDefault();
                                 handleClear();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                         >
                             <Eraser className="h-3.5 w-3.5 mr-2" />
                             {t("clear") || "Clear"}

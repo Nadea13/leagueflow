@@ -16,11 +16,11 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0A0A0B] border-white/5 p-0 overflow-hidden max-w-md rounded-none">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
                 
                 <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-white">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
                         <div className="p-2 bg-secondary/10 border border-secondary/20">
                             <Timer className="h-6 w-6 text-secondary" />
                         </div>
@@ -37,7 +37,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                             <Button 
                                 key={mins} 
                                 variant="outline" 
-                                className="h-16 bg-white/5 border-white/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none text-2xl font-black italic transition-all group active:scale-95" 
+                                className="h-16 bg-foreground/5 border-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none text-2xl font-black italic transition-all group active:scale-95" 
                                 onClick={() => onSave(mins)}
                             >
                                 <span className="group-hover:scale-110 transition-transform">+{mins}</span>
@@ -45,13 +45,13 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                         ))}
                     </div>
 
-                    <div className="space-y-3 relative z-10 pt-4 border-t border-white/5">
+                    <div className="space-y-3 relative z-10 pt-4 border-t border-foreground/5">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("custom")}</Label>
                         <div className="flex gap-3">
                             <Input
                                 type="number"
                                 placeholder="0"
-                                className="h-12 flex-1 bg-white/5 border-white/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-white transition-all"
+                                className="h-12 flex-1 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         const val = parseInt((e.target as HTMLInputElement).value);
@@ -71,11 +71,11 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                         </div>
                     </div>
                 </div>
-                <div className="p-4 bg-white/5 border-t border-white/5">
+                <div className="p-4 bg-foreground/5 border-t border-foreground/5">
                     <Button 
                         variant="ghost" 
                         onClick={() => onOpenChange(false)}
-                        className="w-full text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-none"
+                        className="w-full text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
                     >
                         CANCEL
                     </Button>
@@ -97,11 +97,11 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0A0A0B] border-white/5 p-0 overflow-hidden max-w-xs rounded-none">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-xs rounded-none">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
                 
                 <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-white">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
                         <div className="p-2 bg-secondary/10 border border-secondary/20">
                             <Timer className="h-6 w-6 text-secondary" />
                         </div>
@@ -126,16 +126,16 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                             <Label className="text-[10px] font-black uppercase tracking-widest text-secondary text-center block w-full">{t("min")}</Label>
                             <Input
                                 name="minutes" type="number" min="0"
-                                className="h-16 text-center text-3xl font-black bg-white/5 border-white/5 focus:border-secondary/50 rounded-none text-white"
+                                className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-secondary/50 rounded-none text-foreground"
                                 defaultValue={Math.floor(currentTime / 60)}
                             />
                         </div>
-                        <span className="text-3xl font-black text-white/20 mt-6">:</span>
+                        <span className="text-3xl font-black text-foreground/20 mt-6">:</span>
                         <div className="space-y-2 flex-1">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-secondary text-center block w-full">{t("sec")}</Label>
                             <Input
                                 name="seconds" type="number" min="0" max="59"
-                                className="h-16 text-center text-3xl font-black bg-white/5 border-white/5 focus:border-secondary/50 rounded-none text-white"
+                                className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-secondary/50 rounded-none text-foreground"
                                 defaultValue={currentTime % 60}
                             />
                         </div>
@@ -153,7 +153,7 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                             variant="ghost" 
                             type="button"
                             onClick={() => onOpenChange(false)}
-                            className="h-10 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-none"
+                            className="h-10 text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
                         >
                             CANCEL
                         </Button>

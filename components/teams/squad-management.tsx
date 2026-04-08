@@ -552,7 +552,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                 {isLocked && (
                     <div className="absolute top-0 right-0">
-                        <Badge variant="destructive" className="font-black uppercase tracking-tighter rounded-none bg-red-600 text-white border-none py-1 px-3 italic">
+                        <Badge variant="destructive" className="font-black uppercase tracking-tighter rounded-none bg-red-600 text-foreground border-none py-1 px-3 italic">
                             <Lock className="h-3 w-3 mr-1.5" />
                             {tCommon("secured")}
                         </Badge>
@@ -593,7 +593,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                     }}
                                 >
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="h-9 rounded-none bg-white/5 border-secondary/20 hover:bg-secondary/10 hover:border-secondary/40 transition-all font-black uppercase italic tracking-widest text-[10px] gap-2">
+                                        <Button variant="outline" size="sm" className="h-9 rounded-none bg-foreground/5 border-secondary/20 hover:bg-secondary/10 hover:border-secondary/40 transition-all font-black uppercase italic tracking-widest text-[10px] gap-2">
                                             <Search className="h-3.5 w-3.5" />
                                             {t("connect_global") || "Search Global"}
                                         </Button>
@@ -622,7 +622,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                     {searchResults.map((gp) => (
                                                         <button
                                                             key={gp.id}
-                                                            className="w-full text-left px-4 py-3 hover:bg-secondary/10 group flex items-center justify-between transition-colors border-b border-white/5 last:border-0"
+                                                            className="w-full text-left px-4 py-3 hover:bg-secondary/10 group flex items-center justify-between transition-colors border-b border-foreground/5 last:border-0"
                                                             onClick={() => handleSelectGlobalPlayer(gp)}
                                                         >
                                                             <div className="flex flex-col">
@@ -639,7 +639,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                 </div>
                                             ) : (
                                                 <div className="p-8 text-center">
-                                                    <div className="h-10 w-10 bg-white/5 border border-white/5 flex items-center justify-center mx-auto mb-3">
+                                                    <div className="h-10 w-10 bg-foreground/5 border border-foreground/5 flex items-center justify-center mx-auto mb-3">
                                                         <FileText className="h-5 w-5 text-muted-foreground/20" />
                                                     </div>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No records found</p>
@@ -673,7 +673,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                 <button 
                                                     type="button" 
                                                     onClick={() => setSelectedGlobalPlayerId(null)}
-                                                    className="ml-0.5 hover:text-white transition-colors"
+                                                    className="ml-0.5 hover:text-foreground transition-colors"
                                                 >
                                                     <X className="h-2.5 w-2.5" />
                                                 </button>
@@ -965,7 +965,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                             <>
                                                                                                 <img src={player.global_player.id_card_url} alt="ID Card" className="w-full h-full object-contain" />
                                                                                                 <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover/id:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                                                                                    <Button variant="outline" size="sm" className="rounded-none border-black text-black hover:bg-black hover:text-white font-black uppercase italic text-[10px]" asChild>
+                                                                                                    <Button variant="outline" size="sm" className="rounded-none border-black text-black hover:bg-black hover:text-foreground font-black uppercase italic text-[10px]" asChild>
                                                                                                         <a href={player.global_player.id_card_url} target="_blank" rel="noopener noreferrer">
                                                                                                             <View className="h-3.5 w-3.5 mr-2" />
                                                                                                             {t("fullscreen") || "Fullscreen"}
@@ -1315,7 +1315,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                 {tCommon("edit")}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                                className="rounded-none py-3 px-4 text-[10px] font-black uppercase tracking-widest text-red-500 focus:bg-red-500 focus:text-white cursor-pointer transition-all border-t border-border/20"
+                                                                className="rounded-none py-3 px-4 text-[10px] font-black uppercase tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
                                                                 onClick={() => setPlayerToDelete(player.id)}
                                                             >
                                                                 <Trash2 className="mr-3 h-4 w-4" />
@@ -1412,7 +1412,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                             <Button
                                                 type="button"
                                                 variant="outline"
-                                                className="w-full rounded-none h-10 text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
+                                                className="w-full rounded-none h-10 text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-foreground transition-all"
                                                 disabled={isDeletingTeam || isLocked}
                                             >
                                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
@@ -1468,7 +1468,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -1476,7 +1476,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 e.preventDefault();
                                 confirmDeletePlayer();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {tCommon("delete") || "Delete"}

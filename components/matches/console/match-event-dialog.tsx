@@ -93,13 +93,13 @@ export function MatchEventDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0A0A0B] border-white/5 p-0 overflow-hidden max-w-md rounded-none">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
                 {/* Header Decoration */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
                 
                 <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase italic tracking-tighter text-white">
-                        <div className={cn("p-2 bg-white/5 border border-white/10", eventConfig?.color)}>
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase italic tracking-tighter text-foreground">
+                        <div className={cn("p-2 bg-foreground/5 border border-foreground/10", eventConfig?.color)}>
                             {Icon && <Icon className="h-6 w-6" />}
                         </div>
                         {eventConfig?.label && t(eventConfig.label)}
@@ -117,7 +117,7 @@ export function MatchEventDialog({
                         <Input
                             value={minute}
                             onChange={e => setMinute(e.target.value)}
-                            className="h-12 bg-white/5 border-white/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black italic text-xl text-white transition-all"
+                            className="h-12 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black italic text-xl text-foreground transition-all"
                             type="number"
                         />
                     </div>
@@ -128,10 +128,10 @@ export function MatchEventDialog({
                             {eventType === 'substitution' ? t("player_out") : t("player")}
                         </Label>
                         <Select value={playerId} onValueChange={setPlayerId}>
-                            <SelectTrigger className="h-12 bg-white/5 border-white/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-white transition-all">
+                            <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-foreground transition-all">
                                 <SelectValue placeholder={t("player_name")} />
                             </SelectTrigger>
-                            <SelectContent className="bg-[#0A0A0B] border-white/10 rounded-none">
+                            <SelectContent className="bg-card border-foreground/10 rounded-none">
                                 {players.map((player) => (
                                     <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
                                         {player.number ? `#${player.number} ` : ""}{player.name}
@@ -149,10 +149,10 @@ export function MatchEventDialog({
                         <div className="space-y-3 relative z-10">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-secondary italic">{t("assist")}</Label>
                             <Select value={assistPlayerId} onValueChange={setAssistPlayerId}>
-                                <SelectTrigger className="h-12 bg-white/5 border-white/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-white transition-all">
+                                <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-foreground transition-all">
                                     <SelectValue placeholder={t("no_assist")} />
                                 </SelectTrigger>
-                                <SelectContent className="bg-[#0A0A0B] border-white/10 rounded-none">
+                                <SelectContent className="bg-card border-foreground/10 rounded-none">
                                     <SelectItem value="none" className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">{t("no_assist")}</SelectItem>
                                     {players.map((player) => (
                                         <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
@@ -169,10 +169,10 @@ export function MatchEventDialog({
                         <div className="space-y-3 relative z-10">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-secondary italic">{t("player_in")}</Label>
                             <Select value={subInPlayerId} onValueChange={setSubInPlayerId}>
-                                <SelectTrigger className="h-12 bg-white/5 border-white/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-white transition-all">
+                                <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-foreground transition-all">
                                     <SelectValue placeholder={t("select_player_in")} />
                                 </SelectTrigger>
-                                <SelectContent className="bg-[#0A0A0B] border-white/10 rounded-none">
+                                <SelectContent className="bg-card border-foreground/10 rounded-none">
                                     {players.map((player) => (
                                         <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
                                             {player.number ? `#${player.number} ` : ""}{player.name}
@@ -184,12 +184,12 @@ export function MatchEventDialog({
                     )}
                 </div>
 
-                <DialogFooter className="p-8 bg-white/5 flex flex-row gap-4 items-center sm:justify-start">
+                <DialogFooter className="p-8 bg-foreground/5 flex flex-row gap-4 items-center sm:justify-start">
                     <Button 
                         type="button" 
                         variant="ghost" 
                         onClick={() => onOpenChange(false)}
-                        className="flex-1 h-12 rounded-none text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                        className="flex-1 h-12 rounded-none text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
                     >
                         {tCommon("cancel")}
                     </Button>

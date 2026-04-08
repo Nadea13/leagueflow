@@ -281,7 +281,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                             ) : (
                                 <>
                                     {/* QR Code Branded Container */}
-                                    <div className="p-2 bg-white rounded-none shadow-inner border border-border/50 relative group">
+                                    <div className="p-2 bg-foreground rounded-none shadow-inner border border-border/50 relative group">
                                         <div className="mix-blend-multiply">
                                             <QRCodeSVG value={paymentState.qrCode} size={200} />
                                         </div>

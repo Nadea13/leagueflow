@@ -308,21 +308,21 @@ export function TournamentContent({
                 <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max">
                     <TabsTrigger
                         value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Trophy className="h-3.5 w-3.5" />
                         {t("overview")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="teams"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Users className="h-3.5 w-3.5" />
                         {t("teams")} ({teams?.length || 0})
                     </TabsTrigger>
                     <TabsTrigger
                         value="fixtures"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Calendar className="h-3.5 w-3.5" />
                         {t("fixtures")}
@@ -330,7 +330,7 @@ export function TournamentContent({
                     {userRole === 'admin' && (
                         <TabsTrigger
                             value="settings"
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-white/5"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                         >
                             <Settings className="h-3.5 w-3.5" />
                             {t("settings")}
@@ -517,7 +517,7 @@ export function TournamentContent({
                                         <Button
                                             variant="outline"
                                             size="default"
-                                            className="rounded-none w-full border-border hover:bg-white/5 hover:text-white transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                            className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
                                             onClick={() => window.open(registrationUrl, '_blank')}
                                         >
                                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -680,7 +680,7 @@ export function TournamentContent({
                                                         variant="outline"
                                                         size="default"
                                                         asChild
-                                                        className="rounded-none w-full border-border hover:bg-white/5 hover:text-white transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                        className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
                                                     >
                                                         <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
                                                             <ExternalLink className="h-4 w-4 mr-2" />
@@ -703,7 +703,7 @@ export function TournamentContent({
                         {/* Main Schedule Column */}
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Unwrapped Header */}
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 pb-4 md:pb-6 border-b border-white/5">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 pb-4 md:pb-6 border-b border-foreground/5">
                                 <div className="flex flex-col gap-1">
                                     <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Calendar className="h-5 w-5 text-secondary" />
@@ -715,7 +715,7 @@ export function TournamentContent({
                                 </div>
 
                                 {/* View Toggle - Moved to Header */}
-                                <div className="flex bg-white/5 p-1 rounded-none border border-white/5 self-start md:self-auto">
+                                <div className="flex bg-foreground/5 p-1 rounded-none border border-foreground/5 self-start md:self-auto">
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -797,15 +797,15 @@ export function TournamentContent({
                                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
                                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
                                     <div className="space-y-2 md:space-y-3">
-                                        <div className="space-y-1 border-b border-white/5 pb-2 md:pb-3">
+                                        <div className="space-y-1 border-b border-foreground/5 pb-2 md:pb-3">
                                             <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest flex justify-between items-center">
                                                 Status:
-                                                <Badge className="rounded-none bg-white/5 text-foreground border-white/10 text-[9px] font-black uppercase px-3 py-1">
+                                                <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black uppercase px-3 py-1">
                                                     {tournament?.status?.toUpperCase()}
                                                 </Badge>
                                             </p>
                                         </div>
-                                        <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("format")}</span>
                                             <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
                                                 {tournament?.format?.replace('_', ' ').toUpperCase()}
@@ -847,19 +847,19 @@ export function TournamentContent({
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
                                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
                                         <div className="space-y-4 md:space-y-6">
-                                            <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                            <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
-                                                <Badge className="rounded-none bg-white/5 text-foreground border-white/10 text-[9px] font-black uppercase px-3 py-1">
+                                                <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black uppercase px-3 py-1">
                                                     {tournament?.status?.toUpperCase()}
                                                 </Badge>
                                             </div>
-                                            <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                            <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Plan</span>
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-secondary italic">
                                                     {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                                            <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Team Slots</span>
                                                 <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
                                                     {teams.length} / {tournament?.max_teams || 8}

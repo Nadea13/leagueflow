@@ -102,7 +102,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
     return (
         <div className="min-h-screen bg-background overflow-x-hidden pt-16 print:pt-0">
             {/* Navbar */}
-            <nav className="border-b fixed top-0 border-slate-200 dark:border-white/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
+            <nav className="border-b fixed top-0 border-slate-200 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 font-bold text-xl">
                         <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">

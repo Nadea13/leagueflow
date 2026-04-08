@@ -202,20 +202,20 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                         name="name"
                                         defaultValue={tournament.name}
                                         placeholder={tDialog("name")}
-                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label htmlFor="status" className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("status")}</Label>
                                     <Select name="status" defaultValue={tournament.status || "draft"}>
-                                        <SelectTrigger className="w-full h-12 bg-white/5 border-white/10 rounded-none focus:ring-0">
+                                        <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                             <SelectValue placeholder={t("select_status")} />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-neutral-950 border-white/10 rounded-none">
-                                            <SelectItem value="draft" className="focus:bg-white/10 focus:text-secondary">{t("draft")}</SelectItem>
-                                            <SelectItem value="active" className="focus:bg-white/10 focus:text-secondary">{t("active")}</SelectItem>
-                                            <SelectItem value="completed" className="focus:bg-white/10 focus:text-secondary">{t("completed")}</SelectItem>
+                                        <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
+                                            <SelectItem value="draft" className="focus:bg-foreground/10 focus:text-secondary">{t("draft")}</SelectItem>
+                                            <SelectItem value="active" className="focus:bg-foreground/10 focus:text-secondary">{t("active")}</SelectItem>
+                                            <SelectItem value="completed" className="focus:bg-foreground/10 focus:text-secondary">{t("completed")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -223,14 +223,14 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                 <div className="space-y-1">
                                     <Label htmlFor="format" className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("format")}</Label>
                                     <Select name="format" defaultValue={tournament.format || "league"}>
-                                        <SelectTrigger className="w-full h-12 bg-white/5 border-white/10 rounded-none focus:ring-0">
+                                        <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                             <SelectValue placeholder={t("select_format")} />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-neutral-950 border-white/10 rounded-none">
-                                            <SelectItem value="league" className="focus:bg-white/10 focus:text-secondary">{t("format_league")}</SelectItem>
-                                            <SelectItem value="league_ha" className="focus:bg-white/10 focus:text-secondary">{t("format_league_ha")}</SelectItem>
-                                            <SelectItem value="knockout" className="focus:bg-white/10 focus:text-secondary">{t("format_knockout")}</SelectItem>
-                                            <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-white/10 focus:text-secondary">
+                                        <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
+                                            <SelectItem value="league" className="focus:bg-foreground/10 focus:text-secondary">{t("format_league")}</SelectItem>
+                                            <SelectItem value="league_ha" className="focus:bg-foreground/10 focus:text-secondary">{t("format_league_ha")}</SelectItem>
+                                            <SelectItem value="knockout" className="focus:bg-foreground/10 focus:text-secondary">{t("format_knockout")}</SelectItem>
+                                            <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-foreground/10 focus:text-secondary">
                                                 {t("format_group_knockout")} {!isPro && t("pro_only")}
                                             </SelectItem>
                                         </SelectContent>
@@ -253,7 +253,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                         defaultValue={tournament.max_teams || 8}
                                         min="2"
                                         max={isPro ? 128 : 8}
-                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
 
@@ -264,7 +264,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                         id="start_date"
                                         name="start_date"
                                         defaultValue={tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""}
-                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
                                     />
                                 </div>
 
@@ -275,7 +275,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                         id="end_date"
                                         name="end_date"
                                         defaultValue={tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""}
-                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
                                     />
                                 </div>
 
@@ -286,7 +286,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                         id="document_deadline"
                                         name="document_deadline"
                                         defaultValue={tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : ""}
-                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
                                     />
                                 </div>
 
@@ -296,12 +296,12 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                             {t("advancing_teams_per_group", { defaultValue: "Advancing Teams Per Group" })}
                                         </Label>
                                         <Select name="advancing_teams" defaultValue={tournament.advancing_teams?.toString() || "2"} required>
-                                            <SelectTrigger className="w-full h-12 bg-white/5 border-white/10 rounded-none focus:ring-0">
+                                            <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                                 <SelectValue placeholder="Select" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-neutral-950 border-white/10 rounded-none">
+                                            <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
                                                 {[1, 2, 3, 4].map((num) => (
-                                                    <SelectItem key={num} value={num.toString()} className="focus:bg-white/10 focus:text-secondary">
+                                                    <SelectItem key={num} value={num.toString()} className="focus:bg-foreground/10 focus:text-secondary">
                                                         {num}
                                                     </SelectItem>
                                                 ))}
@@ -339,7 +339,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                     disabled={isPending}
                                     className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group overflow-hidden"
                                 >
-                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center gap-2">
                                         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                         {tCommon("save")}
@@ -372,14 +372,14 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                     <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
 
                     <div className="relative z-10 space-y-4 md:space-y-6">
-                        <div className="p-8 bg-muted/5 border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative group/plan">
+                        <div className="p-8 bg-muted/5 border border-foreground/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative group/plan">
                             <div className="space-y-1 relative z-10">
                                 <p className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("billing_plan_label")}</p>
                                 <h4 className="text-3xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
                                     {isGlobalPro ? (userPlan === 'monthly' ? t("plan_monthly") : t("plan_yearly")) : (isTournamentPro ? t("plan_tournament") : t("plan_free"))}
                                     <Badge variant="outline" className={cn(
                                         "rounded-none border-2 font-black uppercase italic tracking-widest px-3",
-                                        isPro ? "border-secondary/40 text-secondary bg-secondary/5" : "border-white/10 text-muted-foreground"
+                                        isPro ? "border-secondary/40 text-secondary bg-secondary/5" : "border-foreground/10 text-muted-foreground"
                                     )}>
                                         {isPro ? t("plan_pro_badge") : t("plan_free_badge")}
                                     </Badge>
@@ -391,7 +391,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                     disabled={showPayment}
                                     className="w-full sm:w-auto h-14 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group overflow-hidden z-10"
                                 >
-                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10">{t("upgrade_button")}</span>
                                 </Button>
                             )}
@@ -432,7 +432,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                 </div>
             </div>
             {/* Mobile Configuration Overview - Shown only on mobile before Danger Zone */}
-            <div className="lg:hidden space-y-4 border-white/5">
+            <div className="lg:hidden space-y-4 border-foreground/5">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <ClipboardEdit className="h-5 w-5 text-secondary" />
@@ -444,19 +444,19 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-3 md:p-6 shadow-xl shadow-black/20">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
                     <div className="space-y-2 md:space-y-3">
-                        <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
-                            <Badge className="rounded-none bg-white/5 text-foreground border-white/10 text-[9px] font-black uppercase px-3 py-1">
+                            <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black uppercase px-3 py-1">
                                 {tournament?.status?.toUpperCase()}
                             </Badge>
                         </div>
-                        <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Plan</span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-secondary italic">
                                 {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
                             </span>
                         </div>
-                        <div className="flex justify-between items-center border-b border-white/5 pb-2 md:pb-3">
+                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Team Slots</span>
                             <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
                                 {teams.length} / {tournament?.max_teams || 8}
@@ -493,7 +493,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                 <DialogTrigger asChild>
                                     <Button
                                         variant="destructive"
-                                        className="w-full sm:w-auto h-12 rounded-none bg-destructive text-white hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-4 md:px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
+                                        className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-4 md:px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
                                     >
                                         <Trash2 className="h-5 w-5 mr-2 md:mr-3" />
                                         {t("delete_tournament")}
@@ -526,7 +526,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                             variant="ghost"
                                             onClick={() => { setDeleteDialogOpen(false); setDeleteConfirmText(""); }}
                                             disabled={isPending}
-                                            className="rounded-none border-white/10 font-black uppercase italic tracking-tighter px-4 md:px-6 h-12"
+                                            className="rounded-none border-foreground/10 font-black uppercase italic tracking-tighter px-4 md:px-6 h-12"
                                         >
                                             {tCommon("cancel")}
                                         </Button>
@@ -534,7 +534,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                             variant="destructive"
                                             onClick={handleDelete}
                                             disabled={isPending || deleteConfirmText !== tournament.name}
-                                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-12 text-[11px] font-black uppercase tracking-widest px-8"
+                                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-12 text-[11px] font-black uppercase tracking-widest px-8"
                                         >
                                             {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                                             {t("delete_tournament")}
@@ -557,7 +557,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                     variant="destructive"
                                     onClick={() => setResetDialogOpen(true)}
                                     disabled={isPending}
-                                    className="w-full sm:w-auto h-12 rounded-none bg-destructive text-white hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
+                                    className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
                                 >
                                     {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-3" /> : <RefreshCw className="h-5 w-5 mr-3" />}
                                     {t("reset_fixtures")}
@@ -580,7 +580,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="flex flex-row justify-end gap-2 md:gap-3 mt-4 md:mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-muted/30 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest px-4 md:px-6 mt-0">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-muted/30 dark:bg-foreground/5 hover:bg-muted dark:hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest px-4 md:px-6 mt-0">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -588,7 +588,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                 e.preventDefault();
                                 handleReset();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest px-4 md:px-6"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest px-4 md:px-6"
                         >
                             <RefreshCw className="h-3.5 w-3.5 mr-2" />
                             {t("reset_fixtures")}

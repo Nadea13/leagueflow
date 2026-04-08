@@ -11,9 +11,9 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
 
     if (!matches || matches.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center bg-white/5 border border-white/5 group relative overflow-hidden">
+            <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5 group relative overflow-hidden">
                 <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
-                <div className="h-16 w-16 rounded-none bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:border-secondary/30 transition-colors">
+                <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
                     <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                 </div>
                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
@@ -70,7 +70,7 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
                                 <div className="h-px bg-secondary/30 flex-1" />
                             </div>
                         )}
-                        <div className="space-y-[1px] bg-white/5 border border-white/5">
+                        <div className="space-y-[1px] bg-foreground/5 border border-foreground/5">
                             {[...stageMatches]
                                 .sort((a, b) => {
                                     if (a.round !== b.round) return (a.round || 0) - (b.round || 0);

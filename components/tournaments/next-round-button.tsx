@@ -108,7 +108,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -116,7 +116,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
                                 e.preventDefault();
                                 handleAdvance();
                             }}
-                            className="rounded-none border border-primary/20 bg-primary/90 text-white hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-primary/20 bg-primary/90 text-foreground hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                         >
                             <ArrowRight className="h-3.5 w-3.5 mr-2" />
                             Advance

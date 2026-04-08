@@ -59,12 +59,12 @@ export function FixtureGenerator({
       disabled={isLoading} 
       variant="ghost"
       className={cn(
-        "w-full h-12 rounded-none border border-white/5 font-black uppercase italic tracking-tighter transition-all duration-300 group overflow-hidden relative",
-        hasFixtures ? "bg-white/5 hover:bg-white/10 text-muted-foreground/60 hover:text-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg shadow-secondary/10",
+        "w-full h-12 rounded-none border border-foreground/5 font-black uppercase italic tracking-tighter transition-all duration-300 group overflow-hidden relative",
+        hasFixtures ? "bg-foreground/5 hover:bg-foreground/10 text-muted-foreground/60 hover:text-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg shadow-secondary/10",
         className
       )}
     >
-      {!hasFixtures && <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />}
+      {!hasFixtures && <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />}
       <Wand2 className={cn("mr-2 h-4 w-4 relative z-10", !hasFixtures && "animate-pulse")} />
       <span className="relative z-10">{getButtonText()}</span>
     </Button>

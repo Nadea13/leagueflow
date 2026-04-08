@@ -88,7 +88,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.half_duration}
                                     onChange={e => updateField('half_duration', parseInt(e.target.value) || 0)}
                                     min={1}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -98,7 +98,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.extra_time_duration}
                                     onChange={e => updateField('extra_time_duration', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -108,7 +108,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.max_substitutions}
                                     onChange={e => updateField('max_substitutions', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                         </div>
@@ -125,7 +125,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     onChange={e => updateField('min_squad_size', e.target.value ? parseInt(e.target.value) : null)}
                                     placeholder={t("no_limit")}
                                     min={1}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -136,7 +136,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     onChange={e => updateField('max_squad_size', e.target.value ? parseInt(e.target.value) : null)}
                                     placeholder={t("no_limit")}
                                     min={1}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                         </div>
@@ -152,7 +152,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.yellow_card_ban_threshold}
                                     onChange={e => updateField('yellow_card_ban_threshold', parseInt(e.target.value) || 1)}
                                     min={1}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                                 <p className="text-[9px] font-bold uppercase text-muted-foreground/40 tracking-wider px-1">{t("yellow_ban_desc")}</p>
                             </div>
@@ -163,7 +163,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.red_card_ban_matches}
                                     onChange={e => updateField('red_card_ban_matches', parseInt(e.target.value) || 1)}
                                     min={1}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                                 <p className="text-[9px] font-bold uppercase text-muted-foreground/40 tracking-wider px-1">{t("red_ban_desc")}</p>
                             </div>
@@ -180,7 +180,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.points_for_win}
                                     onChange={e => updateField('points_for_win', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -190,7 +190,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.points_for_draw}
                                     onChange={e => updateField('points_for_draw', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -200,7 +200,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                     value={rules.points_for_loss}
                                     onChange={e => updateField('points_for_loss', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                         </div>
@@ -212,7 +212,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                             disabled={isSaving}
                             className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                            <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                              <span className="relative z-10 flex items-center gap-2">
                                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                  {tCommon("save")}

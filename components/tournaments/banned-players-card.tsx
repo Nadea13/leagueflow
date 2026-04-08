@@ -29,7 +29,7 @@ export function BannedPlayersCard({ bannedPlayers }: BannedPlayersCardProps) {
                 
                 <div className="space-y-4 relative z-10">
                     {bannedPlayers.map(player => (
-                        <div key={player.playerId} className="flex items-center justify-between group/item p-3 border border-white/5 hover:bg-white/5 transition-all">
+                        <div key={player.playerId} className="flex items-center justify-between group/item p-3 border border-foreground/5 hover:bg-foreground/5 transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="p-2 bg-red-600/10 text-red-600">
                                     <AlertTriangle className="h-4 w-4" />

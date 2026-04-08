@@ -156,7 +156,7 @@ function TeamItem({
             <div className="absolute left-0 top-0 w-1 h-full bg-secondary opacity-0 group-hover:opacity-100 transition-opacity z-30" />
             
             <div className="flex items-center flex-1 min-w-0 z-10">
-                <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mr-2 md:mr-3 shrink-0 overflow-hidden border border-white/5 relative">
+                <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mr-2 md:mr-3 shrink-0 overflow-hidden border border-foreground/5 relative">
                     {team.logo_url ? (
                         <img src={team.logo_url} alt={team.name} className="h-full w-full object-contain p-1" />
                     ) : (
@@ -212,7 +212,7 @@ function TeamItem({
                     {!isReadOnly && (
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-9 w-9 rounded-none border-border/10 bg-muted/5 hover:bg-white/5 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
+                                <Button variant="outline" size="icon" className="h-9 w-9 rounded-none border-border/10 bg-muted/5 hover:bg-foreground/5 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                             </DialogTrigger>
@@ -227,7 +227,7 @@ function TeamItem({
                                 <div className="space-y-4 justify-center flex">
                                     <div className="flex flex-col items-center gap-3">
                                         <label htmlFor="edit-logo-upload" className="cursor-pointer group relative">
-                                            <div className="h-28 w-28 rounded-none border border-border/10 flex items-center justify-center overflow-hidden bg-white/5 hover:bg-white/10 transition-all group-hover:border-secondary/30 relative">
+                                            <div className="h-28 w-28 rounded-none border border-border/10 flex items-center justify-center overflow-hidden bg-foreground/5 hover:bg-foreground/10 transition-all group-hover:border-secondary/30 relative">
                                                 {previewUrl || existingLogoUrl ? (
                                                     <img
                                                         src={previewUrl || existingLogoUrl}
@@ -264,7 +264,7 @@ function TeamItem({
                                     <Input
                                         id="name"
                                         value={name}
-                                        className="bg-white/5 border-border/10 rounded-none font-black uppercase italic tracking-tighter h-12 focus-visible:ring-secondary/20"
+                                        className="bg-foreground/5 border-border/10 rounded-none font-black uppercase italic tracking-tighter h-12 focus-visible:ring-secondary/20"
                                         onChange={(e) => setName(e.target.value)}
                                     />
                                 </div>
@@ -274,7 +274,7 @@ function TeamItem({
                                     <Textarea
                                         id="description"
                                         value={description}
-                                        className="bg-white/5 border-border/10 rounded-none font-medium text-sm min-h-[100px] focus-visible:ring-secondary/20"
+                                        className="bg-foreground/5 border-border/10 rounded-none font-medium text-sm min-h-[100px] focus-visible:ring-secondary/20"
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder={t("no_description") || "No description"}
                                     />
@@ -286,7 +286,7 @@ function TeamItem({
                                     onClick={() => setShowDeleteConfirm(true)} 
                                     disabled={isLoading} 
                                     type="button"
-                                    className="rounded-none border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all h-10 px-6 text-[11px] font-black uppercase italic tracking-widest"
+                                    className="rounded-none border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive hover:text-foreground transition-all h-10 px-6 text-[11px] font-black uppercase italic tracking-widest"
                                 >
                                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                                     {tCommon("delete")}
@@ -316,7 +316,7 @@ function TeamItem({
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter className="mt-6">
-                                <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                                <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                                     {tCommon("cancel")}
                                 </AlertDialogCancel>
                                 <AlertDialogAction
@@ -325,7 +325,7 @@ function TeamItem({
                                         handleDelete();
                                     }}
                                     disabled={isLoading}
-                                    className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                                    className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                                 >
                                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-3.5 w-3.5 mr-2" />}
                                     {t("delete_team")}

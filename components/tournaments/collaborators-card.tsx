@@ -121,7 +121,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             onClick={() => !isPro && togglePayment?.()}
                             className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/btn overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                            <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                             <span className="relative z-10 flex items-center gap-2">
                                 <Plus className="h-4 w-4" />
                                 {t("invite")}
@@ -129,7 +129,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                         </Button>
                     </DialogTrigger>
                     {isPro && (
-                        <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-white/5 rounded-none p-0 overflow-hidden">
+                        <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-foreground/5 rounded-none p-0 overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
                             <DialogHeader className="p-8 pb-4">
                                 <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
@@ -149,14 +149,14 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-                                        className="bg-white/5 border-white/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
                                 <div className="flex justify-end gap-4">
                                     <Button 
                                         variant="ghost" 
                                         onClick={() => setDialogOpen(false)}
-                                        className="h-12 rounded-none border-white/10 font-black uppercase italic tracking-tighter px-8 hover:bg-white/5"
+                                        className="h-12 rounded-none border-foreground/10 font-black uppercase italic tracking-tighter px-8 hover:bg-foreground/5"
                                     >
                                         {tCommon("cancel")}
                                     </Button>
@@ -165,7 +165,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                         disabled={isInviting || !email.trim()}
                                         className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/save overflow-hidden"
                                     >
-                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
+                                        <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
                                         <span className="relative z-10 flex items-center gap-2">
                                             {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-secondary-foreground" /> : <Mail className="h-4 w-4" />}
                                             {t("send_invite")}
@@ -196,7 +196,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                 onClick={togglePayment}
                                 className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/upbtn overflow-hidden"
                             >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
+                                <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center gap-2">
                                     <Users className="h-4 w-4" />
                                     {tCommon("upgrade_to_pro")}
@@ -212,7 +212,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                         </div>
                     ) : collaborators.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center border border-white/5 bg-background/50">
+                        <div className="flex flex-col items-center justify-center py-16 text-center border border-foreground/5 bg-background/50">
                             <div className="h-16 w-16 bg-muted/20 flex items-center justify-center mb-6 relative group/icon">
                                 <div className="absolute inset-0 bg-secondary/10 scale-0 group-hover/icon:scale-100 transition-transform" />
                                 <Users className="h-8 w-8 text-secondary/40 relative z-10" />
@@ -224,7 +224,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             {collaborators.map((collab) => (
                                 <div
                                     key={collab.id}
-                                    className="flex items-center justify-between p-4 bg-muted/20 border border-white/5 hover:bg-muted/30 transition-colors group/item"
+                                    className="flex items-center justify-between p-4 bg-muted/20 border border-foreground/5 hover:bg-muted/30 transition-colors group/item"
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 bg-muted/20 flex items-center justify-center group-hover/item:bg-secondary/10 transition-colors">
@@ -274,7 +274,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -282,7 +282,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                 e.preventDefault();
                                 confirmRemove();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {t("remove") || "Remove"}

@@ -321,26 +321,26 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
         const actions = [
             { type: 'goal', label: t("goal"), icon: Trophy, color: 'hover:bg-secondary hover:text-black hover:border-secondary' },
             { type: 'yellow_card', label: t("yellow_card"), icon: Square, color: 'hover:bg-yellow-400 hover:text-black hover:border-yellow-400', iconColor: 'text-yellow-500' },
-            { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-white hover:border-red-500', iconColor: 'text-red-500' },
-            { type: 'substitution', label: t("substitution"), icon: Repeat, color: 'hover:bg-blue-500 hover:text-white hover:border-blue-500' },
-            { type: 'foul', label: t("foul") || "Foul", icon: Activity, color: 'hover:bg-orange-500 hover:text-white hover:border-orange-500' },
-            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target, color: 'hover:bg-indigo-600 hover:text-white hover:border-indigo-600' },
-            { type: 'save', label: t("save") || "Save", icon: Shield, color: 'hover:bg-teal-600 hover:text-white hover:border-teal-600' },
-            { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope, color: 'hover:bg-amber-600 hover:text-white hover:border-amber-600' },
-            { type: 'corner', label: t("corner") || "Corner", icon: Flag, color: 'hover:bg-white hover:text-black hover:border-white' },
+            { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-foreground hover:border-red-500', iconColor: 'text-red-500' },
+            { type: 'substitution', label: t("substitution"), icon: Repeat, color: 'hover:bg-blue-500 hover:text-foreground hover:border-blue-500' },
+            { type: 'foul', label: t("foul") || "Foul", icon: Activity, color: 'hover:bg-orange-500 hover:text-foreground hover:border-orange-500' },
+            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target, color: 'hover:bg-indigo-600 hover:text-foreground hover:border-indigo-600' },
+            { type: 'save', label: t("save") || "Save", icon: Shield, color: 'hover:bg-teal-600 hover:text-foreground hover:border-teal-600' },
+            { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope, color: 'hover:bg-amber-600 hover:text-foreground hover:border-amber-600' },
+            { type: 'corner', label: t("corner") || "Corner", icon: Flag, color: 'hover:bg-cyan-500 hover:text-black hover:border-foreground' },
         ];
 
         return (
-            <div className="bg-white/5 border border-white/5 p-4 md:p-6 relative overflow-hidden group">
+            <div className="bg-foreground/5 border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
                 <div className={cn(
                     "absolute top-0 left-0 w-1 h-full translate-y-full group-hover:translate-y-0 transition-transform duration-500",
-                    type === 'home' ? "bg-secondary" : "bg-white/40"
+                    type === 'home' ? "bg-secondary" : "bg-foreground/40"
                 )} />
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/5 rotate-12 transition-transform group-hover:scale-110" />
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-foreground/5 rotate-12 transition-transform group-hover:scale-110" />
 
                 <div className="relative z-10 space-y-2 md:space-y-3">
-                    <div className="space-y-1 pb-2 md:pb-3 border-b border-white/5">
-                        <h3 className="text-xl font-black uppercase tracking-tighter text-white">{name}</h3>
+                    <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
+                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">{name}</h3>
                         <p className="text-[9px] text-muted-foreground uppercase tracking-widest">{type === 'home' ? 'Home' : 'Away'} Team Actions</p>
                     </div>
 
@@ -351,7 +351,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
                                 className={cn(
-                                    "group flex flex-col items-center justify-center h-20 border-white/5 bg-white/5 transition-all duration-300 rounded-none",
+                                    "group flex flex-col items-center justify-center h-20 border-foreground/5 bg-foreground/5 transition-all duration-300 rounded-none",
                                     action.color
                                 )}
                             >
@@ -367,12 +367,12 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
 
     return (
         <div className={cn(
-            "min-h-screen bg-[#0A0A0B] text-foreground flex flex-col font-display selection:bg-secondary/30 space-y-4 md:space-y-6",
+            "min-h-screen bg-background text-foreground flex flex-col font-display selection:bg-secondary/30 space-y-4 md:space-y-6",
             readOnly ? "pt-18 md:pt-22 px-2 md:px-0" : "pt-0"
         )}>
             {/* Top Navigation Bar */}
             {readOnly && (
-                <nav className="border-b fixed top-0 border-slate-200 dark:border-white/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
+                <nav className="border-b fixed top-0 border-slate-200 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
                     <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
                             <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
@@ -406,9 +406,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                         </Link>
                     </Button>
                     <div className="text-2xl md:text-5xl flex items-center gap-2 md:gap-3">
-                        <span className="font-black uppercase tracking-tighter text-white">{match.home_team?.name || 'Home'}</span>
+                        <span className="font-black uppercase tracking-tighter text-foreground">{match.home_team?.name || 'Home'}</span>
                         <span className="text-secondary text-xs md:text-sm font-black tracking-widest opacity-50 px-2 leading-none">VS</span>
-                        <span className="font-black uppercase tracking-tighter text-white">{match.away_team?.name || 'Away'}</span>
+                        <span className="font-black uppercase tracking-tighter text-foreground">{match.away_team?.name || 'Away'}</span>
                     </div>
                 </div>
 
@@ -436,26 +436,26 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                 {/* Sidebar: Admin Controls or Match Info */}
                 <aside className="col-span-12 lg:col-span-3 lg:row-span-2 gap-2 md:gap-3 order-2 lg:order-1 flex flex-col">
                         {/* Match Controls */}
-                        <div className="bg-white/5 border border-white/5 p-4 md:p-6 relative overflow-hidden group">
+                        <div className="bg-foreground/5 border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
 
                                 <div className="relative z-10 space-y-2 md:space-y-3">
-                                    <div className="space-y-1 pb-2 md:pb-3 border-b border-white/5">
+                                    <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
                                         <p className="text-[9px] text-muted-foreground">{readOnly ? "Real-time match updates" : "Real-time session management"}</p>
                                     </div>
                                     {readOnly ? (
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("tournament") || "Tournament"}</span>
-                                                <span className="text-[10px] font-black uppercase italic text-white truncate max-w-[120px]">{tournamentName}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t("tournament") || "Tournament"}</span>
+                                                <span className="text-[10px] font-black uppercase italic text-foreground truncate max-w-[120px]">{tournamentName}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("stage") || "Stage"}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
                                                 <span className="text-[10px] font-black uppercase italic text-secondary">{match.stage || "Regular"}</span>
                                             </div>
-                                            <div className="pt-4 border-t border-white/5">
+                                            <div className="pt-4 border-t border-foreground/5">
                                                 <div className="flex flex-col items-center gap-2 py-4 bg-secondary/5 border border-secondary/10">
                                                     <Timer className="w-6 h-6 text-secondary animate-pulse" />
                                                     <span className="text-[8px] font-black uppercase tracking-[0.3em] text-secondary/60">LIVE UPDATES ACTIVE</span>
@@ -479,11 +479,11 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                             </div>
 
                         {!readOnly && (
-                            <div className="bg-white/5 border border-white/5 p-4 md:p-6 relative overflow-hidden group">
+                            <div className="bg-foreground/5 border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
 
                                 <div className="relative z-10 space-y-2 md:space-y-3">
-                                    <div className="space-y-1 pb-2 md:pb-3 border-b border-white/5">
+                                    <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("quick_actions")}</h4>
                                         <p className="text-[9px] text-muted-foreground italic">Admin session tools</p>
                                     </div>
@@ -491,7 +491,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                                         <Button
                                             variant="outline"
                                             onClick={handleUndo}
-                                            className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-white/5 bg-white/5 hover:bg-white/10 hover:border-secondary/50 rounded-none transition-all group"
+                                            className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-secondary/50 rounded-none transition-all group"
                                         >
                                             <Undo className="h-4 w-4 text-muted-foreground group-hover:text-secondary" />
                                             <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest">{t("undo")}</span>
@@ -506,7 +506,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                                             trigger={
                                                 <Button
                                                     variant="outline"
-                                                    className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-white/5 bg-white/5 hover:bg-white/10 hover:border-secondary/50 rounded-none transition-all group"
+                                                    className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-secondary/50 rounded-none transition-all group"
                                                 >
                                                     <Target className="h-4 w-4 text-muted-foreground group-hover:text-secondary" />
                                                     <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest">{t("penalty_shootout")}</span>
@@ -516,7 +516,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                                         <Button
                                             variant="outline"
                                             onClick={() => setWoDialogOpen(true)}
-                                            className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-white/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 rounded-none transition-all group"
+                                            className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 rounded-none transition-all group"
                                         >
                                             <Ban className="h-4 w-4 text-red-500/50 group-hover:text-red-500" />
                                             <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-red-500/70 group-hover:text-red-500">WO {t("walkover")}</span>

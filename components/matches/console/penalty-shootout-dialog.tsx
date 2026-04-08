@@ -137,17 +137,17 @@ export function PenaltyShootoutDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="sm" className="h-12 border-white/5 bg-white/5 hover:bg-white/10 hover:border-secondary/50 rounded-none transition-all group">
+                    <Button variant="outline" size="sm" className="h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-secondary/50 rounded-none transition-all group">
                         <Target className="h-4 w-4 mr-2" />
                         <span className="text-[10px] font-black uppercase tracking-widest">Penalty Shootout</span>
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="bg-[#0A0A0B] border-white/5 p-0 overflow-hidden max-w-md rounded-none">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
                 
                 <DialogHeader className="p-8 pb-4 text-left">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-white">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
                         <div className="p-2 bg-secondary/10 border border-secondary/20">
                             <Target className="h-6 w-6 text-secondary" />
                         </div>
@@ -165,23 +165,23 @@ export function PenaltyShootoutDialog({
                         <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
 
                         {/* Score Summary Scoreboard Style */}
-                        <div className="flex items-center justify-center gap-10 py-6 bg-white/5 border border-white/5 relative z-10 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                        <div className="flex items-center justify-center gap-10 py-6 bg-foreground/5 border border-foreground/5 relative z-10 overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-foreground/5 to-transparent pointer-events-none" />
                             <div className="text-center relative z-10">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2 truncate max-w-[120px]">{homeTeamName}</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2 truncate max-w-[120px]">{homeTeamName}</p>
                                 <span className={cn(
                                     "text-5xl font-black tracking-tighter transition-all",
-                                    hasWinner === 'home' ? "text-secondary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-white"
+                                    hasWinner === 'home' ? "text-secondary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-foreground"
                                 )}>
                                     {homeScore}
                                 </span>
                             </div>
-                            <span className="text-white/20 text-3xl font-black tracking-tighter relative z-10">-</span>
+                            <span className="text-foreground/20 text-3xl font-black tracking-tighter relative z-10">-</span>
                             <div className="text-center relative z-10">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-2 truncate max-w-[120px]">{awayTeamName}</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-foreground/40 mb-2 truncate max-w-[120px]">{awayTeamName}</p>
                                 <span className={cn(
                                     "text-5xl font-black tracking-tighter transition-all",
-                                    hasWinner === 'away' ? "text-secondary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-white"
+                                    hasWinner === 'away' ? "text-secondary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-foreground"
                                 )}>
                                     {awayScore}
                                 </span>
@@ -191,7 +191,7 @@ export function PenaltyShootoutDialog({
                         {/* Winner/Status Banner */}
                         {hasWinner ? (
                             <div className="text-center py-3 bg-secondary/10 border border-secondary/20 relative z-10 overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 <p className="text-xs font-black uppercase tracking-widest text-secondary relative z-10">
                                     🏆 {t("wins_on_penalties", { team: hasWinner === 'home' ? homeTeamName : awayTeamName })}
                                 </p>
@@ -207,9 +207,9 @@ export function PenaltyShootoutDialog({
 
                         {/* Shot Grid */}
                         <div className="grid grid-cols-[1fr_auto_1fr] gap-x-6 gap-y-4 relative z-10">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-white/20 text-center">{homeTeamName}</div>
+                            <div className="text-[9px] font-black uppercase tracking-widest text-foreground/20 text-center">{homeTeamName}</div>
                             <div className="w-8" />
-                            <div className="text-[9px] font-black uppercase tracking-widest text-white/20 text-center">{awayTeamName}</div>
+                            <div className="text-[9px] font-black uppercase tracking-widest text-foreground/20 text-center">{awayTeamName}</div>
 
                             {Array.from({ length: totalRounds }, (_, i) => {
                                 const homeShot = homeShots[i];
@@ -230,14 +230,14 @@ export function PenaltyShootoutDialog({
                                             ) : !hasWinner ? (
                                                 <div className="flex gap-2">
                                                     <button
-                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-secondary hover:text-black hover:border-secondary flex items-center justify-center group/btn transition-all disabled:opacity-20"
+                                                        className="w-12 h-12 border border-foreground/5 bg-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => homeTeamId && handleAddShot(homeTeamId, true)}
                                                         disabled={isSaving || !homeTeamId}
                                                     >
                                                         <Check className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
                                                     <button
-                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center group/btn transition-all disabled:opacity-20"
+                                                        className="w-12 h-12 border border-foreground/5 bg-foreground/5 hover:bg-red-500 hover:text-foreground hover:border-red-500 flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => homeTeamId && handleAddShot(homeTeamId, false)}
                                                         disabled={isSaving || !homeTeamId}
                                                     >
@@ -245,7 +245,7 @@ export function PenaltyShootoutDialog({
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="w-12 h-12 border border-white/2 bg-white/2 opacity-20" />
+                                                <div className="w-12 h-12 border border-foreground/2 bg-foreground/2 opacity-20" />
                                             )}
                                         </div>
 
@@ -253,7 +253,7 @@ export function PenaltyShootoutDialog({
                                         <div className="flex items-center justify-center">
                                             <span className={cn(
                                                 "text-xs font-black italic tracking-tighter",
-                                                isSD ? "text-amber-500" : "text-white/40"
+                                                isSD ? "text-amber-500" : "text-foreground/40"
                                             )}>
                                                 {isSD ? `SD${i - 4}` : i + 1}
                                             </span>
@@ -271,14 +271,14 @@ export function PenaltyShootoutDialog({
                                             ) : !hasWinner ? (
                                                 <div className="flex gap-2">
                                                     <button
-                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-secondary hover:text-black hover:border-secondary flex items-center justify-center group/btn transition-all disabled:opacity-20"
+                                                        className="w-12 h-12 border border-foreground/5 bg-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => awayTeamId && handleAddShot(awayTeamId, true)}
                                                         disabled={isSaving || !awayTeamId}
                                                     >
                                                         <Check className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                     </button>
                                                     <button
-                                                        className="w-12 h-12 border border-white/5 bg-white/5 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center group/btn transition-all disabled:opacity-20"
+                                                        className="w-12 h-12 border border-foreground/5 bg-foreground/5 hover:bg-red-500 hover:text-foreground hover:border-red-500 flex items-center justify-center group/btn transition-all disabled:opacity-20"
                                                         onClick={() => awayTeamId && handleAddShot(awayTeamId, false)}
                                                         disabled={isSaving || !awayTeamId}
                                                     >
@@ -286,7 +286,7 @@ export function PenaltyShootoutDialog({
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <div className="w-12 h-12 border border-white/2 bg-white/2 opacity-20" />
+                                                <div className="w-12 h-12 border border-foreground/2 bg-foreground/2 opacity-20" />
                                             )}
                                         </div>
                                     </div>
@@ -295,7 +295,7 @@ export function PenaltyShootoutDialog({
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col gap-3 pt-4 border-t border-white/5 relative z-10">
+                        <div className="flex flex-col gap-3 pt-4 border-t border-foreground/5 relative z-10">
                             {shots.length > 0 && (
                                 <Button 
                                     variant="ghost" 
@@ -309,7 +309,7 @@ export function PenaltyShootoutDialog({
                             <Button 
                                 variant="ghost" 
                                 onClick={() => setOpen(false)}
-                                className="h-10 text-[9px] font-black uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/5 rounded-none"
+                                className="h-10 text-[9px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
                             >
                                 CLOSE SESSION
                             </Button>

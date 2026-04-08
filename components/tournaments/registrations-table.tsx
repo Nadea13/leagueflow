@@ -173,7 +173,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-9 w-9 p-0 rounded-none border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-all shadow-sm"
+                                                    className="h-9 w-9 p-0 rounded-none border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-foreground transition-all shadow-sm"
                                                     disabled={isActing !== null}
                                                     onClick={() => setRegistrationToReject(reg.id)}
                                                     title="Reject"
@@ -226,7 +226,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-white/5 hover:bg-white/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -234,7 +234,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                 e.preventDefault();
                                 confirmReject();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-white hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                         >
                             <X className="h-3.5 w-3.5 mr-2" />
                             Reject

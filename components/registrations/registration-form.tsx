@@ -290,7 +290,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                         ) : (
                                             <div className="relative rounded-none overflow-hidden border bg-muted/30 p-2">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-16 w-16 relative rounded-none overflow-hidden border bg-white">
+                                                    <div className="h-16 w-16 relative rounded-none overflow-hidden border bg-foreground">
                                                         <img src={logoPreviewUrl} alt="Logo preview" className="object-contain w-full h-full" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -442,7 +442,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                                         ) : (
                                                             <div className="relative rounded-none overflow-hidden border bg-muted/30 p-4">
                                                                 <div className="flex flex-col gap-4">
-                                                                    <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-white flex items-center justify-center">
+                                                                    <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-foreground flex items-center justify-center">
                                                                         <img
                                                                             src={slipPreviewUrl}
                                                                             alt="Slip preview"
