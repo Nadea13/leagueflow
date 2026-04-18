@@ -26,6 +26,7 @@ export interface Tournament {
     sport: SportType;
     created_at: string;
     updated_at?: string;
+    document_deadline?: string | null;
 }
 
 export interface Match {

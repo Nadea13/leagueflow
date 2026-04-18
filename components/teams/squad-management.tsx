@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from "react";
-import { ActionResponse, Player, GlobalPlayer, Team, SportType } from "@/types/index";
+import { ActionResponse, Player, GlobalPlayer, Team, SportType, Registration, Tournament } from "@/types/index";
 import { getPlayers, addPlayer, updatePlayer, deletePlayer, importRoster, toggleRosterLock, updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/actions/manager/team";
 import Papa from "papaparse";
 import * as xlsx from "xlsx";
@@ -17,9 +17,10 @@ import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Setti
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
+import Image from "next/image";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -42,11 +43,11 @@ import {
 
 interface SquadManagementProps {
     team: Team & {
-        participations?: any[];
-        registrations?: any[];
+        participations?: { tournament_id: string }[];
+        registrations?: Registration[];
         is_roster_locked?: boolean;
         isParticipation?: boolean;
-        tournament?: any;
+        tournament?: Tournament;
         team_id?: string | null;
     };
     initialPlayers: Player[];
@@ -171,6 +172,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         if (team.isParticipation && players.length === 0 && team.team_id && !isImporting) {
             handleImportRoster(team.team_id);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [team.isParticipation, team.team_id]);
 
     const handleToggleLock = async () => {
@@ -195,7 +197,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         setIsImporting(true);
 
         try {
-            const processData = async (data: any[]) => {
+            const processData = async (data: unknown[][]) => {
                 let successCount = 0;
                 let errorCount = 0;
 
@@ -259,7 +261,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             if (importFile.name.endsWith(".csv")) {
                 Papa.parse(importFile, {
                     complete: (results) => {
-                        processData(results.data);
+                        processData(results.data as unknown[][]);
                     },
                     error: (error) => {
                         setIsImporting(false);
@@ -275,7 +277,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
                         const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
-                        processData(jsonData);
+                        processData(jsonData as unknown[][]);
                     } catch (err) {
                         setIsImporting(false);
                         toast({ title: tCommon("error"), description: "Failed to parse Excel file", variant: "destructive" });
@@ -303,7 +305,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         }
     };
 
-    const handleSelectGlobalPlayer = (gp: any) => {
+    const handleSelectGlobalPlayer = (gp: GlobalPlayer) => {
         setNewName(gp.name);
         setNewBirthDate(gp.date_of_birth || "");
         setSelectedGlobalPlayerId(gp.id);
@@ -805,7 +807,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                             <SelectContent className="rounded-none border-border">
                                                                 {myTeams.map((t) => (
                                                                     <SelectItem key={t.id} value={t.id} className="text-xs font-bold uppercase focus:bg-secondary focus:text-black">
-                                                                        {t.name} {(t as any).tournament ? `(${(t as any).tournament.name})` : "(No Tournament)"}
+                                                                        {t.name} {(t as Team & { tournament?: { name: string } }).tournament ? `(${(t as Team & { tournament?: { name: string } }).tournament?.name})` : "(No Tournament)"}
                                                                     </SelectItem>
                                                                 ))}
                                                             </SelectContent>
@@ -908,7 +910,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                                                 <div className="h-12 w-12 rounded-none border border-border/40 overflow-hidden bg-muted/10 relative group/photo-list">
                                                     {player.photo_url || player.global_player?.photo_url ? (
-                                                        <img src={player.photo_url || player.global_player?.photo_url || ""} alt={player.name} className="h-full w-full object-cover" />
+                                                        <Image src={player.photo_url || player.global_player?.photo_url || ""} alt={player.name} width={48} height={48} className="object-cover" />
                                                     ) : (
                                                         <div className="h-full w-full flex items-center justify-center opacity-20">
                                                             <Users className="h-6 w-6" />
@@ -1388,7 +1390,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 <div className="relative group mb-6">
                                     <div className="h-32 w-32 rounded-none border-2 border-dashed border-secondary/20 bg-muted/10 flex items-center justify-center overflow-hidden transition-all group-hover:border-secondary/50 p-2">
                                         {previewUrl ? (
-                                            <img src={previewUrl} alt="Team Logo" className="h-full w-full object-contain" />
+                                            <Image src={previewUrl} alt="Team Logo" width={128} height={128} className="w-full h-full object-contain" />
                                         ) : (
                                             <Users className="h-10 w-10 text-muted-foreground/20" />
                                         )}
