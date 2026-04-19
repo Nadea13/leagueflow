@@ -177,8 +177,8 @@ export async function getDashboardTournaments(query?: string) {
             current_teams: t.tournament_teams?.[0]?.count || 0,
             plan: t.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
         }))
-    ].sort((a: { created_at: string }, b: { created_at: string }) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ].sort((a, b) =>
+        new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()
     );
 
     return tournaments;
