@@ -147,6 +147,7 @@ export async function getDashboardTournaments(query?: string) {
         id: string;
         name: string;
         user_id: string;
+        created_at: string;
         tournament_teams: { count: number }[];
         payments: { plan: string; status: string }[];
     }
@@ -178,7 +179,7 @@ export async function getDashboardTournaments(query?: string) {
             plan: t.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
         }))
     ].sort((a, b) =>
-        new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     return tournaments;
