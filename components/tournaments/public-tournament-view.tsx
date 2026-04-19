@@ -96,7 +96,7 @@ export function PublicTournamentView({
                 table: 'tournaments',
                 filter: `id=eq.${initialTournament.id}`
             }, (payload) => {
-                setTournament(payload.new);
+                setTournament(payload.new as Tournament);
             })
             .subscribe();
 

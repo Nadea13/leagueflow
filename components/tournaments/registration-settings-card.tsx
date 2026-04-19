@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Check, AlertTriangle, ClipboardEdit, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ActionResponse } from "@/types/index";
+import { ActionResponse, Tournament } from "@/types/index";
 
 const initialState: ActionResponse = {
     success: false,
@@ -122,7 +122,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                     type="number"
                                     id="registration_fee"
                                     name="registration_fee"
-                                    defaultValue={tournament.registration_fee}
+                                    defaultValue={tournament.registration_fee ?? undefined}
                                     placeholder="0.00"
                                     min="0"
                                     step="0.01"
@@ -136,7 +136,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                     type="text"
                                     id="bank_account_number"
                                     name="bank_account_number"
-                                    defaultValue={tournament.bank_account_number}
+                                    defaultValue={tournament.bank_account_number ?? undefined}
                                     placeholder="08xxxxxxxx or ID Card"
                                     disabled={!isPro}
                                     className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
@@ -160,7 +160,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                         type="text"
                                         id="bank_account_name"
                                         name="bank_account_name"
-                                        defaultValue={tournament.bank_account_name}
+                                        defaultValue={tournament.bank_account_name ?? undefined}
                                         placeholder={t("account_name")}
                                         disabled={!isPro}
                                         className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"

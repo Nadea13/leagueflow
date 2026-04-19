@@ -10,6 +10,7 @@ import { Calendar, MapPin, AlertCircle, CheckCircle2, Users } from "lucide-react
 import { formatDate } from "@/lib/date";
 import { Separator } from "@/components/ui/separator";
 import { getMyTeams } from "@/actions/manager/team";
+import { Team } from "@/types/index";
 
 interface RegisterPageProps {
     params: Promise<{ id: string }>;
@@ -200,7 +201,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                                     </div>
                                     <RegistrationForm 
                                         tournament={tournament} 
-                                        initialTeams={(await getMyTeams()).data || []}
+                                        initialTeams={((await getMyTeams()).data as Team[]) || []}
                                     />
                                 </div>
                             </div>

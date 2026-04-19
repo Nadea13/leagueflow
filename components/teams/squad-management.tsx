@@ -135,7 +135,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         const res = await getMyTeams();
         if (res.success && res.data) {
             // Filter out current team
-            setMyTeams(res.data.filter(t => t.id !== team.id));
+            setMyTeams((res.data as Team[]).filter(t => t.id !== team.id));
         }
         setIsFetchingTeams(false);
     };

@@ -57,7 +57,7 @@ export default async function AdminMatchConsole(props: {
     // Transformer for events
     const formattedEvents = (events || []).map(e => ({
         ...e,
-        player_name: (e.player as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as { name: string } | null)?.name : undefined),
+        player_name: (e.player as unknown as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as unknown as { name: string } | null)?.name : undefined),
         player: undefined
     }));
 
@@ -65,7 +65,6 @@ export default async function AdminMatchConsole(props: {
         <MatchConsolePage
             match={match}
             tournamentId={id}
-            goals={[]}
             isPro={!!isPro}
             readOnly={false}
             initialEvents={formattedEvents as MatchEvent[]}

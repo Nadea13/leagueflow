@@ -46,7 +46,7 @@ export async function addMatchEvent(
     playerId: string | null,
     extraInfo: Record<string, unknown> | null = null,
     tournamentId: string
-): Promise<ActionResponse> {
+): Promise<ActionResponse<MatchEvent>> {
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };

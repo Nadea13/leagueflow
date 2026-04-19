@@ -16,7 +16,7 @@ import { StandingsTable } from "@/components/tournaments/standings-table";
 import { TeamList } from "@/components/tournaments/team-list";
 import { GroupStandings } from "@/components/tournaments/group-standings";
 import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
-import { Match, Team, Goal, MatchEvent, Tournament, Player } from "@/types/index";
+import { Match, Team, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
 import { calculateStandings } from "@/lib/standings";
@@ -38,7 +38,7 @@ import { RegistrationSettingsCard } from "@/components/tournaments/registration-
 interface TournamentContentProps {
     tournament: Tournament;
     initialMatches: Match[];
-    initialTeams: Team[];
+    initialTeams: (TournamentTeam & { team?: { user_id: string | null } })[];
     initialGoals: Goal[];
     userPlan: string | undefined;
     initialIsPro: boolean;
@@ -70,7 +70,7 @@ export function TournamentContent({
     // State
     const [tournament, setTournament] = useState(initialTournament);
     const [matches, setMatches] = useState<Match[]>(initialMatches);
-    const [teams, setTeams] = useState<Team[]>(initialTeams);
+    const [teams, setTeams] = useState<(TournamentTeam & { team?: { user_id: string | null } })[]>(initialTeams);
     const [goals, setGoals] = useState<Goal[]>(initialGoals);
     const [fixtureView, setFixtureView] = useState<'list' | 'calendar'>('list');
     const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
@@ -184,9 +184,9 @@ export function TournamentContent({
                 filter: `tournament_id=eq.${id}`
             }, (payload) => {
                 if (payload.eventType === 'INSERT') {
-                    setTeams(prev => [...prev, payload.new as Team]);
+                    setTeams(prev => [...prev, payload.new as any]);
                 } else if (payload.eventType === 'UPDATE') {
-                    setTeams(prev => prev.map(t => t.id === payload.new.id ? payload.new as Team : t));
+                    setTeams(prev => prev.map(t => t.id === payload.new.id ? payload.new as any : t));
                 } else if (payload.eventType === 'DELETE') {
                     setTeams(prev => prev.filter(t => t.id !== payload.old.id));
                 }
@@ -199,7 +199,7 @@ export function TournamentContent({
                 filter: `id=eq.${id}`
             }, (payload) => {
                 if (payload.eventType === 'UPDATE') {
-                    setTournament(payload.new);
+                    setTournament(payload.new as Tournament);
                 }
                 router.refresh();
             })
@@ -212,7 +212,7 @@ export function TournamentContent({
 
     // Derived State
     const hasFixtures = matches.length > 0;
-    const isPro = initialIsPro || (tournament?.plan && tournament.plan !== 'free');
+    const isPro = !!(initialIsPro || (tournament?.plan && tournament.plan !== 'free'));
 
     // Calculate Standings
     const calculatedStandings = calculateStandings(teams, matches);
@@ -754,7 +754,6 @@ export function TournamentContent({
                                         teams={teams}
                                         matches={matches}
                                         tournamentId={id}
-                                        goals={goals}
                                         isPro={isPro}
                                     />
                                 ) : (

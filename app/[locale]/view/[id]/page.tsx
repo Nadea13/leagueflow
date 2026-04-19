@@ -92,7 +92,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
     if (teams && teams.length > 0) {
         const { data: playersData } = await adminSupa
             .from("players")
-            .select("id, name, team_id")
+            .select("id, name, team_id, created_at")
             .in("team_id", teams.map(t => t.id));
         initialPlayers = playersData || [];
     }

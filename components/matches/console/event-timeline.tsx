@@ -42,7 +42,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                             <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{t("no_events")}</p>
                         </div>
                     ) : (
-                        events.map((event) => {
+                        events.map((event: any) => {
                             const evtConfig = EVENT_TYPES.find(e => e.type === event.event_type);
                             const isNeutral = !event.team_id;
                             const isHome = !isNeutral && event.team_id === match.home_team_id;

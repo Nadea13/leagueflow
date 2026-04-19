@@ -41,7 +41,7 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
 
             if (latestMarker) {
                 const now = Date.now();
-                const markerTimestamp = latestMarker.extra_info?.start_timestamp || new Date(latestMarker.created_at).getTime();
+                const markerTimestamp = (latestMarker.extra_info?.start_timestamp as number) || new Date(latestMarker.created_at).getTime();
                 const diffSeconds = Math.max(0, Math.floor((now - markerTimestamp) / 1000));
                 const finalTime = (match.elapsed_before_pause || 0) + diffSeconds;
                 

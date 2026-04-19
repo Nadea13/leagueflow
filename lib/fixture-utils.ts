@@ -27,7 +27,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
     const startRound = 1;
 
     if (tournament.format === 'group_knockout') {
-        let assignedGroups = Array.from(new Set(teams?.map((t: TournamentTeam) => t.group_name).filter(Boolean) || [])).sort();
+        let assignedGroups = Array.from(new Set(teams?.map((t) => t.group_name).filter(Boolean) || [])).sort();
         
         // If groups aren't defined yet, or we want to force re-distribution, 
         // we figure out how many groups we need. 
@@ -152,7 +152,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
         const actualTeams = teams ? [...teams].sort(() => Math.random() - 0.5) : [];
         const slots: (string | null)[] = Array(bracketSize).fill(null);
         
-        actualTeams.forEach((t: TournamentTeam, i: number) => {
+        actualTeams.forEach((t, i) => {
             if (i < bracketSize) slots[i] = t.id;
         });
 

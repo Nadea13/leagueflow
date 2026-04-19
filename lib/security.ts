@@ -10,12 +10,10 @@ import { User } from "@supabase/supabase-js";
 export async function validateTournamentAccess(
     tournamentId: string,
     requiredRole: 'admin' | 'editor' | 'viewer' = 'editor'
-): Promise<{
-    success: boolean;
-    error?: string;
-    user?: User;
-    role?: 'admin' | 'editor' | 'viewer';
-}> {
+): Promise<
+    | { success: true; user: User; role: 'admin' | 'editor' | 'viewer' }
+    | { success: false; error: string; user?: undefined; role?: undefined }
+> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 

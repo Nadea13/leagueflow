@@ -73,7 +73,6 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                                 time={timerTime}
                                 readOnly={timerReadOnly}
                                 customText={timerCustomText}
-                                onAddTime={onAddTime}
                                 addedTime={addedTime}
                             />
                         )}

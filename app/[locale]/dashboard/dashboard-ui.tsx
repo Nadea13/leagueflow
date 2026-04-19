@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tournament, Team } from "@/types/index";
 
 interface DashboardUIProps {
-    tournaments: (Tournament & { role?: string; tournament_teams?: { count: number } })[];
+    tournaments: (Tournament & { role?: string; tournament_teams?: { count: number }[] })[];
     teams: (Team & { tournament?: { name: string } | null })[];
     userPlan: string;
     isOrganizer?: boolean;
@@ -171,7 +171,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
                                                     <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                        <AvatarImage src={team.logo_url} alt={team.name} className="object-contain" />
+                                                        <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain" />
                                                         <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black italic">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                                     </Avatar>
                                                     <div className="grid gap-1">

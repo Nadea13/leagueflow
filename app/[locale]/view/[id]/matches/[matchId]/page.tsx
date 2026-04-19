@@ -79,7 +79,7 @@ export default async function PublicMatchConsole(props: {
     // Transformer for events
     const formattedEvents = (events || []).map(e => ({
         ...e,
-        player_name: (e.player as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as { name: string } | null)?.name : undefined),
+        player_name: (e.player as unknown as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as unknown as { name: string } | null)?.name : undefined),
         player: undefined
     }));
 
@@ -88,7 +88,6 @@ export default async function PublicMatchConsole(props: {
             match={match}
             tournamentId={id}
             tournamentName={tournament?.name}
-            goals={[]}
             isPro={!!isPro}
             readOnly={true}
             initialEvents={formattedEvents as MatchEvent[]}

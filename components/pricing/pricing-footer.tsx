@@ -45,7 +45,7 @@ export function PricingFooter({ managerPlans, organizerPlans }: PricingFooterPro
                             <span className="w-2 h-6 bg-primary"></span>
                             {tBilling('manager_plans')}
                         </h3>
-                        <PricingCards plans={managerPlans} landingPageMode={true} />
+                        <PricingCards plans={managerPlans as any[]} landingPageMode={true} />
                     </div>
 
                     {/* Organizer Plans */}
@@ -54,7 +54,7 @@ export function PricingFooter({ managerPlans, organizerPlans }: PricingFooterPro
                             <span className="w-2 h-6 bg-primary"></span>
                             {tBilling('organizer_plans')}
                         </h3>
-                        <PricingCards plans={organizerPlans} landingPageMode={true} />
+                        <PricingCards plans={organizerPlans as any[]} landingPageMode={true} />
                     </div>
                 </div>
             </DialogContent>

@@ -704,7 +704,7 @@ export async function confirmPayment(
     const supabase = await createClient();
 
     // 1. Verify Payment Server-Side
-    let charge: { id: string } | null = null;
+    let charge: any = null;
 
     if (paymentMethod === 'promptpay') {
         // For manual PromptPay, we trust the reference from the verified slip for now
@@ -1050,7 +1050,7 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
                     home_team_id: validWinners[i],
                     away_team_id: validWinners[i + 1],
                     round: startRound,
-                    stage: nextStage as string,
+                    stage: nextStage as any,
                     status: 'scheduled',
                     is_manual: false,
                     home_score: null,
@@ -1077,18 +1077,18 @@ export async function addGoal(
     playerName: string,
     tournamentId: string,
     goalTime?: string | number
-): Promise<ActionResponse> {
+): Promise<ActionResponse<{ id: string }>> {
     const supabase = await createClient();
 
     if (!playerName) return { success: false, error: "Player Name required" };
 
     // 1. Add Goal
-    const { error: insertError } = await supabase.from('goals').insert({
+    const { data: newGoal, error: insertError } = await supabase.from('goals').insert({
         match_id: matchId,
         team_id: teamId,
         player_name: playerName,
         goal_time: goalTime ? String(goalTime) : null
-    });
+    }).select('id').single();
 
     if (insertError) return { success: false, error: insertError.message };
 
@@ -1129,7 +1129,7 @@ export async function addGoal(
     if (updateError) return { success: false, error: updateError.message };
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
+    return { success: true, data: { id: newGoal?.id || '' } };
 }
 
 export async function deleteGoal(goalId: string, tournamentId: string): Promise<ActionResponse> {
@@ -1157,7 +1157,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
     if (!currentRoundMatches || currentRoundMatches.length === 0) return;
 
     // Find index of current match in the list
-    const indexInRound = currentRoundMatches.findIndex((m: Match) => m.id === match.id);
+    const indexInRound = currentRoundMatches.findIndex((m: any) => m.id === match.id);
     if (indexInRound === -1) return;
 
     // 2. Determine target match position in next round
@@ -1182,7 +1182,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
 }
 
 // Helper to calc standings
-function getGroupStandings(groupTeams: unknown[], allMatches: Match[]) {
+function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Match[]): Array<Record<string, unknown> & { id: string; points: number; gd: number; gf: number }> {
     return groupTeams.map(t => {
         const teamMatches = allMatches.filter(m =>
             (m.home_team_id === t.id || m.away_team_id === t.id)
@@ -1208,8 +1208,8 @@ function getGroupStandings(groupTeams: unknown[], allMatches: Match[]) {
             }
         });
 
-        return { ...t, points, gd, gf };
-    }).sort((a: { points: number; gd: number; gf: number; id: string }, b: { points: number; gd: number; gf: number; id: string }) => {
+        return { ...t, id: t.id as string, points, gd, gf };
+    }).sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
 
         // Head-to-Head (H2H) Points

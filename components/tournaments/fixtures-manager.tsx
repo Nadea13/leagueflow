@@ -214,7 +214,6 @@ export function FixturesManager({ matches, teams, tournamentId, isPro = false }:
                                                         tournamentId={tournamentId}
                                                         isEditMode={isEditMode}
                                                         teams={teams}
-                                                        isPro={isPro}
                                                     />
                                                 </div>
                                             ))
