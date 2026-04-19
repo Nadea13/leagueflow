@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateProfile } from "@/actions/common/user";
-import { Loader2, User } from "lucide-react";
+import { Loader2, User as UserIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { User } from "@supabase/supabase-js";
 
-export function ProfileForm({ user }: { user: any }) {
+export function ProfileForm({ user }: { user: User }) {
     const t = useTranslations("Profile");
     const tCommon = useTranslations("Common");
     const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +38,7 @@ export function ProfileForm({ user }: { user: any }) {
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 mb-4 md:mb-6">
-                <User className="h-5 w-5 text-secondary" />
+                <UserIcon className="h-5 w-5 text-secondary" />
                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
                     {t("user_info")}
                 </h3>

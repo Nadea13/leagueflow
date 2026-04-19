@@ -1,6 +1,7 @@
-import { ActionResponse, Match } from "@/types/index";
+import { ActionResponse, Match, TournamentTeam } from "@/types/index";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-export async function initTournamentStructure(tournamentId: string, supabase: any): Promise<ActionResponse> {
+export async function initTournamentStructure(tournamentId: string, supabase: SupabaseClient): Promise<ActionResponse> {
     // 1. Fetch tournament format and teams
     const { data: tournament } = await supabase
         .from('tournaments')
@@ -26,7 +27,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
     const startRound = 1;
 
     if (tournament.format === 'group_knockout') {
-        let assignedGroups = Array.from(new Set(teams?.map((t: any) => t.group_name).filter(Boolean) || [])).sort();
+        let assignedGroups = Array.from(new Set(teams?.map((t: TournamentTeam) => t.group_name).filter(Boolean) || [])).sort();
         
         // If groups aren't defined yet, or we want to force re-distribution, 
         // we figure out how many groups we need. 
@@ -69,10 +70,10 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
             }
         });
 
-        let allGroupMatches: Partial<Match>[] = [];
+        const allGroupMatches: Partial<Match>[] = [];
         assignedGroups.forEach(groupName => {
             const groupTeams = teamsInGroups[groupName as string];
-            const groupFixtures = generateRoundRobinMatches(groupTeams as any, tournamentId, 'group', startRound);
+            const groupFixtures = generateRoundRobinMatches(groupTeams, tournamentId, 'group', startRound);
             allGroupMatches.push(...groupFixtures);
         });
 
@@ -115,7 +116,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
             let kIndex = globalMatchIndex;
 
             while (currentRoundMatchCount >= 1) {
-                let stageName: any;
+                let stageName: Match['stage'];
                 if (currentRoundMatchCount === 1) stageName = 'final';
                 else if (currentRoundMatchCount === 2) stageName = 'semi_final';
                 else if (currentRoundMatchCount === 4) stageName = 'quarter_final';
@@ -151,7 +152,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
         const actualTeams = teams ? [...teams].sort(() => Math.random() - 0.5) : [];
         const slots: (string | null)[] = Array(bracketSize).fill(null);
         
-        actualTeams.forEach((t: any, i: number) => {
+        actualTeams.forEach((t: TournamentTeam, i: number) => {
             if (i < bracketSize) slots[i] = t.id;
         });
 
@@ -161,7 +162,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
         let globalMatchIndex = 1;
 
         while (currentRoundMatchCount >= 1) {
-            let stage: any;
+            let stage: Match['stage'];
             if (currentRoundMatchCount === 1) stage = 'final';
             else if (currentRoundMatchCount === 2) stage = 'semi_final';
             else if (currentRoundMatchCount === 4) stage = 'quarter_final';
@@ -205,11 +206,11 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
             isFirstRound = false;
         }
 
-        const roundFixtures = (r: number) => fixtures.filter(f => f.round === r).sort((a: any, b: any) => (a.match_index || 0) - (b.match_index || 0));
+        const roundFixtures = (r: number) => fixtures.filter(f => f.round === r).sort((a, b) => (a.match_index || 0) - (b.match_index || 0));
         for (let r = startRound; r < currentRound - 1; r++) {
             const matchesInRound = roundFixtures(r);
             const nextRoundMatches = roundFixtures(r + 1);
-            matchesInRound.forEach((m: any, idxInRound: number) => {
+            matchesInRound.forEach((m: Partial<Match>, idxInRound: number) => {
                 if (m.status === 'finished' && m.winner_id) {
                     const nextMatchIdx = Math.floor(idxInRound / 2);
                     const isHome = idxInRound % 2 === 0;
@@ -225,7 +226,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
     } else if (tournament.format === 'league_ha' || tournament.format === 'league') {
         const actualTeams = teams ? [...teams].sort(() => Math.random() - 0.5) : [];
         const teamIds = Array(maxTeams).fill(null).map((_, i) => actualTeams[i]?.id || null);
-        const leagueFixtures = generateRoundRobinMatches(teamIds as any, tournamentId, 'league', startRound, tournament.format === 'league_ha');
+        const leagueFixtures = generateRoundRobinMatches(teamIds, tournamentId, 'league', startRound, tournament.format === 'league_ha');
 
         let globalMatchIndex = 1;
         const matchesByRound: Record<number, Partial<Match>[]> = {};
@@ -274,7 +275,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: an
 
 function generateRoundRobinMatches(teamIds: (string | null)[], tournamentId: string, stage: 'league' | 'group', startRound: number = 1, doubleRoundRobin: boolean = false): Partial<Match>[] {
     const fixtures: Partial<Match>[] = [];
-    let leagueTeams = [...teamIds];
+    const leagueTeams = [...teamIds];
 
     if (leagueTeams.length % 2 !== 0) {
         leagueTeams.push(null);
@@ -342,8 +343,7 @@ function generateRoundRobinMatches(teamIds: (string | null)[], tournamentId: str
 function assignMatchTimes(fixtures: Partial<Match>[], startDateStr: string, endDateStr: string | null | undefined, numberOfPitches: number) {
     if (!startDateStr) return;
 
-    let currentDate = new Date(startDateStr);
-    const endDate = endDateStr ? new Date(endDateStr) : null;
+    const currentDate = new Date(startDateStr);
     currentDate.setHours(8, 0, 0, 0);
 
     const START_HOUR = 8;

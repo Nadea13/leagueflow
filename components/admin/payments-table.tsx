@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { Payment } from "@/types";
 import { formatDate } from "@/lib/date";
 import { useLocale } from "next-intl";
-import { Search, CreditCard, Filter, ArrowUpRight, Check, X, User } from "lucide-react";
+import Image from "next/image";
+import { Search, CreditCard, Filter, ArrowUpRight, Check, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,8 +66,8 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             } else {
                 toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
             }
-        } catch (error: any) {
-            toast({ title: tCommon("error"), description: error.message, variant: "destructive" });
+        } catch (error) {
+            toast({ title: tCommon("error"), description: error instanceof Error ? error.message : String(error), variant: "destructive" });
         } finally {
             setIsVerifying(false);
         }
@@ -83,8 +84,8 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             } else {
                 toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
             }
-        } catch (error: any) {
-            toast({ title: tCommon("error"), description: error.message, variant: "destructive" });
+        } catch (error) {
+            toast({ title: tCommon("error"), description: error instanceof Error ? error.message : String(error), variant: "destructive" });
         } finally {
             setIsVerifying(false);
         }
@@ -352,8 +353,8 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 {(() => {
                                     try {
                                         const parsed = JSON.parse(selectedPayment.provider_id);
-                                        return parsed.url ? <img src={parsed.url} alt="Slip" className="max-h-[400px] object-contain" /> : <p>No image available</p>;
-                                    } catch (e) {
+                                        return parsed.url ? <Image src={parsed.url} alt="Slip" width={400} height={600} className="max-h-[400px] object-contain" unoptimized /> : <p>No image available</p>;
+                                    } catch (_e) {
                                         return <p className="text-muted-foreground break-all font-mono text-xs">{selectedPayment.provider_id}</p>;
                                     }
                                 })()}

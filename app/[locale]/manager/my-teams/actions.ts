@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { ActionResponse } from "@/types/index";
+import { ActionResponse, Team } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
 
 export async function createTeam(prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
@@ -76,7 +76,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
     }
 }
 
-export async function getMyTeams(): Promise<ActionResponse<any[]>> {
+export async function getMyTeams(): Promise<ActionResponse<Team[]>> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -102,7 +102,7 @@ export async function getMyTeams(): Promise<ActionResponse<any[]>> {
     }
 }
 
-export async function updateTeamGlobal(teamId: string, formData: FormData, tournamentId: string): Promise<ActionResponse> {
+export async function updateTeamGlobal(teamId: string, formData: FormData, _tournamentId: string): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -171,7 +171,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, tourn
     }
 }
 
-export async function deleteTeamGlobal(teamId: string, tournamentId: string): Promise<ActionResponse> {
+export async function deleteTeamGlobal(teamId: string, _tournamentId: string): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();

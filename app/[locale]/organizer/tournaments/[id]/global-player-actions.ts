@@ -81,8 +81,8 @@ async function isAuthorizedForGlobalPlayer(globalPlayerId: string, userId: strin
         .eq("global_player_id", globalPlayerId);
     
     if (participations) {
-        for (const p of participations) {
-            const tournamentId = (p as any).tournament_teams?.tournament_id;
+        for (const p of participations as unknown as Array<{ team_id: string | null; tournament_teams: { tournament_id: string } | null }>) {
+            const tournamentId = p.tournament_teams?.tournament_id;
             if (tournamentId) {
                 // Check if user is organizer
                 const { data: tournament } = await supabase
@@ -257,7 +257,7 @@ export async function getGlobalPlayer(globalPlayerId: string): Promise<ActionRes
     return { success: true, data: data as GlobalPlayer };
 }
 
-export async function getPlayerTournamentHistory(globalPlayerId: string): Promise<ActionResponse<any[]>> {
+export async function getPlayerTournamentHistory(globalPlayerId: string): Promise<ActionResponse<unknown[]>> {
     const supabase = await createClient();
 
     const { data, error } = await supabase

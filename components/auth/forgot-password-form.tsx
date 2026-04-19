@@ -37,7 +37,7 @@ export function ForgotPasswordForm() {
             }
 
             setIsSuccess(true);
-        } catch (err) {
+        } catch (_err) {
             setError(tCommon('something_went_wrong'));
         } finally {
             setIsLoading(false);

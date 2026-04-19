@@ -7,9 +7,12 @@ import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ManagerPlan, OrganizerPlan, Product } from "@/types";
+
+type PricingPlan = Plan & Partial<ManagerPlan> & Partial<OrganizerPlan> & Partial<Product>;
 
 interface PricingCardsProps {
-    plans: Plan[];
+    plans: PricingPlan[];
     currentPlan?: string | null;
     activePlan?: string;
     onSelectPlan?: (planId: string) => void;
@@ -82,7 +85,7 @@ export function PricingCards({
 
     // Sort plans by price
     const sortedPlans = [...plans].sort((a, b) => a.price - b.price);
-    const isManagerPlans = plans.length > 0 && ('max_teams' in plans[0] || (plans[0] as any).target_role === 'manager');
+    const isManagerPlans = plans.length > 0 && ('max_teams' in plans[0] || (plans[0] as PricingPlan).target_role === 'manager');
 
     return (
         <div className="overflow-x-auto rounded-none border bg-background shadow-sm pt-6">
@@ -141,7 +144,7 @@ export function PricingCards({
                                 "p-4 text-center text-muted-foreground",
                                 plan.recommended && "border-x-2 border-primary/20 bg-primary/5"
                             )}>
-                                {(plan as any).teams_limit === 0 || (plan as any).max_teams === 0 ? t('unlimited') : ((plan as any).teams_limit ?? (plan as any).max_teams)}
+                                {(plan.teams_limit === 0 || plan.max_teams === 0) ? t('unlimited') : (plan.teams_limit ?? plan.max_teams)}
                             </td>
                         ))}
                     </tr>
@@ -169,7 +172,7 @@ export function PricingCards({
                                 "p-4 text-center capitalize text-muted-foreground",
                                 plan.recommended && "border-x-2 border-primary/20 bg-primary/5"
                             )}>
-                                {getTranslatedValue('format', (plan as any).format_support ?? (plan as any).max_players_per_team?.toString())}
+                                {getTranslatedValue('format', plan.format_support ?? plan.max_players_per_team?.toString())}
                             </td>
                         ))}
                     </tr>
@@ -183,7 +186,7 @@ export function PricingCards({
                                     "p-4 text-center",
                                     plan.recommended && "border-x-2 border-primary/20 bg-primary/5"
                                 )}>
-                                    {(plan as any).invite_enabled ? (
+                                    {plan.invite_enabled ? (
                                         <Check className="h-6 w-5 mx-auto text-primary" aria-hidden="true" />
                                     ) : (
                                         <X className="h-6 w-5 mx-auto text-muted-foreground opacity-50" aria-hidden="true" />
@@ -202,7 +205,7 @@ export function PricingCards({
                                     "p-4 text-center",
                                     plan.recommended && "border-x-2 border-primary/20 bg-primary/5"
                                 )}>
-                                    {(plan as any).register_enabled ? (
+                                    {plan.register_enabled ? (
                                         <Check className="h-6 w-5 mx-auto text-primary" aria-hidden="true" />
                                     ) : (
                                         <X className="h-6 w-5 mx-auto text-muted-foreground opacity-50" aria-hidden="true" />
@@ -221,7 +224,7 @@ export function PricingCards({
                                     "p-4 text-center text-muted-foreground capitalize",
                                     plan.recommended && "border-x-2 border-primary/20 bg-primary/5"
                                 )}>
-                                    {getTranslatedValue('stats', (plan as any).stats_support)}
+                                    {getTranslatedValue('stats', plan.stats_support)}
                                 </td>
                             ))}
                         </tr>

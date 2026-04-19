@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Announcement } from "@/types/index";
 import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnouncementPin } from "@/actions/organizer/tournaments/announcement";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
+
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDate } from "@/lib/date";
@@ -55,18 +55,21 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
     const [content, setContent] = useState("");
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setIsLoading(true);
         const result = await getAnnouncements(tournamentId);
         if (result.success && result.data) {
             setAnnouncements(result.data);
         }
         setIsLoading(false);
-    };
+    }, [tournamentId]);
 
     useEffect(() => {
-        fetchData();
-    }, [tournamentId]);
+        const timer = setTimeout(() => {
+            fetchData();
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchData]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();

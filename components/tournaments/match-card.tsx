@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/date";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { CalendarIcon, MapPin, Clock, Trophy, Eraser, ChevronRight } from "lucide-react";
-import { Match, Goal, Team, MatchEvent } from "@/types/index";
-import { updateMatch, deleteMatch } from "@/actions/organizer/tournaments/general";
+import { Eraser, ChevronRight } from "lucide-react";
+import { Match, Team } from "@/types/index";
+import { updateMatch } from "@/actions/organizer/tournaments/general";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ import {
 
 // ...
 
-export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPublic = false, isEditMode = false, teams = [], isPro = false, initialEvents = [] }: { match: Match; tournamentId: string; goals?: Goal[]; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; isPro?: boolean; initialEvents?: MatchEvent[] }) {
+export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [] }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[] }) {
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
@@ -50,8 +51,8 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
         const supabase = createClient();
         const channel = supabase
             .channel(`match-card-${match.id}`)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
-                setMatchState(payload.new as Match);
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload: { new: Match }) => {
+                setMatchState(payload.new);
                 // No router.refresh() here to avoid full page reloads on every card update, local state is enough for the card itself
             })
             .subscribe();
@@ -77,51 +78,10 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
         }
     };
 
-    // Running Timer Logic
-    const [elapsedTime, setElapsedTime] = useState<string>("");
-
-    useEffect(() => {
-        if (match.status === 'live') {
-            const calculateTime = () => {
-                if (match.timer_status === 'paused' && match.elapsed_before_pause !== undefined) {
-                    // Paused: Static time from snapshot
-                    const totalSeconds = match.elapsed_before_pause;
-                    const mins = Math.floor(totalSeconds / 60);
-                    const secs = totalSeconds % 60;
-                    setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-                } else if (match.match_date && match.match_time) {
-                    // Playing: Calc diff from Last Resume Time + specific elapsed history
-                    const now = new Date();
-                    const start = new Date(`${match.match_date}T${match.match_time}`);
-                    const extraSeconds = match.elapsed_before_pause || 0;
-
-                    const diffMs = now.getTime() - start.getTime();
-                    const totalSeconds = Math.max(0, Math.floor(diffMs / 1000) + extraSeconds);
-
-                    const mins = Math.floor(totalSeconds / 60);
-                    const secs = totalSeconds % 60;
-
-                    setElapsedTime(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-                }
-            };
-
-            calculateTime(); // Initial Update
-
-            // Run interval ONLY if playing
-            if (match.timer_status !== 'paused') {
-                const interval = setInterval(calculateTime, 1000);
-                return () => clearInterval(interval);
-            }
-        } else {
-            setElapsedTime("");
-        }
-    }, [match.status, match.match_date, match.match_time, match.timer_status, match.elapsed_before_pause]);
-
     // Helper Variables
     const status = match.status?.toLowerCase() || 'scheduled';
     const isLive = status === 'live';
     const isFinished = status === 'finished';
-    const isTie = isFinished && (match.home_score === match.away_score);
 
     // Format Date Helper
     // Use global formatDate helper
@@ -136,24 +96,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
     };
 
     // Tie Breaker Logic (ถ้าต้องการให้เลือกผู้ชนะเมื่อเสมอในรอบ Knockout)
-    const showTieBreaker = isTie && (
-        match.stage?.includes('knockout') ||
-        match.stage === 'quarter_final' ||
-        match.stage === 'semi_final' ||
-        match.stage === 'final'
-    );
-
-    const handleSelectWinner = async (winnerId: string | null) => {
-        if (!winnerId) return;
-        setIsLoading(true);
-        try {
-            await updateMatch(match.id, { winner_id: winnerId }, tournamentId);
-        } catch (error) {
-            console.error("Failed to set winner");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // const showTieBreaker = ... (removed as unused)
 
     const handleClear = async () => {
         setClearDialogOpen(false);
@@ -167,7 +110,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                 winner_id: null,
                 status: 'scheduled'
             }, tournamentId);
-        } catch (error) {
+        } catch (_error) {
             console.error("Failed to clear match");
         } finally {
             setIsLoading(false);
@@ -272,7 +215,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                                     {match.home_team?.name || tMatch("tbd")}
                                 </span>
                                 {match.home_team?.logo_url ? (
-                                    <img src={match.home_team.logo_url} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
+                                    <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" unoptimized />
                                 ) : (
                                     <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/5">
                                         <span className="text-[10px] md:text-xs font-black text-muted-foreground/40">
@@ -350,7 +293,7 @@ export function MatchCard({ match: initialMatch, tournamentId, goals = [], isPub
                         ) : (
                             <>
                                 {match.away_team?.logo_url ? (
-                                    <img src={match.away_team.logo_url} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
+                                    <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" unoptimized />
                                 ) : (
                                     <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/5">
                                         <span className="text-[10px] md:text-xs font-black text-muted-foreground/40">

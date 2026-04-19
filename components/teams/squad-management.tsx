@@ -1,24 +1,22 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from "react";
-import { ActionResponse, Player, GlobalPlayer, Team, SportType, Registration, Tournament } from "@/types/index";
+import {  Player, GlobalPlayer, Team, SportType, Registration, Tournament } from "@/types/index";
 import { getPlayers, addPlayer, updatePlayer, deletePlayer, importRoster, toggleRosterLock, updateTeamGlobal, getMyTeams, deleteTeamGlobal } from "@/actions/manager/team";
 import Papa from "papaparse";
 import * as xlsx from "xlsx";
-import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers, updateGlobalPlayerAthleteTypes, createGlobalPlayer } from "@/actions/organizer/tournaments/global-player";
+import {  linkPlayerToGlobal, unlinkPlayerFromGlobal, updateGlobalPlayerIdCard, updateGlobalPlayerPhoto, getGlobalPlayers, updateGlobalPlayerAthleteTypes, createGlobalPlayer } from "@/actions/organizer/tournaments/global-player";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+// Removed unused Table, TableRow imports
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Settings, Upload, Copy, AlertCircle, Bell, Lock, Unlock, ExternalLink, CalendarDays, Trophy, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft, Plus } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Upload, Copy, AlertCircle, Lock, Unlock, ExternalLink, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, ArrowLeft, ChevronRight, ChevronLeft, Plus } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -246,7 +244,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                 setIsImporting(false);
                 setImportFile(null);
-                importFileRef.current && (importFileRef.current.value = '');
+                if (importFileRef.current) {
+                    importFileRef.current.value = '';
+                }
 
                 const { getPlayers } = await import("@/actions/manager/team");
                 const res = await getPlayers(team.id);
@@ -263,7 +263,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     complete: (results) => {
                         processData(results.data as unknown[][]);
                     },
-                    error: (error) => {
+                    error: (_error) => {
                         setIsImporting(false);
                         toast({ title: tCommon("error"), description: "Failed to parse CSV file", variant: "destructive" });
                     }
@@ -278,7 +278,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         const worksheet = workbook.Sheets[firstSheetName];
                         const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
                         processData(jsonData as unknown[][]);
-                    } catch (err) {
+                    } catch (_err) {
                         setIsImporting(false);
                         toast({ title: tCommon("error"), description: "Failed to parse Excel file", variant: "destructive" });
                     }
@@ -288,7 +288,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 setIsImporting(false);
                 toast({ title: tCommon("error"), description: "Unsupported file format. Please upload a CSV or Excel file.", variant: "destructive" });
             }
-        } catch (error) {
+        } catch (_error) {
             setIsImporting(false);
             toast({ title: tCommon("error"), description: "An unexpected error occurred during import.", variant: "destructive" });
         }
@@ -782,7 +782,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                             </DialogDescription>
                                         </DialogHeader>
 
-                                        <Tabs value={importTab} onValueChange={(v) => setImportTab(v as any)} className="w-full">
+                                        <Tabs value={importTab} onValueChange={(v) => setImportTab(v as "teams" | "file")} className="w-full">
                                             <TabsList className="grid w-full grid-cols-2 rounded-none mb-6 h-12 bg-muted/20 border-b border-border/40">
                                                 <TabsTrigger value="teams" className="rounded-none text-xs font-black uppercase italic data-[state=active]:bg-secondary data-[state=active]:text-black">{t("from_my_teams") || "From My Teams"}</TabsTrigger>
                                                 <TabsTrigger value="file" className="rounded-none text-xs font-black uppercase italic data-[state=active]:bg-secondary data-[state=active]:text-black">{t("from_file") || "From File"}</TabsTrigger>
@@ -849,7 +849,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                 onClick={() => {
                                                     setSelectedSourceTeamId("");
                                                     setImportFile(null);
-                                                    importFileRef.current && (importFileRef.current.value = '');
+                                                    if (importFileRef.current) {
+                                                        importFileRef.current.value = '';
+                                                    }
                                                 }}
                                                 disabled={effectivelyLocked || isImporting}
                                             >
@@ -940,7 +942,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     <div className="relative group/photo">
                                                                                         <div className="h-32 w-32 rounded-none border-4 border-secondary/20 bg-muted flex items-center justify-center overflow-hidden ring-4 ring-secondary/5">
                                                                                             {player.global_player?.photo_url || player.photo_url ? (
-                                                                                                <img src={player.global_player?.photo_url || player.photo_url || ""} alt={player.name} className="h-full w-full object-cover" />
+                                                                                                <Image src={player.global_player?.photo_url || player.photo_url || ""} alt={player.name} width={128} height={128} className="h-full w-full object-cover" unoptimized />
                                                                                             ) : (
                                                                                                 <Users className="h-12 w-12 text-muted-foreground/20" />
                                                                                             )}
@@ -980,7 +982,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     <div className="aspect-[1.6/1] w-full border-2 border-dashed border-border/40 rounded-none bg-muted/10 flex flex-col items-center justify-center relative overflow-hidden group/id">
                                                                                         {player.global_player?.id_card_url ? (
                                                                                             <>
-                                                                                                <img src={player.global_player.id_card_url} alt="ID Card" className="w-full h-full object-contain" />
+                                                                                                <Image src={player.global_player.id_card_url} alt="ID Card" width={400} height={250} className="w-full h-full object-contain" unoptimized />
                                                                                                 <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover/id:opacity-100 transition-opacity flex items-center justify-center gap-3">
                                                                                                     <Button variant="outline" size="sm" className="rounded-none border-black text-black hover:bg-black hover:text-foreground font-black uppercase italic text-[10px]" asChild>
                                                                                                         <a href={player.global_player.id_card_url} target="_blank" rel="noopener noreferrer">

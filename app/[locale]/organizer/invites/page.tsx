@@ -6,7 +6,7 @@ import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle2, XCircle, Users, Trophy, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Users, ArrowRight } from "lucide-react";
 import { getPendingInvites, acceptInvite } from "@/app/[locale]/organizer/tournaments/[id]/collaborator-actions";
 
 export default function InvitesPage() {
@@ -96,7 +96,7 @@ export default function InvitesPage() {
                                         </CardTitle>
                                     </div>
                                     <Badge variant="outline" className="capitalize">
-                                        {t(`roles.${invite.role}` as any)}
+                                        {t(`roles.${invite.role}` as Parameters<typeof t>[0])}
                                     </Badge>
                                 </CardHeader>
                                 <CardContent className="flex-1">

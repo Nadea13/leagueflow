@@ -96,7 +96,7 @@ export function MatchDialog({ tournamentId, teams, match, trigger, defaultRound 
             } else {
                 alert(result.error);
             }
-        } catch (error) {
+        } catch (_error) {
             alert("An unexpected error occurred");
         } finally {
             setLoading(false);

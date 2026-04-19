@@ -17,7 +17,7 @@ export async function getUserTeams() {
     const ownedTournamentIds = ownedTournaments?.map(t => t.id) || [];
 
     // Construct the query
-    let query = supabase
+    const query = supabase
         .from("teams")
         .select("id, name, logo_url, description, created_at, tournament:tournaments(id, name)");
     

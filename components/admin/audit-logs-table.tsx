@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdminAuditLogsProps {
     initialLogs: AuditLog[];
-    authLogs?: any[];
+    authLogs?: Record<string, unknown>[];
 }
 
 export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsProps) {
@@ -317,7 +317,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    paginatedAuthLogs.map((log: any) => (
+                                    paginatedAuthLogs.map((log: Record<string, unknown>) => (
                                         <TableRow key={log.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                             <TableCell className="font-medium text-xs text-muted-foreground whitespace-nowrap">
                                                 {formatDate(log.created_at, "d MMM yyyy, HH:mm", locale)}

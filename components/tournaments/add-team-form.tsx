@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState, useState, useEffect, useRef } from "react";
-import { Plus, Image as ImageIcon, Camera, Upload } from "lucide-react";
+import Image from "next/image";
+import { Plus, Camera, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addTeam } from "@/actions/organizer/tournaments/general";
-import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/routing";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { ActionResponse, SportType } from "@/types/index";
+import { ActionResponse } from "@/types/index";
 
 const initialState: ActionResponse = {
     success: false,
@@ -36,7 +38,9 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
     useEffect(() => {
         if (state.success) {
             formRef.current?.reset();
-            setPreview("");
+            // Wrap in a timeout to avoid synchronous cascading renders warning
+            const timer = setTimeout(() => setPreview(""), 0);
+            return () => clearTimeout(timer);
         }
     }, [state.success]);
 
@@ -63,7 +67,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                         <label htmlFor="add-logo-upload" className={`cursor-pointer group relative shrink-0 ${isLimitReached ? 'pointer-events-none opacity-50' : ''}`}>
                             <div className="h-16 w-16 rounded-none border border-muted-foreground/20 flex items-center justify-center overflow-hidden bg-foreground/5 hover:bg-foreground/10 transition-colors relative">
                                 {preview ? (
-                                    <img src={preview} alt="Preview" className="h-full w-full object-cover" />
+                                    <Image src={preview} alt="Preview" width={64} height={64} className="h-full w-full object-cover" unoptimized />
                                 ) : (
                                     <div className="flex flex-col items-center gap-1 opacity-40">
                                         <Camera className="h-5 w-5" />
@@ -140,7 +144,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                     <div className="p-3 bg-amber-500/10 border-l-2 border-amber-500">
                         <p className="text-[10px] font-bold uppercase text-amber-500 leading-tight">
                             {t.rich("limit_reached_desc", {
-                                link: (chunks) => <a href="/dashboard/billing" className="underline font-black">{chunks}</a>
+                                link: (chunks) => <Link href="/dashboard/billing" className="underline font-black">{chunks}</Link>
                             })}
                         </p>
                     </div>

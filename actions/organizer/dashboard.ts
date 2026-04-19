@@ -8,7 +8,7 @@ import { ensureProfileExists } from "@/lib/profile";
 import { initTournamentStructure } from "@/lib/fixture-utils";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 
-export async function createTournament(prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
+export async function createTournament(_prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
         const name = formData.get("name") as string;
@@ -20,7 +20,7 @@ export async function createTournament(prevState: ActionResponse, formData: Form
         const number_of_pitches = parseInt(formData.get("number_of_pitches") as string) || 1;
         const document_deadline = formData.get("document_deadline") as string;
         let max_teams = parseInt(formData.get("max_teams") as string) || 8;
-        let advancing_teams = parseInt(formData.get("advancing_teams") as string) || null;
+        const advancing_teams = parseInt(formData.get("advancing_teams") as string) || null;
 
         const { data: { user } } = await supabase.auth.getUser();
 
@@ -91,7 +91,7 @@ export async function createTournament(prevState: ActionResponse, formData: Form
 
         revalidatePath("/dashboard");
         return { success: true };
-    } catch (error) {
+    } catch (_error) {
         return { success: false, error: "An unexpected error occurred" };
     }
 }
@@ -143,30 +143,41 @@ export async function getDashboardTournaments(query?: string) {
         .eq("user_id", user.id)
         .eq("status", "accepted");
 
+    interface TournamentWithCount extends Record<string, unknown> {
+        id: string;
+        name: string;
+        user_id: string;
+        tournament_teams: { count: number }[];
+        payments: { plan: string; status: string }[];
+    }
+
     // Filter shared tournaments by query locally since the nested structure makes it tricky to filter at the DB level easily
     let sharedTournaments = (sharedMemberships || [])
-        .map((m: any) => ({ ...m.tournaments, role: m.role }))
-        .filter((t: any) => t && t.id && t.user_id !== user.id);
+        .map((m: { role: string; tournaments: unknown }) => ({ ...(m.tournaments as TournamentWithCount), role: m.role }))
+        .filter((t: TournamentWithCount) => t && t.id && t.user_id !== user.id);
 
     if (query) {
         const lowerQuery = query.toLowerCase();
-        sharedTournaments = sharedTournaments.filter((t: any) => t.name?.toLowerCase().includes(lowerQuery));
+        sharedTournaments = sharedTournaments.filter((t: TournamentWithCount) => t.name?.toLowerCase().includes(lowerQuery));
     }
 
     // Merge and Sort
     const tournaments = [
-        ...(ownedTournaments || []).map(t => ({
-            ...t,
-            role: 'owner',
-            current_teams: (t as any).tournament_teams?.[0]?.count || 0,
-            plan: (t as any).payments?.some((p: any) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
-        })),
+        ...(ownedTournaments || []).map(t => {
+            const tournament = t as unknown as TournamentWithCount;
+            return {
+                ...tournament,
+                role: 'owner',
+                current_teams: tournament.tournament_teams?.[0]?.count || 0,
+                plan: tournament.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
+            };
+        }),
         ...sharedTournaments.map(t => ({
             ...t,
-            current_teams: (t as any).tournament_teams?.[0]?.count || 0,
-            plan: (t as any).payments?.some((p: any) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
+            current_teams: t.tournament_teams?.[0]?.count || 0,
+            plan: t.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
         }))
-    ].sort((a, b: any) =>
+    ].sort((a: { created_at: string }, b: { created_at: string }) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
@@ -193,7 +204,7 @@ export async function registerAsOrganizer(): Promise<ActionResponse> {
 
         revalidatePath("/", "layout");
         return { success: true };
-    } catch (error: any) {
-        return { success: false, error: error.message };
+    } catch (error: unknown) {
+        return { success: false, error: (error as Error).message };
     }
 }

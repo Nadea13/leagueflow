@@ -6,7 +6,7 @@ import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FileText, Clock, CheckCircle, XCircle, Users, Trophy } from "lucide-react";
-import { format } from "date-fns";
+
 import { getFormatter } from "next-intl/server";
 
 export default async function MyRegistrationsPage() {

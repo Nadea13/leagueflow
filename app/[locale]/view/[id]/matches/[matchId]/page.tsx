@@ -1,12 +1,13 @@
-import { notFound } from "next/navigation";
+
 import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/components/matches/match-console-page";
+import { MatchEvent } from "@/types";
 
 export default async function PublicMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const { locale, id, matchId } = await props.params;
+    const { locale: _locale, id, matchId } = await props.params;
     const resolvedParams = await props.searchParams;
     const fromTab = typeof resolvedParams.from === 'string' ? resolvedParams.from : 'fixtures';
 
@@ -44,7 +45,8 @@ export default async function PublicMatchConsole(props: {
     let isPro = false;
     if (tournament) {
         // Check tournament specific payments
-        const isTournamentPro = (tournament as any).payments?.some((p: any) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament'));
+        const payments = (tournament as { payments?: { plan: string; status: string }[] }).payments;
+        const isTournamentPro = payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament'));
         if (isTournamentPro) {
             isPro = true;
         } else if (tournament.user_id) {
@@ -77,7 +79,7 @@ export default async function PublicMatchConsole(props: {
     // Transformer for events
     const formattedEvents = (events || []).map(e => ({
         ...e,
-        player_name: (e.player as any)?.name || (Array.isArray(e.player) ? (e.player[0] as any)?.name : null),
+        player_name: (e.player as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as { name: string } | null)?.name : undefined),
         player: undefined
     }));
 
@@ -89,7 +91,7 @@ export default async function PublicMatchConsole(props: {
             goals={[]}
             isPro={!!isPro}
             readOnly={true}
-            initialEvents={formattedEvents as any}
+            initialEvents={formattedEvents as MatchEvent[]}
             backUrl={`/view/${id}?tab=${fromTab}`}
         />
     );

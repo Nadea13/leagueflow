@@ -2,24 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
-import { ChevronLeft, Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BarChart3, BookOpen, AlertTriangle, ArrowLeft, ChevronRight, Search, Settings, Users, Bell, Lock, Unlock, FileText, View, Camera, MoreVertical, Edit2, ArrowRight, Plus, ClipboardEdit } from "lucide-react";
+import { Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BookOpen, AlertTriangle, ArrowLeft, Settings, Users, Plus, ClipboardEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { AddTeamForm } from "@/components/tournaments/add-team-form";
 import { FixtureGenerator } from "@/components/tournaments/fixture-generator";
 import { StandingsTable } from "@/components/tournaments/standings-table";
 import { TeamList } from "@/components/tournaments/team-list";
 import { GroupStandings } from "@/components/tournaments/group-standings";
 import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
-import { Match, Team, Goal, MatchEvent } from "@/types/index";
+import { Match, Team, Goal, MatchEvent, Tournament, Player } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
 import { calculateStandings } from "@/lib/standings";
@@ -39,7 +36,7 @@ import { RegistrationSettingsCard } from "@/components/tournaments/registration-
 
 
 interface TournamentContentProps {
-    tournament: any;
+    tournament: Tournament;
     initialMatches: Match[];
     initialTeams: Team[];
     initialGoals: Goal[];
@@ -80,7 +77,7 @@ export function TournamentContent({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        setTimeout(() => setMounted(true), 0);
     }, []);
 
     const currentTab = searchParams.get('tab') || 'overview';
@@ -97,10 +94,12 @@ export function TournamentContent({
 
     // Update state when props change (server revalidation)
     useEffect(() => {
-        setTournament(initialTournament);
-        setMatches(initialMatches);
-        setTeams(initialTeams);
-        setGoals(initialGoals);
+        setTimeout(() => {
+            setTournament(initialTournament);
+            setMatches(initialMatches);
+            setTeams(initialTeams);
+            setGoals(initialGoals);
+        }, 0);
     }, [initialTournament, initialMatches, initialTeams, initialGoals]);
 
     // Fetch match events for player stats
@@ -118,7 +117,7 @@ export function TournamentContent({
                 .in("match_id", matchIds);
 
             if (data) {
-                const events = data.map((e: any) => ({
+                const events = (data as (MatchEvent & { players: { name: string } | null })[]).map((e) => ({
                     ...e,
                     player_name: e.players?.name || "Unknown",
                 }));
@@ -129,7 +128,7 @@ export function TournamentContent({
         if (matches.length > 0) {
             fetchEvents();
         }
-    }, [matches]);
+    }, [matches, supabase]);
 
     // Fetch all players from all teams for stats
     const [allPlayersForStats, setAllPlayersForStats] = useState<{ id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[]>([]);
@@ -144,7 +143,7 @@ export function TournamentContent({
                 .in("team_id", teamIds);
 
             if (data) {
-                const playersWithTeam = data.map((p: any) => {
+                const playersWithTeam = (data as Player[]).map((p) => {
                     const team = teams.find(t => t.id === p.team_id);
                     return {
                         ...p,
@@ -152,12 +151,12 @@ export function TournamentContent({
                         teamLogoUrl: team?.logo_url,
                     };
                 });
-                setAllPlayersForStats(playersWithTeam);
+                setAllPlayersForStats(playersWithTeam as unknown as { id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[]);
             }
         };
 
         fetchAllPlayers();
-    }, [teams]);
+    }, [teams, supabase]);
 
     // Realtime Subscription
     useEffect(() => {

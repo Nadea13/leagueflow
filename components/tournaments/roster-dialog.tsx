@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Player, GlobalPlayer } from "@/types/index";
 import { addPlayer, getPlayers, deletePlayer, updatePlayer } from "@/actions/organizer/tournaments/player";
-import { searchGlobalPlayers, linkPlayerToGlobal, unlinkPlayerFromGlobal } from "@/actions/organizer/tournaments/global-player";
+import {  linkPlayerToGlobal, unlinkPlayerFromGlobal } from "@/actions/organizer/tournaments/global-player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,7 +18,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Plus } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
@@ -76,7 +75,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
     const [editPosition, setEditPosition] = useState<string>("");
     const [editBirthDate, setEditBirthDate] = useState<string>("");
 
-    const fetchPlayers = async () => {
+    const fetchPlayers = useCallback(async () => {
         setIsLoading(true);
         const result = await getPlayers(teamId);
         if (result.success && result.data) {
@@ -89,13 +88,13 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
             });
         }
         setIsLoading(false);
-    };
+    }, [teamId, tCommon, t, toast]);
 
     useEffect(() => {
         if (open) {
             fetchPlayers();
         }
-    }, [open, teamId]);
+    }, [open, fetchPlayers]);
 
     // Search for global players (now allows empty query to fetch initial list)
     const handleSearch = useCallback(async (query: string) => {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatDate } from "@/lib/date";
 import { useLocale } from "next-intl";
+import { Tournament } from "@/types";
 import { Search, Trophy, Trash2, ExternalLink } from "lucide-react";
 import { deleteTournamentAsAdmin } from "@/app/[locale]/admin/actions";
 import { Link } from "@/i18n/routing";
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface AdminTournamentsTableProps {
-    initialTournaments: any[];
+    initialTournaments: (Tournament & { owner_email?: string })[];
 }
 
 export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTableProps) {

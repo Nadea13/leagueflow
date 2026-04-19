@@ -7,16 +7,18 @@ import { StatsOverview } from "@/components/dashboard/stats-overview";
 import { TournamentCard } from "@/components/dashboard/tournament-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { Link } from "@/i18n/routing";
-import { ArrowRight, Users, Info, Activity, CheckCircle, FileText, Trophy } from "lucide-react";
+import { ArrowRight, Users, FileText, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
+
+import { Tournament, Team } from "@/types/index";
 
 interface DashboardUIProps {
-    tournaments: any[];
-    teams: any[];
+    tournaments: (Tournament & { role?: string; tournament_teams?: { count: number } })[];
+    teams: (Team & { tournament?: { name: string } | null })[];
     userPlan: string;
     isOrganizer?: boolean;
     metrics: {
@@ -35,17 +37,22 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
 
     useEffect(() => {
         if (forcedMode) {
-            setMode(forcedMode);
-            return;
+            const timer = setTimeout(() => {
+                setMode(forcedMode);
+            }, 0);
+            return () => clearTimeout(timer);
         }
-        const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team';
 
-        if (savedMode === 'organizer' && !isOrganizer) {
-            setMode('team');
-            localStorage.setItem('dashboard-mode', 'team');
-        } else if (savedMode) {
-            setMode(savedMode);
-        }
+        const timer = setTimeout(() => {
+            const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team';
+
+            if (savedMode === 'organizer' && !isOrganizer) {
+                setMode('team');
+                localStorage.setItem('dashboard-mode', 'team');
+            } else if (savedMode) {
+                setMode(savedMode);
+            }
+        }, 0);
 
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'dashboard-mode') {
@@ -59,7 +66,10 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
             }
         };
         window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, [isOrganizer, forcedMode]);
 
     const isPro = userPlan !== 'free';
@@ -67,10 +77,10 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
     const hasTournaments = tournaments.length > 0;
 
     // Stats for organizer
-    const ownedTournaments = tournaments.filter((t: any) => t.role === 'owner');
+    const ownedTournaments = tournaments.filter((t) => t.role === 'owner');
     const totalTournaments = ownedTournaments.length;
-    const activeTournaments = ownedTournaments.filter((t: any) => t.status === 'active').length;
-    const completedTournaments = ownedTournaments.filter((t: any) => t.status === 'completed').length;
+    const activeTournaments = ownedTournaments.filter((t) => t.status === 'active').length;
+    const completedTournaments = ownedTournaments.filter((t) => t.status === 'completed').length;
 
     if (mode === 'team') {
         return (
@@ -250,7 +260,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             <h2 className="text-xl md:text-2xl font-bold tracking-tight uppercase italic leading-none">{t("my_tournaments")}</h2>
                         </div>
                         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {recentTournaments.map((tournament: any) => (
+                            {recentTournaments.map((tournament) => (
                                 <TournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
                             ))}
                             {tournaments.length > 3 && (

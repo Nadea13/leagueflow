@@ -26,9 +26,9 @@ export async function getAllPayments() {
         .from("profiles")
         .select("id, email, full_name");
 
-    const userMap = new Map(users?.map((u: any) => [u.id, u]) || []);
+    const userMap = new Map(users?.map((u: { id: string; email?: string | null; full_name?: string | null }) => [u.id, u]) || []);
 
-    return payments.map((p: any) => {
+    return payments.map((p: Record<string, unknown>) => {
         const user = userMap.get(p.user_id);
         return {
             ...p,
@@ -60,7 +60,7 @@ export async function approvePayment(paymentId: string) {
     }
 
     // Update payment status to success
-    const updateData: any = { status: 'success' };
+    const updateData: Record<string, unknown> = { status: 'success' };
 
     // Calculate expiration if paying for a subscription
     if (payment.plan === 'monthly' || payment.plan === 'yearly') {

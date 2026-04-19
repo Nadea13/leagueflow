@@ -24,7 +24,7 @@ export async function getTeamPayments(tournamentId: string): Promise<ActionRespo
         return { success: false, error: error.message };
     }
 
-    const payments = (data || []).map((p: any) => ({
+    const payments = (data || []).map((p: Record<string, unknown> & { tournament_teams?: { name: string; logo_url: string | null } | null }) => ({
         ...p,
         team: p.tournament_teams ? { name: p.tournament_teams.name, logo_url: p.tournament_teams.logo_url } : null,
     }));

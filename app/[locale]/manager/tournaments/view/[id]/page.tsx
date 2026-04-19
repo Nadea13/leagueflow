@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { RegistrationForm } from "@/components/registrations/registration-form";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date";
-import { cn } from "@/lib/utils";
+
 import { format } from "date-fns";
 
 export default async function ManagerTournamentRegisterPage({ params }: { params: Promise<{ id: string, locale: string }> }) {

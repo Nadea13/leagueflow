@@ -26,9 +26,9 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
-                const mapped = data.map((e: any) => ({
+                const mapped = data.map((e) => ({
                     ...e,
-                    player_name: e.players?.name || e.player_name || "Unknown",
+                    player_name: (e.players as { name: string } | null)?.name || (e as { player_name?: string }).player_name || "Unknown",
                     players: undefined
                 }));
                 setEvents(mapped);
@@ -101,14 +101,14 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             supabase.removeChannel(channel);
             if (pollInterval) clearInterval(pollInterval);
         };
-    }, [matchId, isReadOnly]);
+    }, [matchId, isReadOnly, initialData]);
 
     const addEvent = async (
         teamId: string | null,
         type: EventType,
         minute: number,
         playerId: string | null = null,
-        extraInfo: any = {},
+        extraInfo: Record<string, unknown> = {},
         playerName: string = "Unknown"
     ) => {
         // Optimistic Update

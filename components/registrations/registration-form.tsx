@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Team } from "@/types/index";
 import { useTranslations } from "next-intl";
-import { Calendar, MapPin, Trophy, AlertCircle, CheckCircle2, Users, ImageIcon, X, Upload, User, Phone, FileText, Loader2, Smartphone, CreditCard } from "lucide-react";
+import { Trophy, AlertCircle, CheckCircle2, Users, ImageIcon, X, Upload, User, FileText, Loader2, Smartphone } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -14,27 +15,24 @@ import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PromptPayQR } from "./promptpay-qr";
 import { registerTeam } from "@/actions/manager/register-team";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
 // Schema generator based on fee
-const createFormSchema = (isFree: boolean, t: any) => z.object({
+const createFormSchema = (isFree: boolean, t: (key: string) => string) => z.object({
     teamName: z.string().min(2, t("team_name_error")),
     contactName: z.string().min(2, t("contact_name_error")),
     contactPhone: z.string().min(10, t("contact_phone_error")),
     description: z.string().optional(),
-    logoFile: z.any()
+    logoFile: z.instanceof(FileList).optional()
         .optional()
         .refine(
             (files) => !files || files.length === 0 || files[0].size <= 5 * 1024 * 1024,
@@ -45,8 +43,8 @@ const createFormSchema = (isFree: boolean, t: any) => z.object({
             t("logo_type_error")
         ),
     slipFile: isFree
-        ? z.any().optional()
-        : z.any()
+        ? z.instanceof(FileList).optional()
+        : z.instanceof(FileList)
             .refine((files) => files?.length === 1, t("slip_required"))
             .refine(
                 (files) => files?.[0]?.size <= 5 * 1024 * 1024,
@@ -141,7 +139,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
             } else {
                 toast.error(result.error || t("reg_failed_toast"));
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error("An unexpected error occurred");
             console.error(error);
         } finally {
@@ -251,7 +249,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                     <FormField
                         control={form.control}
                         name="logoFile"
-                        render={({ field: { value, onChange, ...fieldProps } }) => (
+                        render={({ field: { value: _value, onChange, ...fieldProps } }) => (
                             <FormItem className="w-full md:col-span-2">
                                 <FormLabel className="flex items-center gap-2">
                                     <ImageIcon className="w-4 h-4 text-muted-foreground" />
@@ -291,7 +289,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                             <div className="relative rounded-none overflow-hidden border bg-muted/30 p-2">
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-16 w-16 relative rounded-none overflow-hidden border bg-foreground">
-                                                        <img src={logoPreviewUrl} alt="Logo preview" className="object-contain w-full h-full" />
+                                                        <Image src={logoPreviewUrl} alt="Logo preview" width={64} height={64} className="object-contain w-full h-full" unoptimized />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-medium truncate text-foreground">{t("logo_preview") || "Logo Preview"}</p>
@@ -402,7 +400,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                     <FormField
                                         control={form.control}
                                         name="slipFile"
-                                        render={({ field: { onChange, value, ...rest } }) => (
+                                        render={({ field: { onChange, value: _value, ...rest } }) => (
                                             <FormItem className="flex-1 flex flex-col">
                                                 <FormLabel className="flex items-center gap-2">
                                                     <FileText className="w-4 h-4 text-muted-foreground" />
@@ -443,10 +441,13 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                                             <div className="relative rounded-none overflow-hidden border bg-muted/30 p-4">
                                                                 <div className="flex flex-col gap-4">
                                                                     <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-foreground flex items-center justify-center">
-                                                                        <img
+                                                                        <Image
                                                                             src={slipPreviewUrl}
                                                                             alt="Slip preview"
+                                                                            width={300}
+                                                                            height={400}
                                                                             className="object-contain w-full h-full"
+                                                                            unoptimized
                                                                         />
                                                                         <Button
                                                                             type="button"

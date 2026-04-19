@@ -20,7 +20,7 @@ const initialState: ActionResponse = {
 };
 
 interface RegistrationSettingsCardProps {
-    tournament: any;
+    tournament: Tournament;
     isPro: boolean;
     onUpgrade?: () => void;
 }
@@ -29,14 +29,15 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
-    const [isPending, startTransition] = useTransition();
+    const [isPending] = useTransition();
     const [mounted, setMounted] = useState(false);
 
     const updateTournamentWithId = updateTournament.bind(null, tournament.id);
     const [state, formAction] = useActionState(updateTournamentWithId, initialState);
 
     useEffect(() => {
-        setMounted(true);
+        const timer = setTimeout(() => setMounted(true), 0);
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {

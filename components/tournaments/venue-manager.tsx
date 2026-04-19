@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Venue } from "@/types/index";
 import { getVenues, addVenue, deleteVenue } from "@/actions/organizer/tournaments/venue";
 import { Button } from "@/components/ui/button";
@@ -51,18 +51,19 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
     const [capacity, setCapacity] = useState("");
     const [notes, setNotes] = useState("");
 
-    const fetchVenues = async () => {
+    const fetchVenues = useCallback(async () => {
         setIsLoading(true);
         const result = await getVenues(tournamentId);
         if (result.success && result.data) {
             setVenues(result.data);
         }
         setIsLoading(false);
-    };
+    }, [tournamentId]);
 
     useEffect(() => {
-        fetchVenues();
-    }, [tournamentId]);
+        const timer = setTimeout(() => fetchVenues(), 0);
+        return () => clearTimeout(timer);
+    }, [fetchVenues]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();

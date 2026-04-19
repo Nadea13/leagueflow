@@ -5,6 +5,7 @@ import { CreateTournamentDialog } from "@/components/tournaments/create-tourname
 import { TournamentCard } from "@/components/dashboard/tournament-card";
 import { Input } from "@/components/ui/input";
 import { Search, Trophy } from "lucide-react";
+import { Tournament } from "@/types/index";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -76,7 +77,7 @@ export default async function TournamentsPage({
                 </div>
             ) : (
                 <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {tournaments.map((tournament: any) => (
+                    {tournaments.map((tournament: Tournament) => (
                         <TournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
                     ))}
                 </div>

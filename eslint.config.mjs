@@ -7,7 +7,11 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
       "@typescript-eslint/no-explicit-any": "warn",
     }
   },
@@ -18,6 +22,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "analyze-lint.js",
+    "find-top-files.js",
+    "fix-unused-vars.js",
+    "fix-all-lint.js",
   ]),
 ]);
 

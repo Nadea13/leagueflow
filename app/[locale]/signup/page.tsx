@@ -5,7 +5,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+
 
 export default function SignUpPage() {
     const t = useTranslations('SignUp');

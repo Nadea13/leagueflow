@@ -1,14 +1,15 @@
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, Trophy, MapPin } from "lucide-react";
+
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarDays, Users, Trophy } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
+import { Tournament } from "@/types";
 
 interface PublicTournamentCardProps {
-    tournament: any;
+    tournament: Tournament & { tournament_teams?: { count: number }[] };
     isManager?: boolean;
 }
 
@@ -45,7 +46,7 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
                                 <div className={cn("text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-none",
                                     tournament.status === 'completed' ? "bg-muted text-muted-foreground/40" : "bg-secondary/10 text-secondary border border-secondary/20"
                                 )}>
-                                    {tSettings(tournament.status as any)}
+                                    {tSettings(tournament.status as Parameters<typeof tSettings>[0])}
                                 </div>
                             )}
                             {isClosed && (

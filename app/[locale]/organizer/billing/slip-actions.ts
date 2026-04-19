@@ -52,11 +52,11 @@ export async function verifySlip(formData: FormData): Promise<ActionResponse<{ a
             }
         };
 
-    } catch (error: any) {
-        console.error("Slip verification error:", error);
+    } catch (_error) {
+        console.error("Slip verification error:", _error);
         return {
             success: false,
-            error: error?.message || "Failed to verify slip"
+            error: (_error as Error)?.message || "Failed to verify slip"
         };
     }
 }

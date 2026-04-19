@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Team } from "@/types/index";
+import Image from "next/image";
+
 import { updateTeam, deleteTeam, assignTeamGroup } from "@/actions/organizer/tournaments/general";
+import { TournamentTeam } from "@/types/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -29,10 +31,10 @@ import { useTranslations } from "next-intl";
 import { RosterDialog } from "./roster-dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+
 
 interface TeamListProps {
-    teams: any[];
+    teams: (TournamentTeam & { team?: { user_id: string | null } })[];
     tournamentId: string;
     isPro?: boolean;
     showGroupSelector?: boolean;
@@ -84,7 +86,7 @@ function TeamItem({
     showGroupSelector,
     isReadOnly
 }: {
-    team: any;
+    team: TournamentTeam & { team?: { user_id: string | null } };
     tournamentId: string;
     isPro: boolean;
     showGroupSelector: boolean;
@@ -98,7 +100,7 @@ function TeamItem({
     const [name, setName] = useState(team.name);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [existingLogoUrl, setExistingLogoUrl] = useState(team.logo_url || "");
+    const [existingLogoUrl] = useState(team.logo_url || "");
     const [isLoading, setIsLoading] = useState(false);
     const [isGroupLoading, setIsGroupLoading] = useState(false);
     const [description, setDescription] = useState(team.description || "");
@@ -158,7 +160,7 @@ function TeamItem({
             <div className="flex items-center flex-1 min-w-0 z-10">
                 <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mr-2 md:mr-3 shrink-0 overflow-hidden border border-foreground/5 relative">
                     {team.logo_url ? (
-                        <img src={team.logo_url} alt={team.name} className="h-full w-full object-contain p-1" />
+                        <Image src={team.logo_url} alt={team.name} width={48} height={48} className="h-full w-full object-contain p-1" unoptimized />
                     ) : (
                         <span className="text-[10px] font-black text-muted-foreground/40">
                             {team.name.substring(0, 2).toUpperCase()}
@@ -229,10 +231,13 @@ function TeamItem({
                                         <label htmlFor="edit-logo-upload" className="cursor-pointer group relative">
                                             <div className="h-28 w-28 rounded-none border border-border/10 flex items-center justify-center overflow-hidden bg-foreground/5 hover:bg-foreground/10 transition-all group-hover:border-secondary/30 relative">
                                                 {previewUrl || existingLogoUrl ? (
-                                                    <img
+                                                    <Image
                                                         src={previewUrl || existingLogoUrl}
                                                         alt="Logo Preview"
+                                                        width={112}
+                                                        height={112}
                                                         className="h-full w-full object-contain p-2"
+                                                        unoptimized
                                                     />
                                                 ) : (
                                                     <ImageIcon className="h-10 w-10 text-muted-foreground/10 group-hover:text-secondary/20 transition-colors" />

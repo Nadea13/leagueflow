@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { ActionResponse, PenaltyShot, Match } from "@/types/index";
+import { ActionResponse, PenaltyShot } from "@/types/index";
 
 async function syncPenaltyScore(matchId: string) {
     const supabase = await createClient();
@@ -58,7 +58,7 @@ export async function getPenaltyShootout(matchId: string): Promise<ActionRespons
         return { success: false, error: error.message };
     }
 
-    const shots = (data || []).map((shot: any) => ({
+    const shots = (data || []).map((shot: Record<string, unknown> & { players?: { name: string } | null }) => ({
         ...shot,
         player: shot.players ? { name: shot.players.name } : null,
     }));

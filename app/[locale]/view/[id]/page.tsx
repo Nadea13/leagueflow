@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Match, MatchEvent, Goal } from "@/types/index";
+import { Match, MatchEvent, Goal, Team, Player } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { PublicTournamentView } from "@/components/tournaments/public-tournament-view";
@@ -72,7 +72,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         .in("match_id", matchIds)
         .order("minute", { ascending: true });
 
-    const allEvents = allEventsResult?.map((event: any) => ({
+    const allEvents = allEventsResult?.map((event: Record<string, unknown> & { players?: { name: string } | null }) => ({
         ...event,
         player_name: event.players?.name || "Unknown"
     })) || [];
@@ -88,7 +88,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
     }
 
     // 6. Fetch Players for Stats (Admin Client)
-    let initialPlayers: any[] = [];
+    let initialPlayers: Player[] = [];
     if (teams && teams.length > 0) {
         const { data: playersData } = await adminSupa
             .from("players")
@@ -124,11 +124,11 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
 
             <PublicTournamentView 
                 tournament={tournament}
-                initialTeams={(teams as any[]) || []}
+                initialTeams={(teams as Team[]) || []}
                 initialMatches={(matches as Match[]) || []}
                 initialEvents={(allEvents as MatchEvent[]) || []}
                 initialGoals={(initialGoals as Goal[]) || []}
-                initialPlayers={(initialPlayers as any[]) || []}
+                initialPlayers={(initialPlayers as Player[]) || []}
             />
         </div>
     );

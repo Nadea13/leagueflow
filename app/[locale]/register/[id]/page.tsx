@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
+import Image from "next/image";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { RegistrationForm } from "@/components/registrations/registration-form";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, MapPin, Trophy, AlertCircle, CheckCircle2, Users } from "lucide-react";
+import { Calendar, MapPin, AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { Separator } from "@/components/ui/separator";
 import { getMyTeams } from "@/actions/manager/team";
@@ -42,7 +43,6 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
     }
 
     const isRegistrationOpen = tournament.is_registration_open;
-    const isPro = tournament.is_pro; // Assuming we might want to show a pro badge or styling
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden pt-16">
@@ -73,7 +73,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                     <h1 className="text-3xl font-bold tracking-tight mb-2">{tournament.name}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                         <Badge variant="outline" className="capitalize">{tournament.format?.replace(/_/g, " ") || "Tournament"}</Badge>
-                        <Badge variant={tournament.status === 'active' ? 'default' : 'secondary'} className="capitalize">{t_common(tournament.status as any)}</Badge>
+                        <Badge variant={tournament.status === 'active' ? 'default' : 'secondary'} className="capitalize">{t_common(tournament.status as Parameters<typeof t_common>[0])}</Badge>
                         {tournament.start_date && (
                             <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
@@ -162,7 +162,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                                                     <div key={team.id} className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-none bg-muted flex items-center justify-center overflow-hidden border">
                                                             {team.logo_url ? (
-                                                                <img src={team.logo_url} alt={team.name} className="w-full h-full object-cover" />
+                                                                <Image src={team.logo_url} alt={team.name} width={40} height={40} className="w-full h-full object-cover" unoptimized />
                                                             ) : (
                                                                 <Users className="w-5 h-5 text-muted-foreground" />
                                                             )}

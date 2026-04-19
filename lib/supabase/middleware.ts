@@ -15,7 +15,7 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) =>
+                    cookiesToSet.forEach(({ name, value, options: _options }) =>
                         request.cookies.set(name, value)
                     )
                     supabaseResponse = NextResponse.next({
@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
 
     const {
         data: { user },
-        error,
+        error: _error,
     } = await supabase.auth.getUser()
 
     // console.log("Middleware Auth Check:", user?.email || "No User", error?.message || "No Error");

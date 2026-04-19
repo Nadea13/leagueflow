@@ -8,7 +8,10 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
 
     // Sync isRunning with server state
     useEffect(() => {
-        setIsRunning(match.timer_status === 'playing');
+        const timer = setTimeout(() => {
+            setIsRunning(match.timer_status === 'playing');
+        }, 0);
+        return () => clearTimeout(timer);
     }, [match.timer_status]);
 
     const localStartRef = useRef<number | null>(null);

@@ -5,7 +5,7 @@ import { LanguageSelect } from "@/components/layout/language-select";
 import { ModeToggle } from "@/components/layout/mode-toggle";
 import { DeleteAccountButton } from "./delete-account-button";
 import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriangle } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+
 
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/dashboard/profile-form";

@@ -2,7 +2,7 @@
 
 import { Match } from "@/types/index";
 import { useState, useMemo } from "react";
-import { useTranslations } from "next-intl";
+
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ interface FixturesCalendarProps {
 }
 
 export function FixturesCalendar({ matches }: FixturesCalendarProps) {
-    const t = useTranslations("Common");
+
 
     // Find initial month from matches or use current
     const initialDate = useMemo(() => {

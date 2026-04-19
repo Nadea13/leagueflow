@@ -1,6 +1,6 @@
 "use client"
 
-import { ActionResponse, Plan, ManagerPlan, OrganizerPlan } from "@/types"
+import {  Plan, ManagerPlan, OrganizerPlan } from "@/types"
 import { deletePlan } from "@/actions/admin/plans"
 import { useTranslations } from "next-intl"
 import { useState } from "react"

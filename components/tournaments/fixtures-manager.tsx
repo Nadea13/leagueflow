@@ -7,7 +7,7 @@ import { MatchCard } from "@/components/tournaments/match-card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { deleteMatch, advanceStage } from "@/actions/organizer/tournaments/general";
+import { advanceStage } from "@/actions/organizer/tournaments/general";
 import {
     Select,
     SelectContent,
@@ -32,27 +32,21 @@ interface FixturesManagerProps {
     teams: Team[];
     matches: Match[];
     tournamentId: string;
-    goals?: any[]; // Using any[] or Goal[] if imported
     format?: string;
     isPro?: boolean;
 }
 
-export function FixturesManager({ matches, teams, tournamentId, format, goals = [], isPro = false }: FixturesManagerProps) {
+export function FixturesManager({ matches, teams, tournamentId, isPro = false }: FixturesManagerProps) {
     const t = useTranslations("Tournament");
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
     const tBracket = useTranslations("Bracket");
     const [isEditMode, setIsEditMode] = useState(false);
-    const [filterRound, setFilterRound] = useState<string>("all");
     const [filterStage, setFilterStage] = useState<string>("all");
     const [isAdvancing, setIsAdvancing] = useState(false);
     const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
 
-    // Calculate Max Group Round
-    const maxGroupRound = matches.reduce((max, m) => {
-        if (m.stage === 'group' && (m.round || 0) > max) return m.round || 0;
-        return max;
-    }, 0);
+    // ... (removed maxGroupRound as unused)
 
     // Filter Logic
     const filteredMatches = matches.filter(match => {
@@ -72,21 +66,9 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
         return match.stage === filterStage;
     });
 
-    // Group matches by round
-    const matchesByRound = (filteredMatches || []).reduce((acc: Record<number, Match[]>, match: Match) => {
-        const round = match.round;
-        if (!acc[round]) {
-            acc[round] = [];
-        }
-        acc[round].push(match);
-        return acc;
-    }, {});
 
-    const handleDelete = async (matchId: string) => {
-        if (confirm(tFixtures("confirm_delete_match"))) {
-            await deleteMatch(matchId, tournamentId);
-        }
-    };
+
+    // ... (removed handleDelete as unused)
 
     const handleAdvance = async () => {
         setAdvanceDialogOpen(false);
@@ -193,8 +175,7 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
 
                         return sortedKeys.map((key) => {
                             const stageMatches = groups[key];
-                            const firstMatch = stageMatches[0];
-                            const stage = firstMatch.stage;
+                            const stage = stageMatches[0].stage;
                             
                             let headerText = "";
                             if (key === 'group_stage') {
@@ -231,7 +212,6 @@ export function FixturesManager({ matches, teams, tournamentId, format, goals = 
                                                     <MatchCard
                                                         match={match}
                                                         tournamentId={tournamentId}
-                                                        goals={goals.filter((g: any) => g.match_id === match.id)}
                                                         isEditMode={isEditMode}
                                                         teams={teams}
                                                         isPro={isPro}

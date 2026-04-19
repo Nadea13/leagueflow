@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CookieConsent, COOKIE_CONSENT_KEY } from "./types";
 import { CookieSettingsModal } from "./settings-modal";
-import { X } from "lucide-react";
+
 
 export function CookieBanner() {
     const t = useTranslations("CookieConsent");
@@ -17,7 +17,8 @@ export function CookieBanner() {
         // Check if cookie exists
         const consent = document.cookie.split('; ').find(row => row.startsWith(COOKIE_CONSENT_KEY + '='));
         if (!consent) {
-            setShowBanner(true);
+            const timer = setTimeout(() => setShowBanner(true), 0);
+            return () => clearTimeout(timer);
         }
     }, []);
 

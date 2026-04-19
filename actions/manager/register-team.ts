@@ -12,15 +12,15 @@ const registrationSchema = z.object({
     teamName: z.string().min(2, "Team name must be at least 2 characters"),
     contactName: z.string().min(2, "Contact name must be at least 2 characters"),
     contactPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-    logoFile: z.any().optional().nullable(),
+    logoFile: z.unknown().optional().nullable(),
     logoUrl: z.string().optional().nullable(),
     existingTeamId: z.string().uuid().optional().nullable(),
     description: z.string().optional().nullable(),
-    slipFile: z.any().optional().nullable(),
+    slipFile: z.unknown().optional().nullable(),
 });
 
 // Mock Slip Verification Function
-async function mockVerifySlip(file: File, expectedAmount: number, expectedReceiver: string | null) {
+async function mockVerifySlip(_file: File, expectedAmount: number, expectedReceiver: string | null) {
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -65,7 +65,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
     };
 
     console.log("[registerTeam] Initiating registration for tournament:", rawData.tournamentId);
-    console.log("[registerTeam] Raw data keys present:", Object.keys(rawData).filter(k => (rawData as any)[k]));
+    console.log("[registerTeam] Raw data keys present:", Object.keys(rawData).filter(k => (rawData as Record<string, unknown>)[k]));
 
     const validation = registrationSchema.safeParse(rawData);
     if (!validation.success) {
@@ -159,7 +159,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 return { success: false, error: "Slip verification failed: Invalid slip" };
             }
 
-            const { transRef: vTransRef, amount, receiverAccount } = verificationResult.data;
+            const { transRef: vTransRef, amount, receiverAccount: _receiverAccount } = verificationResult.data;
             transRef = vTransRef;
 
             // Check 2: Amount
@@ -268,7 +268,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
 
         // 7. Insert Registration (Using Admin Client to bypass RLS)
         console.log("[registerTeam] Inserting registration record...");
-        const { data: regData, error: insertError } = await adminSupabase
+        const { error: insertError } = await adminSupabase
             .from("registrations")
             .insert({
                 tournament_id: tournamentId,

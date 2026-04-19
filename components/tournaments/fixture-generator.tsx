@@ -21,7 +21,7 @@ export function FixtureGenerator({
   const t = useTranslations("Fixtures")
   const [isLoading, setIsLoading] = useState(false)
 
-  const isKnockout = format === 'knockout' || format === 'group_knockout';
+
 
   const getButtonText = () => {
     if (isLoading) return t("generating");

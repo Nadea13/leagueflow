@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatDate } from "@/lib/date";
 import { useLocale } from "next-intl";
+import { Profile } from "@/types";
 import { Search, Shield, User, MoreHorizontal, Check } from "lucide-react";
 import { updateUserRole } from "@/app/[locale]/admin/actions";
 import { toast } from "sonner";
@@ -29,12 +30,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface AdminUsersTableProps {
-    initialUsers: any[];
+    initialUsers: Profile[];
 }
 
 export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
     const t = useTranslations("Admin");
-    const tCommon = useTranslations("Common");
+
     const locale = useLocale();
     const [searchTerm, setSearchTerm] = useState("");
     const [page, setPage] = useState(1);

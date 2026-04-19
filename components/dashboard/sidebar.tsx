@@ -5,7 +5,7 @@ import { Link, usePathname, useRouter } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
-import { Badge } from "@/components/ui/badge"
+
 import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
 import { Button } from "@/components/ui/button"
 import { LayoutGrid, Users as UsersIcon, Trophy, CheckCircle2, Loader2 } from "lucide-react"
@@ -25,13 +25,15 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
 
     // Persist mode in localStorage
     useEffect(() => {
-        const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team'
-        if (savedMode === 'organizer' && !isOrganizer) {
-            setMode('team')
-            localStorage.setItem('dashboard-mode', 'team')
-        } else if (savedMode) {
-            setMode(savedMode)
-        }
+        const timer = setTimeout(() => {
+            const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team'
+            if (savedMode === 'organizer' && !isOrganizer) {
+                setMode('team')
+                localStorage.setItem('dashboard-mode', 'team')
+            } else if (savedMode) {
+                setMode(savedMode)
+            }
+        }, 0);
 
         // Sync with DashboardHeader
         const handleStorageChange = (e: StorageEvent) => {
@@ -40,7 +42,10 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
             }
         }
         window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('storage', handleStorageChange);
+        }
     }, [isOrganizer])
 
     const handleModeChange = (newMode: 'organizer' | 'team') => {

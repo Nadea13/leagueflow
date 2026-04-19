@@ -51,7 +51,7 @@ export async function recordPayment(data: {
 
     if (!user) return { success: false, error: "User not authenticated" };
 
-    const insertData: any = {
+    const insertData: Record<string, unknown> = {
         user_id: user.id,
         amount: data.amount,
         status: data.status,
@@ -98,7 +98,7 @@ export async function recordPayment(data: {
     return { success: true };
 }
 
-export async function updateProfilePaymentStatus(data: {
+export async function updateProfilePaymentStatus(_data: {
     payment_status: string;
     payment_id?: string;
     payment_method?: string;

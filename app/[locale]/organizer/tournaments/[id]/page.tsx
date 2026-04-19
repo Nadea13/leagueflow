@@ -28,9 +28,10 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         getUserRole(id)
     ]);
 
-    const tournament = tournamentResult.data ? {
-        ...tournamentResult.data,
-        plan: (tournamentResult.data as any).payments?.some((p: any) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
+    const tournamentData = tournamentResult.data;
+    const tournament = tournamentData ? {
+        ...tournamentData,
+        plan: (tournamentData as { payments?: { plan: string; status: string }[] }).payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
     } : null;
     const tournamentError = tournamentResult.error;
 
@@ -55,7 +56,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const matches = matchesResult.data || [];
 
     // Fetch goals for Top Scorers (only if matches exist)
-    let tournamentGoals: any[] = [];
+    let tournamentGoals: Goal[] = [];
     if (matches && matches.length > 0) {
         const matchIds = matches.map(m => m.id);
         const { data: goalsData } = await supabase
@@ -70,7 +71,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
 
     // Calculate Pro Status
     const isGlobalPro = userPlan === 'monthly' || userPlan === 'yearly';
-    const isTournamentPro = (tournament as any).payments?.some((p: any) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament'));
+    const isTournamentPro = (tournament as unknown as { payments?: { plan: string; status: string }[] }).payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament'));
     const isSharedWithMe = !isOwner && userRole !== null;
 
     const isPro = !!(isGlobalPro || isTournamentPro || isSharedWithMe);

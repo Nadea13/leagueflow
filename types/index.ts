@@ -120,7 +120,7 @@ export interface MatchEvent {
     player_id?: string | null;
     event_type: EventType;
     minute: number;
-    extra_info?: any; // JSONB
+    extra_info?: Record<string, unknown>; // JSONB
     created_at: string;
     // Join
     player_name?: string; // For display convenience if joined
@@ -160,7 +160,16 @@ export interface TournamentMember {
     created_at: string;
 }
 
-export type ActionResponse<T = any> = {
+export interface Profile {
+    id: string;
+    email: string | null;
+    full_name: string | null;
+    role: string | null;
+    avatar_url?: string | null;
+    created_at?: string;
+}
+
+export type ActionResponse<T = unknown> = {
     success: boolean;
     message?: string;
     error?: string;
@@ -173,7 +182,7 @@ export interface AuditLog {
     action: string;
     target_type: string;
     target_id: string;
-    details: any;
+    details: Record<string, unknown>;
     ip_address?: string | null;
     created_at: string;
     // Join

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
 import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
-import { History, ListCheck, Receipt } from "lucide-react";
+import { History, Receipt } from "lucide-react";
 
 interface BillingHistoryProps {
     history?: PaymentRecord[];

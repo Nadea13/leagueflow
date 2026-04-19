@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Loader2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Filter, Trophy } from "lucide-react";
-import { startOfDay, addDays, subDays, addMonths, subMonths, format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
+import { Loader2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
+import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,12 +11,15 @@ import { MatchCard } from "./match-card";
 import { getPublicMatches } from "@/actions/public/public-matches";
 import { formatDate } from "@/lib/date";
 import { Link } from "@/i18n/routing";
+import { Match, Tournament } from "@/types";
+
+type PublicMatch = Match & { tournaments: Tournament };
 
 export function PublicMatchListHome() {
     const t = useTranslations("Home");
-    const tPublic = useTranslations("PublicView");
+
     const locale = useLocale();
-    const [matches, setMatches] = useState<any[]>([]);
+    const [matches, setMatches] = useState<PublicMatch[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const [selectedDate, setSelectedDate] = useState<string | null>(() => {
@@ -27,7 +30,7 @@ export function PublicMatchListHome() {
     // Extract all unique tournaments from matches
     const allTournaments = useMemo(() => {
         const unique = new Map();
-        matches.forEach((m: any) => {
+        matches.forEach((m) => {
             if (m.tournaments && !unique.has(m.tournament_id)) {
                 unique.set(m.tournament_id, {
                     id: m.tournament_id,
@@ -50,8 +53,8 @@ export function PublicMatchListHome() {
             try {
                 const data = await getPublicMatches();
                 setMatches(data || []);
-            } catch (error) {
-                console.error("Failed to fetch matches:", error);
+            } catch (_error) {
+                console.error("Failed to fetch matches:", _error);
             } finally {
                 setIsLoading(false);
             }
@@ -95,18 +98,9 @@ export function PublicMatchListHome() {
         return days;
     }, [viewDate]);
 
-    const changeMonth = (offset: number) => {
-        setViewDate(addDays(startOfMonth(viewDate), offset * 32)); // rough jump to next/prev month
-    };
 
-    // Generate date range (Today +/- 7 days)
-    const dateRange = useMemo(() => {
-        const today = startOfDay(new Date());
-        return Array.from({ length: 15 }, (_, i) => {
-            const date = addDays(subDays(today, 7), i);
-            return format(date, 'yyyy-MM-dd');
-        });
-    }, []);
+
+
 
     // Set of dates that have matches for the dot indicator
     const datesWithMatches = useMemo(() => {
@@ -123,7 +117,7 @@ export function PublicMatchListHome() {
     }, [matches, selectedDate]);
 
     // Group matches by date and tournament
-    const groupedMatches = filteredMatches.reduce((acc: any, match: any) => {
+    const groupedMatches = filteredMatches.reduce((acc: Record<string, Record<string, PublicMatch[]>>, match) => {
         const date = match.match_date || "TBD";
         const tournamentName = match.tournaments?.name || "Tournament";
         if (!acc[date]) acc[date] = {};
@@ -293,7 +287,7 @@ export function PublicMatchListHome() {
                                     </div>
 
                                     <div className="space-y-12 pl-4 sm:pl-8 border-l border-border/10">
-                                        {Object.entries(groupedMatches[date]).map(([tournamentName, tournamentMatches]: [string, any]) => (
+                                        {Object.entries(groupedMatches[date]).map(([tournamentName, tournamentMatches]) => (
                                             <div key={tournamentName} className="space-y-6">
                                                 <div className="flex items-center gap-3 group/tour">
                                                     <div className="h-8 w-1 bg-secondary/20 group-hover/tour:bg-secondary transition-all" />
@@ -306,7 +300,7 @@ export function PublicMatchListHome() {
                                                     <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent ml-4" />
                                                 </div>
                                                 <div className="grid grid-cols-1 gap-4">
-                                                    {tournamentMatches.map((match: any) => (
+                                                    {tournamentMatches.map((match) => (
                                                         <MatchCard 
                                                             key={match.id} 
                                                             match={match} 

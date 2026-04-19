@@ -9,7 +9,6 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -45,7 +44,8 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
     // Close dialog on success
     useEffect(() => {
         if (state.success && open) {
-            setOpen(false);
+            const timer = setTimeout(() => setOpen(false), 0);
+            return () => clearTimeout(timer);
         }
     }, [state.success, open]);
 

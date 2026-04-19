@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/routing"
 import { useTheme } from "next-themes"
-import { Laptop, Moon, Sun, LogOut, User, CreditCard } from "lucide-react"
+import { Laptop, Moon, Sun, LogOut, User } from "lucide-react"
 import {
     Avatar,
     AvatarFallback,

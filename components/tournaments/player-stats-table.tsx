@@ -1,6 +1,7 @@
 "use client";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { PlayerStat } from "@/lib/player-stats";
 import { AlertTriangle, Shield } from "lucide-react";
@@ -53,7 +54,7 @@ export function PlayerStatsTable({ stats }: PlayerStatsTableProps) {
                             <TableCell className="px-0">
                                 <div className="flex items-center gap-1">
                                     {stat.teamLogoUrl ? (
-                                        <img src={stat.teamLogoUrl} alt="" className="w-4 h-4 object-contain" />
+                                        <Image src={stat.teamLogoUrl} alt="" width={16} height={16} className="w-4 h-4 object-contain" unoptimized />
                                     ) : (
                                         <div className="w-4 h-4 bg-muted rounded-none flex items-center justify-center text-[8px] font-bold">
                                             {stat.teamName?.charAt(0)}

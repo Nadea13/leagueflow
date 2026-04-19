@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { Plus, Upload } from "lucide-react";
 import { createTeam } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,6 @@ const initialState: ActionResponse = {
     success: false,
     error: undefined,
 };
-
-interface TournamentOption {
-    id: string;
-    name: string;
-}
 
 export function CreateTeamDialog() {
     const t = useTranslations("Team");
@@ -117,10 +113,13 @@ export function CreateTeamDialog() {
                             <div className="relative group">
                                 <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border group-hover:border-secondary transition-colors overflow-hidden bg-muted/30">
                                     {previewUrl ? (
-                                        <img
+                                        <Image
                                             src={previewUrl}
                                             alt={tCommon("preview")}
+                                            width={80}
+                                            height={80}
                                             className="h-full w-full object-cover p-1"
+                                            unoptimized
                                         />
                                     ) : (
                                         <Upload className="h-8 w-8 text-muted-foreground/30 group-hover:text-secondary transition-colors" />
