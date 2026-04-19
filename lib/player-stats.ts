@@ -33,7 +33,7 @@ const DEFAULT_RULES: TournamentRules = {
  */
 export function calculatePlayerStats(
     events: MatchEvent[],
-    players: { id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[],
+    players: { id: string; name: string; team_id?: string | null; teamName?: string; teamLogoUrl?: string | null }[],
     rules?: TournamentRules | null
 ): PlayerStat[] {
     const r = rules || DEFAULT_RULES;
@@ -44,7 +44,7 @@ export function calculatePlayerStats(
         statsMap.set(player.id, {
             playerId: player.id,
             playerName: player.name,
-            teamId: player.team_id,
+            teamId: player.team_id || '',
             teamName: player.teamName,
             teamLogoUrl: player.teamLogoUrl,
             matchesPlayed: 0,
@@ -136,7 +136,7 @@ export function calculatePlayerStats(
  */
 export function getBannedPlayers(
     events: MatchEvent[],
-    players: { id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[],
+    players: { id: string; name: string; team_id?: string | null; teamName?: string; teamLogoUrl?: string | null }[],
     rules?: TournamentRules | null
 ): PlayerStat[] {
     const stats = calculatePlayerStats(events, players, rules);

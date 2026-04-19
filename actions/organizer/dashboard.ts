@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { ActionResponse } from "@/types/index";
+import { ActionResponse, TournamentStatus, SportType } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { ensureProfileExists } from "@/lib/profile";
 import { initTournamentStructure } from "@/lib/fixture-utils";
@@ -106,7 +106,7 @@ export async function getDashboardTournaments(query?: string) {
     let ownedQuery = supabase
         .from("tournaments")
         .select(`
-            id, name, format, description, status, created_at, user_id, start_date, end_date, number_of_pitches, max_teams,
+            id, name, format, sport, description, status, is_registration_open, created_at, user_id, start_date, end_date, number_of_pitches, max_teams,
             tournament_teams(count),
             payments(plan, status)
         `)
@@ -129,7 +129,9 @@ export async function getDashboardTournaments(query?: string) {
                 id,
                 name,
                 format,
+                sport,
                 status,
+                is_registration_open,
                 created_at,
                 user_id,
                 start_date,
@@ -146,6 +148,12 @@ export async function getDashboardTournaments(query?: string) {
     interface TournamentWithCount extends Record<string, unknown> {
         id: string;
         name: string;
+        status: TournamentStatus;
+        format: string;
+        sport: SportType;
+        description: string | null;
+        is_registration_open: boolean;
+        plan?: 'free' | 'tournament' | 'monthly' | 'yearly';
         user_id: string;
         created_at: string;
         tournament_teams: { count: number }[];
@@ -170,13 +178,15 @@ export async function getDashboardTournaments(query?: string) {
                 ...tournament,
                 role: 'owner',
                 current_teams: tournament.tournament_teams?.[0]?.count || 0,
-                plan: tournament.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
+                sport: tournament.sport as SportType,
+                plan: (tournament.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free') as 'tournament' | 'free'
             };
         }),
         ...sharedTournaments.map(t => ({
             ...t,
             current_teams: t.tournament_teams?.[0]?.count || 0,
-            plan: t.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
+            sport: t.sport as SportType,
+            plan: (t.payments?.some((p: { status: string; plan: string }) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free') as 'tournament' | 'free'
         }))
     ].sort((a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

@@ -141,7 +141,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
             }
         } catch (_error) {
             toast.error("An unexpected error occurred");
-            console.error(error);
+            console.error(_error);
         } finally {
             setIsSubmitting(false);
         }

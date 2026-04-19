@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/routing";
@@ -19,6 +20,10 @@ export default async function SettingsPage() {
 
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        redirect("/login");
+    }
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">

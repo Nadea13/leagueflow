@@ -19,7 +19,7 @@ export async function getUserTeams() {
     // Construct the query
     const query = supabase
         .from("teams")
-        .select("id, name, logo_url, description, created_at, tournament:tournaments(id, name)");
+        .select("id, name, logo_url, description, created_at, user_id, sport, tournament:tournaments(id, name)");
     
     // OR condition for user_id OR tournament_id in owned list
     const conditions = [`user_id.eq.${user.id}`];
@@ -31,16 +31,10 @@ export async function getUserTeams() {
         .or(conditions.join(','))
         .order("created_at", { ascending: false });
 
-    if (error) {
-        console.error("Error fetching teams:", error);
-        // Fallback: try without description if column might be missing
-        const { data: fallbackTeams } = await supabase
-            .from("teams")
-            .select("id, name, logo_url, created_at, tournament:tournaments(id, name)")
-            .or(conditions.join(','))
-            .order("created_at", { ascending: false });
-        return fallbackTeams || [];
-    }
+    const formattedTeams = (teams || []).map(team => ({
+        ...team,
+        tournament: Array.isArray(team.tournament) ? team.tournament[0] : (team.tournament || null)
+    }));
 
-    return teams || [];
+    return formattedTeams;
 }

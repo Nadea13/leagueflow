@@ -122,7 +122,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
         formData.append("position", newPosition);
         formData.append("birthDate", newBirthDate);
 
-        const result = await addPlayer(teamId, null, formData);
+        const result = await addPlayer(teamId, { success: false }, formData);
 
         setIsSaving(false);
         if (result.success) {

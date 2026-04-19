@@ -1183,7 +1183,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: ReturnTyp
 }
 
 // Helper to calc standings
-function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Match[]) {
+function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Match[]): Array<Record<string, unknown> & { id: string; points: number; gd: number; gf: number }> {
     return groupTeams.map(t => {
         const teamMatches = allMatches.filter(m =>
             (m.home_team_id === t.id || m.away_team_id === t.id)
@@ -1209,8 +1209,8 @@ function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Ma
             }
         });
 
-        return { ...t, points, gd, gf };
-    }).sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        return { ...t, id: t.id as string, points, gd, gf };
+    }).sort((a, b) => {
         if (b.points !== a.points) return b.points - a.points;
 
         // Head-to-Head (H2H) Points

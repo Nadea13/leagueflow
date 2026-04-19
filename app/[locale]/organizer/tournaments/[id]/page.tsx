@@ -31,8 +31,8 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const tournamentData = tournamentResult.data;
     const tournament = tournamentData ? {
         ...tournamentData,
-        plan: (tournamentData as { payments?: { plan: string; status: string }[] }).payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free'
-    } : null;
+        plan: ((tournamentData as { payments?: { plan: string; status: string }[] }).payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free') as 'free' | 'tournament' | 'monthly' | 'yearly'
+    } as any : null;
     const tournamentError = tournamentResult.error;
 
     if (tournamentError || !tournament) {
@@ -80,7 +80,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         <TournamentContent
             tournament={tournament}
             initialMatches={matches as Match[] || []}
-            initialTeams={teams as Team[] || []}
+            initialTeams={teams as any[] || []}
             initialGoals={tournamentGoals as Goal[]}
             userPlan={userPlan}
             initialIsPro={isPro}

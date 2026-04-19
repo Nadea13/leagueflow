@@ -83,7 +83,7 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
                 <div className="space-y-4 md:space-y-6">
                     <div className="space-y-2 md:space-y-3">
                         <PricingCards
-                            plans={plans}
+                            plans={plans as any[]}
                             onSelectPlan={handleSelectPlan}
                             currentPlan={selectedPlanId}
                             activePlan={userPlan}

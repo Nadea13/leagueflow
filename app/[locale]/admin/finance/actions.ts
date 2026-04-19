@@ -29,7 +29,7 @@ export async function getAllPayments() {
     const userMap = new Map(users?.map((u: { id: string; email?: string | null; full_name?: string | null }) => [u.id, u]) || []);
 
     return payments.map((p: Record<string, unknown>) => {
-        const user = userMap.get(p.user_id);
+        const user = userMap.get(p.user_id as string);
         return {
             ...p,
             user: user ? { email: user.email, full_name: user.full_name } : undefined

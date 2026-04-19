@@ -85,8 +85,6 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
                                             <MatchCard
                                                 match={match}
                                                 tournamentId={tournamentId}
-                                                goals={[]}
-                                                initialEvents={matchEvents}
                                                 isPublic={true}
                                             />
                                         </div>

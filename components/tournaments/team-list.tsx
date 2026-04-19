@@ -72,7 +72,7 @@ export function TeamList({ teams, tournamentId, isPro = false, showGroupSelector
                     tournamentId={tournamentId}
                     isPro={isPro}
                     showGroupSelector={showGroupSelector}
-                    isReadOnly={team.team?.user_id && team.team.user_id !== organizerId}
+                    isReadOnly={!!(team.team?.user_id && team.team.user_id !== organizerId)}
                 />
             ))}
         </div>

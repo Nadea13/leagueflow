@@ -306,7 +306,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
     };
 
     const lastAddTimeEvent = [...events].reverse().find(e => e.event_type === 'add_time' && !e.id.startsWith("temp-"));
-    const addedTime = lastAddTimeEvent?.extra_info?.added_minutes || null;
+    const addedTime = (lastAddTimeEvent?.extra_info as any)?.added_minutes || null;
 
     // --- Team Action Grid Component ---
     const TeamActionGrid = ({ teamId, name, type }: { teamId: string, name: string, type: 'home' | 'away' }) => {
@@ -525,9 +525,6 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                         match={match}
                         homeScore={homeScore}
                         awayScore={awayScore}
-                        isPro={isPro}
-                        readOnly={readOnly}
-                        onAction={handleQuickAction}
                         onTeamClick={(teamId) => {
                             setSelectedTeamId(teamId);
                             setEventDialogOpen(true);
@@ -556,7 +553,6 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                             }))
                         ].sort((a: MatchEvent, b: MatchEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
                         match={match}
-                        players={allPlayers}
                         readOnly={readOnly}
                         onDelete={deleteEvent}
                     />

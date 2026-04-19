@@ -56,7 +56,7 @@ export async function verifySlip(formData: FormData): Promise<ActionResponse<{ a
         console.error("Slip verification error:", error);
         return {
             success: false,
-            error: error?.message || "Failed to verify slip"
+            error: error instanceof Error ? error.message : "Failed to verify slip"
         };
     }
 }
