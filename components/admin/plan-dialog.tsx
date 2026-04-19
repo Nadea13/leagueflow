@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { ActionResponse, Plan, ManagerPlan, OrganizerPlan } from "@/types"
+import {  Plan, ManagerPlan, OrganizerPlan } from "@/types"
 import { upsertPlan } from "@/actions/admin/plans"
 import { Button } from "@/components/ui/button"
 import {
@@ -137,7 +137,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
     async function onSubmit(values: PlanFormValues) {
         setIsLoading(true)
         try {
-            const planData: any = {
+            const planData: Record<string, unknown> = {
                 id: initialPlan?.id,
                 name: values.name,
                 description: values.description?.map(d => d.value) || [],
@@ -175,7 +175,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                     variant: "destructive",
                 })
             }
-        } catch (error) {
+        } catch (_error) {
             toast({
                 title: tCommon("error"),
                 description: tCommon("unexpected_error"),

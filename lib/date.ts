@@ -23,8 +23,6 @@ export function formatDate(
     // If Thai locale, use Intl.DateTimeFormat for Buddhist Year support
     // date-fns doesn't natively support Buddhist calendar types easily without plugins
     if (locale === 'th') {
-        const options: Intl.DateTimeFormatOptions = {};
-
         // Map date-fns format tokens to Intl options (Approximate mapping)
         // This is a basic mapping for common patterns used in the app
         // If it looks like a standard date format we want to localize to BE

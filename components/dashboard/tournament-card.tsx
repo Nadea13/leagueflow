@@ -1,14 +1,14 @@
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, Trophy } from "lucide-react";
+
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
+import { Tournament } from "@/types";
 
 interface TournamentCardProps {
-    tournament: any;
+    tournament: Tournament & { current_teams?: number };
     userPlan?: string;
 }
 
@@ -42,7 +42,7 @@ export function TournamentCard({ tournament, userPlan }: TournamentCardProps) {
                 <CardHeader className="relative z-10">
                     <div className="flex flex-col gap-2">
                         <div className={cn("text-[9px] font-bold uppercase tracking-widest opacity-80", statusColor.split(' ').filter(c => c.startsWith('text-')).join(' '))}>
-                            {tournament.status ? tSettings(tournament.status as any) : tSettings('draft')}
+                            {tournament.status ? tSettings(tournament.status) : tSettings('draft')}
                         </div>
                         <CardTitle className="text-lg font-black leading-none tracking-tight uppercase italic group-hover:text-secondary transition-colors truncate">
                             {tournament.name}

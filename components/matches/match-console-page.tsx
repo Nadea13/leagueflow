@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getPlayers } from "@/app/[locale]/organizer/tournaments/[id]/player-actions";
@@ -9,25 +9,19 @@ import { getPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/pe
 import { createClient } from "@/lib/supabase/client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
     Timer,
     ArrowLeft,
     Target,
-    RotateCcw,
-    History,
-    Settings,
-    User,
     Undo,
     Ban,
     Activity,
     Square,
     Repeat,
-    PlusCircle,
     Flag,
-    ArrowRight,
     Trophy,
     Stethoscope,
     Shield
@@ -53,7 +47,6 @@ import { EVENT_TYPES } from "./console/constants";
 interface MatchConsolePageProps {
     match: Match;
     tournamentId: string;
-    goals: any[];
     isPro?: boolean;
     readOnly?: boolean;
     initialEvents?: MatchEvent[];
@@ -96,7 +89,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
 
     useEffect(() => {
         const loadPlayers = async () => {
-            const fetchTeam = async (id: string, setter: any) => {
+            const fetchTeam = async (id: string, setter: (players: Player[]) => void) => {
                 const res = await getPlayers(id);
                 if (res.success && res.data) setter(res.data);
             };
@@ -106,24 +99,24 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
         loadPlayers();
     }, [match.home_team_id, match.away_team_id]);
 
-    const fetchShots = async () => {
+    const fetchShots = useCallback(async () => {
         const res = await getPenaltyShootout(match.id);
         if (res.success && res.data) {
             setPenaltyShots(res.data);
         }
-    };
+    }, [match.id]);
 
     useEffect(() => {
         fetchShots();
-    }, [match.id]);
+    }, [fetchShots]);
 
     useEffect(() => {
         const supabase = createClient();
         const channel = supabase
             .channel(`match-${match.id}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
-                const newData = payload.new as any;
-                setMatch(prev => ({ ...prev, ...newData }));
+                const _newData = payload.new as Match;
+                setMatch(prev => ({ ...prev, ..._newData }));
             })
             .subscribe();
 
@@ -166,13 +159,13 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match"} (Match: ${match.id})`);
 
             toast({ title: t("match_started") || "Match Started" });
-        } catch (error: any) {
+        } catch (error) {
             console.error("Start match error:", error);
             setIsRunning(backupIsRunning);
             setMatch(backupMatch);
             toast({
                 title: "Error starting match",
-                description: `${error.message} (Match: ${match.id.substring(0, 8)})`,
+                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
                 variant: "destructive"
             });
         }
@@ -206,13 +199,13 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match balance"} (Match: ${match.id})`);
 
             toast({ title: t("match_paused") || "Match Paused" });
-        } catch (error: any) {
+        } catch (error) {
             console.error("Pause match error:", error);
             setIsRunning(backupIsRunning);
             setMatch(backupMatch);
             toast({
                 title: "Error pausing match",
-                description: `${error.message} (Match: ${match.id.substring(0, 8)})`,
+                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
                 variant: "destructive"
             });
         }
@@ -240,13 +233,13 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match resume"} (Match: ${match.id})`);
 
             toast({ title: t("match_resumed") || "Match Resumed" });
-        } catch (error: any) {
+        } catch (error) {
             console.error("Resume match error:", error);
             setIsRunning(backupIsRunning);
             setMatch(backupMatch);
             toast({
                 title: "Error resuming match",
-                description: `${error.message} (Match: ${match.id.substring(0, 8)})`,
+                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
                 variant: "destructive"
             });
         }
@@ -255,7 +248,6 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
     const handleEndMatch = async () => {
         if (!confirm(t("confirm_end"))) return;
         const currentMinute = Math.floor(time / 60) + 1;
-        const teamId = match.home_team_id || match.away_team_id;
         await addEvent(null, 'full_time', currentMinute, null, {}, "Full Time");
         setIsRunning(false);
         await updateMatch(match.id, { status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute }, tournamentId);
@@ -298,7 +290,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
         setEventDialogOpen(true);
     };
 
-    const handleSaveEvent = async (data: { minute: number; playerId: string; extraInfo: any; autoRed?: boolean }) => {
+    const handleSaveEvent = async (data: { minute: number; playerId: string; extraInfo: Record<string, unknown>; autoRed?: boolean }) => {
         if (!selectedTeamId || !selectedEventType) return;
         const player = allPlayers.find(p => p.id === data.playerId);
         const playerName = player ? player.name : "Unknown";
@@ -562,7 +554,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, isPro = fa
                             ...penaltyShots.map((ps: PenaltyShot) => ({
                                 id: ps.id, match_id: ps.match_id, team_id: ps.team_id, player_id: ps.player_id, event_type: 'penalty_shot' as const, minute: 120, extra_info: { scored: ps.scored, round: ps.round }, created_at: ps.created_at, player_name: ps.player?.name
                             }))
-                        ].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
+                        ].sort((a: MatchEvent, b: MatchEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
                         match={match}
                         players={allPlayers}
                         readOnly={readOnly}

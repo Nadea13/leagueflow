@@ -1,18 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
-import { Button } from "@/components/ui/button";
-import { Users, Info } from "lucide-react";
+
+import { Users } from "lucide-react";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 
 export default async function MyTeamsPage() {
     const supabase = await createClient();
     const t = await getTranslations("Team");
-    const tCommon = await getTranslations("Common");
-    const tNav = await getTranslations("Nav");
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return null;
@@ -80,7 +78,7 @@ export default async function MyTeamsPage() {
                                                 </CardTitle>
                                                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                                                     {team.participations && team.participations.length > 0 ? (
-                                                        team.participations.slice(0, 2).map((p: any, i: number) => (
+                                                        team.participations.slice(0, 2).map((p: { tournament: { name: string } }, i: number) => (
                                                             <Badge key={i} variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase italic rounded-none shrink-0">
                                                                 {p.tournament.name}
                                                             </Badge>

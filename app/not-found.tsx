@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import "./globals.css";
-import { ThemeProvider } from "@/components/layout/theme-provider";
+
 import { Button } from "@/components/ui/button";
 
 // Render the default Next.js 404 page when a route
@@ -17,7 +17,7 @@ export default function NotFound() {
         <div className="space-y-2">
           <h2 className="text-4xl font-black uppercase italic tracking-tighter text-foreground">Page Not Found</h2>
           <p className="text-muted-foreground font-medium max-w-md mx-auto">
-            The page you're looking for doesn't exist or has been moved.
+            The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
         </div>
         <Button asChild variant="secondary" className="h-12 px-8 font-black uppercase italic tracking-widest shadow-[0_0_20px_rgba(0,196,154,0.2)]">

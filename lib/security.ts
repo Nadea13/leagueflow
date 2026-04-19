@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { ActionResponse } from "@/types";
+import { User } from "@supabase/supabase-js";
+
 
 /**
  * Validates that the current user has administrative or editor access to a tournament.
@@ -12,7 +13,7 @@ export async function validateTournamentAccess(
 ): Promise<{
     success: boolean;
     error?: string;
-    user?: any;
+    user?: User;
     role?: 'admin' | 'editor' | 'viewer';
 }> {
     const supabase = await createClient();

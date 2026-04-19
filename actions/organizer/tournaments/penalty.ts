@@ -58,7 +58,7 @@ export async function getPenaltyShootout(matchId: string): Promise<ActionRespons
         return { success: false, error: error.message };
     }
 
-    const shots = (data || []).map((shot: any) => ({
+    const shots = (data || []).map((shot: Record<string, unknown> & { players?: { name: string } | null }) => ({
         ...shot,
         player: shot.players ? { name: shot.players.name } : null,
     }));

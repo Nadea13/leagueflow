@@ -1,3 +1,4 @@
+import React from "react";
 import {
     Goal as IconGoal,
     RotateCw,
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 import { EventType } from "@/types";
 
-export const EVENT_TYPES: { type: EventType; label: string; icon: any; color: string }[] = [
+export const EVENT_TYPES: { type: EventType; label: string; icon: React.ElementType; color: string }[] = [
     { type: 'goal', label: 'goal', icon: IconGoal, color: 'text-green-600' },
     { type: 'yellow_card', label: 'yellow_card', icon: Square, color: 'text-yellow-500' },
     { type: 'red_card', label: 'red_card', icon: Square, color: 'text-red-600' },

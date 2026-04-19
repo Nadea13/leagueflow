@@ -16,15 +16,14 @@ interface MatchEventDialogProps {
     eventType: EventType | null;
     initialMinute: number;
     players: Player[]; // Players of the selected team
-    allPlayers?: Player[]; // All players (for assist usually, though custom requires team specific)
     existingEvents: MatchEvent[]; // To check for previous cards
-    onSave: (data: { minute: number; playerId: string; extraInfo: any; autoRed?: boolean }) => void;
+    onSave: (data: { minute: number; playerId: string; extraInfo: Record<string, unknown>; autoRed?: boolean }) => void;
 }
 
 export function MatchEventDialog({
     open,
     onOpenChange,
-    teamId,
+    teamId: _teamId,
     eventType,
     initialMinute,
     players,
@@ -41,16 +40,19 @@ export function MatchEventDialog({
 
     useEffect(() => {
         if (open) {
-            setMinute(initialMinute.toString());
-            setPlayerId("");
-            setAssistPlayerId("");
-            setSubInPlayerId("");
+            const timer = setTimeout(() => {
+                setMinute(initialMinute.toString());
+                setPlayerId("");
+                setAssistPlayerId("");
+                setSubInPlayerId("");
+            }, 0);
+            return () => clearTimeout(timer);
         }
     }, [open, initialMinute, eventType]);
 
     const handleSave = () => {
         const min = parseInt(minute) || 0;
-        const extraInfo: any = {};
+        const extraInfo: Record<string, unknown> = {};
         let autoRed = false;
 
         // Card Ban Logic: Check if player already has a yellow card

@@ -1,6 +1,6 @@
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
-import { Trophy, Users, Search } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface EmptyStateProps {
@@ -9,7 +9,7 @@ interface EmptyStateProps {
     tournaments?: { id: string; name: string }[];
 }
 
-export function EmptyState({ isPro, type = 'tournament', tournaments = [] }: EmptyStateProps) {
+export function EmptyState({ isPro, type = 'tournament', tournaments: _tournaments = [] }: EmptyStateProps) {
     const t = useTranslations("Common");
     const tTeam = useTranslations("Team");
 

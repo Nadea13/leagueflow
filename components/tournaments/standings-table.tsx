@@ -7,6 +7,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 import { Standing } from "@/types/index";
 import { List } from "lucide-react";
@@ -52,7 +53,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                                 <div className="flex items-center gap-4">
                                     <div className="w-8 h-8 bg-muted/10 border border-border/10 p-1 rounded-none shrink-0 relative overflow-hidden flex items-center justify-center">
                                         {team.team?.logo_url ? (
-                                            <img src={team.team.logo_url} alt={team.team.name} className="w-full h-full object-contain relative z-10" />
+                                            <Image src={team.team.logo_url} alt={team.team.name} width={32} height={32} className="w-full h-full object-contain relative z-10" unoptimized />
                                         ) : (
                                             <span className="text-[10px] font-black uppercase text-muted-foreground/40">
                                                 {team.team?.name.charAt(0)}

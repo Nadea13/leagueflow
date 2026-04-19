@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+
 import {
     Dialog,
     DialogContent,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { PricingCards } from "./pricing-cards";
 import { Plan } from "@/types";
-import { CreditCard } from "lucide-react";
+
 
 interface PricingFooterProps {
     managerPlans: Plan[];

@@ -1,13 +1,14 @@
-import { notFound } from "next/navigation";
+
 import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/components/matches/match-console-page";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
+import { MatchEvent } from "@/types";
 
 export default async function AdminMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const { locale, id, matchId } = await props.params;
+    const { locale: _locale, id, matchId } = await props.params;
     const resolvedParams = await props.searchParams;
     const fromTab = typeof resolvedParams.from === 'string' ? resolvedParams.from : 'fixtures';
 
@@ -56,7 +57,7 @@ export default async function AdminMatchConsole(props: {
     // Transformer for events
     const formattedEvents = (events || []).map(e => ({
         ...e,
-        player_name: (e.player as any)?.name || (Array.isArray(e.player) ? (e.player[0] as any)?.name : null),
+        player_name: (e.player as { name: string } | null)?.name || (Array.isArray(e.player) ? (e.player[0] as { name: string } | null)?.name : undefined),
         player: undefined
     }));
 
@@ -67,7 +68,7 @@ export default async function AdminMatchConsole(props: {
             goals={[]}
             isPro={!!isPro}
             readOnly={false}
-            initialEvents={formattedEvents as any}
+            initialEvents={formattedEvents as MatchEvent[]}
             backUrl={`/organizer/tournaments/${id}?tab=${fromTab}`}
         />
     );

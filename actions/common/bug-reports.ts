@@ -4,6 +4,15 @@ import { createClient } from "@/lib/supabase/server"
 import { ActionResponse } from "@/types"
 import { requireAdminAuth } from "@/lib/admin-auth"
 
+export interface BugReport {
+    id: string;
+    user_id: string | null;
+    user_email: string | null;
+    message: string;
+    status: 'unread' | 'read' | 'resolved';
+    created_at: string;
+}
+
 export async function submitBugReport(message: string): Promise<ActionResponse<null>> {
     try {
         const supabase = await createClient()
@@ -33,7 +42,7 @@ export async function submitBugReport(message: string): Promise<ActionResponse<n
             success: true,
             message: "Report submitted successfully. Thank you for your feedback!"
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Unexpected error submitting bug report:", e)
         return {
             success: false,
@@ -42,7 +51,7 @@ export async function submitBugReport(message: string): Promise<ActionResponse<n
     }
 }
 
-export async function getBugReports(): Promise<ActionResponse<any[]>> {
+export async function getBugReports(): Promise<ActionResponse<BugReport[]>> {
     const auth = await requireAdminAuth();
     if (!auth.authorized) return { success: false, error: auth.error };
 
@@ -67,7 +76,7 @@ export async function getBugReports(): Promise<ActionResponse<any[]>> {
             success: true,
             data: data || []
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Unexpected error fetching bug reports:", e)
         return {
             success: false,
@@ -99,7 +108,7 @@ export async function markBugReportAsRead(id: string): Promise<ActionResponse<nu
         return {
             success: true
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Unexpected error updating bug report:", e)
         return {
             success: false,
@@ -131,7 +140,7 @@ export async function resolveBugReport(id: string): Promise<ActionResponse<null>
         return {
             success: true
         }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Unexpected error resolving bug report:", e)
         return {
             success: false,

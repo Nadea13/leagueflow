@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
-import { deleteFileFromUrl } from "@/lib/supabase/storage";
+
 
 /**
  * Authorization helper to check if a user is authorized to manage a team.
@@ -141,7 +141,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
 /**
  * Get all global teams owned by the current user.
  */
-export async function getMyTeams(): Promise<ActionResponse<any[]>> {
+export async function getMyTeams(): Promise<ActionResponse<unknown[]>> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -175,17 +175,19 @@ export async function getTeam(teamId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    let { data, error } = await supabase
+    const { data: teamData, error } = await supabase
         .from("teams")
         .select(`*`)
         .eq("id", teamId)
         .single();
 
+    let data = teamData;
+
     let isParticipation = false;
 
     // Fallback: Check if this is a tournament_team (participation)
     if (error || !data) {
-        const { data: participation, error: pError } = await supabase
+        const { data: participation } = await supabase
             .from("tournament_teams")
             .select(`*, tournament:tournaments(*)`)
             .eq("id", teamId)
@@ -202,7 +204,7 @@ export async function getTeam(teamId: string) {
     if (!data) return null;
 
     // Fetch Tournament Participations (only for global teams)
-    let participations = [];
+    let participations: unknown[] = [];
     if (!isParticipation) {
         const { data: pData } = await supabase
             .from("tournament_teams")
@@ -234,7 +236,7 @@ export async function getTeam(teamId: string) {
 /**
  * Update global team information.
  */
-export async function updateTeamGlobal(teamId: string, formData: FormData, tournamentId: string): Promise<ActionResponse> {
+export async function updateTeamGlobal(teamId: string, formData: FormData, _tournamentId: string): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -308,7 +310,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, tourn
 /**
  * Delete a global team.
  */
-export async function deleteTeamGlobal(teamId: string, tournamentId: string): Promise<ActionResponse> {
+export async function deleteTeamGlobal(teamId: string, _tournamentId: string): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -429,7 +431,7 @@ export async function addPlayer(
         return { success: false, error: "Team record not found." };
     }
 
-    const insertData: any = {
+    const insertData = {
         name,
         number: number ? parseInt(number) : null,
         position: position || null,

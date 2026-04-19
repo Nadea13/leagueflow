@@ -1,8 +1,8 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import {  createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { ActionResponse } from "@/types";
+import { ActionResponse, AuditLog, Tournament } from "@/types";
 import { logActivity } from "@/lib/audit";
 
 import { requireAdminAuth } from "@/lib/admin-auth";
@@ -95,7 +95,7 @@ export async function getGlobalPlayers() {
     return players;
 }
 
-export async function createGlobalPlayer(name: string, data: any = {}): Promise<ActionResponse> {
+export async function createGlobalPlayer(name: string, data: Record<string, unknown> = {}): Promise<ActionResponse> {
     const auth = await requireAdminAuth();
     if (!auth.authorized) return { success: false, error: auth.error };
 
@@ -135,8 +135,8 @@ export async function getAuditLogsWithUsers() {
 
     const users = await getUsers();
 
-    return logs.map((log: any) => {
-        const user = users?.find((u: any) => u.id === log.user_id);
+    return logs.map((log: AuditLog) => {
+        const user = users?.find((u: { id: string; email?: string | null }) => u.id === log.user_id);
         return {
             ...log,
             user: user ? { email: user.email } : undefined
@@ -194,10 +194,10 @@ export async function getAllTournaments() {
         .from("profiles")
         .select("id, email, full_name");
 
-    const userMap = new Map(users?.map((u: any) => [u.id, u]) || []);
+    const userMap = new Map(users?.map((u: { id: string; email?: string | null; full_name?: string | null }) => [u.id, u]) || []);
 
     // Map profile to owner_email for convenience
-    return tournaments.map((t: any) => {
+    return tournaments.map((t: Tournament) => {
         const user = userMap.get(t.user_id);
         return {
             ...t,

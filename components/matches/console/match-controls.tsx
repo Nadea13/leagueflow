@@ -1,7 +1,7 @@
-import { Play, Pause, Square, History, Clock, Plus } from "lucide-react";
+import { Play, Pause, Square, Clock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
+
 
 interface MatchControlsProps {
     status: string;

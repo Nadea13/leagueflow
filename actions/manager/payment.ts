@@ -15,7 +15,7 @@ export interface PromptPayChargeData {
     account_name: string;
 }
 
-export async function createPromptPayCharge(amount: number, metadata: any): Promise<ActionResponse<PromptPayChargeData>> {
+export async function createPromptPayCharge(amount: number, _metadata: Record<string, unknown>): Promise<ActionResponse<PromptPayChargeData>> {
     try {
         const promptPayId = process.env.NEXT_PUBLIC_PROMPTPAY_ID || "0800000000";
         const accountName = process.env.NEXT_PUBLIC_PROMPTPAY_NAME || "LeagueFlow";
@@ -38,7 +38,7 @@ export async function createPromptPayCharge(amount: number, metadata: any): Prom
                 account_name: accountName
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("QR Generation Failed:", error);
         return {
             success: false,

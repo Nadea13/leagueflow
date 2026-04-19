@@ -1,15 +1,13 @@
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
-import { Trophy, Zap, List, Share2, ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PricingCards } from "@/components/pricing/pricing-cards";
+
 import { PricingFooter } from "@/components/pricing/pricing-footer";
 import { getPlans } from "@/actions/admin/plans";
-import { PublicTournamentList } from "@/components/tournaments/public-tournament-list";
+
 import { PublicMatchListHome } from "@/components/tournaments/public-match-list-home";
 import { createClient } from "@/lib/supabase/server";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Trophy as TrophyIcon } from "lucide-react";
 
 export default async function Home() {
   const [
@@ -26,7 +24,6 @@ export default async function Home() {
   const t = await getTranslations('Home');
   const tLanding = await getTranslations('Landing');
   const tPricing = await getTranslations('Pricing');
-  const tBilling = await getTranslations('Billing');
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

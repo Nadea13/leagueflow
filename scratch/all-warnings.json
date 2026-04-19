@@ -1,0 +1,632 @@
+[
+  {
+    "file": "D:\\Work\\leagueflow\\actions\\organizer\\tournaments\\general.ts",
+    "line": 46,
+    "column": 5,
+    "rule": "@typescript-eslint/no-unused-expressions",
+    "message": "Expected an assignment or function call and instead saw an expression."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\actions\\organizer\\tournaments\\penalty.ts",
+    "line": 61,
+    "column": 43,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\actions\\organizer\\tournaments\\player.ts",
+    "line": 37,
+    "column": 16,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\[id]\\matches\\[matchId]\\page.tsx",
+    "line": 93,
+    "column": 47,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\layout.tsx",
+    "line": 77,
+    "column": 43,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\billing\\actions.ts",
+    "line": 54,
+    "column": 23,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\billing\\slip-actions.ts",
+    "line": 55,
+    "column": 21,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\[id]\\actions.ts",
+    "line": 73,
+    "column": 45,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'pError' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\[id]\\actions.ts",
+    "line": 211,
+    "column": 23,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\actions.ts",
+    "line": 79,
+    "column": 60,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\actions.ts",
+    "line": 105,
+    "column": 76,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tournamentId' is defined but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\actions.ts",
+    "line": 174,
+    "column": 56,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tournamentId' is defined but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\page.tsx",
+    "line": 14,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tCommon' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\page.tsx",
+    "line": 15,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tNav' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\my-teams\\page.tsx",
+    "line": 83,
+    "column": 97,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\tournaments\\page.tsx",
+    "line": 16,
+    "column": 48,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\manager\\tournaments\\page.tsx",
+    "line": 17,
+    "column": 51,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\organizer\\billing\\actions.ts",
+    "line": 54,
+    "column": 23,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\organizer\\billing\\slip-actions.ts",
+    "line": 55,
+    "column": 21,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\organizer\\tournaments\\[id]\\actions.ts",
+    "line": 45,
+    "column": 5,
+    "rule": "@typescript-eslint/no-unused-expressions",
+    "message": "Expected an assignment or function call and instead saw an expression."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\organizer\\tournaments\\[id]\\player-actions.ts",
+    "line": 37,
+    "column": 16,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\page.tsx",
+    "line": 11,
+    "column": 10,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'TabsTrigger' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\page.tsx",
+    "line": 28,
+    "column": 9,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tBilling' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\register\\[id]\\page.tsx",
+    "line": 46,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'isPro' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\view\\[id]\\page.tsx",
+    "line": 91,
+    "column": 25,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\view\\[id]\\page.tsx",
+    "line": 127,
+    "column": 41,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\app\\[locale]\\view\\[id]\\page.tsx",
+    "line": 131,
+    "column": 52,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\audit-logs-table.tsx",
+    "line": 33,
+    "column": 16,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\audit-logs-table.tsx",
+    "line": 320,
+    "column": 65,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\payments-table.tsx",
+    "line": 69,
+    "column": 25,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\payments-table.tsx",
+    "line": 87,
+    "column": 25,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\payments-table.tsx",
+    "line": 357,
+    "column": 46,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'e' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\plan-dialog.tsx",
+    "line": 140,
+    "column": 29,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\plan-dialog.tsx",
+    "line": 178,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'error' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\players-table.tsx",
+    "line": 32,
+    "column": 21,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\players-table.tsx",
+    "line": 39,
+    "column": 21,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'setPlayers' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\tournaments-table.tsx",
+    "line": 36,
+    "column": 25,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\users-table.tsx",
+    "line": 32,
+    "column": 19,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\admin\\users-table.tsx",
+    "line": 37,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tCommon' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\auth\\email-login-form.tsx",
+    "line": 32,
+    "column": 28,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'data' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\auth\\email-login-form.tsx",
+    "line": 49,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'err' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\auth\\forgot-password-form.tsx",
+    "line": 40,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'err' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\auth\\reset-password-form.tsx",
+    "line": 47,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'err' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\auth\\sign-up-form.tsx",
+    "line": 55,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'err' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\billing\\payment-section.tsx",
+    "line": 76,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'error' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\billing\\payment-section.tsx",
+    "line": 122,
+    "column": 40,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\billing\\payment-section.tsx",
+    "line": 228,
+    "column": 78,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\dashboard\\empty-state.tsx",
+    "line": 12,
+    "column": 58,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tournaments' is assigned a value but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\dashboard\\profile-form.tsx",
+    "line": 7,
+    "column": 10,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'Card' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\dashboard\\profile-form.tsx",
+    "line": 7,
+    "column": 16,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'CardTitle' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\dashboard\\profile-form.tsx",
+    "line": 13,
+    "column": 47,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\constants.ts",
+    "line": 19,
+    "column": 67,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\event-timeline.tsx",
+    "line": 3,
+    "column": 17,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'Player' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\match-event-dialog.tsx",
+    "line": 21,
+    "column": 67,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\match-event-dialog.tsx",
+    "line": 27,
+    "column": 5,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'teamId' is defined but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\match-event-dialog.tsx",
+    "line": 56,
+    "column": 26,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\match-timer.tsx",
+    "line": 12,
+    "column": 36,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'readOnly' is assigned a value but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\penalty-shootout-dialog.tsx",
+    "line": 32,
+    "column": 5,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'onComplete' is defined but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\scoreboard.tsx",
+    "line": 1,
+    "column": 17,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'EventType' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\console\\scoreboard.tsx",
+    "line": 20,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'t' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\match-console-page.tsx",
+    "line": 12,
+    "column": 10,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'Card' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\matches\\match-console-page.tsx",
+    "line": 251,
+    "column": 15,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'teamId' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\registrations\\promptpay-qr.tsx",
+    "line": 9,
+    "column": 10,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'CreditCard' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\registrations\\registration-form.tsx",
+    "line": 30,
+    "column": 47,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\fixture-generator.tsx",
+    "line": 24,
+    "column": 9,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'isKnockout' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\fixtures-calendar.tsx",
+    "line": 16,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'t' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\group-standings.tsx",
+    "line": 14,
+    "column": 50,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'isPublic' is assigned a value but never used. Allowed unused args must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\match-card.tsx",
+    "line": 9,
+    "column": 17,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'Goal' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\match-card.tsx",
+    "line": 9,
+    "column": 29,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'MatchEvent' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\match-card.tsx",
+    "line": 85,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'isTie' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\match-card.tsx",
+    "line": 114,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'error' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\match-dialog.tsx",
+    "line": 99,
+    "column": 18,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'error' is defined but never used. Allowed unused caught errors must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-match-list-home.tsx",
+    "line": 20,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'tPublic' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-match-list-home.tsx",
+    "line": 101,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'changeMonth' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-match-list-home.tsx",
+    "line": 106,
+    "column": 11,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'dateRange' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-tournament-card.tsx",
+    "line": 11,
+    "column": 17,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-tournament-card.tsx",
+    "line": 48,
+    "column": 69,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-tournament-list.tsx",
+    "line": 13,
+    "column": 52,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\public-tournament-view.tsx",
+    "line": 51,
+    "column": 19,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'setGoals' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\registration-settings-card.tsx",
+    "line": 23,
+    "column": 17,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\registration-settings-card.tsx",
+    "line": 32,
+    "column": 23,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'startTransition' is assigned a value but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\roster-dialog.tsx",
+    "line": 21,
+    "column": 10,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'Table' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\roster-dialog.tsx",
+    "line": 21,
+    "column": 17,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'TableRow' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\components\\tournaments\\top-scorers-table.tsx",
+    "line": 14,
+    "column": 10,
+    "rule": "@typescript-eslint/no-unused-vars",
+    "message": "'useLocale' is defined but never used. Allowed unused vars must match /^_/u."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\hooks\\use-match-events.ts",
+    "line": 29,
+    "column": 45,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\hooks\\use-match-events.ts",
+    "line": 111,
+    "column": 20,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\i18n\\request.ts",
+    "line": 9,
+    "column": 56,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\lib\\fixture-utils.ts",
+    "line": 76,
+    "column": 75,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\lib\\fixture-utils.ts",
+    "line": 229,
+    "column": 69,
+    "rule": "@typescript-eslint/no-explicit-any",
+    "message": "Unexpected any. Specify a different type."
+  },
+  {
+    "file": "D:\\Work\\leagueflow\\scratch\\full-report.js",
+    "line": 1,
+    "column": 12,
+    "rule": "@typescript-eslint/no-require-imports",
+    "message": "A `require()` style import is forbidden."
+  }
+]

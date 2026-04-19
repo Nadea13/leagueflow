@@ -72,7 +72,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         .in("match_id", matchIds)
         .order("minute", { ascending: true });
 
-    const allEvents = allEventsResult?.map((event: any) => ({
+    const allEvents = allEventsResult?.map((event: MatchEvent & { players?: { name: string } | null }) => ({
         ...event,
         player_name: event.players?.name || "Unknown"
     })) || [];
@@ -88,7 +88,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
     }
 
     // 6. Fetch Players for Stats (Admin Client)
-    let initialPlayers: any[] = [];
+    let initialPlayers: { id: string; name: string; team_id: string }[] = [];
     if (teams && teams.length > 0) {
         const { data: playersData } = await adminSupa
             .from("players")

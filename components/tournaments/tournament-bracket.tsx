@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
+import Image from "next/image";
 import { Match } from "@/types/index";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { ExportToImageButton } from "@/components/ui/export-to-image-button";
+
 import { Link } from "@/i18n/routing";
 
 interface TournamentBracketProps {
@@ -20,6 +21,18 @@ const MATCH_GAP = 12;    // Gap between cards in a pair
 
 export function TournamentBracket({ matches, isPublic = false }: TournamentBracketProps) {
     const t = useTranslations("Bracket");
+
+    // Measure actual card height for precise slot sizing
+    const [cardHeight, setCardHeight] = useState(MATCH_SLOT_H);
+    const measureRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (measureRef.current) {
+            const h = measureRef.current.getBoundingClientRect().height;
+            if (h > 0) setCardHeight(h);
+        }
+    }, []);
+
     const knockoutMatches = matches.filter(
         (m) => m.stage !== "league" && m.stage !== "group"
     );
@@ -53,17 +66,6 @@ export function TournamentBracket({ matches, isPublic = false }: TournamentBrack
     }, {} as Record<string, Match[]>);
 
     const activeStages = allStages.filter(stage => matchesByStage[stage] && matchesByStage[stage].length > 0);
-
-    // Measure actual card height for precise slot sizing
-    const [cardHeight, setCardHeight] = useState(MATCH_SLOT_H);
-    const measureRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (measureRef.current) {
-            const h = measureRef.current.getBoundingClientRect().height;
-            if (h > 0) setCardHeight(h);
-        }
-    }, []);
 
     // The base slot height = card height + gap
     const baseSlotH = cardHeight + MATCH_GAP;
@@ -341,7 +343,7 @@ function TeamRow({
             <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
                 <div className="w-5 h-5 bg-muted/10 border border-border/10 p-0.5 rounded-none shrink-0 flex items-center justify-center overflow-hidden">
                     {logoUrl ? (
-                        <img src={logoUrl} className="w-full h-full object-contain" alt="" />
+                        <Image src={logoUrl} width={20} height={20} className="w-full h-full object-contain" alt="" unoptimized />
                     ) : (
                         <span className="text-[9px] font-black text-muted-foreground/30 capitalize">
                             {name?.charAt(0) || "?"}

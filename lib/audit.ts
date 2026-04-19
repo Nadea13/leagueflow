@@ -5,7 +5,7 @@ export async function logActivity(
     action: string,
     targetType: string,
     targetId: string,
-    details: any = null
+    details: Record<string, unknown> | null = null
 ) {
     try {
         const supabase = await createClient();
@@ -27,8 +27,8 @@ export async function logActivity(
             ip_address: ipAddress
         });
 
-    } catch (error) {
-        console.error("Failed to log activity:", error);
+    } catch (_error) {
+        console.error("Failed to log activity:", _error);
         // Don't throw, we don't want to break the app because logging failed
     }
 }

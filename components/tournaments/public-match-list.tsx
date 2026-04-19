@@ -1,12 +1,12 @@
 "use client";
 
 import { MatchCard } from "@/components/tournaments/match-card";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
+import { Match, MatchEvent } from "@/types";
 
 import { Calendar } from "lucide-react";
 
-export function PublicMatchList({ matches, tournamentId, events = [] }: { matches: any[]; tournamentId: string; events?: any[] }) {
+export function PublicMatchList({ matches, tournamentId, events = [] }: { matches: Match[]; tournamentId: string; events?: MatchEvent[] }) {
     const t = useTranslations("PublicView");
 
     if (!matches || matches.length === 0) {
@@ -25,7 +25,7 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
     }
 
     // Group by stage for knockouts, consolidate for group/league
-    const groups = matches.reduce((acc: any, match: any) => {
+    const groups = matches.reduce((acc: Record<string, Match[]>, match) => {
         const isKnockout = match.stage !== 'group' && match.stage !== 'league';
         const key = isKnockout ? match.stage : 'group_stage';
         if (!acc[key]) acc[key] = [];
@@ -78,8 +78,8 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
                                     if (a.match_time !== b.match_time) return (a.match_time || '') > (b.match_time || '') ? 1 : -1;
                                     return (a.venue || '').localeCompare(b.venue || '', undefined, { numeric: true });
                                 })
-                                .map((match: any) => {
-                                    const matchEvents = events.filter((e: any) => e.match_id === match.id);
+                                .map((match) => {
+                                    const matchEvents = events.filter((e) => e.match_id === match.id);
                                     return (
                                         <div key={match.id} className="relative group overflow-hidden">
                                             <MatchCard

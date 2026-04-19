@@ -1,4 +1,4 @@
-import { MatchEvent, Player, TournamentRules } from "@/types/index";
+import { MatchEvent, TournamentRules } from "@/types/index";
 
 export interface PlayerStat {
     playerId: string;

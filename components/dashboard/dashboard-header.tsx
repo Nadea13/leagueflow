@@ -8,9 +8,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { UserNav } from "@/components/dashboard/user-nav"
 import { useState, useEffect } from "react"
-import { getNavItems, adminNavItem } from "@/config/nav"
-import { Badge } from "@/components/ui/badge"
-import { Trophy, CheckCircle2, Loader2, LayoutGrid, Users as UsersIcon } from "lucide-react"
+import { getNavItems } from "@/config/nav"
+
+import { Trophy, CheckCircle2, Loader2 } from "lucide-react"
 import { registerAsOrganizer } from "@/actions/organizer/dashboard"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -37,17 +37,19 @@ export function DashboardHeader({ userEmail, role, isOrganizer: initialIsOrganiz
 
     // Sync mode from localStorage
     useEffect(() => {
-        if (forcedMode) {
-            setMode(forcedMode);
-            return;
-        }
-        const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team'
-        if (savedMode === 'organizer' && !isOrganizer) {
-            setMode('team')
-            localStorage.setItem('dashboard-mode', 'team')
-        } else if (savedMode) {
-            setMode(savedMode)
-        }
+        const timer = setTimeout(() => {
+            if (forcedMode) {
+                setMode(forcedMode);
+                return;
+            }
+            const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team'
+            if (savedMode === 'organizer' && !isOrganizer) {
+                setMode('team')
+                localStorage.setItem('dashboard-mode', 'team')
+            } else if (savedMode) {
+                setMode(savedMode)
+            }
+        }, 0);
 
         // Listen for storage changes to sync between Sidebar and Header
         const handleStorageChange = (e: StorageEvent) => {
@@ -56,7 +58,10 @@ export function DashboardHeader({ userEmail, role, isOrganizer: initialIsOrganiz
             }
         }
         window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('storage', handleStorageChange);
+        }
     }, [isOrganizer, forcedMode])
 
     const handleModeChange = (newMode: 'organizer' | 'team') => {

@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Trophy, Users, Calendar, Goal as GoalIcon, ArrowLeft, GitBranch, Award } from "lucide-react";
+import { Trophy, Users, Calendar, ArrowLeft, GitBranch, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { StandingsTable } from "@/components/tournaments/standings-table";
 import { PublicMatchList } from "@/components/tournaments/public-match-list";
 import { GroupStandings } from "@/components/tournaments/group-standings";
 import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { PrintButton } from "@/components/tournaments/print-button";
-import { Match, MatchEvent, Team, Goal } from "@/types";
+import { Match, MatchEvent, Team, Goal, Tournament, Player } from "@/types";
 import { calculateStandings } from "@/lib/standings";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -27,12 +27,12 @@ import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 
 interface PublicTournamentViewProps {
-    tournament: any;
+    tournament: Tournament;
     initialTeams: Team[];
     initialMatches: Match[];
     initialEvents: MatchEvent[];
     initialGoals: Goal[];
-    initialPlayers: any[];
+    initialPlayers: Player[];
 }
 
 export function PublicTournamentView({
@@ -48,7 +48,7 @@ export function PublicTournamentView({
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
     const [tournament, setTournament] = useState(initialTournament);
-    const [goals, setGoals] = useState<Goal[]>(initialGoals || []);
+    const goals = initialGoals || [];
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -126,8 +126,8 @@ export function PublicTournamentView({
                 table: 'match_events'
             }, (payload) => {
                 const matchIds = matches.map(m => m.id);
-                if (payload.new && !matchIds.includes((payload.new as any).match_id)) return;
-                if (payload.old && !matchIds.includes((payload.old as any).match_id)) return;
+                if (payload.new && !matchIds.includes((payload.new as MatchEvent).match_id)) return;
+                if (payload.old && !matchIds.includes((payload.old as MatchEvent).match_id)) return;
 
                 if (payload.eventType === 'INSERT') {
                     setEvents(prev => [payload.new as MatchEvent, ...prev]);

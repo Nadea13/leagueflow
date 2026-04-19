@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,7 +34,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
     const [registrationToReject, setRegistrationToReject] = useState<string | null>(null);
     const supabase = createClient();
 
-    const fetchRegistrations = async () => {
+    const fetchRegistrations = useCallback(async () => {
         setIsLoading(true);
         const { data, error } = await supabase
             .from("registrations")
@@ -46,11 +46,12 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
             setRegistrations(data as Registration[]);
         }
         setIsLoading(false);
-    };
+    }, [tournamentId, supabase]);
 
     useEffect(() => {
-        fetchRegistrations();
-    }, [tournamentId]);
+        const timer = setTimeout(() => fetchRegistrations(), 0);
+        return () => clearTimeout(timer);
+    }, [fetchRegistrations]);
 
     const handleApprove = async (id: string) => {
         setIsActing(id);

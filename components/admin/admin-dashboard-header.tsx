@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { UserNav } from "@/components/dashboard/user-nav"
 import { useState } from "react"
-import { LayoutDashboard, Users, Trophy, CreditCard, MessageSquareWarning, UserSearch } from "lucide-react"
+import { LayoutDashboard, Users, Trophy, CreditCard, UserSearch } from "lucide-react"
 
 interface AdminDashboardHeaderProps {
     userEmail?: string

@@ -52,7 +52,7 @@ export async function verifySlip(formData: FormData): Promise<ActionResponse<{ a
             }
         };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Slip verification error:", error);
         return {
             success: false,

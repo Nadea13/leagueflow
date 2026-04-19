@@ -19,7 +19,7 @@ export async function recordPayment(data: {
 
     if (!user) return { success: false, error: "User not authenticated" };
 
-    const insertData: any = {
+    const insertData: Record<string, unknown> = {
         user_id: user.id,
         amount: data.amount,
         status: 'pending', // FORCE status to pending for manager manual verification

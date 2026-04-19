@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Tournament } from "@/types";
 import { PublicTournamentCard } from "./public-tournament-card";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
 
 export function PublicTournamentList({ onlyActive = false, isManager = false }: { onlyActive?: boolean, isManager?: boolean }) {
     const t = useTranslations("Home");
     const [search, setSearch] = useState("");
-    const [tournaments, setTournaments] = useState<any[]>([]);
+    const [tournaments, setTournaments] = useState<Tournament[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -18,9 +19,9 @@ export function PublicTournamentList({ onlyActive = false, isManager = false }: 
             setIsLoading(true);
             try {
                 const data = await getPublicTournaments(search);
-                setTournaments(data || []);
-            } catch (error) {
-                console.error("Failed to fetch tournaments:", error);
+                setTournaments(data as unknown as Tournament[] || []);
+            } catch (_error) {
+                console.error("Failed to fetch tournaments:", _error);
             } finally {
                 setIsLoading(false);
             }

@@ -244,7 +244,7 @@ export async function getPendingInvites(): Promise<ActionResponse<Array<{
         return { success: false, error: error.message };
     }
 
-    const invites = (data || []).map((item: any) => ({
+    const invites = (data || []).map((item: { id: string; tournament_id: string; role: string; tournaments: { name: string } | null }) => ({
         id: item.id,
         tournament_id: item.tournament_id,
         tournament_name: item.tournaments?.name,

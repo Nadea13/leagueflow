@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
-import { deleteFileFromUrl } from "@/lib/supabase/storage";
+
 
 async function isAuthorizedOrganizer(tournamentId: string, userId: string) {
     const supabase = await createClient();
@@ -34,7 +34,7 @@ async function isAuthorizedOrganizer(tournamentId: string, userId: string) {
 
 export async function addPlayer(
     teamId: string,
-    prevState: any,
+    prevState: ActionResponse,
     formData: FormData
 ): Promise<ActionResponse> {
     const supabase = await createClient();

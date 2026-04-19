@@ -1,22 +1,21 @@
 'use client'
 
-import { Match, Player } from "@/types";
+import { Match, MatchEvent } from "@/types";
 import { EVENT_TYPES } from "./constants";
-import { Trash2, Clock, ArrowRight } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Trash2, Clock } from "lucide-react";
+// Removed unused Card, CardContent imports
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 interface EventTimelineProps {
-    events: any[];
+    events: MatchEvent[];
     match: Match;
-    players: Player[];
     readOnly?: boolean;
     onDelete?: (eventId: string) => void;
 }
 
-export function EventTimeline({ events, match, players, readOnly = false, onDelete }: EventTimelineProps) {
+export function EventTimeline({ events, match, readOnly = false, onDelete }: EventTimelineProps) {
     const t = useTranslations("Console");
 
     return (
@@ -67,7 +66,7 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                                                 "text-sm font-black italic tracking-tighter drop-shadow-sm transition-colors",
                                                 isHome ? "text-foreground/40 group-hover/item:text-secondary" : "text-foreground/40 group-hover/item:text-foreground"
                                             )}>
-                                                {event.minute}'
+                                                {event.minute}&apos;
                                             </span>
                                         </div>
                                     )}
@@ -93,7 +92,7 @@ export function EventTimeline({ events, match, players, readOnly = false, onDele
                                                         </span>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm font-black italic text-foreground/40">
-                                                                {event.minute}'
+                                                                {event.minute}&apos;
                                                             </span>
                                                             {event.extra_info?.added_minutes && (
                                                                 <span className="text-sm1 font-black italic text-foreground/40">

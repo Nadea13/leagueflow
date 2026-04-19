@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { PenaltyShot } from "@/types/index";
 import { getPenaltyShootout, addPenaltyShot, clearPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/penalty-actions";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function PenaltyShootoutDialog({
     homeTeamName,
     awayTeamName,
     trigger,
-    onComplete,
+    onComplete: _onComplete,
     onUpdate,
 }: PenaltyShootoutDialogProps) {
     const { toast } = useToast();
@@ -39,18 +39,21 @@ export function PenaltyShootoutDialog({
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    const fetchShots = async () => {
+    const fetchShots = useCallback(async () => {
         setIsLoading(true);
         const result = await getPenaltyShootout(matchId);
         if (result.success && result.data) {
             setShots(result.data);
         }
         setIsLoading(false);
-    };
+    }, [matchId]);
 
     useEffect(() => {
-        if (open) fetchShots();
-    }, [open, matchId]);
+        if (open) {
+            const timer = setTimeout(() => fetchShots(), 0);
+            return () => clearTimeout(timer);
+        }
+    }, [open, fetchShots]);
 
     const homeShots = shots.filter(s => s.team_id === homeTeamId);
     const awayShots = shots.filter(s => s.team_id === awayTeamId);

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ActionResponse, Match } from "@/types/index";
@@ -12,7 +13,7 @@ import { validateUploadedFile } from "@/lib/file-validation";
 
 export async function addTeam(
     tournamentId: string,
-    prevState: any,
+    prevState: unknown,
     formData: FormData
 ): Promise<ActionResponse> {
     const supabase = await createClient();
@@ -32,7 +33,7 @@ export async function addTeam(
     const user = access.user;
 
     // Check global plan
-    const { data: globalSubscription } = await supabase
+    const { data: _globalSubscription } = await supabase
         .from("payments")
         .select("id")
         .eq("user_id", user.id)
@@ -42,7 +43,6 @@ export async function addTeam(
         .limit(1)
         .single();
 
-    let isPro = !!globalSubscription;
 
     // Check Team Limit
     const { data: tourney } = await supabase
@@ -244,7 +244,7 @@ export async function deleteTeam(teamId: string, tournamentId: string): Promise<
 }
 
 // Helper to get last round
-async function getLastRound(tournamentId: string, supabase: any): Promise<number> {
+async function getLastRound(tournamentId: string, supabase: SupabaseClient): Promise<number> {
     const { data } = await supabase
         .from('matches')
         .select('round')
@@ -414,7 +414,7 @@ export async function updateMatchScore(
 
 export async function updateTournament(
     tournamentId: string,
-    prevState: any,
+    prevState: unknown,
     formData: FormData
 ): Promise<ActionResponse> {
     // Security Check
@@ -424,7 +424,7 @@ export async function updateTournament(
 
     const supabase = await createClient();
     const formType = formData.get("form_type") as string;
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     // 1. Determine Pro Status once
     let isPro = false;
@@ -708,7 +708,7 @@ export async function confirmPayment(
     const supabase = await createClient();
 
     // 1. Verify Payment Server-Side
-    let charge: any;
+    let charge: { status: string; metadata?: { tournament_id?: string } };
 
     if (paymentMethod === 'promptpay') {
         // For manual PromptPay, we trust the reference from the verified slip for now
@@ -816,7 +816,6 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
     // Logic: Find the first stage that is NOT fully finished AND has populated teams
     // OR, if we hit a stage that is placeholders (no teams), the *previous* stage is the current one (ready to advance).
 
-    let foundActiveOrFinished = false;
 
     for (const stage of stageOrder) {
         const stageMatches = matches.filter(m => m.stage === stage);
@@ -834,7 +833,6 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
 
         // Has teams. This is a real stage.
         currentStage = stage;
-        foundActiveOrFinished = true;
 
         if (!allFinished) {
             // We found a stage that is in progress. This is definitely the current stage.
@@ -1054,7 +1052,7 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
                     home_team_id: validWinners[i],
                     away_team_id: validWinners[i + 1],
                     round: startRound,
-                    stage: nextStage as any,
+                    stage: nextStage as Match['stage'],
                     status: 'scheduled',
                     is_manual: false,
                     home_score: null,
@@ -1146,7 +1144,7 @@ export async function deleteGoal(goalId: string, tournamentId: string): Promise<
 }
 
 // Helper to advance winner
-async function advanceWinner(match: Match, winnerId: string, supabase: any) {
+async function advanceWinner(match: Match, winnerId: string, supabase: ReturnType<typeof createClient> extends Promise<infer T> ? T : never) {
     if (match.match_index === null || match.match_index === undefined) return;
 
     // 1. Get all matches for current round to find relative position
@@ -1160,7 +1158,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: any) {
     if (!currentRoundMatches || currentRoundMatches.length === 0) return;
 
     // Find index of current match in the list
-    const indexInRound = currentRoundMatches.findIndex((m: any) => m.id === match.id);
+    const indexInRound = currentRoundMatches.findIndex((m: { id: string }) => m.id === match.id);
     if (indexInRound === -1) return;
 
     // 2. Determine target match position in next round
@@ -1185,7 +1183,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: any) {
 }
 
 // Helper to calc standings
-function getGroupStandings(groupTeams: any[], allMatches: any[]) {
+function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Match[]) {
     return groupTeams.map(t => {
         const teamMatches = allMatches.filter(m =>
             (m.home_team_id === t.id || m.away_team_id === t.id)
@@ -1212,7 +1210,7 @@ function getGroupStandings(groupTeams: any[], allMatches: any[]) {
         });
 
         return { ...t, points, gd, gf };
-    }).sort((a: any, b: any) => {
+    }).sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
         if (b.points !== a.points) return b.points - a.points;
 
         // Head-to-Head (H2H) Points

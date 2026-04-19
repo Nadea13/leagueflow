@@ -29,7 +29,7 @@ export function EmailLoginForm() {
         setError(null);
 
         try {
-            const { error, data } = await supabase.auth.signInWithPassword({
+            const { error, data: _data } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             });
@@ -46,7 +46,7 @@ export function EmailLoginForm() {
             // Redirect on success
             router.push(`/${locale}/dashboard`);
             router.refresh();
-        } catch (err) {
+        } catch (_err) {
             setError(t('invalid_credentials'));
         } finally {
             setIsLoading(false);

@@ -1,16 +1,15 @@
-import { Timer, Plus, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+// Removed unused Timer, RotateCcw imports
+
+
 
 interface MatchTimerProps {
     time: number;
     readOnly?: boolean;
     customText?: string | number | null;
-    onAddTime?: () => void;
     addedTime?: number | null;
 }
 
-export function MatchTimer({ time, readOnly = false, customText, onAddTime, addedTime }: MatchTimerProps) {
+export function MatchTimer({ time, readOnly: _readOnly = false, customText, addedTime }: MatchTimerProps) {
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;

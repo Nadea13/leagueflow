@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Trophy, Activity, CheckCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+
 import { PublicTournamentList } from "@/components/tournaments/public-tournament-list";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +13,8 @@ export default async function ManagerTournamentsPage() {
     // Fetch initial tournaments to get counts for stats
     const tournaments = await getPublicTournaments("");
     const totalCount = tournaments.length;
-    const activeCount = tournaments.filter((t: any) => t.status === "active").length;
-    const completedCount = tournaments.filter((t: any) => t.status === "completed").length;
+    const activeCount = tournaments.filter((t: { status: string }) => t.status === "active").length;
+    const completedCount = tournaments.filter((t: { status: string }) => t.status === "completed").length;
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">

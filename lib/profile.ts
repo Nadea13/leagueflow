@@ -4,7 +4,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
  * Ensures a profile exists in the public.profiles table for the given user.
  * This acts as a safety net if the database trigger fails or hasn't fired yet.
  */
-export async function ensureProfileExists(supabase: SupabaseClient, user: { id: string; email?: string; user_metadata?: any }) {
+export async function ensureProfileExists(supabase: SupabaseClient, user: { id: string; email?: string; user_metadata?: Record<string, unknown> }) {
     const { data: profile, error: fetchError } = await supabase
         .from("profiles")
         .select("id")

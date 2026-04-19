@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 export async function getPublicMatches() {
     const supabase = createAdminClient();
 
-    let dbQuery = supabase
+    const dbQuery = supabase
         .from("matches")
         .select(`
             *,

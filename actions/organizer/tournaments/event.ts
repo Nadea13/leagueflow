@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, MatchEvent } from "@/types";
-import { addGoal, deleteGoal, updateMatchScore } from "./general";
+import { addGoal, deleteGoal } from "./general";
 import { validateTournamentAccess } from "@/lib/security";
 
 export async function getMatchEvents(matchId: string): Promise<ActionResponse<MatchEvent[]>> {
@@ -26,7 +26,7 @@ export async function getMatchEvents(matchId: string): Promise<ActionResponse<Ma
         return { success: false, error: error.message };
     }
 
-    const events = (data || []).map((event: any) => ({
+    const events = (data || []).map((event: MatchEvent & { players?: { name: string } | null }) => ({
         ...event,
         player_name: event.players?.name || "Unknown"
     }));
@@ -40,7 +40,7 @@ export async function addMatchEvent(
     eventType: string,
     minute: number,
     playerId: string | null,
-    extraInfo: any = null,
+    extraInfo: Record<string, unknown> | null = null,
     tournamentId: string
 ): Promise<ActionResponse> {
     // Security Check
@@ -50,7 +50,7 @@ export async function addMatchEvent(
     const supabase = await createClient();
 
     let eventData = null;
-    let { data: initialData, error } = await supabase
+    const { data: initialData, error: initialError } = await supabase
         .from("match_events")
         .insert({
             match_id: matchId,
@@ -64,6 +64,7 @@ export async function addMatchEvent(
         .select()
         .single();
 
+    let error = initialError;
     eventData = initialData;
 
     // Database Healing & Admin Retry
@@ -129,7 +130,7 @@ export async function addMatchEvent(
         if (goalRes.success && goalRes.data) {
             await supabase
                 .from("match_events")
-                .update({ extra_info: { ...extraInfo, linked_goal_id: (goalRes.data as any).id } })
+                .update({ extra_info: { ...extraInfo, linked_goal_id: (goalRes.data as { id: string }).id } })
                 .eq("id", eventData.id);
         }
     }

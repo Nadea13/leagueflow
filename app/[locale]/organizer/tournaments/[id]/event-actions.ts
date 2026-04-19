@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, MatchEvent } from "@/types";
-import { addGoal, deleteGoal, updateMatchScore } from "./actions";
+import { addGoal, deleteGoal } from "./actions";
 import { validateTournamentAccess } from "@/lib/security";
 
 export async function getMatchEvents(matchId: string): Promise<ActionResponse<MatchEvent[]>> {
@@ -30,7 +30,7 @@ export async function getMatchEvents(matchId: string): Promise<ActionResponse<Ma
     }
 
     // Map player details to flat structure if needed, or keep as is
-    const events = data.map((event: any) => ({
+    const events = data.map((event: MatchEvent & { players?: { name: string } | null }) => ({
         ...event,
         player_name: event.players?.name || "Unknown"
     }));
@@ -44,7 +44,7 @@ export async function addMatchEvent(
     eventType: string,
     minute: number,
     playerId: string | null,
-    extraInfo: any = null,
+    extraInfo: Record<string, unknown> | null = null,
     tournamentId: string
 ): Promise<ActionResponse> {
     // Security Check
@@ -58,9 +58,9 @@ export async function addMatchEvent(
     // Some matches might have been generated with 'team_id' (global) instead of 'tournament_team_id' (participation).
     // match_events.team_id REFERENCES tournament_teams(id).
     
-    let effectiveTeamId = teamId;
+    const effectiveTeamId = teamId;
     let eventData = null;
-    let { data: initialData, error } = await supabase
+    const { data: initialData, error: initialError } = await supabase
         .from("match_events")
         .insert({
             match_id: matchId,
@@ -73,6 +73,8 @@ export async function addMatchEvent(
         })
         .select()
         .single();
+    
+    let error = initialError;
 
     eventData = initialData;
 

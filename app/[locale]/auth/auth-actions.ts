@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logActivity } from "@/lib/audit";
 import { ActionResponse } from "@/types";
 
-export async function logAuthEvent(action: 'LOGIN' | 'REGISTER', userId: string, details: any = {}) {
+export async function logAuthEvent(action: 'LOGIN' | 'REGISTER', userId: string, details: Record<string, unknown> = {}) {
     await logActivity(action, 'user', userId, details);
 }
 

@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
-import { deleteFileFromUrl } from "@/lib/supabase/storage";
+
 
 async function isAuthorizedForTeam(teamId: string, userId: string) {
     const supabase = await createClient();
@@ -58,17 +58,19 @@ export async function getTeam(teamId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    let { data, error } = await supabase
+    const { data: initialData, error } = await supabase
         .from("teams")
         .select(`*`)
         .eq("id", teamId)
         .single();
 
+    let data = initialData;
+
     let isParticipation = false;
 
     // Fallback: Check if this is a tournament_team (participation)
     if (error || !data) {
-        const { data: participation, error: pError } = await supabase
+        const { data: participation, error: _pError } = await supabase
             .from("tournament_teams")
             .select(`*, tournament:tournaments(*)`)
             .eq("id", teamId)
@@ -206,7 +208,7 @@ export async function addPlayer(
         return { success: false, error: "Team record not found. Please refresh and try again." };
     }
 
-    const insertData: any = {
+    const insertData: Record<string, unknown> = {
         name,
         number: number ? parseInt(number) : null,
         position: position || null,

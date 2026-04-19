@@ -6,15 +6,15 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import Image from "next/image";
 import { Goal, Team } from "@/types/index";
 import { useTranslations } from "next-intl";
 import { Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLocale } from "next-intl";
+
 
 export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[] }) {
     const t = useTranslations("TopScorers");
-    const locale = useLocale();
 
     // Aggregate goals by (team_id, player_name)
     const scorerStats: Record<string, { player_name: string; team_id: string; goals: number }> = {};
@@ -96,7 +96,7 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                                             <div className="flex items-center gap-3">
                                                 <div className="w-7 h-7 bg-muted/10 border border-border/10 p-1 rounded-none flex items-center justify-center overflow-hidden shrink-0">
                                                     {team?.logo_url ? (
-                                                        <img src={team.logo_url} alt="" className="w-full h-full object-contain" />
+                                                        <Image src={team.logo_url} alt="" width={28} height={28} className="w-full h-full object-contain" unoptimized />
                                                     ) : (
                                                         <span className="text-[8px] font-black text-muted-foreground/30 capitalize">
                                                             {team?.name.charAt(0)}

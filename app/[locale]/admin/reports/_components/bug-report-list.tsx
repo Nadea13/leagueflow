@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { th } from "date-fns/locale"
-import { markBugReportAsRead, resolveBugReport } from "@/actions/common/bug-reports"
+import { markBugReportAsRead, resolveBugReport, type BugReport } from "@/actions/common/bug-reports"
 import { toast } from "sonner"
 import { Search, AlertCircle, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -26,11 +26,11 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog"
 
-export function BugReportList({ initialReports }: { initialReports: any[] }) {
+export function BugReportList({ initialReports }: { initialReports: BugReport[] }) {
     const t = useTranslations("Admin")
     const [reports, setReports] = useState(initialReports)
     const [searchTerm, setSearchTerm] = useState("")
-    const [selectedReport, setSelectedReport] = useState<any | null>(null)
+    const [selectedReport, setSelectedReport] = useState<BugReport | null>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [page, setPage] = useState(1);
     const itemsPerPage = 100;
@@ -55,7 +55,7 @@ export function BugReportList({ initialReports }: { initialReports: any[] }) {
         }
     }
 
-    const handleViewReport = async (report: any) => {
+    const handleViewReport = async (report: BugReport) => {
         setSelectedReport(report)
         setDialogOpen(true)
 

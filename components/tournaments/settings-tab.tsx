@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
-import { updateTournament, resetFixtures, deleteTournament, confirmPayment } from "@/actions/organizer/tournaments/general";
+import { updateTournament, resetFixtures, deleteTournament } from "@/actions/organizer/tournaments/general";
 import { getPlans } from "@/actions/admin/plans";
 import { PaymentSection } from "@/components/billing/payment-section";
 import { Plan } from "@/types";
@@ -10,12 +10,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useTransition } from "react";
-import { ActionResponse } from "@/types/index";
+import { ActionResponse, Tournament, TournamentTeam } from "@/types/index";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,12 +28,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Loader2, RefreshCw, Clock, Settings, MapPin, BookOpen, UserPlus, Users, CreditCard, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { Check, Loader2, RefreshCw, CreditCard, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
+
 import { Link } from "@/i18n/routing";
-import { createPromptPayCharge } from "@/actions/manager/payment";
+
 import { CollaboratorsCard } from "@/components/tournaments/collaborators-card";
 import { VenueManager } from "@/components/tournaments/venue-manager";
 import { RulesConfig } from "@/components/tournaments/rules-config";
@@ -49,7 +49,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tournament: any; hasFixtures: boolean; userPlan?: string; teams: any[] }) {
+export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
     const tournamentId = tournament.id;
     const t = useTranslations("Settings");
     const tBilling = useTranslations("Billing");

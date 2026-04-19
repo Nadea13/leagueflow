@@ -11,7 +11,7 @@ interface GroupStandingsProps {
     isPublic?: boolean;
 }
 
-export function GroupStandings({ teams, matches, isPublic = false }: GroupStandingsProps) {
+export function GroupStandings({ teams, matches, isPublic: _isPublic = false }: GroupStandingsProps) {
     // 1. Group teams by group_name
     const teamsByGroup = teams.reduce((acc, team) => {
         const group = team.group_name || "Unassigned";

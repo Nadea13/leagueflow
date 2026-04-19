@@ -40,7 +40,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
         if (!rules) return;
 
         setIsSaving(true);
-        const { tournament_id, created_at, updated_at, ...ruleData } = rules;
+        const { tournament_id: _, created_at: __, updated_at: ___, ...ruleData } = rules;
         const result = await updateTournamentRules(tournamentId, ruleData);
 
         if (result.success) {
