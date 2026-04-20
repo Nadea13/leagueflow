@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle2, XCircle, Users, ArrowRight } from "lucide-react";
 import { getPendingInvites, acceptInvite } from "@/app/[locale]/organizer/tournaments/[id]/collaborator-actions";
+import { EmptyState } from "@/components/dashboard/empty-state";
 
 export default function InvitesPage() {
     const t = useTranslations("Collaborators");
@@ -50,7 +51,7 @@ export default function InvitesPage() {
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6 relative">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
                         {t("pending_invites_title")}
                     </h1>
                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
@@ -64,20 +65,12 @@ export default function InvitesPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
             ) : invites.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                    <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
-                        <Users className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
-                    </div>
-                    <h3 className="text-2xl font-black uppercase tracking-tight relative z-10">
-                        {t("no_pending_invites")}
-                    </h3>
-                    <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10">
-                         <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                        {t("pending_invites_desc")}
-                         <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                    </p>
-                </div>
+                <EmptyState
+                    title={t("no_pending_invites")}
+                    description={t("pending_invites_desc")}
+                    icon={Users}
+                    action={<div />}
+                />
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {invites.map((invite) => {
