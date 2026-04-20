@@ -7,7 +7,7 @@ import { PricingCards } from "@/components/pricing/pricing-cards";
 import { PaymentSection } from "@/components/billing/payment-section";
 import { BillingHistory } from "@/components/billing/billing-history";
 import { Separator } from "@/components/ui/separator";
-import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
+import { PaymentRecord } from "@/actions/common/billing/general";
 import { Plan } from "@/types";
 import { CreditCard, AlertCircle, Trophy } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/empty-state";

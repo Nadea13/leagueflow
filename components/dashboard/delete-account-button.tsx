@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { deleteAccount } from "@/actions/common/user";
+import { LucideIcon } from "lucide-react";
 
 export function DeleteAccountButton({ email }: { email: string }) {
     const t = useTranslations("DashboardSettings");
@@ -25,7 +26,6 @@ export function DeleteAccountButton({ email }: { email: string }) {
                 // Redirect happens on server
             } catch (error) {
                 console.error("Failed to delete account:", error);
-                // Could show toast here if we had toast imported
                 alert("Failed to delete account. Please try again or contact support.");
             }
         });
@@ -34,12 +34,12 @@ export function DeleteAccountButton({ email }: { email: string }) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="destructive" className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-10 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+                <Button variant="destructive" className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-6 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]">
                     <Trash2 className="h-5 w-5 mr-3" />
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md p-8">
+            <DialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md p-6">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
                         <Trash2 className="h-5 w-5 text-destructive" />
@@ -49,8 +49,8 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         {t("delete_confirm_desc")}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="py-6 space-y-3">
-                    <Label htmlFor="confirm-delete" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                <div className="space-y-3">
+                    <Label htmlFor="confirm-delete" className="text-[11px] font-bold tracking-widest text-muted-foreground/60">
                         {t("type_to_confirm", { text: email })}
                     </Label>
                     <Input 
@@ -61,7 +61,7 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         className="bg-muted/30 dark:bg-foreground/5 border-border/10 rounded-none h-10 focus-visible:ring-0 focus-visible:border-destructive transition-all font-bold text-foreground"
                     />
                 </div>
-                <DialogFooter className="mt-6 flex flex-row justify-end gap-3">
+                <DialogFooter className="flex flex-row justify-end gap-3">
                     <Button 
                         variant="ghost"
                         onClick={() => { setIsOpen(false); setConfirmText(""); }} 
