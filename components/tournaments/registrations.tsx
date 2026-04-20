@@ -22,11 +22,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface RegistrationsTableProps {
-    tournamentId: string;
-}
-
-export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
+export function Registrations({ tournamentId }: { tournamentId: string }) {
     const t = useTranslations("Registrations");
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [isLoading, setIsLoading] = useState(true);

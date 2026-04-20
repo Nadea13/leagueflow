@@ -5,11 +5,11 @@ import { AlertTriangle, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 
-interface BannedPlayersCardProps {
+interface BannedPlayersProps {
     bannedPlayers: PlayerStat[];
 }
 
-export function BannedPlayersCard({ bannedPlayers }: BannedPlayersCardProps) {
+export function BannedPlayers({ bannedPlayers }: BannedPlayersProps) {
     const t = useTranslations("BannedPlayers");
 
     if (bannedPlayers.length === 0) return null;

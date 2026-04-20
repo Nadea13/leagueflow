@@ -15,7 +15,7 @@ import { Match, Tournament } from "@/types";
 
 type PublicMatch = Match & { tournaments: Tournament };
 
-export function PublicMatchListHome() {
+export function PublicMatchesHome() {
     const t = useTranslations("Home");
 
     const locale = useLocale();

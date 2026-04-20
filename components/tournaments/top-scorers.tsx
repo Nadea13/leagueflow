@@ -7,13 +7,17 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import Image from "next/image";
-import { Goal, Team } from "@/types/index";
+import { Goal, Team, TournamentTeam } from "@/types/index";
 import { useTranslations } from "next-intl";
 import { Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface TopScorersProps {
+    goals: Goal[];
+    teams: (TournamentTeam & { team?: { user_id: string | null } })[];
+}
 
-export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[] }) {
+export function TopScorers({ goals, teams }: TopScorersProps) {
     const t = useTranslations("TopScorers");
 
     // Aggregate goals by (team_id, player_name)

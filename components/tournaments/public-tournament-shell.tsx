@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { StandingsTable } from "@/components/tournaments/standings-table";
-import { PublicMatchList } from "@/components/tournaments/public-match-list";
-import { GroupStandings } from "@/components/tournaments/group-standings";
-import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
+import { Standings } from "@/components/tournaments/standings";
+import { PublicMatches } from "@/components/tournaments/public-matches";
+import { StandingsGroups } from "@/components/tournaments/standings-groups";
+import { Bracket } from "@/components/tournaments/bracket";
 import { ShareButton } from "@/components/tournaments/share-button";
 import { PrintButton } from "@/components/tournaments/print-button";
 import { Match, MatchEvent, Team, Goal, Tournament, Player } from "@/types";
@@ -21,12 +21,12 @@ import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 import { TournamentStats } from "@/components/tournaments/tournament-stats";
-import { PlayerStatsTable } from "@/components/tournaments/player-stats-table";
-import { BannedPlayersCard } from "@/components/tournaments/banned-players-card";
-import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
+import { PlayerStats } from "@/components/tournaments/player-stats";
+import { BannedPlayers } from "@/components/tournaments/banned-players";
+import { TopScorers } from "@/components/tournaments/top-scorers";
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 
-interface PublicTournamentViewProps {
+interface PublicTournamentShellProps {
     tournament: Tournament;
     initialTeams: Team[];
     initialMatches: Match[];
@@ -35,14 +35,14 @@ interface PublicTournamentViewProps {
     initialPlayers: Player[];
 }
 
-export function PublicTournamentView({
+export function PublicTournamentShell({
     tournament: initialTournament,
     initialTeams,
     initialMatches,
     initialEvents,
     initialGoals,
     initialPlayers
-}: PublicTournamentViewProps) {
+}: PublicTournamentShellProps) {
     const t = useTranslations("PublicView");
     const tTournament = useTranslations("Tournament");
     const [matches, setMatches] = useState<Match[]>(initialMatches);
@@ -246,7 +246,7 @@ export function PublicTournamentView({
                                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
                                     <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                     <CardContent className="p-0 z-0">
-                                        <StandingsTable standings={standings} />
+                                        <Standings standings={standings} />
                                     </CardContent>
                                 </Card>
                             </div>
@@ -264,7 +264,7 @@ export function PublicTournamentView({
                                 <Card className="bg-background border rounded-none relative overflow-hidden group transition-colors shadow-xl shadow-black/20">
                                     <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                     <CardContent className="p-0 z-0">
-                                        <GroupStandings teams={initialTeams} matches={matches} isPublic={true} />
+                                        <StandingsGroups teams={initialTeams} matches={matches} isPublic={true} />
                                     </CardContent>
                                 </Card>
                             </div>
@@ -280,7 +280,7 @@ export function PublicTournamentView({
                                     <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("bracket_desc")}</p>
                                 </div>
                                 <div className="relative z-10 overflow-x-auto pb-4">
-                                    <TournamentBracket matches={matches} isPublic={true} />
+                                    <Bracket matches={matches} isPublic={true} />
                                 </div>
                             </div>
                         )}
@@ -298,7 +298,7 @@ export function PublicTournamentView({
                             <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
                                 <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                 <CardContent className="p-0 z-0">
-                                    <TopScorersTable goals={goals} teams={initialTeams} />
+                                    <TopScorers goals={goals} teams={initialTeams} />
                                 </CardContent>
                             </Card>
                         </div>
@@ -316,14 +316,14 @@ export function PublicTournamentView({
                                     <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                     <CardContent className="p-0 z-0">
                                         <div className="overflow-x-auto">
-                                            <PlayerStatsTable stats={playerStats} />
+                                            <PlayerStats stats={playerStats} />
                                         </div>
                                     </CardContent>
                                 </Card>
                             </div>
 
                             {bannedPlayers.length > 0 && (
-                                <BannedPlayersCard bannedPlayers={bannedPlayers} />
+                                <BannedPlayers bannedPlayers={bannedPlayers} />
                             )}
                         </div>
                     </div>
@@ -338,7 +338,7 @@ export function PublicTournamentView({
                             </h2>
                             <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("fixtures_results_desc")}</p>
                         </div>
-                        <PublicMatchList matches={matches} tournamentId={tournament.id} events={events} />
+                        <PublicMatches matches={matches} tournamentId={tournament.id} events={events} />
                     </div>
                 </TabsContent>
             </Tabs>

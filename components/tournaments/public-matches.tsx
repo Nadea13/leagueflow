@@ -6,7 +6,7 @@ import { Match, MatchEvent } from "@/types";
 
 import { Calendar } from "lucide-react";
 
-export function PublicMatchList({ matches, tournamentId, events = [] }: { matches: Match[]; tournamentId: string; events?: MatchEvent[] }) {
+export function PublicMatches({ matches, tournamentId, events = [] }: { matches: Match[]; tournamentId: string; events?: MatchEvent[] }) {
     const t = useTranslations("PublicView");
 
     if (!matches || matches.length === 0) {

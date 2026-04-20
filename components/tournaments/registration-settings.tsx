@@ -19,13 +19,13 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-interface RegistrationSettingsCardProps {
+interface RegistrationSettingsProps {
     tournament: Tournament;
     isPro: boolean;
-    onUpgrade?: () => void;
+    onUpgrade: () => void;
 }
 
-export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: RegistrationSettingsCardProps) {
+export function RegistrationSettings({ tournament, isPro, onUpgrade }: RegistrationSettingsProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();

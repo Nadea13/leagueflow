@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
-interface FixturesCalendarProps {
+interface FixtureCalendarProps {
     matches: Match[];
 }
 
-export function FixturesCalendar({ matches }: FixturesCalendarProps) {
+export function FixtureCalendar({ matches }: FixtureCalendarProps) {
 
 
     // Find initial month from matches or use current

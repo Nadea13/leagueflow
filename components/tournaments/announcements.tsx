@@ -37,12 +37,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface AnnouncementsCardProps {
-    tournamentId: string;
-    isEditable?: boolean;
-}
-
-export function AnnouncementsCard({ tournamentId, isEditable = true }: AnnouncementsCardProps) {
+export function Announcements({ tournamentId, isEditable = true }: { tournamentId: string, isEditable: boolean }) {
     const { toast } = useToast();
     const t = useTranslations("Announcements");
     const tCommon = useTranslations("Common");

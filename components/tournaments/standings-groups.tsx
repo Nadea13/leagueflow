@@ -5,13 +5,13 @@ import { StandingsTable } from "./standings-table";
 import { calculateStandings } from "@/lib/standings";
 import { useTranslations } from "next-intl";
 
-interface GroupStandingsProps {
+interface StandingsGroupsProps {
     teams: Team[];
     matches: Match[];
     isPublic?: boolean;
 }
 
-export function GroupStandings({ teams, matches, isPublic: _isPublic = false }: GroupStandingsProps) {
+export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }: StandingsGroupsProps) {
     // 1. Group teams by group_name
     const teamsByGroup = teams.reduce((acc, team) => {
         const group = team.group_name || "Unassigned";

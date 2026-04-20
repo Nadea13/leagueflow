@@ -36,7 +36,7 @@ interface FixturesManagerProps {
     isPro?: boolean;
 }
 
-export function FixturesManager({ matches, teams, tournamentId, isPro = false }: FixturesManagerProps) {
+export function FixtureManager({ matches, teams, tournamentId, isPro = false }: FixturesManagerProps) {
     const t = useTranslations("Tournament");
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");

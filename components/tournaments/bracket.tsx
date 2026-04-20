@@ -19,7 +19,7 @@ const CARD_W = 232;
 const MATCH_SLOT_H = 80; // Base height per match slot in the first round
 const MATCH_GAP = 12;    // Gap between cards in a pair
 
-export function TournamentBracket({ matches, isPublic = false }: TournamentBracketProps) {
+export function Bracket({ matches, isPublic = false }: BracketProps) {
     const t = useTranslations("Bracket");
 
     // Measure actual card height for precise slot sizing

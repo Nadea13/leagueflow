@@ -12,7 +12,11 @@ import Image from "next/image";
 import { Standing } from "@/types/index";
 import { List } from "lucide-react";
 
-export function StandingsTable({ standings }: { standings: Standing[] }) {
+interface StandingsProps {
+    standings: Standing[];
+}
+
+export function Standings({ standings }: StandingsProps) {
     const t = useTranslations("Standings");
 
     // Standings are already sorted by the SQL View query in page.tsx:
