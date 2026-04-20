@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { getDashboardTournaments } from "@/actions/organizer/dashboard";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
-import { TournamentCard } from "@/components/dashboard/tournament-card";
+import { DashboardTournamentCard } from "@/components/dashboard/dashboard-tournament-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -70,7 +70,7 @@ export default async function TournamentsPage({
             ) : (
                 <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tournaments.map((tournament: Tournament) => (
-                        <TournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
+                        <DashboardTournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
                     ))}
                 </div>
             )}

@@ -11,11 +11,11 @@ interface StatItem {
     description?: string;
 }
 
-interface StatsOverviewProps {
+interface StatsCardsProps {
     items: StatItem[];
 }
 
-export function StatsOverview({ items }: StatsOverviewProps) {
+export function StatsCards({ items }: StatsCardsProps) {
     const displayItems = items;
 
     return (

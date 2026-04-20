@@ -6,7 +6,7 @@ import { Menu } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { UserNav } from "@/components/dashboard/user-nav"
+import { UserDropdown } from "@/components/dashboard/user-dropdown"
 import { useState, useEffect } from "react"
 import { getNavItems } from "@/config/nav"
 
@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
-interface DashboardHeaderProps {
+interface DashboardNavbarProps {
     userEmail?: string
     role?: string
     isOrganizer?: boolean
@@ -24,7 +24,7 @@ interface DashboardHeaderProps {
     className?: string
 }
 
-export function DashboardHeader({ userEmail, role, isOrganizer: initialIsOrganizer, forcedMode, className }: DashboardHeaderProps) {
+export function DashboardNavbar({ userEmail, role, isOrganizer: initialIsOrganizer, forcedMode, className }: DashboardNavbarProps) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
     const { toast } = useToast()
@@ -218,7 +218,7 @@ export function DashboardHeader({ userEmail, role, isOrganizer: initialIsOrganiz
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserNav email={userEmail} mode={mode} />
+                <UserDropdown email={userEmail} mode={mode} />
             </div>
 
             <Dialog open={showRegDialog} onOpenChange={setShowRegDialog}>
