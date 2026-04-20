@@ -1,5 +1,3 @@
-import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
@@ -11,7 +9,6 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     >
-      <div className="absolute top-0 left-0 w-1 h-full bg-secondary/20" />
       {props.children}
     </div>
   )
