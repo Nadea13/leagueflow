@@ -1,10 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
 import { BillingPageContent } from "@/components/billing/billing-page-content";
-import { getPaymentHistory } from "@/actions/common/billing/general";
-import { getDashboardTournaments } from "@/actions/organizer/dashboard";
-import { getPlans } from "@/actions/admin/plans";
 import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -14,6 +11,85 @@ export const metadata: Metadata = {
     description: "Manage your subscription plan, upgrade to Pro, and view payment history.",
 };
 
+// ==========================================
+// EDIT PLANS HERE
+// ==========================================
+const HARDCODED_PLANS = [
+    {
+        id: 'fallback-free',
+        name: 'Free',
+        description: ['Limit 8 teams per tournament', 'Basic stats', 'Community Support'],
+        price: 0,
+        discounted_price: null,
+        duration: 'lifetime',
+        max_tournaments: 0,
+        max_teams_per_tournament: 8,
+        format_support: 'Basic',
+        invite_enabled: false,
+        register_enabled: true,
+        stats_support: 'Basic',
+        support_level: 'Community',
+        recommended: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'fallback-tournament',
+        name: 'Single Tournament',
+        description: ['Single tournament use', 'All tournament formats', 'Advanced Stats & Goals', 'Standard Support', 'Custom Branding'],
+        price: 990,
+        discounted_price: 590,
+        duration: 'lifetime',
+        max_tournaments: 1,
+        max_teams_per_tournament: 0,
+        format_support: 'All',
+        invite_enabled: true,
+        register_enabled: true,
+        stats_support: 'Advanced',
+        support_level: 'Standard',
+        recommended: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'fallback-monthly',
+        name: 'Organizer Monthly Pro',
+        description: ['Unlimited tournaments', 'All pro features included', 'Priority 24/7 Support', 'Cancel anytime'],
+        price: 1290,
+        discounted_price: 890,
+        duration: 'monthly',
+        max_tournaments: 0,
+        max_teams_per_tournament: 0,
+        format_support: 'All',
+        invite_enabled: true,
+        register_enabled: true,
+        stats_support: 'Advanced',
+        support_level: 'Priority',
+        recommended: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'fallback-yearly',
+        name: 'Organizer Yearly Pro',
+        description: ['Save 2 months', 'Unlimited everything', 'VIP Priority Support', 'Advance Analytics'],
+        price: 12900,
+        discounted_price: 8900,
+        duration: 'yearly',
+        max_tournaments: 0,
+        max_teams_per_tournament: 0,
+        format_support: 'All',
+        invite_enabled: true,
+        register_enabled: true,
+        stats_support: 'Advanced',
+        support_level: 'Priority',
+        recommended: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    }
+];
+
+const SAMPLE_TOURNAMENTS: any[] = [];
 export default async function BillingPage() {
     const t = await getTranslations("Billing");
     const supabase = await createClient();
@@ -23,50 +99,23 @@ export default async function BillingPage() {
         return null;
     }
 
-    // Fetch user's tournaments (owned only)
-    const allTournaments = await getDashboardTournaments();
-    const tournaments = allTournaments.filter(t => t.role === 'owner');
+    // 1. Fetch real tournaments
+    const { data: tournaments } = await supabase
+        .from('tournaments')
+        .select('id, name, status, plan')
+        .eq('organizer_id', user.id);
 
-    // Fetch plans for organizer
-    const { data: plans } = await getPlans({ role: 'organizer' });
+    // 2. Fetch real payment history
+    const { data: history } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    // Fetch payment history
-    const history = await getPaymentHistory();
-
-    // Check active subscription
-    let userPlan = 'free';
-    const { data: subscription } = await supabase
-        .from("payments")
-        .select("plan, subscription_expires_at")
-        .eq("user_id", user.id)
-        .eq("status", "success")
-        .in("plan", ["monthly", "yearly", "manager_pro"])
-        .is("tournament_id", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-
-    let daysRemaining: number | null = null;
-    let isExpired: boolean = false;
-
-    if (subscription) {
-        const now = new Date();
-        const expiresAt = subscription.subscription_expires_at
-            ? new Date(subscription.subscription_expires_at)
-            : null;
-
-        if (expiresAt) {
-            const diffTime = expiresAt.getTime() - now.getTime();
-            daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            if (daysRemaining <= 0) {
-                isExpired = true;
-                userPlan = 'free';
-            } else {
-                userPlan = subscription.plan || 'free';
-            }
-        }
-    }
+    // 3. Subscription status logic (can be real or simplified)
+    const userPlan = 'free'; // This could also be fetched from profiles if needed
+    const daysRemaining = null;
+    const isExpired = false;
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">
@@ -78,11 +127,10 @@ export default async function BillingPage() {
             </div>
 
             <BillingPageContent
-                tournaments={tournaments}
-                initialHistory={history}
-                onRefreshHistory={getPaymentHistory}
+                tournaments={tournaments || []}
+                initialHistory={history || []}
                 userPlan={userPlan}
-                plans={plans || []}
+                plans={HARDCODED_PLANS as any}
                 daysRemaining={daysRemaining}
                 isExpired={isExpired}
             />

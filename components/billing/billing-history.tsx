@@ -33,9 +33,6 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
 
             {history && history.length > 0 ? (
                 <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors">
-                    {/* Accent Line */}
-                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-
                     <Table>
                         <TableHeader className="bg-muted/0">
                             <TableRow className="hover:bg-transparent border-border/40">
@@ -94,8 +91,6 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                 </div>
             ) : (
                 <div className="flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-8 text-center animate-in fade-in-50 relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-
                     <div className="p-6 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
                         <History className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                     </div>

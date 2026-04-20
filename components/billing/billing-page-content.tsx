@@ -14,14 +14,13 @@ import { CreditCard, AlertCircle, Trophy } from "lucide-react";
 interface BillingPageContentProps {
     tournaments: { id: string; name: string; status: string; plan?: string | null; }[] | null;
     initialHistory: PaymentRecord[];
-    onRefreshHistory: () => Promise<PaymentRecord[]>;
     userPlan: string;
     plans: Plan[];
     daysRemaining?: number | null;
     isExpired?: boolean;
 }
 
-export function BillingPageContent({ tournaments, initialHistory, onRefreshHistory, userPlan, plans, daysRemaining, isExpired }: BillingPageContentProps) {
+export function BillingPageContent({ tournaments, initialHistory, userPlan, plans, daysRemaining, isExpired }: BillingPageContentProps) {
     const t = useTranslations("Billing");
     const router = useRouter();
     const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
@@ -36,8 +35,7 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
     };
 
     const handlePaymentSuccess = async () => {
-        const newHistory = await onRefreshHistory();
-        setHistory(newHistory);
+        // Since data is hardcoded, we just refresh the router state
         router.refresh();
     };
 
@@ -115,8 +113,6 @@ export function BillingPageContent({ tournaments, initialHistory, onRefreshHisto
                         />
                     ) : (
                         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-4 md:p-6 text-center animate-in fade-in-50 relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                            
                             <div className="p-4 md:p-6 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
                                 <CreditCard className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                             </div>

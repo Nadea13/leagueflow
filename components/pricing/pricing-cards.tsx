@@ -144,7 +144,7 @@ export function PricingCards({
                                 "p-4 text-center text-muted-foreground",
                                 plan.recommended && "border-x-2 border-primary/20 bg-primary/5"
                             )}>
-                                {(plan.teams_limit === 0 || plan.max_teams === 0) ? t('unlimited') : (plan.teams_limit ?? plan.max_teams)}
+                                {(plan.teams_limit === 0 || plan.max_teams === 0 || plan.max_teams_per_tournament === 0) ? t('unlimited') : (plan.teams_limit ?? plan.max_teams ?? plan.max_teams_per_tournament)}
                             </td>
                         ))}
                     </tr>
