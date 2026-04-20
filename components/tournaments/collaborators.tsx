@@ -34,13 +34,13 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface CollaboratorsCardProps {
+interface CollaboratorsProps {
     tournamentId: string;
     isPro?: boolean;
     togglePayment?: () => void;
 }
 
-export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: CollaboratorsCardProps) {
+export function Collaborators({ tournamentId, isPro, togglePayment }: CollaboratorsProps) {
     const t = useTranslations("Collaborators");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PricingFooter } from "@/components/pricing/pricing-footer";
 import { getPlans } from "@/actions/admin/plans";
 
-import { PublicMatchListHome } from "@/components/tournaments/public-match-list-home";
+import { PublicMatchesHome } from "@/components/tournaments/public-matches-home";
 import { createClient } from "@/lib/supabase/server";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -69,7 +69,7 @@ export default async function Home() {
         {/* Results Section */}
         <section id="results" className="py-6">
           <div className="container mx-auto px-4">
-            <PublicMatchListHome />
+            <PublicMatchesHome />
           </div>
         </section>
       </main>

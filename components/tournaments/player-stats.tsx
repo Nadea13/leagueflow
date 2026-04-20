@@ -7,11 +7,11 @@ import { PlayerStat } from "@/lib/player-stats";
 import { AlertTriangle, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-interface PlayerStatsTableProps {
+interface PlayerStatsProps {
     stats: PlayerStat[];
 }
 
-export function PlayerStatsTable({ stats }: PlayerStatsTableProps) {
+export function PlayerStats({ stats }: PlayerStatsProps) {
     const t = useTranslations("PlayerStats");
 
     if (stats.length === 0) {

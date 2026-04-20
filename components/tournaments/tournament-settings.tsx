@@ -34,7 +34,7 @@ import { Check, Loader2, RefreshCw, CreditCard, AlertTriangle, ClipboardEdit, Tr
 
 import { Link } from "@/i18n/routing";
 
-import { CollaboratorsCard } from "@/components/tournaments/collaborators-card";
+import { Collaborators } from "@/components/tournaments/collaborators";
 import { VenueManager } from "@/components/tournaments/venue-manager";
 import { RulesConfig } from "@/components/tournaments/rules-config";
 
@@ -49,7 +49,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
+export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
     const tournamentId = tournament.id;
     const t = useTranslations("Settings");
     const tBilling = useTranslations("Billing");
@@ -356,7 +356,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
             <VenueManager tournamentId={tournamentId} />
 
             {/* Collaborators */}
-            <CollaboratorsCard tournamentId={tournamentId} isPro={isPro} togglePayment={togglePayment} />
+            <Collaborators tournamentId={tournamentId} isPro={isPro} togglePayment={togglePayment} />
 
             {/* Billing & Subscription */}
             <div className="space-y-4 md:space-y-6">

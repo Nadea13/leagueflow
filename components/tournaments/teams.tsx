@@ -33,15 +33,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
 
-interface TeamListProps {
+interface TeamsProps {
     teams: (TournamentTeam & { team?: { user_id: string | null } })[];
     tournamentId: string;
-    isPro?: boolean;
+    isPro: boolean;
     showGroupSelector?: boolean;
     organizerId?: string;
 }
 
-export function TeamList({ teams, tournamentId, isPro = false, showGroupSelector = false, organizerId }: TeamListProps) {
+export function Teams({ teams, tournamentId, isPro, showGroupSelector = false, organizerId }: TeamsProps) {
     const t = useTranslations("Team");
 
     if (!teams || teams.length === 0) {

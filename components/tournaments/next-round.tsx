@@ -19,13 +19,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 
-interface NextRoundButtonProps {
+interface NextRoundProps {
     tournamentId: string;
     matches: Match[];
     format: string; // 'league', 'knockout', 'group_knockout'
 }
 
-export function NextRoundButton({ tournamentId, matches, format }: NextRoundButtonProps) {
+export function NextRound({ tournamentId, matches, format }: NextRoundProps) {
     const t = useTranslations("Fixtures");
     const [isPending, startTransition] = useTransition();
     const [confirmOpen, setConfirmOpen] = useState(false);

@@ -10,29 +10,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AddTeamForm } from "@/components/tournaments/add-team-form";
+import { TeamForm } from "@/components/tournaments/team-form";
 import { FixtureGenerator } from "@/components/tournaments/fixture-generator";
-import { StandingsTable } from "@/components/tournaments/standings-table";
-import { TeamList } from "@/components/tournaments/team-list";
-import { GroupStandings } from "@/components/tournaments/group-standings";
-import { TournamentBracket } from "@/components/tournaments/tournament-bracket";
+import { Standings } from "@/components/tournaments/standings";
+import { Teams } from "@/components/tournaments/teams";
+import { StandingsGroups } from "@/components/tournaments/standings-groups";
+import { Bracket } from "@/components/tournaments/bracket";
 import { Match, Team, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/share-button";
-import { TopScorersTable } from "@/components/tournaments/top-scorers-table";
+import { TopScorers } from "@/components/tournaments/top-scorers";
 import { calculateStandings } from "@/lib/standings";
-import { SettingsTab } from "@/components/tournaments/settings-tab";
-import { FixturesManager } from "@/components/tournaments/fixtures-manager";
-import { FixturesCalendar } from "@/components/tournaments/fixtures-calendar";
-import { NextRoundButton } from "@/components/tournaments/next-round-button";
+import { TournamentSettings } from "@/components/tournaments/tournament-settings";
+import { FixtureManager } from "@/components/tournaments/fixture-manager";
+import { FixtureCalendar } from "@/components/tournaments/fixture-calendar";
+import { NextRound } from "@/components/tournaments/next-round";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { TournamentStats } from "@/components/tournaments/tournament-stats";
-import { PlayerStatsTable } from "@/components/tournaments/player-stats-table";
-import { BannedPlayersCard } from "@/components/tournaments/banned-players-card";
-import { AnnouncementsCard } from "@/components/tournaments/announcements-card";
-import { RegistrationsTable } from "@/components/tournaments/registrations-table";
+import { PlayerStats } from "@/components/tournaments/player-stats";
+import { BannedPlayers } from "@/components/tournaments/banned-players";
+import { Announcements } from "@/components/tournaments/announcements";
+import { Registrations } from "@/components/tournaments/registrations";
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
-import { RegistrationSettingsCard } from "@/components/tournaments/registration-settings-card";
+import { RegistrationSettings } from "@/components/tournaments/registration-settings";
 
 
 interface TournamentContentProps {
@@ -382,7 +382,7 @@ export function TournamentContent({
                                     <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
                                         <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                         <CardContent className="p-0 z-0">
-                                            <StandingsTable standings={calculatedStandings} />
+                                            <Standings standings={calculatedStandings} />
                                         </CardContent>
                                     </Card>
                                 </div>
@@ -399,7 +399,7 @@ export function TournamentContent({
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("group_standings_desc")}</p>
                                     </div>
                                     <div className="relative z-10">
-                                        <GroupStandings teams={teams} matches={matches} />
+                                        <StandingsGroups teams={teams} matches={matches} />
                                     </div>
                                 </div>
                             )}
@@ -415,7 +415,7 @@ export function TournamentContent({
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("bracket_desc")}</p>
                                     </div>
                                     <div className="relative z-10">
-                                        <TournamentBracket matches={matches} />
+                                        <Bracket matches={matches} />
                                     </div>
                                 </div>
                             )}
@@ -441,7 +441,7 @@ export function TournamentContent({
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
                                         <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                         <CardContent className="p-0 z-0">
-                                            <TopScorersTable goals={goals} teams={teams} />
+                                            <TopScorers goals={goals} teams={teams} />
                                         </CardContent>
                                     </Card>
                                 ) : (
@@ -473,14 +473,14 @@ export function TournamentContent({
                                         <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                         <CardContent className="p-0 z-0">
                                             <div className="overflow-x-auto">
-                                                <PlayerStatsTable stats={playerStats} />
+                                                <PlayerStats stats={playerStats} />
                                             </div>
                                         </CardContent>
                                     </Card>
                                 </div>
                             )}
                             {/* 6. Banned Players Alert */}
-                            <BannedPlayersCard bannedPlayers={bannedPlayers} />
+                            <BannedPlayers bannedPlayers={bannedPlayers} />
                         </div>
 
                         {/* Right Column: Sidebar (Actions & Announcements) */}
@@ -533,7 +533,7 @@ export function TournamentContent({
 
                             {/* Announcements Section */}
                             <div className="space-y-4 md:space-y-6">
-                                <AnnouncementsCard
+                                <Announcements
                                     tournamentId={id}
                                     isEditable={userRole === 'admin' || userRole === 'editor'}
                                 />
@@ -584,7 +584,7 @@ export function TournamentContent({
                                         <div className="absolute top-0 left-0 z-30 w-1 h-full bg-primary" />
                                         <CardContent className="p-0 z-0">
                                             <div className={cn(!isPro && "opacity-40 grayscale pointer-events-none")}>
-                                                <RegistrationsTable tournamentId={id} />
+                                                <Registrations tournamentId={id} />
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -603,7 +603,7 @@ export function TournamentContent({
                                 <Card className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
                                     <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                     <CardContent className="p-0 z-0">
-                                        <TeamList
+                                        <Teams
                                             teams={teams}
                                             tournamentId={id}
                                             isPro={isPro}
@@ -619,7 +619,7 @@ export function TournamentContent({
                         <div className="lg:col-span-1 space-y-4 md:space-y-6">
                             {/* Registration Settings (Administrative) */}
                             {userRole === 'admin' && (
-                                <RegistrationSettingsCard
+                                <RegistrationSettings
                                     tournament={tournament}
                                     isPro={isPro}
                                     onUpgrade={() => router.push(`${pathname}?tab=settings&action=upgrade`)}
@@ -638,7 +638,7 @@ export function TournamentContent({
 
                                 <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
                                     <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                    <AddTeamForm
+                                    <TeamForm
                                         tournamentId={id}
                                         isLimitReached={!isPro && (teams?.length || 0) >= 8}
                                     />
@@ -750,14 +750,14 @@ export function TournamentContent({
                             {/* Fixtures View */}
                             <div className="min-h-[400px]">
                                 {fixtureView === 'list' ? (
-                                    <FixturesManager
+                                    <FixtureManager
                                         teams={teams}
                                         matches={matches}
                                         tournamentId={id}
                                         isPro={isPro}
                                     />
                                 ) : (
-                                    <FixturesCalendar matches={matches} />
+                                    <FixtureCalendar matches={matches} />
                                 )}
                             </div>
                         </div>
@@ -787,7 +787,7 @@ export function TournamentContent({
                                         />
 
                                         {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                            <NextRoundButton
+                                            <NextRound
                                                 tournamentId={id}
                                                 matches={matches}
                                                 format={tournament?.format || 'league'}
@@ -833,7 +833,7 @@ export function TournamentContent({
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                             {/* Main Settings Column */}
                             <div className="lg:col-span-2">
-                                <SettingsTab tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} teams={teams} />
+                                <TournamentSettings tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} teams={teams} />
                             </div>
 
                             {/* Sidebar Info Column */}

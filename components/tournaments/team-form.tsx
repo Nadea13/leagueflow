@@ -25,7 +25,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function AddTeamForm({ tournamentId, isLimitReached = false }: { tournamentId: string; isLimitReached?: boolean }) {
+export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentId: string; isLimitReached?: boolean }) {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");

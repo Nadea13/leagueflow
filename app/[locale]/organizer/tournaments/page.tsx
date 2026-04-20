@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getDashboardTournaments } from "@/actions/organizer/dashboard";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
-import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
+import { TournamentCreate } from "@/components/tournaments/tournament-create";
 import { DashboardTournamentCard } from "@/components/dashboard/dashboard-tournament-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export default async function TournamentsPage({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <CreateTournamentDialog isPro={isPro} />
+                    <TournamentCreate isPro={isPro} />
                 </div>
             </div>
 

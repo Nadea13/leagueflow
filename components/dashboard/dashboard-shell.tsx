@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
+import { TournamentCreate } from "@/components/tournaments/tournament-create";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { DashboardTournamentCard } from "@/components/dashboard/dashboard-tournament-card";
@@ -218,8 +218,8 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                         {t("welcome")}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <CreateTournamentDialog isPro={isPro} />
+                <div className="flex items-center">
+                    <TournamentCreate isPro={userPlan !== 'free'} />
                 </div>
             </div>
 

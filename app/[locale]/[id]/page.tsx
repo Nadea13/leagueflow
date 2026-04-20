@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Match, MatchEvent, Goal, Player } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { PublicTournamentView } from "@/components/tournaments/public-tournament-view";
+import { PublicTournamentShell } from "@/components/tournaments/public-tournament-shell";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
@@ -122,7 +122,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                 </div>
             </nav>
 
-            <PublicTournamentView 
+            <PublicTournamentShell 
                 tournament={tournament}
                 initialTeams={teams || []}
                 initialMatches={matches as Match[] || []}
