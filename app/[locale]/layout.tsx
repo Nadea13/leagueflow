@@ -7,7 +7,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { CookieBanner } from "@/components/cookie-consent/banner";
+import { CookieBanner } from "@/components/cookies/cookie-banner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

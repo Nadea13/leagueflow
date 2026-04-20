@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CookieConsent, COOKIE_CONSENT_KEY } from "./types";
-import { CookieSettingsModal } from "./settings-modal";
+import { CookieConsent, COOKIE_CONSENT_KEY } from "./cookie-types";
+import { CookieSettings } from "./cookie-settings";
 
 
 export function CookieBanner() {
@@ -83,7 +83,7 @@ export function CookieBanner() {
                 </Card>
             </div>
 
-            <CookieSettingsModal
+            <CookieSettings
                 open={showSettings}
                 onOpenChange={setShowSettings}
                 onSave={saveConsent}

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Globe, Check } from "lucide-react"
 
-export function LanguageSwitcher() {
+export function LanguageSubMenu() {
     const t = useTranslations("Common")
     const locale = useLocale()
     const router = useRouter()

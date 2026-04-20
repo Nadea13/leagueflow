@@ -12,7 +12,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function LanguageSelect() {
+export function LanguageToggle() {
     const t = useTranslations("Common");
     const locale = useLocale();
     const router = useRouter();
