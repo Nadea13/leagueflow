@@ -1,7 +1,7 @@
 import { getDashboardTournaments } from "@/actions/organizer/dashboard";
 import { getUserSubscriptionPlan, getUserDashboardMetrics, getUserProfile } from "@/actions/common/user";
 import { getUserTeams } from "@/actions/manager/dashboard";
-import { DashboardUI } from "@/components/dashboard/dashboard-ui";
+import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export default async function ManagerDashboardPage() {
     ]);
 
     return (
-        <DashboardUI 
+        <DashboardShell 
             tournaments={allTournaments} 
             teams={teams} 
             userPlan={userPlan} 

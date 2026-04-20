@@ -3,8 +3,8 @@
 import { useTranslations } from "next-intl";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
-import { StatsOverview } from "@/components/dashboard/stats-overview";
-import { TournamentCard } from "@/components/dashboard/tournament-card";
+import { StatsCards } from "@/components/dashboard/stats-cards";
+import { DashboardTournamentCard } from "@/components/dashboard/dashboard-tournament-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Users, FileText, Trophy, Activity, CheckCircle } from "lucide-react";
@@ -17,7 +17,7 @@ import { BecomeOrganizerButton } from "@/components/dashboard/become-organizer-b
 
 import { Tournament, Team } from "@/types/index";
 
-interface DashboardUIProps {
+interface DashboardShellProps {
     tournaments: (Tournament & { role?: string; tournament_teams?: { count: number }[] })[];
     teams: (Team & { tournament?: { name: string } | null })[];
     userPlan: string;
@@ -30,7 +30,7 @@ interface DashboardUIProps {
     forcedMode?: 'organizer' | 'team';
 }
 
-export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer, forcedMode }: DashboardUIProps) {
+export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrganizer, forcedMode }: DashboardShellProps) {
     const t = useTranslations("Dashboard");
     const tCommon = useTranslations("Common");
     const tTeam = useTranslations("Team");
@@ -100,7 +100,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                     </div>
                 </div>
 
-                <StatsOverview
+                <StatsCards
                     items={[
                         {
                             label: t("total_teams"),
@@ -223,7 +223,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                 </div>
             </div>
 
-            <StatsOverview
+            <StatsCards
                 items={[
                     {
                         label: t("total_tournaments"),
@@ -259,7 +259,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                         </div>
                         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {recentTournaments.map((tournament) => (
-                                <TournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
+                                <DashboardTournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
                             ))}
                             {tournaments.length > 3 && (
                                 <Link

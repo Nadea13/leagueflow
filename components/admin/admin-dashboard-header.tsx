@@ -6,7 +6,7 @@ import { Menu } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { UserNav } from "@/components/dashboard/user-nav"
+import { UserDropdown } from "@/components/dashboard/user-dropdown"
 import { useState } from "react"
 import { LayoutDashboard, Users, Trophy, CreditCard, UserSearch } from "lucide-react"
 
@@ -146,7 +146,7 @@ export function AdminDashboardHeader({ userEmail, className }: AdminDashboardHea
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserNav email={userEmail} />
+                <UserDropdown email={userEmail} />
             </div>
         </header>
     )

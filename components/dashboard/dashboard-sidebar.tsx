@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { registerAsOrganizer } from "@/actions/organizer/dashboard"
 import { useToast } from "@/hooks/use-toast"
 
-export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team' }) {
+export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team' }) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
     const { toast } = useToast()
@@ -35,7 +35,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
             }
         }, 0);
 
-        // Sync with DashboardHeader
+        // Sync with DashboardNavbar
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'dashboard-mode') {
                 setMode(e.newValue as 'organizer' | 'team')

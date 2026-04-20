@@ -26,7 +26,7 @@ import { LanguageSwitcher } from "@/components/layout/language-switcher"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
-export function UserNav({ email, mode = 'team' }: { email: string | undefined, mode?: 'organizer' | 'team' }) {
+export function UserDropdown({ email, mode = 'team' }: { email: string | undefined, mode?: 'organizer' | 'team' }) {
     const { setTheme } = useTheme()
     const t = useTranslations("Nav")
     const tCommon = useTranslations("Common")

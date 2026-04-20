@@ -7,12 +7,12 @@ import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
 import { Tournament } from "@/types";
 
-interface TournamentCardProps {
+interface DashboardTournamentCardProps {
     tournament: Tournament & { current_teams?: number };
     userPlan?: string;
 }
 
-export function TournamentCard({ tournament, userPlan }: TournamentCardProps) {
+export function DashboardTournamentCard({ tournament, userPlan }: DashboardTournamentCardProps) {
     const t = useTranslations("Common");
     const locale = useLocale();
     const tSettings = useTranslations("Settings");
