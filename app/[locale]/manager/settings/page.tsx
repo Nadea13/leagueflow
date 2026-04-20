@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/routing";
 import { LanguageSelect } from "@/components/layout/language-select";
 import { ModeToggle } from "@/components/layout/mode-toggle";
-import { DeleteAccountButton } from "./delete-account-button";
+import { DeleteAccountButton } from "@/components/dashboard/delete-account-button";
 import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriangle } from "lucide-react";
 
 

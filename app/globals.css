@@ -172,7 +172,7 @@
 }
 
 .pro-editor .ql-editor.ql-blank::before {
-  @apply text-muted-foreground/40 italic text-[13px];
+  @apply text-muted-foreground/40 text-[13px];
   left: 16px;
 }
 
