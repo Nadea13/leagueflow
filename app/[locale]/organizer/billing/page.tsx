@@ -103,7 +103,7 @@ export default async function BillingPage() {
     const { data: tournaments } = await supabase
         .from('tournaments')
         .select('id, name, status, plan')
-        .eq('organizer_id', user.id);
+        .eq('user_id', user.id);
 
     // 2. Fetch real payment history
     const { data: history } = await supabase
