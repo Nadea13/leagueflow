@@ -26,7 +26,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
         <div className="space-y-4">
             <div className="flex items-center gap-3 mb-6">
                 <Receipt className="h-5 w-5 text-secondary" />
-                <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                     {t("historyTitle")}
                 </h3>
             </div>
@@ -52,7 +52,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                                         #{record.id.slice(0, 8).toUpperCase()}
                                     </TableCell>
                                     <TableCell className="py-4">
-                                        <Badge variant="outline" className={`rounded-none font-black uppercase tracking-tighter text-[9px] py-0 px-2 h-5 italic border-none ${
+                                        <Badge variant="outline" className={`rounded-none font-black uppercase tracking-tighter text-[9px] py-0 px-2 h-5 border-none ${
                                             record.status === 'success' ? "bg-green-500/10 text-green-500" :
                                                 record.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" :
                                                     "bg-red-500/10 text-red-500"
@@ -60,11 +60,11 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                                             {t(`status_${record.status}`)}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="py-4 font-black uppercase italic text-[10px] tracking-tight">
+                                    <TableCell className="py-4 font-black uppercase text-[10px] tracking-tight">
                                         {record.payment_method === 'promptpay' ? t('method_promptpay') :
                                             record.payment_method === 'credit_card' ? t('method_credit_card') : record.payment_method}
                                     </TableCell>
-                                    <TableCell className="py-4 font-black uppercase italic text-[10px] tracking-tight text-secondary">
+                                    <TableCell className="py-4 font-black uppercase text-[10px] tracking-tight text-secondary">
                                         {record.plan === 'yearly' ? t('yearly.title') :
                                             record.plan === 'monthly' ? t('monthly.title') :
                                                 record.plan === 'tournament' ? t('tournament.title') :
@@ -81,7 +81,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                                             "-"
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-right py-4 pr-4 font-black italic text-sm">
+                                    <TableCell className="text-right py-4 pr-4 font-black text-sm">
                                         {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(record.amount)}
                                     </TableCell>
                                 </TableRow>
@@ -95,7 +95,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                         <History className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                     </div>
 
-                    <h3 className="text-xl font-black uppercase italic tracking-tight mb-2 relative z-10">
+                    <h3 className="text-xl font-black uppercase tracking-tight mb-2 relative z-10">
                         {t("no_history")}
                     </h3>
                     <p className="text-[10px] uppercase font-bold text-muted-foreground/60 max-w-[200px] flex items-center gap-2 relative z-10 mx-auto">

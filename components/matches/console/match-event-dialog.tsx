@@ -100,13 +100,13 @@ export function MatchEventDialog({
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
                 
                 <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase italic tracking-tighter text-foreground">
+                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
                         <div className={cn("p-2 bg-foreground/5 border border-foreground/10", eventConfig?.color)}>
                             {Icon && <Icon className="h-6 w-6" />}
                         </div>
                         {eventConfig?.label && t(eventConfig.label)}
                     </DialogTitle>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2 italic">CONFIGURE MATCH EVENT DATA</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">CONFIGURE MATCH EVENT DATA</p>
                 </DialogHeader>
 
                 <div className="px-8 py-6 space-y-8 relative">
@@ -115,31 +115,31 @@ export function MatchEventDialog({
 
                     {/* Time Input */}
                     <div className="space-y-3 relative z-10">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-secondary italic">{t("time")}</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("time")}</Label>
                         <Input
                             value={minute}
                             onChange={e => setMinute(e.target.value)}
-                            className="h-12 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black italic text-xl text-foreground transition-all"
+                            className="h-12 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
                             type="number"
                         />
                     </div>
 
                     {/* Player Selection */}
                     <div className="space-y-3 relative z-10">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-secondary italic">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">
                             {eventType === 'substitution' ? t("player_out") : t("player")}
                         </Label>
                         <Select value={playerId} onValueChange={setPlayerId}>
-                            <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-foreground transition-all">
+                            <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase tracking-widest text-foreground transition-all">
                                 <SelectValue placeholder={t("player_name")} />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-foreground/10 rounded-none">
                                 {players.map((player) => (
-                                    <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
+                                    <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase tracking-widest py-3">
                                         {player.number ? `#${player.number} ` : ""}{player.name}
                                     </SelectItem>
                                 ))}
-                                <SelectItem value="unknown" className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
+                                <SelectItem value="unknown" className="focus:bg-secondary focus:text-black font-black uppercase tracking-widest py-3">
                                     {t("unknown_player")}
                                 </SelectItem>
                             </SelectContent>
@@ -149,15 +149,15 @@ export function MatchEventDialog({
                     {/* Goal: Assist */}
                     {eventType === 'goal' && (
                         <div className="space-y-3 relative z-10">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-secondary italic">{t("assist")}</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("assist")}</Label>
                             <Select value={assistPlayerId} onValueChange={setAssistPlayerId}>
-                                <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-foreground transition-all">
+                                <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase tracking-widest text-foreground transition-all">
                                     <SelectValue placeholder={t("no_assist")} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card border-foreground/10 rounded-none">
-                                    <SelectItem value="none" className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">{t("no_assist")}</SelectItem>
+                                    <SelectItem value="none" className="focus:bg-secondary focus:text-black font-black uppercase tracking-widest py-3">{t("no_assist")}</SelectItem>
                                     {players.map((player) => (
-                                        <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
+                                        <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase tracking-widest py-3">
                                             {player.number ? `#${player.number} ` : ""}{player.name}
                                         </SelectItem>
                                     ))}
@@ -169,14 +169,14 @@ export function MatchEventDialog({
                     {/* Substitution: Player IN */}
                     {eventType === 'substitution' && (
                         <div className="space-y-3 relative z-10">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-secondary italic">{t("player_in")}</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("player_in")}</Label>
                             <Select value={subInPlayerId} onValueChange={setSubInPlayerId}>
-                                <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase italic tracking-widest text-foreground transition-all">
+                                <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase tracking-widest text-foreground transition-all">
                                     <SelectValue placeholder={t("select_player_in")} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card border-foreground/10 rounded-none">
                                     {players.map((player) => (
-                                        <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase italic tracking-widest py-3">
+                                        <SelectItem key={player.id} value={player.id} className="focus:bg-secondary focus:text-black font-black uppercase tracking-widest py-3">
                                             {player.number ? `#${player.number} ` : ""}{player.name}
                                         </SelectItem>
                                     ))}

@@ -230,7 +230,7 @@ export function TournamentContent({
         toast({
             title: tCommon("copied"),
             description: tCommon("copied_desc"),
-            className: "rounded-none border-secondary font-bold uppercase italic"
+            className: "rounded-none border-secondary font-bold uppercase"
         });
     };
 
@@ -255,20 +255,20 @@ export function TournamentContent({
                         <div className="flex items-center gap-2 font-black tracking-[0.2em] flex-wrap">
                             {/* Metadata Badges */}
                             <div className="flex flex-wrap items-center gap-2">
-                                <Badge variant="secondary" className="rounded-none font-black italic text-[9px] bg-secondary text-black px-2 shadow-[0_0_10px_rgba(0,196,154,0.3)]">
+                                <Badge variant="secondary" className="rounded-none font-black text-[9px] bg-secondary text-black px-2 shadow-[0_0_10px_rgba(0,196,154,0.3)]">
                                     {tSports(tournament?.sport || 'football')}
                                 </Badge>
 
-                                <Badge variant="outline" className="rounded-none font-black italic text-[9px] border-none text-muted-foreground">
+                                <Badge variant="outline" className="rounded-none font-black text-[9px] border-none text-muted-foreground">
                                     {tournament?.format?.replace('_', ' ')}
                                 </Badge>
 
-                                <span className="text-[10px] font-black tracking-widest text-secondary italic">
+                                <span className="text-[10px] font-black tracking-widest text-secondary">
                                     {teams.length} {tCommon("teams")}
                                 </span>
 
                                 <Badge className={cn(
-                                    "font-black italic border-none px-3 py-1 shadow-lg h-4 md:h-5",
+                                    "font-black border-none px-3 py-1 shadow-lg h-4 md:h-5",
                                     tournament?.status === 'active' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
                                     tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
                                     (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
@@ -286,7 +286,7 @@ export function TournamentContent({
 
                         {/* Title Section */}
                         <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                            <h1 className="text-2xl md:text-5xl font-black italic tracking-tighter uppercase leading-[0.9] text-foreground">
+                            <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-[0.9] text-foreground">
                                 {tournament?.name}
                             </h1>
                         </div>
@@ -312,21 +312,21 @@ export function TournamentContent({
                 <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max">
                     <TabsTrigger
                         value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Trophy className="h-3.5 w-3.5" />
                         {t("overview")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="teams"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Users className="h-3.5 w-3.5" />
                         {t("teams")} ({teams?.length || 0})
                     </TabsTrigger>
                     <TabsTrigger
                         value="fixtures"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Calendar className="h-3.5 w-3.5" />
                         {t("fixtures")}
@@ -334,7 +334,7 @@ export function TournamentContent({
                     {userRole === 'admin' && (
                         <TabsTrigger
                             value="settings"
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                         >
                             <Settings className="h-3.5 w-3.5" />
                             {t("settings")}
@@ -351,7 +351,7 @@ export function TournamentContent({
                             {tournament?.description && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
                                             <BookOpen className="h-5 w-5 text-secondary" />
                                             {t("description")}
                                         </h2>
@@ -361,7 +361,7 @@ export function TournamentContent({
                                         <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
                                         <CardContent className="p-0">
                                             <div
-                                                className="prose prose-invert prose-sm md:prose-base max-w-none text-foreground/70 font-medium leading-relaxed italic"
+                                                className="prose prose-invert prose-sm md:prose-base max-w-none text-foreground/70 font-medium leading-relaxed"
                                                 dangerouslySetInnerHTML={{ __html: tournament.description }}
                                             />
                                         </CardContent>
@@ -373,7 +373,7 @@ export function TournamentContent({
                             {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Trophy className="h-5 w-5 text-secondary" />
                                             {t("standings")}
                                         </h2>
@@ -392,7 +392,7 @@ export function TournamentContent({
                             {tournament?.format === 'group_knockout' && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Trophy className="h-5 w-5 text-secondary" />
                                             {t("group_standings")}
                                         </h2>
@@ -408,7 +408,7 @@ export function TournamentContent({
                             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <GitBranch className="h-5 w-5 text-secondary" />
                                             {t("bracket")}
                                         </h2>
@@ -424,12 +424,12 @@ export function TournamentContent({
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center justify-between">
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Award className="h-5 w-5 text-secondary" />
                                             {t("top_scorers")}
                                         </h2>
                                         {!isPro && (
-                                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary text-[10px] uppercase font-black italic shadow-[0_0_10px_rgba(0,196,154,0.1)] px-3 py-1 bg-secondary/5">
+                                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary text-[10px] uppercase font-black shadow-[0_0_10px_rgba(0,196,154,0.1)] px-3 py-1 bg-secondary/5">
                                                 {t("pro_badge")}
                                             </Badge>
                                         )}
@@ -451,7 +451,7 @@ export function TournamentContent({
                                             <p className="text-xs md:text-sm font-bold uppercase text-muted-foreground/60 tracking-wider leading-relaxed max-w-sm mx-auto">
                                                 {t("upsell_pro_required")}
                                             </p>
-                                            <Button variant="secondary" asChild className="rounded-none font-black uppercase italic text-[11px] tracking-widest px-8 shadow-xl shadow-secondary/20 hover:-translate-y-0.5 transition-all">
+                                            <Button variant="secondary" asChild className="rounded-none font-black uppercase text-[11px] tracking-widest px-8 shadow-xl shadow-secondary/20 hover:-translate-y-0.5 transition-all">
                                                 <Link href="/dashboard/billing">{t("upsell_view_plans")}</Link>
                                             </Button>
                                         </div>
@@ -463,7 +463,7 @@ export function TournamentContent({
                             {isPro && playerStats.length > 0 && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Users className="h-5 w-5 text-secondary" />
                                             {t("player_stats")}
                                         </h2>
@@ -487,7 +487,7 @@ export function TournamentContent({
                         <div className="lg:col-span-1 space-y-4 md:space-y-6">
                             {/* Action Bar Header */}
                             <div className="flex flex-col gap-1">
-                                <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                     <Settings className="h-5 w-5 text-secondary" />
                                     {t("actions")}
                                 </h2>
@@ -552,7 +552,7 @@ export function TournamentContent({
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                                 <BookOpen className="h-5 w-5 text-primary" />
                                                 {tRegistrations("title")}
                                             </h3>
@@ -594,7 +594,7 @@ export function TournamentContent({
                             {/* Participating Teams */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Users className="h-5 w-5 text-secondary" />
                                         {t("participating_teams")} <span className="text-muted-foreground/40 ml-1">[{teams?.length || 0}]</span>
                                     </h3>
@@ -629,7 +629,7 @@ export function TournamentContent({
                             {/* Add Team Section */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Plus className="h-5 w-5 text-secondary" />
                                         {t("add_team")}
                                     </h3>
@@ -648,11 +648,11 @@ export function TournamentContent({
                                 {isPro && (
                                     <div className="space-y-4 md:space-y-6">
                                         <div className="flex flex-col gap-1">
-                                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                                 <ExternalLink className="h-5 w-5 text-primary" />
                                                 {t("public_link")}
                                             </h3>
-                                            <p className="text-[10px] font-bold uppercase text-muted-foreground/60 italic">Direct access for teams</p>
+                                            <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Direct access for teams</p>
                                         </div>
 
                                         <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
@@ -709,7 +709,7 @@ export function TournamentContent({
                             {/* Unwrapped Header */}
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 pb-4 md:pb-6 border-b border-foreground/5">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Calendar className="h-5 w-5 text-secondary" />
                                         {t("match_schedule")}
                                     </h3>
@@ -724,7 +724,7 @@ export function TournamentContent({
                                         variant="ghost"
                                         size="sm"
                                         className={cn(
-                                            "rounded-none h-8 px-4 font-black uppercase italic tracking-tighter text-[10px] transition-all",
+                                            "rounded-none h-8 px-4 font-black uppercase tracking-tighter text-[10px] transition-all",
                                             fixtureView === 'list' && "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20"
                                         )}
                                         onClick={() => setFixtureView('list')}
@@ -736,7 +736,7 @@ export function TournamentContent({
                                         variant="ghost"
                                         size="sm"
                                         className={cn(
-                                            "rounded-none h-8 px-4 font-black uppercase italic tracking-tighter text-[10px] transition-all",
+                                            "rounded-none h-8 px-4 font-black uppercase tracking-tighter text-[10px] transition-all",
                                             fixtureView === 'calendar' && "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20"
                                         )}
                                         onClick={() => setFixtureView('calendar')}
@@ -767,7 +767,7 @@ export function TournamentContent({
                             {/* Generation Controls Block */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Settings className="h-5 w-5 text-secondary" />
                                         Control Center
                                     </h3>
@@ -783,7 +783,7 @@ export function TournamentContent({
                                             tournamentId={id}
                                             hasFixtures={hasFixtures}
                                             format={tournament?.format}
-                                            className="h-14 font-black uppercase italic tracking-tighter text-sm shadow-lg shadow-secondary/10"
+                                            className="h-14 font-black uppercase tracking-tighter text-sm shadow-lg shadow-secondary/10"
                                         />
 
                                         {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
@@ -810,13 +810,13 @@ export function TournamentContent({
                                         </div>
                                         <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("format")}</span>
-                                            <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
+                                            <span className="text-[11px] font-black uppercase tracking-widest text-foreground">
                                                 {tournament?.format?.replace('_', ' ').toUpperCase()}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Total Teams</span>
-                                            <span className="text-[11px] font-black uppercase tracking-widest text-secondary italic">
+                                            <span className="text-[11px] font-black uppercase tracking-widest text-secondary">
                                                 {teams.length}
                                             </span>
                                         </div>
@@ -840,7 +840,7 @@ export function TournamentContent({
                             <div className="lg:col-span-1 space-y-4 md:space-y-6 hidden lg:block">
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <ClipboardEdit className="h-5 w-5 text-secondary" />
                                             Configuration Overview
                                         </h3>
@@ -858,19 +858,19 @@ export function TournamentContent({
                                             </div>
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Plan</span>
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-secondary italic">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-secondary">
                                                     {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Team Slots</span>
-                                                <span className="text-[11px] font-black uppercase tracking-widest text-foreground italic">
+                                                <span className="text-[11px] font-black uppercase tracking-widest text-foreground">
                                                     {teams.length} / {tournament?.max_teams || 8}
                                                 </span>
                                             </div>
                                             <div className="pt-2 md:pt-3">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
-                                                <p className="text-[11px] font-black text-foreground italic">
+                                                <p className="text-[11px] font-black text-foreground">
                                                     {mounted ? new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}
                                                 </p>
                                             </div>
@@ -880,8 +880,8 @@ export function TournamentContent({
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
                                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15_rgba(0,196,154,0.1)]" />
                                         <div className="space-y-3">
-                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary italic">Quick Help</h5>
-                                            <p className="text-[11px] text-muted-foreground/80 leading-relaxed italic font-medium">
+                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary">Quick Help</h5>
+                                            <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
                                                 Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
                                             </p>
                                         </div>

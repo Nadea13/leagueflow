@@ -113,10 +113,10 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="w-[100px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("report_date")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("reporter")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("report_message")}</TableHead>
+                            <TableHead className="w-[100px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("report_date")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("reporter")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("report_message")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -193,7 +193,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                     <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground flex items-center gap-2">
+                            <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                                 <AlertCircle className="h-5 w-5 text-secondary" />
                                 {t("report_details")}
                             </DialogTitle>

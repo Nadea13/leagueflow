@@ -29,7 +29,7 @@ export default async function SettingsPage() {
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-foreground leading-none">{t("title")}</h1>
+                    <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-foreground leading-none">{t("title")}</h1>
                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">{t("subtitle")}</p>
                 </div>
             </div>
@@ -42,7 +42,7 @@ export default async function SettingsPage() {
                 <div className="space-y-4 md:space-y-6">
                     <div className="flex items-center gap-3 mb-4 md:mb-6">
                         <Sliders className="h-5 w-5 text-secondary" />
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                             {t("preferences")}
                         </h3>
                     </div>
@@ -52,14 +52,14 @@ export default async function SettingsPage() {
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{tCommon("language")}</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{tCommon("language")}</Label>
                                     <p className="text-[11px] text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
                                 </div>
                                 <LanguageSelect />
                             </div>
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{tCommon("theme")}</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{tCommon("theme")}</Label>
                                     <p className="text-[11px] text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
                                 </div>
                                 <ModeToggle />
@@ -72,7 +72,7 @@ export default async function SettingsPage() {
                 <div className="space-y-4 md:space-y-6">
                     <div className="flex items-center gap-3 my-4 md:my-6">
                         <Scale className="h-5 w-5 text-secondary" />
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                             {t("legal")}
                         </h3>
                     </div>
@@ -83,21 +83,21 @@ export default async function SettingsPage() {
                             <Link href="/privacy-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
                                     <Shield className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
-                                    <span className="font-black uppercase italic text-xs tracking-tight">{tLegal("privacy")}</span>
+                                    <span className="font-black uppercase text-xs tracking-tight">{tLegal("privacy")}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
                             </Link>
                             <Link href="/terms-of-service" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
                                     <FileText className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
-                                    <span className="font-black uppercase italic text-xs tracking-tight">{tLegal("terms")}</span>
+                                    <span className="font-black uppercase text-xs tracking-tight">{tLegal("terms")}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
                             </Link>
                             <Link href="/refund-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
                                     <CreditCard className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
-                                    <span className="font-black uppercase italic text-xs tracking-tight">{tLegal("refund")}</span>
+                                    <span className="font-black uppercase text-xs tracking-tight">{tLegal("refund")}</span>
                                 </div>
                                 <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
                             </Link>
@@ -109,7 +109,7 @@ export default async function SettingsPage() {
                 <div className="space-y-4 md:space-y-6">
                     <div className="flex items-center gap-3 my-4 md:my-6">
                         <AlertTriangle className="h-5 w-5 text-destructive" />
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-destructive">
+                        <h3 className="text-xl font-black uppercase tracking-tighter text-destructive">
                             {t("danger_zone")}
                         </h3>
                     </div>
@@ -119,7 +119,7 @@ export default async function SettingsPage() {
                         
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="space-y-2">
-                                <h4 className="text-lg font-black uppercase italic tracking-tight text-destructive/90">{t("delete_account")}</h4>
+                                <h4 className="text-lg font-black uppercase tracking-tight text-destructive/90">{t("delete_account")}</h4>
                                 <p className="text-xs font-medium text-muted-foreground max-w-md">{t("delete_account_desc")}</p>
                             </div>
                             <DeleteAccountButton email={user?.email || ""} />
@@ -130,7 +130,7 @@ export default async function SettingsPage() {
             
             {/* Version Info */}
             <div className="mt-8 mb-4 flex justify-center items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
                     {t("version")} 0.1.1
                 </span>
             </div>

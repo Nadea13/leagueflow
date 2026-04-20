@@ -88,26 +88,26 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="min-w-[200px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("plan_name")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("price")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("duration")}</TableHead>
+                            <TableHead className="min-w-[200px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("plan_name")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("price")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("duration")}</TableHead>
                             
                             {role === 'manager' ? (
                                 <>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("max_teams")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("players_per_team")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("max_teams")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("players_per_team")}</TableHead>
                                 </>
                             ) : (
                                 <>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("max_tournaments")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("teams_per_tournament")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("formats")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("max_tournaments")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("teams_per_tournament")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("formats")}</TableHead>
                                 </>
                             )}
                             
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("support")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("recommended")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("support")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("recommended")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -146,11 +146,11 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className={plan.discounted_price ? "line-through text-[10px] text-muted-foreground" : "font-black text-sm italic"}>
+                                            <span className={plan.discounted_price ? "line-through text-[10px] text-muted-foreground" : "font-black text-sm"}>
                                                 ฿{plan.price.toLocaleString()}
                                             </span>
                                             {plan.discounted_price && (
-                                                <span className="text-secondary font-black text-sm italic">
+                                                <span className="text-secondary font-black text-sm">
                                                     ฿{plan.discounted_price.toLocaleString()}
                                                 </span>
                                             )}
@@ -203,7 +203,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent className="rounded-none border-border">
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle className="font-black italic uppercase tracking-tighter">
+                                                        <AlertDialogTitle className="font-black uppercase tracking-tighter">
                                                             {tCommon("are_you_sure")}
                                                         </AlertDialogTitle>
                                                         <AlertDialogDescription>

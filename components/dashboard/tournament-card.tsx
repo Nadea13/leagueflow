@@ -44,7 +44,7 @@ export function TournamentCard({ tournament, userPlan }: TournamentCardProps) {
                         <div className={cn("text-[9px] font-bold uppercase tracking-widest opacity-80", statusColor.split(' ').filter(c => c.startsWith('text-')).join(' '))}>
                             {tournament.status ? tSettings(tournament.status) : tSettings('draft')}
                         </div>
-                        <CardTitle className="text-lg font-black leading-none tracking-tight uppercase italic group-hover:text-secondary transition-colors truncate">
+                        <CardTitle className="text-lg font-black leading-none tracking-tight uppercase group-hover:text-secondary transition-colors truncate">
                             {tournament.name}
                         </CardTitle>
                     </div>
@@ -68,7 +68,7 @@ export function TournamentCard({ tournament, userPlan }: TournamentCardProps) {
                                 </span>
                             </div>
                         </div>
-                        <div className="text-[9px] font-bold uppercase text-secondary/70 tracking-[0.2em] italic">
+                        <div className="text-[9px] font-bold uppercase text-secondary/70 tracking-[0.2em]">
                             {tournament.format || 'League'} • Championship
                         </div>
                     </div>

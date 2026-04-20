@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
-import { serverSideLogin } from "@/app/[locale]/auth/auth-actions";
+import { signIn } from "@/actions/common/auth";
 
 export function EmailLoginForm() {
     const t = useTranslations('Login');
@@ -20,6 +20,7 @@ export function EmailLoginForm() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,19 +30,18 @@ export function EmailLoginForm() {
         setError(null);
 
         try {
-            const { error, data: _data } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // Use Server Action for better security and cookie handling
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', password);
 
-            if (error) {
+            const result = await signIn(formData, locale);
+
+            if (!result.success) {
                 setError(t('invalid_credentials'));
                 setIsLoading(false);
                 return;
             }
-
-            // Log activity via server action to capture IP
-            await serverSideLogin(email);
 
             // Redirect on success
             router.push(`/${locale}/dashboard`);
@@ -83,15 +83,29 @@ export function EmailLoginForm() {
                         {t('forgot_password')}
                     </Link>
                 </div>
-                <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="bg-background/50"
-                />
+                <div className="relative">
+                    <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="bg-background/50 pr-10"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        disabled={isLoading}
+                    >
+                        {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                        ) : (
+                            <Eye className="h-4 w-4" />
+                        )}
+                    </button>
+                </div>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (

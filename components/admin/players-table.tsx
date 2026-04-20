@@ -94,7 +94,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                         <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                             <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                                     <Shield className="h-5 w-5 text-secondary" />
                                     {t("add_player")}
                                 </DialogTitle>
@@ -166,16 +166,16 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                 {commonT("user")}
                             </TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                 {t("date_of_birth")}
                             </TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                 {t("created_at")}
                             </TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                 {t("actions")}
                             </TableHead>
                         </TableRow>

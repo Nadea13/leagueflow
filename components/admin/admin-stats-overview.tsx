@@ -26,7 +26,7 @@ export function AdminStatsOverview({ stats }: AdminStatsProps) {
                     <Users className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         {stats.totalUsers}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -45,7 +45,7 @@ export function AdminStatsOverview({ stats }: AdminStatsProps) {
                     <Crown className="h-4 w-4 text-emerald-500 opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         {stats.proUsers}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -64,7 +64,7 @@ export function AdminStatsOverview({ stats }: AdminStatsProps) {
                     <Trophy className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         {stats.activeTournaments}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -83,7 +83,7 @@ export function AdminStatsOverview({ stats }: AdminStatsProps) {
                     <DollarSign className="h-4 w-4 text-secondary/70 opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         ฿{stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">

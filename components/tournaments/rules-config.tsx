@@ -66,7 +66,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                     <Settings2 className="h-5 w-5 text-secondary" />
                     {t("title")}
                 </h3>
@@ -82,7 +82,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("half_duration")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("half_duration")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.half_duration}
@@ -92,7 +92,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("extra_time")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("extra_time")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.extra_time_duration}
@@ -102,7 +102,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("max_substitutions")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("max_substitutions")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.max_substitutions}
@@ -118,7 +118,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("min_squad_size")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("min_squad_size")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.min_squad_size || ""}
@@ -129,7 +129,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("max_squad_size")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("max_squad_size")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.max_squad_size || ""}
@@ -146,7 +146,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("yellow_ban_threshold")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("yellow_ban_threshold")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.yellow_card_ban_threshold}
@@ -157,7 +157,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                 <p className="text-[9px] font-bold uppercase text-muted-foreground/40 tracking-wider px-1">{t("yellow_ban_desc")}</p>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("red_ban_matches")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("red_ban_matches")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.red_card_ban_matches}
@@ -174,7 +174,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-3 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("win")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("win")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.points_for_win}
@@ -184,7 +184,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("draw")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("draw")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.points_for_draw}
@@ -194,7 +194,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("loss")}</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("loss")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.points_for_loss}
@@ -210,7 +210,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                         <Button 
                             type="submit" 
                             disabled={isSaving}
-                            className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group overflow-hidden"
+                            className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
                         >
                             <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                              <span className="relative z-10 flex items-center gap-2">

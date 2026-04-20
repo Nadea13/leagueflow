@@ -8,7 +8,7 @@ export default async function TermsOfServicePage() {
         <div className="container mx-auto max-w-4xl py-8 space-y-8 md:py-12">
             <BackButton />
             <div className="space-y-2 border-b-2 border-secondary/20 pb-6">
-                <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter text-foreground leading-none">
+                <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-foreground leading-none">
                     {t("title")}
                 </h1>
                 <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-70">
@@ -17,7 +17,7 @@ export default async function TermsOfServicePage() {
             </div>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("acceptance_title")}
                 </h2>
@@ -29,7 +29,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("service_title")}
                 </h2>
@@ -41,7 +41,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("accounts_title")}
                 </h2>
@@ -53,7 +53,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("content_title")}
                 </h2>
@@ -65,7 +65,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("payments_title")}
                 </h2>
@@ -77,7 +77,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("ip_title")}
                 </h2>
@@ -89,7 +89,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("liability_title")}
                 </h2>
@@ -101,7 +101,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("termination_title")}
                 </h2>
@@ -113,7 +113,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("law_title")}
                 </h2>
@@ -125,7 +125,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("accuracy_title")}
                 </h2>
@@ -137,7 +137,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("fair_play_title")}
                 </h2>
@@ -149,7 +149,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("availability_title")}
                 </h2>
@@ -161,7 +161,7 @@ export default async function TermsOfServicePage() {
             </section>
 
             <section className="space-y-4 group">
-                <h2 className="text-2xl font-black uppercase italic tracking-tight text-foreground flex items-center gap-3">
+                <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
                     <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                     {t("comm_title")}
                 </h2>

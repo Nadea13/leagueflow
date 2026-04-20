@@ -22,7 +22,7 @@ export function StatsOverview({ totalTournaments, activeTournaments, completedTo
                     <Trophy className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         {totalTournaments}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -41,7 +41,7 @@ export function StatsOverview({ totalTournaments, activeTournaments, completedTo
                     <Activity className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         {activeTournaments}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -60,7 +60,7 @@ export function StatsOverview({ totalTournaments, activeTournaments, completedTo
                     <CheckCircle className="h-4 w-4 text-secondary/70 opacity-80 shrink-0 hidden sm:block" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                    <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                    <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                         {completedTournaments}
                     </div>
                     <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">

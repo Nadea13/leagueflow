@@ -10,7 +10,7 @@ export default async function AdminPlayersPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-foreground">
+                    <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-foreground">
                         {t("players")}
                     </h1>
                     <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">

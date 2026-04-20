@@ -26,7 +26,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
             <div className="px-4 pt-2 md:px-6 md:pt-6 flex items-center justify-between px-4 relative z-10">
                 <div className="space-y-1">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("match_log") || "Match Log"}</h3>
-                    <p className="text-[8px] text-muted-foreground italic">CHRONOLOGICAL EVENT HISTORY</p>
+                    <p className="text-[8px] text-muted-foreground">CHRONOLOGICAL EVENT HISTORY</p>
                 </div>
             </div>
 
@@ -63,7 +63,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                     {!isNeutral && (
                                         <div className="w-6 flex flex-col items-center">
                                             <span className={cn(
-                                                "text-sm font-black italic tracking-tighter drop-shadow-sm transition-colors",
+                                                "text-sm font-black tracking-tighter drop-shadow-sm transition-colors",
                                                 isHome ? "text-foreground/40 group-hover/item:text-secondary" : "text-foreground/40 group-hover/item:text-foreground"
                                             )}>
                                                 {event.minute}&apos;
@@ -87,15 +87,15 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                 <div className="flex items-center gap-4 w-full">
                                                     <div className="flex-1 h-[1px] bg-secondary/40" />
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.3em] italic text-secondary drop-shadow-md">
+                                                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary drop-shadow-md">
                                                             {t(evtConfig?.label || event.event_type)}
                                                         </span>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-black italic text-foreground/40">
+                                                            <span className="text-sm font-black text-foreground/40">
                                                                 {event.minute}&apos;
                                                             </span>
                                                             {event.extra_info?.added_minutes && (
-                                                                <span className="text-sm1 font-black italic text-foreground/40">
+                                                                <span className="text-sm1 font-black text-foreground/40">
                                                                     (+{event.extra_info.added_minutes} MIN)
                                                                 </span>
                                                             )}
@@ -110,7 +110,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                         isNeutral ? "justify-center" : (isHome ? "flex-row" : "flex-row-reverse")
                                                     )}>
                                                         <span className={cn(
-                                                            "text-[9px] font-black uppercase tracking-widest italic",
+                                                            "text-[9px] font-black uppercase tracking-widest",
                                                             event.event_type === 'goal' ? "text-secondary" : (isNeutral ? "text-foreground/60" : "text-foreground/40")
                                                         )}>
                                                             {event.event_type === 'penalty_shot' 
@@ -120,20 +120,20 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                         {!isNeutral && (
                                                             <>
                                                                 <span className="text-[10px] text-foreground/20">•</span>
-                                                                <span className="text-[10px] font-black uppercase italic tracking-tighter text-foreground truncate max-w-[120px]">
+                                                                <span className="text-[10px] font-black uppercase tracking-tighter text-foreground truncate max-w-[120px]">
                                                                     {isHome ? match.home_team?.name : match.away_team?.name}
                                                                 </span>
                                                             </>
                                                         )}
                                                     </div>
                                                     <p className={cn(
-                                                        "text-xs font-black uppercase italic tracking-widest text-foreground truncate",
+                                                        "text-xs font-black uppercase tracking-widest text-foreground truncate",
                                                         isNeutral ? "text-center" : ""
                                                     )}>
                                                         {event.player_name || "Match Event"}
                                                     </p>
                                                     {event.extra_info?.reason && (
-                                                        <p className="text-[9px] text-foreground/40 italic mt-1 font-medium">{event.extra_info.reason}</p>
+                                                        <p className="text-[9px] text-foreground/40 mt-1 font-medium">{event.extra_info.reason}</p>
                                                     )}
                                                 </div>
                                             )}

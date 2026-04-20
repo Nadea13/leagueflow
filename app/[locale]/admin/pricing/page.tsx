@@ -18,7 +18,7 @@ export default async function AdminPricingPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black italic uppercase tracking-tighter text-foreground">
+                    <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-foreground">
                         {t("plan_management")}
                     </h1>
                     <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
@@ -30,10 +30,10 @@ export default async function AdminPricingPage() {
             <Tabs defaultValue="organizer" className="w-full">
                 <div className="flex items-center justify-between mb-4">
                     <TabsList className="bg-muted/30 border border-border rounded-none p-1 h-auto">
-                        <TabsTrigger value="organizer" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                        <TabsTrigger value="organizer" className="rounded-none text-[10px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
                             {t("organizer_plans")}
                         </TabsTrigger>
-                        <TabsTrigger value="manager" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                        <TabsTrigger value="manager" className="rounded-none text-[10px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
                             {t("manager_plans")}
                         </TabsTrigger>
                     </TabsList>

@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
-import { serverSideSignup } from "@/app/[locale]/auth/auth-actions";
+import { signUp } from "@/actions/common/auth";
 
 export function SignUpForm() {
     const t = useTranslations('SignUp');
@@ -20,6 +20,8 @@ export function SignUpForm() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [fullName, setFullName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -30,25 +32,24 @@ export function SignUpForm() {
         setIsLoading(true);
         setError(null);
 
+        if (password !== confirmPassword) {
+            setError(t('passwords_dont_match'));
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            const { error, data } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                    },
-                    emailRedirectTo: `${window.location.origin}/${locale}/auth/confirm`,
-                },
-            });
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('confirmPassword', confirmPassword);
+            formData.append('fullName', fullName);
 
-            if (error) {
-                setError(error.message);
+            const result = await signUp(formData, locale);
+
+            if (!result.success) {
+                setError(result.error || tCommon('something_went_wrong'));
                 return;
-            }
-
-            if (data.user) {
-                await serverSideSignup(data.user.id, email);
             }
 
             setIsSuccess(true);
@@ -116,15 +117,44 @@ export function SignUpForm() {
 
             <div className="space-y-2">
                 <Label htmlFor="password">{t('password')}</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className="bg-background/50"
-                />
+                <div className="relative">
+                    <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="bg-background/50 pr-10"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        disabled={isLoading}
+                    >
+                        {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                        ) : (
+                            <Eye className="h-4 w-4" />
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="confirmPassword">{t('confirm_password')}</Label>
+                <div className="relative">
+                    <Input
+                        id="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="bg-background/50 pr-10"
+                    />
+                </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>

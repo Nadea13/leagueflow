@@ -90,7 +90,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                         </label>
                         <div className="flex-1 space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("team_logo")}</Label>
-                            <p className="text-[9px] text-muted-foreground italic">PNG, JPG up to 2MB</p>
+                            <p className="text-[9px] text-muted-foreground">PNG, JPG up to 2MB</p>
                         </div>
                     </div>
 
@@ -102,7 +102,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                                 name="name"
                                 placeholder={isLimitReached ? t("limit_reached") : t("team_name_placeholder")}
                                 required
-                                className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                 disabled={isLimitReached}
                             />
                         </div>
@@ -110,12 +110,12 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                         <div className="space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tCommon("sport")}</Label>
                             <Select name="sport" defaultValue="football">
-                                <SelectTrigger className="h-12 bg-foreground/5 border-none rounded-none focus:ring-0 px-3 font-bold uppercase italic tracking-tighter text-left">
+                                <SelectTrigger className="h-12 bg-foreground/5 border-none rounded-none focus:ring-0 px-3 font-bold uppercase tracking-tighter text-left">
                                     <SelectValue placeholder={tDialog("select_sport")} />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-none border-border">
                                     {['football'].map((sportKey) => (
-                                        <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
+                                        <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">
                                             {tSports(sportKey)}
                                         </SelectItem>
                                     ))}
@@ -133,7 +133,7 @@ export function AddTeamForm({ tournamentId, isLimitReached = false }: { tourname
                             />
                         </div>
 
-                        <SubmitButton disabled={isLimitReached} className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 transition-all">
+                        <SubmitButton disabled={isLimitReached} className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all">
                             <Plus className="h-4 w-4 mr-2" />
                             {t("add_team_button")}
                         </SubmitButton>

@@ -34,14 +34,14 @@ export function DeleteAccountButton({ email }: { email: string }) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="destructive" className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase italic tracking-tighter transition-all px-6 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+                <Button variant="destructive" className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase tracking-tighter transition-all px-6 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]">
                     <Trash2 className="h-5 w-5 mr-3" />
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
             <DialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md p-6">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                    <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                         <Trash2 className="h-5 w-5 text-destructive" />
                         {t("delete_confirm_title")}
                     </DialogTitle>

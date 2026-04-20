@@ -56,10 +56,10 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
                             )}
                             <div className="flex items-center gap-1.5 opacity-60">
                                 <Trophy className="h-3 w-3 text-secondary" />
-                                <span className="text-[9px] font-black uppercase italic tracking-tighter text-muted-foreground/80">{tournament.format || 'League'}</span>
+                                <span className="text-[9px] font-black uppercase tracking-tighter text-muted-foreground/80">{tournament.format || 'League'}</span>
                             </div>
                         </div>
-                        <CardTitle className="text-2xl font-black leading-none tracking-tighter uppercase italic group-hover:text-secondary transition-colors truncate">
+                        <CardTitle className="text-2xl font-black leading-none tracking-tighter uppercase group-hover:text-secondary transition-colors truncate">
                             {tournament.name}
                         </CardTitle>
                     </div>
@@ -69,7 +69,7 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
                     <div className="flex flex-col gap-4">
                         <div className="grid grid-cols-2 gap-4 border-t border-border/40 pt-4">
                             <div className="flex flex-col">
-                                <span className="text-[8px] uppercase font-black text-muted-foreground/40 tracking-[0.2em] italic mb-1">{t("kick_off")}</span>
+                                <span className="text-[8px] uppercase font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{t("kick_off")}</span>
                                 <div className="flex items-center gap-2">
                                     <CalendarDays className="h-3.5 w-3.5 text-secondary/40 shrink-0" />
                                     <span className="text-[11px] font-black uppercase tabular-nums tracking-tight">
@@ -80,7 +80,7 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
                                 </div>
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[8px] uppercase font-black text-muted-foreground/40 tracking-[0.2em] italic mb-1">{t("team_limit")}</span>
+                                <span className="text-[8px] uppercase font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{t("team_limit")}</span>
                                 <div className="flex items-center gap-2">
                                     <Users className="h-3.5 w-3.5 text-secondary/40 shrink-0" />
                                     <span className="text-[11px] font-black uppercase tabular-nums tracking-tight">

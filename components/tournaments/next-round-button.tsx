@@ -99,7 +99,7 @@ export function NextRoundButton({ tournamentId, matches, format }: NextRoundButt
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                             <ArrowRight className="h-5 w-5 text-primary" />
                             Advance Round
                         </AlertDialogTitle>

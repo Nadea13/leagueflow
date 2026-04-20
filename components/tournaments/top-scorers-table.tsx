@@ -64,7 +64,7 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                                             <Activity className="h-8 w-8 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
                                         </div>
                                         <div className="space-y-1">
-                                            <h3 className="text-sm font-black uppercase italic tracking-widest text-muted-foreground/40">{t("no_goals")}</h3>
+                                            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{t("no_goals")}</h3>
                                             <p className="text-[10px] font-bold uppercase text-muted-foreground/20">Awaiting match events</p>
                                         </div>
                                     </div>
@@ -81,14 +81,14 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                                     >
                                         <TableCell className="text-center px-0 border-b border-border/5">
                                             <span className={cn(
-                                                "text-[10px] font-black italic tracking-tighter tabular-nums",
+                                                "text-[10px] font-black tracking-tighter tabular-nums",
                                                 isTop3 ? "text-secondary" : "text-muted-foreground/40"
                                             )}>
                                                 {String(index + 1).padStart(2, '0')}
                                             </span>
                                         </TableCell>
                                         <TableCell className="px-4 border-b border-border/5">
-                                            <span className="text-sm font-black uppercase italic tracking-tighter text-foreground group-hover/row:text-primary transition-colors">
+                                            <span className="text-sm font-black uppercase tracking-tighter text-foreground group-hover/row:text-primary transition-colors">
                                                 {scorer.player_name}
                                             </span>
                                         </TableCell>
@@ -103,7 +103,7 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
                                                         </span>
                                                     )}
                                                 </div>
-                                                <span className="text-[10px] font-black uppercase italic tracking-tighter text-muted-foreground/60 group-hover/row:text-muted-foreground transition-colors truncate max-w-[120px] md:max-w-none">
+                                                <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground/60 group-hover/row:text-muted-foreground transition-colors truncate max-w-[120px] md:max-w-none">
                                                     {team?.name}
                                                 </span>
                                             </div>
@@ -122,7 +122,7 @@ export function TopScorersTable({ goals, teams }: { goals: Goal[]; teams: Team[]
             </div>
             {sortedScorers.length > 0 && (
                 <div className="py-2 flex justify-end">
-                    <p className="text-[8px] font-black uppercase italic tracking-widest text-muted-foreground/30">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/30">
                         {t("showing_top_10") || "Showing TOP 10 Goal Scorers"}
                     </p>
                 </div>

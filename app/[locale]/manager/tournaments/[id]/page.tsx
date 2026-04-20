@@ -181,7 +181,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                                             ? t("registration_closed_full_desc") 
                                             : (isPastDeadline ? t("registration_closed_deadline_desc") : t("registration_closed_desc"))}
                                     </p>
-                                    <Button asChild variant="outline" size="sm" className="rounded-full px-6 font-black uppercase italic tracking-tighter">
+                                    <Button asChild variant="outline" size="sm" className="rounded-full px-6 font-black uppercase tracking-tighter">
                                         <Link href="/manager/tournaments">
                                             {tCommon("back_to_dashboard")}
                                         </Link>

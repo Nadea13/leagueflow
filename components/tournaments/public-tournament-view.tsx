@@ -165,16 +165,16 @@ export function PublicTournamentView({
                     <div className="flex flex-col flex-1 gap-1 md:gap-2 min-w-0">
                         {/* Metadata Badges */}
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <Badge variant="outline" className="rounded-none font-black italic text-[10px] border-none bg-secondary/10 text-secondary uppercase tracking-widest">
+                            <Badge variant="outline" className="rounded-none font-black text-[10px] border-none bg-secondary/10 text-secondary uppercase tracking-widest">
                                 {tournament?.format?.replace('_', ' ')}
                             </Badge>
 
-                            <span className="text-[10px] font-black tracking-widest text-muted-foreground italic px-2 border-l border-foreground/10 uppercase">
+                            <span className="text-[10px] font-black tracking-widest text-muted-foreground px-2 border-l border-foreground/10 uppercase">
                                 {initialTeams.length} {tTournament("teams")}
                             </span>
 
                             <Badge className={cn(
-                                "font-black italic border-none px-3 py-1 shadow-lg text-[10px] h-5 uppercase tracking-widest",
+                                "font-black border-none px-3 py-1 shadow-lg text-[10px] h-5 uppercase tracking-widest",
                                 tournament?.status === 'active' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
                                 tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
                                 (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
@@ -182,14 +182,14 @@ export function PublicTournamentView({
                                 {tTournament(tournament?.status || 'draft')}
                             </Badge>
 
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 border-none font-black italic uppercase tracking-tighter bg-foreground/5 text-muted-foreground/60">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 border-none font-black uppercase tracking-tighter bg-foreground/5 text-muted-foreground/60">
                                 {t("beta")}
                             </Badge>
                         </div>
 
                         {/* Title Section */}
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-[0.85] text-foreground drop-shadow-2xl">
+                            <h1 className="text-3xl md:text-6xl font-black tracking-tighter uppercase leading-[0.85] text-foreground drop-shadow-2xl">
                                 {tournament?.name}
                             </h1>
                         </div>
@@ -218,14 +218,14 @@ export function PublicTournamentView({
                 <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max print:hidden backdrop-blur-sm">
                     <TabsTrigger
                         value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Trophy className="h-3.5 w-3.5" />
                         {t("overview")}
                     </TabsTrigger>
                     <TabsTrigger
                         value="matches"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase italic transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
                     >
                         <Calendar className="h-3.5 w-3.5" />
                         {t("matches")}
@@ -237,7 +237,7 @@ export function PublicTournamentView({
                         {(tournament.format === 'league' || tournament.format === 'league_ha') && (
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("league_table")}
                                     </h2>
@@ -255,7 +255,7 @@ export function PublicTournamentView({
                         {tournament.format === 'group_knockout' && (
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("group_standings")}
                                     </h2>
@@ -273,7 +273,7 @@ export function PublicTournamentView({
                         {(tournament.format === 'knockout' || tournament.format === 'group_knockout') && (
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <GitBranch className="h-5 w-5 text-secondary" />
                                         {t("bracket")}
                                     </h2>
@@ -289,7 +289,7 @@ export function PublicTournamentView({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-8 border-t border-foreground/5">
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex flex-col gap-1">
-                                <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                     <Award className="h-5 w-5 text-secondary" />
                                     {t("top_scorers")}
                                 </h2>
@@ -306,7 +306,7 @@ export function PublicTournamentView({
                         <div className="space-y-12">
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Users className="h-5 w-5 text-secondary" />
                                         {t("player_stats")}
                                     </h2>
@@ -332,7 +332,7 @@ export function PublicTournamentView({
                 <TabsContent value="matches">
                     <div className="space-y-4 md:space-y-6">
                         <div className="flex flex-col gap-1">
-                            <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                 <Calendar className="h-5 w-5 text-secondary" />
                                 {t("fixtures_results")}
                             </h2>

@@ -20,7 +20,7 @@ export default async function ManagerTournamentsPage() {
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
                         {tNav("tournaments")}
                     </h1>
                     <p className="text-muted-foreground/60 text-[10px] md:text-xs font-bold uppercase tracking-widest max-w-xl">
@@ -40,7 +40,7 @@ export default async function ManagerTournamentsPage() {
                         <Trophy className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">{totalCount}</div>
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{totalCount}</div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                             <span className="w-2 h-[1px] bg-secondary/40" />
                             {tDashboard("all_time")}
@@ -57,7 +57,7 @@ export default async function ManagerTournamentsPage() {
                         <Activity className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">{activeCount}</div>
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{activeCount}</div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                             <span className="w-2 h-[1px] bg-secondary/40" />
                             {tDashboard("currently_running")}
@@ -74,7 +74,7 @@ export default async function ManagerTournamentsPage() {
                         <CheckCircle className="h-4 w-4 text-secondary/70 opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">{completedCount}</div>
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{completedCount}</div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                             <span className="w-2 h-[1px] bg-secondary/30" />
                             {tDashboard("successfully_finished")}
@@ -86,7 +86,7 @@ export default async function ManagerTournamentsPage() {
             <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3 mb-4 md:mb-6">
                     <Trophy className="h-5 w-5 text-secondary" />
-                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                         {t("available_competitions")}
                     </h3>
                 </div>

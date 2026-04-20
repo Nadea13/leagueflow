@@ -37,7 +37,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                             <Button 
                                 key={mins} 
                                 variant="outline" 
-                                className="h-16 bg-foreground/5 border-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none text-2xl font-black italic transition-all group active:scale-95" 
+                                className="h-16 bg-foreground/5 border-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none text-2xl font-black transition-all group active:scale-95" 
                                 onClick={() => onSave(mins)}
                             >
                                 <span className="group-hover:scale-110 transition-transform">+{mins}</span>

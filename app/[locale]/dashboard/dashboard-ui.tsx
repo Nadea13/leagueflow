@@ -88,7 +88,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
             <div className="flex flex-col gap-4 md:gap-6">
                 <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
                     <div>
-                        <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
+                        <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
                             {tTeam("dashboard")}
                         </h1>
                         <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
@@ -111,7 +111,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             <Users className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                         </CardHeader>
                         <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                            <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">{metrics.totalTeams}</div>
+                            <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{metrics.totalTeams}</div>
                             <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                                 <span className="w-2 h-[1px] bg-secondary/40" />
                                 {t("all_time_teams")}
@@ -128,7 +128,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             <Trophy className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                         </CardHeader>
                         <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                            <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">{metrics.assignedTeams}</div>
+                            <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{metrics.assignedTeams}</div>
                             <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                                 <span className="w-2 h-[1px] bg-primary/40" />
                                 {t("assigned_desc")}
@@ -145,7 +145,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                             <FileText className="h-4 w-4 text-orange-500/80 opacity-80 shrink-0 hidden sm:block" />
                         </CardHeader>
                         <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                            <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">{metrics.pendingRegistrations}</div>
+                            <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{metrics.pendingRegistrations}</div>
                             <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                                 <span className="w-2 h-[1px] bg-orange-500/40" />
                                 {t("pending_desc")}
@@ -173,19 +173,19 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                                                 <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
                                                     <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
                                                         <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain" />
-                                                        <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black italic">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                        <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                                     </Avatar>
                                                     <div className="grid gap-1">
-                                                        <CardTitle className="text-lg font-black leading-none tracking-tight uppercase italic group-hover:text-secondary transition-colors truncate">
+                                                        <CardTitle className="text-lg font-black leading-none tracking-tight uppercase group-hover:text-secondary transition-colors truncate">
                                                             {team.name}
                                                         </CardTitle>
                                                         <div className="flex items-center gap-2">
                                                             {team.tournament ? (
-                                                                <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase italic rounded-none shrink-0">
+                                                                <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase rounded-none shrink-0">
                                                                     {tCommon("active")}
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase italic rounded-none shrink-0 opacity-70">
+                                                                <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase rounded-none shrink-0 opacity-70">
                                                                     {tTeam("unassigned_badge")}
                                                                 </Badge>
                                                             )}
@@ -202,7 +202,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                                                         {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
                                                     </span>
                                                 </div>
-                                                <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 italic leading-relaxed">
+                                                <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 leading-relaxed">
                                                     {team.description || tTeam("no_description")}
                                                 </p>
                                             </div>
@@ -242,7 +242,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">{t("title")}</h1>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">{t("title")}</h1>
                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
                         {t("welcome")}
                     </p>
@@ -264,7 +264,7 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                 <div>
                     <div className="space-y-4 md:space-y-6">
                         <div className="flex items-center justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
-                            <h2 className="text-xl md:text-2xl font-bold tracking-tight uppercase italic leading-none">{t("my_tournaments")}</h2>
+                            <h2 className="text-xl md:text-2xl font-bold tracking-tight uppercase leading-none">{t("my_tournaments")}</h2>
                         </div>
                         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {recentTournaments.map((tournament) => (
