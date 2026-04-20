@@ -3,8 +3,9 @@ import { getDashboardTournaments } from "@/actions/organizer/dashboard";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { TournamentCard } from "@/components/dashboard/tournament-card";
+import { EmptyState } from "@/components/dashboard/empty-state";
 import { Input } from "@/components/ui/input";
-import { Search, Trophy } from "lucide-react";
+import { Search } from "lucide-react";
 import { Tournament } from "@/types/index";
 import type { Metadata } from "next";
 
@@ -61,20 +62,11 @@ export default async function TournamentsPage({
             </div>
 
             {tournaments.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                    <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
-                        <Trophy className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
-                    </div>
-                    <h3 className="text-2xl font-black uppercase italic tracking-tight relative z-10">
-                        {query ? "No tournaments found" : tCommon("no_tournaments")}
-                    </h3>
-                    <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10">
-                         <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                        {query ? `Search query: "${query}"` : tCommon("no_tournaments_desc")}
-                         <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                    </p>
-                </div>
+                <EmptyState
+                    isPro={isPro}
+                    title={query ? "No tournaments found" : undefined}
+                    description={query ? `Search query: "${query}"` : undefined}
+                />
             ) : (
                 <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tournaments.map((tournament: Tournament) => (

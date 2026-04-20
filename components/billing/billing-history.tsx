@@ -13,6 +13,7 @@ import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
 import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
 import { History, Receipt } from "lucide-react";
+import { EmptyState } from "@/components/dashboard/empty-state";
 
 interface BillingHistoryProps {
     history?: PaymentRecord[];
@@ -90,20 +91,12 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                     </Table>
                 </div>
             ) : (
-                <div className="flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-8 text-center animate-in fade-in-50 relative overflow-hidden group">
-                    <div className="p-6 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
-                        <History className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
-                    </div>
-
-                    <h3 className="text-xl font-black uppercase italic tracking-tight mb-2 relative z-10">
-                        {t("no_history")}
-                    </h3>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground/60 max-w-[200px] flex items-center gap-2 relative z-10 mx-auto">
-                        <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                        {t("no_payment_records", { defaultValue: "No payment records found" })}
-                        <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                    </p>
-                </div>
+                <EmptyState
+                    title={t("no_history")}
+                    description={t("no_payment_records", { defaultValue: "No payment records found" })}
+                    icon={History}
+                    action={<div />}
+                />
             )}
         </div>
     );
