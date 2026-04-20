@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/routing";
 
-interface TournamentBracketProps {
+interface BracketProps {
     matches: Match[];
     isPublic?: boolean;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Match, Team } from "@/types/index";
-import { StandingsTable } from "./standings-table";
+import { Standings as StandingsTable } from "./standings";
 import { calculateStandings } from "@/lib/standings";
 import { useTranslations } from "next-intl";
 

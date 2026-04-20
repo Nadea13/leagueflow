@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Trophy, Activity, CheckCircle } from "lucide-react";
 
-import { PublicTournamentList } from "@/components/tournaments/public-tournament-list";
+import { PublicTournaments } from "@/components/tournaments/public-tournaments";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -90,7 +90,7 @@ export default async function ManagerTournamentsPage() {
                         {t("available_competitions")}
                     </h3>
                 </div>
-                <PublicTournamentList onlyActive={true} isManager={true} />
+                <PublicTournaments onlyActive={true} isManager={true} />
             </div>
         </div>
     );
