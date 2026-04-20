@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { deleteAccount } from "@/actions/common/user";
+import { LucideIcon } from "lucide-react";
 
 export function DeleteAccountButton({ email }: { email: string }) {
     const t = useTranslations("DashboardSettings");
@@ -25,7 +26,6 @@ export function DeleteAccountButton({ email }: { email: string }) {
                 // Redirect happens on server
             } catch (error) {
                 console.error("Failed to delete account:", error);
-                // Could show toast here if we had toast imported
                 alert("Failed to delete account. Please try again or contact support.");
             }
         });
