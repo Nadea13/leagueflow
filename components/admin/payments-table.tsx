@@ -136,7 +136,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <CreditCard className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             ฿{totalAmount.toLocaleString()}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -155,7 +155,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <Check className="h-4 w-4 text-emerald-500 opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {successfulPayments}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -174,7 +174,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <ArrowUpRight className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {initialPayments.length}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -223,13 +223,13 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("date")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">PG ID</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("amount")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("actions", { defaultValue: "Actions" })}</TableHead>
+                            <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("date")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">PG ID</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("amount")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions", { defaultValue: "Actions" })}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -274,7 +274,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                         </code>
                                     </TableCell>
                                     <TableCell>
-                                        <span className="font-black text-sm italic">฿{payment.amount.toLocaleString()}</span>
+                                        <span className="font-black text-sm">฿{payment.amount.toLocaleString()}</span>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Badge
@@ -338,7 +338,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                     <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground">
+                            <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground">
                                 Verify Payment
                             </DialogTitle>
                             <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
@@ -363,7 +363,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                             <p className="text-center text-muted-foreground">No slip uploaded for this payment.</p>
                         )}
                         <div className="mt-6 text-center border-t border-border pt-4">
-                            <p className="text-3xl font-black italic tracking-tighter">฿{selectedPayment?.amount.toLocaleString()}</p>
+                            <p className="text-3xl font-black tracking-tighter">฿{selectedPayment?.amount.toLocaleString()}</p>
                             <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground mt-1 capitalize">{selectedPayment?.plan}</p>
                         </div>
                     </div>

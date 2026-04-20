@@ -96,7 +96,7 @@ export function FixturesManager({ matches, teams, tournamentId, isPro = false }:
                     <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
                         <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                     </div>
-                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground mb-2">{tFixtures("ready_to_start")}</h3>
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground mb-2">{tFixtures("ready_to_start")}</h3>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
                         {tFixtures("generate_instruction")}
                     </p>
@@ -109,20 +109,20 @@ export function FixturesManager({ matches, teams, tournamentId, isPro = false }:
                         <div className="space-y-1">
                             <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
                             <Select value={filterStage} onValueChange={setFilterStage}>
-                                <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold uppercase italic tracking-tighter text-xs">
+                                <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold uppercase tracking-tighter text-xs">
                                     <SelectValue placeholder={tMatch("round")} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card border-foreground/10 rounded-none">
-                                    <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                    <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")}</SelectItem>
-                                    <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} A</SelectItem>
-                                    <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} B</SelectItem>
-                                    <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} C</SelectItem>
-                                    <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("group")} D</SelectItem>
-                                    <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
-                                    <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
-                                    <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("semi_final")}</SelectItem>
-                                    <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase italic font-bold text-xs">{tMatch("final")}</SelectItem>
+                                    <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                    <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")}</SelectItem>
+                                    <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} A</SelectItem>
+                                    <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} B</SelectItem>
+                                    <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} C</SelectItem>
+                                    <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} D</SelectItem>
+                                    <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
+                                    <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
+                                    <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("semi_final")}</SelectItem>
+                                    <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("final")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -152,7 +152,7 @@ export function FixturesManager({ matches, teams, tournamentId, isPro = false }:
                 {filteredMatches.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5">
                         <Calendar className="h-12 w-12 text-muted-foreground/20 mb-4" />
-                        <h3 className="text-sm font-black uppercase italic tracking-tighter text-muted-foreground/40">{tFixtures("no_fixtures")}</h3>
+                        <h3 className="text-sm font-black uppercase tracking-tighter text-muted-foreground/40">{tFixtures("no_fixtures")}</h3>
                     </div>
                 ) : (
                     (() => {
@@ -226,7 +226,7 @@ export function FixturesManager({ matches, teams, tournamentId, isPro = false }:
                                             <Button
                                                 onClick={() => setAdvanceDialogOpen(true)}
                                                 disabled={isAdvancing}
-                                                className="h-14 px-4 md:px-6 bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 shadow-lg shadow-secondary/10 group transition-all"
+                                                className="h-14 px-4 md:px-6 bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 shadow-lg shadow-secondary/10 group transition-all"
                                             >
                                                 {isAdvancing ? tFixtures("generating") : (
                                                     <span className="flex items-center gap-3">
@@ -249,7 +249,7 @@ export function FixturesManager({ matches, teams, tournamentId, isPro = false }:
             <AlertDialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                             <ArrowRight className="h-5 w-5 text-secondary" />
                             {tFixtures("proceed_knockout")}
                         </AlertDialogTitle>

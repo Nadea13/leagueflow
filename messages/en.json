@@ -855,12 +855,18 @@
         "full_name": "Full Name",
         "email": "Email Address",
         "password": "Password",
+        "confirm_password": "Confirm Password",
+        "passwords_dont_match": "Passwords do not match",
         "register": "Register",
         "registering": "Registering...",
         "have_account": "Already have an account?",
         "sign_in": "Sign In",
         "success_title": "Check your email",
-        "success_desc": "We've sent a verification link to your email."
+        "success_desc": "We've sent a verification link to your email.",
+        "agreement": "By clicking continue, you agree to our",
+        "terms": "Terms of Service",
+        "and": "and",
+        "privacy": "Privacy Policy"
     },
     "ForgotPassword": {
         "title": "Forgot Password",

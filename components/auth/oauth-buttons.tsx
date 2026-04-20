@@ -31,7 +31,7 @@ export function OAuthButtons() {
     };
 
     return (
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-2 md:gap-3 w-full">
             {error && (
                 <div className="text-sm text-red-500 text-center p-2 bg-red-50 dark:bg-red-950/20 rounded-none">
                     {error}

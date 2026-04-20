@@ -43,7 +43,7 @@ export function MatchControls({
                             <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
                             <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-secondary">{t("start_match")}</span>
                         </div>
-                        <span className="hidden md:block text-[9px] text-secondary/60 italic ml-7">Kick off the competition</span>
+                        <span className="hidden md:block text-[9px] text-secondary/60 ml-7">Kick off the competition</span>
                     </div>
                 </Button>
             ) : status === 'live' && isRunning ? (
@@ -57,7 +57,7 @@ export function MatchControls({
                             <Pause className="h-4 w-4 fill-orange-500 text-orange-500 group-hover:scale-110 transition-transform" /> 
                             <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-orange-500">{t("pause")}</span>
                         </div>
-                        <span className="hidden md:block text-[9px] text-orange-500/60 italic ml-7">Temporarily halt play</span>
+                        <span className="hidden md:block text-[9px] text-orange-500/60 ml-7">Temporarily halt play</span>
                     </div>
                 </Button>
             ) : status === 'live' && !isRunning ? (
@@ -71,7 +71,7 @@ export function MatchControls({
                             <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
                             <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-secondary">{t("resume_match")}</span>
                         </div>
-                        <span className="hidden md:block text-[9px] text-secondary/60 italic ml-7">Continue the match</span>
+                        <span className="hidden md:block text-[9px] text-secondary/60 ml-7">Continue the match</span>
                     </div>
                 </Button>
             ) : (
@@ -98,7 +98,7 @@ export function MatchControls({
                         <Square className="h-4 w-4 fill-red-500 text-red-500 group-hover:scale-110 transition-transform" /> 
                         <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-red-500">{t("stop_finish")}</span>
                     </div>
-                    <span className="hidden md:block text-[9px] text-red-500/60 italic ml-7">End the regulation time</span>
+                    <span className="hidden md:block text-[9px] text-red-500/60 ml-7">End the regulation time</span>
                 </div>
             </Button>
 

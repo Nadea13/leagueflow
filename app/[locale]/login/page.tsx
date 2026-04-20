@@ -1,5 +1,6 @@
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { EmailLoginForm } from "@/components/auth/email-login-form";
+import { AuthNavbar } from "@/components/auth/auth-navbar";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,14 +9,10 @@ export default function LoginPage() {
     const t = useTranslations('Login');
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4">
-            {/* Background gradient effects */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10" />
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-none blur-3xl -z-10" />
-            <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-secondary/10 rounded-none blur-3xl -z-10" />
-
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4 pt-20 md:pt-16">
+            <AuthNavbar />
             <Card className="w-full py-4 md:py-6 max-w-sm backdrop-blur-sm bg-background/80 shadow-xl border">
-                <CardHeader className="space-y-4 text-center">
+                <CardHeader className="text-center mb-2 md:mb-3">
                     {/* Logo */}
                     <Link href="/" className="flex items-center justify-center gap-2 group">
                         <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
@@ -26,10 +23,10 @@ export default function LoginPage() {
                             <path d="M137.211 24.5986C138.191 27.5371 137.739 28.1896 136.565 30.983C136.234 31.7759 135.904 32.5688 135.563 33.3857C135.2 34.2315 134.836 35.0773 134.461 35.9486C133.908 37.2513 133.908 37.2513 133.343 38.5803C119.694 70.3639 98.4172 99.4369 70.8115 120.599C69.8872 121.334 68.9644 122.072 68.0427 122.811C53.7988 134.199 53.7988 134.199 50.8115 134.199C50.2508 132.803 49.7033 131.402 49.1615 129.999C48.8552 129.219 48.5489 128.439 48.2334 127.636C47.3033 124.29 47.3033 124.29 48.4115 122.199C50.0305 120.986 51.5772 119.968 53.3115 118.949C72.4474 107.16 90.9969 91.6468 105.002 74.0486C106.187 72.5746 107.402 71.1232 108.646 69.6986C120.381 56.2213 129.292 40.5486 137.211 24.5986Z" fill="#00C49A" />
                             <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
                         </svg>
-                        <span className="font-black text-foreground text-xl italic tracking-tighter">LeagueFlow</span>
+                        <span className="font-black text-foreground text-xl tracking-tighter">LeagueFlow</span>
                     </Link>
 
-                    <div className="space-y-1">
+                    <div className="space-y-2 md:space-y-3">
                         <CardTitle className="text-2xl font-semibold tracking-tight">
                             {t('title')}
                         </CardTitle>
@@ -39,7 +36,7 @@ export default function LoginPage() {
                     </div>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 md:space-y-6">
                     <OAuthButtons />
 
                     <div className="relative">

@@ -255,7 +255,7 @@ export function PenaltyShootoutDialog({
                                         {/* Round Number */}
                                         <div className="flex items-center justify-center">
                                             <span className={cn(
-                                                "text-xs font-black italic tracking-tighter",
+                                                "text-xs font-black tracking-tighter",
                                                 isSD ? "text-amber-500" : "text-foreground/40"
                                             )}>
                                                 {isSD ? `SD${i - 4}` : i + 1}

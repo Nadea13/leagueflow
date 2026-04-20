@@ -73,7 +73,7 @@ export function BillingPageContent({ tournaments, initialHistory, userPlan, plan
                 )}
                 <div className="flex items-center gap-3 mb-4 md:mb-6">
                     <Trophy className="h-5 w-5 text-secondary" />
-                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                         {t("plansTitle")}
                     </h3>
                 </div>
@@ -99,7 +99,7 @@ export function BillingPageContent({ tournaments, initialHistory, userPlan, plan
                 <section id="payment-section">
                     <div className="flex items-center gap-3 mb-4 md:mb-6">
                         <CreditCard className="h-5 w-5 text-secondary" />
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                             {selectedPlanId ? t("payment_details") : t("paymentMethodTitle")}
                         </h3>
                     </div>
@@ -117,7 +117,7 @@ export function BillingPageContent({ tournaments, initialHistory, userPlan, plan
                                 <CreditCard className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                             </div>
 
-                            <h3 className="text-xl font-black uppercase italic tracking-tight mb-2 relative z-10">
+                            <h3 className="text-xl font-black uppercase tracking-tight mb-2 relative z-10">
                                 {t("select_plan_title", { defaultValue: "Select a Plan" })}
                             </h3>
                             <p className="text-[10px] uppercase font-bold text-muted-foreground/60 max-w-[200px] flex items-center gap-2 relative z-10 mx-auto">

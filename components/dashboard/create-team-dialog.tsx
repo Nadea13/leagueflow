@@ -66,7 +66,7 @@ export function CreateTeamDialog() {
                 <div className="bg-gradient-to-r from-secondary/20 to-background p-6 border-b border-border relative">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-foreground">{t("add_team")}</DialogTitle>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">{t("add_team")}</DialogTitle>
                         <DialogDescription className="text-muted-foreground font-medium">
                             {t("no_teams_desc")}
                         </DialogDescription>
@@ -75,7 +75,7 @@ export function CreateTeamDialog() {
                 
                 <form action={formAction} className="p-6 space-y-6">
                     <div className="space-y-3">
-                        <Label htmlFor="name" className="text-[10px] font-black uppercase italic tracking-widest text-secondary">
+                        <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-secondary">
                             {t("team_name")}
                         </Label>
                         <Input
@@ -88,16 +88,16 @@ export function CreateTeamDialog() {
                     </div>
 
                     <div className="space-y-3">
-                        <Label htmlFor="sport" className="text-[10px] font-black uppercase italic tracking-widest text-secondary">
+                        <Label htmlFor="sport" className="text-[10px] font-black uppercase tracking-widest text-secondary">
                             {tCommon("sport") || "Sport"}
                         </Label>
                         <Select name="sport" defaultValue="football">
-                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase tracking-tighter">
                                 <SelectValue placeholder={t("select_sport") || "Select Sport"} />
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
                                 {(['football'] as SportType[]).map((sportKey) => (
-                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
+                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}
                                     </SelectItem>
                                 ))}
@@ -106,7 +106,7 @@ export function CreateTeamDialog() {
                     </div>
 
                     <div className="space-y-2 md:space-y-3">
-                        <Label htmlFor="logo" className="text-[10px] font-black uppercase italic tracking-widest text-secondary">
+                        <Label htmlFor="logo" className="text-[10px] font-black uppercase tracking-widest text-secondary">
                             {t("upload_logo")}
                         </Label>
                         <div className="flex items-center gap-6 p-4 bg-muted/10 border border-border">
@@ -133,7 +133,7 @@ export function CreateTeamDialog() {
                             <div className="flex-1">
                                 <Label
                                     htmlFor="logo"
-                                    className="cursor-pointer inline-flex items-center justify-center h-10 px-6 w-full bg-muted/20 hover:bg-muted/30 border border-border text-[10px] font-black uppercase italic tracking-widest text-foreground transition-all active:scale-95"
+                                    className="cursor-pointer inline-flex items-center justify-center h-10 px-6 w-full bg-muted/20 hover:bg-muted/30 border border-border text-[10px] font-black uppercase tracking-widest text-foreground transition-all active:scale-95"
                                 >
                                     {previewUrl ? t("click_to_upload") : t("upload_logo")}
                                 </Label>
@@ -151,7 +151,7 @@ export function CreateTeamDialog() {
                     </div>
 
                     {state?.error && (
-                        <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 border-l-4 border-red-500 uppercase italic">
+                        <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 border-l-4 border-red-500 uppercase">
                             {state.error}
                         </div>
                     )}

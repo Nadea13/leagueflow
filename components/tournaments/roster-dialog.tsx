@@ -216,7 +216,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                         ) : (
                             <Users className="h-4 w-4 text-muted-foreground" />
                         )}
-                        <span className="hidden sm:inline font-bold uppercase italic tracking-tighter text-xs">
+                        <span className="hidden sm:inline font-bold uppercase tracking-tighter text-xs">
                             {readOnly ? t("view_squad") : t("manage_squad")}
                         </span>
                     </Button>
@@ -236,7 +236,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                 <div className="flex items-center justify-between mb-5">
                                     <div className="space-y-1 block w-full">
                                         <div className="flex items-center w-full">
-                                            <h3 className="text-lg font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                                            <h3 className="text-lg font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                                                 <UserPlus className="h-5 w-5 text-secondary" />
                                                 {t("add_player")}
                                             </h3>
@@ -294,7 +294,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                         <label className="text-[10px] font-bold uppercase tracking-wider text-transparent select-none hidden sm:block">Action</label>
                                         <Button 
                                             type="submit" 
-                                            className="w-full h-10 rounded-none font-black uppercase italic tracking-wider text-xs transition-all bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
+                                            className="w-full h-10 rounded-none font-black uppercase tracking-wider text-xs transition-all bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
                                             disabled={isSaving || !newName.trim()}
                                         >
                                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
@@ -341,7 +341,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                             autoFocus
                                                         />
                                                     ) : (
-                                                        <span className="font-mono text-2xl font-black italic tracking-tighter text-secondary">
+                                                        <span className="font-mono text-2xl font-black tracking-tighter text-secondary">
                                                             {player.number?.toString().padStart(2, '0') || "??"}
                                                         </span>
                                                     )}
@@ -366,12 +366,12 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                         <Input
                                                             value={editName}
                                                             onChange={e => setEditName(e.target.value)}
-                                                            className="h-10 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black uppercase italic tracking-tighter text-secondary focus-visible:ring-0"
+                                                            className="h-10 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black uppercase tracking-tighter text-secondary focus-visible:ring-0"
                                                             placeholder={t("player_name")}
                                                             autoFocus
                                                         />
                                                     ) : (
-                                                        <h4 className="text-xl font-black uppercase italic tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
+                                                        <h4 className="text-xl font-black uppercase tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
                                                             {player.name}
                                                         </h4>
                                                     )}
@@ -451,7 +451,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                                 placeholder="Start typing..."
                                                                                 value={searchQuery}
                                                                                 onChange={(e) => handleSearch(e.target.value)}
-                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black uppercase italic tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
+                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black uppercase tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
                                                                                 autoFocus
                                                                             />
                                                                             <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary group-focus-within/search:w-full transition-all duration-700 z-20" />
@@ -473,7 +473,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                                     onClick={() => handleLinkPlayer(player.id, gp)}
                                                                                 >
                                                                                     <div className="flex flex-col">
-                                                                                        <span className="font-black uppercase italic text-xs tracking-tight group-hover/item:text-secondary">{gp.name}</span>
+                                                                                        <span className="font-black uppercase text-xs tracking-tight group-hover/item:text-secondary">{gp.name}</span>
                                                                                         {gp.date_of_birth && (
                                                                                             <span className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase mt-0.5">
                                                                                                 {formatDate(gp.date_of_birth)}
@@ -631,7 +631,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                 <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
                     <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                            <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                                 <Trash2 className="h-5 w-5 text-destructive" />
                                 {tCommon("delete")}
                             </AlertDialogTitle>

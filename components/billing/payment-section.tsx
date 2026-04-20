@@ -161,7 +161,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
             {/* Header */}
             <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-5 border-b border-border/10 relative">
                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                <h3 className="text-base font-black italic uppercase tracking-widest text-secondary flex items-center gap-2">
+                <h3 className="text-base font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                     <Smartphone className="w-5 h-5" />
                     {t("pay_with_promptpay")}
                 </h3>
@@ -177,7 +177,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
 
             {/* Plan Info Bar */}
             <div className="px-6 py-3 bg-muted/30 border-b border-border/10 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-wider text-muted-foreground/60">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">
                     <Trophy className="w-3 h-3 text-secondary" />
                     {t("plan_prefix")}
                     <span className="text-foreground">
@@ -197,10 +197,10 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                             <span className="text-[10px] text-muted-foreground/40 line-through font-bold">
                                 ฿{plan.price}
                             </span>
-                            <span className="text-xs font-black italic text-secondary">฿{plan.discounted_price}</span>
+                            <span className="text-xs font-black text-secondary">฿{plan.discounted_price}</span>
                         </>
                     ) : (
-                        <span className="text-xs font-black italic text-secondary">฿{plan.price}</span>
+                        <span className="text-xs font-black text-secondary">฿{plan.price}</span>
                     )}
                 </div>
             </div>
@@ -208,7 +208,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
             <div className="p-8">
                 {planType === 'tournament' && !externalSelectedTournament && (
                     <div className="mb-8 max-w-sm mx-auto">
-                        <label className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/60 mb-2 block text-center">
+                        <label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 mb-2 block text-center">
                             {t("select_tournament_label")}
                         </label>
                         <Select
@@ -239,7 +239,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                     {isGeneratingQR ? (
                         <div className="text-center space-y-4">
                             <Loader2 className="w-10 h-10 animate-spin text-secondary mx-auto" />
-                            <p className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/60 animate-pulse">
+                            <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 animate-pulse">
                                 {tCommon("loading")}
                             </p>
                         </div>
@@ -248,7 +248,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                             <div className="text-center space-y-4">
                                 <Button 
                                     onClick={handleGenerateQR} 
-                                    className="rounded-none font-black italic uppercase italic tracking-widest px-8 shadow-[0_0_20px_rgba(var(--secondary),0.2)]"
+                                    className="rounded-none font-black uppercase tracking-widest px-8 shadow-[0_0_20px_rgba(var(--secondary),0.2)]"
                                     disabled={isGeneratingQR}
                                 >
                                     {isGeneratingQR ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -256,7 +256,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                 </Button>
                             </div>
                         ) : (
-                            <div className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40 text-center animate-pulse">
+                            <div className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/40 text-center animate-pulse">
                                 <Smartphone className="w-8 h-8 mx-auto mb-2 opacity-20" />
                                 {t("select_tournament_hint")}
                             </div>
@@ -269,7 +269,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                         <Check className="w-10 h-10 text-secondary -rotate-3" />
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-xl font-black italic uppercase tracking-tighter text-secondary">
+                                        <h3 className="text-xl font-black uppercase tracking-tighter text-secondary">
                                             {t("payment_pending_title", { defaultValue: "Verification Pending" })}
                                         </h3>
                                         <p className="text-xs font-medium text-muted-foreground leading-relaxed px-4 text-center">
@@ -301,7 +301,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                                 <p className="text-[10px] uppercase font-bold text-muted-foreground/40 leading-none">
                                                     {t("account_name_label") || "Account Name"}
                                                 </p>
-                                                <p className="text-sm font-black uppercase italic tracking-tight text-foreground">
+                                                <p className="text-sm font-black uppercase tracking-tight text-foreground">
                                                     {accountName}
                                                 </p>
                                             </div>
@@ -331,7 +331,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                         </div>
 
                                         <div className="space-y-4">
-                                            <p className="text-[10px] text-center uppercase font-black italic tracking-widest text-muted-foreground/60 leading-relaxed px-2">
+                                            <p className="text-[10px] text-center uppercase font-black tracking-widest text-muted-foreground/60 leading-relaxed px-2">
                                                 {t("paid_instruction", { defaultValue: "Please scan the QR code to pay, then upload your transfer slip to complete." })}
                                             </p>
                                             
@@ -344,7 +344,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                                 />
                                                 <Button 
-                                                    className="w-full relative h-12 rounded-none font-black italic uppercase italic tracking-widest bg-secondary hover:bg-secondary/90 shadow-[0_4px_14px_rgba(var(--secondary),0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                                                    className="w-full relative h-12 rounded-none font-black uppercase tracking-widest bg-secondary hover:bg-secondary/90 shadow-[0_4px_14px_rgba(var(--secondary),0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]" 
                                                     disabled={isUploadingSlip}
                                                 >
                                                     {isUploadingSlip ? (

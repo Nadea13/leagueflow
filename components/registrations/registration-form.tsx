@@ -361,12 +361,12 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                             <div className="absolute top-0 left-0 w-1 h-8 bg-secondary" />
                             <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-4 border-b border-border/10 relative -mx-6 -mt-6 mb-6">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                <h3 className="text-sm font-black italic uppercase tracking-widest text-secondary flex items-center gap-2">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                                     <Smartphone className="w-4 h-4" />
                                     {t("payment_details")}
                                 </h3>
                             </div>
-                            <p className="text-xs font-bold uppercase italic tracking-tighter text-muted-foreground/60 mb-6">
+                            <p className="text-xs font-bold uppercase tracking-tighter text-muted-foreground/60 mb-6">
                                 {t("scan_or_transfer")}
                             </p>
 
@@ -384,15 +384,15 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                     <div className="bg-card border border-border/10 shadow-xl rounded-none p-6 space-y-4 text-sm relative overflow-hidden">
                                         <div className="absolute top-0 left-0 w-1 h-8 bg-secondary/30" />
                                         <div className="flex justify-between items-center pb-3 border-b border-border/5">
-                                            <span className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40">{t("bank_label")}</span>
-                                            <span className="font-black italic uppercase text-foreground">{tournament.bank_name || "-"}</span>
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/40">{t("bank_label")}</span>
+                                            <span className="font-black uppercase text-foreground">{tournament.bank_name || "-"}</span>
                                         </div>
                                         <div className="flex justify-between items-center pb-3 border-b border-border/5">
-                                            <span className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40">{t("account_name_label")}</span>
-                                            <span className="font-black italic uppercase text-foreground">{tournament.bank_account_name || "-"}</span>
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/40">{t("account_name_label")}</span>
+                                            <span className="font-black uppercase text-foreground">{tournament.bank_account_name || "-"}</span>
                                         </div>
                                         <div className="flex justify-between items-center pt-1">
-                                            <span className="text-[10px] uppercase font-black italic tracking-widest text-muted-foreground/40">{t("account_no_label")}</span>
+                                            <span className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/40">{t("account_no_label")}</span>
                                             <span className="font-mono font-bold text-secondary text-lg leading-none tracking-tighter">{tournament.bank_account_number || "-"}</span>
                                         </div>
                                     </div>
@@ -428,10 +428,10 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                                                         <Upload className="w-8 h-8" />
                                                                     </div>
                                                                     <div className="space-y-1">
-                                                                        <div className="text-sm font-black italic uppercase tracking-widest text-foreground">
+                                                                        <div className="text-sm font-black uppercase tracking-widest text-foreground">
                                                                             {t("click_to_upload")}
                                                                         </div>
-                                                                        <p className="text-[10px] font-bold uppercase italic tracking-widest text-muted-foreground/40">
+                                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
                                                                             {t("file_types_hint")}
                                                                         </p>
                                                                     </div>

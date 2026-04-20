@@ -98,11 +98,11 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("tournaments")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("owner")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("tournaments")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("owner")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -156,7 +156,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent className="rounded-none border-border">
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle className="font-black italic uppercase tracking-tighter">
+                                                        <AlertDialogTitle className="font-black uppercase tracking-tighter">
                                                             {tSettings("delete_tournament")}?
                                                         </AlertDialogTitle>
                                                         <AlertDialogDescription>

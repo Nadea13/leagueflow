@@ -121,7 +121,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                     <button
                         onClick={() => handleModeChange('organizer')}
                         className={cn(
-                            "flex flex-1 items-center justify-center gap-2 px-2 py-2 text-[10px] font-black uppercase italic transition-all rounded-none",
+                            "flex flex-1 items-center justify-center gap-2 px-2 py-2 text-[10px] font-black uppercase transition-all rounded-none",
                             mode === 'organizer' ? "bg-secondary text-secondary-foreground shadow-[0_0_15px_rgba(0,196,154,0.3)]" : "text-muted-foreground hover:text-secondary"
                         )}
                     >
@@ -131,7 +131,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                     <button
                         onClick={() => handleModeChange('team')}
                         className={cn(
-                            "flex flex-1 items-center justify-center gap-2 px-2 py-2 text-[10px] font-black uppercase italic transition-all rounded-none",
+                            "flex flex-1 items-center justify-center gap-2 px-2 py-2 text-[10px] font-black uppercase transition-all rounded-none",
                             mode === 'team' ? "bg-secondary text-secondary-foreground shadow-[0_0_15px_rgba(0,196,154,0.3)]" : "text-muted-foreground hover:text-secondary"
                         )}
                     >
@@ -159,7 +159,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                             >
                                 {isActive && <div className="absolute left-0 top-0 w-1 h-full bg-secondary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
                                 <item.icon className={cn("h-4.5 w-4.5 transition-transform group-hover:scale-110", isActive ? "text-secondary" : "text-muted-foreground/50")} />
-                                <span className="text-[11px] font-black uppercase italic tracking-[0.15em]">{t(item.titleKey)}</span>
+                                <span className="text-[11px] font-black uppercase tracking-[0.15em]">{t(item.titleKey)}</span>
                             </Link>
                         );
                     })}
@@ -178,7 +178,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                             <div className="w-12 h-12 bg-muted flex items-center justify-center mb-4 border border-border rotate-3">
                                 <Trophy className="h-6 w-6 text-secondary -rotate-3" />
                             </div>
-                            <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-foreground">Become an Organizer</DialogTitle>
+                            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">Become an Organizer</DialogTitle>
                             <DialogDescription className="text-muted-foreground font-medium pt-1">
                                 Unlock professional tournament management tools and reach thousands of players.
                             </DialogDescription>
@@ -192,7 +192,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                                     <CheckCircle2 className="h-4 w-4 text-secondary" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase italic tracking-widest text-foreground">Tournament Creation</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Tournament Creation</p>
                                     <p className="text-[11px] text-muted-foreground font-medium">Build professional leagues and brackets with ease.</p>
                                 </div>
                             </div>
@@ -201,7 +201,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                                     <CheckCircle2 className="h-4 w-4 text-secondary" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase italic tracking-widest text-foreground">Financial Controls</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Financial Controls</p>
                                     <p className="text-[11px] text-muted-foreground font-medium">Manage registration fees and secure payments.</p>
                                 </div>
                             </div>
@@ -210,7 +210,7 @@ export function Sidebar({ className, role, isOrganizer: initialIsOrganizer, forc
                                     <CheckCircle2 className="h-4 w-4 text-secondary" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase italic tracking-widest text-foreground">Match Console</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Match Console</p>
                                     <p className="text-[11px] text-muted-foreground font-medium">Real-time scheduling and live score tracking.</p>
                                 </div>
                             </div>

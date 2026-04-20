@@ -28,7 +28,7 @@ export function EmptyState({ isPro, type = 'tournament', tournaments: _tournamen
                 <Icon className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
             </div>
 
-            <h3 className="text-2xl font-black uppercase italic tracking-tight mb-2 relative z-10">
+            <h3 className="text-2xl font-black uppercase tracking-tight mb-2 relative z-10">
                 {title}
             </h3>
             <p className="text-[11px] uppercase font-bold text-muted-foreground/60 max-w-sm mb-8 flex items-center gap-2 relative z-10">

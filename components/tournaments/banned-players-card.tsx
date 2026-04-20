@@ -17,7 +17,7 @@ export function BannedPlayersCard({ bannedPlayers }: BannedPlayersCardProps) {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
                     <Shield className="h-5 w-5 text-red-600" />
                     {t("title")} <span className="text-muted-foreground/40 text-sm ml-1">[{bannedPlayers.length}]</span>
                 </h2>
@@ -35,11 +35,11 @@ export function BannedPlayersCard({ bannedPlayers }: BannedPlayersCardProps) {
                                     <AlertTriangle className="h-4 w-4" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="font-black italic uppercase tracking-tighter text-foreground text-lg leading-none">{player.playerName}</span>
+                                    <span className="font-black uppercase tracking-tighter text-foreground text-lg leading-none">{player.playerName}</span>
                                     <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mt-1">{player.teamName}</span>
                                 </div>
                             </div>
-                            <Badge variant="outline" className="rounded-none px-3 py-1 text-[10px] font-black uppercase italic text-red-600 border-red-600/30 bg-red-600/5">
+                            <Badge variant="outline" className="rounded-none px-3 py-1 text-[10px] font-black uppercase text-red-600 border-red-600/30 bg-red-600/5">
                                 {player.banReason}
                             </Badge>
                         </div>

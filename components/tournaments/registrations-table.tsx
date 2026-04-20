@@ -113,12 +113,12 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                             <div className="h-9 w-9 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center shrink-0">
                                                 <Home className="h-4 w-4 text-primary" />
                                             </div>
-                                            <span className="font-black uppercase italic tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
+                                            <span className="font-black uppercase tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-6 border-b border-border/5">
                                         <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2 text-[11px] font-black uppercase italic tracking-tight text-foreground/80">
+                                            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-tight text-foreground/80">
                                                 <User className="h-3 w-3 text-primary" />
                                                 {reg.contact_name}
                                             </div>
@@ -127,7 +127,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                                 {reg.contact_phone}
                                             </div>
                                             {reg.description && (
-                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase italic tracking-widest text-secondary/60 mt-1">
+                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary/60 mt-1">
                                                     <FileText className="h-3 w-3" />
                                                     {reg.description}
                                                 </div>
@@ -148,14 +148,14 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-9 px-3 text-[10px] font-black uppercase italic tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
+                                                className="h-9 px-3 text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
                                                 onClick={() => window.open(reg.slip_url!, "_blank")}
                                             >
                                                 <ExternalLink className="h-3.5 w-3.5 mr-2" />
                                                 {t("view_slip")}
                                             </Button>
                                         ) : (
-                                            <span className="text-[10px] font-black uppercase italic text-muted-foreground/20 tracking-tighter">No Slip</span>
+                                            <span className="text-[10px] font-black uppercase text-muted-foreground/20 tracking-tighter">No Slip</span>
                                         )}
                                     </TableCell>
                                     <TableCell className="text-center px-4 border-b border-border/5">
@@ -184,7 +184,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                             </div>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 uppercase italic tabular-nums whitespace-nowrap">
+                                    <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 uppercase tabular-nums whitespace-nowrap">
                                         {new Date(reg.created_at).toLocaleString('en-US', { 
                                             day: '2-digit', 
                                             month: 'short', 
@@ -204,7 +204,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
                                             <FileText className="h-8 w-8 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
                                         </div>
                                         <div className="space-y-1">
-                                            <h3 className="text-sm font-black uppercase italic tracking-widest text-muted-foreground/40">{t("no_registrations")}</h3>
+                                            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{t("no_registrations")}</h3>
                                             <p className="text-[10px] font-bold uppercase text-muted-foreground/20">Waiting for first signup</p>
                                         </div>
                                     </div>
@@ -218,7 +218,7 @@ export function RegistrationsTable({ tournamentId }: RegistrationsTableProps) {
             <AlertDialog open={!!registrationToReject} onOpenChange={(open) => !open && setRegistrationToReject(null)}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                             <X className="h-5 w-5 text-destructive" />
                             Reject Registration
                         </AlertDialogTitle>

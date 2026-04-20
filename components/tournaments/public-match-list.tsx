@@ -16,7 +16,7 @@ export function PublicMatchList({ matches, tournamentId, events = [] }: { matche
                 <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
                     <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                 </div>
-                <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
+                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
                     Stay tuned for match updates and schedules.
                 </p>

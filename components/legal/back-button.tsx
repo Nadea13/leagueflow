@@ -14,7 +14,7 @@ export function BackButton() {
             variant="ghost"
             size="sm"
             onClick={() => router.back()}
-            className="group mb-6 -ml-2 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1 font-bold uppercase italic tracking-wider text-[10px]"
+            className="group mb-6 -ml-2 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1 font-bold uppercase tracking-wider text-[10px]"
         >
             <ChevronLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
             {t('back')}

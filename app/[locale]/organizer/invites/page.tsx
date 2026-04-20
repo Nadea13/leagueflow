@@ -50,7 +50,7 @@ export default function InvitesPage() {
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6 relative">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
                         {t("pending_invites_title")}
                     </h1>
                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
@@ -69,7 +69,7 @@ export default function InvitesPage() {
                     <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
                         <Users className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                     </div>
-                    <h3 className="text-2xl font-black uppercase italic tracking-tight relative z-10">
+                    <h3 className="text-2xl font-black uppercase tracking-tight relative z-10">
                         {t("no_pending_invites")}
                     </h3>
                     <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10">

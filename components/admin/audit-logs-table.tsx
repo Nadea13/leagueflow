@@ -93,7 +93,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                         <FileText className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {totalLogs}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -112,7 +112,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                         <ShieldAlert className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {tournamentLogs}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -131,7 +131,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                         <CreditCard className="h-4 w-4 text-secondary/70 opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {paymentLogs}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -150,7 +150,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                         <ShieldAlert className="h-4 w-4 text-destructive opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none text-destructive">
+                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none text-destructive">
                             {suspiciousLogs}
                         </div>
                         <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
@@ -163,10 +163,10 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
 
             <Tabs defaultValue="system" className="w-full">
                 <TabsList className="mb-4 bg-muted/30 border border-border rounded-none p-1 h-auto">
-                    <TabsTrigger value="system" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                    <TabsTrigger value="system" className="rounded-none text-[10px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
                         System Logs
                     </TabsTrigger>
-                    <TabsTrigger value="auth" className="rounded-none text-[10px] font-black uppercase italic tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                    <TabsTrigger value="auth" className="rounded-none text-[10px] font-black uppercase tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
                         Auth Logs
                     </TabsTrigger>
                 </TabsList>
@@ -210,12 +210,12 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                                    <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("time")}</TableHead>
-                                    <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
-                                    <TableHead className="w-[120px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">IP Address</TableHead>
-                                    <TableHead className="w-[130px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("action")}</TableHead>
-                                    <TableHead className="w-[130px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("target")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
+                                    <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("time")}</TableHead>
+                                    <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                                    <TableHead className="w-[120px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">IP Address</TableHead>
+                                    <TableHead className="w-[130px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("action")}</TableHead>
+                                    <TableHead className="w-[130px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("target")}</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -304,9 +304,9 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                                    <TableHead className="w-[180px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("time")}</TableHead>
-                                    <TableHead className="w-[200px] text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">IP Address</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">Event Payload</TableHead>
+                                    <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("time")}</TableHead>
+                                    <TableHead className="w-[200px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">IP Address</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Event Payload</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

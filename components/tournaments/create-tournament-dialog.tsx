@@ -49,8 +49,8 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
         }
     }, [state.success, open]);
 
-    const labelStyle = "text-[10px] font-black uppercase italic tracking-widest text-secondary";
-    const inputStyle = "bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter";
+    const labelStyle = "text-[10px] font-black uppercase tracking-widest text-secondary";
+    const inputStyle = "bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter";
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -67,7 +67,7 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                     <DialogHeader>
                         <div className="flex items-center gap-3 mb-1">
                             <Trophy className="h-5 w-5 text-secondary" />
-                            <DialogTitle className="text-2xl font-black italic uppercase tracking-tighter text-foreground">
+                            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">
                                 {t("create_title")}
                             </DialogTitle>
                         </div>
@@ -96,12 +96,12 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                             {tCommon("sport")}
                         </Label>
                         <Select name="sport" defaultValue="football">
-                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase tracking-tighter">
                                 <SelectValue placeholder={t("select_sport")} />
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
                                 {(['football'] as SportType[]).map((sportKey) => (
-                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
+                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}
                                     </SelectItem>
                                 ))}
@@ -116,14 +116,14 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                             defaultValue="league"
                             onValueChange={(v) => setFormat(v)}
                         >
-                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase tracking-tighter">
                                 <SelectValue placeholder={t("select_format")} />
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
-                                <SelectItem value="league" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">{tFormat("league")}</SelectItem>
-                                <SelectItem value="league_ha" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
-                                <SelectItem value="knockout" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
-                                <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold italic text-xs tracking-tighter">
+                                <SelectItem value="league" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">{tFormat("league")}</SelectItem>
+                                <SelectItem value="league_ha" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
+                                <SelectItem value="knockout" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
+                                <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">
                                     {tFormat("group_knockout")} {!isPro && "(PRO)"}
                                 </SelectItem>
                             </SelectContent>
@@ -147,7 +147,7 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                             <Label htmlFor="max_teams" className={`flex items-center justify-between ${labelStyle}`}>
                                 {t("max_teams")}
                                 {!isPro && (
-                                    <span className="text-[10px] text-primary font-bold uppercase tracking-tighter bg-primary/10 px-1 rounded not-italic">
+                                    <span className="text-[10px] text-primary font-bold uppercase tracking-tighter bg-primary/10 px-1 rounded not">
                                         Max 8
                                     </span>
                                 )}
@@ -169,7 +169,7 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                         <div className="space-y-3">
                             <Label htmlFor="advancing_teams" className={labelStyle}>{t("advancing_teams")}</Label>
                             <Select name="advancing_teams" defaultValue="2">
-                                <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase italic tracking-tighter">
+                                <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold uppercase tracking-tighter">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-none border-border">
@@ -207,13 +207,13 @@ export function CreateTournamentDialog({ isPro = false }: { isPro?: boolean }) {
                     </div>
 
                     {state.error && (
-                        <div className="text-xs font-bold text-red-500 bg-red-500/10 p-4 border-l-4 border-red-500 uppercase italic">
+                        <div className="text-xs font-bold text-red-500 bg-red-500/10 p-4 border-l-4 border-red-500 uppercase">
                             {state.error}
                         </div>
                     )}
 
                     <div>
-                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-secondary/90 transition-all rounded-none bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter">
+                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-secondary/90 transition-all rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter">
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>
                     </div>

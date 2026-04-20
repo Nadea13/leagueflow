@@ -62,7 +62,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">
-                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <ClipboardEdit className="h-5 w-5 text-secondary" />
                         {t("registration_settings")}
                     </h3>
@@ -98,7 +98,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
 
                         <div className="flex items-center justify-between p-4 md:p-6 bg-foreground/5 border-none rounded-none">
                             <div className="space-y-1">
-                                <Label htmlFor="is_registration_open" className="text-sm md:text-lg font-black uppercase italic tracking-tight text-foreground">
+                                <Label htmlFor="is_registration_open" className="text-sm md:text-lg font-black uppercase tracking-tight text-foreground">
                                     {t("allow_registration")}
                                 </Label>
                                 <p className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-wider">
@@ -127,7 +127,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                     min="0"
                                     step="0.01"
                                     disabled={!isPro}
-                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -139,14 +139,14 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                     defaultValue={tournament.bank_account_number ?? undefined}
                                     placeholder="08xxxxxxxx or ID Card"
                                     disabled={!isPro}
-                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                                 <div className="space-y-1">
                                     <Label htmlFor="bank_name" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("bank_name")}</Label>
                                     <Select name="bank_name" defaultValue={tournament.bank_name || "PromptPay"} disabled={!isPro}>
-                                        <SelectTrigger id="bank_name" className="h-12 bg-foreground/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold uppercase italic tracking-tighter">
+                                        <SelectTrigger id="bank_name" className="h-12 bg-foreground/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold uppercase tracking-tighter">
                                             <SelectValue placeholder={t("select_bank")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
@@ -163,7 +163,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                                         defaultValue={tournament.bank_account_name ?? undefined}
                                         placeholder={t("account_name")}
                                         disabled={!isPro}
-                                        className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase italic tracking-tighter"
+                                        className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                     />
                                 </div>
                             </div>
@@ -171,7 +171,7 @@ export function RegistrationSettingsCard({ tournament, isPro, onUpgrade }: Regis
                             <Button 
                                 type="submit" 
                                 disabled={!isPro || isPending}
-                                className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase italic tracking-tighter hover:bg-secondary/90 transition-all relative group overflow-hidden"
+                                className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all relative group overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center justify-center gap-2">

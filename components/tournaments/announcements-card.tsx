@@ -119,7 +119,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-1">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                    <h3 className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Megaphone className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
@@ -131,7 +131,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                             <Button 
                                 size="sm" 
                                 variant="ghost" 
-                                className="rounded-none border border-secondary/20 hover:bg-secondary/10 font-black uppercase italic text-[10px] tracking-widest text-secondary h-8 shadow-[0_4px_10px_rgba(0,196,154,0.1)] transition-all hover:-translate-y-0.5" 
+                                className="rounded-none border border-secondary/20 hover:bg-secondary/10 font-black uppercase text-[10px] tracking-widest text-secondary h-8 shadow-[0_4px_10px_rgba(0,196,154,0.1)] transition-all hover:-translate-y-0.5" 
                             >
                                 <Plus className="h-4 w-4 mr-1 text-secondary" />
                                 {t("new")}
@@ -140,7 +140,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                         <DialogContent className="bg-card border-border/40 rounded-none sm:max-w-[500px] shadow-2xl p-0 overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
                             <DialogHeader className="p-6 pb-0">
-                                <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                                <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
                                     <Megaphone className="h-6 w-6 text-secondary" />
                                     {t("new")}
                                 </DialogTitle>
@@ -171,7 +171,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                         type="button" 
                                         variant="ghost" 
                                         size="sm" 
-                                        className="text-[10px] font-black uppercase italic tracking-widest rounded-none hover:bg-foreground/5 h-10 px-6"
+                                        className="text-[10px] font-black uppercase tracking-widest rounded-none hover:bg-foreground/5 h-10 px-6"
                                         onClick={() => setIsDialogOpen(false)}
                                     >
                                         {tCommon("cancel")}
@@ -179,7 +179,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                     <Button 
                                         type="submit" 
                                         size="sm" 
-                                        className="text-[10px] font-black uppercase italic tracking-widest rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                                        className="text-[10px] font-black uppercase tracking-widest rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
                                         disabled={isSaving || !title.trim()}
                                     >
                                         {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
@@ -220,10 +220,10 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                         {ann.is_pinned && (
                                             <div className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-none shadow-[0_0_10px_rgba(0,196,154,0.3)]">
                                                 <Pin className="h-2.5 w-2.5" />
-                                                <span className="text-[8px] font-black uppercase italic tracking-widest">{t("pinned")}</span>
+                                                <span className="text-[8px] font-black uppercase tracking-widest">{t("pinned")}</span>
                                             </div>
                                         )}
-                                        <h4 className="font-black uppercase italic tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-secondary transition-colors line-clamp-1">
+                                        <h4 className="font-black uppercase tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-secondary transition-colors line-clamp-1">
                                             {ann.title}
                                         </h4>
                                     </div>
@@ -235,7 +235,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                     )}
                                     
                                     <div className="flex items-center gap-2 pt-2">
-                                        <p className="text-[9px] font-black uppercase italic tracking-widest text-muted-foreground/40">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">
                                             {formatDate(ann.created_at, "MMM d, yyyy · HH:mm", locale)}
                                         </p>
                                     </div>
@@ -276,7 +276,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                                 <DropdownMenuContent align="end" className="rounded-none border-border/40">
                                                     <DropdownMenuItem 
                                                         onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                                        className="font-bold uppercase italic text-[10px] tracking-widest"
+                                                        className="font-bold uppercase text-[10px] tracking-widest"
                                                     >
                                                         {ann.is_pinned ? (
                                                             <>
@@ -292,7 +292,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem 
                                                         onClick={() => setDeleteId(ann.id)}
-                                                        className="font-bold uppercase italic text-[10px] tracking-widest text-destructive focus:text-destructive"
+                                                        className="font-bold uppercase text-[10px] tracking-widest text-destructive focus:text-destructive"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5 mr-2" />
                                                         {tCommon("delete")}
@@ -311,7 +311,7 @@ export function AnnouncementsCard({ tournamentId, isEditable = true }: Announcem
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
                             {t("delete_announcement") || "Delete Announcement"}
                         </AlertDialogTitle>

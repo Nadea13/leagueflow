@@ -106,7 +106,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="flex flex-col gap-1">
-                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
                         <Users className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
@@ -119,7 +119,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             size="sm" 
                             disabled={!isPro}
                             onClick={() => !isPro && togglePayment?.()}
-                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/btn overflow-hidden"
+                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase tracking-tighter transition-all relative group/btn overflow-hidden"
                         >
                             <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                             <span className="relative z-10 flex items-center gap-2">
@@ -132,7 +132,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                         <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-foreground/5 rounded-none p-0 overflow-hidden">
                             <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
                             <DialogHeader className="p-8 pb-4">
-                                <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-3">
+                                <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
                                     <Mail className="h-8 w-8 text-secondary" />
                                     {t("invite_title")}
                                 </DialogTitle>
@@ -142,7 +142,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             </DialogHeader>
                             <div className="px-8 py-6 space-y-6">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
                                     <Input
                                         type="email"
                                         placeholder="collaborator@example.com"
@@ -156,14 +156,14 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                     <Button 
                                         variant="ghost" 
                                         onClick={() => setDialogOpen(false)}
-                                        className="h-12 rounded-none border-foreground/10 font-black uppercase italic tracking-tighter px-8 hover:bg-foreground/5"
+                                        className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-8 hover:bg-foreground/5"
                                     >
                                         {tCommon("cancel")}
                                     </Button>
                                     <Button 
                                         onClick={handleInvite} 
                                         disabled={isInviting || !email.trim()}
-                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/save overflow-hidden"
+                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group/save overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
                                         <span className="relative z-10 flex items-center gap-2">
@@ -194,7 +194,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                             </div>
                             <Button
                                 onClick={togglePayment}
-                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase italic tracking-tighter transition-all relative group/upbtn overflow-hidden"
+                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group/upbtn overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center gap-2">
@@ -217,7 +217,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                 <div className="absolute inset-0 bg-secondary/10 scale-0 group-hover/icon:scale-100 transition-transform" />
                                 <Users className="h-8 w-8 text-secondary/40 relative z-10" />
                             </div>
-                            <h3 className="text-xl font-black uppercase italic tracking-tighter text-muted-foreground/40">{t("no_collaborators")}</h3>
+                            <h3 className="text-xl font-black uppercase tracking-tighter text-muted-foreground/40">{t("no_collaborators")}</h3>
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -236,8 +236,8 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3">
-                                                <span className="text-sm font-black uppercase italic tracking-tight text-foreground">{collab.email}</span>
-                                                <Badge variant="outline" className="rounded-none border-secondary/20 bg-secondary/5 text-[9px] font-black uppercase italic tracking-widest px-2 py-0 text-secondary/70">
+                                                <span className="text-sm font-black uppercase tracking-tight text-foreground">{collab.email}</span>
+                                                <Badge variant="outline" className="rounded-none border-secondary/20 bg-secondary/5 text-[9px] font-black uppercase tracking-widest px-2 py-0 text-secondary/70">
                                                     {collab.role}
                                                 </Badge>
                                             </div>
@@ -265,7 +265,7 @@ export function CollaboratorsCard({ tournamentId, isPro, togglePayment }: Collab
             <AlertDialog open={!!removeMemberId} onOpenChange={(open) => !open && setRemoveMemberId(null)}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase italic tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
                             {t("remove_collaborator") || "Remove Collaborator"}
                         </AlertDialogTitle>

@@ -31,7 +31,7 @@ export default async function MyTeamsPage() {
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between border-b-4 border-secondary/20 pb-4 md:pb-6 relative">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase italic leading-none">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
                         {t("dashboard")}
                     </h1>
                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
@@ -50,7 +50,7 @@ export default async function MyTeamsPage() {
                         <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
                             <Users className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                         </div>
-                        <h3 className="text-2xl font-black uppercase italic tracking-tight relative z-10">
+                        <h3 className="text-2xl font-black uppercase tracking-tight relative z-10">
                             {t("no_teams_yet")}
                         </h3>
                         <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10">
@@ -70,21 +70,21 @@ export default async function MyTeamsPage() {
                                         <div className="flex items-center gap-4 overflow-hidden">
                                             <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
                                                 <AvatarImage src={team.logo_url} alt={team.name} className="object-contain" />
-                                                <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black italic">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                             </Avatar>
                                             <div className="grid gap-1">
-                                                <CardTitle className="text-lg font-black leading-none tracking-tight uppercase italic group-hover:text-secondary transition-colors truncate">
+                                                <CardTitle className="text-lg font-black leading-none tracking-tight uppercase group-hover:text-secondary transition-colors truncate">
                                                     {team.name}
                                                 </CardTitle>
                                                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                                                     {team.participations && team.participations.length > 0 ? (
                                                         team.participations.slice(0, 2).map((p: { tournament: { name: string } }, i: number) => (
-                                                            <Badge key={i} variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase italic rounded-none shrink-0">
+                                                            <Badge key={i} variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase rounded-none shrink-0">
                                                                 {p.tournament.name}
                                                             </Badge>
                                                         ))
                                                     ) : (
-                                                        <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase italic rounded-none shrink-0 opacity-70">
+                                                        <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase rounded-none shrink-0 opacity-70">
                                                             {t("unassigned_badge")}
                                                         </Badge>
                                                     )}
@@ -94,7 +94,7 @@ export default async function MyTeamsPage() {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="flex-1 pb-4 md:pb-6 text-sm relative z-10">
-                                    <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 italic leading-relaxed">
+                                    <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 leading-relaxed">
                                         {team.description || t("no_description")}
                                     </p>
                                 </CardContent>

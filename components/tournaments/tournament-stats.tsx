@@ -32,7 +32,7 @@ export function TournamentStats({ teams, matches, goals }: TournamentStatsProps)
                     <Users className="h-4 w-4 text-secondary/40 group-hover:text-secondary transition-colors shrink-0" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-4 md:px-6 pt-0 md:pt-0 pb-6">
-                    <div className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">{totalTeams}</div>
+                    <div className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none">{totalTeams}</div>
                     <p className="text-[10px] font-bold uppercase text-muted-foreground/40 mt-2 flex items-center gap-1.5">
                         <span className="w-3 h-[1px] bg-secondary/20" />
                         {t("stats_teams_registered")}
@@ -50,7 +50,7 @@ export function TournamentStats({ teams, matches, goals }: TournamentStatsProps)
                     <CalendarDays className="h-4 w-4 text-secondary/40 group-hover:text-secondary transition-colors shrink-0" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-4 md:px-6 pt-0 md:pt-0 pb-6">
-                    <div className="text-3xl md:text-5xl font-black tracking-tighter italic uppercase leading-none">
+                    <div className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none">
                         {completedMatches} <span className="text-muted-foreground text-xs md:text-base font-black opacity-30 mt-auto pb-1 md:pb-2">/ {totalMatches}</span>
                     </div>
                     <p className="text-[10px] font-bold uppercase text-muted-foreground/40 mt-2 flex items-center gap-1.5">
@@ -70,7 +70,7 @@ export function TournamentStats({ teams, matches, goals }: TournamentStatsProps)
                     <Trophy className="h-4 w-4 text-secondary/40 group-hover:text-secondary transition-colors shrink-0" />
                 </CardHeader>
                 <CardContent className="relative z-10 px-4 md:px-6 pt-0 md:pt-0 pb-6">
-                    <div className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter leading-none">{totalGoals}</div>
+                    <div className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none">{totalGoals}</div>
                     <p className="text-[10px] font-bold uppercase text-muted-foreground/40 mt-2 flex items-center gap-1.5">
                         <span className="w-3 h-[1px] bg-secondary/20" />
                         {t("stats_goals_scored")}

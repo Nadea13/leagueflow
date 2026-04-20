@@ -199,7 +199,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                 <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-black italic uppercase tracking-tighter text-foreground">
+                        <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground">
                             {initialPlan ? t("edit_plan") : t("add_plan")}
                         </DialogTitle>
                         <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
@@ -246,7 +246,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         {/* Pricing & Limits */}
                         <div className="col-span-2 border-t border-border pt-4 flex items-center gap-3">
                             <div className="w-1 h-4 bg-secondary" />
-                            <span className="text-[10px] font-black uppercase italic tracking-[0.15em]">{t("pricing_and_limits")}</span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.15em]">{t("pricing_and_limits")}</span>
                         </div>
 
                         <div className="grid grid-cols-3 items-center gap-4">
@@ -318,7 +318,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                             <>
                                 <div className="col-span-2 border-t border-border pt-4 flex items-center gap-3">
                                     <div className="w-1 h-4 bg-secondary" />
-                                    <span className="text-[10px] font-black uppercase italic tracking-[0.15em]">{t("features_and_support")}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.15em]">{t("features_and_support")}</span>
                                 </div>
 
                                 <div className="grid grid-cols-3 items-center gap-4">

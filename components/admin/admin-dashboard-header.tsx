@@ -116,7 +116,7 @@ export function AdminDashboardHeader({ userEmail, className }: AdminDashboardHea
                                 >
                                     {active && <div className="absolute left-0 top-0 w-1.5 h-full bg-secondary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
                                     <item.icon className={cn("h-5 w-5", active ? "text-secondary" : "text-muted-foreground/50")} />
-                                    <span className="text-[12px] font-black uppercase italic tracking-[0.2em]">{item.title}</span>
+                                    <span className="text-[12px] font-black uppercase tracking-[0.2em]">{item.title}</span>
                                 </Link>
                             );
                         })}

@@ -79,10 +79,10 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("role")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase italic tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("role")}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

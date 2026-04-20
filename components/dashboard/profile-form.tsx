@@ -39,7 +39,7 @@ export function ProfileForm({ user }: { user: User }) {
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 mb-4 md:mb-6">
                 <UserIcon className="h-5 w-5 text-secondary" />
-                <h3 className="text-xl font-black uppercase italic tracking-tighter text-foreground">
+                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
                     {t("user_info")}
                 </h3>
             </div>
@@ -49,18 +49,18 @@ export function ProfileForm({ user }: { user: User }) {
                 
                 <form action={handleUpdate} className="grid gap-4 md:gap-6">
                     <div className="grid gap-3">
-                        <Label htmlFor="email" className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">
+                        <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">
                             {t("email")}
                         </Label>
                         <Input 
                             id="email" 
                             value={user?.email} 
                             disabled 
-                            className="bg-muted/10 border-border text-muted-foreground/40 cursor-not-allowed italic font-medium h-12 rounded-none" 
+                            className="bg-muted/10 border-border text-muted-foreground/40 cursor-not-allowed font-medium h-12 rounded-none" 
                         />
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="fullName" className="text-[10px] font-black uppercase italic tracking-widest text-secondary/70">
+                        <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">
                             {t("full_name")}
                         </Label>
                         <Input
@@ -72,7 +72,7 @@ export function ProfileForm({ user }: { user: User }) {
                         />
                     </div>
                     <div className="flex justify-start">
-                        <Button type="submit" disabled={isLoading} variant="secondary" className="h-12 px-10 rounded-none font-black uppercase italic tracking-tighter shadow-[0_0_20px_rgba(0,196,154,0.1)] hover:shadow-[0_0_30px_rgba(0,196,154,0.2)] transition-all">
+                        <Button type="submit" disabled={isLoading} variant="secondary" className="h-12 px-10 rounded-none font-black uppercase tracking-tighter shadow-[0_0_20px_rgba(0,196,154,0.1)] hover:shadow-[0_0_30px_rgba(0,196,154,0.2)] transition-all">
                             {isLoading ? (
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             ) : (

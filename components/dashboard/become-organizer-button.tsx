@@ -39,7 +39,7 @@ export function BecomeOrganizerButton() {
                 <Trophy className="h-24 w-24 text-secondary rotate-12" />
             </div>
             <div className="relative z-10">
-                <h3 className="text-xl font-black uppercase italic tracking-tight text-secondary">
+                <h3 className="text-xl font-black uppercase tracking-tight text-secondary">
                     {t("become_organizer")}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 max-w-md">
@@ -48,7 +48,7 @@ export function BecomeOrganizerButton() {
                 <Button 
                     onClick={handleBecomeOrganizer} 
                     disabled={isLoading}
-                    className="mt-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase italic"
+                    className="mt-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase"
                 >
                     {isLoading ? (
                         <>

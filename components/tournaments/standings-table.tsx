@@ -46,7 +46,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                 <TableBody>
                     {standings.map((team, index) => (
                         <TableRow key={team.team_id} className="h-12 border-b border-border/5 hover:bg-muted/5 transition-colors group">
-                            <TableCell className="text-center px-0 sticky left-0 z-10 bg-background group-hover:bg-muted/10 transition-colors font-black italic tracking-tighter text-muted-foreground/40 text-sm tabular-nums border-b border-border/5">
+                            <TableCell className="text-center px-0 sticky left-0 z-10 bg-background group-hover:bg-muted/10 transition-colors font-black tracking-tighter text-muted-foreground/40 text-sm tabular-nums border-b border-border/5">
                                 {index + 1}
                             </TableCell>
                             <TableCell className="px-6 sticky left-10 z-10 bg-background group-hover:bg-muted/10 transition-colors border-b border-border/5 border-r border-border/5">
@@ -60,7 +60,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                                             </span>
                                         )}
                                     </div>
-                                    <span className="font-black uppercase italic tracking-tighter text-foreground text-sm truncate max-w-[120px] md:max-w-none group-hover:text-primary transition-colors" title={team.team?.name}>
+                                    <span className="font-black uppercase tracking-tighter text-foreground text-sm truncate max-w-[120px] md:max-w-none group-hover:text-primary transition-colors" title={team.team?.name}>
                                         {team.team?.name}
                                     </span>
                                 </div>
@@ -71,7 +71,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                             <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.lost}</TableCell>
                             <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.gf}</TableCell>
                             <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.ga}</TableCell>
-                            <TableCell className={`text-center px-4 font-black italic text-sm tabular-nums border-b border-border/5 ${team.gd > 0 ? "text-primary" : team.gd < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>
+                            <TableCell className={`text-center px-4 font-black text-sm tabular-nums border-b border-border/5 ${team.gd > 0 ? "text-primary" : team.gd < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>
                                 {team.gd > 0 ? `+${team.gd}` : team.gd}
                             </TableCell>
                             <TableCell className="text-center px-6 sticky right-0 z-10 bg-background group-hover:bg-muted/10 transition-colors font-black text-lg text-foreground border-b border-border/5 border-l border-border/5 tabular-nums">
@@ -88,7 +88,7 @@ export function StandingsTable({ standings }: { standings: Standing[] }) {
                                         <List className="h-8 w-8 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-sm font-black uppercase italic tracking-widest text-muted-foreground/40">{t("no_stats")}</h3>
+                                        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{t("no_stats")}</h3>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/20">Awaiting match results</p>
                                     </div>
                                 </div>
