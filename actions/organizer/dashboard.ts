@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, TournamentStatus, SportType } from "@/types/index";
 import { logActivity } from "@/lib/audit";
@@ -204,9 +204,13 @@ export async function registerAsOrganizer(): Promise<ActionResponse> {
             return { success: false, error: "Authentication required" };
         }
 
-        const { error } = await supabase
+        const adminClient = createAdminClient();
+        const { error } = await adminClient
             .from("profiles")
-            .update({ role: 'organizer' })
+            .update({ 
+                is_organizer: true,
+                role: 'organizer' 
+            })
             .eq("id", user.id);
 
         if (error) {

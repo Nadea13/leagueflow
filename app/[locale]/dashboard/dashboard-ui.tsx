@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { BecomeOrganizerButton } from "@/components/dashboard/become-organizer-button";
 
 
 import { Tournament, Team } from "@/types/index";
@@ -224,6 +225,12 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                                     </div>
                                 </Link>
                             )}
+                        </div>
+                    )}
+
+                    {!isOrganizer && (
+                        <div className="mt-8">
+                            <BecomeOrganizerButton />
                         </div>
                     )}
                 </div>

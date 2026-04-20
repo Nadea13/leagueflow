@@ -3,6 +3,11 @@ CREATE OR REPLACE FUNCTION public.protect_profile_role() RETURNS trigger AS $fun
 BEGIN
   -- Check if the request comes from the Supabase API (JWT token is present)
   IF current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    -- Allow service_role to bypass protection
+    IF (current_setting('request.jwt.claims', true)::jsonb ->> 'role') = 'service_role' THEN
+      RETURN NEW;
+    END IF;
+    
     NEW.role = OLD.role;
     NEW.is_organizer = OLD.is_organizer;
   END IF;
