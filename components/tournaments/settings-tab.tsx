@@ -322,7 +322,7 @@ export function SettingsTab({ tournament, hasFixtures, userPlan, teams }: { tour
                                             modules={{
                                                 toolbar: [
                                                     [{ 'header': [1, 2, false] }],
-                                                    ['bold', ', 'underline'],
+                                                    ['bold', 'underline'],
                                                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                                                     ['clean']
                                                 ]

@@ -8,6 +8,8 @@ import { getPlans } from "@/actions/admin/plans";
 
 import { PublicMatchListHome } from "@/components/tournaments/public-match-list-home";
 import { createClient } from "@/lib/supabase/server";
+import { LanguageSelect } from "@/components/layout/language-select";
+import { ModeToggle } from "@/components/layout/mode-toggle";
 
 export default async function Home() {
   const [
@@ -99,9 +101,15 @@ export default async function Home() {
               </Button>
             </div>
           </div>
-          <p className="md:self-end text-[10px] font-black tracking-[0.2em] opacity-40">
-            © {new Date().getFullYear()} LeagueFlow. {tLanding('footer_rights')}
-          </p>
+          <div className="flex flex-col md:flex-row items-center gap-6 md:self-end">
+            <p className="text-[10px] font-black tracking-[0.2em] opacity-40">
+              © {new Date().getFullYear()} LeagueFlow. {tLanding('footer_rights')}
+            </p>
+            <div className="flex items-center gap-2">
+              <LanguageSelect />
+              <ModeToggle />
+            </div>
+          </div>
         </div>
       </footer>
     </div >
