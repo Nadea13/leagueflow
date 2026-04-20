@@ -131,7 +131,6 @@ export function DashboardUI({ tournaments, teams, userPlan, metrics, isOrganizer
                         <EmptyState
                             type="team"
                             isPro={isPro}
-                            tournaments={tournaments.map(t => ({ id: t.id, name: t.name }))}
                         />
                     ) : (
                         <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

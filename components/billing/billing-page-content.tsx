@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { PaymentRecord } from "@/app/[locale]/dashboard/billing/actions";
 import { Plan } from "@/types";
 import { CreditCard, AlertCircle, Trophy } from "lucide-react";
+import { EmptyState } from "@/components/dashboard/empty-state";
 
 interface BillingPageContentProps {
     tournaments: { id: string; name: string; status: string; plan?: string | null; }[] | null;
@@ -112,20 +113,12 @@ export function BillingPageContent({ tournaments, initialHistory, userPlan, plan
                             externalSelectedTournament={selectedTournamentId}
                         />
                     ) : (
-                        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-4 md:p-6 text-center animate-in fade-in-50 relative overflow-hidden group">
-                            <div className="p-4 md:p-6 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
-                                <CreditCard className="h-10 w-10 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
-                            </div>
-
-                            <h3 className="text-xl font-black uppercase italic tracking-tight mb-2 relative z-10">
-                                {t("select_plan_title", { defaultValue: "Select a Plan" })}
-                            </h3>
-                            <p className="text-[10px] uppercase font-bold text-muted-foreground/60 max-w-[200px] flex items-center gap-2 relative z-10 mx-auto">
-                                <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                                {t("select_plan_prompt")}
-                                <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                            </p>
-                        </div>
+                        <EmptyState
+                            title={t("select_plan_title", { defaultValue: "Select a Plan" })}
+                            description={t("select_plan_prompt")}
+                            icon={CreditCard}
+                            action={<div />}
+                        />
                     )}
                 </section>
                 <section>
