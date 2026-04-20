@@ -2,8 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/routing";
-import { LanguageSelect } from "@/components/layout/language-select";
-import { ModeToggle } from "@/components/layout/mode-toggle";
+import { LanguageToggle } from "@/components/layout/language-toggle";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { DeleteAccountButton } from "@/components/dashboard/delete-account-button";
 import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriangle } from "lucide-react";
 
@@ -54,14 +54,14 @@ export default async function SettingsPage() {
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{tCommon("language")}</Label>
                                     <p className="text-[11px] text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
                                 </div>
-                                <LanguageSelect />
+                                <LanguageToggle />
                             </div>
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-1">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{tCommon("theme")}</Label>
                                     <p className="text-[11px] text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
                                 </div>
-                                <ModeToggle />
+                                <ThemeToggle />
                             </div>
                         </div>
                     </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import { Link } from "@/i18n/routing";
-import { LanguageSelect } from "@/components/layout/language-select";
-import { ModeToggle } from "@/components/layout/mode-toggle";
+import { LanguageToggle } from "@/components/layout/language-toggle";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function AuthNavbar() {
     return (
@@ -20,8 +20,8 @@ export function AuthNavbar() {
                     <span className="font-black text-foreground text-xl tracking-tighter">LeagueFlow</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <LanguageSelect />
-                    <ModeToggle />
+                    <LanguageToggle />
+                    <ThemeToggle />
                 </div>
             </div>
         </header>

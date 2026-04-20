@@ -6,15 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { CookieConsent } from "./types";
+import { CookieConsent } from "./cookie-types";
 
-interface CookieSettingsModalProps {
+interface CookieSettingsProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (consent: CookieConsent) => void;
 }
 
-export function CookieSettingsModal({ open, onOpenChange, onSave }: CookieSettingsModalProps) {
+export function CookieSettings({ open, onOpenChange, onSave }: CookieSettingsProps) {
     const t = useTranslations("CookieConsent");
 
     const [preferences, setPreferences] = useState<CookieConsent>({

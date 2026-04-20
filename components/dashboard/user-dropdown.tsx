@@ -22,7 +22,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "@/actions/common/auth"
-import { LanguageSwitcher } from "@/components/layout/language-switcher"
+import { LanguageSubMenu } from "@/components/layout/language-sub-menu"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
@@ -62,7 +62,7 @@ export function UserDropdown({ email, mode = 'team' }: { email: string | undefin
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="bg-border" />
-                <LanguageSwitcher />
+                <LanguageSubMenu />
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="rounded-none focus:bg-muted focus:text-secondary py-2.5">
                         <Sun className="mr-3 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 opacity-70" />
