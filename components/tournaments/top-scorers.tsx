@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface TopScorersProps {
     goals: Goal[];
-    teams: (TournamentTeam & { team?: { user_id: string | null } })[];
+    teams: (Team | TournamentTeam)[];
 }
 
 export function TopScorers({ goals, teams }: TopScorersProps) {

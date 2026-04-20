@@ -1,4 +1,4 @@
-import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
+import { TournamentCreate } from "@/components/tournaments/tournament-create";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 import { Trophy, Users, LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -37,7 +37,7 @@ export function EmptyState({
     const defaultAction = isTeam ? (
         <CreateTeamDialog />
     ) : (
-        <CreateTournamentDialog isPro={isPro ?? false} />
+        <TournamentCreate isPro={isPro ?? false} />
     );
 
     return (
