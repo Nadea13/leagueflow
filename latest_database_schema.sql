@@ -2304,6 +2304,11 @@ UPDATE global_players SET athlete_types = '{}' WHERE athlete_types IS NULL;
 CREATE OR REPLACE FUNCTION public.protect_profile_role() RETURNS trigger AS $function$
 BEGIN
   IF current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    -- Allow service_role to bypass protection
+    IF (current_setting('request.jwt.claims', true)::jsonb ->> 'role') = 'service_role' THEN
+      RETURN NEW;
+    END IF;
+
     NEW.role = OLD.role;
     NEW.is_organizer = OLD.is_organizer;
   END IF;

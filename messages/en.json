@@ -98,7 +98,10 @@
         "no_tournaments": "No tournaments found",
         "create_first": "Create your first tournament to get started.",
         "card_teams": "Teams",
-        "card_not_scheduled": "Not scheduled"
+        "card_not_scheduled": "Not scheduled",
+        "become_organizer": "Become an Organizer",
+        "become_organizer_desc": "Change your role to create and manage your own tournaments.",
+        "become_organizer_btn": "Become an Organizer"
     },
     "NotFound": {
         "title": "404",
@@ -124,7 +127,8 @@
         "my_teams": "My Teams",
         "my_registrations": "My Registrations",
         "organizer_mode": "Organizer",
-        "team_mode": "Manager"
+        "team_mode": "Manager",
+        "become_organizer": "Become an Organizer"
     },
     "Tournament": {
         "format": "Format",

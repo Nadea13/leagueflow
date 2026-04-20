@@ -95,7 +95,10 @@
         "no_tournaments": "ไม่พบทัวร์นาเมนต์",
         "create_first": "สร้างทัวร์นาเมนต์แรกของคุณเพื่อเริ่มต้น",
         "card_teams": "ทีม",
-        "card_not_scheduled": "ยังไม่กำหนดวัน"
+        "card_not_scheduled": "ยังไม่กำหนดวัน",
+        "become_organizer": "เป็นผู้จัดการแข่งขัน",
+        "become_organizer_desc": "เปลี่ยนบทบาทของคุณเพื่อสร้างและจัดการทัวร์นาเมนต์ของคุณเอง",
+        "become_organizer_btn": "สมัครเป็นผู้จัดการแข่งขัน"
     },
     "NotFound": {
         "title": "404",
@@ -120,7 +123,8 @@
         "my_teams": "ทีมของฉัน",
         "my_registrations": "การสมัครแข่งของฉัน",
         "organizer_mode": "ผู้จัดการแข่งขัน",
-        "team_mode": "ผู้จัดการทีม"
+        "team_mode": "ผู้จัดการทีม",
+        "become_organizer": "เป็นผู้จัดการแข่งขัน"
     },
     "Registration": {
         "title": "ลงทะเบียนทัวร์นาเมนต์",
