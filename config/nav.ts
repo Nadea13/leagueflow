@@ -29,11 +29,6 @@ export const organizerNavItems: NavItem[] = [
         icon: Mail,
     },
     {
-        titleKey: "billing",
-        href: "/organizer/billing",
-        icon: CreditCard,
-    },
-    {
         titleKey: "settings",
         href: "/organizer/settings",
         icon: Settings,
@@ -60,11 +55,6 @@ export const teamNavItems: NavItem[] = [
         titleKey: "my_registrations",
         href: "/manager/my-registrations",
         icon: Trophy,
-    },
-    {
-        titleKey: "billing",
-        href: "/manager/billing",
-        icon: CreditCard,
     },
     {
         titleKey: "settings",

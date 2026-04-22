@@ -230,8 +230,8 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                             <SelectItem value="league" className="focus:bg-foreground/10 focus:text-secondary">{t("format_league")}</SelectItem>
                                             <SelectItem value="league_ha" className="focus:bg-foreground/10 focus:text-secondary">{t("format_league_ha")}</SelectItem>
                                             <SelectItem value="knockout" className="focus:bg-foreground/10 focus:text-secondary">{t("format_knockout")}</SelectItem>
-                                            <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-foreground/10 focus:text-secondary">
-                                                {t("format_group_knockout")} {!isPro && t("pro_only")}
+                                            <SelectItem value="group_knockout" className="focus:bg-foreground/10 focus:text-secondary">
+                                                {t("format_group_knockout")}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -240,11 +240,6 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                 <div className="space-y-1">
                                     <Label htmlFor="max_teams" className="text-[10px] font-black uppercase tracking-widest text-secondary/70 flex items-center justify-between">
                                         {tDialog("max_teams")}
-                                        {!isPro && (
-                                            <span className="text-[9px] text-secondary font-black uppercase tracking-tighter bg-secondary/10 px-2 py-0.5">
-                                                Max 8
-                                            </span>
-                                        )}
                                     </Label>
                                     <Input
                                         type="number"
@@ -252,7 +247,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                         name="max_teams"
                                         defaultValue={tournament.max_teams || 8}
                                         min="2"
-                                        max={isPro ? 128 : 8}
+                                        max={128}
                                         className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
@@ -359,78 +354,12 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
             <Collaborators tournamentId={tournamentId} isPro={isPro} togglePayment={togglePayment} />
 
             {/* Billing & Subscription */}
+            {/* Temporarily hidden during development */}
+            {/*
             <div className="space-y-4 md:space-y-6">
-                <div className="flex flex-col gap-1">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <CreditCard className="h-5 w-5 text-secondary" />
-                        Billing & Subscription
-                    </h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Manage subscription plan for this tournament.</p>
-                </div>
-
-                <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-3 md:p-6 shadow-sm">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-
-                    <div className="relative z-10 space-y-4 md:space-y-6">
-                        <div className="p-8 bg-muted/5 border border-foreground/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden relative group/plan">
-                            <div className="space-y-1 relative z-10">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("billing_plan_label")}</p>
-                                <h4 className="text-3xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
-                                    {isGlobalPro ? (userPlan === 'monthly' ? t("plan_monthly") : t("plan_yearly")) : (isTournamentPro ? t("plan_tournament") : t("plan_free"))}
-                                    <Badge variant="outline" className={cn(
-                                        "rounded-none border-2 font-black uppercase tracking-widest px-3",
-                                        isPro ? "border-secondary/40 text-secondary bg-secondary/5" : "border-foreground/10 text-muted-foreground"
-                                    )}>
-                                        {isPro ? t("plan_pro_badge") : t("plan_free_badge")}
-                                    </Badge>
-                                </h4>
-                            </div>
-                            {!isPro && (
-                                <Button
-                                    onClick={togglePayment}
-                                    disabled={showPayment}
-                                    className="w-full sm:w-auto h-14 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden z-10"
-                                >
-                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                    <span className="relative z-10">{t("upgrade_button")}</span>
-                                </Button>
-                            )}
-                        </div>
-
-                        {/* Payment Section */}
-                        {!isPro && showPayment && (
-                            <div className="bg-neutral-950 border border-secondary/20 p-8 animate-in fade-in slide-in-from-top-4 duration-500">
-                                {isFetchingPlans ? (
-                                    <div className="flex items-center justify-center p-12">
-                                        <Loader2 className="w-10 h-10 animate-spin text-secondary" />
-                                    </div>
-                                ) : tournamentPlan ? (
-                                    <PaymentSection
-                                        plan={tournamentPlan}
-                                        tournaments={[tournament]}
-                                        externalSelectedTournament={tournament.id}
-                                        onCancel={() => setShowPayment(false)}
-                                        onSuccess={handlePaymentSuccess}
-                                    />
-                                ) : (
-                                    <div className="text-center p-8 text-secondary font-black uppercase tracking-tighter border border-secondary/20 bg-secondary/5">
-                                        FAILED TO LOAD PRICING DATA
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="flex justify-end">
-                            <Link
-                                href="/dashboard/billing"
-                                className="text-[10px] font-black uppercase tracking-tight text-muted-foreground/40 hover:text-secondary transition-colors"
-                            >
-                                {t("view_pricing")} →
-                            </Link>
-                        </div>
-                    </div>
-                </div>
+                ... (billing section hidden)
             </div>
+            */}
             {/* Mobile Configuration Overview - Shown only on mobile before Danger Zone */}
             <div className="lg:hidden space-y-4 border-foreground/5">
                 <div className="flex flex-col gap-1">

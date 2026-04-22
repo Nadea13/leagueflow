@@ -47,7 +47,7 @@ export function StatsCards({ items }: StatsCardsProps) {
                             <item.icon className={cn("h-4 w-4 opacity-80 shrink-0 hidden sm:block", colorClass)} />
                         </CardHeader>
                         <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                            <div className="text-2xl md:text-5xl font-black tracking-tighter italic leading-none">
+                            <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                                 {item.value}
                             </div>
                             {item.description && (
