@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlayerStat } from "@/lib/player-stats";
 import { AlertTriangle, Shield } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface PlayerStatsProps {
     stats: PlayerStat[];
@@ -16,12 +17,12 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
 
     if (stats.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed rounded-none bg-muted/10">
-                <div className="h-12 w-12 rounded-none bg-muted/20 flex items-center justify-center mb-4">
-                    <Shield className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-sm font-medium text-muted-foreground">{t("no_stats")}</h3>
-            </div>
+            <EmptyState
+                icon={Shield}
+                title={t("no_stats")}
+                description="Awaiting match events and player activity"
+                className="py-12 border-none"
+            />
         );
     }
 

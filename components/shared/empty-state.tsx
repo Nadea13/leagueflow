@@ -1,5 +1,3 @@
-import { TournamentCreate } from "@/components/tournaments/tournament-create";
-import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 import { Trophy, Users, LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -10,9 +8,6 @@ interface EmptyStateProps {
     icon?: LucideIcon;
     action?: React.ReactNode;
     className?: string;
-    // Legacy support
-    isPro?: boolean;
-    type?: 'tournament' | 'team';
 }
 
 export function EmptyState({ 
@@ -21,24 +16,16 @@ export function EmptyState({
     icon: IconProp, 
     action, 
     className,
-    isPro, 
-    type = 'tournament' 
 }: EmptyStateProps) {
     const t = useTranslations("Common");
     const tTeam = useTranslations("Team");
 
-    const isTeam = type === 'team';
-    const DefaultIcon = isTeam ? Users : Trophy;
+    // We can still use the icon logic if we want a default icon
+    const DefaultIcon = Trophy;
     const Icon = IconProp || DefaultIcon;
     
-    const displayTitle = title || (isTeam ? tTeam("no_teams_yet") : t("no_tournaments"));
-    const displayDescription = description || (isTeam ? tTeam("my_teams_desc") : t("no_tournaments_desc"));
-
-    const defaultAction = isTeam ? (
-        <CreateTeamDialog />
-    ) : (
-        <TournamentCreate isPro={isPro ?? false} />
-    );
+    const displayTitle = title || t("no_tournaments");
+    const displayDescription = description || t("no_tournaments_desc");
 
     return (
         <div className={cn(
@@ -57,9 +44,11 @@ export function EmptyState({
                 {displayDescription}
                 <span className="w-4 h-[1px] bg-muted-foreground/30" />
             </p>
-            <div className="relative z-10">
-                {action || defaultAction}
-            </div>
+            {action && (
+                <div className="relative z-10">
+                    {action}
+                </div>
+            )}
         </div>
     );
 }

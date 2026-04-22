@@ -238,7 +238,7 @@ export function TournamentContent({
     return (
         <div className="flex flex-col gap-4 md:gap-6">
             {/* Unified Header Block */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6 relative group">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 relative group">
                 <div className="flex items-start gap-2 md:gap-6 w-full">
                     <Button
                         variant="ghost"
@@ -341,9 +341,8 @@ export function TournamentContent({
                                         </h2>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("overview")}</p>
                                     </div>
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all duration-500 p-4 md:p-6 shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                                        <CardContent className="p-0">
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all duration-500 shadow-xl shadow-black/20">
+                                        <CardContent className="px-2 md:px-3">
                                             <div
                                                 className="prose prose-invert prose-sm md:prose-base max-w-none text-foreground/70 font-medium leading-relaxed"
                                                 dangerouslySetInnerHTML={{ __html: tournament.description }}
@@ -405,25 +404,26 @@ export function TournamentContent({
                             )}
 
                             {/* 4. Top Scorers */}
-                            <div className="space-y-4 md:space-y-6">
-                                <div className="flex flex-col gap-1">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <Award className="h-5 w-5 text-secondary" />
-                                            {t("top_scorers")}
-                                        </h2>
-                                        {/* Pro locks removed */}
+                            {goals.length > 0 && (
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                                <Award className="h-5 w-5 text-secondary" />
+                                                {t("top_scorers")}
+                                            </h2>
+                                            {/* Pro locks removed */}
+                                        </div>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
                                     </div>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
-                                </div>
 
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                         <CardContent className="p-0 z-0">
                                             <TopScorers goals={goals} teams={teams} />
                                         </CardContent>
                                     </Card>
-                            </div>
+                                </div>
+                            )}
 
                             {/* 5. Player Stats */}
                             {playerStats.length > 0 && (
@@ -436,7 +436,6 @@ export function TournamentContent({
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Comprehensive performance tracking</p>
                                     </div>
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors p-0 shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                         <CardContent className="p-0 z-0">
                                             <div className="overflow-x-auto">
                                                 <PlayerStats stats={playerStats} />
@@ -445,6 +444,7 @@ export function TournamentContent({
                                     </Card>
                                 </div>
                             )}
+
                             {/* 6. Banned Players Alert */}
                             <BannedPlayers bannedPlayers={bannedPlayers} />
                         </div>
@@ -462,7 +462,6 @@ export function TournamentContent({
 
                             {/* Public Link Card */}
                             <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                                 <div className="space-y-2 md:space-y-3">
                                     <div className="space-y-2 md:space-y-3">
                                         <div className="flex items-center justify-between">
@@ -590,55 +589,55 @@ export function TournamentContent({
                                 </Card>
 
                                 {/* Public Registration Link - Only for Pro */}
-                                    <div className="space-y-4 md:space-y-6">
-                                        <div className="flex flex-col gap-1">
-                                            <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                                <ExternalLink className="h-5 w-5 text-primary" />
-                                                {t("public_link")}
-                                            </h3>
-                                            <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Direct access for teams</p>
-                                        </div>
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <ExternalLink className="h-5 w-5 text-primary" />
+                                            {t("public_link")}
+                                        </h3>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Direct access for teams</p>
+                                    </div>
 
-                                        <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                            <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                        <div className="space-y-2 md:space-y-3">
                                             <div className="space-y-2 md:space-y-3">
-                                                <div className="space-y-2 md:space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t("public_link")}</label>
-                                                        <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
-                                                    </div>
-                                                    <div className="p-4 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
-                                                        {mounted ? registrationUrl : "..."}
-                                                    </div>
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t("public_link")}</label>
+                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
                                                 </div>
-
-                                                <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                                    <Button
-                                                        type="button"
-                                                        variant="secondary"
-                                                        size="default"
-                                                        className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
-                                                        onClick={copyRegistrationLink}
-                                                    >
-                                                        <Copy className="h-4 w-4 mr-2" />
-                                                        {tCommon("copy_link")}
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="default"
-                                                        asChild
-                                                        className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
-                                                    >
-                                                        <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
-                                                            <ExternalLink className="h-4 w-4 mr-2" />
-                                                            {tCommon("open_link")}
-                                                        </a>
-                                                    </Button>
+                                                <div className="p-4 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                                    {mounted ? registrationUrl : "..."}
                                                 </div>
                                             </div>
-                                        </Card>
-                                    </div>
+
+                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                                <Button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="default"
+                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                    onClick={copyRegistrationLink}
+                                                >
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    {tCommon("copy_link")}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="default"
+                                                    asChild
+                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                >
+                                                    <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
+                                                        <ExternalLink className="h-4 w-4 mr-2" />
+                                                        {tCommon("open_link")}
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -720,7 +719,6 @@ export function TournamentContent({
                                 </div>
 
                                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary/20 group-hover:bg-secondary/40 transition-colors" />
                                     <div className="space-y-2 md:space-y-3">
                                         <FixtureGenerator
                                             tournamentId={id}
@@ -741,7 +739,6 @@ export function TournamentContent({
 
                                 {/* Extra Information / Status */}
                                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
                                     <div className="space-y-2 md:space-y-3">
                                         <div className="space-y-1 border-b border-foreground/5 pb-2 md:pb-3">
                                             <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest flex justify-between items-center">
@@ -791,7 +788,6 @@ export function TournamentContent({
                                     </div>
 
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
                                         <div className="space-y-4 md:space-y-6">
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
@@ -821,7 +817,6 @@ export function TournamentContent({
                                     </Card>
 
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15_rgba(0,196,154,0.1)]" />
                                         <div className="space-y-3">
                                             <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary">Quick Help</h5>
                                             <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">

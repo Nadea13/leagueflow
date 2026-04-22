@@ -50,7 +50,6 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
                             </div>
                             
                             <div className="bg-background border border-border/10 rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
-                                <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                 <div className="p-0">
                                     <StandingsTable standings={groupStandings} />
                                 </div>

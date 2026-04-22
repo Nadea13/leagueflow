@@ -63,9 +63,9 @@ export default async function TournamentsPage({
 
             {tournaments.length === 0 ? (
                 <EmptyState
-                    isPro={isPro}
                     title={query ? "No tournaments found" : undefined}
                     description={query ? `Search query: "${query}"` : undefined}
+                    action={<TournamentCreate isPro={isPro} />}
                 />
             ) : (
                 <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

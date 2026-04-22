@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { Users } from "lucide-react";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default async function MyTeamsPage() {
     const supabase = await createClient();
@@ -41,18 +42,13 @@ export default async function MyTeamsPage() {
 
             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {(!teams || teams.length === 0) ? (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
-                        <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
-                            <Users className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
-                        </div>
-                        <h3 className="text-2xl font-black uppercase tracking-tight relative z-10">
-                            {t("no_teams_yet")}
-                        </h3>
-                        <p className="text-[11px] uppercase font-bold text-muted-foreground/60 mt-2 opacity-60 flex items-center gap-2 relative z-10">
-                            <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                            {t("no_teams_desc") || "Create your first team to start participating in tournaments."}
-                            <span className="w-4 h-[1px] bg-muted-foreground/30" />
-                        </p>
+                    <div className="col-span-full">
+                        <EmptyState
+                            icon={Users}
+                            title={t("no_teams_yet")}
+                            description={t("no_teams_desc") || "Create your first team to start participating in tournaments."}
+                            action={<CreateTeamDialog />}
+                        />
                     </div>
                 ) : (
                     teams.map((team) => (
