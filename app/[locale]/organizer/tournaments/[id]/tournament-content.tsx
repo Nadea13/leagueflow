@@ -6,7 +6,8 @@ import { Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BookOpen,
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tab } from "@/components/ui/tab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -307,40 +308,23 @@ export function TournamentContent({
                 <TournamentStats teams={teams} matches={matches} goals={goals} />
             </div>
 
-            {/* Tabs */}
-            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max">
-                    <TabsTrigger
-                        value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
-                    >
-                        <Trophy className="h-3.5 w-3.5" />
-                        {t("overview")}
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="teams"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
-                    >
-                        <Users className="h-3.5 w-3.5" />
-                        {t("teams")} ({teams?.length || 0})
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="fixtures"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
-                    >
-                        <Calendar className="h-3.5 w-3.5" />
-                        {t("fixtures")}
-                    </TabsTrigger>
-                    {userRole === 'admin' && (
-                        <TabsTrigger
-                            value="settings"
-                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.3)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
-                        >
-                            <Settings className="h-3.5 w-3.5" />
-                            {t("settings")}
-                        </TabsTrigger>
-                    )}
-                </TabsList>
+            {/* Tabs Navigation */}
+            <Tab
+                value={currentTab}
+                onChange={handleTabChange}
+                className="w-full md:w-max"
+                itemClassName="flex-1 md:flex-none"
+                options={[
+                    { value: 'overview', label: t("overview"), icon: Trophy },
+                    { value: 'teams', label: t("teams"), icon: Users, badge: teams?.length || 0 },
+                    { value: 'fixtures', label: t("fixtures"), icon: Calendar },
+                    ...(userRole === 'admin' ? [
+                        { value: 'settings', label: t("settings"), icon: Settings }
+                    ] : [])
+                ]}
+            />
+
+            <Tabs value={currentTab} className="w-full">
 
                 {/* Overview Tab */}
                 <TabsContent value="overview" className="space-y-4 md:space-y-6">

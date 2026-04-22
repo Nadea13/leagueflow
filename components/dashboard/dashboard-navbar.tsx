@@ -13,6 +13,7 @@ import { getNavItems } from "@/config/nav"
 import { Trophy, CheckCircle2, Loader2 } from "lucide-react"
 import { registerAsOrganizer } from "@/actions/organizer/dashboard"
 import { useToast } from "@/hooks/use-toast"
+import { Tab } from "@/components/ui/tab"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
@@ -149,26 +150,16 @@ export function DashboardNavbar({ userEmail, role, isOrganizer: initialIsOrganiz
 
                     {/* Mode Switcher for Mobile */}
                     <div className="px-2 py-2 mb-4 pr-4">
-                        <div className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border">
-                            <button
-                                onClick={() => handleModeChange('organizer')}
-                                className={cn(
-                                    "flex flex-1 items-center justify-center gap-2 px-2 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none",
-                                    mode === 'organizer' ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-secondary opacity-70 hover:opacity-100 font-bold"
-                                )}
-                            >
-                                {t("organizer_mode")}
-                            </button>
-                            <button
-                                onClick={() => handleModeChange('team')}
-                                className={cn(
-                                    "flex flex-1 items-center justify-center gap-2 px-2 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none",
-                                    mode === 'team' ? "bg-secondary text-secondary-foreground shadow-sm" : "text-muted-foreground hover:text-secondary opacity-70 hover:opacity-100 font-bold"
-                                )}
-                            >
-                                {t("team_mode")}
-                            </button>
-                        </div>
+                        <Tab
+                            value={mode}
+                            onChange={handleModeChange}
+                            showIcons={false}
+                            fullWidth={true}
+                            options={[
+                                { label: t("organizer_mode"), value: 'organizer' },
+                                { label: t("team_mode"), value: 'team' }
+                            ]}
+                        />
                     </div>
 
                     <nav className="grid gap-1 px-2 font-medium overflow-y-auto pb-4">
