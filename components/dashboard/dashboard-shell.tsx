@@ -3,9 +3,9 @@
 import { useTranslations } from "next-intl";
 import { TournamentCreate } from "@/components/tournaments/tournament-create";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
-import { StatsCards } from "@/components/dashboard/stats-cards";
+import { StatsCards } from "@/components/shared/stats-cards";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
-import { EmptyState } from "@/components/dashboard/empty-state";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Users, FileText, Trophy, Activity, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
