@@ -5,6 +5,7 @@ import { Link, usePathname, useRouter } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
+import { useAnalytics } from "@/hooks/use-analytics"
 
 import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
     const [isOrganizer, setIsOrganizer] = useState(initialIsOrganizer)
     const [showRegDialog, setShowRegDialog] = useState(false)
     const [isRegistering, setIsRegistering] = useState(false)
+    const { trackAction, trackClick } = useAnalytics()
 
     // Persist mode in localStorage
     useEffect(() => {
@@ -59,6 +61,8 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
         // Dispatch event for same-window sync
         window.dispatchEvent(new StorageEvent('storage', { key: 'dashboard-mode', newValue: newMode }))
         
+        trackAction('CHANGE_DASHBOARD_MODE', 'ui_element', newMode, { isOrganizer })
+
         // Navigate to the respective dashboard
         if (newMode === 'organizer') {
             router.push('/organizer/dashboard')
@@ -150,6 +154,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                                 key={item.href}
                                 href={item.href}
                                 target={item.openInNewTab ? "_blank" : undefined}
+                                onClick={() => trackClick('NAV_ITEM', 'navigation', { target: item.href })}
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3.5 transition-all relative group",
                                     isActive
