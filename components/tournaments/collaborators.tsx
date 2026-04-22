@@ -40,7 +40,8 @@ interface CollaboratorsProps {
     togglePayment?: () => void;
 }
 
-export function Collaborators({ tournamentId, isPro, togglePayment }: CollaboratorsProps) {
+export function Collaborators({ tournamentId, togglePayment }: Omit<CollaboratorsProps, 'isPro'>) {
+    const isPro = true; // Pro locks removed for all
     const t = useTranslations("Collaborators");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();

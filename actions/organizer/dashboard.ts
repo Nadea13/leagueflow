@@ -39,8 +39,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         }
 
         // Check Pro Status for Team Limit
-        const userPlan = await getUserSubscriptionPlan();
-        const isPro = userPlan === 'monthly' || userPlan === 'yearly';
+        const isPro = true; // Pro locks removed for all users
 
         const { data: tournament, error } = await supabase.from("tournaments").insert({
             user_id: user.id,

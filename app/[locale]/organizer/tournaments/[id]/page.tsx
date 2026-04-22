@@ -69,12 +69,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const userRole = roleRes.success && roleRes.data ? roleRes.data.role : null;
     const isOwner = roleRes.success && roleRes.data ? roleRes.data.isOwner : false;
 
-    // Calculate Pro Status
-    const isGlobalPro = userPlan === 'monthly' || userPlan === 'yearly';
-    const isTournamentPro = (tournament as unknown as { payments?: { plan: string; status: string }[] }).payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament'));
-    const isSharedWithMe = !isOwner && userRole !== null;
-
-    const isPro = !!(isGlobalPro || isTournamentPro || isSharedWithMe);
+    const isPro = true; // Pro locks removed for all users
 
     return (
         <TournamentContent

@@ -25,7 +25,8 @@ interface RegistrationSettingsProps {
     onUpgrade: () => void;
 }
 
-export function RegistrationSettings({ tournament, isPro, onUpgrade }: RegistrationSettingsProps) {
+export function RegistrationSettings({ tournament, onUpgrade }: Omit<RegistrationSettingsProps, 'isPro'>) {
+    const isPro = true; // Pro locks removed for all
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
