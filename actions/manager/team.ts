@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
+import { logActivity } from "@/lib/audit";
 
 
 /**
@@ -125,6 +126,20 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
         if (insertError) {
             console.error("Create team error:", insertError);
             return { success: false, error: insertError.message };
+        }
+        
+        // Fetch the inserted team to get its ID
+        const { data: insertedTeam } = await supabase
+            .from("teams")
+            .select("id")
+            .eq("name", name)
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+        if (insertedTeam) {
+            await logActivity('CREATE_TEAM', 'team', insertedTeam.id, { name, sport });
         }
 
         revalidatePath("/manager/my-teams");

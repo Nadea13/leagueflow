@@ -8,6 +8,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { CookieBanner } from "@/components/cookies/cookie-banner";
+import { PageViewTracker } from "@/hooks/use-analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -100,6 +101,7 @@ export default async function LocaleLayout({
             {children}
             <Toaster />
             <CookieBanner />
+            <PageViewTracker />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
