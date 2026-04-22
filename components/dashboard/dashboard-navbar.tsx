@@ -224,7 +224,6 @@ export function DashboardNavbar({ userEmail, role, isOrganizer: initialIsOrganiz
             <Dialog open={showRegDialog} onOpenChange={setShowRegDialog}>
                 <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
                     <div className="bg-secondary/10 px-8 py-6 border-b border-border relative">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                         <DialogHeader>
                             <div className="w-12 h-12 bg-muted flex items-center justify-center mb-4 border border-border rotate-3">
                                 <Trophy className="h-6 w-6 text-secondary -rotate-3" />

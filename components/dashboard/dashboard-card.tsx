@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Tournament, Team } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy } from "lucide-react";
+import { Trophy, Shield } from "lucide-react";
 
 interface DashboardCardProps {
     type: 'tournament' | 'team';
@@ -40,13 +40,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
             <Link href={`/organizer/tournaments/${tournament.id}`} className="block h-full group">
                 <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-5 border border-border transition-all hover:border-secondary/50 overflow-hidden relative shadow-sm hover:shadow-md cursor-pointer">
                     <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    {isPro && (
-                        <div className="absolute right-4 md:right-6 z-20">
-                            <div className="bg-secondary/5 text-secondary text-[7px] font-bold px-2 py-0.5 uppercase tracking-[0.2em] border border-secondary/20">
-                                {t("pro")}
-                            </div>
-                        </div>
-                    )}
+                    <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-secondary" />
                     <CardHeader className="relative z-10">
                         <div className="flex flex-col gap-2">
                             <div className={cn("text-[9px] font-bold uppercase tracking-widest opacity-80", statusColor.split(' ').filter(c => c.startsWith('text-')).join(' '))}>
@@ -92,6 +86,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
         <Link href={`/${mode === 'organizer' ? 'organizer/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
             <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-secondary/50 overflow-hidden relative shadow-lg cursor-pointer">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                <Shield className="absolute right-4 md:right-6 top-4 md:top-6 z-20 h-4 w-4 text-secondary" />
                 <CardHeader className="pt-4 md:pt-6 relative z-10">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
