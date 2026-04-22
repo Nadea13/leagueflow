@@ -209,6 +209,7 @@ export async function updateTeam(
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
+    await logActivity('UPDATE_TEAM', 'team', teamId, { name, sport, tournament_id: tournamentId });
     return { success: true };
 }
 
@@ -499,6 +500,7 @@ export async function updateTournament(
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
+    await logActivity('UPDATE_TOURNAMENT', 'tournament', tournamentId, updateData);
     return { success: true };
 }
 
@@ -687,6 +689,7 @@ export async function updateMatch(
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
+    await logActivity('UPDATE_MATCH', 'match', matchId, { tournament_id: tournamentId, ...data });
     return { success: true };
 }
 
