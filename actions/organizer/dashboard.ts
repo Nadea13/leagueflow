@@ -42,10 +42,6 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         const userPlan = await getUserSubscriptionPlan();
         const isPro = userPlan === 'monthly' || userPlan === 'yearly';
 
-        if (!isPro && max_teams > 8) {
-            max_teams = 8;
-        }
-
         const { data: tournament, error } = await supabase.from("tournaments").insert({
             user_id: user.id,
             name,

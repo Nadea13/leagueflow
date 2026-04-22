@@ -458,8 +458,7 @@ export async function updateTournament(
         if (formData.has("document_deadline")) updateData.document_deadline = formData.get("document_deadline") as string || null;
     }
 
-    // Only allow registration updates if authenticated and Pro
-    if (isPro && (formType === 'registration' || !formType)) {
+    if (formType === 'registration' || !formType) {
         // Toggle logic: Only update if it's the registration form OR explicitly present
         if (formType === 'registration') {
             updateData.is_registration_open = formData.get("is_registration_open") === 'true';
@@ -475,9 +474,6 @@ export async function updateTournament(
 
     if (formData.has("max_teams")) {
         let max_teams = Number(formData.get("max_teams") || 8);
-        if (!isPro && max_teams > 8) {
-            max_teams = 8;
-        }
         updateData.max_teams = max_teams;
     }
 

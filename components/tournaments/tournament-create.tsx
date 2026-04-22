@@ -123,8 +123,8 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                                 <SelectItem value="league" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">{tFormat("league")}</SelectItem>
                                 <SelectItem value="league_ha" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
                                 <SelectItem value="knockout" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
-                                <SelectItem value="group_knockout" disabled={!isPro} className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">
-                                    {tFormat("group_knockout")} {!isPro && "(PRO)"}
+                                <SelectItem value="group_knockout" className="focus:bg-secondary/10 focus:text-secondary uppercase font-bold text-xs tracking-tighter">
+                                    {tFormat("group_knockout")}
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -146,11 +146,6 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                         <div className="space-y-3">
                             <Label htmlFor="max_teams" className={`flex items-center justify-between ${labelStyle}`}>
                                 {t("max_teams")}
-                                {!isPro && (
-                                    <span className="text-[10px] text-primary font-bold uppercase tracking-tighter bg-primary/10 px-1 rounded not">
-                                        Max 8
-                                    </span>
-                                )}
                             </Label>
                             <Input
                                 id="max_teams"
@@ -158,7 +153,7 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                                 type="number"
                                 defaultValue={8}
                                 min={2}
-                                max={isPro ? 128 : 8}
+                                max={128}
                                 className={inputStyle}
                                 required
                             />
