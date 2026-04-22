@@ -1,10 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "@/i18n/routing";
-
+import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { Users } from "lucide-react";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 
@@ -46,7 +42,6 @@ export default async function MyTeamsPage() {
             <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {(!teams || teams.length === 0) ? (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
                         <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
                             <Users className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                         </div>
@@ -61,45 +56,17 @@ export default async function MyTeamsPage() {
                     </div>
                 ) : (
                     teams.map((team) => (
-                        <Link key={team.id} href={`/manager/my-teams/${team.id}`} className="block group h-full">
-                            <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-secondary/50 group overflow-hidden relative shadow-lg hover:shadow-secondary/5 hover:-translate-y-1">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                                <CardHeader className="pt-4 md:pt-6 relative z-10">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-4 overflow-hidden">
-                                            <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                <AvatarImage src={team.logo_url} alt={team.name} className="object-contain" />
-                                                <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="grid gap-1">
-                                                <CardTitle className="text-lg font-black leading-none tracking-tight uppercase group-hover:text-secondary transition-colors truncate">
-                                                    {team.name}
-                                                </CardTitle>
-                                                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                                                    {team.participations && team.participations.length > 0 ? (
-                                                        team.participations.slice(0, 2).map((p: { tournament: { name: string } }, i: number) => (
-                                                            <Badge key={i} variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase rounded-none shrink-0">
-                                                                {p.tournament.name}
-                                                            </Badge>
-                                                        ))
-                                                    ) : (
-                                                        <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase rounded-none shrink-0 opacity-70">
-                                                            {t("unassigned_badge")}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="flex-1 pb-4 md:pb-6 text-sm relative z-10">
-                                    <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 leading-relaxed">
-                                        {team.description || t("no_description")}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        </Link>
+                        <DashboardCard 
+                            key={team.id} 
+                            type="team" 
+                            data={{
+                                ...team,
+                                tournament: (team.participations && (team.participations as any).length > 0) 
+                                    ? (team.participations as any)[0].tournament 
+                                    : null
+                            }} 
+                            mode="team" 
+                        />
                     ))
                 )}
             </div>

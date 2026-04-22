@@ -64,7 +64,6 @@ export function CreateTeamDialog() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
                 <div className="bg-gradient-to-r from-secondary/20 to-background p-6 border-b border-border relative">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">{t("add_team")}</DialogTitle>
                         <DialogDescription className="text-muted-foreground font-medium">

@@ -47,7 +47,6 @@ export default async function SettingsPage() {
                     </div>
                     
                     <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-1">
@@ -77,7 +76,6 @@ export default async function SettingsPage() {
                     </div>
                     
                     <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors shadow-sm">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
                         <div className="grid gap-2">
                             <Link href="/privacy-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
@@ -114,8 +112,6 @@ export default async function SettingsPage() {
                     </div>
                     
                     <div className="bg-destructive/[0.02] border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-4 md:p-6">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-destructive/20 group-hover:bg-destructive/40 transition-colors" />
-                        
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="space-y-2">
                                 <h4 className="text-lg font-black uppercase tracking-tight text-destructive/90">{t("delete_account")}</h4>

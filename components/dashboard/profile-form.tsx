@@ -45,8 +45,6 @@ export function ProfileForm({ user }: { user: User }) {
             </div>
             
             <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
-                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                
                 <form action={handleUpdate} className="grid gap-4 md:gap-6">
                     <div className="grid gap-3">
                         <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">
