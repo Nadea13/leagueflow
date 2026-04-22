@@ -13,7 +13,7 @@ import { PaymentRecord } from "@/actions/common/billing/general";
 import { formatDate } from "@/lib/date";
 import { useLocale, useTranslations } from "next-intl";
 import { History, Receipt } from "lucide-react";
-import { EmptyState } from "@/components/dashboard/empty-state";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface BillingHistoryProps {
     history?: PaymentRecord[];
