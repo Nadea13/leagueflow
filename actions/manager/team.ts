@@ -315,6 +315,8 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
         revalidatePath("/manager/my-teams");
         revalidatePath(`/manager/my-teams/${teamId}`);
         
+        await logActivity('UPDATE_TEAM', 'team', teamId, { name, sport, update_type: 'global' });
+        
         return { success: true };
     } catch (error) {
         console.error("Unexpected error in updateTeamGlobal:", error);
@@ -526,6 +528,7 @@ export async function updatePlayer(
     if (error) return { success: false, error: error.message };
 
     revalidatePath(`/manager/my-teams/${teamId}`);
+    await logActivity('UPDATE_PLAYER', 'player', playerId, { team_id: teamId, ...data });
     return { success: true };
 }
 

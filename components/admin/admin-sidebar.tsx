@@ -3,7 +3,7 @@
 import { Link, usePathname } from "@/i18n/routing"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Users, Trophy, CreditCard, UserSearch } from "lucide-react"
+import { LayoutDashboard, Users, Trophy, CreditCard, UserSearch, LineChart } from "lucide-react"
 
 export function AdminSidebar({ className }: { className?: string }) {
     const t = useTranslations("Admin");
@@ -38,9 +38,9 @@ export function AdminSidebar({ className }: { className?: string }) {
             icon: CreditCard,
         },
         {
-            title: t("plans"),
-            href: "/admin/pricing",
-            icon: CreditCard,
+            title: "Tracking",
+            href: "/admin/tracking",
+            icon: LineChart,
         },
         {
             title: t("players"),
