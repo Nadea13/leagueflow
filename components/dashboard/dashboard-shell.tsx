@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { TournamentCreate } from "@/components/tournaments/tournament-create";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 import { StatsCards } from "@/components/dashboard/stats-cards";
-import { DashboardTournamentCard } from "@/components/dashboard/dashboard-tournament-card";
+import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Users, FileText, Trophy, Activity, CheckCircle } from "lucide-react";
@@ -135,51 +135,12 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                     ) : (
                         <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {teams.slice(0, 3).map((team) => (
-                                <Link key={team.id} href={`/${(mode as string) === 'organizer' ? 'organizer/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
-                                    <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-secondary/50 overflow-hidden relative shadow-lg cursor-pointer">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                                        <CardHeader className="pt-4 md:pt-6 relative z-10">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                                                    <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                        <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain" />
-                                                        <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="grid gap-1">
-                                                        <CardTitle className="text-lg font-black leading-none tracking-tight uppercase group-hover:text-secondary transition-colors truncate">
-                                                            {team.name}
-                                                        </CardTitle>
-                                                        <div className="flex items-center gap-2">
-                                                            {team.tournament ? (
-                                                                <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black uppercase rounded-none shrink-0">
-                                                                    {tCommon("active")}
-                                                                </Badge>
-                                                            ) : (
-                                                                <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black uppercase rounded-none shrink-0 opacity-70">
-                                                                    {tTeam("unassigned_badge")}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="pb-4 md:pb-6 text-sm relative z-10">
-                                            <div className="grid gap-4">
-                                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2 border-l-2 border-secondary/30">
-                                                    <Trophy className="h-3.5 w-3.5 text-secondary shadow-[0_0_10px_rgba(0,196,154,0.3)]" />
-                                                    <span className="truncate uppercase tracking-tight">
-                                                        {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
-                                                    </span>
-                                                </div>
-                                                <p className="text-[11px] font-medium text-muted-foreground/60 line-clamp-2 leading-relaxed">
-                                                    {team.description || tTeam("no_description")}
-                                                </p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
+                                <DashboardCard 
+                                    key={team.id} 
+                                    type="team" 
+                                    data={team} 
+                                    mode={mode} 
+                                />
                             ))}
                             {teams.length > 3 && (
                                 <Link
@@ -254,12 +215,14 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
             ) : (
                 <div>
                     <div className="space-y-4 md:space-y-6">
-                        <div className="flex items-center justify-between border-b-4 border-secondary/20 pb-4 md:pb-6">
-                            <h2 className="text-xl md:text-2xl font-bold tracking-tight uppercase leading-none">{t("my_tournaments")}</h2>
-                        </div>
                         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {recentTournaments.map((tournament) => (
-                                <DashboardTournamentCard key={tournament.id} tournament={tournament} userPlan={userPlan} />
+                                <DashboardCard 
+                                    key={tournament.id} 
+                                    type="tournament" 
+                                    data={tournament} 
+                                    userPlan={userPlan} 
+                                />
                             ))}
                             {tournaments.length > 3 && (
                                 <Link
