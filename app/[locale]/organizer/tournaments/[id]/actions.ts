@@ -423,26 +423,7 @@ export async function updateTournament(
     const updateData: Record<string, unknown> = {};
 
     // 1. Determine Pro Status once
-    let isPro = false;
-    if (user) {
-        const { data: globalSub } = await supabase
-            .from("payments")
-            .select("id")
-            .eq("user_id", user.id)
-            .eq("status", "success")
-            .in("plan", ["monthly", "yearly"])
-            .is("tournament_id", null)
-            .limit(1)
-            .single();
-
-        const { data: tourneyPlan } = await supabase
-            .from("tournaments")
-            .select("plan")
-            .eq("id", tournamentId)
-            .single();
-
-        isPro = !!globalSub || (tourneyPlan?.plan && tourneyPlan.plan !== 'free');
-    }
+    let isPro = true; // Always true for all users as per request
 
     if (formType === 'general' || !formType) {
         if (formData.has("name")) updateData.name = formData.get("name") as string;
@@ -471,9 +452,6 @@ export async function updateTournament(
 
     if (formData.has("max_teams")) {
         let max_teams = Number(formData.get("max_teams") || 8);
-        if (!isPro && max_teams > 8) {
-            max_teams = 8;
-        }
         updateData.max_teams = max_teams;
     }
 

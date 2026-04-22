@@ -60,9 +60,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
     const [state, formAction] = useActionState(updateTournamentWithId, initialState);
     const [isPending, startTransition] = useTransition();
 
-    const isGlobalPro = userPlan === 'monthly' || userPlan === 'yearly';
-    const isTournamentPro = tournament.plan && tournament.plan !== 'free';
-    const isPro = isGlobalPro || isTournamentPro;
+    const isPro = true; // Pro locks removed for all
 
     const { toast } = useToast();
 
@@ -351,7 +349,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
             <VenueManager tournamentId={tournamentId} />
 
             {/* Collaborators */}
-            <Collaborators tournamentId={tournamentId} isPro={isPro} togglePayment={togglePayment} />
+            <Collaborators tournamentId={tournamentId} togglePayment={togglePayment} />
 
             {/* Billing & Subscription */}
             {/* Temporarily hidden during development */}

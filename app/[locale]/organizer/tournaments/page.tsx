@@ -25,7 +25,7 @@ export default async function TournamentsPage({
 
     const tournaments = await getDashboardTournaments(query);
     const userPlan = await getUserSubscriptionPlan();
-    const isPro = userPlan !== 'free';
+    const isPro = true; // Pro locks removed
     const t = await getTranslations("Dashboard");
     const tCommon = await getTranslations("Common");
 

@@ -212,7 +212,7 @@ export function TournamentContent({
 
     // Derived State
     const hasFixtures = matches.length > 0;
-    const isPro = !!(initialIsPro || (tournament?.plan && tournament.plan !== 'free'));
+    const isPro = true; // Always true as per user request to remove locks
 
     // Calculate Standings
     const calculatedStandings = calculateStandings(teams, matches);
@@ -428,39 +428,21 @@ export function TournamentContent({
                                             <Award className="h-5 w-5 text-secondary" />
                                             {t("top_scorers")}
                                         </h2>
-                                        {!isPro && (
-                                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary text-[10px] uppercase font-black shadow-[0_0_10px_rgba(0,196,154,0.1)] px-3 py-1 bg-secondary/5">
-                                                {t("pro_badge")}
-                                            </Badge>
-                                        )}
+                                        {/* Pro locks removed */}
                                     </div>
                                     <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
                                 </div>
 
-                                {isPro ? (
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
                                         <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                         <CardContent className="p-0 z-0">
                                             <TopScorers goals={goals} teams={teams} />
                                         </CardContent>
                                     </Card>
-                                ) : (
-                                    <div className="relative border border-border/20 bg-muted/5 p-12 rounded-none text-center group overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-muted/20" />
-                                        <div className="space-y-5 relative z-10">
-                                            <p className="text-xs md:text-sm font-bold uppercase text-muted-foreground/60 tracking-wider leading-relaxed max-w-sm mx-auto">
-                                                {t("upsell_pro_required")}
-                                            </p>
-                                            <Button variant="secondary" asChild className="rounded-none font-black uppercase text-[11px] tracking-widest px-8 shadow-xl shadow-secondary/20 hover:-translate-y-0.5 transition-all">
-                                                <Link href="/dashboard/billing">{t("upsell_view_plans")}</Link>
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             {/* 5. Player Stats */}
-                            {isPro && playerStats.length > 0 && (
+                            {playerStats.length > 0 && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -556,34 +538,14 @@ export function TournamentContent({
                                                 <BookOpen className="h-5 w-5 text-primary" />
                                                 {tRegistrations("title")}
                                             </h3>
-                                            {!isPro && (
-                                                <Badge variant="secondary" className="rounded-none bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 uppercase tracking-wider">
-                                                    {tSettings("plan_pro_badge")}
-                                                </Badge>
-                                            )}
                                         </div>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{tSettings("registration_settings_desc")}</p>
                                     </div>
 
-                                    {!isPro && (
-                                        <div className="relative border-l-4 border-primary bg-primary/5 p-5 flex items-center gap-2 md:gap-3 group overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-                                            <AlertTriangle className="h-5 w-5 text-primary shrink-0" />
-                                            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
-                                                <p className="text-[11px] text-primary font-black uppercase tracking-tight">
-                                                    {t("upsell_pro_feature")}
-                                                </p>
-                                                <Button variant="link" asChild className="p-0 h-auto font-black underline text-primary uppercase text-[10px] tracking-widest hover:text-primary/80 transition-colors">
-                                                    <Link href="/dashboard/billing">{tSettings("upgrade_button")}</Link>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-
                                     <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
                                         <div className="absolute top-0 left-0 z-30 w-1 h-full bg-primary" />
                                         <CardContent className="p-0 z-0">
-                                            <div className={cn(!isPro && "opacity-40 grayscale pointer-events-none")}>
+                                            <div>
                                                 <Registrations tournamentId={id} />
                                             </div>
                                         </CardContent>
@@ -621,7 +583,6 @@ export function TournamentContent({
                             {userRole === 'admin' && (
                                 <RegistrationSettings
                                     tournament={tournament}
-                                    isPro={isPro}
                                     onUpgrade={() => router.push(`${pathname}?tab=settings&action=upgrade`)}
                                 />
                             )}
@@ -640,12 +601,11 @@ export function TournamentContent({
                                     <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
                                     <TeamForm
                                         tournamentId={id}
-                                        isLimitReached={!isPro && (teams?.length || 0) >= 8}
+                                        isLimitReached={false}
                                     />
                                 </Card>
 
                                 {/* Public Registration Link - Only for Pro */}
-                                {isPro && (
                                     <div className="space-y-4 md:space-y-6">
                                         <div className="flex flex-col gap-1">
                                             <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -695,7 +655,6 @@ export function TournamentContent({
                                             </div>
                                         </Card>
                                     </div>
-                                )}
                             </div>
                         </div>
                     </div>
