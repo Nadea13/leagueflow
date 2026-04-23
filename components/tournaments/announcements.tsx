@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDate } from "@/lib/date";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import {
     Dialog,
@@ -188,19 +189,19 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
 
             {/* Announcement List */}
             {announcements.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border/20 rounded-none bg-muted/5">
-                    <div className="h-12 w-12 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center mb-4">
-                        <Megaphone className="h-6 w-6 text-muted-foreground/40" />
-                    </div>
-                    <h3 className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("no_announcements")}</h3>
-                </div>
+                <EmptyState
+                    icon={Megaphone}
+                    title={t("no_announcements")}
+                    description={t("no_announcements_desc")}
+                    className="py-12 border-none"
+                />
             ) : (
                 <div className="grid grid-cols-1 gap-2 md:gap-3">
                     {announcements.map(ann => (
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-2 md:p-4 rounded-none border border-border/20 transition-all relative overflow-hidden group/item",
+                                "p-2 md:p-3 rounded-none border border-border/20 transition-all relative overflow-hidden group/item",
                                 ann.is_pinned ? "bg-secondary/[0.03] border-secondary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >

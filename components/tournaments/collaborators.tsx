@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, Trash2, Mail, Loader2, UserCheck, Clock } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TournamentMember } from "@/types";
 import {
     inviteCollaborator,
@@ -104,10 +105,10 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-4 md:space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                 <div className="flex flex-col gap-1">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Users className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
@@ -130,18 +131,17 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                         </Button>
                     </DialogTrigger>
                     {isPro && (
-                        <DialogContent className="sm:max-w-[500px] bg-[#0A0A0A] border-foreground/5 rounded-none p-0 overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
-                            <DialogHeader className="p-8 pb-4">
-                                <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
-                                    <Mail className="h-8 w-8 text-secondary" />
+                        <DialogContent className="sm:max-w-[500px] bg-neutral-950 border-foreground/10 rounded-none shadow-2xl p-4 md:p-6 overflow-hidden">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <Mail className="h-6 w-6 text-secondary" />
                                     {t("invite_title")}
                                 </DialogTitle>
                                 <DialogDescription className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 pt-2">
                                     {t("invite_desc")}
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="px-8 py-6 space-y-6">
+                            <div className="py-4 space-y-4 md:space-y-6">
                                 <div className="space-y-1">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
                                     <Input
@@ -153,18 +153,18 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                         className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
-                                <div className="flex justify-end gap-4">
+                                <div className="flex justify-end gap-2 md:gap-3">
                                     <Button 
                                         variant="ghost" 
                                         onClick={() => setDialogOpen(false)}
-                                        className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-8 hover:bg-foreground/5"
+                                        className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                     >
                                         {tCommon("cancel")}
                                     </Button>
                                     <Button 
                                         onClick={handleInvite} 
                                         disabled={isInviting || !email.trim()}
-                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group/save overflow-hidden"
+                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group/save overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
                                         <span className="relative z-10 flex items-center gap-2">
@@ -179,13 +179,12 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                 </Dialog>
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
-                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">
                 
-                <div className="relative z-10 space-y-6">
+                <div className="relative z-10 space-y-4 md:space-y-6">
 
                 {!isPro && (
-                    <div className="p-4 bg-secondary/[0.03] border border-secondary/10 relative overflow-hidden group/upsell">
+                    <div className="p-2 md:p-3 bg-secondary/[0.03] border border-secondary/10 relative overflow-hidden group/upsell">
                         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                             <div className="space-y-1">
                                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/80">{t("title")} (PRO)</h4>
@@ -207,27 +206,26 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                     </div>
                 )}
 
-                <div className={cn("space-y-3", !isPro && "opacity-40 grayscale pointer-events-none")}>
+                <div className={cn("space-y-2 md:space-y-3", !isPro && "opacity-40 grayscale pointer-events-none")}>
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                         </div>
                     ) : collaborators.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center border border-foreground/5 bg-background/50">
-                            <div className="h-16 w-16 bg-muted/20 flex items-center justify-center mb-6 relative group/icon">
-                                <div className="absolute inset-0 bg-secondary/10 scale-0 group-hover/icon:scale-100 transition-transform" />
-                                <Users className="h-8 w-8 text-secondary/40 relative z-10" />
-                            </div>
-                            <h3 className="text-xl font-black uppercase tracking-tighter text-muted-foreground/40">{t("no_collaborators")}</h3>
-                        </div>
+                        <EmptyState
+                            icon={Users}
+                            title={t("no_collaborators")}
+                            description="Invite team members to help manage the tournament"
+                            className="py-12 border-none"
+                        />
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-2 md:space-y-3">
                             {collaborators.map((collab) => (
                                 <div
                                     key={collab.id}
-                                    className="flex items-center justify-between p-4 bg-muted/20 border border-foreground/5 hover:bg-muted/30 transition-colors group/item"
+                                    className="flex items-center justify-between p-2 md:p-3 bg-muted/20 border border-foreground/5 hover:bg-muted/30 transition-colors group/item"
                                 >
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2 md:gap-4">
                                         <div className="w-10 h-10 bg-muted/20 flex items-center justify-center group-hover/item:bg-secondary/10 transition-colors">
                                             {collab.status === 'accepted' ? (
                                                 <UserCheck className="h-5 w-5 text-secondary" />

@@ -253,7 +253,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center min-w-[5rem] group-hover:scale-110 transition-transform duration-300">
+                            <div className="flex flex-col items-center justify-center min-w-[5rem] transition-transform duration-300">
                                 <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-secondary transition-colors">
                                     {formatTime(match.match_time) || "--:--"}
                                 </span>
@@ -347,7 +347,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     return (
         <>
             {canOpen ? (
-                <Link href={url} className="block transition-transform hover:scale-[1.01]">
+                <Link href={url} className="block transition-transform">
                     {CardContent}
                 </Link>
             ) : CardContent}

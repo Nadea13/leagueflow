@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import { updateTeam, deleteTeam, assignTeamGroup } from "@/actions/organizer/tournaments/general";
 import { TournamentTeam } from "@/types/index";
@@ -46,20 +47,12 @@ export function Teams({ teams, tournamentId, isPro, showGroupSelector = false, o
 
     if (!teams || teams.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/5 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                <div className="p-6 bg-background border border-border/10 rotate-12 transition-transform group-hover:rotate-0 shadow-lg mb-4 relative z-10">
-                    <Users className="h-8 w-8 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
-                </div>
-                <h3 className="text-xl font-black uppercase tracking-tight text-foreground/40 relative z-10">
-                    {t("no_teams")}
-                </h3>
-                <p className="text-[10px] uppercase font-black text-muted-foreground/20 mt-2 flex items-center gap-2 relative z-10">
-                    <span className="w-3 h-[1px] bg-muted-foreground/10" />
-                    {t("no_teams_desc")}
-                    <span className="w-3 h-[1px] bg-muted-foreground/10" />
-                </p>
-            </div>
+            <EmptyState
+                icon={Users}
+                title={t("no_teams")}
+                description={t("no_teams_desc")}
+                className="py-12 border-none"
+            />
         );
     }
 
@@ -153,10 +146,7 @@ function TeamItem({
     };
 
     return (
-        <div className="flex items-center justify-between px-2 py-4 md:p-6 hover:bg-muted/5 transition-all group relative overflow-hidden">
-            {/* Standardized Accent Bar */}
-            <div className="absolute left-0 top-0 w-1 h-full bg-secondary opacity-0 group-hover:opacity-100 transition-opacity z-30" />
-            
+        <div className="flex items-center justify-between p-2 md:p-3 hover:bg-muted/5 transition-all group relative overflow-hidden">            
             <div className="flex items-center flex-1 min-w-0 z-10">
                 <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mr-2 md:mr-3 shrink-0 overflow-hidden border border-foreground/5 relative">
                     {team.logo_url ? (

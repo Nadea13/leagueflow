@@ -73,9 +73,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("description")}</p>
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
-                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                
+            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">
                 <div className="relative z-10 space-y-4 md:space-y-6">
                     <form onSubmit={handleSave} className="space-y-2 md:space-y-3">
                     {/* Match Duration */}

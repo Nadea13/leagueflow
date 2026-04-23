@@ -11,6 +11,7 @@ import Image from "next/image";
 
 import { Standing } from "@/types/index";
 import { List } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface StandingsProps {
     standings: Standing[];
@@ -23,6 +24,17 @@ export function Standings({ standings }: StandingsProps) {
     // .order("pts", { ascending: false })
     // .order("gd", { ascending: false })
     // .order("gf", { ascending: false });
+
+    if (standings.length === 0) {
+        return (
+            <EmptyState
+                icon={List}
+                title={t("no_stats")}
+                description="Awaiting match results to calculate rankings"
+                className="py-12 border-none"
+            />
+        );
+    }
 
     return (
         <div className="w-full overflow-x-auto rounded-none">
@@ -83,22 +95,6 @@ export function Standings({ standings }: StandingsProps) {
                             </TableCell>
                         </TableRow>
                     ))}
-                    {standings.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={10} className="text-center py-20 bg-muted/2">
-                                <div className="flex flex-col items-center justify-center gap-4">
-                                    <div className="h-16 w-16 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center relative group">
-                                        <div className="absolute top-0 left-0 w-1 h-full bg-muted/20" />
-                                        <List className="h-8 w-8 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/40">{t("no_stats")}</h3>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/20">Awaiting match results</p>
-                                    </div>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    )}
                 </TableBody>
             </Table>
         </div>

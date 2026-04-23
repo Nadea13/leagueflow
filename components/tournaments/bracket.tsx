@@ -6,6 +6,7 @@ import { Match } from "@/types/index";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import { Link } from "@/i18n/routing";
 
@@ -39,12 +40,12 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
 
     if (knockoutMatches.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border/20 rounded-none bg-muted/5">
-                <div className="h-12 w-12 rounded-none bg-muted/10 flex items-center justify-center mb-4 border border-border/10">
-                    <Trophy className="h-6 w-6 text-muted-foreground/40" />
-                </div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">{t("no_knockout")}</h3>
-            </div>
+            <EmptyState
+                icon={Trophy}
+                title={t("no_knockout")}
+                description="Knockout rounds will appear here once group stages are complete or matches are generated"
+                className="py-12 border-none"
+            />
         );
     }
 

@@ -32,8 +32,6 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Loader2, RefreshCw, CreditCard, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
 
-import { Link } from "@/i18n/routing";
-
 import { Collaborators } from "@/components/tournaments/collaborators";
 import { VenueManager } from "@/components/tournaments/venue-manager";
 import { RulesConfig } from "@/components/tournaments/rules-config";
@@ -186,8 +184,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("update_details")}</p>
                 </div>
 
-                <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-6 shadow-sm">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">
                     <div className="relative z-10">
                         <form action={formAction} className="space-y-2 md:space-y-3">
                             <input type="hidden" name="form_type" value="general" />
@@ -359,7 +356,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
             </div>
             */}
             {/* Mobile Configuration Overview - Shown only on mobile before Danger Zone */}
-            <div className="lg:hidden space-y-4 border-foreground/5">
+            <div className="lg:hidden space-y-2 md:space-y-3 border-foreground/5">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <ClipboardEdit className="h-5 w-5 text-secondary" />
@@ -409,8 +406,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                 </div>
 
                 <div className="grid gap-4 md:gap-6">
-                    <div className="bg-background border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-3 md:p-6">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-destructive transition-colors" />
+                    <div className="bg-background border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-2 md:p-3">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                             <div className="space-y-2 md:space-y-3">
                                 <h4 className="text-lg font-black uppercase tracking-tight text-destructive">{t("delete_tournament")}</h4>
@@ -473,8 +469,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                     </div>
 
                     {hasFixtures && (
-                        <div className="bg-background border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-3 md:p-6">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-destructive transition-colors" />
+                        <div className="bg-background border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-2 md:p-3">
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-3">
                                 <div className="space-y-2 md:space-y-3">
                                     <h4 className="text-lg font-black uppercase tracking-tight text-destructive">{t("reset_fixtures")}</h4>

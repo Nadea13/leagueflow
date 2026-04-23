@@ -362,12 +362,9 @@ export function TournamentContent({
                                         </h2>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("group_standings_desc") || "League table"}</p>
                                     </div>
-                                    <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                        <CardContent className="p-0 z-0">
-                                            <Standings standings={calculatedStandings} />
-                                        </CardContent>
-                                    </Card>
+                                    <div className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
+                                        <Standings standings={calculatedStandings} />
+                                    </div>
                                 </div>
                             )}
 
@@ -461,7 +458,7 @@ export function TournamentContent({
                             </div>
 
                             {/* Public Link Card */}
-                            <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                            <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
                                 <div className="space-y-2 md:space-y-3">
                                     <div className="space-y-2 md:space-y-3">
                                         <div className="flex items-center justify-between">
@@ -525,14 +522,9 @@ export function TournamentContent({
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{tSettings("registration_settings_desc")}</p>
                                     </div>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-primary" />
-                                        <CardContent className="p-0 z-0">
-                                            <div>
-                                                <Registrations tournamentId={id} />
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                    <div className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
+                                        <Registrations tournamentId={id} />
+                                    </div>
                                 </div>
                             )}
 
@@ -545,9 +537,7 @@ export function TournamentContent({
                                     </h3>
                                     <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Confirmed tournament entries</p>
                                 </div>
-                                <Card className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                    <CardContent className="p-0 z-0">
+                                <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
                                         <Teams
                                             teams={teams}
                                             tournamentId={id}
@@ -555,8 +545,7 @@ export function TournamentContent({
                                             showGroupSelector={tournament?.format?.includes("group")}
                                             organizerId={tournament?.user_id}
                                         />
-                                    </CardContent>
-                                </Card>
+                                </div>
                             </div>
                         </div>
 
@@ -580,8 +569,7 @@ export function TournamentContent({
                                     <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Manual Entry Management</p>
                                 </div>
 
-                                <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
                                     <TeamForm
                                         tournamentId={id}
                                         isLimitReached={false}
@@ -592,21 +580,20 @@ export function TournamentContent({
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <ExternalLink className="h-5 w-5 text-primary" />
+                                            <ExternalLink className="h-5 w-5 text-secondary" />
                                             {t("public_link")}
                                         </h3>
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Direct access for teams</p>
                                     </div>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                        <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
                                         <div className="space-y-2 md:space-y-3">
                                             <div className="space-y-2 md:space-y-3">
                                                 <div className="flex items-center justify-between">
                                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t("public_link")}</label>
                                                     <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
                                                 </div>
-                                                <div className="p-4 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
                                                     {mounted ? registrationUrl : "..."}
                                                 </div>
                                             </div>
@@ -690,7 +677,7 @@ export function TournamentContent({
                             </div>
 
                             {/* Fixtures View */}
-                            <div className="min-h-[400px]">
+                            <div className="min-h-[400px] bg-background rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
                                 {fixtureView === 'list' ? (
                                     <FixtureManager
                                         teams={teams}
@@ -718,7 +705,7 @@ export function TournamentContent({
                                     </p>
                                 </div>
 
-                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
                                     <div className="space-y-2 md:space-y-3">
                                         <FixtureGenerator
                                             tournamentId={id}
@@ -738,7 +725,7 @@ export function TournamentContent({
                                 </Card>
 
                                 {/* Extra Information / Status */}
-                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
                                     <div className="space-y-2 md:space-y-3">
                                         <div className="space-y-1 border-b border-foreground/5 pb-2 md:pb-3">
                                             <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest flex justify-between items-center">
@@ -787,7 +774,7 @@ export function TournamentContent({
                                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Update details and status</p>
                                     </div>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
                                         <div className="space-y-4 md:space-y-6">
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
@@ -816,8 +803,8 @@ export function TournamentContent({
                                         </div>
                                     </Card>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-4 md:p-6 shadow-xl shadow-black/20">
-                                        <div className="space-y-3">
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                        <div className="space-y-2 md:space-y-3">
                                             <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary">Quick Help</h5>
                                             <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
                                                 Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
