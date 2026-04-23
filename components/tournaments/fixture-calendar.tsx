@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface FixtureCalendarProps {
     matches: Match[];
@@ -69,6 +71,17 @@ export function FixtureCalendar({ matches }: FixtureCalendarProps) {
     }
     for (let d = 1; d <= daysInMonth; d++) {
         days.push(d);
+    }
+
+    if (matches.length === 0) {
+        return (
+            <EmptyState
+                icon={Calendar}
+                title="No Matches Scheduled"
+                description="Match schedules will appear here once fixtures are generated"
+                className="py-12 border-none"
+            />
+        );
     }
 
     return (

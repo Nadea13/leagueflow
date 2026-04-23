@@ -76,9 +76,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                 )}
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
-                <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                
+            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">             
                 <div className="relative z-10 space-y-4 md:space-y-6">
                     {!isPro && (
                         <div className="p-4 bg-secondary/5 border border-secondary/20 text-[11px] text-secondary font-black uppercase tracking-wider flex items-center gap-3">
@@ -97,7 +95,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                         <input type="hidden" name="format" value={tournament.format || "league"} />
                         <input type="hidden" name="max_teams" value={tournament.max_teams || 8} />
 
-                        <div className="flex items-center justify-between p-4 md:p-6 bg-foreground/5 border-none rounded-none">
+                        <div className="flex items-center justify-between p-2 md:p-3 bg-foreground/5 border-none rounded-none">
                             <div className="space-y-1">
                                 <Label htmlFor="is_registration_open" className="text-sm md:text-lg font-black uppercase tracking-tight text-foreground">
                                     {t("allow_registration")}

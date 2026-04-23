@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Plus, Trash2, MapPin, ExternalLink, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import {
     Dialog,
@@ -131,17 +132,16 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             </span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px] bg-[#0A0A0A] border-foreground/5 rounded-none p-0 overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-secondary" />
-                        <DialogHeader className="p-8 pb-4">
-                            <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
-                                <MapPin className="h-8 w-8 text-secondary" />
+                    <DialogContent className="sm:max-w-[500px] bg-neutral-950 border-foreground/10 rounded-none shadow-2xl p-4 md:p-6 overflow-hidden">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                <MapPin className="h-6 w-6 text-secondary" />
                                 {t("add_venue")}
                             </DialogTitle>
                         </DialogHeader>
 
-                        <form onSubmit={handleAdd} className="p-8 pt-4 space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <form onSubmit={handleAdd} className="space-y-4 md:space-y-6 py-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                                 <div className="space-y-1">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("venue_name")}</Label>
                                     <Input
@@ -190,19 +190,19 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
-                            <div className="flex justify-end gap-4 pt-4">
+                            <div className="flex justify-end gap-2 md:gap-3 pt-4">
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     onClick={() => setOpen(false)}
-                                    className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-8 hover:bg-foreground/5"
+                                    className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                 >
                                     {tCommon("cancel")}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={isSaving || !name.trim()}
-                                    className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
+                                    className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center gap-2">
@@ -217,21 +217,19 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
             </div>
 
             <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors shadow-sm">
-                <div className="absolute top-0 left-0 z-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
-                <div className="relative z-0 space-y-4 md:space-y-6">
+                <div className="relative z-0 space-y-4">
                     {/* Venue List */}
                     {isLoading ? (
                         <div className="flex justify-center py-12">
                             <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                         </div>
                     ) : venues.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center border border-foreground/5 bg-background/50">
-                            <div className="h-16 w-16 bg-muted/20 flex items-center justify-center mb-6 relative group-hover:scale-110 transition-transform">
-                                <div className="absolute inset-0 bg-secondary/10 scale-0 group-hover:scale-100 transition-transform" />
-                                <MapPin className="h-8 w-8 text-secondary/40 relative z-10" />
-                            </div>
-                            <h3 className="text-xl font-black uppercase tracking-tighter text-muted-foreground/40">{t("no_venues")}</h3>
-                        </div>
+                        <EmptyState
+                            icon={MapPin}
+                            title={t("no_venues")}
+                            description="Add tournament venues to schedule matches"
+                            className="py-12 border-none"
+                        />
                     ) : (
                         <div className="bg-background border border-foreground/5 overflow-hidden">
                             <Table className="border-separate border-spacing-0">

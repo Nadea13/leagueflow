@@ -4,6 +4,8 @@ import { Match, Team } from "@/types/index";
 import { Standings as StandingsTable } from "./standings";
 import { calculateStandings } from "@/lib/standings";
 import { useTranslations } from "next-intl";
+import { Trophy } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface StandingsGroupsProps {
     teams: Team[];
@@ -24,6 +26,17 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
     const sortedGroups = Object.keys(teamsByGroup).sort();
 
     const t = useTranslations("Tournament");
+
+    if (sortedGroups.length === 0) {
+        return (
+            <EmptyState
+                icon={Trophy}
+                title={t("group_standings")}
+                description="No groups have been defined for this tournament yet"
+                className="py-12 border-none"
+            />
+        );
+    }
 
     return (
         <div className="space-y-4 md:space-y-6">

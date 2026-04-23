@@ -16,6 +16,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Calendar, ArrowRight } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import {
     AlertDialog,
@@ -91,19 +92,15 @@ export function FixtureManager({ matches, teams, tournamentId, isPro = false }: 
     return (
         <div className="space-y-4 md:space-y-6">
             {matches.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5 group relative overflow-hidden">
-                    <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
-                    <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
-                        <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
-                    </div>
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground mb-2">{tFixtures("ready_to_start")}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
-                        {tFixtures("generate_instruction")}
-                    </p>
-                </div>
+                <EmptyState
+                    icon={Calendar}
+                    title={tFixtures("ready_to_start")}
+                    description={tFixtures("generate_instruction")}
+                    className="py-12 border"
+                />
             ) : (
                 <>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-foreground/5 p-4 md:p-6 border border-foreground/5">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-foreground/5 p-2 md:p-3 border-none">
                     {/* Filter Area */}
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <div className="space-y-1">
@@ -150,10 +147,12 @@ export function FixtureManager({ matches, teams, tournamentId, isPro = false }: 
 
             <div id="fixtures-canvas" className="space-y-4 md:space-y-6">
                 {filteredMatches.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5">
-                        <Calendar className="h-12 w-12 text-muted-foreground/20 mb-4" />
-                        <h3 className="text-sm font-black uppercase tracking-tighter text-muted-foreground/40">{tFixtures("no_fixtures")}</h3>
-                    </div>
+                    <EmptyState
+                        icon={Calendar}
+                        title={tFixtures("no_fixtures")}
+                        description="No fixtures found for the selected filter"
+                        className="py-12 border-none"
+                    />
                 ) : (
                     (() => {
                         const groups = filteredMatches.reduce((acc: Record<string, Match[]>, match) => {
@@ -199,7 +198,7 @@ export function FixtureManager({ matches, teams, tournamentId, isPro = false }: 
                                             <div className="h-px bg-secondary/30 flex-1" />
                                         </div>
                                     )}
-                                    <div className="space-y-[1px] bg-foreground/5 border border-foreground/5">
+                                    <div className="space-y-[1px] bg-foreground/5 border-none">
                                         {[...stageMatches]
                                             .sort((a, b) => {
                                                 if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
