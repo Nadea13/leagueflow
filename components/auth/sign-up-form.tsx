@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 import { signUp } from "@/actions/common/auth";
 
@@ -16,6 +17,7 @@ export function SignUpForm() {
     const tCommon = useTranslations('Common');
     const locale = useLocale();
     const router = useRouter();
+    const { toast } = useToast();
     const supabase = createClient();
 
     const [email, setEmail] = useState("");
@@ -24,7 +26,6 @@ export function SignUpForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [fullName, setFullName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +53,13 @@ export function SignUpForm() {
                 return;
             }
 
-            setIsSuccess(true);
+            toast({
+                title: t('success_title'),
+                description: t('success_desc'),
+            });
+
+            // Redirect to login page immediately
+            router.push(`/${locale}/login`);
         } catch (_err) {
             setError(tCommon('something_went_wrong'));
         } finally {
@@ -60,24 +67,7 @@ export function SignUpForm() {
         }
     };
 
-    if (isSuccess) {
-        return (
-            <div className="flex flex-col items-center justify-center space-y-4 py-8 text-center animate-in fade-in zoom-in duration-300">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                    <h3 className="text-xl font-semibold">{t('success_title')}</h3>
-                    <p className="text-sm text-muted-foreground max-w-[250px]">
-                        {t('success_desc')}
-                    </p>
-                </div>
-                <Button variant="outline" onClick={() => router.push(`/${locale}/login`)} className="mt-4">
-                    {t('sign_in')}
-                </Button>
-            </div>
-        );
-    }
+
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4 w-full">
