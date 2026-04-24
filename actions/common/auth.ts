@@ -72,6 +72,11 @@ export async function signUp(formData: FormData, locale: string): Promise<Action
         return { success: false, error: "Registration failed" };
     }
 
+    // Ensure no session is kept (no cookies) after signup
+    if (data.session) {
+        await supabase.auth.signOut();
+    }
+
     // 2. Log activity
     await logActivity('REGISTER', 'user', data.user.id, { email });
 
