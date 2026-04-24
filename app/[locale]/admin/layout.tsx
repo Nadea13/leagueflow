@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     // Check if user has admin role
     const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, full_name")
         .eq("id", user.id)
         .single();
 
@@ -32,7 +32,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 </div>
             </div>
             <div className="flex flex-col">
-                <AdminDashboardHeader userEmail={user?.email || undefined} />
+                <AdminDashboardHeader 
+                    userEmail={user?.email || undefined} 
+                    userName={profile?.full_name} 
+                />
                 <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>

@@ -12,10 +12,11 @@ import { LayoutDashboard, Users, Trophy, CreditCard, UserSearch } from "lucide-r
 
 interface AdminDashboardHeaderProps {
     userEmail?: string
+    userName?: string | null
     className?: string
 }
 
-export function AdminDashboardHeader({ userEmail, className }: AdminDashboardHeaderProps) {
+export function AdminDashboardHeader({ userEmail, userName, className }: AdminDashboardHeaderProps) {
     const pathname = usePathname()
     const t = useTranslations("Admin")
     const [open, setOpen] = useState(false)
@@ -146,7 +147,7 @@ export function AdminDashboardHeader({ userEmail, className }: AdminDashboardHea
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserDropdown email={userEmail} />
+                <UserDropdown email={userEmail} name={userName} />
             </div>
         </header>
     )

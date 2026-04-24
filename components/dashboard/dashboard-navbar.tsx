@@ -19,13 +19,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 
 interface DashboardNavbarProps {
     userEmail?: string
+    userName?: string | null
     role?: string
     isOrganizer?: boolean
     forcedMode?: 'organizer' | 'team'
     className?: string
 }
 
-export function DashboardNavbar({ userEmail, role, isOrganizer: initialIsOrganizer, forcedMode, className }: DashboardNavbarProps) {
+export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initialIsOrganizer, forcedMode, className }: DashboardNavbarProps) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
     const { toast } = useToast()
@@ -209,7 +210,7 @@ export function DashboardNavbar({ userEmail, role, isOrganizer: initialIsOrganiz
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserDropdown email={userEmail} mode={mode} />
+                <UserDropdown email={userEmail} name={userName} mode={mode} />
             </div>
 
             <Dialog open={showRegDialog} onOpenChange={setShowRegDialog}>
