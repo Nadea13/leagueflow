@@ -18,7 +18,7 @@ export default async function ManagerTournamentsPage() {
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                 <div>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-foreground leading-[0.8] mb-2">
                         {tNav("tournaments")}

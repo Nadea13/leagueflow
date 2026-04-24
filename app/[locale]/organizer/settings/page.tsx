@@ -26,7 +26,7 @@ export default async function SettingsPage() {
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-foreground leading-none">{t("title")}</h1>
                     <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">{t("subtitle")}</p>
