@@ -64,19 +64,26 @@ export async function updateSession(request: NextRequest) {
         if (isLoginPage || isRootPage) {
             const url = request.nextUrl.clone();
 
-            // If it's a login page, we want to replace 'login' with 'dashboard' to preserve locale if present
+            // Fetch profile to check role for correct dashboard redirection
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role, is_organizer')
+                .eq('id', user.id)
+                .single();
+
+            const isOrganizer = profile?.role === 'organizer' || profile?.is_organizer;
+            const dashboardPath = isOrganizer ? '/organizer/dashboard' : '/dashboard';
+
+            // If it's a login page, we want to replace 'login' with the dashboard path to preserve locale if present
             if (isLoginPage) {
-                // Determine if we need to replace internal path or just append
-                // If path is just '/login', becomes '/dashboard'
-                // If path is '/en/login', becomes '/en/dashboard'
-                url.pathname = path.replace('/login', '/dashboard');
+                url.pathname = path.replace('/login', dashboardPath);
             } else {
                 // It's a root page
                 if (path === '/') {
-                    url.pathname = '/dashboard';
+                    url.pathname = dashboardPath;
                 } else {
-                    // path is '/en' or '/th', append '/dashboard'
-                    url.pathname = `${path}/dashboard`;
+                    // path is '/en' or '/th', append the dashboard path
+                    url.pathname = `${path}${dashboardPath}`;
                 }
             }
 

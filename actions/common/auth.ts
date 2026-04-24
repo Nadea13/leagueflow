@@ -30,14 +30,23 @@ export async function signIn(formData: FormData, locale: string): Promise<Action
         return { success: false, error: error.message };
     }
 
-    if (!data.user) {
-        return { success: false, error: "Authentication failed" };
-    }
+    // 3. Get profile to check role
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, is_organizer')
+        .eq('id', data.user.id)
+        .single();
 
-    // 3. Log activity
+    // 4. Log activity
     await logActivity('LOGIN', 'user', data.user.id, { email });
 
-    return { success: true };
+    return { 
+        success: true, 
+        data: {
+            role: profile?.role,
+            is_organizer: profile?.is_organizer
+        }
+    };
 }
 
 export async function signUp(formData: FormData, locale: string): Promise<ActionResponse> {

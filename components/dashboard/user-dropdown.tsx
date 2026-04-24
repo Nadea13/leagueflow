@@ -26,20 +26,23 @@ import { LanguageSubMenu } from "@/components/layout/language-sub-menu"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
-export function UserDropdown({ email, mode = 'team' }: { email: string | undefined, mode?: 'organizer' | 'team' }) {
+export function UserDropdown({ email, name, mode = 'team' }: { email: string | undefined, name?: string | null, mode?: 'organizer' | 'team' }) {
     const { setTheme } = useTheme()
     const t = useTranslations("Nav")
     const tCommon = useTranslations("Common")
 
     const profileHref = mode === 'organizer' ? '/organizer/settings' : '/manager/settings'
+    const displayName = name || email;
 
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-none hover:bg-muted p-0 overflow-hidden group">
                     <Avatar className="h-9 w-9 rounded-none border border-border group-hover:border-secondary transition-colors">
-                        <AvatarImage src="" alt={email} />
-                        <AvatarFallback className="bg-secondary/10 text-secondary text-xs font-bold">{email?.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarImage src="" alt={displayName} />
+                        <AvatarFallback className="bg-secondary/10 text-secondary text-xs font-bold">
+                            {displayName?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
@@ -48,8 +51,11 @@ export function UserDropdown({ email, mode = 'team' }: { email: string | undefin
                     <div className="flex flex-col space-y-1">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-secondary">{tCommon("user")}</p>
                         <p className="text-sm font-medium leading-none text-foreground truncate">
-                            {email}
+                            {displayName}
                         </p>
+                        {name && email && (
+                            <p className="text-[10px] text-muted-foreground truncate">{email}</p>
+                        )}
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border" />

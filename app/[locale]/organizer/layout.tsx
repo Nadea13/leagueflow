@@ -15,7 +15,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
     // Fetch User Profile
     const { data: profile } = await supabase
         .from("profiles")
-        .select("role, is_organizer")
+        .select("role, is_organizer, full_name")
         .eq("id", user.id)
         .single();
 
@@ -34,7 +34,13 @@ export default async function OrganizerLayout({ children, params }: { children: 
                 </div>
             </div>
             <div className="flex flex-col">
-                <DashboardNavbar userEmail={user?.email || undefined} role={userRole} isOrganizer={isOrganizer} forcedMode="organizer" />
+                <DashboardNavbar 
+                    userEmail={user?.email || undefined} 
+                    userName={profile?.full_name}
+                    role={userRole} 
+                    isOrganizer={isOrganizer} 
+                    forcedMode="organizer" 
+                />
                 <main className="flex flex-1 flex-col gap-4 p-2 md:p-4 lg:gap-6 lg:p-6 pb-6">
                     {children}
                 </main>
