@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateProfile } from "@/actions/common/user";
-import { Loader2, User as UserIcon } from "lucide-react";
+import { Loader2, User as UserIcon, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
@@ -69,12 +69,13 @@ export function ProfileForm({ user }: { user: User }) {
                             className="bg-muted/20 border-border text-foreground h-12 rounded-none focus-visible:ring-secondary/30"
                         />
                     </div>
-                    <div className="flex justify-start">
-                        <Button type="submit" disabled={isLoading} variant="secondary" className="h-12 px-10 rounded-none font-black uppercase tracking-tighter shadow-[0_0_20px_rgba(0,196,154,0.1)] hover:shadow-[0_0_30px_rgba(0,196,154,0.2)] transition-all">
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isLoading} variant="default" className="h-12 px-10 rounded-none font-black uppercase tracking-tighter shadow-[0_0_20px_rgba(0,196,154,0.1)] hover:shadow-[0_0_30px_rgba(0,196,154,0.2)] transition-all">
                             {isLoading ? (
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             ) : (
                                 <span className="flex items-center gap-2">
+                                    <Check className="h-4 w-4" />
                                     {tCommon("save")}
                                 </span>
                             )}
