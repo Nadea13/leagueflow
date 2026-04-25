@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Trash2, Mail, Loader2, UserCheck, Clock } from "lucide-react";
+import { Users, Plus, Trash2, Mail, Loader2, UserCheck, Clock, Check } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TournamentMember } from "@/types";
 import {
@@ -168,7 +168,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                     >
                                         <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
                                         <span className="relative z-10 flex items-center gap-2">
-                                            {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-secondary-foreground" /> : <Mail className="h-4 w-4" />}
+                                            {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-secondary-foreground" /> : <Check className="h-4 w-4" />}
                                             {t("send_invite")}
                                         </span>
                                     </Button>

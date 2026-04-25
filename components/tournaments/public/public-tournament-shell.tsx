@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Standings } from "@/components/tournaments/standings";
-import { PublicMatches } from "@/components/tournaments/public-matches";
-import { StandingsGroups } from "@/components/tournaments/standings-groups";
-import { Bracket } from "@/components/tournaments/bracket";
-import { ShareButton } from "@/components/tournaments/share-button";
-import { PrintButton } from "@/components/tournaments/print-button";
+import { Standings } from "@/components/tournaments/ranking/standings";
+import { PublicMatches } from "@/components/tournaments/public/public-matches-list";
+import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";
+import { Bracket } from "@/components/tournaments/ranking/bracket";
+import { ShareButton } from "@/components/tournaments/shared/share-button";
+import { PrintButton } from "@/components/tournaments/shared/print-button";
 import { Match, MatchEvent, Team, Goal, Tournament, Player } from "@/types";
 import { calculateStandings } from "@/lib/standings";
 import { createClient } from "@/lib/supabase/client";
@@ -20,10 +20,10 @@ import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-import { TournamentStats } from "@/components/tournaments/tournament-stats";
-import { PlayerStats } from "@/components/tournaments/player-stats";
-import { BannedPlayers } from "@/components/tournaments/banned-players";
-import { TopScorers } from "@/components/tournaments/top-scorers";
+import { TournamentStats } from "@/components/tournaments/shared/overview-stats";
+import { PlayerStats } from "@/components/tournaments/ranking/player-stats";
+import { BannedPlayers } from "@/components/tournaments/ranking/banned-players";
+import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 
 interface PublicTournamentShellProps {

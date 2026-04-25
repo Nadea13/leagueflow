@@ -25,7 +25,7 @@ interface NextRoundProps {
     format: string; // 'league', 'knockout', 'group_knockout'
 }
 
-export function NextRound({ tournamentId, matches, format }: NextRoundProps) {
+export function ProgressionLogic({ tournamentId, matches, format }: NextRoundProps) {
     const t = useTranslations("Fixtures");
     const [isPending, startTransition] = useTransition();
     const [confirmOpen, setConfirmOpen] = useState(false);

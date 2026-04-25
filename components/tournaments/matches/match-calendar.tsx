@@ -14,7 +14,7 @@ interface FixtureCalendarProps {
     matches: Match[];
 }
 
-export function FixtureCalendar({ matches }: FixtureCalendarProps) {
+export function MatchCalendar({ matches }: FixtureCalendarProps) {
 
 
     // Find initial month from matches or use current

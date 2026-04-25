@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { TournamentCreate } from "@/components/tournaments/tournament-create";
+import { TournamentCreate } from "@/components/tournaments/management/create-tournament-form";
 import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
 import { StatsCards } from "@/components/shared/stats-cards";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
@@ -137,11 +137,11 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                     ) : (
                         <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {teams.slice(0, 3).map((team) => (
-                                <DashboardCard 
-                                    key={team.id} 
-                                    type="team" 
-                                    data={team} 
-                                    mode={mode} 
+                                <DashboardCard
+                                    key={team.id}
+                                    type="team"
+                                    data={team}
+                                    mode={mode}
                                 />
                             ))}
                             {teams.length > 3 && (
@@ -221,11 +221,11 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                     <div className="space-y-4 md:space-y-6">
                         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {recentTournaments.map((tournament) => (
-                                <DashboardCard 
-                                    key={tournament.id} 
-                                    type="tournament" 
-                                    data={tournament} 
-                                    userPlan={userPlan} 
+                                <DashboardCard
+                                    key={tournament.id}
+                                    type="tournament"
+                                    data={tournament}
+                                    userPlan={userPlan}
                                 />
                             ))}
                             {tournaments.length > 3 && (
