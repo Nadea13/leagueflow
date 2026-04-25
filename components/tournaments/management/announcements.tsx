@@ -6,7 +6,7 @@ import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnounceme
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical } from "lucide-react";
+import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical, Check } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -177,7 +177,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                         className="text-[10px] font-black tracking-widest rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
                                         disabled={isSaving || !title.trim()}
                                     >
-                                        {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
                                         {t("post")}
                                     </Button>
                                 </div>

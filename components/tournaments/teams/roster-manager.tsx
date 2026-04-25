@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Plus } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Plus, Check } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
@@ -297,7 +297,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                             className="w-full h-10 rounded-none font-black uppercase tracking-wider text-xs transition-all bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
                                             disabled={isSaving || !newName.trim()}
                                         >
-                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
+                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
                                             {t("add")}
                                         </Button>
                                     </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PricingFooter } from "@/components/pricing/pricing-footer";
 import { getPlans } from "@/actions/admin/plans";
 
-import { PublicMatchesHome } from "@/components/tournaments/public-matches-home";
+import { PublicMatchesHome } from "@/components/tournaments/public/public-matches-home";
 import { createClient } from "@/lib/supabase/server";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";

@@ -1,6 +1,6 @@
 "use client";
 
-import { MatchCard } from "@/components/tournaments/match-card";
+import { MatchCard } from "@/components/tournaments/matches/match-card";
 import { useTranslations } from "next-intl";
 import { Match, MatchEvent } from "@/types";
 
@@ -37,7 +37,7 @@ export function PublicMatches({ matches, tournamentId, events = [] }: { matches:
     const sortedKeys = Object.keys(groups).sort((a, b) => {
         if (a === 'group_stage') return -1;
         if (b === 'group_stage') return 1;
-        
+
         const aRound = groups[a][0].round || 0;
         const bRound = groups[b][0].round || 0;
         return aRound - bRound;
@@ -49,7 +49,7 @@ export function PublicMatches({ matches, tournamentId, events = [] }: { matches:
                 const stageMatches = groups[key];
                 const firstMatch = stageMatches[0];
                 const stage = firstMatch.stage;
-                
+
                 let headerText = "";
                 if (key !== 'group_stage') {
                     if (stage === 'round_of_16') headerText = t("stage_round_of_16");

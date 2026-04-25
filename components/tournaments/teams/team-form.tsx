@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Plus, Camera, Upload } from "lucide-react";
+import { Plus, Camera, Upload, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addTeam } from "@/actions/organizer/tournaments/general";
 import { Link } from "@/i18n/routing";
@@ -133,10 +133,12 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
                             />
                         </div>
 
-                        <SubmitButton disabled={isLimitReached} className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all">
-                            <Plus className="h-4 w-4 mr-2" />
-                            {t("add_team_button")}
-                        </SubmitButton>
+                        <div className="flex justify-end pt-4">
+                            <SubmitButton disabled={isLimitReached} className="h-12 px-10 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all">
+                                <Check className="h-4 w-4 mr-2" />
+                                {t("add_team_button")}
+                            </SubmitButton>
+                        </div>
                     </div>
                 </div>
                 {state.error && <p className="text-[10px] font-bold uppercase text-red-500">{state.error}</p>}

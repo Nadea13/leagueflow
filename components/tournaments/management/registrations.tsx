@@ -108,8 +108,8 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                             <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("contact_info")}</TableHead>
                             <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("payment_status")}</TableHead>
                             <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("slip")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">Actions</TableHead>
                             <TableHead className="text-right px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("date")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -165,9 +165,18 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <span className="text-[10px] font-black uppercase text-muted-foreground/20 tracking-tighter">No Slip</span>
                                     )}
                                 </TableCell>
-                                <TableCell className="text-center px-4 border-b border-border/5">
+                                <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 uppercase tabular-nums whitespace-nowrap">
+                                    {new Date(reg.created_at).toLocaleString('en-US', { 
+                                        day: '2-digit', 
+                                        month: 'short', 
+                                        hour: '2-digit', 
+                                        minute: '2-digit',
+                                        hour12: false
+                                    }).replace(',', '')}
+                                </TableCell>
+                                <TableCell className="text-right px-6 border-b border-border/5">
                                     {reg.payment_status === 'PENDING' && (
-                                        <div className="flex items-center justify-center gap-2">
+                                        <div className="flex items-center justify-end gap-2">
                                             <Button
                                                 size="sm"
                                                 variant="outline"
@@ -190,15 +199,6 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             </Button>
                                         </div>
                                     )}
-                                </TableCell>
-                                <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 uppercase tabular-nums whitespace-nowrap">
-                                    {new Date(reg.created_at).toLocaleString('en-US', { 
-                                        day: '2-digit', 
-                                        month: 'short', 
-                                        hour: '2-digit', 
-                                        minute: '2-digit',
-                                        hour12: false
-                                    }).replace(',', '')}
                                 </TableCell>
                             </TableRow>
                         ))}

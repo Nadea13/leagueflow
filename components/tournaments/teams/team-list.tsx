@@ -29,7 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Loader2, Users, Upload, ImageIcon, Trash2, Edit2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { RosterDialog } from "./roster-dialog";
+import { RosterDialog } from "./roster-manager";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 

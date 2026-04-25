@@ -167,17 +167,19 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                 </div>
                             </div>
 
-                            <Button 
-                                type="submit" 
-                                disabled={!isPro || isPending}
-                                className="w-full h-12 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all relative group overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                <span className="relative z-10 flex items-center justify-center gap-2">
-                                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                                    {tCommon("save")}
-                                </span>
-                            </Button>
+                            <div className="flex justify-end pt-4">
+                                <Button 
+                                    type="submit" 
+                                    disabled={!isPro || isPending}
+                                    className="h-12 px-10 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all relative group overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                        {tCommon("save")}
+                                    </span>
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </div>

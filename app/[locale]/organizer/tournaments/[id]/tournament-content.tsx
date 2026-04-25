@@ -11,29 +11,29 @@ import { Tab } from "@/components/ui/tab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TeamForm } from "@/components/tournaments/team-form";
-import { FixtureGenerator } from "@/components/tournaments/fixture-generator";
-import { Standings } from "@/components/tournaments/standings";
-import { Teams } from "@/components/tournaments/teams";
-import { StandingsGroups } from "@/components/tournaments/standings-groups";
-import { Bracket } from "@/components/tournaments/bracket";
+import { TeamForm } from "@/components/tournaments/teams/team-form";
+import { MatchGenerator } from "@/components/tournaments/matches/match-generator";
+import { Standings } from "@/components/tournaments/ranking/standings";
+import { Teams } from "@/components/tournaments/teams/team-list";
+import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";
+import { Bracket } from "@/components/tournaments/ranking/bracket";
 import { Match, Team, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
-import { ShareButton } from "@/components/tournaments/share-button";
-import { TopScorers } from "@/components/tournaments/top-scorers";
+import { ShareButton } from "@/components/tournaments/shared/share-button";
+import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
 import { calculateStandings } from "@/lib/standings";
-import { TournamentSettings } from "@/components/tournaments/tournament-settings";
-import { FixtureManager } from "@/components/tournaments/fixture-manager";
-import { FixtureCalendar } from "@/components/tournaments/fixture-calendar";
-import { NextRound } from "@/components/tournaments/next-round";
+import { TournamentSettings } from "@/components/tournaments/settings/tournament-settings";
+import { MatchManager } from "@/components/tournaments/matches/match-manager";
+import { MatchCalendar } from "@/components/tournaments/matches/match-calendar";
+import { ProgressionLogic } from "@/components/tournaments/matches/progression-logic";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { TournamentStats } from "@/components/tournaments/tournament-stats";
-import { PlayerStats } from "@/components/tournaments/player-stats";
-import { BannedPlayers } from "@/components/tournaments/banned-players";
-import { Announcements } from "@/components/tournaments/announcements";
-import { Registrations } from "@/components/tournaments/registrations";
+import { TournamentStats } from "@/components/tournaments/shared/overview-stats";
+import { PlayerStats } from "@/components/tournaments/ranking/player-stats";
+import { BannedPlayers } from "@/components/tournaments/ranking/banned-players";
+import { Announcements } from "@/components/tournaments/management/announcements";
+import { Registrations } from "@/components/tournaments/management/registrations";
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
-import { RegistrationSettings } from "@/components/tournaments/registration-settings";
+import { RegistrationSettings } from "@/components/tournaments/settings/registration-settings";
 
 
 interface TournamentContentProps {
@@ -538,13 +538,13 @@ export function TournamentContent({
                                     <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Confirmed tournament entries</p>
                                 </div>
                                 <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
-                                        <Teams
-                                            teams={teams}
-                                            tournamentId={id}
-                                            isPro={isPro}
-                                            showGroupSelector={tournament?.format?.includes("group")}
-                                            organizerId={tournament?.user_id}
-                                        />
+                                    <Teams
+                                        teams={teams}
+                                        tournamentId={id}
+                                        isPro={isPro}
+                                        showGroupSelector={tournament?.format?.includes("group")}
+                                        organizerId={tournament?.user_id}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -679,14 +679,14 @@ export function TournamentContent({
                             {/* Fixtures View */}
                             <div className="min-h-[400px] bg-background rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
                                 {fixtureView === 'list' ? (
-                                    <FixtureManager
+                                    <MatchManager
                                         teams={teams}
                                         matches={matches}
                                         tournamentId={id}
                                         isPro={isPro}
                                     />
                                 ) : (
-                                    <FixtureCalendar matches={matches} />
+                                    <MatchCalendar matches={matches} />
                                 )}
                             </div>
                         </div>
@@ -707,7 +707,7 @@ export function TournamentContent({
 
                                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
                                     <div className="space-y-2 md:space-y-3">
-                                        <FixtureGenerator
+                                        <MatchGenerator
                                             tournamentId={id}
                                             hasFixtures={hasFixtures}
                                             format={tournament?.format}
@@ -715,7 +715,7 @@ export function TournamentContent({
                                         />
 
                                         {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                            <NextRound
+                                            <ProgressionLogic
                                                 tournamentId={id}
                                                 matches={matches}
                                                 format={tournament?.format || 'league'}

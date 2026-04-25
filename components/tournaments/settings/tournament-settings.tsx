@@ -32,9 +32,9 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Loader2, RefreshCw, CreditCard, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
 
-import { Collaborators } from "@/components/tournaments/collaborators";
-import { VenueManager } from "@/components/tournaments/venue-manager";
-import { RulesConfig } from "@/components/tournaments/rules-config";
+import { Collaborators } from "@/components/tournaments/management/collaborators";
+import { VenueManager } from "@/components/tournaments/settings/venue-manager";
+import { RulesConfig } from "@/components/tournaments/settings/rules-config";
 
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";

@@ -7,7 +7,7 @@ import { Wand2 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
-export function FixtureGenerator({ 
+export function MatchGenerator({ 
   tournamentId, 
   hasFixtures, 
   format,
