@@ -196,14 +196,14 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                         name="name"
                                         defaultValue={tournament.name}
                                         placeholder={tDialog("name")}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
                                     <Label htmlFor="status" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("status")}</Label>
                                     <Select name="status" defaultValue={tournament.status || "draft"}>
-                                        <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
+                                        <SelectTrigger className="w-full h-10 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                             <SelectValue placeholder={t("select_status")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
@@ -217,7 +217,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                 <div className="space-y-1">
                                     <Label htmlFor="format" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("format")}</Label>
                                     <Select name="format" defaultValue={tournament.format || "league"}>
-                                        <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
+                                        <SelectTrigger className="w-full h-10 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                             <SelectValue placeholder={t("select_format")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
@@ -242,7 +242,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                         defaultValue={tournament.max_teams || 8}
                                         min="2"
                                         max={128}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
 
@@ -253,7 +253,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                         id="start_date"
                                         name="start_date"
                                         defaultValue={tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
                                     />
                                 </div>
 
@@ -264,7 +264,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                         id="end_date"
                                         name="end_date"
                                         defaultValue={tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
                                     />
                                 </div>
 
@@ -275,7 +275,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                         id="document_deadline"
                                         name="document_deadline"
                                         defaultValue={tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : ""}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
                                     />
                                 </div>
 
@@ -285,7 +285,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                             {t("advancing_teams_per_group", { defaultValue: "Advancing Teams Per Group" })}
                                         </Label>
                                         <Select name="advancing_teams" defaultValue={tournament.advancing_teams?.toString() || "2"} required>
-                                            <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
+                                            <SelectTrigger className="w-full h-10 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                                 <SelectValue placeholder="Select" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-card border-foreground/10 rounded-none">
@@ -326,7 +326,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                 <Button
                                     type="submit"
                                     disabled={isPending}
-                                    className="h-12 bg-secondary hover:bg-secondary px-10 rounded-none font-black uppercase tracking-tighter transition-all relative overflow-hidden"
+                                    className="h-10 bg-secondary hover:bg-secondary px-10 rounded-none font-black uppercase tracking-tighter transition-all relative overflow-hidden"
                                 >
                                     <span className="relative z-10 flex items-center gap-2">
                                         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
@@ -414,7 +414,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                 <DialogTrigger asChild>
                                     <Button
                                         variant="destructive"
-                                        className="w-full sm:w-auto h-12 rounded-none bg-destructive text-muted hover:bg-red-600 font-black uppercase tracking-tighter transition-all px-4 md:px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
+                                        className="w-full sm:w-auto h-10 rounded-none bg-destructive text-muted hover:bg-red-600 font-black uppercase tracking-tighter transition-all px-4 md:px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
                                     >
                                         <Trash2 className="h-5 w-5 mr-2 md:mr-3" />
                                         {t("delete_tournament")}
@@ -447,7 +447,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                             variant="ghost"
                                             onClick={() => { setDeleteDialogOpen(false); setDeleteConfirmText(""); }}
                                             disabled={isPending}
-                                            className="rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 h-12"
+                                            className="rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 h-10"
                                         >
                                             {tCommon("cancel")}
                                         </Button>
@@ -455,7 +455,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                             variant="destructive"
                                             onClick={handleDelete}
                                             disabled={isPending || deleteConfirmText !== tournament.name}
-                                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-12 text-[11px] font-black uppercase tracking-widest px-8"
+                                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest px-8"
                                         >
                                             {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                                             {t("delete_tournament")}
@@ -477,7 +477,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                     variant="destructive"
                                     onClick={() => setResetDialogOpen(true)}
                                     disabled={isPending}
-                                    className="w-full sm:w-auto h-12 rounded-none bg-destructive text-muted hover:bg-destructive font-black uppercase tracking-tighter transition-all px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
+                                    className="w-full sm:w-auto h-10 rounded-none bg-destructive text-muted hover:bg-destructive font-black uppercase tracking-tighter transition-all px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
                                 >
                                     {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-3" /> : <RefreshCw className="h-5 w-5 mr-3" />}
                                     {t("reset_fixtures")}

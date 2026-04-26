@@ -125,7 +125,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                     min="0"
                                     step="0.01"
                                     disabled={!isPro}
-                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
+                                    className="h-10 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                 />
                             </div>
                             <div className="space-y-1">
@@ -137,14 +137,14 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                     defaultValue={tournament.bank_account_number ?? undefined}
                                     placeholder="08xxxxxxxx or ID Card"
                                     disabled={!isPro}
-                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
+                                    className="h-10 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                                 <div className="space-y-1">
                                     <Label htmlFor="bank_name" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("bank_name")}</Label>
                                     <Select name="bank_name" defaultValue={tournament.bank_name || "PromptPay"} disabled={!isPro}>
-                                        <SelectTrigger id="bank_name" className="h-12 bg-foreground/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold uppercase tracking-tighter">
+                                        <SelectTrigger id="bank_name" className="h-10 bg-foreground/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold uppercase tracking-tighter">
                                             <SelectValue placeholder={t("select_bank")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
@@ -161,7 +161,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                         defaultValue={tournament.bank_account_name ?? undefined}
                                         placeholder={t("account_name")}
                                         disabled={!isPro}
-                                        className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
+                                        className="h-10 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold uppercase tracking-tighter"
                                     />
                                 </div>
                             </div>
@@ -170,7 +170,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                 <Button 
                                     type="submit" 
                                     disabled={!isPro || isPending}
-                                    className="h-12 px-10 rounded-none font-black uppercase tracking-tighter bg-secondary hover:bg-secondary transition-all relative overflow-hidden"
+                                    className="h-10 px-10 rounded-none font-black uppercase tracking-tighter bg-secondary hover:bg-secondary transition-all relative overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-foreground/20 translate-y-full transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center justify-center gap-2">

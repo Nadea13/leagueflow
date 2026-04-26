@@ -642,7 +642,7 @@ export function TournamentContent({
                                 <div className="flex flex-col gap-1">
                                     <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Settings className="h-5 w-5 text-secondary" />
-                                        Control Center
+                                        {t("control_center")}
                                     </h3>
                                 </div>
 
@@ -652,7 +652,7 @@ export function TournamentContent({
                                             tournamentId={id}
                                             hasFixtures={hasFixtures}
                                             format={tournament?.format}
-                                            className="h-14 font-black uppercase tracking-tighter text-sm"
+                                            className="h-10 font-black uppercase tracking-tighter text-sm"
                                         />
 
                                         {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
