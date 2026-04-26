@@ -132,7 +132,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             </span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] bg-neutral-950 border-foreground/10 rounded-none shadow-2xl p-4 md:p-6 overflow-hidden">
+                    <DialogContent className="sm:max-w-[500px] bg-card border-foreground/10 rounded-none shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                 <MapPin className="h-6 w-6 text-secondary" />
@@ -140,7 +140,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             </DialogTitle>
                         </DialogHeader>
 
-                        <form onSubmit={handleAdd} className="space-y-4 md:space-y-6 py-4">
+                        <form onSubmit={handleAdd} className="space-y-4 md:space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                                 <div className="space-y-1">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("venue_name")}</Label>
@@ -216,7 +216,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                 </Dialog>
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors shadow-sm">
+            <div className="bg-background rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors shadow-sm">
                 <div className="relative z-0 space-y-4">
                     {/* Venue List */}
                     {isLoading ? (

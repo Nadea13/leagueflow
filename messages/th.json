@@ -1363,7 +1363,7 @@
     },
     "Announcements": {
         "title": "ประกาศ",
-        "new": "ประกาศใหม่",
+        "news": "ข่าวสาร",
         "post": "โพสต์",
         "no_announcements": "ยังไม่มีประกาศ",
         "pinned": "ปักหมุด",

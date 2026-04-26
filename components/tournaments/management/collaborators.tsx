@@ -131,17 +131,14 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                         </Button>
                     </DialogTrigger>
                     {isPro && (
-                        <DialogContent className="sm:max-w-[500px] bg-neutral-950 border-foreground/10 rounded-none shadow-2xl p-4 md:p-6 overflow-hidden">
+                        <DialogContent className="sm:max-w-[500px] bg-card border rounded-none shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                     <Mail className="h-6 w-6 text-secondary" />
                                     {t("invite_title")}
                                 </DialogTitle>
-                                <DialogDescription className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 pt-2">
-                                    {t("invite_desc")}
-                                </DialogDescription>
                             </DialogHeader>
-                            <div className="py-4 space-y-4 md:space-y-6">
+                            <div className="space-y-4 md:space-y-6">
                                 <div className="space-y-1">
                                     <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
                                     <Input

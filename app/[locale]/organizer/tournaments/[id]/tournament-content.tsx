@@ -318,26 +318,6 @@ export function TournamentContent({
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Left Column: Main Tournament Data (Spans 2) */}
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
-                            {/* 0. Tournament Description */}
-                            {tournament?.description && (
-                                <div className="space-y-4 md:space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
-                                            <BookOpen className="h-5 w-5 text-secondary" />
-                                            {t("description")}
-                                        </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("overview")}</p>
-                                    </div>
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all duration-500 shadow-xl shadow-black/20">
-                                        <CardContent className="px-2 md:px-3">
-                                            <div
-                                                className="prose prose-invert prose-sm md:prose-base max-w-none text-foreground/70 font-medium leading-relaxed"
-                                                dangerouslySetInnerHTML={{ __html: tournament.description }}
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            )}
 
                             {/* 1. League Table (For 'league' AND 'league_ha') */}
                             {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
@@ -502,11 +482,11 @@ export function TournamentContent({
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Registrations Section (Admin Only) */}
                             {userRole === 'admin' && (
-                                <div className="space-y-4 md:space-y-6">
+                                <div className="space-y-4 md:space-y-6 pb-6">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                                <BookOpen className="h-5 w-5 text-secondary" />
+                                                <ClipboardEdit className="h-5 w-5 text-secondary" />
                                                 {tRegistrations("title")}
                                             </h3>
                                         </div>

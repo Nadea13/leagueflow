@@ -326,11 +326,6 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         <Eraser className="h-4 w-4" />
                     </Button>
                 )}
-                
-                {/* Arrow indicator for drill-down */}
-                <div className="mx-2 hidden md:block">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/10 group-hover:text-secondary group-hover:translate-x-1 transition-all" />
-                </div>
             </div>
         </div>
     );
