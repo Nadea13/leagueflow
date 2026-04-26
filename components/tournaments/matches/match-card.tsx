@@ -120,7 +120,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col md:grid md:grid-cols-[160px_1fr_120px] items-center px-4 md:px-6 py-2 md:py-4 transition-all cursor-pointer group relative overflow-hidden",
+                "flex flex-col md:grid md:grid-cols-[150px_1fr_150px] items-center px-4 md:px-6 py-2 md:py-4 transition-all cursor-pointer group relative overflow-hidden",
                 isFinished ? "bg-[#050505]/60" : "bg-transparent hover:bg-foreground/5",
                 "gap-4",
                 isLive && "bg-secondary/5"
@@ -130,7 +130,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
             {isLive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-secondary animate-pulse" />}
 
             {/* 1. Status/Time/Badge Section */}
-            <div className="flex flex-col items-center justify-center w-full md:w-auto md:items-start md:justify-start gap-2 min-w-[120px]">
+            <div className="flex flex-col items-center justify-center w-full md:w-auto gap-2 min-w-[120px]">
                 {status !== 'scheduled' && (
                     <div
                         className={cn(
@@ -314,7 +314,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
             </div>
 
             {/* 3. Actions / Selection Indicator */}
-            <div className="flex items-center justify-end md:ml-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-center w-full" onClick={e => e.stopPropagation()}>
                 {isEditMode && match.away_team_id && (
                     <Button
                         size="icon"
