@@ -39,12 +39,12 @@ export function Standings({ standings }: StandingsProps) {
     return (
         <div className="w-full overflow-x-auto rounded-none">
             <Table className="min-w-[600px] text-xs md:text-sm border-separate border-spacing-0">
-                <TableHeader className="bg-muted/5">
-                    <TableRow className="h-10 border-b border-border/10 hover:bg-muted/5 transition-colors">
-                        <TableHead className="w-10 min-w-[2.5rem] px-0 text-center sticky left-0 z-20 bg-background/95 backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10 whitespace-nowrap">
+                <TableHeader className="bg-card">
+                    <TableRow className="h-10 border-b border-border/10 hover:bg-card transition-colors">
+                        <TableHead className="w-10 min-w-[2.5rem] px-0 text-center sticky left-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10 whitespace-nowrap">
                             {t("pos")}
                         </TableHead>
-                        <TableHead className="px-6 sticky left-10 z-20 bg-background/95 backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10 border-r border-border/5 whitespace-nowrap">
+                        <TableHead className="px-6 sticky left-10 z-20 bg-card backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10 border-r border-border/5 whitespace-nowrap">
                             {t("team")}
                         </TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("played")}</TableHead>
@@ -54,7 +54,7 @@ export function Standings({ standings }: StandingsProps) {
                         <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gf")}</TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("ga")}</TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gd")}</TableHead>
-                        <TableHead className="text-center px-6 sticky right-0 z-20 bg-background/95 backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-secondary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
+                        <TableHead className="text-center px-6 sticky right-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-secondary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
                             {t("pts")}
                         </TableHead>
                     </TableRow>
@@ -62,10 +62,10 @@ export function Standings({ standings }: StandingsProps) {
                 <TableBody>
                     {standings.map((team, index) => (
                         <TableRow key={team.team_id} className="h-12 border-b border-border/5 hover:bg-muted/5 transition-colors group">
-                            <TableCell className="text-center px-0 sticky left-0 z-10 bg-background group-hover:bg-muted/10 transition-colors font-black tracking-tighter text-muted-foreground/40 text-sm tabular-nums border-b border-border/5">
+                            <TableCell className="text-center px-0 sticky left-0 z-10 bg-card group-hover:bg-muted/10 transition-colors font-black tracking-tighter text-muted-foreground/40 text-sm tabular-nums border-b border-border/5">
                                 {index + 1}
                             </TableCell>
-                            <TableCell className="px-6 sticky left-10 z-10 bg-background group-hover:bg-muted/10 transition-colors border-b border-border/5 border-r border-border/5">
+                            <TableCell className="px-6 sticky left-10 z-10 bg-card group-hover:bg-muted/10 transition-colors border-b border-border/5 border-r border-border/5">
                                 <div className="flex items-center gap-4">
                                     <div className="w-8 h-8 bg-muted/10 border border-border/10 p-1 rounded-none shrink-0 relative overflow-hidden flex items-center justify-center">
                                         {team.team?.logo_url ? (
@@ -90,7 +90,7 @@ export function Standings({ standings }: StandingsProps) {
                             <TableCell className={`text-center px-4 font-black text-sm tabular-nums border-b border-border/5 ${team.gd > 0 ? "text-primary" : team.gd < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>
                                 {team.gd > 0 ? `+${team.gd}` : team.gd}
                             </TableCell>
-                            <TableCell className="text-center px-6 sticky right-0 z-10 bg-background group-hover:bg-muted/10 transition-colors font-black text-lg text-foreground border-b border-border/5 border-l border-border/5 tabular-nums">
+                            <TableCell className="text-center px-6 sticky right-0 z-10 bg-card group-hover:bg-card transition-colors font-black text-lg text-foreground border-b border-border/5 border-l border-border/5 tabular-nums">
                                 {team.pts}
                             </TableCell>
                         </TableRow>

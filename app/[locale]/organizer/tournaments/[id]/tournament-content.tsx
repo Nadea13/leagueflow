@@ -343,7 +343,6 @@ export function TournamentContent({
                                             <Trophy className="h-5 w-5 text-secondary" />
                                             {t("group_standings")}
                                         </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("group_standings_desc")}</p>
                                     </div>
                                     <div className="relative z-10">
                                         <StandingsGroups teams={teams} matches={matches} />
@@ -482,7 +481,7 @@ export function TournamentContent({
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Registrations Section (Admin Only) */}
                             {userRole === 'admin' && (
-                                <div className="space-y-4 md:space-y-6 pb-6">
+                                <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -490,10 +489,9 @@ export function TournamentContent({
                                                 {tRegistrations("title")}
                                             </h3>
                                         </div>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{tSettings("registration_settings_desc")}</p>
                                     </div>
 
-                                    <div className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
+                                    <div className="bg-card border rounded-none relative overflow-hidden transition-colors">
                                         <Registrations tournamentId={id} />
                                     </div>
                                 </div>
@@ -506,9 +504,8 @@ export function TournamentContent({
                                         <Users className="h-5 w-5 text-secondary" />
                                         {t("participating_teams")} <span className="text-muted-foreground/40 ml-1">[{teams?.length || 0}]</span>
                                     </h3>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Confirmed tournament entries</p>
                                 </div>
-                                <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                <div className="bg-card border rounded-none relative overflow-hidden transition-colors">
                                     <Teams
                                         teams={teams}
                                         tournamentId={id}
@@ -529,10 +526,9 @@ export function TournamentContent({
                                             <Settings className="h-5 w-5 text-secondary" />
                                             {t("actions")}
                                         </h3>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("actions_desc")}</p>
                                     </div>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                    <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
                                         <div className="space-y-2 md:space-y-3">
                                             <div className="space-y-2 md:space-y-3">
                                                 <div className="flex items-center justify-between">
@@ -583,10 +579,9 @@ export function TournamentContent({
                                         <Plus className="h-5 w-5 text-secondary" />
                                         {t("add_team")}
                                     </h3>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Manual Entry Management</p>
                                 </div>
 
-                                <Card className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                <Card className="bg-card border rounded-none relative overflow-hidden transition-all p-2 md:p-3">
                                     <TeamForm
                                         tournamentId={id}
                                         isLimitReached={false}
@@ -604,15 +599,12 @@ export function TournamentContent({
                         {/* Main Schedule Column */}
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Unwrapped Header */}
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 pb-4 md:pb-6 border-b border-foreground/5">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex justify-start items-center gap-2 md:gap-3">
                                         <Calendar className="h-5 w-5 text-secondary" />
                                         {t("match_schedule")}
                                     </h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
-                                        {t("manage_fixtures")}
-                                    </p>
                                 </div>
 
                                 {/* View Toggle - Moved to Header */}
@@ -623,13 +615,13 @@ export function TournamentContent({
                                         { value: 'list', label: t("list_view"), icon: List },
                                         { value: 'calendar', label: t("calendar_view"), icon: Calendar }
                                     ]}
-                                    className="h-9 border-foreground/5 bg-foreground/5"
+                                    className="h-10 border"
                                     itemClassName="px-4"
                                 />
                             </div>
 
                             {/* Fixtures View */}
-                            <div className="min-h-[400px] bg-background rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                            <div className="min-h-[400px] bg-background rounded-none relative overflow-hidden transition-colors">
                                 {fixtureView === 'list' ? (
                                     <MatchManager
                                         teams={teams}
@@ -652,18 +644,15 @@ export function TournamentContent({
                                         <Settings className="h-5 w-5 text-secondary" />
                                         Control Center
                                     </h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
-                                        Fixture generation & tools
-                                    </p>
                                 </div>
 
-                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
+                                <Card className="bg-card border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
                                     <div className="space-y-2 md:space-y-3">
                                         <MatchGenerator
                                             tournamentId={id}
                                             hasFixtures={hasFixtures}
                                             format={tournament?.format}
-                                            className="h-14 font-black uppercase tracking-tighter text-sm shadow-lg shadow-secondary/10"
+                                            className="h-14 font-black uppercase tracking-tighter text-sm"
                                         />
 
                                         {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
@@ -677,7 +666,7 @@ export function TournamentContent({
                                 </Card>
 
                                 {/* Extra Information / Status */}
-                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                <Card className="bg-card border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
                                     <div className="space-y-2 md:space-y-3">
                                         <div className="space-y-1 border-b border-foreground/5 pb-2 md:pb-3">
                                             <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest flex justify-between items-center">
@@ -723,10 +712,9 @@ export function TournamentContent({
                                             <ClipboardEdit className="h-5 w-5 text-secondary" />
                                             Configuration Overview
                                         </h3>
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Update details and status</p>
                                     </div>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                    <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
                                         <div className="space-y-4 md:space-y-6">
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
@@ -755,7 +743,7 @@ export function TournamentContent({
                                         </div>
                                     </Card>
 
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                    <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
                                         <div className="space-y-2 md:space-y-3">
                                             <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary">Quick Help</h5>
                                             <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">

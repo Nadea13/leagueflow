@@ -67,7 +67,6 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                         <ClipboardEdit className="h-5 w-5 text-secondary" />
                         {t("registration_settings")}
                     </h3>
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("registration_settings_desc")}</p>
                 </div>
                 {!isPro && (
                     <Badge variant="secondary" className="rounded-none bg-secondary text-secondary-foreground text-[10px] font-black px-3 py-1 uppercase tracking-widest">
@@ -76,7 +75,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                 )}
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">             
+            <div className="bg-card border rounded-none relative overflow-hidden group transition-colors p-2 md:p-3">             
                 <div className="relative z-10 space-y-4 md:space-y-6">
                     {!isPro && (
                         <div className="p-4 bg-secondary/5 border border-secondary/20 text-[11px] text-secondary font-black uppercase tracking-wider flex items-center gap-3">
@@ -171,9 +170,9 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                 <Button 
                                     type="submit" 
                                     disabled={!isPro || isPending}
-                                    className="h-12 px-10 rounded-none bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all relative group overflow-hidden"
+                                    className="h-12 px-10 rounded-none font-black uppercase tracking-tighter bg-secondary hover:bg-secondary transition-all relative overflow-hidden"
                                 >
-                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center justify-center gap-2">
                                         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                         {tCommon("save")}

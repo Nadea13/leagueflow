@@ -70,10 +70,9 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <Settings2 className="h-5 w-5 text-secondary" />
                     {t("title")}
                 </h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("description")}</p>
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">
+            <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-2 md:p-3">
                 <div className="relative z-10 space-y-4 md:space-y-6">
                     <form onSubmit={handleSave} className="space-y-2 md:space-y-3">
                     {/* Match Duration */}
@@ -208,10 +207,9 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                         <Button 
                             type="submit" 
                             disabled={isSaving}
-                            className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
+                            className="h-12 bg-secondary hover:bg-secondary px-10 rounded-none font-black uppercase tracking-tighter transition-all relative overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                             <span className="relative z-10 flex items-center gap-2">
+                            <span className="relative z-10 flex items-center gap-2">
                                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                  {tCommon("save")}
                              </span>

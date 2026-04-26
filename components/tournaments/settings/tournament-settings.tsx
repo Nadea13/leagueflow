@@ -181,10 +181,9 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                         <ClipboardEdit className="h-5 w-5 text-secondary" />
                         {t("general_info")}
                     </h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("update_details")}</p>
                 </div>
 
-                <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">
+                <div className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
                     <div className="relative z-10">
                         <form action={formAction} className="space-y-2 md:space-y-3">
                             <input type="hidden" name="form_type" value="general" />
@@ -289,7 +288,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                             <SelectTrigger className="w-full h-12 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                                 <SelectValue placeholder="Select" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
+                                            <SelectContent className="bg-card border-foreground/10 rounded-none">
                                                 {[1, 2, 3, 4].map((num) => (
                                                     <SelectItem key={num} value={num.toString()} className="focus:bg-foreground/10 focus:text-secondary">
                                                         {num}
@@ -327,9 +326,8 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                 <Button
                                     type="submit"
                                     disabled={isPending}
-                                    className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-10 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
+                                    className="h-12 bg-secondary hover:bg-secondary px-10 rounded-none font-black uppercase tracking-tighter transition-all relative overflow-hidden"
                                 >
-                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center gap-2">
                                         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                         {tCommon("save")}
@@ -406,7 +404,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                 </div>
 
                 <div className="grid gap-4 md:gap-6">
-                    <div className="bg-background border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-2 md:p-3">
+                    <div className="bg-card border border-destructive/50 rounded-none relative overflow-hidden transition-colors p-2 md:p-3">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                             <div className="space-y-2 md:space-y-3">
                                 <h4 className="text-lg font-black uppercase tracking-tight text-destructive">{t("delete_tournament")}</h4>
@@ -416,7 +414,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                 <DialogTrigger asChild>
                                     <Button
                                         variant="destructive"
-                                        className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase tracking-tighter transition-all px-4 md:px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
+                                        className="w-full sm:w-auto h-12 rounded-none bg-destructive text-muted hover:bg-red-600 font-black uppercase tracking-tighter transition-all px-4 md:px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
                                     >
                                         <Trash2 className="h-5 w-5 mr-2 md:mr-3" />
                                         {t("delete_tournament")}
@@ -469,7 +467,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                     </div>
 
                     {hasFixtures && (
-                        <div className="bg-background border border-destructive/10 rounded-none relative overflow-hidden group hover:bg-destructive/[0.04] transition-colors p-2 md:p-3">
+                        <div className="bg-card border border-destructive/50 rounded-none relative overflow-hidden transition-colors p-2 md:p-3">
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-3">
                                 <div className="space-y-2 md:space-y-3">
                                     <h4 className="text-lg font-black uppercase tracking-tight text-destructive">{t("reset_fixtures")}</h4>
@@ -479,7 +477,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
                                     variant="destructive"
                                     onClick={() => setResetDialogOpen(true)}
                                     disabled={isPending}
-                                    className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black uppercase tracking-tighter transition-all px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
+                                    className="w-full sm:w-auto h-12 rounded-none bg-destructive text-muted hover:bg-destructive font-black uppercase tracking-tighter transition-all px-6 shadow-none hover:shadow-[0_0_30_rgba(239,68,68,0.4)]"
                                 >
                                     {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-3" /> : <RefreshCw className="h-5 w-5 mr-3" />}
                                     {t("reset_fixtures")}
