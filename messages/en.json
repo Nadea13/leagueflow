@@ -184,7 +184,9 @@
         "reset_fixtures": "Reset Fixtures",
         "reset_desc": "This will remove all matches and standings data. This action cannot be undone.",
         "type_to_confirm": "Please type \"{text}\" to confirm:",
-        "active": "Active"
+        "active": "Active",
+        "list_view": "List",
+        "calendar_view": "Calendar"
     },
     "Registration": {
         "title": "Tournament Registration",
