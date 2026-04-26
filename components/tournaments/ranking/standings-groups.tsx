@@ -22,8 +22,8 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
         return acc;
     }, {} as Record<string, Team[]>);
 
-    // Sort group names (A, B, C...)
-    const sortedGroups = Object.keys(teamsByGroup).sort();
+    // Sort group names (A, B, C...) and exclude Unassigned
+    const sortedGroups = Object.keys(teamsByGroup).filter(g => g !== "Unassigned").sort();
 
     const t = useTranslations("Tournament");
 
@@ -32,8 +32,8 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
             <EmptyState
                 icon={Trophy}
                 title={t("group_standings")}
-                description="No groups have been defined for this tournament yet"
-                className="py-12 border"
+                description={t("group_standings_empty") || "No groups have been defined for this tournament yet. Assign teams to groups to see standings."}
+                className="py-12 border bg-background/50"
             />
         );
     }

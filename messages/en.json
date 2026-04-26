@@ -143,6 +143,7 @@
         "registrations": "Registrations",
         "group_standings": "Group Standings",
         "group_standings_desc": "Group stage rankings",
+        "group_standings_empty": "No groups have been defined for this tournament yet. Assign teams to groups to see standings.",
         "bracket": "Bracket",
         "bracket_desc": "Knockout stage progress",
         "top_scorers": "Top Scorers",
