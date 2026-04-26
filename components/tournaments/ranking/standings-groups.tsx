@@ -33,7 +33,7 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
                 icon={Trophy}
                 title={t("group_standings")}
                 description="No groups have been defined for this tournament yet"
-                className="py-12 border-none"
+                className="py-12 border"
             />
         );
     }

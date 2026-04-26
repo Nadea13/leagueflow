@@ -79,7 +79,7 @@ export function MatchCalendar({ matches }: FixtureCalendarProps) {
                 icon={Calendar}
                 title="No Matches Scheduled"
                 description="Match schedules will appear here once fixtures are generated"
-                className="py-12 border-none"
+                className="py-12 border"
             />
         );
     }

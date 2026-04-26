@@ -93,7 +93,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                 icon={FileText}
                 title={t("no_registrations")}
                 description="Waiting for the first signup for this tournament"
-                className="py-12 border-none"
+                className="py-12 border"
             />
         );
     }

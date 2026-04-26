@@ -51,7 +51,7 @@ export function Teams({ teams, tournamentId, isPro, showGroupSelector = false, o
                 icon={Users}
                 title={t("no_teams")}
                 description={t("no_teams_desc")}
-                className="py-12 border-none"
+                className="py-12 border"
             />
         );
     }
