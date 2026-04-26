@@ -7,6 +7,7 @@ import { Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface EventTimelineProps {
     events: MatchEvent[];
@@ -19,10 +20,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
     const t = useTranslations("Console");
 
     return (
-        <div className="bg-foreground/5 border border-foreground/5 relative overflow-hidden group">
-            {/* Background Decorative Element */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-foreground/5 rotate-12 translate-x-4 -translate-y-4 pointer-events-none" />
-            
+        <div className="bg-card border border-foreground/5 relative overflow-hidden group">
             <div className="px-4 pt-2 md:px-6 md:pt-6 flex items-center justify-between px-4 relative z-10">
                 <div className="space-y-1">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("match_log") || "Match Log"}</h3>
@@ -37,10 +35,12 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
             <div className="relative z-10">
                 <div className="max-h-[500px] overflow-y-auto px-4 pb-4 md:px-6 md:pb-6 space-y-2 md:space-y-3 no-scrollbar scroll-smooth">
                     {events.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 opacity-20">
-                            <Clock className="w-10 h-10 mb-4 text-foreground" />
-                            <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{t("no_events")}</p>
-                        </div>
+                        <EmptyState
+                            icon={Clock}
+                            title={t("no_events") || "No events yet"}
+                            description="Live match updates will appear here"
+                            className="py-12 border-none bg-transparent min-h-0"
+                        />
                     ) : (
                         events.map((event: any) => {
                             const evtConfig = EVENT_TYPES.find(e => e.type === event.event_type);

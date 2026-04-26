@@ -65,7 +65,6 @@ export default async function AdminMatchConsole(props: {
         <MatchConsolePage
             match={match}
             tournamentId={id}
-            isPro={!!isPro}
             readOnly={false}
             initialEvents={formattedEvents as MatchEvent[]}
             backUrl={`/organizer/tournaments/${id}?tab=${fromTab}`}

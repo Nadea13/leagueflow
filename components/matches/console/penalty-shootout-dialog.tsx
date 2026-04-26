@@ -119,7 +119,7 @@ export function PenaltyShootoutDialog({
     const hasWinner = useMemo(() => {
         const hLen = homeShots.length;
         const aLen = awayShots.length;
-        
+
         // 1. Regulation Phase (5 shots each)
         const hRemaining = Math.max(0, 5 - hLen);
         const aRemaining = Math.max(0, 5 - aLen);
@@ -136,27 +136,24 @@ export function PenaltyShootoutDialog({
         }
 
         return null;
-    }, [homeShots.length, awayShots.length, homeScore, awayScore]);    return (
+    }, [homeShots.length, awayShots.length, homeScore, awayScore]); return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
                     <Button variant="outline" size="sm" className="h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-secondary/50 rounded-none transition-all group">
-                        <Target className="h-4 w-4 mr-2" />
+                        <Target className="h-4 w-4" />
                         <span className="text-[10px] font-black uppercase tracking-widest">Penalty Shootout</span>
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
-                
-                <DialogHeader className="p-8 pb-4 text-left">
+                <DialogHeader className="p-4 md:p-6 text-left">
                     <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
-                        <div className="p-2 bg-secondary/10 border border-secondary/20">
+                        <div className="p-2 md:p-3 bg-secondary/10 border border-secondary/20">
                             <Target className="h-6 w-6 text-secondary" />
                         </div>
                         {t("title")}
                     </DialogTitle>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">DECISIVE SHOOTOUT SESSION</p>
                 </DialogHeader>
 
                 {isLoading ? (
@@ -164,9 +161,7 @@ export function PenaltyShootoutDialog({
                         <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                     </div>
                 ) : (
-                    <div className="px-8 pb-8 space-y-8 relative">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
-
+                    <div className="px-4 pb-4 space-y-4 md:px-6 md:pb-6 md:space-y-6 relative">
                         {/* Score Summary Scoreboard Style */}
                         <div className="flex items-center justify-center gap-10 py-6 bg-foreground/5 border border-foreground/5 relative z-10 overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-b from-foreground/5 to-transparent pointer-events-none" />
@@ -196,7 +191,7 @@ export function PenaltyShootoutDialog({
                             <div className="text-center py-3 bg-secondary/10 border border-secondary/20 relative z-10 overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 <p className="text-xs font-black uppercase tracking-widest text-secondary relative z-10">
-                                    🏆 {t("wins_on_penalties", { team: hasWinner === 'home' ? homeTeamName : awayTeamName })}
+                                    {t("wins_on_penalties", { team: hasWinner === 'home' ? homeTeamName : awayTeamName })}
                                 </p>
                             </div>
                         ) : isSuddenDeath ? (
@@ -298,23 +293,23 @@ export function PenaltyShootoutDialog({
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col gap-3 pt-4 border-t border-foreground/5 relative z-10">
+                        <div className="flex flex-col gap-3 relative z-10">
                             {shots.length > 0 && (
-                                <Button 
-                                    variant="ghost" 
-                                    className="h-10 text-[9px] font-black uppercase tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all" 
+                                <Button
+                                    variant="ghost"
+                                    className="h-10 text-[9px] font-black uppercase tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
                                     onClick={handleClear}
                                 >
                                     <Trash2 className="h-3 w-3 mr-2" />
                                     {t("clear_all")}
                                 </Button>
                             )}
-                            <Button 
-                                variant="ghost" 
+                            <Button
+                                variant="ghost"
                                 onClick={() => setOpen(false)}
                                 className="h-10 text-[9px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
                             >
-                                CLOSE SESSION
+                                {t("close_session")}
                             </Button>
                         </div>
                     </div>

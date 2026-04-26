@@ -25,14 +25,10 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
     };
 
     return (
-        <div className="bg-foreground/5 border border-foreground/5 relative overflow-hidden w-full group">
-            {/* Background Decorative Element */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 -rotate-12 translate-x-8 -translate-y-8 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-1 bg-gradient-to-r from-secondary/50 to-transparent" />
-            
+        <div className="bg-card border border-foreground/5 relative overflow-hidden w-full group">
             <div className="p-4 lg:p-6 flex flex-col items-center justify-center relative z-10 w-full">
                 <div className="flex items-center justify-between w-full max-w-5xl gap-4 md:gap-12">
-                    <div 
+                    <div
                         className="flex-1 text-center md:text-right space-y-2 md:space-y-3 cursor-pointer group/home"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
@@ -54,8 +50,8 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
 
                     {/* Central Score Area */}
                     <div className="flex flex-col items-center gap-4 md:gap-6 px-0 md:px-6 md:border-x border-foreground/5">
-                        <div className="px-4 py-1.5 bg-secondary/10 border border-secondary/20 skew-x-[-12deg]">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary skew-x-[12deg] inline-block">
+                        <div className="px-4 py-1.5 bg-secondary/10 border border-secondary/20">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary inline-block">
                                 {match.stage || "Tournament Match"}
                             </span>
                         </div>
@@ -67,7 +63,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                             </div>
                             <span className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{awayScore}</span>
                         </div>
-                        
+
                         {timerTime !== undefined && (
                             <MatchTimer
                                 time={timerTime}
@@ -84,7 +80,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         )}
                     </div>
 
-                    <div 
+                    <div
                         className="flex-1 text-center md:text-left space-y-4 cursor-pointer group/away"
                         onClick={() => onTeamClick?.(match.away_team_id || "")}
                     >

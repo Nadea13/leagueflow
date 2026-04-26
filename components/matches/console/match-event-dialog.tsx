@@ -95,42 +95,35 @@ export function MatchEventDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
-                {/* Header Decoration */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
-                
-                <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none space-y-2 md:space-y-3">
+                <DialogHeader className="px-4 md:px-6 pt-4 md:pt-6 pb-2 md:pb-3">
+                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black uppercase tracking-tighter text-foreground">
                         <div className={cn("p-2 bg-foreground/5 border border-foreground/10", eventConfig?.color)}>
                             {Icon && <Icon className="h-6 w-6" />}
                         </div>
                         {eventConfig?.label && t(eventConfig.label)}
                     </DialogTitle>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">CONFIGURE MATCH EVENT DATA</p>
                 </DialogHeader>
 
-                <div className="px-8 py-6 space-y-8 relative">
-                    {/* Background Decorative Element */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
-
+                <div className="px-4 md:px-6 space-y-2 md:space-y-3 relative">
                     {/* Time Input */}
                     <div className="space-y-3 relative z-10">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("time")}</Label>
                         <Input
                             value={minute}
                             onChange={e => setMinute(e.target.value)}
-                            className="h-12 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
+                            className="h-10 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
                             type="number"
                         />
                     </div>
 
                     {/* Player Selection */}
-                    <div className="space-y-3 relative z-10">
+                    <div className="space-y-2 md:space-y-3 relative z-10">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-secondary">
                             {eventType === 'substitution' ? t("player_out") : t("player")}
                         </Label>
                         <Select value={playerId} onValueChange={setPlayerId}>
-                            <SelectTrigger className="h-12 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase tracking-widest text-foreground transition-all">
+                            <SelectTrigger className="h-10 bg-foreground/5 border-foreground/5 focus:ring-secondary/20 rounded-none font-black uppercase tracking-widest text-foreground transition-all">
                                 <SelectValue placeholder={t("player_name")} />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-foreground/10 rounded-none">
@@ -186,7 +179,7 @@ export function MatchEventDialog({
                     )}
                 </div>
 
-                <DialogFooter className="p-8 bg-foreground/5 flex flex-row gap-4 items-center sm:justify-start">
+                <DialogFooter className="px-4 md:px-6 pb-4 md:pb-6 pt-2 md:pt-3 bg-card flex flex-row gap-4 items-center sm:justify-start">
                     <Button 
                         type="button" 
                         variant="ghost" 
@@ -199,9 +192,9 @@ export function MatchEventDialog({
                         type="button" 
                         onClick={handleSave} 
                         disabled={!playerId}
-                        className="flex-1 h-12 rounded-none bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black uppercase tracking-widest transition-all skew-x-[-12deg] disabled:opacity-50 disabled:skew-x-0"
+                        className="flex-1 h-12 rounded-none bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
                     >
-                        <span className="skew-x-[12deg] inline-block">{tCommon("save")}</span>
+                        <span className="inline-block">{tCommon("save")}</span>
                     </Button>
                 </DialogFooter>
             </DialogContent>

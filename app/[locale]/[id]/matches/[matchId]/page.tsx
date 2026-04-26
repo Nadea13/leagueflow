@@ -88,8 +88,6 @@ export default async function PublicMatchConsole(props: {
             match={match}
             tournamentId={id}
             tournamentName={tournament?.name}
-
-            isPro={!!isPro}
             readOnly={true}
             initialEvents={formattedEvents as MatchEvent[]}
             backUrl={`/${id}?tab=${fromTab}`}
