@@ -35,7 +35,6 @@ import { Registrations } from "@/components/tournaments/management/registrations
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 import { RegistrationSettings } from "@/components/tournaments/settings/registration-settings";
 
-
 interface TournamentContentProps {
     tournament: Tournament;
     initialMatches: Match[];
@@ -276,12 +275,6 @@ export function TournamentContent({
                                 )}>
                                     {tSettings(tournament?.status || 'draft')}
                                 </Badge>
-
-                                {isPro && (
-                                    <Badge variant="default" className="h-4 md:h-5 px-3 py-1 font-black tracking-widest bg-primary text-primary-foreground border-none shadow-[0_0_10px_rgba(0,196,154,0.2)]">
-                                        PRO
-                                    </Badge>
-                                )}
                             </div>
                         </div>
 
@@ -448,50 +441,54 @@ export function TournamentContent({
 
                         {/* Right Column: Sidebar (Actions & Announcements) */}
                         <div className="lg:col-span-1 space-y-4 md:space-y-6">
-                            {/* Action Bar Header */}
-                            <div className="flex flex-col gap-1">
-                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                    <Settings className="h-5 w-5 text-secondary" />
-                                    {t("actions")}
-                                </h2>
-                                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("actions_desc")}</p>
-                            </div>
-
-                            {/* Public Link Card */}
-                            <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
-                                <div className="space-y-2 md:space-y-3">
-                                    <div className="space-y-2 md:space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
-                                            <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
-                                        </div>
-                                        <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
-                                            {mounted ? registrationUrl : tCommon("loading") || "..."}
-                                        </div>
+                            {tournament?.status !== 'draft' && (
+                                <>
+                                    {/* Action Bar Header */}
+                                    <div className="flex flex-col gap-1">
+                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <Settings className="h-5 w-5 text-secondary" />
+                                            {t("actions")}
+                                        </h2>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("actions_desc")}</p>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                        <Button
-                                            variant="secondary"
-                                            size="default"
-                                            className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
-                                            onClick={copyRegistrationLink}
-                                        >
-                                            <Copy className="h-4 w-4 mr-2" />
-                                            {tCommon("copy_link")}
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="default"
-                                            className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
-                                            onClick={() => window.open(registrationUrl, '_blank')}
-                                        >
-                                            <ExternalLink className="h-4 w-4 mr-2" />
-                                            {tCommon("open_link")}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </Card>
+                                    {/* Public Link Card */}
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                        <div className="space-y-2 md:space-y-3">
+                                            <div className="space-y-2 md:space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
+                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                                </div>
+                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                                    {mounted ? registrationUrl : tCommon("loading") || "..."}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                                <Button
+                                                    variant="secondary"
+                                                    size="default"
+                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                    onClick={copyRegistrationLink}
+                                                >
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    {tCommon("copy_link")}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="default"
+                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                    onClick={() => window.open(registrationUrl, '_blank')}
+                                                >
+                                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                                    {tCommon("open_link")}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </>
+                            )}
 
                             {/* Announcements Section */}
                             <div className="space-y-4 md:space-y-6">
@@ -515,7 +512,7 @@ export function TournamentContent({
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                                <BookOpen className="h-5 w-5 text-primary" />
+                                                <BookOpen className="h-5 w-5 text-secondary" />
                                                 {tRegistrations("title")}
                                             </h3>
                                         </div>
