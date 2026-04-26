@@ -44,7 +44,7 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
                 icon={Trophy}
                 title={t("no_knockout")}
                 description="Knockout rounds will appear here once group stages are complete or matches are generated"
-                className="py-12 border-none"
+                className="py-12 border"
             />
         );
     }

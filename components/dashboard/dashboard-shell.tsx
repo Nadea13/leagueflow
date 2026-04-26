@@ -9,12 +9,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Users, FileText, Trophy, Activity, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { BecomeOrganizerButton } from "@/components/dashboard/become-organizer-button";
-
-
 import { Tournament, Team } from "@/types/index";
 
 interface DashboardShellProps {

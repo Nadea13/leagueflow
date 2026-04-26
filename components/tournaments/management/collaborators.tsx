@@ -216,7 +216,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                             icon={Users}
                             title={t("no_collaborators")}
                             description="Invite team members to help manage the tournament"
-                            className="py-12 border-none"
+                            className="py-12 border"
                         />
                     ) : (
                         <div className="space-y-2 md:space-y-3">

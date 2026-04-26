@@ -21,7 +21,7 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
                 icon={Shield}
                 title={t("no_stats")}
                 description="Awaiting match events and player activity"
-                className="py-12 border-none"
+                className="py-12 border"
             />
         );
     }

@@ -228,7 +228,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             icon={MapPin}
                             title={t("no_venues")}
                             description="Add tournament venues to schedule matches"
-                            className="py-12 border-none"
+                            className="py-12 border"
                         />
                     ) : (
                         <div className="bg-background border border-foreground/5 overflow-hidden">
