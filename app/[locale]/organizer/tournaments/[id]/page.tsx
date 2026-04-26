@@ -41,7 +41,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
 
     // Fetch related data (Teams, Matches, Goals) parallelized
     const [teamsResult, matchesResult] = await Promise.all([
-        supabase.from("tournament_teams").select("*, team:teams(user_id)").eq("tournament_id", id).order("created_at", { ascending: true }),
+        supabase.from("tournament_teams").select("*, team:teams(user_id), registrations(payment_status)").eq("tournament_id", id).order("created_at", { ascending: true }),
         supabase.from("matches").select(`
             *,
             home_team:tournament_teams!matches_home_team_id_fkey(name, logo_url),
@@ -52,7 +52,15 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
             .order("created_at", { ascending: true })
     ]);
 
-    const teams = teamsResult.data || [];
+    const allTeams = teamsResult.data || [];
+    // Filter out teams that have a registration but are not PAID yet
+    const teams = allTeams.filter((t: any) => {
+        const registration = Array.isArray(t.registrations) ? t.registrations[0] : t.registrations;
+        if (registration) {
+            return registration.payment_status === 'PAID';
+        }
+        return true; // Manual additions by organizer don't have registrations
+    });
     const matches = matchesResult.data || [];
 
     // Fetch goals for Top Scorers (only if matches exist)

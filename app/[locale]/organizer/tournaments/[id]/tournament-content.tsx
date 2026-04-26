@@ -183,13 +183,7 @@ export function TournamentContent({
                 table: 'tournament_teams',
                 filter: `tournament_id=eq.${id}`
             }, (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    setTeams(prev => [...prev, payload.new as any]);
-                } else if (payload.eventType === 'UPDATE') {
-                    setTeams(prev => prev.map(t => t.id === payload.new.id ? payload.new as any : t));
-                } else if (payload.eventType === 'DELETE') {
-                    setTeams(prev => prev.filter(t => t.id !== payload.old.id));
-                }
+                // Rely on router.refresh() to update the filtered teams list from the server
                 router.refresh();
             })
             .on('postgres_changes', {
