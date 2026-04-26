@@ -100,7 +100,7 @@ export function MatchManager({ matches, teams, tournamentId, isPro = false }: Fi
                 />
             ) : (
                 <>
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-foreground/5 p-2 md:p-3 border-none">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-card p-2 md:p-3 border">
                         {/* Filter Area */}
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
                             <div className="space-y-1">
@@ -151,7 +151,7 @@ export function MatchManager({ matches, teams, tournamentId, isPro = false }: Fi
                                 icon={Calendar}
                                 title={tFixtures("no_fixtures")}
                                 description="No fixtures found for the selected filter"
-                                className="py-12 border-none"
+                                className="py-12 border"
                             />
                         ) : (
                             (() => {
@@ -198,7 +198,7 @@ export function MatchManager({ matches, teams, tournamentId, isPro = false }: Fi
                                                     <div className="h-px bg-secondary/30 flex-1" />
                                                 </div>
                                             )}
-                                            <div className="space-y-[1px] bg-foreground/5 border-none">
+                                            <div className="space-y-[1px] bg-card border">
                                                 {[...stageMatches]
                                                     .sort((a, b) => {
                                                         if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
@@ -247,7 +247,7 @@ export function MatchManager({ matches, teams, tournamentId, isPro = false }: Fi
             )}
 
             <AlertDialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                             <ArrowRight className="h-5 w-5 text-secondary" />

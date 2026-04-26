@@ -116,23 +116,21 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                         <MapPin className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("description")}</p>
                 </div>
 
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                         <Button
                             size="sm"
-                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 md:px-6 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
+                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary px-4 md:px-6 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                             <span className="relative z-10 flex items-center gap-2 md:gap-3">
                                 <Plus className="h-4 w-4" />
                                 {t("add_venue")}
                             </span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] bg-card border-foreground/10 rounded-none shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
+                    <DialogContent className="sm:max-w-[500px] bg-card border-foreground/10 rounded-none p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                 <MapPin className="h-6 w-6 text-secondary" />
@@ -216,7 +214,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                 </Dialog>
             </div>
 
-            <div className="bg-background rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors shadow-sm">
+            <div className="bg-card rounded-none relative overflow-hidden transition-colors">
                 <div className="relative z-0 space-y-4">
                     {/* Venue List */}
                     {isLoading ? (
@@ -231,14 +229,14 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             className="py-12 border"
                         />
                     ) : (
-                        <div className="bg-background border border-foreground/5 overflow-hidden">
+                        <div className="bg-card border overflow-hidden">
                             <Table className="border-separate border-spacing-0">
                                 <TableHeader>
-                                    <TableRow className="hover:bg-transparent border-foreground/5 bg-muted/20">
+                                    <TableRow className="hover:bg-transparent border bg-muted/20">
                                         <TableHead className="text-[11px] font-black uppercase tracking-widest text-secondary/70 h-11 border-b border-foreground/5">{t("name_header")}</TableHead>
                                         <TableHead className="text-[11px] font-black uppercase tracking-widest text-secondary/70 h-11 border-b border-foreground/5">{t("address_header")}</TableHead>
                                         <TableHead className="text-[11px] font-black uppercase tracking-widest text-secondary/70 h-11 border-b border-foreground/5 text-right">{t("capacity_header")}</TableHead>
-                                        <TableHead className="w-[80px] h-11 border-b border-foreground/5"></TableHead>
+                                        <TableHead className="w-[80px] h-11 border-b"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -278,7 +276,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                                    className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
                                                     onClick={() => setVenueToDelete(venue.id)}
                                                 >
                                                     <Trash2 className="h-5 w-5" />
@@ -293,7 +291,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                 </div>
 
                 <AlertDialog open={!!venueToDelete} onOpenChange={(open) => !open && setVenueToDelete(null)}>
-                    <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                    <AlertDialogContent className="bg-card border-border/10 rounded-none max-w-md">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
                                 <Trash2 className="h-5 w-5 text-destructive" />
@@ -312,7 +310,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     e.preventDefault();
                                     confirmDeleteVenue();
                                 }}
-                                className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                                className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive transition-all h-10 text-[11px] font-black uppercase tracking-widest"
                             >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 {tCommon("delete")}

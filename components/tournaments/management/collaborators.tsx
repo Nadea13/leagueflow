@@ -112,18 +112,16 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                         <Users className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">{t("description")}</p>
                 </div>
 
                 <Dialog open={isPro && dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button 
-                            size="sm" 
+                        <Button
+                            size="sm"
                             disabled={!isPro}
                             onClick={() => !isPro && togglePayment?.()}
-                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 rounded-none font-black uppercase tracking-tighter transition-all relative group/btn overflow-hidden"
+                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary px-6 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                             <span className="relative z-10 flex items-center gap-2">
                                 <Plus className="h-4 w-4" />
                                 {t("invite")}
@@ -176,7 +174,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                 </Dialog>
             </div>
 
-            <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-2 md:p-3 shadow-sm">
+            <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-2 md:p-3">
                 
                 <div className="relative z-10 space-y-4 md:space-y-6">
 
@@ -245,7 +243,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                        className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
                                         onClick={() => setRemoveMemberId(collab.id)}
                                         disabled={isPending}
                                     >

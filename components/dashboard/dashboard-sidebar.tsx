@@ -98,7 +98,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
     const navItems = getNavItems(mode, role)
 
     return (
-        <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[220px] lg:w-[280px] bg-background border-r border-border shadow-2xl z-50", className)}>
+        <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[220px] lg:w-[280px] bg-background border-r border-border z-50", className)}>
             <div className="flex h-20 items-center px-4 lg:px-8 border-b border-border">
                 <Link href="/" className="flex items-center gap-3 transition-transform group">
                     <div className="relative">

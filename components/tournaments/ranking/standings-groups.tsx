@@ -54,15 +54,14 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
 
                     return (
                         <div key={group} className="space-y-4 md:space-y-6">
-                            <div className="flex flex-col gap-1">
-                                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3 relative z-10">
-                                    <span className="w-2 h-2 bg-secondary rounded-none shadow-[0_0_10px_rgba(0,196,154,0.4)]" />
+                            <div className="flex flex-col">
+                                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3 relative z-10">
+                                    <span className="w-2 h-2 bg-secondary rounded-none" />
                                     {t("group_header", { group })}
                                 </h3>
-                                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Group Stage Standings</p>
                             </div>
-                            
-                            <div className="bg-background border border-border/10 rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+
+                            <div className="bg-card border rounded-none relative overflow-hidden transition-colors">
                                 <div className="p-0">
                                     <StandingsTable standings={groupStandings} />
                                 </div>
