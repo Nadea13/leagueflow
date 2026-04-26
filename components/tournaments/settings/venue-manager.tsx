@@ -147,7 +147,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         onChange={e => setName(e.target.value)}
                                         placeholder={t("name_placeholder")}
                                         required
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -156,7 +156,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         value={address}
                                         onChange={e => setAddress(e.target.value)}
                                         placeholder={t("address_placeholder")}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -165,7 +165,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         value={googleMapsUrl}
                                         onChange={e => setGoogleMapsUrl(e.target.value)}
                                         placeholder="https://maps.google.com/..."
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -175,7 +175,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         onChange={e => setCapacity(e.target.value)}
                                         placeholder={t("capacity_placeholder")}
                                         type="number"
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                             </div>
@@ -193,14 +193,14 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     type="button"
                                     variant="ghost"
                                     onClick={() => setOpen(false)}
-                                    className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
+                                    className="h-10 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                 >
                                     {tCommon("cancel")}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={isSaving || !name.trim()}
-                                    className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
+                                    className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center gap-2">
