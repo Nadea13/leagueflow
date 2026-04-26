@@ -234,10 +234,10 @@ export function TournamentContent({
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 relative group">
                 <div className="flex items-start gap-2 md:gap-6 w-full">
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         asChild
-                        className="rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border border-border/50 hover:bg-secondary hover:text-black transition-all shadow-lg shadow-black/20"
+                        className="bg-background/50 backdrop-blur-sm rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all"
                     >
                         <Link href="/dashboard">
                             <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
