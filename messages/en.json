@@ -1371,7 +1371,7 @@
     },
     "Announcements": {
         "title": "Announcements",
-        "new": "New",
+        "news": "News",
         "post": "Post",
         "title_placeholder": "Announcement title",
         "content_placeholder": "Details (optional)",

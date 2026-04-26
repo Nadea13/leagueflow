@@ -115,7 +115,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-1">
-                    <h3 className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Megaphone className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
@@ -126,18 +126,18 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                         <DialogTrigger asChild>
                             <Button
                                 size="sm"
-                                variant="ghost"
-                                className="rounded-none border border-secondary/20 hover:bg-secondary/10 font-black  text-[10px] tracking-widest text-secondary h-8 shadow-[0_4px_10px_rgba(0,196,154,0.1)] transition-all hover:-translate-y-0.5"
+                                variant="secondary"
+                                className="rounded-none font-black text-[10px] tracking-widest h-8 shadow-[0_4px_10px_rgba(0,196,154,0.1)] transition-all px-4"
                             >
-                                <Plus className="h-4 w-4 mr-1 text-secondary" />
-                                {t("new")}
+                                <Plus className="h-4 w-4 mr-1" />
+                                {t("news")}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="bg-card border-border/40 rounded-none sm:max-w-[500px] shadow-2xl p-0 overflow-hidden">
                             <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
                                 <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
                                     <Megaphone className="h-6 w-6 text-secondary" />
-                                    {t("new")}
+                                    {t("news")}
                                 </DialogTitle>
                             </DialogHeader>
                             <form onSubmit={handleAdd} className="p-4 md:p-6 space-y-2 md:space-y-3">
