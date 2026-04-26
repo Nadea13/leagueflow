@@ -256,6 +256,8 @@
         "reset_desc": "การดำเนินการนี้จะลบการแข่งขันและข้อมูลตารางคะแนนทั้งหมด และไม่สามารถยกเลิกได้",
         "type_to_confirm": "โปรดพิมพ์ \"{text}\" เพื่อยืนยัน:",
         "active": "กำลังแข่งขัน",
+        "list_view": "รายการ",
+        "calendar_view": "ปฏิทิน",
         "group_header": "กลุ่ม {group}",
         "stats_participating_teams": "ทีมที่เข้าร่วม",
         "stats_teams_registered": "ทีมที่ลงทะเบียน",

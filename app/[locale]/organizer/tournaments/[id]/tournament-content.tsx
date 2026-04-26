@@ -540,8 +540,54 @@ export function TournamentContent({
                             </div>
                         </div>
 
-                        {/* Management Sidebar */}
                         <div className="lg:col-span-1 space-y-4 md:space-y-6">
+                            {/* Tournament Actions - Matching Overview Tab Style */}
+                            {tournament?.status !== 'draft' && (
+                                <div className="space-y-4 md:space-y-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <Settings className="h-5 w-5 text-secondary" />
+                                            {t("actions")}
+                                        </h3>
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("actions_desc")}</p>
+                                    </div>
+
+                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
+                                        <div className="space-y-2 md:space-y-3">
+                                            <div className="space-y-2 md:space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
+                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                                </div>
+                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                                    {mounted ? registrationUrl : tCommon("loading") || "..."}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                                <Button
+                                                    variant="secondary"
+                                                    size="default"
+                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                    onClick={copyRegistrationLink}
+                                                >
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    {tCommon("copy_link")}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="default"
+                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                    onClick={() => window.open(registrationUrl, '_blank')}
+                                                >
+                                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                                    {tCommon("open_link")}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </div>
+                            )}
                             {/* Registration Settings (Administrative) */}
                             {userRole === 'admin' && (
                                 <RegistrationSettings
@@ -567,55 +613,6 @@ export function TournamentContent({
                                     />
                                 </Card>
 
-                                {/* Public Registration Link - Only for Pro */}
-                                <div className="space-y-4 md:space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <ExternalLink className="h-5 w-5 text-secondary" />
-                                            {t("public_link")}
-                                        </h3>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Direct access for teams</p>
-                                    </div>
-
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
-                                        <div className="space-y-2 md:space-y-3">
-                                            <div className="space-y-2 md:space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t("public_link")}</label>
-                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
-                                                </div>
-                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
-                                                    {mounted ? registrationUrl : "..."}
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                                <Button
-                                                    type="button"
-                                                    variant="secondary"
-                                                    size="default"
-                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
-                                                    onClick={copyRegistrationLink}
-                                                >
-                                                    <Copy className="h-4 w-4 mr-2" />
-                                                    {tCommon("copy_link")}
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="default"
-                                                    asChild
-                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
-                                                >
-                                                    <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
-                                                        <ExternalLink className="h-4 w-4 mr-2" />
-                                                        {tCommon("open_link")}
-                                                    </a>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -639,32 +636,16 @@ export function TournamentContent({
                                 </div>
 
                                 {/* View Toggle - Moved to Header */}
-                                <div className="flex bg-foreground/5 p-1 rounded-none border border-foreground/5 self-start md:self-auto">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn(
-                                            "rounded-none h-8 px-4 font-black uppercase tracking-tighter text-[10px] transition-all",
-                                            fixtureView === 'list' && "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20"
-                                        )}
-                                        onClick={() => setFixtureView('list')}
-                                    >
-                                        <List className="h-3.5 w-3.5 mr-2" />
-                                        List
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn(
-                                            "rounded-none h-8 px-4 font-black uppercase tracking-tighter text-[10px] transition-all",
-                                            fixtureView === 'calendar' && "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20"
-                                        )}
-                                        onClick={() => setFixtureView('calendar')}
-                                    >
-                                        <Calendar className="h-3.5 w-3.5 mr-2" />
-                                        Calendar
-                                    </Button>
-                                </div>
+                                <Tab
+                                    value={fixtureView}
+                                    onChange={(val) => setFixtureView(val as 'list' | 'calendar')}
+                                    options={[
+                                        { value: 'list', label: t("list_view"), icon: List },
+                                        { value: 'calendar', label: t("calendar_view"), icon: Calendar }
+                                    ]}
+                                    className="h-9 border-foreground/5 bg-foreground/5"
+                                    itemClassName="px-4"
+                                />
                             </div>
 
                             {/* Fixtures View */}
