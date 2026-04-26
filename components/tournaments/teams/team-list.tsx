@@ -204,7 +204,7 @@ function TeamItem({
                     {!isReadOnly && (
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="icon" className="h-9 w-9 rounded-none border-border/10 bg-muted/5 hover:bg-foreground/5 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
+                                <Button variant="outline" size="icon" className="bg-background/50 backdrop-blur-sm rounded-none border-border/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                             </DialogTrigger>

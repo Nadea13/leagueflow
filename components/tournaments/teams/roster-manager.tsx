@@ -210,13 +210,13 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="sm" className="h-8 gap-2 hover:bg-muted/10">
+                    <Button variant="outline" size="icon" className="bg-background/50 backdrop-blur-sm rounded-none border-border/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
                         {readOnly ? (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
+                            <Eye className="h-4 w-4" />
                         ) : (
-                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <Users className="h-4 w-4" />
                         )}
-                        <span className="hidden sm:inline font-bold uppercase tracking-tighter text-xs">
+                        <span className="sr-only">
                             {readOnly ? t("view_squad") : t("manage_squad")}
                         </span>
                     </Button>
