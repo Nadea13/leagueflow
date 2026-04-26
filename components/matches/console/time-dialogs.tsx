@@ -17,21 +17,16 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
-                
-                <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
-                        <div className="p-2 bg-secondary/10 border border-secondary/20">
+                <DialogHeader className="p-4 md:p-6">
+                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black uppercase tracking-tighter text-foreground">
+                        <div className="p-2 md:p-3 bg-secondary/10 border border-secondary/20">
                             <Timer className="h-6 w-6 text-secondary" />
                         </div>
                         {t("add_added_time")}
                     </DialogTitle>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">SELECT REGULATION ADD-ON MINUTES</p>
                 </DialogHeader>
 
-                <div className="px-8 py-6 space-y-8 relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
-
+                <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-4 md:space-y-6 relative">
                     <div className="grid grid-cols-3 gap-3 relative z-10">
                         {[1, 2, 3, 4, 5, 6].map(mins => (
                             <Button 
@@ -51,7 +46,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                             <Input
                                 type="number"
                                 placeholder="0"
-                                className="h-12 flex-1 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
+                                className="h-10 flex-1 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         const val = parseInt((e.target as HTMLInputElement).value);
@@ -60,7 +55,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                                 }}
                             />
                             <Button 
-                                className="h-12 px-6 rounded-none bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black uppercase tracking-widest transition-all"
+                                className="h-10 px-6 rounded-none bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black uppercase tracking-widest transition-all"
                                 onClick={(e) => {
                                     const input = e.currentTarget.previousElementSibling as HTMLInputElement;
                                     if (input.value) onSave(parseInt(input.value));
@@ -70,15 +65,16 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                             </Button>
                         </div>
                     </div>
-                </div>
-                <div className="p-4 bg-foreground/5 border-t border-foreground/5">
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => onOpenChange(false)}
-                        className="w-full text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
-                    >
-                        CANCEL
-                    </Button>
+
+                    <div className="pt-2">
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => onOpenChange(false)}
+                            className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
+                        >
+                            {t("cancel") || "CANCEL"}
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
@@ -98,11 +94,9 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-xs rounded-none">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary/50 via-secondary to-secondary/50" />
-                
-                <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
-                        <div className="p-2 bg-secondary/10 border border-secondary/20">
+                <DialogHeader className="p-4 md:p-6">
+                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black uppercase tracking-tighter text-foreground">
+                        <div className="p-2 md:p-3 bg-secondary/10 border border-secondary/20">
                             <Timer className="h-6 w-6 text-secondary" />
                         </div>
                         {t("set_match_time")}
@@ -117,10 +111,8 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                         const s = parseInt(formData.get("seconds") as string) || 0;
                         onSave(m, s);
                     }}
-                    className="p-8 space-y-8 relative"
+                    className="px-4 pb-4 md:px-6 md:pb-6 space-y-4 md:space-y-6 relative"
                 >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 -rotate-12 translate-x-8 -translate-y-8 pointer-events-none" />
-
                     <div className="flex items-center justify-center gap-4 relative z-10">
                         <div className="space-y-2 flex-1">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-secondary text-center block w-full">{t("min")}</Label>
@@ -141,11 +133,10 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 pt-4 relative z-10">
+                    <div className="flex flex-col gap-3 relative z-10">
                         <Button 
                             type="submit" 
-                            size="lg" 
-                            className="h-14 bg-secondary text-black hover:bg-secondary/80 text-[12px] font-black uppercase tracking-widest rounded-none"
+                            className="h-10 bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black uppercase tracking-widest rounded-none"
                         >
                             {t("set_time_btn")}
                         </Button>
@@ -155,7 +146,7 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                             onClick={() => onOpenChange(false)}
                             className="h-10 text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
                         >
-                            CANCEL
+                            {t("cancel") || "CANCEL"}
                         </Button>
                     </div>
                 </form>

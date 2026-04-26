@@ -78,7 +78,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     disabled
-                    className="flex-1 w-12 md:w-full h-12 md:h-14 bg-foreground/5 border-foreground/10 rounded-none opacity-50 cursor-not-allowed"
+                    className="flex-1 w-12 md:w-full h-8 md:h-10 bg-foreground/5 border-foreground/10 rounded-none opacity-50 cursor-not-allowed"
                 >
                     <div className="flex items-center gap-3">
                         <Play className="h-4 w-4 text-foreground/20" /> 
@@ -91,7 +91,7 @@ export function MatchControls({
                 variant="outline"
                 onClick={onEnd}
                 disabled={status === 'finished'}
-                className="flex-1 w-12 md:w-full h-12 md:h-14 bg-red-500/10 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 rounded-none transition-all group active:scale-[0.98]"
+                className="flex-1 w-12 md:w-full h-8 md:h-10 bg-red-500/10 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 rounded-none transition-all group active:scale-[0.98]"
             >
                 <div className="flex flex-col items-center md:items-start">
                     <div className="flex items-center gap-2 md:gap-3">
@@ -107,7 +107,7 @@ export function MatchControls({
                     <Button 
                         variant="outline"
                         onClick={onSetTime}
-                        className="h-12 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 rounded-none transition-all group"
+                        className="h-10 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 rounded-none transition-all group"
                     >
                         <div className="flex items-center gap-3">
                             <Clock className="h-4 w-4 text-foreground/40 group-hover:text-foreground transition-colors" />
@@ -120,7 +120,7 @@ export function MatchControls({
                     <Button 
                         variant="outline"
                         onClick={onAddTime}
-                        className="h-12 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-secondary/40 rounded-none transition-all group"
+                        className="h-10 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-secondary/40 rounded-none transition-all group"
                     >
                         <div className="flex items-center gap-3">
                             <Plus className="h-4 w-4 text-secondary group-hover:scale-110 transition-transform" />

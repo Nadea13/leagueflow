@@ -24,8 +24,8 @@ export function MatchTimer({ time, readOnly: _readOnly = false, customText, adde
                 </div>
             </div>
             {addedTime && (
-                <div className="px-3 py-1 bg-secondary text-black text-[9px] font-black uppercase tracking-widest skew-x-[-12deg]">
-                    <span className="skew-x-[12deg] inline-block">+{addedTime} MIN ADDED</span>
+                <div className="px-3 py-1 bg-secondary text-black text-[9px] font-black uppercase tracking-widest">
+                    +{addedTime} MIN ADDED
                 </div>
             )}
         </div>

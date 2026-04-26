@@ -17,21 +17,16 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500/50 via-red-500 to-red-500/50" />
-                
-                <DialogHeader className="p-8 pb-4">
-                    <DialogTitle className="flex items-center gap-4 text-2xl font-black uppercase tracking-tighter text-foreground">
-                        <div className="p-2 bg-red-500/10 border border-red-500/20">
+                <DialogHeader className="p-4 md:p-6">
+                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black uppercase tracking-tighter text-foreground">
+                        <div className="p-2 md:p-3 bg-red-500/10 border border-red-500/20">
                             <AlertTriangle className="h-6 w-6 text-red-500" />
                         </div>
                         {t("walkover")}
                     </DialogTitle>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mt-2">SELECT WINNING TEAM FOR FORFEIT</p>
                 </DialogHeader>
 
-                <div className="px-8 py-6 relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 -rotate-12 translate-x-12 -translate-y-12 pointer-events-none" />
-
+                <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-4 md:space-y-6 relative">
                     <div className="grid grid-cols-2 gap-4 relative z-10">
                         <Button
                             type="button"
@@ -62,16 +57,16 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                             </span>
                         </Button>
                     </div>
-                </div>
 
-                <div className="p-4 bg-foreground/5 border-t border-foreground/5">
-                    <Button 
-                        variant="ghost" 
-                        onClick={() => onOpenChange(false)}
-                        className="w-full text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
-                    >
-                        CANCEL
-                    </Button>
+                    <div className="pt-2 md:pt-3">
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => onOpenChange(false)}
+                            className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
+                        >
+                            {t("cancel") || "CANCEL"}
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
