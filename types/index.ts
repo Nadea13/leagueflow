@@ -111,7 +111,7 @@ export interface GlobalPlayer {
     created_at: string;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury';
+export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover';
 
 export interface MatchEvent {
     id: string;

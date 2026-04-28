@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/routing";
+import { useMatchEvents } from "@/hooks/use-match-events";
+import { useMatchTimer } from "@/hooks/use-match-timer";
 import { createClient } from "@/lib/supabase/client";
 import {
     AlertDialog,
@@ -41,6 +43,17 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     // --- Realtime Sync State ---
     const [match, setMatchState] = useState<Match>(initialMatch);
 
+    // Live Timer Logic
+    const isLiveStatus = match.status === 'live';
+    const { events } = useMatchEvents(match.id, tournamentId, undefined, true);
+    const { time: liveTime } = useMatchTimer(match, tournamentId, events);
+
+    const formatSeconds = (totalSeconds: number) => {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     // Update local state if prop changes
     useEffect(() => {
         setMatchState(initialMatch);
@@ -52,7 +65,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
         const channel = supabase
             .channel(`match-card-${match.id}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload: { new: Match }) => {
-                setMatchState(payload.new);
+                setMatchState(prev => ({ ...prev, ...payload.new }));
                 // No router.refresh() here to avoid full page reloads on every card update, local state is enough for the card itself
             })
             .subscribe();
@@ -123,18 +136,14 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 "flex flex-col md:grid md:grid-cols-[150px_1fr_150px] items-center px-4 md:px-6 py-2 md:py-4 transition-all cursor-pointer group relative overflow-hidden",
                 isFinished ? "bg-[#050505]/60" : "bg-card hover:bg-card/50",
                 "gap-4",
-                isLive && "bg-secondary/5"
             )}
         >
-            {/* Live Indicator Bar */}
-            {isLive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-secondary animate-pulse" />}
-
             {/* 1. Status/Time/Badge Section */}
             <div className="flex flex-col items-center justify-center w-full md:w-auto gap-2 min-w-[120px]">
                 {status !== 'scheduled' && (
                     <div
                         className={cn(
-                            "uppercase text-[9px] tracking-[0.2em] font-black px-3 py-1 border-l-2",
+                            "uppercase text-[9px] tracking-[0.2em] font-black px-3 py-1",
                             status === 'scheduled' && "text-muted-foreground/40 border-muted-foreground/20",
                             isLive && "text-secondary border-secondary animate-pulse",
                             isFinished && "text-muted-foreground/60 border-muted-foreground/30",
@@ -144,13 +153,10 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         {!match.away_team_id ? t("scheduled") : (
                             isLive ? (
                                 <span className="flex items-center gap-2">
-                                    <span className="relative flex h-1.5 w-1.5">
+                                    <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-secondary opacity-75"></span>
-                                        <span className="relative inline-flex rounded-none h-1.5 w-1.5 bg-secondary"></span>
+                                        <span className="relative inline-flex rounded-none h-2 w-2 bg-secondary"></span>
                                     </span>
-                                    {match.current_minute ? (
-                                        typeof match.current_minute === 'number' ? `${match.current_minute}'` : match.current_minute
-                                    ) : t("live")}
                                 </span>
                             ) : (
                                 isFinished ? t("ft") : t("scheduled")
@@ -249,6 +255,11 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (
                                     <span className="text-[8px] font-black uppercase tracking-tighter mt-1 opacity-60">
                                         ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PK)
+                                    </span>
+                                )}
+                                {isLiveStatus && (
+                                    <span className="text-[10px] font-black text-secondary mt-1 tabular-nums">
+                                        {formatSeconds(liveTime)}
                                     </span>
                                 )}
                             </div>

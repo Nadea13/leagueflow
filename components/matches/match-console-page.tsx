@@ -128,9 +128,37 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const isHomeTeam = (id: string) => id === match.home_team_id || id === match.home_team?.id;
     const isAwayTeam = (id: string) => id === match.away_team_id || id === match.away_team?.id;
 
-    const homeScore = events.filter((e: MatchEvent) => e.team_id && isHomeTeam(e.team_id) && e.event_type === 'goal').length;
-    const awayScore = events.filter((e: MatchEvent) => e.team_id && isAwayTeam(e.team_id) && e.event_type === 'goal').length;
+    const homeScore = match.status === 'finished' ? (match.home_score ?? 0) : events.filter((e: MatchEvent) => e.team_id && isHomeTeam(e.team_id) && e.event_type === 'goal').length;
+    const awayScore = match.status === 'finished' ? (match.away_score ?? 0) : events.filter((e: MatchEvent) => e.team_id && isAwayTeam(e.team_id) && e.event_type === 'goal').length;
     const allPlayers = [...homePlayers, ...awayPlayers];
+
+    // --- Score Sync to DB (for MatchCard) ---
+    useEffect(() => {
+        if (readOnly || match.status === 'finished') return;
+        
+        // Only sync if scores differ from DB values
+        if (homeScore !== (match.home_score ?? 0) || awayScore !== (match.away_score ?? 0)) {
+            const syncScore = setTimeout(() => {
+                updateMatch(match.id, { home_score: homeScore, away_score: awayScore }, tournamentId);
+            }, 500); 
+            return () => clearTimeout(syncScore);
+        }
+    }, [homeScore, awayScore, match.home_score, match.away_score, match.id, tournamentId, readOnly, match.status]);
+
+    // --- Timer Sync to DB (for MatchCard) ---
+    useEffect(() => {
+        if (readOnly || match.status !== 'live' || !isRunning) return;
+
+        const currentMinute = Math.floor(time / 60) + 1;
+        
+        // Only sync if minute changed and it's different from DB
+        if (currentMinute !== match.current_minute) {
+            const syncTimer = setTimeout(() => {
+                updateMatch(match.id, { current_minute: currentMinute }, tournamentId);
+            }, 1000); // Small delay to avoid hammering DB if time jumps
+            return () => clearTimeout(syncTimer);
+        }
+    }, [time, isRunning, match.status, match.current_minute, match.id, tournamentId, readOnly]);
 
     // --- Handlers ---
     const handleStartMatch = async () => {
@@ -148,7 +176,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
 
         try {
             if (resolvedTeamId) {
-                const res = await addEvent(null, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
+                const res = await addEvent(resolvedTeamId, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
                 if (!res.success) throw new Error(`${res.error || "Failed to add kick-off"} (Team: ${resolvedTeamId})`);
             } else {
                 throw new Error("Missing team IDs for kick-off");
@@ -185,7 +213,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
 
         try {
             if (resolvedTeamId) {
-                const res = await addEvent(null, 'match_paused', currentMinute, null, {}, "Match Paused");
+                const res = await addEvent(resolvedTeamId, 'match_paused', currentMinute, null, {}, "Match Paused");
                 if (!res.success) throw new Error(`${res.error || "Failed to add match pause"} (Team: ${resolvedTeamId})`);
             }
             // Clear any 'add_time' events when pausing, so it's reset for the next resumption
@@ -225,7 +253,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
 
         try {
             if (resolvedTeamId) {
-                const res = await addEvent(null, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
+                const res = await addEvent(resolvedTeamId, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
                 if (!res.success) throw new Error(`${res.error || "Failed to add match resume"} (Team: ${resolvedTeamId})`);
             }
             const updateRes = await updateMatch(match.id, { timer_status: 'playing', current_minute: Math.floor(time / 60) + 1 }, tournamentId);
@@ -247,7 +275,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const handleEndMatch = async () => {
         if (!confirm(t("confirm_end"))) return;
         const currentMinute = Math.floor(time / 60) + 1;
-        await addEvent(null, 'full_time', currentMinute, null, {}, "Full Time");
+        const teamId = match.home_team_id || match.away_team_id;
+        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
+        await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
         setIsRunning(false);
         await updateMatch(match.id, { status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute }, tournamentId);
     };
@@ -255,9 +285,29 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const handleWalkover = async (winnerId: string) => {
         if (!confirm(t("confirm_walkover"))) return;
         const isHomeWinner = winnerId === match.home_team_id;
-        await updateMatch(match.id, { status: 'finished', home_score: isHomeWinner ? 3 : 0, away_score: isHomeWinner ? 0 : 3, winner_id: winnerId }, tournamentId);
-        setWoDialogOpen(false);
-        router.refresh();
+        
+        try {
+            // Add walkover event
+            await addEvent(winnerId, 'walkover', 0, null, { winner_id: winnerId }, `Walkover Victory (${isHomeWinner ? '3-0' : '0-3'})`);
+            
+            await updateMatch(match.id, { 
+                status: 'finished', 
+                home_score: isHomeWinner ? 3 : 0, 
+                away_score: isHomeWinner ? 0 : 3, 
+                winner_id: winnerId,
+                current_minute: 0
+            }, tournamentId);
+            
+            setWoDialogOpen(false);
+            router.refresh();
+        } catch (error) {
+            console.error("Walkover error:", error);
+            toast({
+                title: "Error recording walkover",
+                description: "Please try again",
+                variant: "destructive"
+            });
+        }
     };
 
     const handleUndo = async () => {
@@ -498,7 +548,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 rounded-none transition-all group"
                                     >
                                         <Ban className="h-4 w-4 text-red-500/50 group-hover:text-red-500" />
-                                        <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-red-500/70 group-hover:text-red-500">WO {t("walkover")}</span>
+                                        <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-red-500/70 group-hover:text-red-500">{t("walkover")}</span>
                                     </Button>
                                 </div>
                             </div>
@@ -518,7 +568,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                         }}
                         timerTime={time}
                         timerReadOnly={readOnly || match.status === 'finished'}
-                        timerCustomText={match.status === 'finished' ? (match.current_minute || "FT") : null}
+                        timerCustomText={match.status === 'finished' ? "FT" : null}
                         addedTime={isRunning ? addedTime : null}
                     />
 
@@ -552,7 +602,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             <SetTimeDialog open={setTimeDialogOpen} onOpenChange={setSetTimeDialogOpen} currentTime={time} onSave={handleSetTime} />
             <AddTimeDialog open={addTimeDialogOpen} onOpenChange={setAddTimeDialogOpen} onSave={(mins) => {
                 const minute = Math.floor(time / 60) + 1;
-                addEvent(null, 'add_time', minute, null, { added_minutes: mins }, `+${mins} min`);
+                const teamId = match.home_team_id || match.away_team_id;
+                const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
+                addEvent(resolvedTeamId!, 'add_time', minute, null, { added_minutes: mins }, `+${mins} min`);
                 setAddTimeDialogOpen(false);
             }} />
         </div>

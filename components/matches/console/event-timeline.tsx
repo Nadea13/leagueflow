@@ -44,7 +44,8 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                     ) : (
                         events.map((event: any) => {
                             const evtConfig = EVENT_TYPES.find(e => e.type === event.event_type);
-                            const isNeutral = !event.team_id;
+                            const globalEventTypes = ['kick_off', 'half_time', 'full_time', 'match_paused', 'match_resumed', 'add_time'];
+                            const isNeutral = !event.team_id || globalEventTypes.includes(event.event_type);
                             const isHome = !isNeutral && event.team_id === match.home_team_id;
                             const accentColor = isNeutral ? 'bg-foreground/20' :
                                              event.event_type === 'red_card' ? 'bg-red-500' : 
