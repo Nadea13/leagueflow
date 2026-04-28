@@ -1,6 +1,7 @@
 "use client";
 
 import { Match, Team } from "@/types/index";
+import { cn } from "@/lib/utils";
 import { Standings as StandingsTable } from "./standings";
 import { calculateStandings } from "@/lib/standings";
 import { useTranslations } from "next-intl";
@@ -11,9 +12,10 @@ interface StandingsGroupsProps {
     teams: Team[];
     matches: Match[];
     isPublic?: boolean;
+    columns?: 1 | 2;
 }
 
-export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }: StandingsGroupsProps) {
+export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, columns = 2 }: StandingsGroupsProps) {
     // 1. Group teams by group_name
     const teamsByGroup = teams.reduce((acc, team) => {
         const group = team.group_name || "Unassigned";
@@ -40,7 +42,10 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false }:
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <div id="group-standings-canvas" className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
+            <div id="group-standings-canvas" className={cn(
+                "grid grid-cols-1 gap-4 md:gap-6",
+                columns === 2 && "xl:grid-cols-2"
+            )}>
                 {sortedGroups.map((group) => {
                     const groupTeams = teamsByGroup[group];
                     // Filter matches relevant to this group
