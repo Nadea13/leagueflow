@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getPlayers } from "@/app/[locale]/organizer/tournaments/[id]/player-actions";
-import { updateMatch } from "@/app/[locale]/organizer/tournaments/[id]/actions";
+import { updateMatch, advanceStage } from "@/app/[locale]/organizer/tournaments/[id]/actions";
 import { getPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/penalty-actions";
 import { createClient } from "@/lib/supabase/client";
 
@@ -280,6 +280,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
         setIsRunning(false);
         await updateMatch(match.id, { status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute }, tournamentId);
+        
+        // Auto-advance if possible
+        await advanceStage(tournamentId);
     };
 
     const handleWalkover = async (winnerId: string) => {
@@ -297,6 +300,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 winner_id: winnerId,
                 current_minute: 0
             }, tournamentId);
+
+            // Auto-advance if possible
+            await advanceStage(tournamentId);
             
             setWoDialogOpen(false);
             router.refresh();

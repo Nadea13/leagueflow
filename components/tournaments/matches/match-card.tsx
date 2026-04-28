@@ -214,10 +214,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                             </div>
                         ) : (
                             <>
-                                <span className={cn(
-                                    "line-clamp-1 py-1 px-2 text-foreground",
-                                    (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) && "bg-secondary/10"
-                                )}>
+                                <span className="line-clamp-1 py-1 px-2 text-foreground">
                                     {match.home_team?.name || tMatch("tbd")}
                                 </span>
                                 {match.home_team?.logo_url ? (
@@ -268,11 +265,6 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-secondary transition-colors">
                                     {formatTime(match.match_time) || "--:--"}
                                 </span>
-                                {match.match_date && (
-                                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.1em] mt-1 leading-none">
-                                        {formatDate(match.match_date, "d MMM", locale)}
-                                    </span>
-                                )}
                             </div>
                         )}
                     </div>
@@ -312,10 +304,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                         </span>
                                     </div>
                                 )}
-                                <span className={cn(
-                                    "line-clamp-1 py-1 px-2 text-foreground",
-                                    (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) && "bg-secondary/10"
-                                )}>
+                                <span className="line-clamp-1 py-1 px-2 text-foreground">
                                     {match.away_team?.name || tMatch("tbd")}
                                 </span>
                             </>
