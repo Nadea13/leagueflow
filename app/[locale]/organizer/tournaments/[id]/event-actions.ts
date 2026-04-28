@@ -153,6 +153,24 @@ export async function addMatchEvent(
                 .update({ extra_info: { ...extraInfo, linked_goal_id: goalRes.data.id } })
                 .eq("id", eventData.id);
         }
+
+        // --- Live Score Sync ---
+        // Fetch all goals for this match to get the definitive score
+        const { data: goalEvents } = await supabase
+            .from("match_events")
+            .select("team_id")
+            .eq("match_id", matchId)
+            .eq("event_type", "goal");
+
+        if (goalEvents) {
+            // We need to know which team is home/away to update correctly
+            const { data: match } = await supabase.from("matches").select("home_team_id, away_team_id").eq("id", matchId).single();
+            if (match) {
+                const home_score = goalEvents.filter(e => e.team_id === match.home_team_id).length;
+                const away_score = goalEvents.filter(e => e.team_id === match.away_team_id).length;
+                await supabase.from("matches").update({ home_score, away_score }).eq("id", matchId);
+            }
+        }
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
@@ -182,6 +200,9 @@ export async function deleteMatchEvent(eventId: string, tournamentId: string): P
         await deleteGoal(event.extra_info.linked_goal_id, tournamentId);
     }
 
+    const isGoal = event.event_type === 'goal';
+    const matchId = event.match_id;
+
     // 3. Delete the event
     const { error } = await supabase
         .from("match_events")
@@ -190,6 +211,23 @@ export async function deleteMatchEvent(eventId: string, tournamentId: string): P
 
     if (error) {
         return { success: false, error: error.message };
+    }
+
+    // --- Live Score Sync (On Delete) ---
+    if (isGoal) {
+        const { data: goalEvents } = await supabase
+            .from("match_events")
+            .select("team_id")
+            .eq("match_id", matchId)
+            .eq("event_type", "goal");
+
+        const { data: match } = await supabase.from("matches").select("home_team_id, away_team_id").eq("id", matchId).single();
+        
+        if (match) {
+            const home_score = goalEvents?.filter(e => e.team_id === match.home_team_id).length || 0;
+            const away_score = goalEvents?.filter(e => e.team_id === match.away_team_id).length || 0;
+            await supabase.from("matches").update({ home_score, away_score }).eq("id", matchId);
+        }
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);

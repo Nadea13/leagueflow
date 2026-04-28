@@ -13,7 +13,8 @@ import {
     CheckCircle2,
     Coffee,
     Flag,
-    Stethoscope
+    Stethoscope,
+    Ban
 } from "lucide-react";
 import { EventType } from "@/types";
 
@@ -34,4 +35,5 @@ export const EVENT_TYPES: { type: EventType; label: string; icon: React.ElementT
     { type: 'match_paused', label: 'match_paused', icon: Pause, color: 'text-amber-500' },
     { type: 'match_resumed', label: 'match_resumed', icon: Play, color: 'text-green-500' },
     { type: 'add_time', label: 'add_time', icon: Clock, color: 'text-secondary' },
+    { type: 'walkover', label: 'walkover', icon: Ban, color: 'text-red-500' },
 ];
