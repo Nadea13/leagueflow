@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Match, Team } from "@/types/index";
 import { MatchCard } from "@/components/tournaments/matches/match-card";
@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Calendar, ArrowRight, Check } from "lucide-react";
+import { Calendar, ArrowRight, Check, ChevronDown, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import {
@@ -46,6 +46,7 @@ export function MatchManager({ matches, teams, tournamentId, format, isPro = fal
     const tBracket = useTranslations("Bracket");
     const [isEditMode, setIsEditMode] = useState(false);
     const [filterStage, setFilterStage] = useState<string>("all");
+    const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
     const [isAdvancing, setIsAdvancing] = useState(false);
     const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
 
@@ -53,21 +54,34 @@ export function MatchManager({ matches, teams, tournamentId, format, isPro = fal
 
     // Filter Logic
     const filteredMatches = matches.filter(match => {
+        // Stage Filter
         if (filterStage === "all") return true;
-
         if (filterStage.startsWith("Group")) {
             const groupLetter = filterStage.split(" ")[1];
-            // Match must be in 'group' stage AND involve a team from that group (or both)
             if (match.stage !== 'group') return false;
-
             const homeGroup = teams.find(t => t.id === match.home_team_id)?.group_name;
             const awayGroup = teams.find(t => t.id === match.away_team_id)?.group_name;
-
             return homeGroup === groupLetter || awayGroup === groupLetter;
         }
-
         return match.stage === filterStage;
     });
+
+    const toggleDate = (date: string) => {
+        setExpandedDates(prev => {
+            const next = new Set(prev);
+            if (next.has(date)) next.delete(date);
+            else next.add(date);
+            return next;
+        });
+    };
+
+    // Auto-expand first date if nothing is expanded
+    useEffect(() => {
+        if (expandedDates.size === 0 && filteredMatches.length > 0) {
+            const firstDate = filteredMatches.sort((a, b) => (a.match_date || "") > (b.match_date || "") ? 1 : -1)[0].match_date;
+            if (firstDate) setExpandedDates(new Set([firstDate]));
+        }
+    }, [filteredMatches, expandedDates.size]);
 
 
 
@@ -154,6 +168,18 @@ export function MatchManager({ matches, teams, tournamentId, format, isPro = fal
                                     format={format}
                                     className="h-10 w-auto px-4 text-[11px]"
                                 />
+                                <Button
+                                    onClick={() => setAdvanceDialogOpen(true)}
+                                    disabled={isAdvancing}
+                                    className="h-10 px-4 bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all text-[11px]"
+                                >
+                                    {isAdvancing ? tFixtures("generating") : (
+                                        <span className="flex items-center gap-2">
+                                            <ArrowRight className="h-3.5 w-3.5" />
+                                            {tFixtures("proceed_knockout")}
+                                        </span>
+                                    )}
+                                </Button>
                                 <ExportToImageButton
                                     targetId="fixtures-canvas"
                                     filename="fixtures"
@@ -173,86 +199,93 @@ export function MatchManager({ matches, teams, tournamentId, format, isPro = fal
                             />
                         ) : (
                             (() => {
-                                const groups = filteredMatches.reduce((acc: Record<string, Match[]>, match) => {
-                                    const isKnockout = match.stage !== 'group' && match.stage !== 'league';
-                                    const key = isKnockout ? match.stage : 'group_stage';
-                                    if (!acc[key]) acc[key] = [];
-                                    acc[key].push(match);
+                                // Group by Date first
+                                const dateGroups = filteredMatches.reduce((acc: Record<string, Match[]>, match) => {
+                                    const dateKey = match.match_date || "tbd";
+                                    if (!acc[dateKey]) acc[dateKey] = [];
+                                    acc[dateKey].push(match);
                                     return acc;
                                 }, {});
 
-                                const sortedKeys = Object.keys(groups).sort((a, b) => {
-                                    if (a === 'group_stage') return -1;
-                                    if (b === 'group_stage') return 1;
+                                const sortedDates = Object.keys(dateGroups).sort();
 
-                                    const aRound = groups[a][0].round || 0;
-                                    const bRound = groups[b][0].round || 0;
-                                    return aRound - bRound;
-                                });
+                                return sortedDates.map((dateKey) => {
+                                    const dayMatches = dateGroups[dateKey];
+                                    const isExpanded = expandedDates.has(dateKey);
 
-                                return sortedKeys.map((key) => {
-                                    const stageMatches = groups[key];
-                                    const stage = stageMatches[0].stage;
+                                    // Sub-group by Stage within each day
+                                    const stageGroups = dayMatches.reduce((acc: Record<string, Match[]>, match) => {
+                                        const stageKey = match.stage || "unknown";
+                                        if (!acc[stageKey]) acc[stageKey] = [];
+                                        acc[stageKey].push(match);
+                                        return acc;
+                                    }, {});
 
-                                    let headerText = "";
-                                    if (key === 'group_stage') {
-                                        headerText = "";
-                                    } else {
-                                        if (stage === 'round_of_16') headerText = tBracket("round_of_16");
-                                        else if (stage === 'quarter_final') headerText = tBracket("quarter_final");
-                                        else if (stage === 'semi_final') headerText = tBracket("semi_final");
-                                        else if (stage === 'final') headerText = tBracket("final");
-                                        else headerText = stage?.replace('_', ' ').toUpperCase() || "";
-                                    }
+                                    const sortedStages = Object.keys(stageGroups).sort((a, b) => {
+                                        const order = ['group', 'round_of_64', 'round_of_32', 'round_of_16', 'quarter_final', 'semi_final', 'final'];
+                                        return order.indexOf(a) - order.indexOf(b);
+                                    });
 
                                     return (
-                                        <div key={key} className="space-y-4 md:space-y-6">
-                                            {headerText && (
-                                                <div className="flex items-center gap-2 md:gap-3">
-                                                    <div className="h-px bg-secondary/30 flex-1" />
-                                                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-secondary">
-                                                        {headerText}
-                                                    </h3>
-                                                    <div className="h-px bg-secondary/30 flex-1" />
+                                        <div key={dateKey} className="space-y-0 border border-foreground/5 overflow-hidden">
+                                            {/* Date Header / Dropdown Toggle */}
+                                            <button
+                                                onClick={() => toggleDate(dateKey)}
+                                                className="w-full flex items-center justify-between px-4 py-3 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Calendar className="h-4 w-4 text-secondary/70" />
+                                                    <span className="text-xs font-black uppercase tracking-widest text-foreground">
+                                                        {dateKey === "tbd" ? tMatch("tbd") : new Date(dateKey).toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-muted-foreground/40 ml-2">
+                                                        ({dayMatches.length} {tFixtures("matches") || "Matches"})
+                                                    </span>
                                                 </div>
-                                            )}
-                                            <div className="space-y-[1px] bg-card border">
-                                                {[...stageMatches]
-                                                    .sort((a, b) => {
-                                                        if (a.round !== b.round) return (a.round || 0) - (b.round || 0);
-                                                        if (a.match_date !== b.match_date) return (a.match_date || "") > (b.match_date || "") ? 1 : -1;
-                                                        if (a.match_time !== b.match_time) return (a.match_time || "") > (b.match_time || "") ? 1 : -1;
-                                                        return 0;
-                                                    })
-                                                    .map((match) => (
-                                                        <div key={match.id} className="relative group overflow-hidden">
-                                                            <MatchCard
-                                                                match={match}
-                                                                tournamentId={tournamentId}
-                                                                isEditMode={isEditMode}
-                                                                teams={teams}
-                                                            />
-                                                        </div>
-                                                    ))
-                                                }
-                                            </div>
+                                                {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground/40" /> : <ChevronRight className="h-4 w-4 text-muted-foreground/40" />}
+                                            </button>
 
-                                            {/* Proceed to Knockout Button - Styled for Sidebar potentially, but keep here for now if matches are listed */}
-                                            {key === 'group_stage' && matches.some(m => m.stage === 'group') && !matches.some(m => m.stage !== 'group' && m.stage !== 'league') && (
-                                                <div className="flex justify-end pt-4 md:pt-6">
-                                                    <Button
-                                                        onClick={() => setAdvanceDialogOpen(true)}
-                                                        disabled={isAdvancing}
-                                                        className="h-12 px-10 bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 shadow-lg shadow-secondary/10 group transition-all"
-                                                    >
-                                                        {isAdvancing ? tFixtures("generating") : (
-                                                            <span className="flex items-center gap-3">
-                                                                <Check className="h-4 w-4" />
-                                                                {tFixtures("proceed_knockout")}
-                                                                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                                            </span>
-                                                        )}
-                                                    </Button>
+                                            {/* Collapsible Content */}
+                                            {isExpanded && (
+                                                <div className="divide-y divide-foreground/5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    {sortedStages.map((stageKey) => {
+                                                        const stageMatches = stageGroups[stageKey];
+                                                        
+                                                        // Determine stage label
+                                                        let stageLabel = "";
+                                                        if (stageKey === 'round_of_16') stageLabel = tBracket("round_of_16");
+                                                        else if (stageKey === 'quarter_final') stageLabel = tBracket("quarter_final");
+                                                        else if (stageKey === 'semi_final') stageLabel = tBracket("semi_final");
+                                                        else if (stageKey === 'final') stageLabel = tBracket("final");
+                                                        else if (stageKey === 'group') stageLabel = tMatch("group");
+                                                        else stageLabel = stageKey.replace('_', ' ').toUpperCase();
+
+                                                        return (
+                                                            <div key={stageKey} className="space-y-0">
+                                                                {/* Only show stage header if there are multiple stages on this day OR it's not the default 'group' */}
+                                                                {(sortedStages.length > 1) && (
+                                                                    <div className="px-4 py-2 bg-foreground/[0.01] border-b border-foreground/5">
+                                                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-secondary/60">
+                                                                            {stageLabel}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                                <div className="divide-y divide-foreground/5">
+                                                                    {stageMatches
+                                                                        .sort((a, b) => (a.match_time || "") > (b.match_time || "") ? 1 : -1)
+                                                                        .map((match) => (
+                                                                            <MatchCard
+                                                                                key={match.id}
+                                                                                match={match}
+                                                                                tournamentId={tournamentId}
+                                                                                isEditMode={isEditMode}
+                                                                                teams={teams}
+                                                                            />
+                                                                        ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
