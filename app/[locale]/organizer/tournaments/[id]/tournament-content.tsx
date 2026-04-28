@@ -316,39 +316,87 @@ export function TournamentContent({
                 {/* Overview Tab */}
                 <TabsContent value="overview" className="space-y-4 md:space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
-                        {/* Left Column: Main Tournament Data (Spans 2) */}
-                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
-
-                            {/* 1. League Table (For 'league' AND 'league_ha') */}
-                            {(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                <div className="space-y-4 md:space-y-6">
+                        {/* Right Column: Sidebar (Actions & Announcements) - First in DOM for mobile top priority */}
+                        <div className="lg:col-span-1 space-y-4 md:space-y-6 lg:order-2">
+                            {tournament?.status !== 'draft' && (
+                                <>
+                                    {/* Action Bar Header */}
                                     <div className="flex flex-col gap-1">
                                         <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <Trophy className="h-5 w-5 text-secondary" />
-                                            {t("standings")}
+                                            <Settings className="h-5 w-5 text-secondary" />
+                                            {t("actions")}
                                         </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("group_standings_desc") || "League table"}</p>
                                     </div>
-                                    <div className="bg-background border rounded-none relative overflow-hidden hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                        <Standings standings={calculatedStandings} />
-                                    </div>
-                                </div>
+
+                                    {/* Public Link Card */}
+                                    <Card className="bg-card border rounded-none p-2 md:p-3">
+                                        <div className="space-y-2 md:space-y-3">
+                                            <div className="space-y-2 md:space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
+                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                                </div>
+                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
+                                                    {mounted ? registrationUrl : tCommon("loading") || "..."}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                                <Button
+                                                    variant="secondary"
+                                                    size="default"
+                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                    onClick={copyRegistrationLink}
+                                                >
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    {tCommon("copy_link")}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="default"
+                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                    onClick={() => window.open(registrationUrl, '_blank')}
+                                                >
+                                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                                    {tCommon("open_link")}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </>
                             )}
 
-                            {/* 2. Group Standings (Only for 'group_knockout') */}
-                            {tournament?.format === 'group_knockout' && (
-                                <div className="space-y-4 md:space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <Trophy className="h-5 w-5 text-secondary" />
-                                            {t("group_standings")}
-                                        </h2>
-                                    </div>
-                                    <div className="relative z-10">
-                                        <StandingsGroups teams={teams} matches={matches} />
-                                    </div>
+                            {/* Announcements Section */}
+                            <div className="space-y-4 md:space-y-6">
+                                <Announcements
+                                    tournamentId={id}
+                                    isEditable={userRole === 'admin' || userRole === 'editor'}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Left Column: Main Tournament Data (Spans 2) - Second in DOM, lg:order-1 for desktop left alignment */}
+                        <div className="lg:col-span-2 space-y-4 md:space-y-6 lg:order-1">
+
+                            {/* 1. Match Schedule */}
+                            <div className="space-y-4 md:space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <Calendar className="h-5 w-5 text-secondary" />
+                                        {t("match_schedule")}
+                                    </h2>
                                 </div>
-                            )}
+                                <div className="bg-background rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                    <MatchManager
+                                        teams={teams}
+                                        matches={matches}
+                                        tournamentId={id}
+                                        format={tournament?.format}
+                                        isPro={isPro}
+                                        hideControls={true}
+                                    />
+                                </div>
+                            </div>
 
                             {/* 3. Knockout Bracket (For 'knockout' OR 'group_knockout') */}
                             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
@@ -410,66 +458,6 @@ export function TournamentContent({
 
                             {/* 6. Banned Players Alert */}
                             <BannedPlayers bannedPlayers={bannedPlayers} />
-                        </div>
-
-                        {/* Right Column: Sidebar (Actions & Announcements) */}
-                        <div className="lg:col-span-1 space-y-4 md:space-y-6">
-                            {tournament?.status !== 'draft' && (
-                                <>
-                                    {/* Action Bar Header */}
-                                    <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <Settings className="h-5 w-5 text-secondary" />
-                                            {t("actions")}
-                                        </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("actions_desc")}</p>
-                                    </div>
-
-                                    {/* Public Link Card */}
-                                    <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3 shadow-xl shadow-black/20">
-                                        <div className="space-y-2 md:space-y-3">
-                                            <div className="space-y-2 md:space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
-                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
-                                                </div>
-                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
-                                                    {mounted ? registrationUrl : tCommon("loading") || "..."}
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                                <Button
-                                                    variant="secondary"
-                                                    size="default"
-                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
-                                                    onClick={copyRegistrationLink}
-                                                >
-                                                    <Copy className="h-4 w-4 mr-2" />
-                                                    {tCommon("copy_link")}
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="default"
-                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
-                                                    onClick={() => window.open(registrationUrl, '_blank')}
-                                                >
-                                                    <ExternalLink className="h-4 w-4 mr-2" />
-                                                    {tCommon("open_link")}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                </>
-                            )}
-
-                            {/* Announcements Section */}
-                            <div className="space-y-4 md:space-y-6">
-                                <Announcements
-                                    tournamentId={id}
-                                    isEditable={userRole === 'admin' || userRole === 'editor'}
-                                />
-                            </div>
                         </div>
                     </div>
                 </TabsContent>
@@ -627,6 +615,7 @@ export function TournamentContent({
                                         teams={teams}
                                         matches={matches}
                                         tournamentId={id}
+                                        format={tournament?.format}
                                         isPro={isPro}
                                     />
                                 ) : (
@@ -641,55 +630,30 @@ export function TournamentContent({
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
                                     <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <Settings className="h-5 w-5 text-secondary" />
-                                        {t("control_center")}
+                                        <Trophy className="h-5 w-5 text-secondary" />
+                                        {t("standings")}
                                     </h3>
                                 </div>
 
-                                <Card className="bg-card border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
-                                    <div className="space-y-2 md:space-y-3">
-                                        <MatchGenerator
+                                <div className="space-y-4 md:space-y-6">
+                                    {(tournament?.format === 'league' || tournament?.format === 'league_ha') ? (
+                                        <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                            <Standings standings={calculatedStandings} />
+                                        </div>
+                                    ) : (
+                                        <div className="relative z-10">
+                                            <StandingsGroups teams={teams} matches={matches} columns={1} />
+                                        </div>
+                                    )}
+
+                                    {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
+                                        <ProgressionLogic
                                             tournamentId={id}
-                                            hasFixtures={hasFixtures}
-                                            format={tournament?.format}
-                                            className="h-10 font-black uppercase tracking-tighter text-sm"
+                                            matches={matches}
+                                            format={tournament?.format || 'league'}
                                         />
-
-                                        {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                            <ProgressionLogic
-                                                tournamentId={id}
-                                                matches={matches}
-                                                format={tournament?.format || 'league'}
-                                            />
-                                        )}
-                                    </div>
-                                </Card>
-
-                                {/* Extra Information / Status */}
-                                <Card className="bg-card border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-2 md:p-3">
-                                    <div className="space-y-2 md:space-y-3">
-                                        <div className="space-y-1 border-b border-foreground/5 pb-2 md:pb-3">
-                                            <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest flex justify-between items-center">
-                                                Status:
-                                                <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black uppercase px-3 py-1">
-                                                    {tournament?.status?.toUpperCase()}
-                                                </Badge>
-                                            </p>
-                                        </div>
-                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("format")}</span>
-                                            <span className="text-[11px] font-black uppercase tracking-widest text-foreground">
-                                                {tournament?.format?.replace('_', ' ').toUpperCase()}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Total Teams</span>
-                                            <span className="text-[11px] font-black uppercase tracking-widest text-secondary">
-                                                {teams.length}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </Card>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

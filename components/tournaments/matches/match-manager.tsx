@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Match, Team } from "@/types/index";
 import { MatchCard } from "@/components/tournaments/matches/match-card";
+import { MatchGenerator } from "@/components/tournaments/matches/match-generator";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -35,9 +36,10 @@ interface FixturesManagerProps {
     tournamentId: string;
     format?: string;
     isPro?: boolean;
+    hideControls?: boolean;
 }
 
-export function MatchManager({ matches, teams, tournamentId, isPro = false }: FixturesManagerProps) {
+export function MatchManager({ matches, teams, tournamentId, format, isPro = false, hideControls = false }: FixturesManagerProps) {
     const t = useTranslations("Tournament");
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
@@ -97,53 +99,69 @@ export function MatchManager({ matches, teams, tournamentId, isPro = false }: Fi
                     title={tFixtures("ready_to_start")}
                     description={tFixtures("generate_instruction")}
                     className="py-12 border"
+                    action={!hideControls && (
+                        <MatchGenerator
+                            tournamentId={tournamentId}
+                            hasFixtures={false}
+                            format={format}
+                            className="h-10 w-auto px-10"
+                        />
+                    )}
                 />
             ) : (
                 <>
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-card p-2 md:p-3 border">
-                        {/* Filter Area */}
-                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                            <div className="space-y-1">
-                                <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
-                                <Select value={filterStage} onValueChange={setFilterStage}>
-                                    <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold uppercase tracking-tighter text-xs">
-                                        <SelectValue placeholder={tMatch("round")} />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-card border-foreground/10 rounded-none">
-                                        <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                        <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")}</SelectItem>
-                                        <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} A</SelectItem>
-                                        <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} B</SelectItem>
-                                        <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} C</SelectItem>
-                                        <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} D</SelectItem>
-                                        <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
-                                        <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
-                                        <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("semi_final")}</SelectItem>
-                                        <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("final")}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                    {!hideControls && (
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-3 bg-card p-2 md:p-3 border">
+                            {/* Filter Area */}
+                            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
+                                    <Select value={filterStage} onValueChange={setFilterStage}>
+                                        <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold uppercase tracking-tighter text-xs">
+                                            <SelectValue placeholder={tMatch("round")} />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-card border-foreground/10 rounded-none">
+                                            <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                            <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")}</SelectItem>
+                                            <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} A</SelectItem>
+                                            <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} B</SelectItem>
+                                            <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} C</SelectItem>
+                                            <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} D</SelectItem>
+                                            <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
+                                            <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
+                                            <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("semi_final")}</SelectItem>
+                                            <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("final")}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-2 md:gap-3">
                             <div className="flex items-center gap-2 md:gap-3">
-                                <Switch
-                                    id="edit-mode"
-                                    checked={isEditMode}
-                                    onCheckedChange={setIsEditMode}
-                                    className="data-[state=checked]:bg-secondary"
+                                <div className="flex items-center gap-2 md:gap-3">
+                                    <Switch
+                                        id="edit-mode"
+                                        checked={isEditMode}
+                                        onCheckedChange={setIsEditMode}
+                                        className="data-[state=checked]:bg-secondary"
+                                    />
+                                    <Label htmlFor="edit-mode" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground cursor-pointer">
+                                        {t("edit_mode") || "Edit Mode"}
+                                    </Label>
+                                </div>
+                                <MatchGenerator
+                                    tournamentId={tournamentId}
+                                    hasFixtures={matches.length > 0}
+                                    format={format}
+                                    className="h-10 w-auto px-4 text-[11px]"
                                 />
-                                <Label htmlFor="edit-mode" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground cursor-pointer">
-                                    {t("edit_mode") || "Edit Mode"}
-                                </Label>
+                                <ExportToImageButton
+                                    targetId="fixtures-canvas"
+                                    filename="fixtures"
+                                    label={t("export") || "Export"}
+                                />
                             </div>
-                            <ExportToImageButton
-                                targetId="fixtures-canvas"
-                                filename="fixtures"
-                                label={t("export") || "Export"}
-                            />
                         </div>
-                    </div>
+                    )}
 
                     <div id="fixtures-canvas" className="space-y-4 md:space-y-6">
                         {filteredMatches.length === 0 ? (
@@ -151,7 +169,7 @@ export function MatchManager({ matches, teams, tournamentId, isPro = false }: Fi
                                 icon={Calendar}
                                 title={tFixtures("no_fixtures")}
                                 description="No fixtures found for the selected filter"
-                                className="py-12 border"
+                                className="py-10 border"
                             />
                         ) : (
                             (() => {
