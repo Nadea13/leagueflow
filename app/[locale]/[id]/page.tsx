@@ -6,6 +6,8 @@ import { Match, MatchEvent, Goal, Player } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { PublicTournamentShell } from "@/components/tournaments/public/public-tournament-shell";
+import { PublicFooter } from "@/components/layout/public-footer";
+import { getPlans } from "@/actions/admin/plans";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
@@ -25,6 +27,18 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function PublicViewPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const supabase = await createClient();
+
+    // 0. Fetch Plans for Footer
+    const [
+        { data: managerPlans },
+        { data: organizerPlans }
+    ] = await Promise.all([
+        getPlans({ role: 'manager' }),
+        getPlans({ role: 'organizer' })
+    ]);
+
+    const safeManagerPlans = managerPlans || [];
+    const safeOrganizerPlans = organizerPlans || [];
 
     // 1. Fetch Tournament
     const { data: tournament } = await supabase
@@ -100,7 +114,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
     const t = await getTranslations("PublicView");
 
     return (
-        <div className="min-h-screen bg-background overflow-x-hidden pt-16 print:pt-0">
+        <div className="min-h-screen bg-background overflow-x-hidden pt-16 print:pt-0 flex flex-col">
             {/* Navbar */}
             <nav className="border-b fixed top-0 border-slate-200 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -122,14 +136,18 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                 </div>
             </nav>
 
-            <PublicTournamentShell 
-                tournament={tournament}
-                initialTeams={teams || []}
-                initialMatches={matches as Match[] || []}
-                initialEvents={allEvents as MatchEvent[]}
-                initialGoals={initialGoals}
-                initialPlayers={initialPlayers as Player[]}
-            />
+            <main className="flex-1">
+                <PublicTournamentShell 
+                    tournament={tournament}
+                    initialTeams={teams || []}
+                    initialMatches={matches as Match[] || []}
+                    initialEvents={allEvents as MatchEvent[]}
+                    initialGoals={initialGoals}
+                    initialPlayers={initialPlayers as Player[]}
+                />
+            </main>
+
+            <PublicFooter managerPlans={safeManagerPlans} organizerPlans={safeOrganizerPlans} />
         </div>
     );
 }

@@ -1,7 +1,8 @@
-
 import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/components/matches/match-console-page";
 import { MatchEvent } from "@/types";
+import { PublicFooter } from "@/components/layout/public-footer";
+import { getPlans } from "@/actions/admin/plans";
 
 export default async function PublicMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,
@@ -10,6 +11,18 @@ export default async function PublicMatchConsole(props: {
     const { id, matchId } = await props.params;
     const resolvedParams = await props.searchParams;
     const fromTab = typeof resolvedParams.from === 'string' ? resolvedParams.from : 'fixtures';
+
+    // 0. Fetch Plans for Footer
+    const [
+        { data: managerPlans },
+        { data: organizerPlans }
+    ] = await Promise.all([
+        getPlans({ role: 'manager' }),
+        getPlans({ role: 'organizer' })
+    ]);
+
+    const safeManagerPlans = managerPlans || [];
+    const safeOrganizerPlans = organizerPlans || [];
 
     // We use admin client to bypass RLS for public view, standard practice in this repo
     const supabase = createAdminClient();
@@ -84,13 +97,18 @@ export default async function PublicMatchConsole(props: {
     }));
 
     return (
-        <MatchConsolePage
-            match={match}
-            tournamentId={id}
-            tournamentName={tournament?.name}
-            readOnly={true}
-            initialEvents={formattedEvents as MatchEvent[]}
-            backUrl={`/${id}?tab=${fromTab}`}
-        />
+        <div className="flex flex-col min-h-screen">
+            <div className="flex-1">
+                <MatchConsolePage
+                    match={match}
+                    tournamentId={id}
+                    tournamentName={tournament?.name}
+                    readOnly={true}
+                    initialEvents={formattedEvents as MatchEvent[]}
+                    backUrl={`/${id}?tab=${fromTab}`}
+                />
+            </div>
+            <PublicFooter managerPlans={safeManagerPlans} organizerPlans={safeOrganizerPlans} />
+        </div>
     );
 }
