@@ -176,7 +176,7 @@ export function MatchManager({ matches, teams, tournamentId, format, isPro = fal
                                     {isAdvancing ? tFixtures("generating") : (
                                         <span className="flex items-center gap-2">
                                             <ArrowRight className="h-3.5 w-3.5" />
-                                            {tFixtures("proceed_knockout")}
+                                            <span className="hidden md:inline">{tFixtures("proceed_knockout")}</span>
                                         </span>
                                     )}
                                 </Button>

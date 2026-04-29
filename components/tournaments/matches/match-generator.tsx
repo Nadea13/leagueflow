@@ -66,7 +66,7 @@ export function MatchGenerator({
     >
       {!hasFixtures && <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />}
       <Wand2 className={cn("mr-2 h-4 w-4 relative z-10", !hasFixtures && "animate-pulse")} />
-      <span className="relative z-10">{getButtonText()}</span>
+      <span className="relative z-10 hidden md:inline">{getButtonText()}</span>
     </Button>
   )
 }

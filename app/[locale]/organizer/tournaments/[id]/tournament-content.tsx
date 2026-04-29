@@ -603,8 +603,8 @@ export function TournamentContent({
                                         { value: 'list', label: t("list_view"), icon: List },
                                         { value: 'calendar', label: t("calendar_view"), icon: Calendar }
                                     ]}
-                                    className="h-10 border"
-                                    itemClassName="px-4"
+                                    className="h-10 border w-full md:w-auto"
+                                    itemClassName="flex-1 md:flex-none px-4"
                                 />
                             </div>
 
