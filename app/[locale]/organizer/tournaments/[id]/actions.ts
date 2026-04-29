@@ -416,7 +416,7 @@ export async function updateTournament(
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
-    const user = access.user;
+    // user removed as it's unused
 
     const supabase = await createClient();
     const formType = formData.get("form_type") as string;
@@ -682,7 +682,7 @@ export async function confirmPayment(
     const supabase = await createClient();
 
     // 1. Verify Payment Server-Side
-    let charge: any = null;
+    let charge: { status: string; metadata?: { tournament_id: string } } | null = null;
 
     if (paymentMethod === 'promptpay') {
         // For manual PromptPay, we trust the reference from the verified slip for now
@@ -1028,7 +1028,7 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
                     home_team_id: validWinners[i],
                     away_team_id: validWinners[i + 1],
                     round: startRound,
-                    stage: nextStage as any,
+                    stage: nextStage as Match['stage'],
                     status: 'scheduled',
                     is_manual: false,
                     home_score: null,
@@ -1135,7 +1135,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
     if (!currentRoundMatches || currentRoundMatches.length === 0) return;
 
     // Find index of current match in the list
-    const indexInRound = currentRoundMatches.findIndex((m: any) => m.id === match.id);
+    const indexInRound = currentRoundMatches.findIndex((m) => m.id === match.id);
     if (indexInRound === -1) return;
 
     // 2. Determine target match position in next round

@@ -1,6 +1,5 @@
 import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { getPlans } from "@/actions/admin/plans";
@@ -21,9 +20,7 @@ export default async function Home() {
   const safeManagerPlans = managerPlans || [];
   const safeOrganizerPlans = organizerPlans || [];
 
-  const t = await getTranslations('Home');
   const tLanding = await getTranslations('Landing');
-  const tPricing = await getTranslations('Pricing');
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

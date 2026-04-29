@@ -6,7 +6,6 @@ import { ActionResponse, TournamentStatus, SportType } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { ensureProfileExists } from "@/lib/profile";
 import { initTournamentStructure } from "@/lib/fixture-utils";
-import { getUserSubscriptionPlan } from "@/actions/common/user";
 
 export async function createTournament(_prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
     try {
@@ -39,7 +38,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         }
 
         // Check Pro Status for Team Limit
-        const isPro = true; // Pro locks removed for all users
+        // Pro locks removed for all users
 
         const { data: tournament, error } = await supabase.from("tournaments").insert({
             user_id: user.id,

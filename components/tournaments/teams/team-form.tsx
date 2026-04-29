@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Plus, Camera, Upload, Check } from "lucide-react";
+import { Camera, Upload, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addTeam } from "@/actions/organizer/tournaments/general";
 import { Link } from "@/i18n/routing";

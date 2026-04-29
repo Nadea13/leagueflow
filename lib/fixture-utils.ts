@@ -1,4 +1,4 @@
-import { ActionResponse, Match, TournamentTeam } from "@/types/index";
+import { ActionResponse, Match } from "@/types/index";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 export async function initTournamentStructure(tournamentId: string, supabase: SupabaseClient): Promise<ActionResponse> {

@@ -27,7 +27,6 @@ export default async function TournamentsPage({
     const userPlan = await getUserSubscriptionPlan();
     const isPro = true; // Pro locks removed
     const t = await getTranslations("Dashboard");
-    const tCommon = await getTranslations("Common");
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">

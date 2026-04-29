@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, Users, Settings, CreditCard, Mail, Shield, LucideIcon, Home } from "lucide-react"
+import { LayoutDashboard, Trophy, Users, Settings, Mail, Shield, LucideIcon, Home } from "lucide-react"
 
 export interface NavItem {
     titleKey: string

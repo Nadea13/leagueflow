@@ -57,8 +57,8 @@ export default async function MyTeamsPage() {
                             type="team" 
                             data={{
                                 ...team,
-                                tournament: (team.participations && (team.participations as any).length > 0) 
-                                    ? (team.participations as any)[0].tournament 
+                                tournament: (team.participations && (team.participations as Array<{ tournament: { name: string } }>).length > 0) 
+                                    ? (team.participations as Array<{ tournament: { name: string } }>)[0].tournament 
                                     : null
                             }} 
                             mode="team" 

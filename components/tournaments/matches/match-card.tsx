@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { formatDate } from "@/lib/date";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Eraser, ChevronRight } from "lucide-react";
+import { Eraser } from "lucide-react";
 import { Match, Team } from "@/types/index";
 import { updateMatch } from "@/actions/organizer/tournaments/general";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
-    const locale = useLocale();
+    const _locale = useLocale();
     const searchParams = useSearchParams();
 
     const [isLoading, setIsLoading] = useState(false);

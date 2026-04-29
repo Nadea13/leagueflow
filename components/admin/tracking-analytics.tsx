@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { AuditLog } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart3, TrendingUp, MousePointer2, Eye, Clock, Users } from "lucide-react";
+import { TrendingUp, MousePointer2, Eye, Clock } from "lucide-react";
 import { formatDate } from "@/lib/date";
 
 interface TrackingAnalyticsProps {
@@ -41,7 +41,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
     const topFeatures = useMemo(() => {
         const counts = new Map<string, number>();
         logs.filter(l => l.action === 'FEATURE_CLICK').forEach(log => {
-            const name = (log.details as any)?.feature_name || 'Unknown';
+            const name = (log.details as Record<string, any>)?.feature_name || 'Unknown';
             counts.set(name, (counts.get(name) || 0) + 1);
         });
 
@@ -61,7 +61,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
     const topPages = useMemo(() => {
         const counts = new Map<string, number>();
         logs.filter(l => l.action === 'PAGE_VIEW').forEach(log => {
-            const path = (log.details as any)?.path || '/';
+            const path = (log.details as Record<string, any>)?.path || '/';
             counts.set(path, (counts.get(path) || 0) + 1);
         });
 

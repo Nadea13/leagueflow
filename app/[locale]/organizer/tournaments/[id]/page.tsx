@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Match, Team, Goal } from "@/types/index";
+import { Match, Goal, TournamentTeam } from "@/types/index";
 import { TournamentContent } from "./tournament-content";
 import { getUserRole } from "@/actions/organizer/tournaments/collaborator";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
@@ -32,7 +32,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const tournament = tournamentData ? {
         ...tournamentData,
         plan: ((tournamentData as { payments?: { plan: string; status: string }[] }).payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament')) ? 'tournament' : 'free') as 'free' | 'tournament' | 'monthly' | 'yearly'
-    } as any : null;
+    } : null;
     const tournamentError = tournamentResult.error;
 
     if (tournamentError || !tournament) {
@@ -54,10 +54,10 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
 
     const allTeams = teamsResult.data || [];
     // Filter out teams that have a registration but are not PAID yet
-    const teams = allTeams.filter((t: any) => {
+    const teams = allTeams.filter((t) => {
         const registration = Array.isArray(t.registrations) ? t.registrations[0] : t.registrations;
         if (registration) {
-            return registration.payment_status === 'PAID';
+            return (registration as { payment_status: string }).payment_status === 'PAID';
         }
         return true; // Manual additions by organizer don't have registrations
     });
@@ -75,7 +75,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     }
 
     const userRole = roleRes.success && roleRes.data ? roleRes.data.role : null;
-    const isOwner = roleRes.success && roleRes.data ? roleRes.data.isOwner : false;
+    // isOwner removed as it's unused
 
     const isPro = true; // Pro locks removed for all users
 
@@ -83,7 +83,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         <TournamentContent
             tournament={tournament}
             initialMatches={matches as Match[] || []}
-            initialTeams={teams as any[] || []}
+            initialTeams={teams as (TournamentTeam & { team?: { user_id: string | null } })[] || []}
             initialGoals={tournamentGoals as Goal[]}
             userPlan={userPlan}
             initialIsPro={isPro}

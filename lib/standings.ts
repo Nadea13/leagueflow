@@ -1,6 +1,6 @@
 import { Match, Standing, Team } from "@/types/index";
 
-export function calculateStandings(teams: any[], matches: Match[]): Standing[] {
+export function calculateStandings(teams: Team[], matches: Match[]): Standing[] {
     const standingsMap = new Map<string, Standing>();
 
     // Initialize standings for all teams

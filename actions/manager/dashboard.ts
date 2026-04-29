@@ -27,7 +27,7 @@ export async function getUserTeams() {
         conditions.push(`tournament_id.in.(${ownedTournamentIds.join(',')})`);
     }
 
-    const { data: teams, error } = await query
+    const { data: teams } = await query
         .or(conditions.join(','))
         .order("created_at", { ascending: false });
 
