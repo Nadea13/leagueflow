@@ -386,7 +386,7 @@ export function TournamentContent({
                                         {t("match_schedule")}
                                     </h2>
                                 </div>
-                                <div className="bg-background rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                <div className="bg-card rounded-none relative overflow-hidden transition-colors">
                                     <MatchManager
                                         teams={teams}
                                         matches={matches}
