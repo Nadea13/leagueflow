@@ -1,7 +1,6 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/components/matches/match-console-page";
-import { getUserSubscriptionPlan } from "@/actions/common/user";
 import { MatchEvent } from "@/types";
 
 export default async function AdminMatchConsole(props: {
@@ -31,18 +30,12 @@ export default async function AdminMatchConsole(props: {
         return <div className="p-8 text-red-500">Error fetching match: {JSON.stringify(matchError, null, 2)}</div>;
     }
 
-    // Fetch the tournament to check if Pro plan
+    // Fetch the tournament
     const { data: tournament } = await supabase
         .from('tournaments')
-        .select('plan')
+        .select('name')
         .eq('id', id)
         .single();
-        
-    // Fetch global user plan
-    const userPlan = await getUserSubscriptionPlan();
-    
-    // Pro status is true if tournament has specific plan OR user has global plan
-    const isPro = (tournament?.plan && tournament.plan !== 'free') || userPlan === 'monthly' || userPlan === 'yearly';
 
     // Fetch initial events
     const { data: events } = await supabase

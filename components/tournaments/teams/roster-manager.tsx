@@ -19,7 +19,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Plus, Check } from "lucide-react";
+import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Check } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";

@@ -54,31 +54,7 @@ export default async function PublicMatchConsole(props: {
         `)
         .eq('id', id)
         .single();
-        
-    let isPro = false;
-    if (tournament) {
-        // Check tournament specific payments
-        const payments = (tournament as { payments: { plan: string; status: string }[] }).payments;
-        const isTournamentPro = payments?.some((p) => p.status === 'success' && (p.plan === 'tournament' || p.plan === 'per_tournament'));
-        if (isTournamentPro) {
-            isPro = true;
-        } else if (tournament.user_id) {
-            // Check tournament owner's global plan
-            const { data: globalPayment } = await supabase
-                .from('payments')
-                .select('plan, status')
-                .eq('user_id', tournament.user_id)
-                .in('plan', ['monthly', 'yearly'])
-                .eq('status', 'success')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-            if (globalPayment) {
-                isPro = true;
-            }
-        }
-    }
-
+    
     // Fetch initial events
     const { data: events } = await supabase
         .from('match_events')

@@ -14,7 +14,22 @@ export const metadata: Metadata = {
 // ==========================================
 // EDIT PLANS HERE
 // ==========================================
-const HARDCODED_PLANS = [
+interface Plan {
+    id: string;
+    name: string;
+    description: string[];
+    price: number;
+    discounted_price: number | null;
+    duration: string;
+    max_teams: number;
+    max_players_per_team: number;
+    support_level: string;
+    recommended: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+const HARDCODED_PLANS: Plan[] = [
     {
         id: 'fallback-starter',
         name: 'Manager Starter',
@@ -44,13 +59,6 @@ const HARDCODED_PLANS = [
         updated_at: new Date().toISOString()
     }
 ];
-
-const SAMPLE_TOURNAMENTS: any[] = [];
-
-// ==========================================
-// EDIT HISTORY HERE
-// ==========================================
-const SAMPLE_HISTORY: any[] = [];
 
 export default async function BillingPage() {
     const t = await getTranslations("Billing");
@@ -86,7 +94,7 @@ export default async function BillingPage() {
                 tournaments={[]}
                 initialHistory={history || []}
                 userPlan={userPlan}
-                plans={HARDCODED_PLANS as any}
+                plans={HARDCODED_PLANS}
                 daysRemaining={daysRemaining}
                 isExpired={isExpired}
             />

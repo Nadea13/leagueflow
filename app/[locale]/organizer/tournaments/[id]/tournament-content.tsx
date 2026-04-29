@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
-import { Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, BookOpen, AlertTriangle, ArrowLeft, Settings, Users, Plus, ClipboardEdit } from "lucide-react";
+import { Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, ArrowLeft, Settings, Users, Plus, ClipboardEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -12,12 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TeamForm } from "@/components/tournaments/teams/team-form";
-import { MatchGenerator } from "@/components/tournaments/matches/match-generator";
 import { Standings } from "@/components/tournaments/ranking/standings";
 import { Teams } from "@/components/tournaments/teams/team-list";
 import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";
 import { Bracket } from "@/components/tournaments/ranking/bracket";
-import { Match, Team, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
+import { Match, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/shared/share-button";
 import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
 import { calculateStandings } from "@/lib/standings";
@@ -52,7 +51,7 @@ export function TournamentContent({
     initialTeams,
     initialGoals,
     userPlan,
-    initialIsPro,
+    initialIsPro: _initialIsPro,
     id,
     userRole
 }: TournamentContentProps) {
@@ -182,7 +181,7 @@ export function TournamentContent({
                 schema: 'public',
                 table: 'tournament_teams',
                 filter: `tournament_id=eq.${id}`
-            }, (payload) => {
+            }, () => {
                 // Rely on router.refresh() to update the filtered teams list from the server
                 router.refresh();
             })

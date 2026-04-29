@@ -11,7 +11,7 @@ export async function signOut() {
     return redirect("/login");
 }
 
-export async function signIn(formData: FormData, locale: string): Promise<ActionResponse> {
+export async function signIn(formData: FormData, _locale: string): Promise<ActionResponse> {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 

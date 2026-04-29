@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { updateTournament, resetFixtures, deleteTournament } from "@/actions/organizer/tournaments/general";
 import { getPlans } from "@/actions/admin/plans";
-import { PaymentSection } from "@/components/billing/payment-section";
 import { Plan } from "@/types";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -30,13 +29,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Loader2, RefreshCw, CreditCard, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
+import { Check, Loader2, RefreshCw, AlertTriangle, ClipboardEdit, Trash2 } from "lucide-react";
 
 import { Collaborators } from "@/components/tournaments/management/collaborators";
 import { VenueManager } from "@/components/tournaments/settings/venue-manager";
 import { RulesConfig } from "@/components/tournaments/settings/rules-config";
 
-import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -47,7 +45,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
+export function TournamentSettings({ tournament, hasFixtures, teams }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
     const tournamentId = tournament.id;
     const t = useTranslations("Settings");
     const tBilling = useTranslations("Billing");
@@ -65,6 +63,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
     // Payment State
     const [showPayment, setShowPayment] = useState(false);
     const [plans, setPlans] = useState<Plan[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isFetchingPlans, setIsFetchingPlans] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -103,6 +102,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
         fetchPlans();
     }, []);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const tournamentPlan = plans.find(p =>
         p.name?.trim() === 'Per Tournament' ||
         p.duration?.toLowerCase().includes('tournament')
@@ -113,6 +113,7 @@ export function TournamentSettings({ tournament, hasFixtures, userPlan, teams }:
     };
 
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handlePaymentSuccess = () => {
         setShowPayment(false);
         router.refresh();

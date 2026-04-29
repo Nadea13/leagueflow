@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MatchCard } from "@/components/tournaments/matches/match-card";
 import { useTranslations } from "next-intl";
 import { Match, MatchEvent, Team } from "@/types";
 
-import { Calendar, ChevronDown, ChevronRight } from "lucide-react";
+import { Calendar, ChevronDown } from "lucide-react";
 
 export function PublicMatches({ 
     matches, 
     tournamentId, 
     teams = [],
-    events = [] 
+    events: _events = [] 
 }: { 
     matches: Match[]; 
     tournamentId: string; 
@@ -24,13 +24,20 @@ export function PublicMatches({
     
     const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
+    const hasInitialized = useRef(false);
     // Auto-expand first date if nothing is expanded
     useEffect(() => {
-        if (expandedDates.size === 0 && matches.length > 0) {
-            const firstDate = matches.sort((a, b) => (a.match_date || "") > (b.match_date || "") ? 1 : -1)[0].match_date;
-            if (firstDate) setExpandedDates(new Set([firstDate]));
+        if (!hasInitialized.current && matches.length > 0) {
+            const sortedMatches = [...matches].sort((a, b) => (a.match_date || "") > (b.match_date || "") ? 1 : -1);
+            const firstDate = sortedMatches[0].match_date;
+            if (firstDate) {
+                hasInitialized.current = true;
+                setTimeout(() => {
+                    setExpandedDates(new Set([firstDate]));
+                }, 0);
+            }
         }
-    }, [matches, expandedDates.size]);
+    }, [matches]);
 
     const toggleDate = (date: string) => {
         setExpandedDates(prev => {

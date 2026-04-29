@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Tab } from "@/components/ui/tab";
-import { Card, CardContent } from "@/components/ui/card";
 import { Standings } from "@/components/tournaments/ranking/standings";
 import { PublicMatches } from "@/components/tournaments/public/public-matches-list";
 import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";

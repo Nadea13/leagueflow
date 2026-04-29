@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Calendar, ArrowRight, Check, ChevronDown, ChevronRight } from "lucide-react";
+import { Calendar, ArrowRight, ChevronDown, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import {
@@ -39,7 +39,7 @@ interface FixturesManagerProps {
     hideControls?: boolean;
 }
 
-export function MatchManager({ matches, teams, tournamentId, format, isPro = false, hideControls = false }: FixturesManagerProps) {
+export function MatchManager({ matches, teams, tournamentId, format, hideControls = false }: FixturesManagerProps) {
     const t = useTranslations("Tournament");
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");

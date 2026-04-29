@@ -89,7 +89,6 @@ const HARDCODED_PLANS = [
     }
 ];
 
-const SAMPLE_TOURNAMENTS: any[] = [];
 export default async function BillingPage() {
     const t = await getTranslations("Billing");
     const supabase = await createClient();
@@ -130,7 +129,7 @@ export default async function BillingPage() {
                 tournaments={tournaments || []}
                 initialHistory={history || []}
                 userPlan={userPlan}
-                plans={HARDCODED_PLANS as any}
+                plans={HARDCODED_PLANS}
                 daysRemaining={daysRemaining}
                 isExpired={isExpired}
             />
