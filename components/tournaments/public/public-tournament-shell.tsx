@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import { Trophy, Users, Calendar, ArrowLeft, GitBranch, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tab } from "@/components/ui/tab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Standings } from "@/components/tournaments/ranking/standings";
 import { PublicMatches } from "@/components/tournaments/public/public-matches-list";
@@ -149,13 +150,13 @@ export function PublicTournamentShell({
     return (
         <main className="container mx-auto px-2 md:px-0 py-6 max-w-6xl">
             {/* Unified Header Block - Pro Sports Style */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 border-b-4 border-secondary/20 pb-4 md:pb-6 mb-4 md:mb-6 relative group">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 mb-4 md:mb-6">
                 <div className="flex items-start gap-3 md:gap-6 w-full">
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         asChild
-                        className="rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border border-foreground/10 bg-foreground/5 hover:bg-secondary hover:text-black transition-all shadow-xl shadow-black/40"
+                        className="bg-background/50 backdrop-blur-sm rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all"
                     >
                         <Link href="/">
                             <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
@@ -182,14 +183,11 @@ export function PublicTournamentShell({
                                 {tTournament(tournament?.status || 'draft')}
                             </Badge>
 
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 border-none font-black uppercase tracking-tighter bg-foreground/5 text-muted-foreground/60">
-                                {t("beta")}
-                            </Badge>
                         </div>
 
                         {/* Title Section */}
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                            <h1 className="text-3xl md:text-6xl font-black tracking-tighter uppercase leading-[0.85] text-foreground drop-shadow-2xl">
+                            <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-[0.85] text-foreground drop-shadow-2xl">
                                 {tournament?.name}
                             </h1>
                         </div>
@@ -214,24 +212,20 @@ export function PublicTournamentShell({
                 />
             </div>
 
-            <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto w-full md:w-max print:hidden backdrop-blur-sm">
-                    <TabsTrigger
-                        value="overview"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
-                    >
-                        <Trophy className="h-3.5 w-3.5" />
-                        {t("overview")}
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="matches"
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none data-[state=active]:!bg-secondary data-[state=active]:!text-secondary-foreground data-[state=active]:shadow-[0_0_20px_rgba(0,196,154,0.4)] text-muted-foreground hover:text-secondary hover:bg-foreground/5"
-                    >
-                        <Calendar className="h-3.5 w-3.5" />
-                        {t("matches")}
-                    </TabsTrigger>
-                </TabsList>
+            {/* Public Navigation */}
+            <Tab
+                value={currentTab}
+                onChange={handleTabChange}
+                className="w-full md:w-max mb-6"
+                itemClassName="flex-1 md:flex-none"
+                options={[
+                    { value: 'overview', label: t("overview"), icon: Trophy },
+                    { value: 'matches', label: t("matches"), icon: Calendar },
+                    { value: 'statistics', label: t("statistics"), icon: Award },
+                ]}
+            />
 
+            <Tabs defaultValue={currentTab} value={currentTab} onValueChange={handleTabChange} className="w-full">
                 <TabsContent value="overview" className="space-y-4 md:space-y-6">
                     <div className="grid grid-cols-1 gap-4 md:gap-6">
                         {(tournament.format === 'league' || tournament.format === 'league_ha') && (
@@ -241,14 +235,8 @@ export function PublicTournamentShell({
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("league_table")}
                                     </h2>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("league_table_desc")}</p>
                                 </div>
-                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                    <CardContent className="p-0 z-0">
-                                        <Standings standings={standings} />
-                                    </CardContent>
-                                </Card>
+                                <Standings standings={standings} />
                             </div>
                         )}
 
@@ -259,14 +247,8 @@ export function PublicTournamentShell({
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("group_standings")}
                                     </h2>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("group_standings_desc")}</p>
                                 </div>
-                                <Card className="bg-background border rounded-none relative overflow-hidden group transition-colors shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                    <CardContent className="p-0 z-0">
-                                        <StandingsGroups teams={initialTeams} matches={matches} isPublic={true} />
-                                    </CardContent>
-                                </Card>
+                                <StandingsGroups teams={initialTeams} matches={matches} isPublic={true} />
                             </div>
                         )}
 
@@ -285,8 +267,10 @@ export function PublicTournamentShell({
                             </div>
                         )}
                     </div>
+                </TabsContent>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-8 border-t border-foreground/5">
+                <TabsContent value="statistics" className="space-y-4 md:space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-4">
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex flex-col gap-1">
                                 <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -295,12 +279,7 @@ export function PublicTournamentShell({
                                 </h2>
                                 <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc")}</p>
                             </div>
-                            <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                <CardContent className="p-0 z-0">
-                                    <TopScorers goals={goals} teams={initialTeams} />
-                                </CardContent>
-                            </Card>
+                            <TopScorers goals={goals} teams={initialTeams} />
                         </div>
 
                         <div className="space-y-12">
@@ -312,14 +291,7 @@ export function PublicTournamentShell({
                                     </h2>
                                     <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("player_stats_desc")}</p>
                                 </div>
-                                <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
-                                    <div className="absolute top-0 left-0 z-30 w-1 h-full bg-secondary" />
-                                    <CardContent className="p-0 z-0">
-                                        <div className="overflow-x-auto">
-                                            <PlayerStats stats={playerStats} />
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <PlayerStats stats={playerStats} />
                             </div>
 
                             {bannedPlayers.length > 0 && (
@@ -338,7 +310,7 @@ export function PublicTournamentShell({
                             </h2>
                             <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("fixtures_results_desc")}</p>
                         </div>
-                        <PublicMatches matches={matches} tournamentId={tournament.id} events={events} />
+                        <PublicMatches matches={matches} tournamentId={tournament.id} events={events} teams={initialTeams} />
                     </div>
                 </TabsContent>
             </Tabs>
