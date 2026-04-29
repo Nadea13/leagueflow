@@ -38,7 +38,8 @@ export function formatDate(
                 month: formatStr.includes("MMMM") ? 'long' : 'short',
                 year: hasYear ? 'numeric' : undefined,
                 weekday: hasWeekday ? (formatStr.includes("EEEE") ? 'long' : 'short') : undefined,
-                calendar: 'buddhist'
+                calendar: 'buddhist',
+                timeZone: 'Asia/Bangkok'
             };
 
 
