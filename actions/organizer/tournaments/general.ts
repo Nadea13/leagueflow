@@ -474,7 +474,7 @@ export async function updateTournament(
     }
 
     if (formData.has("max_teams")) {
-        let max_teams = Number(formData.get("max_teams") || 8);
+        const max_teams = Number(formData.get("max_teams") || 8);
         updateData.max_teams = max_teams;
     }
 

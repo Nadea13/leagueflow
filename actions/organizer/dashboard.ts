@@ -19,7 +19,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         const end_date = formData.get("end_date") as string;
         const number_of_pitches = parseInt(formData.get("number_of_pitches") as string) || 1;
         const document_deadline = formData.get("document_deadline") as string;
-        let max_teams = parseInt(formData.get("max_teams") as string) || 8;
+        const max_teams = parseInt(formData.get("max_teams") as string) || 8;
         const advancing_teams = parseInt(formData.get("advancing_teams") as string) || null;
 
         const { data: { user } } = await supabase.auth.getUser();

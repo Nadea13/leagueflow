@@ -423,7 +423,7 @@ export async function updateTournament(
     const updateData: Record<string, unknown> = {};
 
     // 1. Determine Pro Status once
-    let isPro = true; // Always true for all users as per request
+    const isPro = true; // Always true for all users as per request
 
     if (formType === 'general' || !formType) {
         if (formData.has("name")) updateData.name = formData.get("name") as string;
@@ -451,7 +451,7 @@ export async function updateTournament(
     }
 
     if (formData.has("max_teams")) {
-        let max_teams = Number(formData.get("max_teams") || 8);
+        const max_teams = Number(formData.get("max_teams") || 8);
         updateData.max_teams = max_teams;
     }
 
