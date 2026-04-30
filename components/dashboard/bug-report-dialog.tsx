@@ -62,15 +62,10 @@ export function BugReportDialog({ className }: BugReportDialogProps) {
             <DialogTrigger asChild>
                 <Button
                     variant="ghost"
-                    className={cn("w-full justify-start gap-3 rounded-none px-3 py-2 text-muted-foreground hover:text-primary hover:bg-muted relative", className)}
+                    className={cn("w-full justify-start gap-3 rounded-none px-3 py-2 text-muted-foreground hover:text-primary relative", className)}
                 >
                     <MessageSquareWarning className="h-4 w-4" />
                     <span>{t("title")}</span>
-                    {/* Add a little indicator pulse to make it noticeable occasionally if wanted
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span> */}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
