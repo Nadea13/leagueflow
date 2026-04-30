@@ -101,7 +101,7 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
                                     className="text-center mb-4 md:mb-6 pr-12"
                                     style={{ width: CARD_W + (!isLast ? CONNECTOR_W : 0) }}
                                 >
-                                    <span className="text-[10px] font-black uppercase tracking-tighter text-secondary/80 bg-secondary/5 px-3 py-1 border-l-2 border-secondary">
+                                    <span className="text-[10px] font-black tracking-tighter text-secondary/80 bg-secondary/5 px-3 py-1 border-l-2 border-secondary">
                                         {stageLabels[stage] || stage.replace('_', ' ')}
                                     </span>
                                 </div>
@@ -274,7 +274,7 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
 
             {/* Header */}
             <div className="flex justify-between items-center px-3 py-1.5 bg-muted/10 border-b border-border/20">
-                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-1.5">
+                <span className="text-[8px] font-black tracking-widest text-muted-foreground/50 flex items-center gap-1.5">
                     {isFinal && <Trophy className="h-2.5 w-2.5 text-secondary" />}
                     {t("match")} {(match.match_index !== undefined && match.match_index !== null) ? `#${match.match_index}` : ""}
                 </span>
@@ -282,13 +282,13 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
                     {match.status === 'live' && (
                         <div className="flex items-center gap-1 bg-red-500/10 px-1.5 py-0.5 rounded-none">
                             <span className="h-1 w-1 bg-red-500 rounded-full animate-pulse" />
-                            <span className="text-[8px] font-black uppercase text-red-500 tracking-tighter">
+                            <span className="text-[8px] font-black text-red-500 tracking-tighter">
                                 {t("live")}
                             </span>
                         </div>
                     )}
                     {isFinished && (
-                        <span className="text-[8px] font-black uppercase text-muted-foreground/40 tracking-tighter">
+                        <span className="text-[8px] font-black text-muted-foreground/40 tracking-tighter">
                             {t("ft")}
                         </span>
                     )}
@@ -352,7 +352,7 @@ function TeamRow({
                     )}
                 </div>
                 <span className={cn(
-                    "truncate text-[11px] font-black uppercase tracking-tighter transition-colors",
+                    "truncate text-[11px] font-black tracking-tighter transition-colors",
                     isWinner ? "text-foreground" : "text-muted-foreground/60"
                 )}>
                     {name || tbd}

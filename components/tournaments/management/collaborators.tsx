@@ -108,7 +108,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
         <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                 <div className="flex flex-col gap-1">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Users className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
@@ -120,7 +120,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                             size="sm"
                             disabled={!isPro}
                             onClick={() => !isPro && togglePayment?.()}
-                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary px-6 rounded-none font-black uppercase tracking-tighter transition-all relative group overflow-hidden"
+                            className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary px-6 rounded-none font-black tracking-tighter transition-all relative group overflow-hidden"
                         >
                             <span className="relative z-10 flex items-center gap-2">
                                 <Plus className="h-4 w-4" />
@@ -131,14 +131,14 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                     {isPro && (
                         <DialogContent className="sm:max-w-[500px] bg-card border rounded-none shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                             <DialogHeader>
-                                <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                     <Mail className="h-6 w-6 text-secondary" />
                                     {t("invite_title")}
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 md:space-y-6">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
+                                    <Label className="text-[10px] font-black tracking-widest text-secondary/70">{t("email_placeholder")}</Label>
                                     <Input
                                         type="email"
                                         placeholder="collaborator@example.com"
@@ -152,14 +152,14 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                     <Button 
                                         variant="ghost" 
                                         onClick={() => setDialogOpen(false)}
-                                        className="h-12 rounded-none border-foreground/10 font-black uppercase tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
+                                        className="h-12 rounded-none border-foreground/10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                     >
                                         {tCommon("cancel")}
                                     </Button>
                                     <Button 
                                         onClick={handleInvite} 
                                         disabled={isInviting || !email.trim()}
-                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group/save overflow-hidden"
+                                        className="h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black tracking-tighter transition-all relative group/save overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
                                         <span className="relative z-10 flex items-center gap-2">
@@ -182,14 +182,14 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                     <div className="p-2 md:p-3 bg-secondary/[0.03] border border-secondary/10 relative overflow-hidden group/upsell">
                         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                             <div className="space-y-1">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/80">{t("title")} (PRO)</h4>
+                                <h4 className="text-[10px] font-black tracking-[0.2em] text-secondary/80">{t("title")} (PRO)</h4>
                                 <p className="text-xs font-medium text-muted-foreground/60 max-w-sm">
                                     {t("upgrade_desc") || "Collaborate with your team to manage this tournament."}
                                 </p>
                             </div>
                             <Button
                                 onClick={togglePayment}
-                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black uppercase tracking-tighter transition-all relative group/upbtn overflow-hidden"
+                                className="h-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 rounded-none font-black tracking-tighter transition-all relative group/upbtn overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center gap-2">
@@ -230,12 +230,12 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-3">
-                                                <span className="text-sm font-black uppercase tracking-tight text-foreground">{collab.email}</span>
-                                                <Badge variant="outline" className="rounded-none border-secondary/20 bg-secondary/5 text-[9px] font-black uppercase tracking-widest px-2 py-0 text-secondary/70">
+                                                <span className="text-sm font-black tracking-tight text-foreground">{collab.email}</span>
+                                                <Badge variant="outline" className="rounded-none border-secondary/20 bg-secondary/5 text-[9px] font-black tracking-widest px-2 py-0 text-secondary/70">
                                                     {collab.role}
                                                 </Badge>
                                             </div>
-                                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/40">
+                                            <span className="text-[10px] font-bold tracking-[0.1em] text-muted-foreground/40">
                                                 {collab.status === 'accepted' ? t("status_accepted") : t("status_pending")}
                                             </span>
                                         </div>
@@ -259,7 +259,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
             <AlertDialog open={!!removeMemberId} onOpenChange={(open) => !open && setRemoveMemberId(null)}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
                             {t("remove_collaborator") || "Remove Collaborator"}
                         </AlertDialogTitle>
@@ -268,7 +268,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -276,7 +276,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                 e.preventDefault();
                                 confirmRemove();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {t("remove") || "Remove"}

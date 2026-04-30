@@ -93,7 +93,7 @@ export function AdminDashboardHeader({ userEmail, userName, className }: AdminDa
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-xl font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
-                                <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-secondary/80 ml-0.5">
+                                <span className="text-[10px] font-bold tracking-[0.3em] text-secondary/80 ml-0.5">
                                     Admin
                                 </span>
                             </div>
@@ -117,7 +117,7 @@ export function AdminDashboardHeader({ userEmail, userName, className }: AdminDa
                                 >
                                     {active && <div className="absolute left-0 top-0 w-1.5 h-full bg-secondary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
                                     <item.icon className={cn("h-5 w-5", active ? "text-secondary" : "text-muted-foreground/50")} />
-                                    <span className="text-[12px] font-black uppercase tracking-[0.2em]">{item.title}</span>
+                                    <span className="text-[12px] font-black tracking-[0.2em]">{item.title}</span>
                                 </Link>
                             );
                         })}
@@ -138,7 +138,7 @@ export function AdminDashboardHeader({ userEmail, userName, className }: AdminDa
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[16px] font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
-                        <span className="text-[8px] font-bold tracking-[0.3em] uppercase text-secondary/80 ml-0.5 mt-0.5">
+                        <span className="text-[8px] font-bold tracking-[0.3em] text-secondary/80 ml-0.5 mt-0.5">
                             Admin
                         </span>
                     </div>

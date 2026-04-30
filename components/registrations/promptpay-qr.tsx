@@ -67,7 +67,7 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
             {/* Header */}
             <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-4 border-b border-border/10 relative">
                 <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                <h3 className="text-sm font-black  uppercase tracking-widest text-secondary flex items-center gap-2">
+                <h3 className="text-sm font-black tracking-widest text-secondary flex items-center gap-2">
                     <Smartphone className="w-4 h-4" />
                     {t("scan_to_pay")}
                 </h3>
@@ -97,8 +97,8 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
 
                 {/* Amount Section */}
                 <div className="text-center space-y-2">
-                    <p className="text-[10px] uppercase font-black  tracking-widest text-muted-foreground/60">{t("amount")}</p>
-                    <p className="text-3xl font-black  uppercase tracking-tighter text-foreground leading-none">
+                    <p className="text-[10px] font-black  tracking-widest text-muted-foreground/60">{t("amount")}</p>
+                    <p className="text-3xl font-black  tracking-tighter text-foreground leading-none">
                         {amount.toLocaleString("th-TH", {
                             style: "currency",
                             currency: "THB",
@@ -110,7 +110,7 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
             {/* Account Details Footer */}
             <div className="p-6 bg-muted/30 border-t border-border/10 space-y-4">
                 <div className="flex flex-col gap-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground/40 leading-none">
+                    <p className="text-[10px] font-bold text-muted-foreground/40 leading-none">
                         {t("account_name_label") || "Account Name"}
                     </p>
                     <p className="text-sm font-black  tracking-tight text-foreground">
@@ -127,7 +127,7 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
                             <Smartphone className="w-4 h-4" />
                         </div>
                         <div className="text-left">
-                            <p className="text-[10px] uppercase font-bold text-muted-foreground/40 leading-none mb-1">
+                            <p className="text-[10px] font-bold text-muted-foreground/40 leading-none mb-1">
                                 PromptPay ID
                             </p>
                             <p className="text-sm font-mono font-bold text-foreground">

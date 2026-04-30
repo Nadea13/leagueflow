@@ -55,8 +55,8 @@ export function PublicMatches({
                 <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
                     <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
                 </div>
-                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
+                <h3 className="text-xl font-black tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
                     Stay tuned for match updates and schedules.
                 </p>
             </div>
@@ -104,10 +104,10 @@ export function PublicMatches({
                                     <Calendar className="h-4 w-4 text-secondary" />
                                 </div>
                                 <div className="flex flex-col items-start gap-0.5">
-                                    <span className="text-xs font-black uppercase tracking-widest text-foreground">
+                                    <span className="text-xs font-black tracking-widest text-foreground">
                                         {dateKey === "tbd" ? tMatch("tbd") : new Date(dateKey).toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                                     </span>
-                                    <span className="text-[9px] font-bold uppercase text-muted-foreground/60 tracking-wider">
+                                    <span className="text-[9px] font-bold text-muted-foreground/60 tracking-wider">
                                         {dayMatches.length} {tMatch("matches") || "Matches"}
                                     </span>
                                 </div>
@@ -140,7 +140,7 @@ export function PublicMatches({
                                             {/* Only show stage header if there are multiple stages on this day OR it's not the default 'group' */}
                                             {(sortedStages.length > 1 || (stageKey !== 'group' && stageKey !== 'league')) && (
                                                 <div className="px-4 py-2 bg-secondary/5 border-b border-foreground/5 flex items-center justify-between">
-                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-secondary">
+                                                    <span className="text-[9px] font-black tracking-[0.2em] text-secondary">
                                                         {stageLabel}
                                                     </span>
                                                 </div>

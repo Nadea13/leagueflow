@@ -165,16 +165,16 @@ export function PublicTournamentShell({
                     <div className="flex flex-col flex-1 gap-1 md:gap-2 min-w-0">
                         {/* Metadata Badges */}
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <Badge variant="outline" className="rounded-none font-black text-[10px] border-none bg-secondary/10 text-secondary uppercase tracking-widest">
+                            <Badge variant="outline" className="rounded-none font-black text-[10px] border-none bg-secondary/10 text-secondary tracking-widest">
                                 {tournament?.format?.replace('_', ' ')}
                             </Badge>
 
-                            <span className="text-[10px] font-black tracking-widest text-muted-foreground px-2 border-l border-foreground/10 uppercase">
+                            <span className="text-[10px] font-black tracking-widest text-muted-foreground px-2 border-l border-foreground/10">
                                 {initialTeams.length} {tTournament("teams")}
                             </span>
 
                             <Badge className={cn(
-                                "font-black border-none px-3 py-1 shadow-lg text-[10px] h-5 uppercase tracking-widest",
+                                "font-black border-none px-3 py-1 shadow-lg text-[10px] h-5 tracking-widest",
                                 tournament?.status === 'active' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
                                 tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
                                 (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
@@ -186,7 +186,7 @@ export function PublicTournamentShell({
 
                         {/* Title Section */}
                         <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                            <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-[0.85] text-foreground drop-shadow-2xl">
+                            <h1 className="text-2xl md:text-5xl font-black tracking-tighter leading-[0.85] text-foreground drop-shadow-2xl">
                                 {tournament?.name}
                             </h1>
                         </div>
@@ -230,7 +230,7 @@ export function PublicTournamentShell({
                         {(tournament.format === 'league' || tournament.format === 'league_ha') && (
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("league_table")}
                                     </h2>
@@ -242,7 +242,7 @@ export function PublicTournamentShell({
                         {tournament.format === 'group_knockout' && (
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("group_standings")}
                                     </h2>
@@ -254,11 +254,11 @@ export function PublicTournamentShell({
                         {(tournament.format === 'knockout' || tournament.format === 'group_knockout') && (
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <GitBranch className="h-5 w-5 text-secondary" />
                                         {t("bracket")}
                                     </h2>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("bracket_desc")}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground/60">{t("bracket_desc")}</p>
                                 </div>
                                 <div className="relative z-10 overflow-x-auto pb-4">
                                     <Bracket matches={matches} isPublic={true} />
@@ -272,11 +272,11 @@ export function PublicTournamentShell({
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-4">
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex flex-col gap-1">
-                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                     <Award className="h-5 w-5 text-secondary" />
                                     {t("top_scorers")}
                                 </h2>
-                                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc")}</p>
+                                <p className="text-[10px] font-bold text-muted-foreground/60">{t("top_scorers_desc")}</p>
                             </div>
                             <TopScorers goals={goals} teams={initialTeams} />
                         </div>
@@ -284,11 +284,11 @@ export function PublicTournamentShell({
                         <div className="space-y-12">
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Users className="h-5 w-5 text-secondary" />
                                         {t("player_stats")}
                                     </h2>
-                                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("player_stats_desc")}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground/60">{t("player_stats_desc")}</p>
                                 </div>
                                 <PlayerStats stats={playerStats} />
                             </div>
@@ -303,11 +303,11 @@ export function PublicTournamentShell({
                 <TabsContent value="matches">
                     <div className="space-y-4 md:space-y-6">
                         <div className="flex flex-col gap-1">
-                            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                            <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                 <Calendar className="h-5 w-5 text-secondary" />
                                 {t("fixtures_results")}
                             </h2>
-                            <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("fixtures_results_desc")}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground/60">{t("fixtures_results_desc")}</p>
                         </div>
                         <PublicMatches matches={matches} tournamentId={tournament.id} events={events} teams={initialTeams} />
                     </div>

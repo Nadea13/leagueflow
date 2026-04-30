@@ -173,7 +173,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                                     <div className="bg-red-500/10 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <AlertCircle className="h-6 w-6 text-red-600" />
                                     </div>
-                                    <h3 className="text-lg font-black uppercase tracking-tight mb-2">
+                                    <h3 className="text-lg font-black tracking-tight mb-2">
                                         {t("registration_closed_title")}
                                     </h3>
                                     <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
@@ -181,7 +181,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                                             ? t("registration_closed_full_desc") 
                                             : (isPastDeadline ? t("registration_closed_deadline_desc") : t("registration_closed_desc"))}
                                     </p>
-                                    <Button asChild variant="outline" size="sm" className="rounded-full px-6 font-black uppercase tracking-tighter">
+                                    <Button asChild variant="outline" size="sm" className="rounded-full px-6 font-black tracking-tighter">
                                         <Link href="/manager/tournaments">
                                             {tCommon("back_to_dashboard")}
                                         </Link>
@@ -232,7 +232,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
 
                             {tournament.description && (
                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{tCommon("description") || "Description"}</h4>
+                                    <h4 className="text-sm font-bold tracking-wider text-muted-foreground">{tCommon("description") || "Description"}</h4>
                                     <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
                                         {tournament.description}
                                     </p>

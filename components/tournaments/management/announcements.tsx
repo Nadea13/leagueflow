@@ -115,11 +115,11 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-1">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Megaphone className="h-5 w-5 text-secondary" />
                         {t("title")}
                     </h3>
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("no_announcements_desc")}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60">{t("no_announcements_desc")}</p>
                 </div>
                 {isEditable && (
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

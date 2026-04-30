@@ -130,7 +130,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                        <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             {t("total_revenue")}
                         </CardTitle>
                         <CreditCard className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
@@ -139,7 +139,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             ฿{totalAmount.toLocaleString()}
                         </div>
-                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                        <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                             <span className="w-2 h-[1px] bg-secondary/40" />
                             {t("all_time_earnings")}
                         </p>
@@ -149,7 +149,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                     <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-emerald-500/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                        <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             {t("recent_transactions")}
                         </CardTitle>
                         <Check className="h-4 w-4 text-emerald-500 opacity-80 shrink-0 hidden sm:block" />
@@ -158,7 +158,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {successfulPayments}
                         </div>
-                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                        <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                             <span className="w-2 h-[1px] bg-emerald-500/40" />
                             {t("transactions_recorded")}
                         </p>
@@ -168,7 +168,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                     <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                        <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             {t("total_activity")}
                         </CardTitle>
                         <ArrowUpRight className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
@@ -177,7 +177,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             {initialPayments.length}
                         </div>
-                        <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                        <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                             <span className="w-2 h-[1px] bg-primary/40" />
                             {t("recorded_actions")}
                         </p>
@@ -223,13 +223,13 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="w-[180px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("date")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">PG ID</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("amount")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions", { defaultValue: "Actions" })}</TableHead>
+                            <TableHead className="w-[180px] text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("date")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("details")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">PG ID</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("amount")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("actions", { defaultValue: "Actions" })}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -252,7 +252,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm truncate">{payment.user?.email || t("unknown")}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{payment.user?.full_name}</span>
+                                                <span className="text-[10px] text-muted-foreground tracking-wider font-medium">{payment.user?.full_name}</span>
                                             </div>
                                         </div>
                                     </TableCell>
@@ -261,7 +261,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                             <span className="text-sm font-bold capitalize">
                                                 {payment.plan ? t("plan_label", { plan: payment.plan }) : t("one_time")}
                                             </span>
-                                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                                            <span className="text-[10px] text-muted-foreground tracking-wider">
                                                 {payment.tournament_id ? t("tournament_upgrade") : t("subscription")}
                                             </span>
                                         </div>
@@ -279,7 +279,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                     <TableCell className="text-right">
                                         <Badge
                                             variant={getStatusColor(payment.status)}
-                                            className="rounded-none text-[10px] font-black uppercase"
+                                            className="rounded-none text-[10px] font-black"
                                         >
                                             {payment.status}
                                         </Badge>
@@ -290,7 +290,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleVerify(payment)}
-                                                className="rounded-none text-[10px] font-black uppercase"
+                                                className="rounded-none text-[10px] font-black"
                                             >
                                                 Verify
                                             </Button>
@@ -305,24 +305,24 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
 
             {filteredPayments.length > 0 && (
                 <div className="flex items-center justify-between py-2 mt-2">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredPayments.length)} of {filteredPayments.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >
@@ -338,7 +338,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                     <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground">
+                            <DialogTitle className="text-xl font-black tracking-tighter text-foreground">
                                 Verify Payment
                             </DialogTitle>
                             <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
@@ -364,7 +364,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         )}
                         <div className="mt-6 text-center border-t border-border pt-4">
                             <p className="text-3xl font-black tracking-tighter">฿{selectedPayment?.amount.toLocaleString()}</p>
-                            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground mt-1 capitalize">{selectedPayment?.plan}</p>
+                            <p className="text-[10px] tracking-[0.2em] font-bold text-muted-foreground mt-1 capitalize">{selectedPayment?.plan}</p>
                         </div>
                     </div>
 
@@ -373,7 +373,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                             variant="destructive"
                             onClick={handleReject}
                             disabled={isVerifying}
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                         >
                             {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Reject
@@ -383,7 +383,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 variant="outline"
                                 onClick={() => setIsVerifyDialogOpen(false)}
                                 disabled={isVerifying}
-                                className="rounded-none text-[10px] font-black uppercase"
+                                className="rounded-none text-[10px] font-black"
                             >
                                 Cancel
                             </Button>
@@ -391,7 +391,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 variant="default"
                                 onClick={handleApprove}
                                 disabled={isVerifying}
-                                className="rounded-none text-[10px] font-black uppercase"
+                                className="rounded-none text-[10px] font-black"
                             >
                                 {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 Approve

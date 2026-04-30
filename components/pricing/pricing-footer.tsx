@@ -33,7 +33,7 @@ export function PricingFooter({ managerPlans, organizerPlans }: PricingFooterPro
             </DialogTrigger>
             <DialogContent className="w-full max-w-[95vw] lg:max-w-7xl max-h-[90vh] overflow-y-auto rounded-none border-border/40">
                 <DialogHeader className="mb-6">
-                    <DialogTitle className="text-3xl font-black uppercase tracking-tighter">
+                    <DialogTitle className="text-3xl font-black tracking-tighter">
                         {tLanding('pricing_title')}
                     </DialogTitle>
                 </DialogHeader>

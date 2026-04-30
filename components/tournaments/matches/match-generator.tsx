@@ -59,7 +59,7 @@ export function MatchGenerator({
       disabled={isLoading} 
       variant="ghost"
       className={cn(
-        "w-full h-12 rounded-none border border-foreground/5 font-black uppercase tracking-tighter transition-all duration-300 group overflow-hidden relative",
+        "w-full h-12 rounded-none border border-foreground/5 font-black tracking-tighter transition-all duration-300 group overflow-hidden relative",
         hasFixtures ? "bg-foreground/5 hover:bg-foreground/10 text-muted-foreground/60 hover:text-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-lg shadow-secondary/10",
         className
       )}

@@ -194,7 +194,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
-                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.1em] ${
+                <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-[0.1em] ${
                     isConnected 
                         ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" 
                         : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
@@ -209,7 +209,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                     <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                        <CardTitle className="text-[10px] tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             Total Page Views
                         </CardTitle>
                         <Eye className="h-4 w-4 text-primary opacity-80 shrink-0" />
@@ -225,7 +225,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary/60" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                        <CardTitle className="text-[10px] tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             Total Interactions
                         </CardTitle>
                         <MousePointerClick className="h-4 w-4 text-secondary opacity-80 shrink-0" />
@@ -241,7 +241,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                     <div className="absolute top-0 left-0 w-1 h-full bg-accent/60" />
                     <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-accent/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                        <CardTitle className="text-[10px] tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             Unique Visitors
                         </CardTitle>
                         <UserIcon className="h-4 w-4 text-accent opacity-80 shrink-0" />
@@ -309,15 +309,15 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                     </div>
                                     <div className="flex items-center gap-3 mt-2 pl-2">
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] uppercase font-bold text-muted-foreground">Views</span>
+                                            <span className="text-[9px] font-bold text-muted-foreground">Views</span>
                                             <span className="text-xs font-mono">{group.views}</span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] uppercase font-bold text-muted-foreground">Clicks</span>
+                                            <span className="text-[9px] font-bold text-muted-foreground">Clicks</span>
                                             <span className="text-xs font-mono">{group.clicks}</span>
                                         </div>
                                         <div className="flex flex-col ml-auto text-right">
-                                            <span className="text-[9px] uppercase font-bold text-muted-foreground">Last Active</span>
+                                            <span className="text-[9px] font-bold text-muted-foreground">Last Active</span>
                                             <span className="text-xs text-muted-foreground">{formatDate(group.lastActive, "d MMM, HH:mm", locale)}</span>
                                         </div>
                                     </div>
@@ -332,7 +332,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                     {/* Header inside right panel */}
                     <div className="p-4 border-b border-border bg-muted/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h3 className="text-lg font-black uppercase tracking-tight">
+                            <h3 className="text-lg font-black tracking-tight">
                                 {activeGroup ? (activeGroup.isAnonymous ? "Anonymous Details" : "User Details") : "Select a User"}
                             </h3>
                             {activeGroup && (
@@ -367,15 +367,15 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                         {!activeGroup ? (
                             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 opacity-50">
                                 <MousePointerClick className="h-16 w-16 mb-4 opacity-20" />
-                                <p className="text-sm font-bold uppercase tracking-widest">Select a user to view their journey</p>
+                                <p className="text-sm font-bold tracking-widest">Select a user to view their journey</p>
                             </div>
                         ) : (
                             <Table>
                                 <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                                     <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                                        <TableHead className="w-[140px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Time</TableHead>
-                                        <TableHead className="w-[150px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Action</TableHead>
-                                        <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Details</TableHead>
+                                        <TableHead className="w-[140px] text-[10px] font-black tracking-[0.15em] text-muted-foreground">Time</TableHead>
+                                        <TableHead className="w-[150px] text-[10px] font-black tracking-[0.15em] text-muted-foreground">Action</TableHead>
+                                        <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">Details</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -393,7 +393,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                                     <div className="text-[9px] mt-1 opacity-50">{formatDate(log.created_at, "d MMM yyyy", locale)}</div>
                                                 </TableCell>
                                                 <TableCell className="align-top pt-3">
-                                                    <Badge variant={log.action === 'PAGE_VIEW' ? 'outline' : 'default'} className="text-[9px] px-1.5 py-0.5 h-auto rounded-none font-black uppercase">
+                                                    <Badge variant={log.action === 'PAGE_VIEW' ? 'outline' : 'default'} className="text-[9px] px-1.5 py-0.5 h-auto rounded-none font-black">
                                                         {log.action}
                                                     </Badge>
                                                 </TableCell>
@@ -413,24 +413,24 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                     {/* Pagination */}
                     {activeGroup && filteredLogs.length > 0 && (
                         <div className="p-3 border-t border-border bg-muted/10 flex items-center justify-between">
-                            <div className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
+                            <div className="text-[9px] tracking-wider font-bold text-muted-foreground hidden sm:block">
                                 {filteredLogs.length} Events Total
                             </div>
                             <div className="flex items-center space-x-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-7 rounded-none text-[9px] font-black uppercase"
+                                    className="h-7 rounded-none text-[9px] font-black"
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1}
                                 >
                                     Prev
                                 </Button>
-                                <span className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} / {totalPages}</span>
+                                <span className="text-[9px] tracking-wider font-bold text-muted-foreground px-2">Page {page} / {totalPages}</span>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-7 rounded-none text-[9px] font-black uppercase"
+                                    className="h-7 rounded-none text-[9px] font-black"
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
                                 >

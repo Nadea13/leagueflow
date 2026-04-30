@@ -85,7 +85,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
 
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="rounded-none text-[10px] font-black uppercase tracking-wider h-10 px-6">
+                        <Button className="rounded-none text-[10px] font-black tracking-wider h-10 px-6">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("add_player")}
                         </Button>
@@ -94,7 +94,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                         <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                             <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                                     <Shield className="h-5 w-5 text-secondary" />
                                     {t("add_player")}
                                 </DialogTitle>
@@ -106,7 +106,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
 
                         <div className="px-6 py-6 space-y-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-wider">
+                                <Label htmlFor="name" className="text-[10px] font-black tracking-wider">
                                     {t("player_name")}
                                 </Label>
                                 <Input
@@ -118,7 +118,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="photo" className="text-[10px] font-black uppercase tracking-wider">
+                                <Label htmlFor="photo" className="text-[10px] font-black tracking-wider">
                                     {t("photo_url")}
                                 </Label>
                                 <Input
@@ -130,7 +130,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="dob" className="text-[10px] font-black uppercase tracking-wider">
+                                <Label htmlFor="dob" className="text-[10px] font-black tracking-wider">
                                     {t("date_of_birth")}
                                 </Label>
                                 <Input
@@ -147,13 +147,13 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                             <Button 
                                 variant="outline" 
                                 onClick={() => setIsAddDialogOpen(false)}
-                                className="rounded-none text-[10px] font-black uppercase tracking-wider"
+                                className="rounded-none text-[10px] font-black tracking-wider"
                             >
                                 {commonT("cancel")}
                             </Button>
                             <Button 
                                 onClick={handleAddPlayer}
-                                className="rounded-none text-[10px] font-black uppercase tracking-wider"
+                                className="rounded-none text-[10px] font-black tracking-wider"
                             >
                                 {t("add_player")}
                             </Button>
@@ -166,16 +166,16 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">
                                 {commonT("user")}
                             </TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">
                                 {t("date_of_birth")}
                             </TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">
                                 {t("created_at")}
                             </TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                            <TableHead className="text-right text-[10px] font-black tracking-[0.15em] text-muted-foreground">
                                 {t("actions")}
                             </TableHead>
                         </TableRow>
@@ -200,7 +200,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                                 )}
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-sm uppercase tracking-tight">{player.name}</span>
+                                                <span className="font-bold text-sm tracking-tight">{player.name}</span>
                                                 <span className="text-[10px] font-medium text-muted-foreground tracking-wider -mt-0.5">PLAYER</span>
                                             </div>
                                         </div>
@@ -211,7 +211,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                             {player.date_of_birth || "-"}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-muted-foreground text-[10px] font-bold uppercase tracking-tight">
+                                    <TableCell className="text-muted-foreground text-[10px] font-bold tracking-tight">
                                         {player.created_at ? new Date(player.created_at).toLocaleDateString() : "-"}
                                     </TableCell>
                                     <TableCell className="text-right">

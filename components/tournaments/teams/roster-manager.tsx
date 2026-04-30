@@ -236,7 +236,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                 <div className="flex items-center justify-between mb-5">
                                     <div className="space-y-1 block w-full">
                                         <div className="flex items-center w-full">
-                                            <h3 className="text-lg font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                            <h3 className="text-lg font-black tracking-tighter text-foreground flex items-center gap-2">
                                                 <UserPlus className="h-5 w-5 text-secondary" />
                                                 {t("add_player")}
                                             </h3>
@@ -247,7 +247,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
 
                                 <form onSubmit={handleAddPlayer} className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
                                     <div className="sm:col-span-5 space-y-2 relative">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("player_name")} *</label>
+                                        <label className="text-[10px] font-bold tracking-wider text-muted-foreground ml-1">{t("player_name")} *</label>
                                         <Input
                                             value={newName}
                                             onChange={e => setNewName(e.target.value)}
@@ -257,7 +257,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("birth_date") || "Birth Date"}</label>
+                                        <label className="text-[10px] font-bold tracking-wider text-muted-foreground ml-1">{t("birth_date") || "Birth Date"}</label>
                                         <Input
                                             value={newBirthDate}
                                             onChange={e => setNewBirthDate(e.target.value)}
@@ -267,7 +267,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("number")}</label>
+                                        <label className="text-[10px] font-bold tracking-wider text-muted-foreground ml-1">{t("number")}</label>
                                         <Input
                                             value={newNumber}
                                             onChange={e => setNewNumber(e.target.value)}
@@ -277,7 +277,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">{t("position")}</label>
+                                        <label className="text-[10px] font-bold tracking-wider text-muted-foreground ml-1">{t("position")}</label>
                                         <Select value={newPosition} onValueChange={setNewPosition}>
                                             <SelectTrigger className="h-10 rounded-none bg-background/50 border-input/50 focus-visible:ring-secondary/20 focus-visible:border-secondary transition-all">
                                                 <SelectValue placeholder="POS" />
@@ -291,10 +291,10 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                         </Select>
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-transparent select-none hidden sm:block">Action</label>
+                                        <label className="text-[10px] font-bold tracking-wider text-transparent select-none hidden sm:block">Action</label>
                                         <Button 
                                             type="submit" 
-                                            className="w-full h-10 rounded-none font-black uppercase tracking-wider text-xs transition-all bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
+                                            className="w-full h-10 rounded-none font-black tracking-wider text-xs transition-all bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]" 
                                             disabled={isSaving || !newName.trim()}
                                         >
                                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
@@ -366,23 +366,23 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                         <Input
                                                             value={editName}
                                                             onChange={e => setEditName(e.target.value)}
-                                                            className="h-10 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black uppercase tracking-tighter text-secondary focus-visible:ring-0"
+                                                            className="h-10 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black tracking-tighter text-secondary focus-visible:ring-0"
                                                             placeholder={t("player_name")}
                                                             autoFocus
                                                         />
                                                     ) : (
-                                                        <h4 className="text-xl font-black uppercase tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
+                                                        <h4 className="text-xl font-black tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
                                                             {player.name}
                                                         </h4>
                                                     )}
 
                                                     {player.global_player_id ? (
-                                                        <Badge variant="secondary" className="rounded-none bg-secondary/10 text-secondary border-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                        <Badge variant="secondary" className="rounded-none bg-secondary/10 text-secondary border-none text-[9px] font-black tracking-widest px-2 py-0.5">
                                                             <Link2 className="h-2.5 w-2.5 mr-1" />
                                                             {t("verified") || "VERIFIED"}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                        <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[9px] font-black tracking-widest px-2 py-0.5">
                                                             {t("local_only") || "LOCAL ONLY"}
                                                         </Badge>
                                                     )}
@@ -390,15 +390,15 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                     <div className="flex items-center gap-2">
                                                         {editingPlayerId === player.id ? (
                                                             <Select value={editPosition} onValueChange={setEditPosition}>
-                                                                <SelectTrigger className="h-7 w-20 rounded-none border-t-0 border-x-0 border-border/40 bg-muted/20 text-[9px] font-black uppercase tracking-widest p-1 focus:ring-0 [&_svg]:hidden">
+                                                                <SelectTrigger className="h-7 w-20 rounded-none border-t-0 border-x-0 border-border/40 bg-muted/20 text-[9px] font-black tracking-widest p-1 focus:ring-0 [&_svg]:hidden">
                                                                     <SelectValue placeholder="POS" />
                                                                 </SelectTrigger>
                                                                 <SelectContent className="rounded-none border-border">
-                                                                    <SelectItem value="FW" className="text-[9px] font-black uppercase tracking-widest">{t("forward") || "FW"}</SelectItem>
+                                                                    <SelectItem value="FW" className="text-[9px] font-black tracking-widest">{t("forward") || "FW"}</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
                                                         ) : (
-                                                            <Badge className="rounded-none bg-muted border-none text-muted-foreground text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                            <Badge className="rounded-none bg-muted border-none text-muted-foreground text-[9px] font-black tracking-widest px-2 py-0.5">
                                                                 {player.position || "N/A"}
                                                             </Badge>
                                                         )}
@@ -409,11 +409,11 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                 onChange={e => setEditBirthDate(e.target.value)}
                                                                 type="date"
                                                                 lang={locale === 'th' ? 'th-TH' : 'en-US'}
-                                                                className="h-7 w-28 border-t-0 border-x-0 border-border/40 bg-muted/10 text-[9px] font-black p-1 focus-visible:ring-0 uppercase shadow-none"
+                                                                className="h-7 w-28 border-t-0 border-x-0 border-border/40 bg-muted/10 text-[9px] font-black p-1 focus-visible:ring-0 shadow-none"
                                                             />
                                                         ) : (
                                                             player.birth_date && (
-                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 font-mono">
+                                                                <span className="text-[10px] font-bold tracking-widest text-muted-foreground/40 font-mono">
                                                                     {formatDate(player.birth_date)}
                                                                 </span>
                                                             )
@@ -437,7 +437,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                             }}
                                                         >
                                                             <PopoverTrigger asChild>
-                                                                <Button variant="link" size="sm" className="p-0 h-auto text-[10px] font-black uppercase tracking-widest text-secondary hover:text-secondary/80 flex items-center gap-2">
+                                                                <Button variant="link" size="sm" className="p-0 h-auto text-[10px] font-black tracking-widest text-secondary hover:text-secondary/80 flex items-center gap-2">
                                                                     <Link2 className="h-3.5 w-3.5" />
                                                                     {tCommon("search")} Global ID
                                                                 </Button>
@@ -451,7 +451,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                                 placeholder="Start typing..."
                                                                                 value={searchQuery}
                                                                                 onChange={(e) => handleSearch(e.target.value)}
-                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black uppercase tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
+                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
                                                                                 autoFocus
                                                                             />
                                                                             <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary group-focus-within/search:w-full transition-all duration-700 z-20" />
@@ -462,7 +462,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                     {isSearching ? (
                                                                         <div className="flex flex-col items-center justify-center py-12 gap-3">
                                                                             <Loader2 className="h-6 w-6 animate-spin text-secondary" />
-                                                                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Scanning Database</span>
+                                                                            <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Scanning Database</span>
                                                                         </div>
                                                                     ) : searchResults.length > 0 ? (
                                                                         <div className="py-2">
@@ -473,9 +473,9 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                                     onClick={() => handleLinkPlayer(player.id, gp)}
                                                                                 >
                                                                                     <div className="flex flex-col">
-                                                                                        <span className="font-black uppercase text-xs tracking-tight group-hover/item:text-secondary">{gp.name}</span>
+                                                                                        <span className="font-black text-xs tracking-tight group-hover/item:text-secondary">{gp.name}</span>
                                                                                         {gp.date_of_birth && (
-                                                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase mt-0.5">
+                                                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/60 mt-0.5">
                                                                                                 {formatDate(gp.date_of_birth)}
                                                                                             </span>
                                                                                         )}
@@ -489,14 +489,14 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                             <div className="h-10 w-10 bg-muted/20 border border-border/40 flex items-center justify-center mx-auto">
                                                                                 {searchQuery ? <FileText className="h-5 w-5 text-muted-foreground/20" /> : <Search className="h-5 w-5 text-muted-foreground/20" />}
                                                                             </div>
-                                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                                                                            <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
                                                                                 {tCommon("no_results") || "No records found"}
                                                                             </p>
                                                                             {searchQuery && (
                                                                                 <Button
                                                                                     size="sm"
                                                                                     variant="outline"
-                                                                                    className="rounded-none w-full h-10 text-[9px] font-black uppercase tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
+                                                                                    className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
                                                                                     onClick={async () => {
                                                                                         const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
                                                                                         const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
@@ -518,7 +518,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                         <Button
                                                                             size="sm"
                                                                             variant="ghost"
-                                                                            className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
+                                                                            className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-secondary transition-colors"
                                                                             onClick={async () => {
                                                                                 const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
                                                                                 const res = await createGlobalPlayer(player.name, null, player.birth_date);
@@ -542,7 +542,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                         <Button
                                                             variant="link"
                                                             size="sm"
-                                                            className="p-0 h-auto text-[10px] font-black uppercase tracking-widest text-red-500/60 hover:text-red-500 flex items-center gap-2"
+                                                            className="p-0 h-auto text-[10px] font-black tracking-widest text-red-500/60 hover:text-red-500 flex items-center gap-2"
                                                             onClick={() => handleUnlinkPlayer(player.id)}
                                                         >
                                                             <Unlink className="h-3.5 w-3.5" />
@@ -553,7 +553,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                     {player.global_player_id && (
                                                         <div className="flex items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
                                                             <div className="h-1.5 w-1.5 rounded-full bg-secondary" />
-                                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground">Cloud Sync Active</span>
+                                                            <span className="text-[9px] font-black tracking-[0.2em] text-foreground">Cloud Sync Active</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -596,7 +596,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
                                                                 <DropdownMenuItem
-                                                                    className="rounded-none py-3 px-4 text-[10px] font-black uppercase tracking-widest focus:bg-secondary focus:text-black cursor-pointer transition-all"
+                                                                    className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-secondary focus:text-black cursor-pointer transition-all"
                                                                     onClick={() => {
                                                                         setEditingPlayerId(player.id);
                                                                         setEditName(player.name || "");
@@ -609,7 +609,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                                     {tCommon("edit")}
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
-                                                                    className="rounded-none py-3 px-4 text-[10px] font-black uppercase tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
+                                                                    className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
                                                                     onClick={() => setPlayerToDelete(player.id)}
                                                                 >
                                                                     <Trash2 className="mr-3 h-4 w-4" />
@@ -631,7 +631,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                 <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
                     <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                            <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                                 <Trash2 className="h-5 w-5 text-destructive" />
                                 {tCommon("delete")}
                             </AlertDialogTitle>
@@ -640,7 +640,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="mt-6">
-                            <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                            <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -648,7 +648,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                     e.preventDefault();
                                     confirmDeletePlayer();
                                 }}
-                                className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                                className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                             >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 {tCommon("delete")}

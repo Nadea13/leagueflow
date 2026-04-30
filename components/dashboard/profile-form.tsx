@@ -39,7 +39,7 @@ export function ProfileForm({ user }: { user: User }) {
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 mb-4 md:mb-6">
                 <UserIcon className="h-5 w-5 text-secondary" />
-                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">
+                <h3 className="text-xl font-black tracking-tighter text-foreground">
                     {t("user_info")}
                 </h3>
             </div>
@@ -47,7 +47,7 @@ export function ProfileForm({ user }: { user: User }) {
             <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
                 <form action={handleUpdate} className="grid gap-4 md:gap-6">
                     <div className="grid gap-3">
-                        <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">
+                        <Label htmlFor="email" className="text-[10px] font-black tracking-widest text-secondary/70">
                             {t("email")}
                         </Label>
                         <Input 
@@ -58,7 +58,7 @@ export function ProfileForm({ user }: { user: User }) {
                         />
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-secondary/70">
+                        <Label htmlFor="fullName" className="text-[10px] font-black tracking-widest text-secondary/70">
                             {t("full_name")}
                         </Label>
                         <Input
@@ -70,7 +70,7 @@ export function ProfileForm({ user }: { user: User }) {
                         />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading} variant="default" className="h-12 px-10 rounded-none font-black uppercase tracking-tighter shadow-[0_0_20px_rgba(0,196,154,0.1)] hover:shadow-[0_0_30px_rgba(0,196,154,0.2)] transition-all">
+                        <Button type="submit" disabled={isLoading} variant="default" className="h-12 px-10 rounded-none font-black tracking-tighter shadow-[0_0_20px_rgba(0,196,154,0.1)] hover:shadow-[0_0_30px_rgba(0,196,154,0.2)] transition-all">
                             {isLoading ? (
                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             ) : (

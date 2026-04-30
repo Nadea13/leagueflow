@@ -104,12 +104,12 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                 <Table className="min-w-[800px] border-separate border-spacing-0">
                     <TableHeader className="bg-muted/5">
                         <TableRow className="h-10 border-b border-border/10 hover:bg-muted/5 transition-colors">
-                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("team_name")}</TableHead>
-                            <TableHead className="px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("contact_info")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("payment_status")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("slip")}</TableHead>
-                            <TableHead className="text-right px-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">{t("date")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">Actions</TableHead>
+                            <TableHead className="px-6 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("team_name")}</TableHead>
+                            <TableHead className="px-6 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("contact_info")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("payment_status")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("slip")}</TableHead>
+                            <TableHead className="text-right px-6 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("date")}</TableHead>
+                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -120,21 +120,21 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <div className="h-9 w-9 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center shrink-0">
                                             <Home className="h-4 w-4 text-primary" />
                                         </div>
-                                        <span className="font-black uppercase tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
+                                        <span className="font-black tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell className="px-6 border-b border-border/5">
                                     <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-tight text-foreground/80">
+                                        <div className="flex items-center gap-2 text-[11px] font-black tracking-tight text-foreground/80">
                                             <User className="h-3 w-3 text-primary" />
                                             {reg.contact_name}
                                         </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/40 tabular-nums uppercase">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/40 tabular-nums">
                                             <Phone className="h-3 w-3" />
                                             {reg.contact_phone}
                                         </div>
                                         {reg.description && (
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary/60 mt-1">
+                                            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-secondary/60 mt-1">
                                                 <FileText className="h-3 w-3" />
                                                 {reg.description}
                                             </div>
@@ -143,7 +143,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                 </TableCell>
                                 <TableCell className="text-center px-4 border-b border-border/5">
                                     <Badge variant="outline" className={cn(
-                                        "rounded-none border-none text-[10px] font-black uppercase px-2.5 py-1 tracking-widest",
+                                        "rounded-none border-none text-[10px] font-black px-2.5 py-1 tracking-widest",
                                         reg.payment_status === 'PAID' ? "bg-secondary text-secondary-foreground shadow-[0_0_10px_rgba(0,196,154,0.2)]" :
                                         reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"
                                     )}>
@@ -155,17 +155,17 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-9 px-3 text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
+                                            className="h-9 px-3 text-[10px] font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
                                             onClick={() => window.open(reg.slip_url!, "_blank")}
                                         >
                                             <ExternalLink className="h-3.5 w-3.5 mr-2" />
                                             {t("view_slip")}
                                         </Button>
                                     ) : (
-                                        <span className="text-[10px] font-black uppercase text-muted-foreground/20 tracking-tighter">No Slip</span>
+                                        <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter">No Slip</span>
                                     )}
                                 </TableCell>
-                                <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 uppercase tabular-nums whitespace-nowrap">
+                                <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap">
                                     {new Date(reg.created_at).toLocaleString('en-US', { 
                                         day: '2-digit', 
                                         month: 'short', 
@@ -209,7 +209,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
             <AlertDialog open={!!registrationToReject} onOpenChange={(open) => !open && setRegistrationToReject(null)}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <X className="h-5 w-5 text-destructive" />
                             Reject Registration
                         </AlertDialogTitle>
@@ -218,7 +218,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -226,7 +226,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                 e.preventDefault();
                                 confirmReject();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <X className="h-3.5 w-3.5 mr-2" />
                             Reject

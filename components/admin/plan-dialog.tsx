@@ -190,7 +190,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>
                 {children || (
-                    <Button className="rounded-none text-[10px] font-black uppercase tracking-wider">
+                    <Button className="rounded-none text-[10px] font-black tracking-wider">
                         <Plus className="mr-2 h-4 w-4" /> {t("add_plan")}
                     </Button>
                 )}
@@ -199,7 +199,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                 <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                     <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground">
+                        <DialogTitle className="text-xl font-black tracking-tighter text-foreground">
                             {initialPlan ? t("edit_plan") : t("add_plan")}
                         </DialogTitle>
                         <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
@@ -210,7 +210,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-6 py-6">
                     <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                         <div className="col-span-2 grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right text-[10px] font-black uppercase tracking-wider">{t("plan_name")}</Label>
+                            <Label htmlFor="name" className="text-right text-[10px] font-black tracking-wider">{t("plan_name")}</Label>
                             <div className="col-span-3">
                                 <Input id="name" {...form.register("name")} />
                                 {form.formState.errors.name && <p className="text-sm text-red-500 mt-1">{t("name_required")}</p>}
@@ -218,7 +218,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         </div>
 
                         <div className="col-span-2 grid grid-cols-4 items-start gap-4">
-                            <Label className="text-right pt-2 text-[10px] font-black uppercase tracking-wider">{t("description")}</Label>
+                            <Label className="text-right pt-2 text-[10px] font-black tracking-wider">{t("description")}</Label>
                             <div className="col-span-3 space-y-2">
                                 {fields.map((field, index) => (
                                     <div key={field.id} className="flex gap-2">
@@ -236,7 +236,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                                     variant="outline"
                                     size="sm"
                                     onClick={() => append({ value: "" })}
-                                    className="w-full rounded-none text-[10px] font-black uppercase"
+                                    className="w-full rounded-none text-[10px] font-black"
                                 >
                                     <Plus className="mr-2 h-4 w-4" /> {t("add_feature")}
                                 </Button>
@@ -246,11 +246,11 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         {/* Pricing & Limits */}
                         <div className="col-span-2 border-t border-border pt-4 flex items-center gap-3">
                             <div className="w-1 h-4 bg-secondary" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.15em]">{t("pricing_and_limits")}</span>
+                            <span className="text-[10px] font-black tracking-[0.15em]">{t("pricing_and_limits")}</span>
                         </div>
 
                         <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="price" className="text-right text-[10px] font-black uppercase tracking-wider">{t("price")}</Label>
+                            <Label htmlFor="price" className="text-right text-[10px] font-black tracking-wider">{t("price")}</Label>
                             <div className="col-span-2">
                                 <Input id="price" type="number" step="0.01" {...form.register("price")} />
                                 {form.formState.errors.price && <p className="text-xs text-red-500 mt-1">{t(form.formState.errors.price.message || "")}</p>}
@@ -258,14 +258,14 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         </div>
 
                         <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="discounted_price" className="text-right whitespace-nowrap text-[10px] font-black uppercase tracking-wider">{t("discounted_price")}</Label>
+                            <Label htmlFor="discounted_price" className="text-right whitespace-nowrap text-[10px] font-black tracking-wider">{t("discounted_price")}</Label>
                             <div className="col-span-2">
                                 <Input id="discounted_price" type="number" step="0.01" {...form.register("discounted_price")} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="duration" className="text-right text-[10px] font-black uppercase tracking-wider">{t("duration")}</Label>
+                            <Label htmlFor="duration" className="text-right text-[10px] font-black tracking-wider">{t("duration")}</Label>
                             <div className="col-span-2">
                                 <Input id="duration" placeholder={t("duration_placeholder")} {...form.register("duration")} />
                             </div>
@@ -274,13 +274,13 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         {role === 'manager' ? (
                             <>
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="max_teams" className="text-right text-[10px] font-black uppercase tracking-wider">{t("max_teams")}</Label>
+                                    <Label htmlFor="max_teams" className="text-right text-[10px] font-black tracking-wider">{t("max_teams")}</Label>
                                     <div className="col-span-2">
                                         <Input id="max_teams" type="number" {...form.register("max_teams")} />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="max_players_per_team" className="text-right whitespace-nowrap text-[10px] font-black uppercase tracking-wider">{t("max_players_per_team")}</Label>
+                                    <Label htmlFor="max_players_per_team" className="text-right whitespace-nowrap text-[10px] font-black tracking-wider">{t("max_players_per_team")}</Label>
                                     <div className="col-span-2">
                                         <Input id="max_players_per_team" type="number" {...form.register("max_players_per_team")} />
                                     </div>
@@ -289,13 +289,13 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         ) : (
                             <>
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="max_tournaments" className="text-right text-[10px] font-black uppercase tracking-wider">{t("max_tournaments")}</Label>
+                                    <Label htmlFor="max_tournaments" className="text-right text-[10px] font-black tracking-wider">{t("max_tournaments")}</Label>
                                     <div className="col-span-2">
                                         <Input id="max_tournaments" type="number" {...form.register("max_tournaments")} />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="max_teams_per_tournament" className="text-right whitespace-nowrap text-[10px] font-black uppercase tracking-wider">{t("max_teams_per_tournament")}</Label>
+                                    <Label htmlFor="max_teams_per_tournament" className="text-right whitespace-nowrap text-[10px] font-black tracking-wider">{t("max_teams_per_tournament")}</Label>
                                     <div className="col-span-2">
                                         <Input id="max_teams_per_tournament" type="number" {...form.register("max_teams_per_tournament")} />
                                     </div>
@@ -304,7 +304,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         )}
 
                         <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="recommended" className="text-right text-[10px] font-black uppercase tracking-wider">{t("recommended")}</Label>
+                            <Label htmlFor="recommended" className="text-right text-[10px] font-black tracking-wider">{t("recommended")}</Label>
                             <div className="col-span-2">
                                 <Switch
                                     id="recommended"
@@ -318,25 +318,25 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                             <>
                                 <div className="col-span-2 border-t border-border pt-4 flex items-center gap-3">
                                     <div className="w-1 h-4 bg-secondary" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.15em]">{t("features_and_support")}</span>
+                                    <span className="text-[10px] font-black tracking-[0.15em]">{t("features_and_support")}</span>
                                 </div>
 
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="format_support" className="text-right text-[10px] font-black uppercase tracking-wider">{t("format_support")}</Label>
+                                    <Label htmlFor="format_support" className="text-right text-[10px] font-black tracking-wider">{t("format_support")}</Label>
                                     <div className="col-span-2">
                                         <Input id="format_support" {...form.register("format_support")} />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="stats_support" className="text-right text-[10px] font-black uppercase tracking-wider">{t("statistics")}</Label>
+                                    <Label htmlFor="stats_support" className="text-right text-[10px] font-black tracking-wider">{t("statistics")}</Label>
                                     <div className="col-span-2">
                                         <Input id="stats_support" {...form.register("stats_support")} />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="invite_enabled" className="text-right text-[10px] font-black uppercase tracking-wider">{t("invite_via_link")}</Label>
+                                    <Label htmlFor="invite_enabled" className="text-right text-[10px] font-black tracking-wider">{t("invite_via_link")}</Label>
                                     <div className="col-span-2">
                                         <Switch
                                             id="invite_enabled"
@@ -347,7 +347,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                                 </div>
 
                                 <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="register_enabled" className="text-right text-[10px] font-black uppercase tracking-wider">{t("open_registration")}</Label>
+                                    <Label htmlFor="register_enabled" className="text-right text-[10px] font-black tracking-wider">{t("open_registration")}</Label>
                                     <div className="col-span-2">
                                         <Switch
                                             id="register_enabled"
@@ -362,14 +362,14 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         )}
 
                         <div className="grid grid-cols-3 items-center gap-4">
-                            <Label htmlFor="support_level" className="text-right text-[10px] font-black uppercase tracking-wider">{t("support")}</Label>
+                            <Label htmlFor="support_level" className="text-right text-[10px] font-black tracking-wider">{t("support")}</Label>
                             <div className="col-span-2">
                                 <Input id="support_level" {...form.register("support_level")} />
                             </div>
                         </div>
                     </div>
                     <DialogFooter className="pt-4 border-t border-border">
-                        <Button type="submit" disabled={isLoading} className="w-full rounded-none font-black uppercase tracking-wider">
+                        <Button type="submit" disabled={isLoading} className="w-full rounded-none font-black tracking-wider">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {tCommon("save")}
                         </Button>

@@ -98,11 +98,11 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("tournaments")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("owner")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("tournaments")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("owner")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -122,7 +122,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm truncate">{tournament.name}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{tournament.format}</span>
+                                                <span className="text-[10px] text-muted-foreground tracking-wider font-medium">{tournament.format}</span>
                                             </div>
                                         </div>
                                     </TableCell>
@@ -132,7 +132,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                     <TableCell>
                                         <Badge
                                             variant={getStatusColor(tournament.status)}
-                                            className="rounded-none text-[10px] font-black uppercase"
+                                            className="rounded-none text-[10px] font-black"
                                         >
                                             {tournament.status}
                                         </Badge>
@@ -156,7 +156,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent className="rounded-none border-border">
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle className="font-black uppercase tracking-tighter">
+                                                        <AlertDialogTitle className="font-black tracking-tighter">
                                                             {tSettings("delete_tournament")}?
                                                         </AlertDialogTitle>
                                                         <AlertDialogDescription>
@@ -164,11 +164,11 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black uppercase">
+                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black">
                                                             {tCommon("cancel")}
                                                         </AlertDialogCancel>
                                                         <AlertDialogAction
-                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-none text-[10px] font-black uppercase"
+                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-none text-[10px] font-black"
                                                             onClick={() => handleDelete(tournament.id, tournament.name)}
                                                         >
                                                             {tCommon("delete")}
@@ -186,24 +186,24 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
             </div>
             {filteredTournaments.length > 0 && (
                 <div className="flex items-center justify-between py-2">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredTournaments.length)} of {filteredTournaments.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >

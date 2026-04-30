@@ -99,7 +99,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <ArrowRight className="h-5 w-5 text-primary" />
                             Advance Round
                         </AlertDialogTitle>
@@ -108,7 +108,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -116,7 +116,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
                                 e.preventDefault();
                                 handleAdvance();
                             }}
-                            className="rounded-none border border-primary/20 bg-primary/90 text-foreground hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-primary/20 bg-primary/90 text-foreground hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <ArrowRight className="h-3.5 w-3.5 mr-2" />
                             Advance

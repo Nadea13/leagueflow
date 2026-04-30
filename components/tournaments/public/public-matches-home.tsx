@@ -143,7 +143,7 @@ export function PublicMatchesHome() {
                         <button
                             onClick={() => setSelectedDate(null)}
                             className={cn(
-                                "px-6 py-2 text-xs font-black uppercase tracking-tighter transition-all shrink-0",
+                                "px-6 py-2 text-xs font-black tracking-tighter transition-all shrink-0",
                                 selectedDate === null 
                                     ? "bg-secondary text-secondary-foreground shadow-[0_0_15px_rgba(var(--secondary),0.3)]"
                                     : "text-muted-foreground/60 hover:text-secondary"
@@ -167,10 +167,10 @@ export function PublicMatchesHome() {
                                     <button className="px-4 py-2 flex items-center justify-center gap-4 hover:bg-muted/10 transition-all border-x border-border/10 flex-1 min-h-[56px]">
                                         <CalendarIcon className="h-5 w-5 text-secondary animate-pulse shrink-0" />
                                         <div className="flex flex-col items-center">
-                                            <span className="text-[10px] font-black uppercase tracking-tighter text-secondary leading-none mb-1">
+                                            <span className="text-[10px] font-black tracking-tighter text-secondary leading-none mb-1">
                                                 {selectedDate ? formatDate(selectedDate, "EEE", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                             </span>
-                                            <span className="text-base font-black uppercase tracking-tight">
+                                            <span className="text-base font-black tracking-tight">
                                                 {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : formatDate(new Date(), "d MMM yyyy", locale)}
                                             </span>
                                         </div>
@@ -182,7 +182,7 @@ export function PublicMatchesHome() {
                                         <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-secondary">
                                             <ChevronLeft className="h-4 w-4" />
                                         </button>
-                                        <span className="text-sm font-black uppercase tracking-tighter">
+                                        <span className="text-sm font-black tracking-tighter">
                                             {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
                                         </span>
                                         <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-secondary">
@@ -233,7 +233,7 @@ export function PublicMatchesHome() {
                                                 setViewDate(new Date());
                                                 setIsCalendarOpen(false);
                                             }}
-                                            className="w-full mt-4 py-2 border border-border/40 text-[10px] font-black uppercase hover:border-secondary transition-all"
+                                            className="w-full mt-4 py-2 border border-border/40 text-[10px] font-black hover:border-secondary transition-all"
                                         >
                                             {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
                                         </button>
@@ -260,17 +260,17 @@ export function PublicMatchesHome() {
                             <div className="relative">
                                 <Loader2 className="h-12 w-12 animate-spin text-secondary relative z-10" />
                             </div>
-                            <p className="text-secondary font-black uppercase tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching") || "LOADING MATCHES..."}</p>
+                            <p className="text-secondary font-black tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching") || "LOADING MATCHES..."}</p>
                         </div>
                     ) : filteredMatches.length === 0 ? (
                         <div className="text-center py-24 border border-dashed border-border/40 bg-muted/5 relative overflow-hidden group">
-                            <p className="text-4xl font-black uppercase tracking-tighter text-muted-foreground/10 mb-2">{t("no_results") || "NO MATCHES FOUND"}</p>
+                            <p className="text-4xl font-black tracking-tighter text-muted-foreground/10 mb-2">{t("no_results") || "NO MATCHES FOUND"}</p>
                             <Button 
                                 variant="outline" 
                                 onClick={() => {
                                     setSelectedDate(null);
                                 }}
-                                className="rounded-none font-black uppercase tracking-tighter"
+                                className="rounded-none font-black tracking-tighter"
                             >
                                 {locale === 'th' ? "ดูแมตช์ทั้งหมด" : "SEE ALL MATCHES"}
                             </Button>
@@ -281,7 +281,7 @@ export function PublicMatchesHome() {
                                 <div key={date} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                                     <div className="flex items-center gap-4 bg-muted/5 border-l-4 border-secondary p-4">
                                         <CalendarIcon className="h-6 w-6 text-secondary" />
-                                        <h3 className="text-2xl font-black uppercase tracking-tighter">
+                                        <h3 className="text-2xl font-black tracking-tighter">
                                             {date === "TBD" ? (locale === 'th' ? "รอกำหนดการ" : "To Be Determined") : formatDate(date, "EEEE, d MMM yyyy", locale)}
                                         </h3>
                                     </div>
@@ -292,8 +292,8 @@ export function PublicMatchesHome() {
                                                 <div className="flex items-center gap-3 group/tour">
                                                     <div className="h-8 w-1 bg-secondary/20 group-hover/tour:bg-secondary transition-all" />
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary/40 leading-none mb-1">TOURNAMENT</span>
-                                                        <h4 className="text-lg font-black uppercase tracking-tight text-foreground group-hover/tour:text-secondary transition-colors">
+                                                        <span className="text-[10px] font-black tracking-[0.2em] text-secondary/40 leading-none mb-1">TOURNAMENT</span>
+                                                        <h4 className="text-lg font-black tracking-tight text-foreground group-hover/tour:text-secondary transition-colors">
                                                             {tournamentName}
                                                         </h4>
                                                     </div>
@@ -324,7 +324,7 @@ export function PublicMatchesHome() {
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <Trophy className="h-6 w-6 text-secondary" />
-                                    <h3 className="text-2xl font-black uppercase tracking-tighter">
+                                    <h3 className="text-2xl font-black tracking-tighter">
                                         {locale === 'th' ? "รายการแข่ง" : "TOURNAMENTS"}
                                     </h3>
                                 </div>
@@ -336,7 +336,7 @@ export function PublicMatchesHome() {
                                     <Link
                                         key={tournament.id}
                                         href={`/${tournament.id}`}
-                                        className="w-full text-left px-4 py-4 text-sm font-black uppercase tracking-tight transition-all relative group border-l-2 block border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-muted/5"
+                                        className="w-full text-left px-4 py-4 text-sm font-black tracking-tight transition-all relative group border-l-2 block border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-muted/5"
                                     >
                                         <div className="flex items-center justify-between">
                                             <span className="truncate pr-4">{tournament.name}</span>

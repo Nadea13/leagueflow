@@ -21,7 +21,7 @@ export function BecomeOrganizerButton() {
                     <Trophy className="h-24 w-24 text-secondary rotate-12" />
                 </div>
                 <div className="relative z-10">
-                    <h3 className="text-xl font-black uppercase tracking-tight text-secondary">
+                    <h3 className="text-xl font-black tracking-tight text-secondary">
                         {t("become_organizer")}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1 max-w-md">
@@ -29,7 +29,7 @@ export function BecomeOrganizerButton() {
                     </p>
                     <Button 
                         onClick={() => setShowDialog(true)} 
-                        className="mt-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase"
+                        className="mt-4 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black"
                     >
                         <Trophy className="mr-2 h-4 w-4" />
                         {t("become_organizer_btn")}

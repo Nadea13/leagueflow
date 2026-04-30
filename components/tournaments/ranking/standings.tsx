@@ -41,20 +41,20 @@ export function Standings({ standings }: StandingsProps) {
             <Table className="min-w-[600px] text-xs md:text-sm border-separate border-spacing-0">
                 <TableHeader className="bg-card">
                     <TableRow className="h-10 border-b border-border/10 hover:bg-card transition-colors">
-                        <TableHead className="w-10 min-w-[2.5rem] px-0 text-center sticky left-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10 whitespace-nowrap">
+                        <TableHead className="w-10 min-w-[2.5rem] px-0 text-center sticky left-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10 whitespace-nowrap">
                             {t("pos")}
                         </TableHead>
-                        <TableHead className="px-6 sticky left-10 z-20 bg-card backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10 border-r border-border/5 whitespace-nowrap">
+                        <TableHead className="px-6 sticky left-10 z-20 bg-card backdrop-blur-sm text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10 border-r border-border/5 whitespace-nowrap">
                             {t("team")}
                         </TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("played")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("won")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("drawn")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("lost")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gf")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("ga")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gd")}</TableHead>
-                        <TableHead className="text-center px-6 sticky right-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-secondary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("played")}</TableHead>
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("won")}</TableHead>
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("drawn")}</TableHead>
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("lost")}</TableHead>
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gf")}</TableHead>
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("ga")}</TableHead>
+                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gd")}</TableHead>
+                        <TableHead className="text-center px-6 sticky right-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black tracking-widest text-secondary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
                             {t("pts")}
                         </TableHead>
                     </TableRow>
@@ -71,12 +71,12 @@ export function Standings({ standings }: StandingsProps) {
                                         {team.team?.logo_url ? (
                                             <Image src={team.team.logo_url} alt={team.team.name} width={32} height={32} className="w-full h-full object-contain relative z-10" unoptimized />
                                         ) : (
-                                            <span className="text-[10px] font-black uppercase text-muted-foreground/40">
+                                            <span className="text-[10px] font-black text-muted-foreground/40">
                                                 {team.team?.name.charAt(0)}
                                             </span>
                                         )}
                                     </div>
-                                    <span className="font-black uppercase tracking-tighter text-foreground text-sm truncate max-w-[120px] md:max-w-none group-hover:text-primary transition-colors" title={team.team?.name}>
+                                    <span className="font-black tracking-tighter text-foreground text-sm truncate max-w-[120px] md:max-w-none group-hover:text-primary transition-colors" title={team.team?.name}>
                                         {team.team?.name}
                                     </span>
                                 </div>

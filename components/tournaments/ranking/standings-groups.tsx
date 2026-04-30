@@ -60,7 +60,7 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, c
                     return (
                         <div key={group} className="space-y-4 md:space-y-6">
                             <div className="flex flex-col">
-                                <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3 relative z-10">
+                                <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3 relative z-10">
                                     <span className="w-2 h-2 bg-secondary rounded-none" />
                                     {t("group_header", { group })}
                                 </h3>

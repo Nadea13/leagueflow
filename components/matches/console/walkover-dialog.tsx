@@ -18,7 +18,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
                 <DialogHeader className="p-4 md:p-6">
-                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black uppercase tracking-tighter text-foreground">
+                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
                         <div className="p-2 md:p-3 bg-red-500/10 border border-red-500/20">
                             <AlertTriangle className="h-6 w-6 text-red-500" />
                         </div>
@@ -37,7 +37,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                             <div className="p-3 bg-foreground/5 group-hover:bg-black/10 transition-colors">
                                 <Trophy className="w-8 h-8 group-hover:scale-110 transition-transform" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">
+                            <span className="text-[10px] font-black tracking-widest text-center px-2">
                                 {match.home_team?.name} <br/>
                                 <span className="text-secondary group-hover:text-black/60">{t("wins")}</span>
                             </span>
@@ -51,7 +51,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                             <div className="p-3 bg-foreground/5 group-hover:bg-black/10 transition-colors">
                                 <Trophy className="w-8 h-8 group-hover:scale-110 transition-transform" />
                             </div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">
+                            <span className="text-[10px] font-black tracking-widest text-center px-2">
                                 {match.away_team?.name} <br/>
                                 <span className="text-secondary group-hover:text-black/60">{t("wins")}</span>
                             </span>
@@ -62,7 +62,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                         <Button 
                             variant="ghost" 
                             onClick={() => onOpenChange(false)}
-                            className="w-full h-10 text-[10px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
+                            className="w-full h-10 text-[10px] font-black tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
                         >
                             {t("cancel") || "CANCEL"}
                         </Button>

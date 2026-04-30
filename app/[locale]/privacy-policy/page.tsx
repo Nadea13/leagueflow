@@ -20,16 +20,16 @@ export default async function PrivacyPolicyPage() {
             <div className="container mx-auto max-w-4xl py-8 space-y-8 md:py-12 flex-1">
                 <BackButton />
                 <div className="space-y-2 border-b-2 border-secondary/20 pb-6">
-                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-foreground leading-none">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
                         {t("title")}
                     </h1>
-                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground opacity-70">
+                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground opacity-70">
                         {t("last_updated")}: {new Date().toLocaleDateString()}
                     </p>
                 </div>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("intro_title")}
                     </h2>
@@ -41,7 +41,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("data_collect_title")}
                     </h2>
@@ -64,7 +64,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("how_use_title")}
                     </h2>
@@ -76,7 +76,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("cookies_title")}
                     </h2>
@@ -88,7 +88,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("retention_title")}
                     </h2>
@@ -100,7 +100,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("rights_title")}
                     </h2>
@@ -112,7 +112,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("security_title")}
                     </h2>
@@ -124,7 +124,7 @@ export default async function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4 group">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground flex items-center gap-3">
+                    <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
                         {t("contact_title")}
                     </h2>

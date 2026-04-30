@@ -41,7 +41,7 @@ export function MatchControls({
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
                             <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
-                            <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-secondary">{t("start_match")}</span>
+                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-secondary">{t("start_match")}</span>
                         </div>
                         <span className="hidden md:block text-[9px] text-secondary/60 ml-7">Kick off the competition</span>
                     </div>
@@ -55,7 +55,7 @@ export function MatchControls({
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
                             <Pause className="h-4 w-4 fill-orange-500 text-orange-500 group-hover:scale-110 transition-transform" /> 
-                            <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-orange-500">{t("pause")}</span>
+                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-orange-500">{t("pause")}</span>
                         </div>
                         <span className="hidden md:block text-[9px] text-orange-500/60 ml-7">Temporarily halt play</span>
                     </div>
@@ -69,7 +69,7 @@ export function MatchControls({
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
                             <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
-                            <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-secondary">{t("resume_match")}</span>
+                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-secondary">{t("resume_match")}</span>
                         </div>
                         <span className="hidden md:block text-[9px] text-secondary/60 ml-7">Continue the match</span>
                     </div>
@@ -82,7 +82,7 @@ export function MatchControls({
                 >
                     <div className="flex items-center gap-3">
                         <Play className="h-4 w-4 text-foreground/20" /> 
-                        <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-foreground/20">{t("match_finished")}</span>
+                        <span className="hidden md:inline text-[11px] font-black tracking-widest text-foreground/20">{t("match_finished")}</span>
                     </div>
                 </Button>
             )}
@@ -96,7 +96,7 @@ export function MatchControls({
                 <div className="flex flex-col items-center md:items-start">
                     <div className="flex items-center gap-2 md:gap-3">
                         <Square className="h-4 w-4 fill-red-500 text-red-500 group-hover:scale-110 transition-transform" /> 
-                        <span className="hidden md:inline text-[11px] font-black uppercase tracking-widest text-red-500">{t("stop_finish")}</span>
+                        <span className="hidden md:inline text-[11px] font-black tracking-widest text-red-500">{t("stop_finish")}</span>
                     </div>
                     <span className="hidden md:block text-[9px] text-red-500/60 ml-7">End the regulation time</span>
                 </div>
@@ -111,7 +111,7 @@ export function MatchControls({
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
                             <Clock className="h-4 w-4 text-foreground/40 group-hover:text-foreground transition-colors" />
-                            <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-foreground/60 group-hover:text-foreground transition-colors">{t("set_time")}</span>
+                            <span className="hidden md:inline text-[10px] font-black tracking-widest text-foreground/60 group-hover:text-foreground transition-colors">{t("set_time")}</span>
                         </div>
                         <span className="hidden md:block text-[9px] text-muted-foreground/60 ml-7">Adjust clock</span>
                     </div>
@@ -127,7 +127,7 @@ export function MatchControls({
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
                             <Plus className="h-4 w-4 text-secondary group-hover:scale-110 transition-transform" />
-                            <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-foreground/60 group-hover:text-secondary transition-colors">{t("add_time")}</span>
+                            <span className="hidden md:inline text-[10px] font-black tracking-widest text-foreground/60 group-hover:text-secondary transition-colors">{t("add_time")}</span>
                         </div>
                         <span className="hidden md:block text-[9px] text-secondary/40 ml-7">Extra minutes</span>
                     </div>

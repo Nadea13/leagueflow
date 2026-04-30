@@ -79,10 +79,10 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("role")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("user")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("role")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("created_at")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -102,14 +102,14 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm truncate">{user.email}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{user.full_name || t("no_name")}</span>
+                                                <span className="text-[10px] text-muted-foreground tracking-wider font-medium">{user.full_name || t("no_name")}</span>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge
                                             variant={user.role === 'admin' ? 'default' : 'outline'}
-                                            className="rounded-none text-[10px] font-black uppercase"
+                                            className="rounded-none text-[10px] font-black"
                                         >
                                             {user.role === 'admin' && <Shield className="mr-1 h-3 w-3" />}
                                             {user.role}
@@ -129,12 +129,12 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="rounded-none border-border">
-                                                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-wider">{t("actions")}</DropdownMenuLabel>
+                                                <DropdownMenuLabel className="text-[10px] font-black tracking-wider">{t("actions")}</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.id)}>
                                                     {t("copy_user_id")}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-wider">{t("change_role")}</DropdownMenuLabel>
+                                                <DropdownMenuLabel className="text-[10px] font-black tracking-wider">{t("change_role")}</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'user')}>
                                                     <User className="mr-2 h-4 w-4" />
                                                     {t("set_as_user")}
@@ -156,7 +156,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
             </div>
             {filteredUsers.length > 0 && (
                 <div className="flex items-center justify-between py-2">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
@@ -164,7 +164,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                             id="pagination-prev"
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => {
                                 setPage(p => Math.max(1, p - 1));
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -173,14 +173,14 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                         >
                             Previous
                         </Button>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2" id="pagination-info">
+                        <span className="text-[10px] tracking-wider font-bold text-muted-foreground px-2" id="pagination-info">
                             Page {page} of {totalPages}
                         </span>
                         <Button
                             id="pagination-next"
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => {
                                 setPage(p => Math.min(totalPages, p + 1));
                                 window.scrollTo({ top: 0, behavior: 'smooth' });

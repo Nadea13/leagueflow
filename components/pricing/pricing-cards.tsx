@@ -101,14 +101,14 @@ export function PricingCards({
                                     isRecommended && "border-2 border-primary/20 bg-primary/5 rounded-t-lg border-b-0"
                                 )}>
                                     {isRecommended && (
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] uppercase font-bold px-2 py-0.5 rounded-none shadow-sm whitespace-nowrap z-10">
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-none shadow-sm whitespace-nowrap z-10">
                                             {t('recommended')}
                                         </div>
                                     )}
                                     <div className="flex flex-col items-center gap-2 mb-1">
                                         <div className="text-lg font-bold">{getTranslatedValue('name', plan.name)}</div>
                                         {plan.price > 0 && (
-                                            <Badge variant="default" className="text-[10px] h-4 px-1.5 uppercase font-black tracking-widest bg-primary text-primary-foreground border-none">
+                                            <Badge variant="default" className="text-[10px] h-4 px-1.5 font-black tracking-widest bg-primary text-primary-foreground border-none">
                                                 {t('pro_badge')}
                                             </Badge>
                                         )}
