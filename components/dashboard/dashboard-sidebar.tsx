@@ -56,12 +56,12 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
             setShowRegDialog(true)
             return
         }
-        
+
         setMode(newMode)
         localStorage.setItem('dashboard-mode', newMode)
         // Dispatch event for same-window sync
         window.dispatchEvent(new StorageEvent('storage', { key: 'dashboard-mode', newValue: newMode }))
-        
+
         trackAction('CHANGE_DASHBOARD_MODE', 'ui_element', newMode, { isOrganizer })
 
         // Navigate to the respective dashboard
@@ -96,7 +96,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                     </div>
                 </Link>
             </div>
-            
+
             {/* Mode Switcher */}
             <div className="px-4 py-6">
                 <Tab
@@ -111,31 +111,28 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                 />
             </div>
 
-            <div className="flex-1 overflow-y-auto pt-2">
-                <nav className="grid items-start px-2 lg:px-4 gap-1">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                target={item.openInNewTab ? "_blank" : undefined}
-                                onClick={() => trackClick('NAV_ITEM', 'navigation', { target: item.href })}
-                                className={cn(
-                                    "flex items-center gap-3 px-4 py-3.5 transition-all relative group",
-                                    isActive
-                                        ? "text-primary font-black bg-muted/30"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
-                                )}
-                            >
-                                {isActive && <div className="absolute left-0 top-0 w-1 h-full bg-primary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
-                                <item.icon className={cn("h-4.5 w-4.5 transition-transform group-hover:scale-110", isActive ? "text-primary" : "text-muted-foreground/50")} />
-                                <span className="text-[11px] font-black tracking-[0.15em]">{t(item.titleKey)}</span>
-                            </Link>
-                        );
-                    })}
-                </nav>
-            </div>
+            <nav className="grid items-start px-2 lg:px-3">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            target={item.openInNewTab ? "_blank" : undefined}
+                            onClick={() => trackClick('NAV_ITEM', 'navigation', { target: item.href })}
+                            className={cn(
+                                "flex items-center gap-3 p-3 transition-all relative group",
+                                isActive
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-primary"
+                            )}
+                        >
+                            <item.icon className={cn("h-5 w-5 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
+                            <span className="text-sm font-medium whitespace-nowrap">{t(item.titleKey)}</span>
+                        </Link>
+                    );
+                })}
+            </nav>
 
             <div className="mt-auto p-4 flex flex-col items-start gap-2 border-t border-border">
                 <BugReportDialog />

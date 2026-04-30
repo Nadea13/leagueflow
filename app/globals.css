@@ -182,17 +182,17 @@
 
 .pro-editor .ql-toolbar.ql-snow button:hover .ql-stroke,
 .pro-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke {
-  @apply stroke-secondary;
+  @apply stroke-primary;
 }
 
 .pro-editor .ql-toolbar.ql-snow button:hover .ql-fill,
 .pro-editor .ql-toolbar.ql-snow button.ql-active .ql-fill {
-  @apply fill-secondary;
+  @apply fill-primary;
 }
 
 .pro-editor .ql-toolbar.ql-snow .ql-picker:hover,
 .pro-editor .ql-toolbar.ql-snow .ql-picker.ql-active {
-  @apply text-secondary;
+  @apply text-primary;
 }
 
 .pro-editor-wrapper {
@@ -200,7 +200,7 @@
 }
 
 .pro-editor-wrapper:focus-within {
-  @apply border-secondary/40 ring-1 ring-secondary/20 transition-all duration-300;
+  @apply border-primary/40 ring-1 ring-primary/20 transition-all duration-300;
 }
 
 /* Rich Text / Prose Fixes */
