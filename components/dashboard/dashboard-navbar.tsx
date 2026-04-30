@@ -2,7 +2,7 @@
 
 import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
-import { Menu } from "lucide-react"
+import { Menu, LayoutGrid, Users as UsersIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -70,12 +70,12 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
             setShowRegDialog(true)
             return
         }
-        
+
         setMode(newMode)
         localStorage.setItem('dashboard-mode', newMode)
         // Dispatch event for same-window sync
         window.dispatchEvent(new StorageEvent('storage', { key: 'dashboard-mode', newValue: newMode }))
-        
+
         // Navigate to the respective dashboard
         if (newMode === 'organizer') {
             router.push('/organizer/dashboard')
@@ -87,7 +87,7 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
     const navItems = getNavItems(mode, role)
 
     return (
-        <header className={cn("sticky top-0 z-40 flex h-20 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-2 md:px-6", className)}>
+        <header className={cn("sticky top-0 z-40 flex py-2 md:h-20 items-center gap-4 border-b border-border bg-background/80 backdrop-blur-xl px-2 md:px-6", className)}>
             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                     <Button
@@ -100,7 +100,7 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="flex flex-col p-0 bg-background border-r border-border w-[300px]">
-                    <div className="flex h-20 items-center px-6 border-b border-border">
+                    <div className="flex py-3 items-center px-2 border-b border-border">
                         <Link
                             href="/"
                             onClick={() => setOpen(false)}
@@ -117,7 +117,7 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
                                 </svg>
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-xl font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
+                                <span className="text-lg font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
                                 <span className="text-[10px] font-bold tracking-[0.3em] text-primary/80 ml-0.5">
                                     {mode === 'organizer' ? 'Organizer' : 'Manager'}
                                 </span>
@@ -126,15 +126,15 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
                     </div>
 
                     {/* Mode Switcher for Mobile */}
-                    <div className="px-2 py-2 mb-4 pr-4">
+                    <div className="px-2">
                         <Tab
                             value={mode}
                             onChange={handleModeChange}
-                            showIcons={false}
+                            className="w-full"
                             fullWidth={true}
                             options={[
-                                { label: t("organizer_mode"), value: 'organizer' },
-                                { label: t("team_mode"), value: 'team' }
+                                { label: t("organizer_mode"), value: 'organizer', icon: LayoutGrid },
+                                { label: t("team_mode"), value: 'team', icon: UsersIcon }
                             ]}
                         />
                     </div>
@@ -148,15 +148,14 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
                                     href={item.href}
                                     onClick={() => setOpen(false)}
                                     className={cn(
-                                        "flex items-center gap-4 px-6 py-4 transition-all relative group",
+                                        "flex items-center gap-2 p-2 transition-all relative group",
                                         isActive
-                                            ? "text-primary font-black bg-muted/30"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:text-primary"
                                     )}
                                 >
-                                    {isActive && <div className="absolute left-0 top-0 w-1.5 h-full bg-primary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
                                     <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground/50")} />
-                                    <span className="text-[12px] font-black tracking-[0.2em]">{t(item.titleKey)}</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{t(item.titleKey)}</span>
                                 </Link>
                             );
                         })}
@@ -176,7 +175,7 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
                         </svg>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-[16px] font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
+                        <span className="text-lg font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
                         <span className="text-[8px] font-bold tracking-[0.3em] text-primary/80 ml-0.5 mt-0.5">
                             {mode === 'organizer' ? 'Organizer' : 'Manager'}
                         </span>
