@@ -23,10 +23,10 @@ export default async function AdminDashboardPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-foreground">
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground">
                         {t("overview") || "Dashboard Overview"}
                     </h1>
-                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                    <p className="text-[10px] tracking-[0.3em] font-bold text-muted-foreground mt-1">
                         Platform Administration
                     </p>
                 </div>
@@ -37,7 +37,7 @@ export default async function AdminDashboardPage() {
             <div className="mt-8 space-y-4">
                 <div className="flex items-center gap-3">
                     <div className="w-1 h-6 bg-secondary" />
-                    <h2 className="text-lg md:text-xl font-black uppercase tracking-tighter text-foreground">
+                    <h2 className="text-lg md:text-xl font-black tracking-tighter text-foreground">
                         {t("audit_logs") || "Audit Logs"}
                     </h2>
                 </div>

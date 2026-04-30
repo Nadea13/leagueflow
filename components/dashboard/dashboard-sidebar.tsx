@@ -8,11 +8,9 @@ import { getNavItems } from "@/config/nav"
 import { useAnalytics } from "@/hooks/use-analytics"
 
 import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
-import { Button } from "@/components/ui/button"
-import { LayoutGrid, Users as UsersIcon, Trophy, CheckCircle2, Loader2 } from "lucide-react"
+import { LayoutGrid, Users as UsersIcon } from "lucide-react"
 import { Tab } from "@/components/ui/tab"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { registerAsOrganizer } from "@/actions/organizer/dashboard"
+import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog"
 import { useToast } from "@/hooks/use-toast"
 
 export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team' }) {
@@ -23,7 +21,6 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
     const [mode, setMode] = useState<'organizer' | 'team'>(forcedMode || 'team')
     const [isOrganizer, setIsOrganizer] = useState(initialIsOrganizer)
     const [showRegDialog, setShowRegDialog] = useState(false)
-    const [isRegistering, setIsRegistering] = useState(false)
     const { trackAction, trackClick } = useAnalytics()
 
     // Persist mode in localStorage
@@ -42,6 +39,9 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'dashboard-mode') {
                 setMode(e.newValue as 'organizer' | 'team')
+                if (e.newValue === 'organizer') {
+                    setIsOrganizer(true)
+                }
             }
         }
         window.addEventListener('storage', handleStorageChange)
@@ -69,29 +69,6 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
             router.push('/organizer/dashboard')
         } else {
             router.push('/manager/dashboard')
-        }
-    }
-
-    const handleRegister = async () => {
-        setIsRegistering(true)
-        const result = await registerAsOrganizer()
-        setIsRegistering(false)
-
-        if (result.success) {
-            setIsOrganizer(true)
-            setShowRegDialog(false)
-            handleModeChange('organizer')
-            toast({
-                title: "Welcome, Organizer!",
-                description: "You have successfully registered as a tournament organizer.",
-            })
-            router.refresh()
-        } else {
-            toast({
-                title: "Registration Failed",
-                description: result.error,
-                variant: "destructive"
-            })
         }
     }
 
@@ -164,72 +141,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                 <BugReportDialog />
             </div>
 
-            <Dialog open={showRegDialog} onOpenChange={setShowRegDialog}>
-                <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
-                    <div className="bg-secondary/10 px-8 py-6 border-b border-border relative">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                        <DialogHeader>
-                            <div className="w-12 h-12 bg-muted flex items-center justify-center mb-4 border border-border rotate-3">
-                                <Trophy className="h-6 w-6 text-secondary -rotate-3" />
-                            </div>
-                            <DialogTitle className="text-2xl font-black uppercase tracking-tighter text-foreground">Become an Organizer</DialogTitle>
-                            <DialogDescription className="text-muted-foreground font-medium pt-1">
-                                Unlock professional tournament management tools and reach thousands of players.
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
-                    
-                    <div className="px-8 py-8 space-y-6">
-                        <div className="grid gap-3">
-                            <div className="flex items-start gap-4 p-4 bg-muted/20 border border-border transition-all hover:border-secondary/30">
-                                <div className="p-1.5 bg-secondary/10 border border-secondary/20">
-                                    <CheckCircle2 className="h-4 w-4 text-secondary" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Tournament Creation</p>
-                                    <p className="text-[11px] text-muted-foreground font-medium">Build professional leagues and brackets with ease.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4 p-4 bg-muted/20 border border-border transition-all hover:border-secondary/30">
-                                <div className="p-1.5 bg-secondary/10 border border-secondary/20">
-                                    <CheckCircle2 className="h-4 w-4 text-secondary" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Financial Controls</p>
-                                    <p className="text-[11px] text-muted-foreground font-medium">Manage registration fees and secure payments.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4 p-4 bg-muted/20 border border-border transition-all hover:border-secondary/30">
-                                <div className="p-1.5 bg-secondary/10 border border-secondary/20">
-                                    <CheckCircle2 className="h-4 w-4 text-secondary" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Match Console</p>
-                                    <p className="text-[11px] text-muted-foreground font-medium">Real-time scheduling and live score tracking.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <DialogFooter className="pt-4">
-                            <Button
-                                className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)]"
-                                onClick={handleRegister}
-                                disabled={isRegistering}
-                                variant="secondary"
-                            >
-                                {isRegistering ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
-                                ) : (
-                                    <span className="flex items-center gap-2">
-                                        <Trophy className="h-4 w-4" />
-                                        Confirm Registration
-                                    </span>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <BecomeOrganizerDialog open={showRegDialog} onOpenChange={setShowRegDialog} />
         </div>
     )
 }

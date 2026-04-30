@@ -17,10 +17,10 @@ export default async function AdminTrackingPage() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tighter text-foreground">
+                    <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-foreground">
                         User Activity Insights
                     </h1>
-                    <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                    <p className="text-[10px] tracking-[0.3em] font-bold text-muted-foreground mt-1">
                         Analytics & Behavior Monitoring
                     </p>
                 </div>
@@ -30,11 +30,11 @@ export default async function AdminTrackingPage() {
                 <TabsList className="bg-muted/50 border border-border p-1 h-12">
                     <TabsTrigger value="overview" className="gap-2 px-6">
                         <BarChart3 className="h-4 w-4" />
-                        <span className="font-bold uppercase tracking-widest text-[10px]">Overview Analytics</span>
+                        <span className="font-bold tracking-widest text-[10px]">Overview Analytics</span>
                     </TabsTrigger>
                     <TabsTrigger value="journey" className="gap-2 px-6">
                         <Users className="h-4 w-4" />
-                        <span className="font-bold uppercase tracking-widest text-[10px]">Individual Journey</span>
+                        <span className="font-bold tracking-widest text-[10px]">Individual Journey</span>
                     </TabsTrigger>
                 </TabsList>
                 

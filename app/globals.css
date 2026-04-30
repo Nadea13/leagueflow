@@ -237,7 +237,7 @@
 }
 
 .prose h1, .prose h2, .prose h3 {
-  @apply font-black uppercase tracking-tighter text-foreground mt-2 md:mt-3 mb-2 md:mb-3;
+  @apply font-black tracking-tighter text-foreground mt-2 md:mt-3 mb-2 md:mb-3;
 }
 
 .prose h1 { @apply text-2xl; }
