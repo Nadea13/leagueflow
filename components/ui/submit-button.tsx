@@ -12,7 +12,7 @@ export function SubmitButton({
     children: React.ReactNode; 
     disabled?: boolean;
     className?: string;
-    variant?: "default" | "destructive" | "outline" | "primary" | "ghost" | "link";
+    variant?: "default" | "destructive" | "outline" | "ghost" | "link";
 }) {
     const { pending } = useFormStatus();
 
