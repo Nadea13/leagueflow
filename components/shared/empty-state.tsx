@@ -32,7 +32,7 @@ export function EmptyState({
             "flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-8 text-center animate-in fade-in-50 relative overflow-hidden group",
             className
         )}>
-            <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
+            <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 mb-6 relative z-10">
                 <Icon className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
             </div>
 

@@ -57,7 +57,7 @@ export function CreateTeamDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="gap-3 w-8 h-8 md:w-auto md:h-auto shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:shadow-[0_0_30px_rgba(0,196,154,0.4)] transition-all">
+                <Button className="gap-3 w-8 h-8 md:w-auto md:h-10">
                     <Plus className="h-5 w-5" />
                     <span className="hidden sm:inline">{t("add_team")}</span>
                 </Button>
