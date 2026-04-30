@@ -74,7 +74,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active': return 'default';
-            case 'completed': return 'primary';
+            case 'completed': return 'default';
             default: return 'outline';
         }
     };

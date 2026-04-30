@@ -42,7 +42,7 @@ export default async function MyRegistrationsPage() {
     const getStatusVariant = (status: string) => {
         if (isApproved(status)) return 'default';
         if (isRejected(status)) return 'destructive';
-        return 'primary';
+        return 'default';
     };
 
     const getDisplayStatus = (status: string) => {

@@ -116,7 +116,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'success': return "default";
-            case 'pending': return "primary";
+            case 'pending': return "default";
             case 'failed': return "destructive";
             default: return "outline";
         }

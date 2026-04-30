@@ -74,7 +74,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
 
     const getActionColor = (action: string) => {
         if (action.includes("CREATE") || action.includes("ADD") || action.includes("PAYMENT")) return "default";
-        if (action.includes("UPDATE") || action.includes("INVITE")) return "primary";
+        if (action.includes("UPDATE") || action.includes("INVITE")) return "default";
         if (action.includes("DELETE") || action.includes("REMOVE")) return "destructive";
         return "outline";
     };

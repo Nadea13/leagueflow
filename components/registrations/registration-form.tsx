@@ -489,7 +489,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                         disabled={isSubmitting || isRegistrationClosed}
                         className="w-full h-12 text-base font-semibold shadow-md active:scale-[0.99] transition-all"
                         size="lg"
-                        variant={isRegistrationClosed ? "primary" : "default"}
+                        variant="default"
                     >
                         {isSubmitting ? (
                             <>

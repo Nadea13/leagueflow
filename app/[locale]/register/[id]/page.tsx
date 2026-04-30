@@ -74,7 +74,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                     <h1 className="text-3xl font-bold tracking-tight mb-2">{tournament.name}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                         <Badge variant="outline" className="capitalize">{tournament.format?.replace(/_/g, " ") || "Tournament"}</Badge>
-                        <Badge variant={tournament.status === 'active' ? 'default' : 'primary'} className="capitalize">{t_common(tournament.status as Parameters<typeof t_common>[0])}</Badge>
+                        <Badge variant={tournament.status === 'active' ? 'default' : 'default'} className="capitalize">{t_common(tournament.status as Parameters<typeof t_common>[0])}</Badge>
                         {tournament.start_date && (
                             <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
