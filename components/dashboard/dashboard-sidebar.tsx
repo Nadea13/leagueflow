@@ -90,7 +90,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                     </div>
                     <div className="flex flex-col">
                         <span className="text-xl font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
-                        <span className="text-[10px] font-bold tracking-[0.3em] text-secondary/80 ml-0.5">
+                        <span className="text-[10px] font-bold tracking-[0.3em] text-primary/80 ml-0.5">
                             {mode === 'organizer' ? 'Organizer' : 'Manager'}
                         </span>
                     </div>
@@ -124,12 +124,12 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3.5 transition-all relative group",
                                     isActive
-                                        ? "text-secondary font-black bg-muted/30"
+                                        ? "text-primary font-black bg-muted/30"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
                                 )}
                             >
-                                {isActive && <div className="absolute left-0 top-0 w-1 h-full bg-secondary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
-                                <item.icon className={cn("h-4.5 w-4.5 transition-transform group-hover:scale-110", isActive ? "text-secondary" : "text-muted-foreground/50")} />
+                                {isActive && <div className="absolute left-0 top-0 w-1 h-full bg-primary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
+                                <item.icon className={cn("h-4.5 w-4.5 transition-transform group-hover:scale-110", isActive ? "text-primary" : "text-muted-foreground/50")} />
                                 <span className="text-[11px] font-black tracking-[0.15em]">{t(item.titleKey)}</span>
                             </Link>
                         );

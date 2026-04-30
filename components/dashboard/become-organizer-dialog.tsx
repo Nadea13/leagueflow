@@ -72,12 +72,12 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl rounded-2xl">
                 {/* Header with Premium Feel */}
-                <div className="relative bg-secondary/10 p-4 md:p-6 border-b border-border/50">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 blur-3xl rounded-full -mr-16 -mt-16 animate-pulse" />
+                <div className="relative bg-primary/10 p-4 md:p-6 border-b border-border/50">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -mr-16 -mt-16 animate-pulse" />
                     
                     <DialogHeader className="relative z-10">
                         <DialogTitle className="text-3xl font-black tracking-tighter text-foreground leading-none">
-                            {tDash("become_organizer").split(' ')[0]} <span className="text-secondary">{tDash("become_organizer").split(' ').slice(1).join(' ')}</span>
+                            {tDash("become_organizer").split(' ')[0]} <span className="text-primary">{tDash("become_organizer").split(' ').slice(1).join(' ')}</span>
                         </DialogTitle>
                         <DialogDescription className="text-muted-foreground font-medium pt-2 text-base leading-relaxed">
                             {tDash("become_organizer_desc")}
@@ -88,9 +88,9 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                 {/* Features List */}
                 <div className="p-4 md:p-6 space-y-2 md:space-y-3">
                     <div className="grid gap-2 md:gap-3">
-                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-secondary/30 group">
-                            <div className="shrink-0 p-2.5 bg-secondary/10 border border-secondary/20 rounded-lg group-hover:scale-110 transition-transform">
-                                <Rocket className="h-5 w-5 text-secondary" />
+                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
+                            <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
+                                <Rocket className="h-5 w-5 text-primary" />
                             </div>
                             <div className="space-y-1">
                                 <p className="text-xs font-black tracking-widest text-foreground">
@@ -102,9 +102,9 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                             </div>
                         </div>
                         
-                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-secondary/30 group">
-                            <div className="shrink-0 p-2.5 bg-secondary/10 border border-secondary/20 rounded-lg group-hover:scale-110 transition-transform">
-                                <Shield className="h-5 w-5 text-secondary" />
+                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
+                            <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
+                                <Shield className="h-5 w-5 text-primary" />
                             </div>
                             <div className="space-y-1">
                                 <p className="text-xs font-black tracking-widest text-foreground">
@@ -116,9 +116,9 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                             </div>
                         </div>
                         
-                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-secondary/30 group">
-                            <div className="shrink-0 p-2.5 bg-secondary/10 border border-secondary/20 rounded-lg group-hover:scale-110 transition-transform">
-                                <Zap className="h-5 w-5 text-secondary" />
+                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
+                            <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
+                                <Zap className="h-5 w-5 text-primary" />
                             </div>
                             <div className="space-y-1">
                                 <p className="text-xs font-black tracking-widest text-foreground">
@@ -132,8 +132,8 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                     </div>
 
                     {/* Explicit Confirmation Step */}
-                    <div className="flex items-center gap-3 p-4 bg-secondary/5 border border-secondary/20 rounded-xl">
-                        <AlertCircle className="h-5 w-5 text-secondary shrink-0" />
+                    <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                        <AlertCircle className="h-5 w-5 text-primary shrink-0" />
                         <p className="text-sm font-bold text-foreground">
                             {isThai ? "คุณพร้อมที่จะเป็นผู้จัดการแข่งขันแล้วหรือยัง?" : "Are you ready to become an organizer?"}
                         </p>
@@ -141,7 +141,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
 
                     <DialogFooter className="pt-2 md:pt-3 flex flex-col sm:flex-row sm:justify-between gap-3">
                         <Button
-                            className="flex-1 h-10 bg-secondary text-secondary-foreground hover:bg-secondary cursor-pointer"
+                            className="flex-1 h-10 bg-primary text-primary-foreground hover:bg-primary cursor-pointer"
                             onClick={handleRegister}
                             disabled={isLoading}
                         >

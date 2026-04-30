@@ -49,7 +49,7 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
         }
     }, [state.success, open]);
 
-    const labelStyle = "text-[10px] font-black tracking-widest text-secondary";
+    const labelStyle = "text-[10px] font-black tracking-widest text-primary";
     const inputStyle = "bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30 font-bold tracking-tighter";
 
     return (
@@ -62,11 +62,11 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col bg-background border-border rounded-none p-0 shadow-2xl">
                 {/* Premium Header */}
-                <div className="bg-gradient-to-r from-secondary/20 to-background p-6 border-b border-border relative shrink-0">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                <div className="bg-gradient-to-r from-primary/20 to-background p-6 border-b border-border relative shrink-0">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                     <DialogHeader>
                         <div className="flex items-center gap-3 mb-1">
-                            <Trophy className="h-5 w-5 text-secondary" />
+                            <Trophy className="h-5 w-5 text-primary" />
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">
                                 {t("create_title")}
                             </DialogTitle>
@@ -101,7 +101,7 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
                                 {(['football'] as SportType[]).map((sportKey) => (
-                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">
+                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}
                                     </SelectItem>
                                 ))}
@@ -120,10 +120,10 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                                 <SelectValue placeholder={t("select_format")} />
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
-                                <SelectItem value="league" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">{tFormat("league")}</SelectItem>
-                                <SelectItem value="league_ha" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
-                                <SelectItem value="knockout" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
-                                <SelectItem value="group_knockout" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">
+                                <SelectItem value="league" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">{tFormat("league")}</SelectItem>
+                                <SelectItem value="league_ha" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
+                                <SelectItem value="knockout" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
+                                <SelectItem value="group_knockout" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                     {tFormat("group_knockout")}
                                 </SelectItem>
                             </SelectContent>
@@ -168,8 +168,8 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-none border-border">
-                                    <SelectItem value="1" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs">1</SelectItem>
-                                    <SelectItem value="2" className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs">2</SelectItem>
+                                    <SelectItem value="1" className="focus:bg-primary/10 focus:text-primary font-bold text-xs">1</SelectItem>
+                                    <SelectItem value="2" className="focus:bg-primary/10 focus:text-primary font-bold text-xs">2</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -208,7 +208,7 @@ export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
                     )}
 
                     <div>
-                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-secondary/90 transition-all rounded-none bg-secondary text-secondary-foreground font-black tracking-tighter">
+                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-primary/90 transition-all rounded-none bg-primary text-primary-foreground font-black tracking-tighter">
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>
                     </div>

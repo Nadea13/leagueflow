@@ -51,9 +51,9 @@ export function PublicMatches({
     if (!matches || matches.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center bg-foreground/5 border border-foreground/5 group relative overflow-hidden">
-                <div className="absolute left-0 top-0 w-1 h-0 bg-secondary group-hover:h-full transition-all duration-500" />
-                <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-secondary/30 transition-colors">
-                    <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-secondary transition-colors" />
+                <div className="absolute left-0 top-0 w-1 h-0 bg-primary group-hover:h-full transition-all duration-500" />
+                <div className="h-16 w-16 rounded-none bg-foreground/5 flex items-center justify-center mb-6 border border-foreground/10 group-hover:border-primary/30 transition-colors">
+                    <Calendar className="h-8 w-8 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                 </div>
                 <h3 className="text-xl font-black tracking-tighter text-foreground mb-2 whitespace-nowrap">{t("no_matches")}</h3>
                 <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40 max-w-xs leading-relaxed">
@@ -100,8 +100,8 @@ export function PublicMatches({
                             className="w-full flex items-center justify-between px-4 py-4 bg-foreground/[0.02] hover:bg-foreground/[0.05] transition-colors group border-b border-foreground/5"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-none bg-secondary/10 flex items-center justify-center border border-secondary/20">
-                                    <Calendar className="h-4 w-4 text-secondary" />
+                                <div className="h-8 w-8 rounded-none bg-primary/10 flex items-center justify-center border border-primary/20">
+                                    <Calendar className="h-4 w-4 text-primary" />
                                 </div>
                                 <div className="flex flex-col items-start gap-0.5">
                                     <span className="text-xs font-black tracking-widest text-foreground">
@@ -139,8 +139,8 @@ export function PublicMatches({
                                         <div key={stageKey} className="space-y-0">
                                             {/* Only show stage header if there are multiple stages on this day OR it's not the default 'group' */}
                                             {(sortedStages.length > 1 || (stageKey !== 'group' && stageKey !== 'league')) && (
-                                                <div className="px-4 py-2 bg-secondary/5 border-b border-foreground/5 flex items-center justify-between">
-                                                    <span className="text-[9px] font-black tracking-[0.2em] text-secondary">
+                                                <div className="px-4 py-2 bg-primary/5 border-b border-foreground/5 flex items-center justify-between">
+                                                    <span className="text-[9px] font-black tracking-[0.2em] text-primary">
                                                         {stageLabel}
                                                     </span>
                                                 </div>

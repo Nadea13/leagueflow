@@ -23,16 +23,16 @@ export function StatsCards({ items }: StatsCardsProps) {
             {displayItems.map((item, index) => {
                 // Safely handle dynamic colors
                 const colorClass = item.color === 'primary' ? 'text-primary' : 
-                                 item.color === 'orange-500' ? 'text-orange-500' : 'text-secondary';
+                                 item.color === 'orange-500' ? 'text-orange-500' : 'text-primary';
                 
                 const bgClass = item.color === 'primary' ? 'bg-primary/5' : 
-                              item.color === 'orange-500' ? 'bg-orange-500/5' : 'bg-secondary/5';
+                              item.color === 'orange-500' ? 'bg-orange-500/5' : 'bg-primary/5';
                 
                 const borderClass = item.color === 'primary' ? 'hover:border-primary/50' : 
-                                  item.color === 'orange-500' ? 'hover:border-orange-500/50' : 'hover:border-secondary/50';
+                                  item.color === 'orange-500' ? 'hover:border-orange-500/50' : 'hover:border-primary/50';
 
                 const accentClass = item.color === 'primary' ? 'bg-primary/40' : 
-                                  item.color === 'orange-500' ? 'bg-orange-500/40' : 'bg-secondary/40';
+                                  item.color === 'orange-500' ? 'bg-orange-500/40' : 'bg-primary/40';
 
                 return (
                     <Card key={index} className={cn(

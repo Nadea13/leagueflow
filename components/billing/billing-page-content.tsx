@@ -73,7 +73,7 @@ export function BillingPageContent({ tournaments, initialHistory, userPlan, plan
                     </div>
                 )}
                 <div className="flex items-center gap-3 mb-4 md:mb-6">
-                    <Trophy className="h-5 w-5 text-secondary" />
+                    <Trophy className="h-5 w-5 text-primary" />
                     <h3 className="text-xl font-black tracking-tighter text-foreground">
                         {t("plansTitle")}
                     </h3>
@@ -99,7 +99,7 @@ export function BillingPageContent({ tournaments, initialHistory, userPlan, plan
             <div className="grid gap-4 md:gap-6 md:grid-cols-2">
                 <section id="payment-section">
                     <div className="flex items-center gap-3 mb-4 md:mb-6">
-                        <CreditCard className="h-5 w-5 text-secondary" />
+                        <CreditCard className="h-5 w-5 text-primary" />
                         <h3 className="text-xl font-black tracking-tighter text-foreground">
                             {selectedPlanId ? t("payment_details") : t("paymentMethodTitle")}
                         </h3>

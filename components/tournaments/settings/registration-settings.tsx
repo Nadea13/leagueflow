@@ -64,12 +64,12 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <ClipboardEdit className="h-5 w-5 text-secondary" />
+                        <ClipboardEdit className="h-5 w-5 text-primary" />
                         {t("registration_settings")}
                     </h3>
                 </div>
                 {!isPro && (
-                    <Badge variant="secondary" className="rounded-none bg-secondary text-secondary-foreground text-[10px] font-black px-3 py-1 tracking-widest">
+                    <Badge variant="default" className="rounded-none bg-primary text-primary-foreground text-[10px] font-black px-3 py-1 tracking-widest">
                         {t("pro_badge")}
                     </Badge>
                 )}
@@ -78,7 +78,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
             <div className="bg-card border rounded-none relative overflow-hidden group transition-colors p-2 md:p-3">             
                 <div className="relative z-10 space-y-4 md:space-y-6">
                     {!isPro && (
-                        <div className="p-4 bg-secondary/5 border border-secondary/20 text-[11px] text-secondary font-black tracking-wider flex items-center gap-3">
+                        <div className="p-4 bg-primary/5 border border-primary/20 text-[11px] text-primary font-black tracking-wider flex items-center gap-3">
                             <AlertTriangle className="h-4 w-4" />
                             <span>
                                 {t("upsell_pro_feature", { defaultValue: "Tournament registrations are a Pro feature." })} 
@@ -109,7 +109,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                 value="true"
                                 defaultChecked={tournament.is_registration_open}
                                 disabled={!isPro}
-                                className="data-[state=checked]:bg-secondary"
+                                className="data-[state=checked]:bg-primary"
                             />
                         </div>
 
@@ -170,7 +170,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                 <Button 
                                     type="submit" 
                                     disabled={!isPro || isPending}
-                                    className="h-10 px-10 rounded-none font-black tracking-tighter bg-secondary hover:bg-secondary transition-all relative overflow-hidden"
+                                    className="h-10 px-10 rounded-none font-black tracking-tighter bg-primary hover:bg-primary transition-all relative overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-foreground/20 translate-y-full transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center justify-center gap-2">

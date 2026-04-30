@@ -65,7 +65,7 @@ export function AdminSidebar({ className }: { className?: string }) {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-xl font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
-                        <span className="text-[10px] font-bold tracking-[0.3em] text-secondary/80 ml-0.5">
+                        <span className="text-[10px] font-bold tracking-[0.3em] text-primary/80 ml-0.5">
                             Admin
                         </span>
                     </div>
@@ -83,12 +83,12 @@ export function AdminSidebar({ className }: { className?: string }) {
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3.5 transition-all relative group",
                                     active
-                                        ? "text-secondary font-black bg-muted/30"
+                                        ? "text-primary font-black bg-muted/30"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/20"
                                 )}
                             >
-                                {active && <div className="absolute left-0 top-0 w-1 h-full bg-secondary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
-                                <item.icon className={cn("h-4.5 w-4.5 transition-transform group-hover:scale-110", active ? "text-secondary" : "text-muted-foreground/50")} />
+                                {active && <div className="absolute left-0 top-0 w-1 h-full bg-primary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />}
+                                <item.icon className={cn("h-4.5 w-4.5 transition-transform group-hover:scale-110", active ? "text-primary" : "text-muted-foreground/50")} />
                                 <span className="text-[11px] font-black tracking-[0.15em]">{item.title}</span>
                             </Link>
                         );

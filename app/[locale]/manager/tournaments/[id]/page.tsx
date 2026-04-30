@@ -64,7 +64,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
         switch (status) {
             case 'APPROVED': return 'default' as const;
             case 'REJECTED': return 'destructive' as const;
-            default: return 'secondary' as const;
+            default: return 'primary' as const;
         }
     };
 
@@ -81,15 +81,15 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                         <h1 className="text-3xl font-bold tracking-tight">{tournament.name}</h1>
                         <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="capitalize">{tournament.format}</Badge>
-                            <Badge variant={tournament.status === 'active' ? 'default' : 'secondary'} className="capitalize">
+                            <Badge variant={tournament.status === 'active' ? 'default' : 'primary'} className="capitalize">
                                 {tournament.status || 'draft'}
                             </Badge>
                             {tournament.registration_fee > 0 ? (
-                                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                                <Badge variant="default" className="bg-primary/10 text-primary border-primary/20">
                                     ฿{Number(tournament.registration_fee).toLocaleString()}
                                 </Badge>
                             ) : (
-                                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+                                <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/20">
                                     Free
                                 </Badge>
                             )}

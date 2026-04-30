@@ -54,7 +54,7 @@ export function Standings({ standings }: StandingsProps) {
                         <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gf")}</TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("ga")}</TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gd")}</TableHead>
-                        <TableHead className="text-center px-6 sticky right-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black tracking-widest text-secondary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
+                        <TableHead className="text-center px-6 sticky right-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black tracking-widest text-primary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
                             {t("pts")}
                         </TableHead>
                     </TableRow>

@@ -222,13 +222,13 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                 </Card>
 
                 <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary/60" />
-                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
                         <CardTitle className="text-[10px] tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             Total Interactions
                         </CardTitle>
-                        <MousePointerClick className="h-4 w-4 text-secondary opacity-80 shrink-0" />
+                        <MousePointerClick className="h-4 w-4 text-primary opacity-80 shrink-0" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
                         <div className="text-3xl md:text-5xl font-black tracking-tighter leading-none">
@@ -283,20 +283,20 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                     className={cn(
                                         "flex flex-col p-3 border cursor-pointer transition-all hover:bg-muted/30 group relative overflow-hidden",
                                         selectedUser === group.identifier 
-                                            ? "border-secondary bg-muted/20" 
+                                            ? "border-primary bg-muted/20" 
                                             : "border-border/50"
                                     )}
                                 >
                                     {selectedUser === group.identifier && (
-                                        <div className="absolute left-0 top-0 w-1 h-full bg-secondary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />
+                                        <div className="absolute left-0 top-0 w-1 h-full bg-primary shadow-[0_0_10px_rgba(0,196,154,0.5)]" />
                                     )}
                                     <div className="flex items-center justify-between pl-2">
                                         <div className="flex items-center gap-2 overflow-hidden">
                                             <div className={cn(
                                                 "h-6 w-6 flex items-center justify-center border",
-                                                group.isAnonymous ? "bg-muted border-border" : "bg-secondary/10 border-secondary/20"
+                                                group.isAnonymous ? "bg-muted border-border" : "bg-primary/10 border-primary/20"
                                             )}>
-                                                {group.isAnonymous ? <Activity className="h-3 w-3 text-muted-foreground" /> : <UserIcon className="h-3 w-3 text-secondary" />}
+                                                {group.isAnonymous ? <Activity className="h-3 w-3 text-muted-foreground" /> : <UserIcon className="h-3 w-3 text-primary" />}
                                             </div>
                                             <span className="text-sm font-bold truncate max-w-[150px]">
                                                 {group.email}
@@ -304,7 +304,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                         </div>
                                         <ChevronRight className={cn(
                                             "h-4 w-4 transition-transform",
-                                            selectedUser === group.identifier ? "text-secondary translate-x-1" : "text-muted-foreground/30 group-hover:text-foreground"
+                                            selectedUser === group.identifier ? "text-primary translate-x-1" : "text-muted-foreground/30 group-hover:text-foreground"
                                         )} />
                                     </div>
                                     <div className="flex items-center gap-3 mt-2 pl-2">

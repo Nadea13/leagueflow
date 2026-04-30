@@ -42,7 +42,7 @@ export default async function MyRegistrationsPage() {
     const getStatusVariant = (status: string) => {
         if (isApproved(status)) return 'default';
         if (isRejected(status)) return 'destructive';
-        return 'secondary';
+        return 'primary';
     };
 
     const getDisplayStatus = (status: string) => {
@@ -66,19 +66,19 @@ export default async function MyRegistrationsPage() {
             </div>
 
             <div className="grid gap-3 grid-cols-3 md:gap-6 md:grid-cols-3">
-                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-secondary/50">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-primary/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
                         <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             {t("total_applications")}
                         </CardTitle>
-                        <Trophy className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
+                        <Trophy className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
                         <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{totalCount}</div>
                         <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
-                            <span className="w-2 h-[1px] bg-secondary/40" />
+                            <span className="w-2 h-[1px] bg-primary/40" />
                             {t("all_time_registrations")}
                         </p>
                     </CardContent>
@@ -122,7 +122,7 @@ export default async function MyRegistrationsPage() {
             <div className="space-y-4 md:space-y-6">
                 {(!registrations || registrations.length === 0) ? (
                     <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border border-border bg-muted/5 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-secondary/40 transition-colors" />
+                        <div className="absolute top-0 left-0 w-1 h-full bg-muted group-hover:bg-primary/40 transition-colors" />
                         <div className="p-8 bg-background border border-border rotate-12 transition-transform group-hover:rotate-0 shadow-xl mb-6 relative z-10">
                             <FileText className="h-12 w-12 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
                         </div>
@@ -138,13 +138,13 @@ export default async function MyRegistrationsPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         {registrations.map((reg) => (
-                            <Card key={reg.id} className="flex flex-col bg-card border border-border transition-all hover:border-secondary/50 group overflow-hidden relative shadow-lg min-h-[300px]">
+                            <Card key={reg.id} className="flex flex-col bg-card border border-border transition-all hover:border-primary/50 group overflow-hidden relative shadow-lg min-h-[300px]">
                                 <div className={cn(
                                     "absolute top-0 left-0 w-1 h-full transition-all",
                                     isApproved(reg.payment_status) ? "bg-green-500" :
                                     isRejected(reg.payment_status) ? "bg-red-500" : "bg-yellow-500"
                                 )} />
-                                <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                                <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                                 
                                 <CardHeader className="relative z-10">
                                     <div className="flex flex-col gap-3">
@@ -154,11 +154,11 @@ export default async function MyRegistrationsPage() {
                                                 {getDisplayStatus(reg.payment_status)}
                                             </Badge>
                                             <div className="flex items-center gap-1.5 opacity-60">
-                                                 <Trophy className="h-3 w-3 text-secondary" />
+                                                 <Trophy className="h-3 w-3 text-primary" />
                                                  <span className="text-[9px] font-black tracking-tighter text-muted-foreground/80">{tCommon("registration")}</span>
                                             </div>
                                         </div>
-                                        <CardTitle className="text-3xl font-black leading-none tracking-tighter group-hover:text-secondary transition-colors truncate">
+                                        <CardTitle className="text-3xl font-black leading-none tracking-tighter group-hover:text-primary transition-colors truncate">
                                             {reg.team_name}
                                         </CardTitle>
                                     </div>
@@ -168,7 +168,7 @@ export default async function MyRegistrationsPage() {
                                     <div className="flex flex-col gap-4">
                                         <div className="space-y-1">
                                             <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em]">{tCommon("tournament") || "Tournament"}</span>
-                                            <p className="text-sm font-bold tracking-tight text-secondary leading-tight line-clamp-2">
+                                            <p className="text-sm font-bold tracking-tight text-primary leading-tight line-clamp-2">
                                                 {reg.tournament?.name || "Tournament Details Unavailable"}
                                             </p>
                                         </div>
@@ -177,7 +177,7 @@ export default async function MyRegistrationsPage() {
                                             <div className="flex flex-col">
                                                 <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{tCommon("date") || "Applied Date"}</span>
                                                 <div className="flex items-center gap-2">
-                                                    <Clock className="h-3.5 w-3.5 text-secondary/40 shrink-0" />
+                                                    <Clock className="h-3.5 w-3.5 text-primary/40 shrink-0" />
                                                     <span className="text-[10px] font-black tabular-nums tracking-tight text-muted-foreground">
                                                         {reg.created_at ? formatter.dateTime(new Date(reg.created_at), { dateStyle: 'medium' }) : "Unknown"}
                                                     </span>
@@ -186,7 +186,7 @@ export default async function MyRegistrationsPage() {
                                             <div className="flex flex-col">
                                                 <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{tCommon("contact") || "Contact"}</span>
                                                 <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <Users className="h-3.5 w-3.5 text-secondary/40 shrink-0" />
+                                                    <Users className="h-3.5 w-3.5 text-primary/40 shrink-0" />
                                                     <span className="text-[10px] font-black tracking-tight truncate">
                                                         {reg.contact_name}
                                                     </span>
@@ -206,7 +206,7 @@ export default async function MyRegistrationsPage() {
                                                 variant="ghost" 
                                                 size="lg" 
                                                 asChild 
-                                                className="flex-1 rounded-none h-14 font-black tracking-widest text-[10px] hover:bg-secondary hover:text-secondary-foreground transition-all border-r border-border/20"
+                                                className="flex-1 rounded-none h-14 font-black tracking-widest text-[10px] hover:bg-primary hover:text-primary-foreground transition-all border-r border-border/20"
                                             >
                                                 <Link href={`/manager/my-registrations/${reg.tournament_team_id}`}>
                                                     {isDeadlinePassed ? (t("view_roster") || "View Roster") : (t("edit_roster") || "Edit Roster")}
@@ -223,7 +223,7 @@ export default async function MyRegistrationsPage() {
                                                 </a>
                                             </Button>
                                         )}
-                                        <Button variant="ghost" className="flex-1 h-full rounded-none text-[9px] font-black tracking-widest hover:text-secondary hover:bg-secondary/5 transition-all" asChild>
+                                        <Button variant="ghost" className="flex-1 h-full rounded-none text-[9px] font-black tracking-widest hover:text-primary hover:bg-primary/5 transition-all" asChild>
                                             <Link href={`/tournaments/${reg.tournament_id}`}>
                                                 {tCommon("info") || "Info"}
                                             </Link>

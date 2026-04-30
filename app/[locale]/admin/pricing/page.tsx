@@ -30,10 +30,10 @@ export default async function AdminPricingPage() {
             <Tabs defaultValue="organizer" className="w-full">
                 <div className="flex items-center justify-between mb-4">
                     <TabsList className="bg-muted/30 border border-border rounded-none p-1 h-auto">
-                        <TabsTrigger value="organizer" className="rounded-none text-[10px] font-black tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                        <TabsTrigger value="organizer" className="rounded-none text-[10px] font-black tracking-[0.15em] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
                             {t("organizer_plans")}
                         </TabsTrigger>
-                        <TabsTrigger value="manager" className="rounded-none text-[10px] font-black tracking-[0.15em] data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
+                        <TabsTrigger value="manager" className="rounded-none text-[10px] font-black tracking-[0.15em] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
                             {t("manager_plans")}
                         </TabsTrigger>
                     </TabsList>

@@ -19,12 +19,12 @@ export function MatchTimer({ time, readOnly: _readOnly = false, customText, adde
     return (
         <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
-                <div className="text-2xl lg:text-6xl font-black tracking-tighter text-secondary tabular-nums drop-shadow-[0_0_15px_rgba(5,255,163,0.2)]">
+                <div className="text-2xl lg:text-6xl font-black tracking-tighter text-primary tabular-nums drop-shadow-[0_0_15px_rgba(5,255,163,0.2)]">
                     {customText ? customText : formatTime(time)}
                 </div>
             </div>
             {addedTime && (
-                <div className="px-3 py-1 bg-secondary text-black text-[9px] font-black tracking-widest">
+                <div className="px-3 py-1 bg-primary text-black text-[9px] font-black tracking-widest">
                     +{addedTime} MIN ADDED
                 </div>
             )}

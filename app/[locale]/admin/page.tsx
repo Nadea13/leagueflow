@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
 
             <div className="mt-8 space-y-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-1 h-6 bg-secondary" />
+                    <div className="w-1 h-6 bg-primary" />
                     <h2 className="text-lg md:text-xl font-black tracking-tighter text-foreground">
                         {t("audit_logs") || "Audit Logs"}
                     </h2>

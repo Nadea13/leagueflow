@@ -65,9 +65,9 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
     return (
         <div className="bg-card border border-border/10 shadow-2xl rounded-none overflow-hidden max-w-sm mx-auto">
             {/* Header */}
-            <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-4 border-b border-border/10 relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                <h3 className="text-sm font-black tracking-widest text-secondary flex items-center gap-2">
+            <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b border-border/10 relative">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                <h3 className="text-sm font-black tracking-widest text-primary flex items-center gap-2">
                     <Smartphone className="w-4 h-4" />
                     {t("scan_to_pay")}
                 </h3>
@@ -120,10 +120,10 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
 
                 <button
                     onClick={copyToClipboard}
-                    className="w-full flex items-center justify-between p-3 bg-background border border-border/10 hover:border-secondary/40 hover:bg-secondary/[0.02] transition-all group"
+                    className="w-full flex items-center justify-between p-3 bg-background border border-border/10 hover:border-primary/40 hover:bg-primary/[0.02] transition-all group"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-secondary/10 text-secondary group-hover:scale-110 transition-transform">
+                        <div className="p-2 bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                             <Smartphone className="w-4 h-4" />
                         </div>
                         <div className="text-left">
@@ -135,7 +135,7 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
                             </p>
                         </div>
                     </div>
-                    <div className="text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </div>
                 </button>

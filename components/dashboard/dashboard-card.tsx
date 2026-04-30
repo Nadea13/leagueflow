@@ -38,15 +38,15 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
 
         return (
             <Link href={`/organizer/tournaments/${tournament.id}`} className="block h-full group">
-                <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-5 border border-border transition-all hover:border-secondary/50 overflow-hidden relative shadow-sm hover:shadow-md cursor-pointer">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-secondary" />
+                <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-5 border border-border transition-all hover:border-primary/50 overflow-hidden relative shadow-sm hover:shadow-md cursor-pointer">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-primary" />
                     <CardHeader className="relative z-10">
                         <div className="flex flex-col gap-2">
                             <div className={cn("text-[9px] font-bold tracking-widest opacity-80", statusColor.split(' ').filter(c => c.startsWith('text-')).join(' '))}>
                                 {tournament.status ? tSettings(tournament.status) : tSettings('draft')}
                             </div>
-                            <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-secondary transition-colors truncate">
+                            <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
                                 {tournament.name}
                             </CardTitle>
                         </div>
@@ -70,7 +70,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                                     </span>
                                 </div>
                             </div>
-                            <div className="text-[9px] font-bold text-secondary/70 tracking-[0.2em]">
+                            <div className="text-[9px] font-bold text-primary/70 tracking-[0.2em]">
                                 {tournament.format || 'League'} • Championship
                             </div>
                         </div>
@@ -84,27 +84,27 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
     const team = data as Team & { tournament?: { name: string } | null };
     return (
         <Link href={`/${mode === 'organizer' ? 'organizer/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
-            <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-secondary/50 overflow-hidden relative shadow-lg cursor-pointer">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
-                <Shield className="absolute right-4 md:right-6 top-4 md:top-6 z-20 h-4 w-4 text-secondary" />
+            <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-primary/50 overflow-hidden relative shadow-lg cursor-pointer">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
+                <Shield className="absolute right-4 md:right-6 top-4 md:top-6 z-20 h-4 w-4 text-primary" />
                 <CardHeader className="pt-4 md:pt-6 relative z-10">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                            <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-secondary/30 transition-all shrink-0 p-1 bg-muted/30">
+                            <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
                                 <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain" />
-                                <AvatarFallback className="rounded-none bg-secondary/5 text-secondary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                <AvatarFallback className="rounded-none bg-primary/5 text-primary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="grid gap-1">
-                                <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-secondary transition-colors truncate">
+                                <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
                                     {team.name}
                                 </CardTitle>
                                 <div className="flex items-center gap-2">
                                     {team.tournament ? (
-                                        <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-secondary/20 bg-secondary/5 text-secondary font-black rounded-none shrink-0">
+                                        <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-primary/20 bg-primary/5 text-primary font-black rounded-none shrink-0">
                                             {tCommon("active")}
                                         </Badge>
                                     ) : (
-                                        <Badge variant="secondary" className="w-fit text-[9px] px-2 py-0.5 border-none font-black rounded-none shrink-0 opacity-70">
+                                        <Badge variant="default" className="w-fit text-[9px] px-2 py-0.5 border-none font-black rounded-none shrink-0 opacity-70">
                                             {tTeam("unassigned_badge")}
                                         </Badge>
                                     )}
@@ -115,8 +115,8 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                 </CardHeader>
                 <CardContent className="pb-4 md:pb-6 text-sm relative z-10">
                     <div className="grid gap-4">
-                        <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2 border-l-2 border-secondary/30">
-                            <Trophy className="h-3.5 w-3.5 text-secondary shadow-[0_0_10px_rgba(0,196,154,0.3)]" />
+                        <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2 border-l-2 border-primary/30">
+                            <Trophy className="h-3.5 w-3.5 text-primary shadow-[0_0_10px_rgba(0,196,154,0.3)]" />
                             <span className="truncate tracking-tight">
                                 {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
                             </span>

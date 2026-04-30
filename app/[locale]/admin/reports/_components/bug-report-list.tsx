@@ -89,7 +89,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
             return <Badge variant="destructive" className="rounded-none text-[10px] font-black">{t("report_status_new")}</Badge>
         }
         if (status === 'read') {
-            return <Badge variant="secondary" className="rounded-none text-[10px] font-black">{t("report_status_read")}</Badge>
+            return <Badge variant="default" className="rounded-none text-[10px] font-black">{t("report_status_read")}</Badge>
         }
         return <Badge variant="outline" className="rounded-none text-[10px] font-black">{t("report_status_resolved")}</Badge>
     }
@@ -141,8 +141,8 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <div className="h-6 w-6 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-                                                <User className="h-3 w-3 text-secondary" />
+                                            <div className="h-6 w-6 bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                <User className="h-3 w-3 text-primary" />
                                             </div>
                                             <span className="text-sm truncate max-w-[150px]">
                                                 {report.user_email || t("anonymous")}
@@ -190,11 +190,11 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="sm:max-w-[525px] rounded-none border-border p-0 overflow-hidden">
-                    <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                    <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                         <DialogHeader>
                             <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                                <AlertCircle className="h-5 w-5 text-secondary" />
+                                <AlertCircle className="h-5 w-5 text-primary" />
                                 {t("report_details")}
                             </DialogTitle>
                             <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
@@ -220,7 +220,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                             </Button>
                             {selectedReport && selectedReport.status === 'unread' && (
                                 <Button
-                                    variant="secondary"
+                                    variant="default"
                                     onClick={() => handleMarkAsRead(selectedReport.id)}
                                     className="rounded-none text-[10px] font-black"
                                 >

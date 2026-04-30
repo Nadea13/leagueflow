@@ -131,7 +131,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                     </Link>
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{t("public_view")}</span>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{t("beta")}</Badge>
+                        <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5">{t("beta")}</Badge>
                     </div>
                 </div>
             </nav>

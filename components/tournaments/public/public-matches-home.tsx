@@ -145,8 +145,8 @@ export function PublicMatchesHome() {
                             className={cn(
                                 "px-6 py-2 text-xs font-black tracking-tighter transition-all shrink-0",
                                 selectedDate === null 
-                                    ? "bg-secondary text-secondary-foreground shadow-[0_0_15px_rgba(var(--secondary),0.3)]"
-                                    : "text-muted-foreground/60 hover:text-secondary"
+                                    ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                    : "text-muted-foreground/60 hover:text-primary"
                             )}
                         >
                             {locale === 'th' ? "ทั้งหมด" : "ALL"}
@@ -157,7 +157,7 @@ export function PublicMatchesHome() {
                         <div className="flex items-center flex-1">
                             <button
                                 onClick={goToPrevDay}
-                                className="p-3 hover:text-secondary text-muted-foreground/40 transition-colors shrink-0"
+                                className="p-3 hover:text-primary text-muted-foreground/40 transition-colors shrink-0"
                             >
                                 <ChevronLeft className="h-5 w-5" />
                             </button>
@@ -165,9 +165,9 @@ export function PublicMatchesHome() {
                             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                 <PopoverTrigger asChild>
                                     <button className="px-4 py-2 flex items-center justify-center gap-4 hover:bg-muted/10 transition-all border-x border-border/10 flex-1 min-h-[56px]">
-                                        <CalendarIcon className="h-5 w-5 text-secondary animate-pulse shrink-0" />
+                                        <CalendarIcon className="h-5 w-5 text-primary animate-pulse shrink-0" />
                                         <div className="flex flex-col items-center">
-                                            <span className="text-[10px] font-black tracking-tighter text-secondary leading-none mb-1">
+                                            <span className="text-[10px] font-black tracking-tighter text-primary leading-none mb-1">
                                                 {selectedDate ? formatDate(selectedDate, "EEE", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                             </span>
                                             <span className="text-base font-black tracking-tight">
@@ -179,13 +179,13 @@ export function PublicMatchesHome() {
 
                                 <PopoverContent className="w-80 p-0 bg-background border-border/40 rounded-none shadow-2xl" align="center">
                                     <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/5">
-                                        <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-secondary">
+                                        <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary">
                                             <ChevronLeft className="h-4 w-4" />
                                         </button>
                                         <span className="text-sm font-black tracking-tighter">
                                             {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
                                         </span>
-                                        <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-secondary">
+                                        <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary">
                                             <ChevronRight className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -212,15 +212,15 @@ export function PublicMatchesHome() {
                                                         }}
                                                         className={cn(
                                                             "h-9 flex flex-col items-center justify-center relative transition-all",
-                                                            isSel ? "bg-secondary text-secondary-foreground font-black" : "hover:bg-muted/10",
-                                                            isToday && !isSel && "border border-secondary/30 text-secondary"
+                                                            isSel ? "bg-primary text-primary-foreground font-black" : "hover:bg-muted/10",
+                                                            isToday && !isSel && "border border-primary/30 text-primary"
                                                         )}
                                                     >
                                                         <span className="text-xs">{format(day, 'd')}</span>
                                                         {hasMatch && (
                                                             <div className={cn(
                                                                 "absolute bottom-1 h-1 w-1 rounded-full",
-                                                                isSel ? "bg-secondary-foreground" : "bg-secondary"
+                                                                isSel ? "bg-primary-foreground" : "bg-primary"
                                                             )} />
                                                         )}
                                                     </button>
@@ -233,7 +233,7 @@ export function PublicMatchesHome() {
                                                 setViewDate(new Date());
                                                 setIsCalendarOpen(false);
                                             }}
-                                            className="w-full mt-4 py-2 border border-border/40 text-[10px] font-black hover:border-secondary transition-all"
+                                            className="w-full mt-4 py-2 border border-border/40 text-[10px] font-black hover:border-primary transition-all"
                                         >
                                             {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
                                         </button>
@@ -243,7 +243,7 @@ export function PublicMatchesHome() {
 
                             <button
                                 onClick={goToNextDay}
-                                className="p-2 hover:text-secondary text-muted-foreground/40 transition-colors"
+                                className="p-2 hover:text-primary text-muted-foreground/40 transition-colors"
                             >
                                 <ChevronRight className="h-5 w-5" />
                             </button>
@@ -256,11 +256,11 @@ export function PublicMatchesHome() {
                 <div className="flex-1 w-full space-y-12">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-24 gap-6 bg-muted/5 border border-dashed border-border/40 relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="relative">
-                                <Loader2 className="h-12 w-12 animate-spin text-secondary relative z-10" />
+                                <Loader2 className="h-12 w-12 animate-spin text-primary relative z-10" />
                             </div>
-                            <p className="text-secondary font-black tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching") || "LOADING MATCHES..."}</p>
+                            <p className="text-primary font-black tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching") || "LOADING MATCHES..."}</p>
                         </div>
                     ) : filteredMatches.length === 0 ? (
                         <div className="text-center py-24 border border-dashed border-border/40 bg-muted/5 relative overflow-hidden group">
@@ -279,8 +279,8 @@ export function PublicMatchesHome() {
                         <div className="space-y-12">
                             {sortedDates.map(date => (
                                 <div key={date} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                    <div className="flex items-center gap-4 bg-muted/5 border-l-4 border-secondary p-4">
-                                        <CalendarIcon className="h-6 w-6 text-secondary" />
+                                    <div className="flex items-center gap-4 bg-muted/5 border-l-4 border-primary p-4">
+                                        <CalendarIcon className="h-6 w-6 text-primary" />
                                         <h3 className="text-2xl font-black tracking-tighter">
                                             {date === "TBD" ? (locale === 'th' ? "รอกำหนดการ" : "To Be Determined") : formatDate(date, "EEEE, d MMM yyyy", locale)}
                                         </h3>
@@ -290,10 +290,10 @@ export function PublicMatchesHome() {
                                         {Object.entries(groupedMatches[date]).map(([tournamentName, tournamentMatches]) => (
                                             <div key={tournamentName} className="space-y-6">
                                                 <div className="flex items-center gap-3 group/tour">
-                                                    <div className="h-8 w-1 bg-secondary/20 group-hover/tour:bg-secondary transition-all" />
+                                                    <div className="h-8 w-1 bg-primary/20 group-hover/tour:bg-primary transition-all" />
                                                     <div className="flex flex-col">
-                                                        <span className="text-[10px] font-black tracking-[0.2em] text-secondary/40 leading-none mb-1">TOURNAMENT</span>
-                                                        <h4 className="text-lg font-black tracking-tight text-foreground group-hover/tour:text-secondary transition-colors">
+                                                        <span className="text-[10px] font-black tracking-[0.2em] text-primary/40 leading-none mb-1">TOURNAMENT</span>
+                                                        <h4 className="text-lg font-black tracking-tight text-foreground group-hover/tour:text-primary transition-colors">
                                                             {tournamentName}
                                                         </h4>
                                                     </div>
@@ -323,7 +323,7 @@ export function PublicMatchesHome() {
                         <div className="bg-muted/5 border border-border/40 p-6 sticky top-24 backdrop-blur-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <Trophy className="h-6 w-6 text-secondary" />
+                                    <Trophy className="h-6 w-6 text-primary" />
                                     <h3 className="text-2xl font-black tracking-tighter">
                                         {locale === 'th' ? "รายการแข่ง" : "TOURNAMENTS"}
                                     </h3>

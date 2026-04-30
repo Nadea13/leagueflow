@@ -101,7 +101,7 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
                                     className="text-center mb-4 md:mb-6 pr-12"
                                     style={{ width: CARD_W + (!isLast ? CONNECTOR_W : 0) }}
                                 >
-                                    <span className="text-[10px] font-black tracking-tighter text-secondary/80 bg-secondary/5 px-3 py-1 border-l-2 border-secondary">
+                                    <span className="text-[10px] font-black tracking-tighter text-primary/80 bg-primary/5 px-3 py-1 border-l-2 border-primary">
                                         {stageLabels[stage] || stage.replace('_', ' ')}
                                     </span>
                                 </div>
@@ -174,7 +174,7 @@ function BracketSlot({
                 <div className="relative shrink-0" style={{ width: CONNECTOR_W, alignSelf: 'stretch' }}>
                     {/* Horizontal stub from card center to vertical bar position */}
                     <div
-                        className="absolute bg-secondary/30"
+                        className="absolute bg-primary/30"
                         style={{
                             left: 0,
                             top: '50%',
@@ -189,7 +189,7 @@ function BracketSlot({
                             {/* Vertical bar: top-of-pair extends downward, bottom-of-pair extends upward */}
                             {isTopOfPair && (
                                 <div
-                                    className="absolute bg-secondary/30"
+                                    className="absolute bg-primary/30"
                                     style={{
                                         left: CONNECTOR_W / 2 - 0.5,
                                         top: '50%',
@@ -201,7 +201,7 @@ function BracketSlot({
                             {isBottomOfPair && (
                                 <>
                                     <div
-                                        className="absolute bg-secondary/30"
+                                        className="absolute bg-primary/30"
                                         style={{
                                             left: CONNECTOR_W / 2 - 0.5,
                                             top: 0,
@@ -211,7 +211,7 @@ function BracketSlot({
                                     />
                                     {/* Output horizontal from vertical bar to next round */}
                                     <div
-                                        className="absolute bg-secondary/30"
+                                        className="absolute bg-primary/30"
                                         style={{
                                             left: CONNECTOR_W / 2,
                                             top: 0,
@@ -227,7 +227,7 @@ function BracketSlot({
                     {/* Single match (no pair): straight horizontal through */}
                     {!hasPairPartner && (
                         <div
-                            className="absolute bg-secondary/30"
+                            className="absolute bg-primary/30"
                             style={{
                                 left: CONNECTOR_W / 2,
                                 top: '50%',
@@ -261,21 +261,21 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
             href={url}
             className={cn(
                 "flex flex-col border border-border/40 bg-card rounded-none overflow-hidden text-sm relative transition-all group",
-                "shadow-lg hover:border-secondary/30",
-                isFinal && "border-secondary/40 shadow-[0_0_20px_rgba(0,196,154,0.1)]",
+                "shadow-lg hover:border-primary/30",
+                isFinal && "border-primary/40 shadow-[0_0_20px_rgba(0,196,154,0.1)]",
                 !isFinished && "opacity-95"
             )}
         >
              {/* Dynamic color strip on top */}
              <div className={cn(
                 "h-0.5 w-full",
-                isFinal ? "bg-secondary shadow-[0_0_8px_rgba(0,196,154,0.6)]" : "bg-muted/20 group-hover:bg-secondary/40"
+                isFinal ? "bg-primary shadow-[0_0_8px_rgba(0,196,154,0.6)]" : "bg-muted/20 group-hover:bg-primary/40"
             )} />
 
             {/* Header */}
             <div className="flex justify-between items-center px-3 py-1.5 bg-muted/10 border-b border-border/20">
                 <span className="text-[8px] font-black tracking-widest text-muted-foreground/50 flex items-center gap-1.5">
-                    {isFinal && <Trophy className="h-2.5 w-2.5 text-secondary" />}
+                    {isFinal && <Trophy className="h-2.5 w-2.5 text-primary" />}
                     {t("match")} {(match.match_index !== undefined && match.match_index !== null) ? `#${match.match_index}` : ""}
                 </span>
                 <div className="flex items-center gap-1">
@@ -336,10 +336,10 @@ function TeamRow({
     return (
         <div className={cn(
             "flex justify-between items-center px-3 py-2 gap-2 transition-colors relative",
-            isWinner ? "bg-secondary/[0.03]" : ""
+            isWinner ? "bg-primary/[0.03]" : ""
         )}>
             {isWinner && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4/5 bg-secondary shadow-[0_0_8px_rgba(0,196,154,0.4)]" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4/5 bg-primary shadow-[0_0_8px_rgba(0,196,154,0.4)]" />
             )}
             <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
                 <div className="w-5 h-5 bg-muted/10 border border-border/10 p-0.5 rounded-none shrink-0 flex items-center justify-center overflow-hidden">
@@ -366,7 +366,7 @@ function TeamRow({
                 )}
                 <span className={cn(
                     "text-xs min-w-[16px] text-center font-black tracking-tighter",
-                    isWinner ? "text-secondary" : "text-muted-foreground/60"
+                    isWinner ? "text-primary" : "text-muted-foreground/60"
                 )}>
                     {score ?? "-"}
                 </span>

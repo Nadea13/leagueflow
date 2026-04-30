@@ -134,7 +134,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             {reg.contact_phone}
                                         </div>
                                         {reg.description && (
-                                            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-secondary/60 mt-1">
+                                            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-primary/60 mt-1">
                                                 <FileText className="h-3 w-3" />
                                                 {reg.description}
                                             </div>
@@ -144,7 +144,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                 <TableCell className="text-center px-4 border-b border-border/5">
                                     <Badge variant="outline" className={cn(
                                         "rounded-none border-none text-[10px] font-black px-2.5 py-1 tracking-widest",
-                                        reg.payment_status === 'PAID' ? "bg-secondary text-secondary-foreground shadow-[0_0_10px_rgba(0,196,154,0.2)]" :
+                                        reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground shadow-[0_0_10px_rgba(0,196,154,0.2)]" :
                                         reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"
                                     )}>
                                         {reg.payment_status}
@@ -180,7 +180,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-9 w-9 p-0 rounded-none border-none bg-secondary/10 text-secondary hover:bg-secondary hover:text-secondary-foreground transition-all shadow-sm"
+                                                className="h-9 w-9 p-0 rounded-none border-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
                                                 disabled={isActing !== null}
                                                 onClick={() => handleApprove(reg.id)}
                                                 title="Approve"

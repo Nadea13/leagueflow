@@ -31,7 +31,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
+                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
                             onClick={() => match.home_team_id && onConfirm(match.home_team_id)}
                         >
                             <div className="p-3 bg-foreground/5 group-hover:bg-black/10 transition-colors">
@@ -39,13 +39,13 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                             </div>
                             <span className="text-[10px] font-black tracking-widest text-center px-2">
                                 {match.home_team?.name} <br/>
-                                <span className="text-secondary group-hover:text-black/60">{t("wins")}</span>
+                                <span className="text-primary group-hover:text-black/60">{t("wins")}</span>
                             </span>
                         </Button>
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
+                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
                             onClick={() => match.away_team_id && onConfirm(match.away_team_id)}
                         >
                             <div className="p-3 bg-foreground/5 group-hover:bg-black/10 transition-colors">
@@ -53,7 +53,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                             </div>
                             <span className="text-[10px] font-black tracking-widest text-center px-2">
                                 {match.away_team?.name} <br/>
-                                <span className="text-secondary group-hover:text-black/60">{t("wins")}</span>
+                                <span className="text-primary group-hover:text-black/60">{t("wins")}</span>
                             </span>
                         </Button>
                     </div>

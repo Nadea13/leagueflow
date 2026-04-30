@@ -131,7 +131,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                 <div className="space-y-1">
                                     <Label className="text-[10px] font-black tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
                                     <Select value={filterStage} onValueChange={setFilterStage}>
-                                        <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold tracking-tighter text-xs">
+                                        <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-primary/50 font-bold tracking-tighter text-xs">
                                             <SelectValue placeholder={tMatch("round")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-card border-foreground/10 rounded-none">
@@ -156,7 +156,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                         id="edit-mode"
                                         checked={isEditMode}
                                         onCheckedChange={setIsEditMode}
-                                        className="data-[state=checked]:bg-secondary"
+                                        className="data-[state=checked]:bg-primary"
                                     />
                                     <Label htmlFor="edit-mode" className="text-[10px] font-black tracking-wider text-muted-foreground cursor-pointer">
                                         {t("edit_mode") || "Edit Mode"}
@@ -171,7 +171,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                 <Button
                                     onClick={() => setAdvanceDialogOpen(true)}
                                     disabled={isAdvancing}
-                                    className="h-10 px-4 bg-secondary text-secondary-foreground font-black tracking-tighter hover:bg-secondary/90 transition-all text-[11px]"
+                                    className="h-10 px-4 bg-primary text-primary-foreground font-black tracking-tighter hover:bg-primary/90 transition-all text-[11px]"
                                 >
                                     {isAdvancing ? tFixtures("generating") : (
                                         <span className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                                 className="w-full flex items-center justify-between px-4 py-3 bg-foreground/[0.03] hover:bg-foreground/[0.06] transition-colors group"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <Calendar className="h-4 w-4 text-secondary/70" />
+                                                    <Calendar className="h-4 w-4 text-primary/70" />
                                                     <span className="text-xs font-black tracking-widest text-foreground">
                                                         {dateKey === "tbd" ? tMatch("tbd") : new Date(dateKey).toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                                                     </span>
@@ -265,7 +265,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                                                 {/* Only show stage header if there are multiple stages on this day OR it's not the default 'group' */}
                                                                 {(sortedStages.length > 1) && (
                                                                     <div className="px-4 py-2 bg-foreground/[0.01] border-b border-foreground/5">
-                                                                        <span className="text-[9px] font-black tracking-[0.2em] text-secondary/60">
+                                                                        <span className="text-[9px] font-black tracking-[0.2em] text-primary/60">
                                                                             {stageLabel}
                                                                         </span>
                                                                     </div>
@@ -301,7 +301,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                 <AlertDialogContent className="bg-card border rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <ArrowRight className="h-5 w-5 text-secondary" />
+                            <ArrowRight className="h-5 w-5 text-primary" />
                             {tFixtures("proceed_knockout")}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
@@ -317,7 +317,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                 e.preventDefault();
                                 handleAdvance();
                             }}
-                            className="rounded-none border border-secondary/20 bg-secondary/90 text-secondary-foreground hover:bg-secondary hover:shadow-[0_0_15_rgba(0,255,157,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="rounded-none border border-primary/20 bg-primary/90 text-primary-foreground hover:bg-primary hover:shadow-[0_0_15_rgba(0,255,157,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <ArrowRight className="h-3.5 w-3.5 mr-2" />
                             {tFixtures("proceed") || "Proceed"}

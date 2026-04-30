@@ -36,14 +36,14 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onStart}
-                    className="w-full h-12 md:h-14 bg-secondary/10 border-secondary/20 hover:bg-secondary/20 hover:border-secondary/40 rounded-none transition-all group active:scale-[0.98]"
+                    className="w-full h-12 md:h-14 bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40 rounded-none transition-all group active:scale-[0.98]"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
-                            <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
-                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-secondary">{t("start_match")}</span>
+                            <Play className="h-4 w-4 fill-primary text-primary group-hover:scale-110 transition-transform" /> 
+                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-primary">{t("start_match")}</span>
                         </div>
-                        <span className="hidden md:block text-[9px] text-secondary/60 ml-7">Kick off the competition</span>
+                        <span className="hidden md:block text-[9px] text-primary/60 ml-7">Kick off the competition</span>
                     </div>
                 </Button>
             ) : status === 'live' && isRunning ? (
@@ -64,14 +64,14 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onResume}
-                    className="w-full h-12 md:h-14 bg-secondary/10 border-secondary/20 hover:bg-secondary/20 hover:border-secondary/40 rounded-none transition-all group active:scale-[0.98]"
+                    className="w-full h-12 md:h-14 bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40 rounded-none transition-all group active:scale-[0.98]"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
-                            <Play className="h-4 w-4 fill-secondary text-secondary group-hover:scale-110 transition-transform" /> 
-                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-secondary">{t("resume_match")}</span>
+                            <Play className="h-4 w-4 fill-primary text-primary group-hover:scale-110 transition-transform" /> 
+                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-primary">{t("resume_match")}</span>
                         </div>
-                        <span className="hidden md:block text-[9px] text-secondary/60 ml-7">Continue the match</span>
+                        <span className="hidden md:block text-[9px] text-primary/60 ml-7">Continue the match</span>
                     </div>
                 </Button>
             ) : (
@@ -122,14 +122,14 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onAddTime}
-                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-secondary/40 rounded-none transition-all group"
+                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-primary/40 rounded-none transition-all group"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
-                            <Plus className="h-4 w-4 text-secondary group-hover:scale-110 transition-transform" />
-                            <span className="hidden md:inline text-[10px] font-black tracking-widest text-foreground/60 group-hover:text-secondary transition-colors">{t("add_time")}</span>
+                            <Plus className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+                            <span className="hidden md:inline text-[10px] font-black tracking-widest text-foreground/60 group-hover:text-primary transition-colors">{t("add_time")}</span>
                         </div>
-                        <span className="hidden md:block text-[9px] text-secondary/40 ml-7">Extra minutes</span>
+                        <span className="hidden md:block text-[9px] text-primary/40 ml-7">Extra minutes</span>
                     </div>
                 </Button>
             )}

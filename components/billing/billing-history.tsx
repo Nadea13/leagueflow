@@ -26,7 +26,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-3 mb-6">
-                <Receipt className="h-5 w-5 text-secondary" />
+                <Receipt className="h-5 w-5 text-primary" />
                 <h3 className="text-xl font-black tracking-tighter text-foreground">
                     {t("historyTitle")}
                 </h3>
@@ -65,7 +65,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                                         {record.payment_method === 'promptpay' ? t('method_promptpay') :
                                             record.payment_method === 'credit_card' ? t('method_credit_card') : record.payment_method}
                                     </TableCell>
-                                    <TableCell className="py-4 font-black text-[10px] tracking-tight text-secondary">
+                                    <TableCell className="py-4 font-black text-[10px] tracking-tight text-primary">
                                         {record.plan === 'yearly' ? t('yearly.title') :
                                             record.plan === 'monthly' ? t('monthly.title') :
                                                 record.plan === 'tournament' ? t('tournament.title') :
