@@ -65,7 +65,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                             <TableHead className="px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">
                                 {t("team") || "Team"}
                             </TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-secondary border-b border-border/10">
+                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-primary border-b border-border/10">
                                 {t("goals")}
                             </TableHead>
                         </TableRow>
@@ -82,7 +82,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                     <TableCell className="text-center px-0 border-b border-border/5">
                                         <span className={cn(
                                             "text-[10px] font-black tracking-tighter tabular-nums",
-                                            isTop3 ? "text-secondary" : "text-muted-foreground/40"
+                                            isTop3 ? "text-primary" : "text-muted-foreground/40"
                                         )}>
                                             {String(index + 1).padStart(2, '0')}
                                         </span>
@@ -109,7 +109,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-center px-4 border-b border-border/5">
-                                        <span className="text-base font-black text-secondary tabular-nums">
+                                        <span className="text-base font-black text-primary tabular-nums">
                                             {scorer.goals}
                                         </span>
                                     </TableCell>

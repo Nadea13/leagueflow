@@ -314,7 +314,7 @@ export function PricingCards({
                                                 </div>
                                             )}
                                             <Button
-                                                variant={isEffectivelyActive ? "outline" : (isSelected ? "default" : "secondary")}
+                                                variant={isEffectivelyActive ? "outline" : (isSelected ? "default" : "primary")}
                                                 className={cn(
                                                     "w-full",
                                                     isSelected && !isEffectivelyActive && "ring-2 ring-primary ring-offset-2"

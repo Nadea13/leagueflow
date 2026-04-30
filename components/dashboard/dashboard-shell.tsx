@@ -101,7 +101,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                             label: t("total_teams"),
                             value: metrics.totalTeams,
                             icon: Users,
-                            color: "secondary",
+                            color: "primary",
                             description: t("all_time_teams")
                         },
                         {
@@ -142,10 +142,10 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                             {teams.length > 3 && (
                                 <Link
                                     href={`/${(mode as string) === 'organizer' ? 'organizer' : 'manager'}/my-teams`}
-                                    className="flex flex-col items-center justify-center gap-6 p-6 h-full min-h-[200px] bg-muted/5 hover:bg-secondary/5 transition-all text-muted-foreground hover:text-secondary group border border-dashed border-border hover:border-secondary/50 relative overflow-hidden"
+                                    className="flex flex-col items-center justify-center gap-6 p-6 h-full min-h-[200px] bg-muted/5 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary group border border-dashed border-border hover:border-primary/50 relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-secondary/0 group-hover:bg-secondary/40 transition-all" />
-                                    <div className="h-16 w-16 rounded-none bg-background flex items-center justify-center border border-border group-hover:border-secondary group-hover:shadow-[0_0_20px_rgba(0,196,154,0.2)] transition-all rotate-12 group-hover:rotate-0">
+                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/0 group-hover:bg-primary/40 transition-all" />
+                                    <div className="h-16 w-16 rounded-none bg-background flex items-center justify-center border border-border group-hover:border-primary group-hover:shadow-[0_0_20px_rgba(0,196,154,0.2)] transition-all rotate-12 group-hover:rotate-0">
                                         <ArrowRight className="h-7 w-7 transition-transform group-hover:translate-x-1" />
                                     </div>
                                     <div className="text-center">
@@ -187,7 +187,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                         label: t("total_tournaments"),
                         value: totalTournaments,
                         icon: Trophy,
-                        color: "secondary",
+                        color: "primary",
                         description: t("all_time")
                     },
                     {
@@ -201,7 +201,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                         label: t("completed"),
                         value: completedTournaments,
                         icon: CheckCircle,
-                        color: "secondary",
+                        color: "primary",
                         description: t("successfully_finished")
                     }
                 ]}
@@ -226,10 +226,10 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                             {tournaments.length > 3 && (
                                 <Link
                                     href={`/${(mode as string) === 'organizer' ? 'organizer' : 'manager'}/tournaments`}
-                                    className="flex flex-col items-center justify-center gap-6 p-6 h-full min-h-[200px] bg-muted/5 hover:bg-secondary/5 transition-all text-muted-foreground hover:text-secondary group border border-dashed border-border hover:border-secondary/50 relative overflow-hidden"
+                                    className="flex flex-col items-center justify-center gap-6 p-6 h-full min-h-[200px] bg-muted/5 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary group border border-dashed border-border hover:border-primary/50 relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-secondary/0 group-hover:bg-secondary/40 transition-all" />
-                                    <div className="h-16 w-16 rounded-none bg-background flex items-center justify-center border border-border group-hover:border-secondary group-hover:shadow-[0_0_20px_rgba(0,196,154,0.2)] transition-all rotate-12 group-hover:rotate-0">
+                                    <div className="absolute top-0 left-0 w-full h-[2px] bg-primary/0 group-hover:bg-primary/40 transition-all" />
+                                    <div className="h-16 w-16 rounded-none bg-background flex items-center justify-center border border-border group-hover:border-primary group-hover:shadow-[0_0_20px_rgba(0,196,154,0.2)] transition-all rotate-12 group-hover:rotate-0">
                                         <ArrowRight className="h-7 w-7 transition-transform -rotate-12 group-hover:rotate-0" />
                                     </div>
                                     <div className="text-center">

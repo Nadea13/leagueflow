@@ -41,7 +41,7 @@ export default async function SettingsPage() {
                 {/* Preferences */}
                 <div className="space-y-4 md:space-y-6">
                     <div className="flex items-center gap-3 mb-4 md:mb-6">
-                        <Sliders className="h-5 w-5 text-secondary" />
+                        <Sliders className="h-5 w-5 text-primary" />
                         <h3 className="text-xl font-black tracking-tighter text-foreground">
                             {t("preferences")}
                         </h3>
@@ -51,14 +51,14 @@ export default async function SettingsPage() {
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black tracking-widest text-secondary/70">{tCommon("language")}</Label>
+                                    <Label className="text-[10px] font-black tracking-widest text-primary/70">{tCommon("language")}</Label>
                                     <p className="text-[11px] text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
                                 </div>
                                 <LanguageToggle />
                             </div>
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black tracking-widest text-secondary/70">{tCommon("theme")}</Label>
+                                    <Label className="text-[10px] font-black tracking-widest text-primary/70">{tCommon("theme")}</Label>
                                     <p className="text-[11px] text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
                                 </div>
                                 <ThemeToggle />
@@ -70,7 +70,7 @@ export default async function SettingsPage() {
                 {/* Legal Links */}
                 <div className="space-y-4 md:space-y-6">
                     <div className="flex items-center gap-3 my-4 md:my-6">
-                        <Scale className="h-5 w-5 text-secondary" />
+                        <Scale className="h-5 w-5 text-primary" />
                         <h3 className="text-xl font-black tracking-tighter text-foreground">
                             {t("legal")}
                         </h3>
@@ -80,24 +80,24 @@ export default async function SettingsPage() {
                         <div className="grid gap-2">
                             <Link href="/privacy-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
-                                    <Shield className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
+                                    <Shield className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-primary transition-colors" />
                                     <span className="font-black text-xs tracking-tight">{tLegal("privacy")}</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
                             </Link>
                             <Link href="/terms-of-service" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
-                                    <FileText className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
+                                    <FileText className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-primary transition-colors" />
                                     <span className="font-black text-xs tracking-tight">{tLegal("terms")}</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
                             </Link>
                             <Link href="/refund-policy" className="group/item flex items-center justify-between p-4 border border-transparent hover:border-border/40 bg-muted/5 hover:bg-background transition-all">
                                 <div className="flex items-center gap-4">
-                                    <CreditCard className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-secondary transition-colors" />
+                                    <CreditCard className="h-5 w-5 text-muted-foreground/60 group-hover/item:text-primary transition-colors" />
                                     <span className="font-black text-xs tracking-tight">{tLegal("refund")}</span>
                                 </div>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-secondary group-hover/item:translate-x-1 transition-all" />
+                                <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
                             </Link>
                         </div>
                     </div>

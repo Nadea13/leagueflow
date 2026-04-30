@@ -159,16 +159,16 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
     return (
         <div className="bg-card border border-border/10 shadow-2xl rounded-none p-0 overflow-hidden animate-in fade-in slide-in-from-top-2 relative">
             {/* Header */}
-            <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-5 border-b border-border/10 relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                <h3 className="text-base font-black tracking-widest text-secondary flex items-center gap-2">
+            <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-5 border-b border-border/10 relative">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                <h3 className="text-base font-black tracking-widest text-primary flex items-center gap-2">
                     <Smartphone className="w-5 h-5" />
                     {t("pay_with_promptpay")}
                 </h3>
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-secondary/10 hover:text-secondary rounded-none" 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-primary/10 hover:text-primary rounded-none" 
                     onClick={onCancel}
                 >
                     <X className="w-4 h-4" />
@@ -178,7 +178,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
             {/* Plan Info Bar */}
             <div className="px-6 py-3 bg-muted/30 border-b border-border/10 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-[10px] font-black tracking-wider text-muted-foreground/60">
-                    <Trophy className="w-3 h-3 text-secondary" />
+                    <Trophy className="w-3 h-3 text-primary" />
                     {t("plan_prefix")}
                     <span className="text-foreground">
                         {
@@ -197,10 +197,10 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                             <span className="text-[10px] text-muted-foreground/40 line-through font-bold">
                                 ฿{plan.price}
                             </span>
-                            <span className="text-xs font-black text-secondary">฿{plan.discounted_price}</span>
+                            <span className="text-xs font-black text-primary">฿{plan.discounted_price}</span>
                         </>
                     ) : (
-                        <span className="text-xs font-black text-secondary">฿{plan.price}</span>
+                        <span className="text-xs font-black text-primary">฿{plan.price}</span>
                     )}
                 </div>
             </div>
@@ -238,7 +238,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                 <div className="flex flex-col items-center justify-center min-h-[300px]">
                     {isGeneratingQR ? (
                         <div className="text-center space-y-4">
-                            <Loader2 className="w-10 h-10 animate-spin text-secondary mx-auto" />
+                            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
                             <p className="text-[10px] font-black tracking-widest text-muted-foreground/60 animate-pulse">
                                 {tCommon("loading")}
                             </p>
@@ -248,7 +248,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                             <div className="text-center space-y-4">
                                 <Button 
                                     onClick={handleGenerateQR} 
-                                    className="rounded-none font-black tracking-widest px-8 shadow-[0_0_20px_rgba(var(--secondary),0.2)]"
+                                    className="rounded-none font-black tracking-widest px-8 shadow-[0_0_20px_rgba(var(--primary),0.2)]"
                                     disabled={isGeneratingQR}
                                 >
                                     {isGeneratingQR ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -265,11 +265,11 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                         <div className="flex flex-col items-center gap-8 w-full max-w-xs mx-auto">
                             {paymentState.status === 'success' ? (
                                 <div className="text-center space-y-4 py-8">
-                                    <div className="w-20 h-20 bg-secondary/10 border border-secondary/20 rounded-none flex items-center justify-center mx-auto rotate-3">
-                                        <Check className="w-10 h-10 text-secondary -rotate-3" />
+                                    <div className="w-20 h-20 bg-primary/10 border border-primary/20 rounded-none flex items-center justify-center mx-auto rotate-3">
+                                        <Check className="w-10 h-10 text-primary -rotate-3" />
                                     </div>
                                     <div className="space-y-1">
-                                        <h3 className="text-xl font-black tracking-tighter text-secondary">
+                                        <h3 className="text-xl font-black tracking-tighter text-primary">
                                             {t("payment_pending_title", { defaultValue: "Verification Pending" })}
                                         </h3>
                                         <p className="text-xs font-medium text-muted-foreground leading-relaxed px-4 text-center">
@@ -309,10 +309,10 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                             <button 
                                                 type="button"
                                                 onClick={copyToClipboard}
-                                                className="w-full flex items-center justify-between p-3 bg-background border border-border/10 hover:border-secondary/40 hover:bg-secondary/[0.02] transition-all group"
+                                                className="w-full flex items-center justify-between p-3 bg-background border border-border/10 hover:border-primary/40 hover:bg-primary/[0.02] transition-all group"
                                             >
                                                 <div className="flex items-center gap-3 text-left">
-                                                    <div className="p-2 bg-secondary/10 text-secondary group-hover:scale-110 transition-transform">
+                                                    <div className="p-2 bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                                                         <Smartphone className="w-4 h-4" />
                                                     </div>
                                                     <div>
@@ -324,7 +324,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <div className="text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                                                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                                 </div>
                                             </button>
@@ -344,7 +344,7 @@ export function PaymentSection({ plan, tournaments, onCancel, onSuccess, externa
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                                 />
                                                 <Button 
-                                                    className="w-full relative h-12 rounded-none font-black tracking-widest bg-secondary hover:bg-secondary/90 shadow-[0_4px_14px_rgba(var(--secondary),0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                                                    className="w-full relative h-12 rounded-none font-black tracking-widest bg-primary hover:bg-primary/90 shadow-[0_4px_14px_rgba(var(--primary),0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]" 
                                                     disabled={isUploadingSlip}
                                                 >
                                                     {isUploadingSlip ? (

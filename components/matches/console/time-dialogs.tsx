@@ -19,8 +19,8 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
                 <DialogHeader className="p-4 md:p-6">
                     <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
-                        <div className="p-2 md:p-3 bg-secondary/10 border border-secondary/20">
-                            <Timer className="h-6 w-6 text-secondary" />
+                        <div className="p-2 md:p-3 bg-primary/10 border border-primary/20">
+                            <Timer className="h-6 w-6 text-primary" />
                         </div>
                         {t("add_added_time")}
                     </DialogTitle>
@@ -32,7 +32,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                             <Button 
                                 key={mins} 
                                 variant="outline" 
-                                className="h-16 bg-foreground/5 border-foreground/5 hover:bg-secondary hover:text-black hover:border-secondary rounded-none text-2xl font-black transition-all group active:scale-95" 
+                                className="h-16 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary rounded-none text-2xl font-black transition-all group active:scale-95" 
                                 onClick={() => onSave(mins)}
                             >
                                 <span className="group-hover:scale-110 transition-transform">+{mins}</span>
@@ -41,12 +41,12 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                     </div>
 
                     <div className="space-y-3 relative z-10 pt-4 border-t border-foreground/5">
-                        <Label className="text-[10px] font-black tracking-widest text-secondary">{t("custom")}</Label>
+                        <Label className="text-[10px] font-black tracking-widest text-primary">{t("custom")}</Label>
                         <div className="flex gap-3">
                             <Input
                                 type="number"
                                 placeholder="0"
-                                className="h-10 flex-1 bg-foreground/5 border-foreground/5 focus:border-secondary/50 focus:ring-secondary/20 rounded-none font-black text-xl text-foreground transition-all"
+                                className="h-10 flex-1 bg-foreground/5 border-foreground/5 focus:border-primary/50 focus:ring-primary/20 rounded-none font-black text-xl text-foreground transition-all"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         const val = parseInt((e.target as HTMLInputElement).value);
@@ -55,7 +55,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                                 }}
                             />
                             <Button 
-                                className="h-10 px-6 rounded-none bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black tracking-widest transition-all"
+                                className="h-10 px-6 rounded-none bg-primary text-black hover:bg-primary/80 text-[10px] font-black tracking-widest transition-all"
                                 onClick={(e) => {
                                     const input = e.currentTarget.previousElementSibling as HTMLInputElement;
                                     if (input.value) onSave(parseInt(input.value));
@@ -96,8 +96,8 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
             <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-xs rounded-none">
                 <DialogHeader className="p-4 md:p-6">
                     <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
-                        <div className="p-2 md:p-3 bg-secondary/10 border border-secondary/20">
-                            <Timer className="h-6 w-6 text-secondary" />
+                        <div className="p-2 md:p-3 bg-primary/10 border border-primary/20">
+                            <Timer className="h-6 w-6 text-primary" />
                         </div>
                         {t("set_match_time")}
                     </DialogTitle>
@@ -115,19 +115,19 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                 >
                     <div className="flex items-center justify-center gap-4 relative z-10">
                         <div className="space-y-2 flex-1">
-                            <Label className="text-[10px] font-black tracking-widest text-secondary text-center block w-full">{t("min")}</Label>
+                            <Label className="text-[10px] font-black tracking-widest text-primary text-center block w-full">{t("min")}</Label>
                             <Input
                                 name="minutes" type="number" min="0"
-                                className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-secondary/50 rounded-none text-foreground"
+                                className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-primary/50 rounded-none text-foreground"
                                 defaultValue={Math.floor(currentTime / 60)}
                             />
                         </div>
                         <span className="text-3xl font-black text-foreground/20 mt-6">:</span>
                         <div className="space-y-2 flex-1">
-                            <Label className="text-[10px] font-black tracking-widest text-secondary text-center block w-full">{t("sec")}</Label>
+                            <Label className="text-[10px] font-black tracking-widest text-primary text-center block w-full">{t("sec")}</Label>
                             <Input
                                 name="seconds" type="number" min="0" max="59"
-                                className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-secondary/50 rounded-none text-foreground"
+                                className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-primary/50 rounded-none text-foreground"
                                 defaultValue={currentTime % 60}
                             />
                         </div>
@@ -136,7 +136,7 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                     <div className="flex flex-col gap-3 relative z-10">
                         <Button 
                             type="submit" 
-                            className="h-10 bg-secondary text-black hover:bg-secondary/80 text-[10px] font-black tracking-widest rounded-none"
+                            className="h-10 bg-primary text-black hover:bg-primary/80 text-[10px] font-black tracking-widest rounded-none"
                         >
                             {t("set_time_btn")}
                         </Button>

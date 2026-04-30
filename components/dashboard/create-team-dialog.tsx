@@ -63,7 +63,7 @@ export function CreateTeamDialog() {
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
-                <div className="bg-gradient-to-r from-secondary/20 to-background p-6 border-b border-border relative">
+                <div className="bg-gradient-to-r from-primary/20 to-background p-6 border-b border-border relative">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">{t("add_team")}</DialogTitle>
                         <DialogDescription className="text-muted-foreground font-medium">
@@ -74,7 +74,7 @@ export function CreateTeamDialog() {
                 
                 <form action={formAction} className="p-6 space-y-6">
                     <div className="space-y-3">
-                        <Label htmlFor="name" className="text-[10px] font-black tracking-widest text-secondary">
+                        <Label htmlFor="name" className="text-[10px] font-black tracking-widest text-primary">
                             {t("team_name")}
                         </Label>
                         <Input
@@ -87,7 +87,7 @@ export function CreateTeamDialog() {
                     </div>
 
                     <div className="space-y-3">
-                        <Label htmlFor="sport" className="text-[10px] font-black tracking-widest text-secondary">
+                        <Label htmlFor="sport" className="text-[10px] font-black tracking-widest text-primary">
                             {tCommon("sport") || "Sport"}
                         </Label>
                         <Select name="sport" defaultValue="football">
@@ -96,7 +96,7 @@ export function CreateTeamDialog() {
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
                                 {(['football'] as SportType[]).map((sportKey) => (
-                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">
+                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}
                                     </SelectItem>
                                 ))}
@@ -105,12 +105,12 @@ export function CreateTeamDialog() {
                     </div>
 
                     <div className="space-y-2 md:space-y-3">
-                        <Label htmlFor="logo" className="text-[10px] font-black tracking-widest text-secondary">
+                        <Label htmlFor="logo" className="text-[10px] font-black tracking-widest text-primary">
                             {t("upload_logo")}
                         </Label>
                         <div className="flex items-center gap-6 p-4 bg-muted/10 border border-border">
                             <div className="relative group">
-                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border group-hover:border-secondary transition-colors overflow-hidden bg-muted/30">
+                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border group-hover:border-primary transition-colors overflow-hidden bg-muted/30">
                                     {previewUrl ? (
                                         <Image
                                             src={previewUrl}
@@ -121,11 +121,11 @@ export function CreateTeamDialog() {
                                             unoptimized
                                         />
                                     ) : (
-                                        <Upload className="h-8 w-8 text-muted-foreground/30 group-hover:text-secondary transition-colors" />
+                                        <Upload className="h-8 w-8 text-muted-foreground/30 group-hover:text-primary transition-colors" />
                                     )}
                                 </div>
                                 {previewUrl && (
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-secondary rounded-none border-2 border-background" />
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-none border-2 border-background" />
                                 )}
                             </div>
                             

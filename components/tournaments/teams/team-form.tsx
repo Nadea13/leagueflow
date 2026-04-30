@@ -115,7 +115,7 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
                                 </SelectTrigger>
                                 <SelectContent className="rounded-none border-border">
                                     {['football'].map((sportKey) => (
-                                        <SelectItem key={sportKey} value={sportKey} className="focus:bg-secondary/10 focus:text-secondary font-bold text-xs tracking-tighter">
+                                        <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                             {tSports(sportKey)}
                                         </SelectItem>
                                     ))}
@@ -134,7 +134,7 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
                         </div>
 
                         <div className="flex justify-end pt-4">
-                            <SubmitButton disabled={isLimitReached} className="h-12 px-10 rounded-none bg-secondary text-secondary-foreground font-black tracking-tighter hover:bg-secondary/90 transition-all">
+                            <SubmitButton disabled={isLimitReached} className="h-12 px-10 rounded-none bg-primary text-primary-foreground font-black tracking-tighter hover:bg-primary/90 transition-all">
                                 <Check className="h-4 w-4 mr-2" />
                                 {t("add_team_button")}
                             </SubmitButton>

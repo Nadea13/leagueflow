@@ -179,7 +179,7 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
             <div className="space-y-4 md:space-y-6">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <ClipboardEdit className="h-5 w-5 text-secondary" />
+                        <ClipboardEdit className="h-5 w-5 text-primary" />
                         {t("general_info")}
                     </h3>
                 </div>
@@ -190,42 +190,42 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                             <input type="hidden" name="form_type" value="general" />
                             <div className="grid gap-2 md:gap-3 md:grid-cols-2">
                                 <div className="space-y-1">
-                                    <Label htmlFor="name" className="text-[10px] font-black tracking-widest text-secondary/70">{tDialog("name")}</Label>
+                                    <Label htmlFor="name" className="text-[10px] font-black tracking-widest text-primary/70">{tDialog("name")}</Label>
                                     <Input
                                         type="text"
                                         id="name"
                                         name="name"
                                         defaultValue={tournament.name}
                                         placeholder={tDialog("name")}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label htmlFor="status" className="text-[10px] font-black tracking-widest text-secondary/70">{t("status")}</Label>
+                                    <Label htmlFor="status" className="text-[10px] font-black tracking-widest text-primary/70">{t("status")}</Label>
                                     <Select name="status" defaultValue={tournament.status || "draft"}>
                                         <SelectTrigger className="w-full h-10 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                             <SelectValue placeholder={t("select_status")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
-                                            <SelectItem value="draft" className="focus:bg-foreground/10 focus:text-secondary">{t("draft")}</SelectItem>
-                                            <SelectItem value="active" className="focus:bg-foreground/10 focus:text-secondary">{t("active")}</SelectItem>
-                                            <SelectItem value="completed" className="focus:bg-foreground/10 focus:text-secondary">{t("completed")}</SelectItem>
+                                            <SelectItem value="draft" className="focus:bg-foreground/10 focus:text-primary">{t("draft")}</SelectItem>
+                                            <SelectItem value="active" className="focus:bg-foreground/10 focus:text-primary">{t("active")}</SelectItem>
+                                            <SelectItem value="completed" className="focus:bg-foreground/10 focus:text-primary">{t("completed")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label htmlFor="format" className="text-[10px] font-black tracking-widest text-secondary/70">{t("format")}</Label>
+                                    <Label htmlFor="format" className="text-[10px] font-black tracking-widest text-primary/70">{t("format")}</Label>
                                     <Select name="format" defaultValue={tournament.format || "league"}>
                                         <SelectTrigger className="w-full h-10 bg-foreground/5 border-foreground/10 rounded-none focus:ring-0">
                                             <SelectValue placeholder={t("select_format")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
-                                            <SelectItem value="league" className="focus:bg-foreground/10 focus:text-secondary">{t("format_league")}</SelectItem>
-                                            <SelectItem value="league_ha" className="focus:bg-foreground/10 focus:text-secondary">{t("format_league_ha")}</SelectItem>
-                                            <SelectItem value="knockout" className="focus:bg-foreground/10 focus:text-secondary">{t("format_knockout")}</SelectItem>
-                                            <SelectItem value="group_knockout" className="focus:bg-foreground/10 focus:text-secondary">
+                                            <SelectItem value="league" className="focus:bg-foreground/10 focus:text-primary">{t("format_league")}</SelectItem>
+                                            <SelectItem value="league_ha" className="focus:bg-foreground/10 focus:text-primary">{t("format_league_ha")}</SelectItem>
+                                            <SelectItem value="knockout" className="focus:bg-foreground/10 focus:text-primary">{t("format_knockout")}</SelectItem>
+                                            <SelectItem value="group_knockout" className="focus:bg-foreground/10 focus:text-primary">
                                                 {t("format_group_knockout")}
                                             </SelectItem>
                                         </SelectContent>
@@ -233,7 +233,7 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label htmlFor="max_teams" className="text-[10px] font-black tracking-widest text-secondary/70 flex items-center justify-between">
+                                    <Label htmlFor="max_teams" className="text-[10px] font-black tracking-widest text-primary/70 flex items-center justify-between">
                                         {tDialog("max_teams")}
                                     </Label>
                                     <Input
@@ -243,46 +243,46 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                                         defaultValue={tournament.max_teams || 8}
                                         min="2"
                                         max={128}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label htmlFor="start_date" className="text-[10px] font-black tracking-widest text-secondary/70">{tDialog("start_date")}</Label>
+                                    <Label htmlFor="start_date" className="text-[10px] font-black tracking-widest text-primary/70">{tDialog("start_date")}</Label>
                                     <Input
                                         type="date"
                                         id="start_date"
                                         name="start_date"
                                         defaultValue={tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label htmlFor="end_date" className="text-[10px] font-black tracking-widest text-secondary/70">{tDialog("end_date")}</Label>
+                                    <Label htmlFor="end_date" className="text-[10px] font-black tracking-widest text-primary/70">{tDialog("end_date")}</Label>
                                     <Input
                                         type="date"
                                         id="end_date"
                                         name="end_date"
                                         defaultValue={tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
                                     />
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label htmlFor="document_deadline" className="text-[10px] font-black tracking-widest text-secondary/70">{t("document_deadline")}</Label>
+                                    <Label htmlFor="document_deadline" className="text-[10px] font-black tracking-widest text-primary/70">{t("document_deadline")}</Label>
                                     <Input
                                         type="date"
                                         id="document_deadline"
                                         name="document_deadline"
                                         defaultValue={tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : ""}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-secondary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
+                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10 [color-scheme:dark]"
                                     />
                                 </div>
 
                                 {tournament.format === "group_knockout" && (
                                     <div className="space-y-1">
-                                        <Label htmlFor="advancing_teams" className="text-[10px] font-black tracking-widest text-secondary/70">
+                                        <Label htmlFor="advancing_teams" className="text-[10px] font-black tracking-widest text-primary/70">
                                             {t("advancing_teams_per_group", { defaultValue: "Advancing Teams Per Group" })}
                                         </Label>
                                         <Select name="advancing_teams" defaultValue={tournament.advancing_teams?.toString() || "2"} required>
@@ -291,7 +291,7 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                                             </SelectTrigger>
                                             <SelectContent className="bg-card border-foreground/10 rounded-none">
                                                 {[1, 2, 3, 4].map((num) => (
-                                                    <SelectItem key={num} value={num.toString()} className="focus:bg-foreground/10 focus:text-secondary">
+                                                    <SelectItem key={num} value={num.toString()} className="focus:bg-foreground/10 focus:text-primary">
                                                         {num}
                                                     </SelectItem>
                                                 ))}
@@ -301,7 +301,7 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                                 )}
 
                                 <div className="col-span-full space-y-1">
-                                    <Label htmlFor="description" className="text-[10px] font-black tracking-widest text-secondary/70">{tDialog("description")}</Label>
+                                    <Label htmlFor="description" className="text-[10px] font-black tracking-widest text-primary/70">{tDialog("description")}</Label>
                                     <div className="pro-editor-wrapper relative">
                                         <ReactQuill
                                             theme="snow"
@@ -327,7 +327,7 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                                 <Button
                                     type="submit"
                                     disabled={isPending}
-                                    className="h-10 bg-secondary hover:bg-secondary px-10 rounded-none font-black tracking-tighter transition-all relative overflow-hidden"
+                                    className="h-10 bg-primary hover:bg-primary px-10 rounded-none font-black tracking-tighter transition-all relative overflow-hidden"
                                 >
                                     <span className="relative z-10 flex items-center gap-2">
                                         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
@@ -358,14 +358,14 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
             <div className="lg:hidden space-y-2 md:space-y-3 border-foreground/5">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <ClipboardEdit className="h-5 w-5 text-secondary" />
+                        <ClipboardEdit className="h-5 w-5 text-primary" />
                         Configuration Overview
                     </h3>
                     <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground/40">Status and details summary</p>
                 </div>
 
                 <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-all p-3 md:p-6 shadow-xl shadow-black/20">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary shadow-[4px_0_15px_rgba(0,196,154,0.1)]" />
                     <div className="space-y-2 md:space-y-3">
                         <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                             <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Status</span>
@@ -375,7 +375,7 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
                         </div>
                         <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
                             <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Plan</span>
-                            <span className="text-[10px] font-black tracking-widest text-secondary">
+                            <span className="text-[10px] font-black tracking-widest text-primary">
                                 {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
                             </span>
                         </div>

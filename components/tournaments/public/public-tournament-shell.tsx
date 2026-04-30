@@ -155,7 +155,7 @@ export function PublicTournamentShell({
                         variant="outline"
                         size="icon"
                         asChild
-                        className="bg-background/50 backdrop-blur-sm rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all"
+                        className="bg-background/50 backdrop-blur-sm rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all"
                     >
                         <Link href="/">
                             <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
@@ -165,7 +165,7 @@ export function PublicTournamentShell({
                     <div className="flex flex-col flex-1 gap-1 md:gap-2 min-w-0">
                         {/* Metadata Badges */}
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <Badge variant="outline" className="rounded-none font-black text-[10px] border-none bg-secondary/10 text-secondary tracking-widest">
+                            <Badge variant="outline" className="rounded-none font-black text-[10px] border-none bg-primary/10 text-primary tracking-widest">
                                 {tournament?.format?.replace('_', ' ')}
                             </Badge>
 
@@ -231,7 +231,7 @@ export function PublicTournamentShell({
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
                                     <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <Trophy className="h-5 w-5 text-secondary" />
+                                        <Trophy className="h-5 w-5 text-primary" />
                                         {t("league_table")}
                                     </h2>
                                 </div>
@@ -243,7 +243,7 @@ export function PublicTournamentShell({
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
                                     <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <Trophy className="h-5 w-5 text-secondary" />
+                                        <Trophy className="h-5 w-5 text-primary" />
                                         {t("group_standings")}
                                     </h2>
                                 </div>
@@ -255,7 +255,7 @@ export function PublicTournamentShell({
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
                                     <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <GitBranch className="h-5 w-5 text-secondary" />
+                                        <GitBranch className="h-5 w-5 text-primary" />
                                         {t("bracket")}
                                     </h2>
                                     <p className="text-[10px] font-bold text-muted-foreground/60">{t("bracket_desc")}</p>
@@ -273,7 +273,7 @@ export function PublicTournamentShell({
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex flex-col gap-1">
                                 <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                    <Award className="h-5 w-5 text-secondary" />
+                                    <Award className="h-5 w-5 text-primary" />
                                     {t("top_scorers")}
                                 </h2>
                                 <p className="text-[10px] font-bold text-muted-foreground/60">{t("top_scorers_desc")}</p>
@@ -285,7 +285,7 @@ export function PublicTournamentShell({
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
                                     <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <Users className="h-5 w-5 text-secondary" />
+                                        <Users className="h-5 w-5 text-primary" />
                                         {t("player_stats")}
                                     </h2>
                                     <p className="text-[10px] font-bold text-muted-foreground/60">{t("player_stats_desc")}</p>
@@ -304,7 +304,7 @@ export function PublicTournamentShell({
                     <div className="space-y-4 md:space-y-6">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                <Calendar className="h-5 w-5 text-secondary" />
+                                <Calendar className="h-5 w-5 text-primary" />
                                 {t("fixtures_results")}
                             </h2>
                             <p className="text-[10px] font-bold text-muted-foreground/60">{t("fixtures_results_desc")}</p>

@@ -116,7 +116,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'success': return "default";
-            case 'pending': return "secondary";
+            case 'pending': return "primary";
             case 'failed': return "destructive";
             default: return "outline";
         }
@@ -126,21 +126,21 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
         <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid gap-3 grid-cols-3 md:gap-4">
-                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-secondary/50">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                <Card className="border border-border bg-card py-2 md:py-6 shadow-none overflow-hidden relative group transition-all hover:border-primary/50">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
                         <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                             {t("total_revenue")}
                         </CardTitle>
-                        <CreditCard className="h-4 w-4 text-secondary opacity-80 shrink-0 hidden sm:block" />
+                        <CreditCard className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
                     </CardHeader>
                     <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
                         <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">
                             ฿{totalAmount.toLocaleString()}
                         </div>
                         <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
-                            <span className="w-2 h-[1px] bg-secondary/40" />
+                            <span className="w-2 h-[1px] bg-primary/40" />
                             {t("all_time_earnings")}
                         </p>
                     </CardContent>
@@ -247,8 +247,8 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-7 w-7 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-                                                <User className="h-3.5 w-3.5 text-secondary" />
+                                            <div className="h-7 w-7 bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                <User className="h-3.5 w-3.5 text-primary" />
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm truncate">{payment.user?.email || t("unknown")}</span>
@@ -335,8 +335,8 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             {/* Verify Dialog */}
             <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
                 <DialogContent className="sm:max-w-[425px] rounded-none border-border p-0 overflow-hidden">
-                    <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                    <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                         <DialogHeader>
                             <DialogTitle className="text-xl font-black tracking-tighter text-foreground">
                                 Verify Payment

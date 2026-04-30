@@ -72,7 +72,7 @@ export function CookieBanner() {
                             <Button variant="outline" onClick={() => setShowSettings(true)}>
                                 {t("settings")}
                             </Button>
-                            <Button variant="secondary" onClick={handleRejectAll}>
+                            <Button variant="default" onClick={handleRejectAll}>
                                 {t("reject_all")}
                             </Button>
                             <Button onClick={handleAcceptAll}>

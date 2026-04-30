@@ -116,7 +116,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <Megaphone className="h-5 w-5 text-secondary" />
+                        <Megaphone className="h-5 w-5 text-primary" />
                         {t("title")}
                     </h3>
                     <p className="text-[10px] font-bold text-muted-foreground/60">{t("no_announcements_desc")}</p>
@@ -126,7 +126,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                         <DialogTrigger asChild>
                             <Button
                                 size="sm"
-                                variant="secondary"
+                                variant="default"
                                 className="rounded-none font-black text-[10px] tracking-widest h-8 shadow-[0_4px_10px_rgba(0,196,154,0.1)] transition-all px-4"
                             >
                                 <Plus className="h-4 w-4 mr-1" />
@@ -136,7 +136,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                         <DialogContent className="bg-card border-border/40 rounded-none sm:max-w-[500px] shadow-2xl p-0 overflow-hidden">
                             <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
                                 <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
-                                    <Megaphone className="h-6 w-6 text-secondary" />
+                                    <Megaphone className="h-6 w-6 text-primary" />
                                     {t("news")}
                                 </DialogTitle>
                             </DialogHeader>
@@ -147,7 +147,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                         value={title}
                                         onChange={e => setTitle(e.target.value)}
                                         placeholder={t("title_placeholder")}
-                                        className="bg-background/50 border-border/20 rounded-none focus-visible:ring-secondary/30 h-11 font-bold"
+                                        className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 h-11 font-bold"
                                         required
                                     />
                                 </div>
@@ -158,7 +158,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                                         placeholder={t("content_placeholder")}
                                         rows={5}
-                                        className="bg-background/50 border-border/20 rounded-none focus-visible:ring-secondary/30 font-medium text-sm min-h-[120px]"
+                                        className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
                                     />
                                 </div>
                                 <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10">
@@ -174,7 +174,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                     <Button
                                         type="submit"
                                         size="sm"
-                                        className="text-[10px] font-black tracking-widest rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                                        className="text-[10px] font-black tracking-widest rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
                                         disabled={isSaving || !title.trim()}
                                     >
                                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
@@ -202,19 +202,19 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                             key={ann.id}
                             className={cn(
                                 "p-2 md:p-3 rounded-none border border-border/20 transition-all relative overflow-hidden group/item",
-                                ann.is_pinned ? "bg-secondary/[0.03] border-secondary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >
                             <div className="flex items-start justify-between gap-2 md:gap-3 relative z-10">
                                 <div className="flex-1 space-y-2 md:space-y-3">
                                     <div className="flex items-center gap-3">
                                         {ann.is_pinned && (
-                                            <div className="flex items-center gap-1.5 bg-secondary text-secondary-foreground px-2 py-0.5 rounded-none shadow-[0_0_10px_rgba(0,196,154,0.3)]">
+                                            <div className="flex items-center gap-1.5 bg-primary text-primary-foreground px-2 py-0.5 rounded-none shadow-[0_0_10px_rgba(0,196,154,0.3)]">
                                                 <Pin className="h-2.5 w-2.5" />
                                                 <span className="text-[8px] font-black tracking-widest">{t("pinned")}</span>
                                             </div>
                                         )}
-                                        <h4 className="font-black tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-secondary transition-colors line-clamp-1">
+                                        <h4 className="font-black tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-primary transition-colors line-clamp-1">
                                             {ann.title}
                                         </h4>
                                     </div>
@@ -239,7 +239,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 rounded-none border border-border/20 hover:bg-secondary/10 hover:text-secondary hover:border-secondary/30 transition-all"
+                                                className="h-8 w-8 rounded-none border border-border/20 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                 title={ann.is_pinned ? t("unpin") : t("pin")}
                                             >

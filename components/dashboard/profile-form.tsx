@@ -38,7 +38,7 @@ export function ProfileForm({ user }: { user: User }) {
     return (
         <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3 mb-4 md:mb-6">
-                <UserIcon className="h-5 w-5 text-secondary" />
+                <UserIcon className="h-5 w-5 text-primary" />
                 <h3 className="text-xl font-black tracking-tighter text-foreground">
                     {t("user_info")}
                 </h3>
@@ -47,7 +47,7 @@ export function ProfileForm({ user }: { user: User }) {
             <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors p-4 md:p-6 shadow-sm">
                 <form action={handleUpdate} className="grid gap-4 md:gap-6">
                     <div className="grid gap-3">
-                        <Label htmlFor="email" className="text-[10px] font-black tracking-widest text-secondary/70">
+                        <Label htmlFor="email" className="text-[10px] font-black tracking-widest text-primary/70">
                             {t("email")}
                         </Label>
                         <Input 
@@ -58,7 +58,7 @@ export function ProfileForm({ user }: { user: User }) {
                         />
                     </div>
                     <div className="grid gap-3">
-                        <Label htmlFor="fullName" className="text-[10px] font-black tracking-widest text-secondary/70">
+                        <Label htmlFor="fullName" className="text-[10px] font-black tracking-widest text-primary/70">
                             {t("full_name")}
                         </Label>
                         <Input
@@ -66,7 +66,7 @@ export function ProfileForm({ user }: { user: User }) {
                             name="fullName"
                             defaultValue={user?.user_metadata?.full_name || ""}
                             placeholder={t("enter_full_name")}
-                            className="bg-muted/20 border-border text-foreground h-12 rounded-none focus-visible:ring-secondary/30"
+                            className="bg-muted/20 border-border text-foreground h-12 rounded-none focus-visible:ring-primary/30"
                         />
                     </div>
                     <div className="flex justify-end">

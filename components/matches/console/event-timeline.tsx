@@ -23,7 +23,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
         <div className="bg-card border border-foreground/5 relative overflow-hidden group">
             <div className="px-4 pt-2 md:px-6 md:pt-6 flex items-center justify-between px-4 relative z-10">
                 <div className="space-y-1">
-                    <h3 className="text-[10px] font-black tracking-widest text-secondary">{t("match_log") || "Match Log"}</h3>
+                    <h3 className="text-[10px] font-black tracking-widest text-primary">{t("match_log") || "Match Log"}</h3>
                     <p className="text-[8px] text-muted-foreground">CHRONOLOGICAL EVENT HISTORY</p>
                 </div>
             </div>
@@ -50,7 +50,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                             const accentColor = isNeutral ? 'bg-foreground/20' :
                                              event.event_type === 'red_card' ? 'bg-red-500' : 
                                              event.event_type === 'yellow_card' ? 'bg-yellow-400' : 
-                                             'bg-secondary';
+                                             'bg-primary';
                             
                             return (
                                 <div 
@@ -65,7 +65,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                         <div className="w-6 flex flex-col items-center">
                                             <span className={cn(
                                                 "text-sm font-black tracking-tighter drop-shadow-sm transition-colors",
-                                                isHome ? "text-foreground/40 group-hover/item:text-secondary" : "text-foreground/40 group-hover/item:text-foreground"
+                                                isHome ? "text-foreground/40 group-hover/item:text-primary" : "text-foreground/40 group-hover/item:text-foreground"
                                             )}>
                                                 {event.minute}&apos;
                                             </span>
@@ -86,9 +86,9 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                         )}>
                                             {isNeutral ? (
                                                 <div className="flex items-center gap-4 w-full">
-                                                    <div className="flex-1 h-[1px] bg-secondary/40" />
+                                                    <div className="flex-1 h-[1px] bg-primary/40" />
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-[10px] font-black tracking-[0.3em] text-secondary drop-shadow-md">
+                                                        <span className="text-[10px] font-black tracking-[0.3em] text-primary drop-shadow-md">
                                                             {t(evtConfig?.label || event.event_type)}
                                                         </span>
                                                         <div className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <div className="flex-1 h-[1px] bg-secondary/40" />
+                                                    <div className="flex-1 h-[1px] bg-primary/40" />
                                                 </div>
                                             ) : (
                                                 <div className="min-w-0">
@@ -112,7 +112,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                     )}>
                                                         <span className={cn(
                                                             "text-[9px] font-black tracking-widest",
-                                                            event.event_type === 'goal' ? "text-secondary" : (isNeutral ? "text-foreground/60" : "text-foreground/40")
+                                                            event.event_type === 'goal' ? "text-primary" : (isNeutral ? "text-foreground/60" : "text-foreground/40")
                                                         )}>
                                                             {event.event_type === 'penalty_shot' 
                                                                 ? (event.extra_info?.scored ? t("penalty_scored") : t("penalty_missed"))

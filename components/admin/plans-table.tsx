@@ -122,15 +122,15 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                 <TableRow key={plan.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-                                                <CreditCard className="h-4 w-4 text-secondary" />
+                                            <div className="h-8 w-8 bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                <CreditCard className="h-4 w-4 text-primary" />
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm">{plan.name}</span>
                                                 {plan.description && plan.description.length > 0 && (
                                                     <div className="flex flex-wrap gap-1 mt-1">
                                                         {plan.description.slice(0, 3).map((feature, i) => (
-                                                            <Badge key={i} variant="secondary" className="text-[9px] font-medium px-1 rounded-none">
+                                                            <Badge key={i} variant="default" className="text-[9px] font-medium px-1 rounded-none">
                                                                 {feature}
                                                             </Badge>
                                                         ))}
@@ -150,7 +150,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                 ฿{plan.price.toLocaleString()}
                                             </span>
                                             {plan.discounted_price && (
-                                                <span className="text-secondary font-black text-sm">
+                                                <span className="text-primary font-black text-sm">
                                                     ฿{plan.discounted_price.toLocaleString()}
                                                 </span>
                                             )}
@@ -182,7 +182,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                     </TableCell>
                                     <TableCell>
                                         {plan.recommended && (
-                                            <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[10px] rounded-none font-black">
+                                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] rounded-none font-black">
                                                 {t("recommended")}
                                             </Badge>
                                         )}

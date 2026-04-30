@@ -358,10 +358,10 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                         <Separator />
 
                         <div className="bg-card border border-border/10 shadow-2xl rounded-none p-6 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-1 h-8 bg-secondary" />
-                            <div className="bg-gradient-to-r from-secondary/10 to-transparent px-6 py-4 border-b border-border/10 relative -mx-6 -mt-6 mb-6">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
-                                <h3 className="text-sm font-black tracking-widest text-secondary flex items-center gap-2">
+                            <div className="absolute top-0 left-0 w-1 h-8 bg-primary" />
+                            <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b border-border/10 relative -mx-6 -mt-6 mb-6">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                                <h3 className="text-sm font-black tracking-widest text-primary flex items-center gap-2">
                                     <Smartphone className="w-4 h-4" />
                                     {t("payment_details")}
                                 </h3>
@@ -382,7 +382,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
 
                                 <div className="flex flex-col h-full gap-6">
                                     <div className="bg-card border border-border/10 shadow-xl rounded-none p-6 space-y-4 text-sm relative overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-1 h-8 bg-secondary/30" />
+                                        <div className="absolute top-0 left-0 w-1 h-8 bg-primary/30" />
                                         <div className="flex justify-between items-center pb-3 border-b border-border/5">
                                             <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("bank_label")}</span>
                                             <span className="font-black text-foreground">{tournament.bank_name || "-"}</span>
@@ -393,7 +393,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                         </div>
                                         <div className="flex justify-between items-center pt-1">
                                             <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("account_no_label")}</span>
-                                            <span className="font-mono font-bold text-secondary text-lg leading-none tracking-tighter">{tournament.bank_account_number || "-"}</span>
+                                            <span className="font-mono font-bold text-primary text-lg leading-none tracking-tighter">{tournament.bank_account_number || "-"}</span>
                                         </div>
                                     </div>
 
@@ -424,7 +424,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                                                                     {...rest}
                                                                 />
                                                                 <div className="flex flex-col items-center gap-4">
-                                                                    <div className="p-4 bg-secondary/10 rounded-none text-secondary group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(var(--secondary),0.1)]">
+                                                                    <div className="p-4 bg-primary/10 rounded-none text-primary group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(var(--primary),0.1)]">
                                                                         <Upload className="w-8 h-8" />
                                                                     </div>
                                                                     <div className="space-y-1">
@@ -489,7 +489,7 @@ export function RegistrationForm({ tournament, initialTeams }: RegistrationFormP
                         disabled={isSubmitting || isRegistrationClosed}
                         className="w-full h-12 text-base font-semibold shadow-md active:scale-[0.99] transition-all"
                         size="lg"
-                        variant={isRegistrationClosed ? "secondary" : "default"}
+                        variant={isRegistrationClosed ? "primary" : "default"}
                     >
                         {isSubmitting ? (
                             <>

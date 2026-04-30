@@ -144,7 +144,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                                 <span className="truncate max-w-[200px]">{item.name}</span>
                                 <span>{item.count} clicks</span>
                             </div>
-                            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-primary rounded-full overflow-hidden">
                                 <div 
                                     className="h-full bg-emerald-500 transition-all duration-700 ease-out" 
                                     style={{ width: `${item.percentage}%` }}
@@ -172,7 +172,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                                 <span className="truncate max-w-[200px]">{item.path}</span>
                                 <span>{item.count} views</span>
                             </div>
-                            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-primary rounded-full overflow-hidden">
                                 <div 
                                     className="h-full bg-blue-500 transition-all duration-700 ease-out" 
                                     style={{ width: `${item.percentage}%` }}

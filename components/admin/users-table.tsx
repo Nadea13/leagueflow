@@ -97,8 +97,8 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                 <TableRow key={user.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-                                                <User className="h-4 w-4 text-secondary" />
+                                            <div className="h-8 w-8 bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                <User className="h-4 w-4 text-primary" />
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm truncate">{user.email}</span>
@@ -138,12 +138,12 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                                 <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'user')}>
                                                     <User className="mr-2 h-4 w-4" />
                                                     {t("set_as_user")}
-                                                    {user.role === 'user' && <Check className="ml-auto h-4 w-4 text-secondary" />}
+                                                    {user.role === 'user' && <Check className="ml-auto h-4 w-4 text-primary" />}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleRoleChange(user.id, 'admin')}>
                                                     <Shield className="mr-2 h-4 w-4" />
                                                     {t("set_as_admin")}
-                                                    {user.role === 'admin' && <Check className="ml-auto h-4 w-4 text-secondary" />}
+                                                    {user.role === 'admin' && <Check className="ml-auto h-4 w-4 text-primary" />}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>

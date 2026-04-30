@@ -196,8 +196,8 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-none border-border p-0">
-                <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                     <DialogHeader>
                         <DialogTitle className="text-xl font-black tracking-tighter text-foreground">
                             {initialPlan ? t("edit_plan") : t("add_plan")}
@@ -245,7 +245,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
 
                         {/* Pricing & Limits */}
                         <div className="col-span-2 border-t border-border pt-4 flex items-center gap-3">
-                            <div className="w-1 h-4 bg-secondary" />
+                            <div className="w-1 h-4 bg-primary" />
                             <span className="text-[10px] font-black tracking-[0.15em]">{t("pricing_and_limits")}</span>
                         </div>
 
@@ -317,7 +317,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         {role === 'organizer' && (
                             <>
                                 <div className="col-span-2 border-t border-border pt-4 flex items-center gap-3">
-                                    <div className="w-1 h-4 bg-secondary" />
+                                    <div className="w-1 h-4 bg-primary" />
                                     <span className="text-[10px] font-black tracking-[0.15em]">{t("features_and_support")}</span>
                                 </div>
 

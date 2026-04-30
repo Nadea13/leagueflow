@@ -144,7 +144,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         className={cn(
                             "text-[9px] tracking-[0.2em] font-black px-3 py-1",
                             status === 'scheduled' && "text-muted-foreground/40 border-muted-foreground/20",
-                            isLive && "text-secondary border-secondary animate-pulse",
+                            isLive && "text-primary border-primary animate-pulse",
                             isFinished && "text-muted-foreground/60 border-muted-foreground/30",
                             !match.away_team_id && "text-muted-foreground/40 border-muted-foreground/20"
                         )}
@@ -153,8 +153,8 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                             isLive ? (
                                 <span className="flex items-center gap-2">
                                     <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-secondary opacity-75"></span>
-                                        <span className="relative inline-flex rounded-none h-2 w-2 bg-secondary"></span>
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-primary opacity-75"></span>
+                                        <span className="relative inline-flex rounded-none h-2 w-2 bg-primary"></span>
                                     </span>
                                 </span>
                             ) : (
@@ -191,7 +191,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 {/* Home Team */}
                 <div className="flex-1 flex items-center justify-end gap-3 md:gap-6 text-right w-[40%]">
                     <div className={cn(
-                        "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-end group-hover:text-secondary transition-colors duration-300",
+                        "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-end group-hover:text-primary transition-colors duration-300",
                         (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground/60"
                     )}>
                         {isEditMode ? (
@@ -200,7 +200,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     value={match.home_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-secondary/50 font-black tracking-tighter text-xs">
+                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-primary/50 font-black tracking-tighter text-xs">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
                                     <SelectContent className="bg-[#111] border-foreground/5">
@@ -234,7 +234,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 <div className="flex items-center justify-center shrink-0">
                     <div className={cn(
                         "flex flex-col items-center justify-center transition-all duration-300",
-                        isLive ? " text-secondary-foreground scale-110" : 
+                        isLive ? " text-primary-foreground scale-110" : 
                         isFinished ? " text-foreground" : " text-muted-foreground/40"
                     )}>
                         {isLive || isFinished ? (
@@ -254,14 +254,14 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     </span>
                                 )}
                                 {isLiveStatus && (
-                                    <span className="text-[10px] font-black text-secondary mt-1 tabular-nums">
+                                    <span className="text-[10px] font-black text-primary mt-1 tabular-nums">
                                         {formatSeconds(liveTime)}
                                     </span>
                                 )}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center min-w-[5rem] transition-transform duration-300">
-                                <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-secondary transition-colors">
+                                <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-primary transition-colors">
                                     {formatTime(match.match_time) || "--:--"}
                                 </span>
                             </div>
@@ -272,7 +272,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 {/* Away Team */}
                 <div className="flex-1 flex items-center justify-start gap-3 md:gap-6 text-left w-[40%]">
                     <div className={cn(
-                        "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-start group-hover:text-secondary transition-colors duration-300",
+                        "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-start group-hover:text-primary transition-colors duration-300",
                         (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground/60"
                     )}>
                         {isEditMode ? (
@@ -281,7 +281,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     value={match.away_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-secondary/50 font-black tracking-tighter text-xs">
+                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-primary/50 font-black tracking-tighter text-xs">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
                                     <SelectContent className="bg-[#111] border-foreground/5">

@@ -38,30 +38,30 @@ export function PublicTournaments({ onlyActive = false, isManager = false }: { o
         <div className="space-y-4 md:space-y-6">
             <div className="relative max-w-2xl ml-0 group">
                 <div className="relative">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-secondary group-focus-within:scale-110 transition-all duration-300" />
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
                     <Input
                         placeholder={t("search_placeholder")}
-                        className="pl-14 h-16 text-lg bg-muted/5 border-border/40 rounded-none group-focus-within:border-secondary group-focus-within:bg-muted/10 transition-all duration-500 font-black tracking-tight placeholder:text-muted-foreground/20"
+                        className="pl-14 h-16 text-lg bg-muted/5 border-border/40 rounded-none group-focus-within:border-primary group-focus-within:bg-muted/10 transition-all duration-500 font-black tracking-tight placeholder:text-muted-foreground/20"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary group-focus-within:w-full transition-all duration-700" />
+                    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within:w-full transition-all duration-700" />
                 </div>
             </div>
 
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-6 bg-muted/5 border border-dashed border-border/40 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="relative">
-                        <Loader2 className="h-12 w-12 animate-spin text-secondary relative z-10" />
-                        <div className="absolute inset-x-0 bottom-0 h-4 bg-secondary/20 blur-xl animate-pulse" />
+                        <Loader2 className="h-12 w-12 animate-spin text-primary relative z-10" />
+                        <div className="absolute inset-x-0 bottom-0 h-4 bg-primary/20 blur-xl animate-pulse" />
                     </div>
-                    <p className="text-secondary font-black tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching")}</p>
+                    <p className="text-primary font-black tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching")}</p>
                 </div>
             ) : tournaments.length === 0 ? (
                 <div className="text-center py-24 border border-dashed border-border/40 bg-muted/5 relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-[2px] bg-muted/10" />
-                    <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-secondary/5 rotate-12 transition-transform group-hover:scale-110" />
+                    <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                     <p className="text-4xl font-black tracking-tighter text-muted-foreground/10 mb-2">{t("no_results")}</p>
                     <p className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("try_adjusting_filters") || "Try adjusting your search query"}</p>
                 </div>
@@ -71,9 +71,9 @@ export function PublicTournaments({ onlyActive = false, isManager = false }: { o
                         <div className="space-y-8">
                             {!onlyActive && (
                                 <div className="flex items-center gap-6 mb-12">
-                                    <div className="h-4 w-4 bg-secondary shadow-[0_0_15px_rgba(0,196,154,0.4)]" />
+                                    <div className="h-4 w-4 bg-primary shadow-[0_0_15px_rgba(0,196,154,0.4)]" />
                                     <h2 className="text-4xl font-black tracking-tighter text-foreground">{t("active_tournaments")}</h2>
-                                    <div className="h-px flex-1 bg-gradient-to-r from-secondary/40 to-transparent" />
+                                    <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
                                 </div>
                             )}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

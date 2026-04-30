@@ -19,7 +19,7 @@ export default async function PrivacyPolicyPage() {
         <div className="flex flex-col min-h-screen">
             <div className="container mx-auto max-w-4xl py-8 space-y-8 md:py-12 flex-1">
                 <BackButton />
-                <div className="space-y-2 border-b-2 border-secondary/20 pb-6">
+                <div className="space-y-2 border-b-2 border-primary/20 pb-6">
                     <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
                         {t("title")}
                     </h1>
@@ -30,7 +30,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("intro_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -42,7 +42,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("data_collect_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -54,7 +54,7 @@ export default async function PrivacyPolicyPage() {
                                 t("data_usage")
                             ].map((item, index) => (
                                 <li key={index} className="flex items-center gap-3 text-sm font-medium text-muted-foreground group/item">
-                                    <div className="w-1.5 h-1.5 bg-secondary/40 rounded-none transform rotate-45 group-hover/item:bg-secondary transition-colors" />
+                                    <div className="w-1.5 h-1.5 bg-primary/40 rounded-none transform rotate-45 group-hover/item:bg-primary transition-colors" />
                                     {item}
                                 </li>
                             ))}
@@ -65,7 +65,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("how_use_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -77,7 +77,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("cookies_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -89,7 +89,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("retention_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -101,7 +101,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("rights_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -113,7 +113,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("security_title")}
                     </h2>
                     <div className="pl-5 space-y-4">
@@ -125,7 +125,7 @@ export default async function PrivacyPolicyPage() {
 
                 <section className="space-y-4 group">
                     <h2 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <div className="w-2 h-8 bg-secondary/20 group-hover:bg-secondary transition-colors" />
+                        <div className="w-2 h-8 bg-primary/20 group-hover:bg-primary transition-colors" />
                         {t("contact_title")}
                     </h2>
                     <div className="pl-5 space-y-4">

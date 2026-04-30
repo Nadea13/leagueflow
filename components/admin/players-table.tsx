@@ -91,11 +91,11 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[500px] rounded-none border-border p-0 overflow-hidden">
-                        <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
+                        <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                             <DialogHeader>
                                 <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                                    <Shield className="h-5 w-5 text-secondary" />
+                                    <Shield className="h-5 w-5 text-primary" />
                                     {t("add_player")}
                                 </DialogTitle>
                                 <DialogDescription className="text-muted-foreground text-sm font-medium pt-1">
@@ -114,7 +114,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                     value={newPlayerName}
                                     onChange={(e) => setNewPlayerName(e.target.value)}
                                     placeholder={t("player_name_placeholder")}
-                                    className="rounded-none border-muted-foreground/20 focus:border-secondary focus:ring-secondary/20"
+                                    className="rounded-none border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -126,7 +126,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                     value={newPlayerPhoto}
                                     onChange={(e) => setNewPlayerPhoto(e.target.value)}
                                     placeholder="https://..."
-                                    className="rounded-none border-muted-foreground/20 focus:border-secondary focus:ring-secondary/20"
+                                    className="rounded-none border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -138,7 +138,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                     type="date"
                                     value={newPlayerDOB}
                                     onChange={(e) => setNewPlayerDOB(e.target.value)}
-                                    className="rounded-none border-muted-foreground/20 focus:border-secondary focus:ring-secondary/20"
+                                    className="rounded-none border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                         </div>

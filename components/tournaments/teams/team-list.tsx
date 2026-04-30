@@ -164,7 +164,7 @@ function TeamItem({
                     )}
                     <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
                         {(!showGroupSelector && team.group_name) ? (
-                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary bg-secondary/5 text-[9px] font-black px-2">
+                            <Badge variant="outline" className="rounded-none border-primary/30 text-primary bg-primary/5 text-[9px] font-black px-2">
                                 {t("group")} {team.group_name}
                             </Badge>
                         ) : (
@@ -177,13 +177,13 @@ function TeamItem({
             <div className="flex items-center gap-2 md:gap-3 z-10">
                 {showGroupSelector && (
                     <div className="flex items-center gap-2">
-                        {isGroupLoading && <Loader2 className="h-3 w-3 animate-spin text-secondary" />}
+                        {isGroupLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
                         <Select
                             defaultValue={team.group_name || "none"}
                             onValueChange={handleGroupChange}
                             disabled={isGroupLoading}
                         >
-                            <SelectTrigger className="w-[110px] h-9 text-[10px] bg-muted/5 border-border/10 rounded-none font-black tracking-widest focus:ring-secondary/20 transition-all hover:bg-muted/10">
+                            <SelectTrigger className="w-[110px] h-9 text-[10px] bg-muted/5 border-border/10 rounded-none font-black tracking-widest focus:ring-primary/20 transition-all hover:bg-muted/10">
                                 <SelectValue placeholder={tGroup("group")} />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-border/10 rounded-none shadow-2xl">
@@ -204,14 +204,14 @@ function TeamItem({
                     {!isReadOnly && (
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="outline" size="icon" className="bg-background/50 backdrop-blur-sm rounded-none border-border/10 hover:border-secondary/30 text-muted-foreground/40 hover:text-secondary transition-all">
+                                <Button variant="outline" size="icon" className="bg-background/50 backdrop-blur-sm rounded-none border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all">
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                             </DialogTrigger>
                         <DialogContent className="bg-card border-border/10 rounded-none max-w-md shadow-2xl">
                             <DialogHeader>
                                 <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                                    <Edit2 className="h-5 w-5 text-secondary" />
+                                    <Edit2 className="h-5 w-5 text-primary" />
                                     {t("edit_team")}
                                 </DialogTitle>
                             </DialogHeader>
@@ -219,7 +219,7 @@ function TeamItem({
                                 <div className="space-y-4 justify-center flex">
                                     <div className="flex flex-col items-center gap-3">
                                         <label htmlFor="edit-logo-upload" className="cursor-pointer group relative">
-                                            <div className="h-28 w-28 rounded-none border border-border/10 flex items-center justify-center overflow-hidden bg-foreground/5 hover:bg-foreground/10 transition-all group-hover:border-secondary/30 relative">
+                                            <div className="h-28 w-28 rounded-none border border-border/10 flex items-center justify-center overflow-hidden bg-foreground/5 hover:bg-foreground/10 transition-all group-hover:border-primary/30 relative">
                                                 {previewUrl || existingLogoUrl ? (
                                                     <Image
                                                         src={previewUrl || existingLogoUrl}
@@ -230,10 +230,10 @@ function TeamItem({
                                                         unoptimized
                                                     />
                                                 ) : (
-                                                    <ImageIcon className="h-10 w-10 text-muted-foreground/10 group-hover:text-secondary/20 transition-colors" />
+                                                    <ImageIcon className="h-10 w-10 text-muted-foreground/10 group-hover:text-primary/20 transition-colors" />
                                                 )}
-                                                <div className="absolute inset-0 bg-secondary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Upload className="h-6 w-6 text-secondary-foreground" />
+                                                <div className="absolute inset-0 bg-primary/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Upload className="h-6 w-6 text-primary-foreground" />
                                                 </div>
                                             </div>
                                             <Input
@@ -259,7 +259,7 @@ function TeamItem({
                                     <Input
                                         id="name"
                                         value={name}
-                                        className="bg-foreground/5 border-border/10 rounded-none font-black tracking-tighter h-12 focus-visible:ring-secondary/20"
+                                        className="bg-foreground/5 border-border/10 rounded-none font-black tracking-tighter h-12 focus-visible:ring-primary/20"
                                         onChange={(e) => setName(e.target.value)}
                                     />
                                 </div>
@@ -269,7 +269,7 @@ function TeamItem({
                                     <Textarea
                                         id="description"
                                         value={description}
-                                        className="bg-foreground/5 border-border/10 rounded-none font-medium text-sm min-h-[100px] focus-visible:ring-secondary/20"
+                                        className="bg-foreground/5 border-border/10 rounded-none font-medium text-sm min-h-[100px] focus-visible:ring-primary/20"
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder={t("no_description") || "No description"}
                                     />
@@ -289,7 +289,7 @@ function TeamItem({
                                 <Button 
                                     onClick={handleSave} 
                                     disabled={isLoading}
-                                    className="rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all h-10 px-8 text-[11px] font-black tracking-widest"
+                                    className="rounded-none bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 px-8 text-[11px] font-black tracking-widest"
                                 >
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     {tCommon("save")}

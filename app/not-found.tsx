@@ -20,7 +20,7 @@ export default function NotFound() {
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
         </div>
-        <Button asChild variant="secondary" className="h-12 px-8 font-black tracking-widest shadow-[0_0_20px_rgba(0,196,154,0.2)]">
+        <Button asChild variant="default" className="h-12 px-8 font-black tracking-widest shadow-[0_0_20px_rgba(0,196,154,0.2)]">
           <Link href="/">Return Home</Link>
         </Button>
       </div>

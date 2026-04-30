@@ -54,9 +54,9 @@ export function Tab<T extends string>({
             className={cn(
               "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all rounded-none border-none",
               fullWidth ? "flex-1" : "flex-none",
-              "text-muted-foreground hover:text-secondary",
+              "text-muted-foreground hover:text-primary",
               isActive ? cn(
-                "bg-secondary text-secondary-foreground shadow-[0_0_15px_rgba(0,196,154,0.3)] hover:text-secondary-foreground hover:bg-secondary",
+                "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(0,196,154,0.3)] hover:text-primary-foreground hover:bg-primary",
                 activeClassName
               ) : "",
               itemClassName
@@ -67,7 +67,7 @@ export function Tab<T extends string>({
             {option.badge !== undefined && (
               <span className={cn(
                 "ml-1 opacity-50 font-bold",
-                isActive ? "text-secondary-foreground/60" : "text-muted-foreground/40"
+                isActive ? "text-primary-foreground/60" : "text-muted-foreground/40"
               )}>
                 ({option.badge})
               </span>

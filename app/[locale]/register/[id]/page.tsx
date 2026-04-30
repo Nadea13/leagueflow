@@ -63,7 +63,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                     </Link>
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground hidden md:block">{t("nav_team_registration")}</span>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">{t("beta")}</Badge>
+                        <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5">{t("beta")}</Badge>
                     </div>
                 </div>
             </nav>
@@ -74,7 +74,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                     <h1 className="text-3xl font-bold tracking-tight mb-2">{tournament.name}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
                         <Badge variant="outline" className="capitalize">{tournament.format?.replace(/_/g, " ") || "Tournament"}</Badge>
-                        <Badge variant={tournament.status === 'active' ? 'default' : 'secondary'} className="capitalize">{t_common(tournament.status as Parameters<typeof t_common>[0])}</Badge>
+                        <Badge variant={tournament.status === 'active' ? 'default' : 'primary'} className="capitalize">{t_common(tournament.status as Parameters<typeof t_common>[0])}</Badge>
                         {tournament.start_date && (
                             <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />

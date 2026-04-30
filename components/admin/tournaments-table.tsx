@@ -74,7 +74,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active': return 'default';
-            case 'completed': return 'secondary';
+            case 'completed': return 'primary';
             default: return 'outline';
         }
     };
@@ -117,8 +117,8 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                 <TableRow key={tournament.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="h-8 w-8 bg-secondary/10 flex items-center justify-center border border-secondary/20 shrink-0">
-                                                <Trophy className="h-4 w-4 text-secondary" />
+                                            <div className="h-8 w-8 bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                                                <Trophy className="h-4 w-4 text-primary" />
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-bold text-sm truncate">{tournament.name}</span>
