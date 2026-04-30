@@ -86,12 +86,12 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
 
     const getStatusBadge = (status: string) => {
         if (status === 'unread') {
-            return <Badge variant="destructive" className="rounded-none text-[10px] font-black uppercase">{t("report_status_new")}</Badge>
+            return <Badge variant="destructive" className="rounded-none text-[10px] font-black">{t("report_status_new")}</Badge>
         }
         if (status === 'read') {
-            return <Badge variant="secondary" className="rounded-none text-[10px] font-black uppercase">{t("report_status_read")}</Badge>
+            return <Badge variant="secondary" className="rounded-none text-[10px] font-black">{t("report_status_read")}</Badge>
         }
-        return <Badge variant="outline" className="rounded-none text-[10px] font-black uppercase">{t("report_status_resolved")}</Badge>
+        return <Badge variant="outline" className="rounded-none text-[10px] font-black">{t("report_status_resolved")}</Badge>
     }
 
     return (
@@ -113,10 +113,10 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="w-[100px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("report_date")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("reporter")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("report_message")}</TableHead>
+                            <TableHead className="w-[100px] text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("status")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("report_date")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("reporter")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("report_message")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -161,24 +161,24 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
 
             {filteredReports.length > 0 && (
                 <div className="flex items-center justify-between py-2">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredReports.length)} of {filteredReports.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >
@@ -193,7 +193,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                     <div className="bg-secondary/10 px-6 py-5 border-b border-border relative">
                         <div className="absolute top-0 left-0 w-1 h-full bg-secondary" />
                         <DialogHeader>
-                            <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                            <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                                 <AlertCircle className="h-5 w-5 text-secondary" />
                                 {t("report_details")}
                             </DialogTitle>
@@ -214,7 +214,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                             <Button
                                 variant="outline"
                                 onClick={() => setDialogOpen(false)}
-                                className="rounded-none text-[10px] font-black uppercase"
+                                className="rounded-none text-[10px] font-black"
                             >
                                 {t("close")}
                             </Button>
@@ -222,7 +222,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                                 <Button
                                     variant="secondary"
                                     onClick={() => handleMarkAsRead(selectedReport.id)}
-                                    className="rounded-none text-[10px] font-black uppercase"
+                                    className="rounded-none text-[10px] font-black"
                                 >
                                     {t("mark_as_read")}
                                 </Button>
@@ -230,7 +230,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                             {selectedReport && selectedReport.status !== 'resolved' && (
                                 <Button
                                     onClick={() => handleResolve(selectedReport.id)}
-                                    className="rounded-none text-[10px] font-black uppercase"
+                                    className="rounded-none text-[10px] font-black"
                                 >
                                     {t("mark_as_resolved")}
                                 </Button>
