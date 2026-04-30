@@ -98,7 +98,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
             </div>
 
             {/* Mode Switcher */}
-            <div className="px-4 py-6">
+            <div className="p-3">
                 <Tab
                     value={mode}
                     onChange={handleModeChange}

@@ -23,19 +23,19 @@ export function LanguageSubMenu() {
 
     return (
         <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="rounded-none focus:bg-muted focus:text-primary py-2.5">
-                <Globe className="mr-3 h-4 w-4 opacity-70" />
-                <span className="text-xs font-bold tracking-tight">{t("language")}</span>
+            <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-3">
+                <Globe className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("language")}</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-background border-border rounded-none min-w-[120px]">
+            <DropdownMenuSubContent className="bg-background border-border min-w-[120px]">
                 <DropdownMenuItem onClick={() => switchLocale("en")}>
-                    <span className="mr-2 text-base opacity-70">🇺🇸</span>
-                    <span className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">English</span>
+                    <span className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary">🇺🇸</span>
+                    <span className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">English</span>
                     {locale === "en" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => switchLocale("th")}>
-                    <span className="mr-2 text-base opacity-70">🇹🇭</span>
-                    <span className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">ไทย</span>
+                    <span className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary">🇹🇭</span>
+                    <span className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">ไทย</span>
                     {locale === "th" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
             </DropdownMenuSubContent>

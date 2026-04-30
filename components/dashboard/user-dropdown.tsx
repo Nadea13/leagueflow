@@ -37,63 +37,62 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-none hover:bg-muted p-0 overflow-hidden group">
-                    <Avatar className="h-9 w-9 rounded-none border border-border group-hover:border-primary transition-colors">
-                        <AvatarImage src="" alt={displayName} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                            {displayName?.substring(0, 2).toUpperCase()}
+                <Button variant="ghost" className="relative h-9 w-9 rounded-none group">
+                    <Avatar>
+                        <AvatarFallback className="text-primary text-sm font-black">
+                            {displayName?.slice(0, 1).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 bg-background border-border rounded-none shadow-2xl p-2" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal p-3 bg-muted/30 mb-2">
+            <DropdownMenuContent className="w-64 bg-card shadow-2xl p-3" align="end" forceMount>
+                <DropdownMenuLabel className="mb-2">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-[10px] font-bold tracking-widest text-primary">{tCommon("user")}</p>
+                        <p className="text-xs font-bold tracking-widest text-primary">{tCommon("user")}</p>
                         <p className="text-sm font-medium leading-none text-foreground truncate">
                             {displayName}
                         </p>
                         {name && email && (
-                            <p className="text-[10px] text-muted-foreground truncate">{email}</p>
+                            <p className="text-xs text-muted-foreground truncate">{email}</p>
                         )}
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuGroup className="space-y-1">
-                    <DropdownMenuItem asChild className="rounded-none focus:bg-muted focus:text-primary transition-colors cursor-pointer py-2.5">
+                    <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-3">
                         <Link href={profileHref} className="w-full flex items-center">
-                            <User className="mr-3 h-4 w-4 opacity-70" />
-                            <span className="text-xs font-bold tracking-tight">{t("profile")}</span>
+                            <User className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                            <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("profile")}</span>
                         </Link>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="bg-border" />
                 <LanguageSubMenu />
                 <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="rounded-none focus:bg-muted focus:text-primary py-2.5">
-                        <Sun className="mr-3 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 opacity-70" />
-                        <Moon className="absolute mr-3 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 opacity-70" />
-                        <span className="text-xs font-bold tracking-tight">{tCommon("theme")}</span>
+                    <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-3">
+                        <Sun className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                        <Moon className="absolute mr-2 md:mr-3 h-4 w-4 text-muted-foreground rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                        <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent className="bg-background border-border rounded-none min-w-[120px]">
                             <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">
-                                <Sun className="mr-2 h-3.5 w-3.5" />
+                                <Sun className="mr-3 h-4 w-4" />
                                 {tCommon("light")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">
-                                <Moon className="mr-2 h-3.5 w-3.5" />
+                                <Moon className="mr-3 h-4 w-4" />
                                 {tCommon("dark")}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">
-                                <Laptop className="mr-2 h-3.5 w-3.5" />
+                                <Laptop className="mr-3 h-4 w-4" />
                                 {tCommon("system")}
                             </DropdownMenuItem>
                         </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem asChild className="rounded-none text-red-500 focus:text-red-400 focus:bg-red-500/10 py-2.5">
+                <DropdownMenuItem asChild className="rounded-none text-destructive focus:text-red-400 focus:bg-red-500/10 py-2.5">
                     <form action={signOut} className="w-full">
                         <button className="w-full flex items-center text-left cursor-pointer">
                             <LogOut className="mr-3 h-4 w-4 text-red-500" />
