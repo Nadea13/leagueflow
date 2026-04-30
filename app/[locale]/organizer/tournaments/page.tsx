@@ -32,10 +32,10 @@ export default async function TournamentsPage({
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] leading-none">
                         {t("my_tournaments")}
                     </h1>
-                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground mt-2 opacity-70">
                         {t("my_tournaments_desc")}
                     </p>
                 </div>
@@ -52,7 +52,7 @@ export default async function TournamentsPage({
                             type="search"
                             name="q"
                             placeholder="Search tournaments by name, location, or status..."
-                            className="pl-14 h-16 text-lg bg-muted/5 border-border/40 rounded-none group-focus-within:border-secondary group-focus-within:bg-muted/10 transition-all duration-500 font-black uppercase tracking-tight placeholder:text-muted-foreground/20"
+                            className="pl-14 h-16 text-lg bg-muted/5 border-border/40 rounded-none group-focus-within:border-secondary group-focus-within:bg-muted/10 transition-all duration-500 font-black tracking-tight placeholder:text-muted-foreground/20"
                             defaultValue={query}
                         />
                         <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary group-focus-within:w-full transition-all duration-700" />

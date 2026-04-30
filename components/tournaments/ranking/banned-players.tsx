@@ -17,11 +17,11 @@ export function BannedPlayers({ bannedPlayers }: BannedPlayersProps) {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-1">
-                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-3">
+                <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-3">
                     <Shield className="h-5 w-5 text-red-600" />
                     {t("title")} <span className="text-muted-foreground/40 text-sm ml-1">[{bannedPlayers.length}]</span>
                 </h2>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Automated disciplinary tracking</p>
+                <p className="text-[10px] font-bold text-muted-foreground/60">Automated disciplinary tracking</p>
             </div>
 
             <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
@@ -35,11 +35,11 @@ export function BannedPlayers({ bannedPlayers }: BannedPlayersProps) {
                                     <AlertTriangle className="h-4 w-4" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="font-black uppercase tracking-tighter text-foreground text-lg leading-none">{player.playerName}</span>
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mt-1">{player.teamName}</span>
+                                    <span className="font-black tracking-tighter text-foreground text-lg leading-none">{player.playerName}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground tracking-widest mt-1">{player.teamName}</span>
                                 </div>
                             </div>
-                            <Badge variant="outline" className="rounded-none px-3 py-1 text-[10px] font-black uppercase text-red-600 border-red-600/30 bg-red-600/5">
+                            <Badge variant="outline" className="rounded-none px-3 py-1 text-[10px] font-black text-red-600 border-red-600/30 bg-red-600/5">
                                 {player.banReason}
                             </Badge>
                         </div>

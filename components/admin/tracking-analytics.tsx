@@ -102,7 +102,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <TrendingUp className="h-4 w-4 text-primary" />
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider">Activity Over Time (Last 7 Days)</CardTitle>
+                        <CardTitle className="text-sm font-bold tracking-wider">Activity Over Time (Last 7 Days)</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -122,7 +122,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                                         )}
                                     </div>
                                 </div>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase">{item.day}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground">{item.day}</span>
                             </div>
                         ))}
                     </div>
@@ -134,13 +134,13 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <MousePointer2 className="h-4 w-4 text-emerald-500" />
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider">Most Used Features</CardTitle>
+                        <CardTitle className="text-sm font-bold tracking-wider">Most Used Features</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-4">
                     {topFeatures.length > 0 ? topFeatures.map((item, i) => (
                         <div key={i} className="space-y-1">
-                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
+                            <div className="flex justify-between text-[10px] font-bold tracking-tight">
                                 <span className="truncate max-w-[200px]">{item.name}</span>
                                 <span>{item.count} clicks</span>
                             </div>
@@ -162,13 +162,13 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <Eye className="h-4 w-4 text-blue-500" />
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider">Most Visited Pages</CardTitle>
+                        <CardTitle className="text-sm font-bold tracking-wider">Most Visited Pages</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-4">
                     {topPages.length > 0 ? topPages.map((item, i) => (
                         <div key={i} className="space-y-1">
-                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
+                            <div className="flex justify-between text-[10px] font-bold tracking-tight">
                                 <span className="truncate max-w-[200px]">{item.path}</span>
                                 <span>{item.count} views</span>
                             </div>
@@ -190,7 +190,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                 <CardHeader className="pb-2">
                     <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-amber-500" />
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider">Daily Activity Peak Hours</CardTitle>
+                        <CardTitle className="text-sm font-bold tracking-wider">Daily Activity Peak Hours</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="pt-4">
@@ -210,7 +210,7 @@ export function TrackingAnalytics({ logs }: TrackingAnalyticsProps) {
                             </div>
                         ))}
                     </div>
-                    <div className="flex justify-between mt-2 text-[8px] font-black uppercase text-muted-foreground tracking-tighter">
+                    <div className="flex justify-between mt-2 text-[8px] font-black text-muted-foreground tracking-tighter">
                         <span>12 AM</span>
                         <span>6 AM</span>
                         <span>12 PM</span>

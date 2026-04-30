@@ -25,17 +25,17 @@ export function LanguageSubMenu() {
         <DropdownMenuSub>
             <DropdownMenuSubTrigger className="rounded-none focus:bg-muted focus:text-secondary py-2.5">
                 <Globe className="mr-3 h-4 w-4 opacity-70" />
-                <span className="text-xs font-bold uppercase tracking-tight">{t("language")}</span>
+                <span className="text-xs font-bold tracking-tight">{t("language")}</span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="bg-background border-border rounded-none min-w-[120px]">
                 <DropdownMenuItem onClick={() => switchLocale("en")}>
                     <span className="mr-2 text-base opacity-70">🇺🇸</span>
-                    <span className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">English</span>
+                    <span className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold">English</span>
                     {locale === "en" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => switchLocale("th")}>
                     <span className="mr-2 text-base opacity-70">🇹🇭</span>
-                    <span className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">ไทย</span>
+                    <span className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold">ไทย</span>
                     {locale === "th" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
             </DropdownMenuSubContent>

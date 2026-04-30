@@ -51,10 +51,10 @@ export default function InvitesPage() {
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] leading-none">
                         {t("pending_invites_title")}
                     </h1>
-                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground mt-2 opacity-70">
                         {t("pending_invites_desc")}
                     </p>
                 </div>

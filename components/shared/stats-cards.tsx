@@ -41,7 +41,7 @@ export function StatsCards({ items }: StatsCardsProps) {
                     )}>
                         <div className={cn("absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 rotate-12 transition-transform group-hover:scale-110", bgClass)} />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                            <CardTitle className="text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
+                            <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
                                 {item.label}
                             </CardTitle>
                             <item.icon className={cn("h-4 w-4 opacity-80 shrink-0 hidden sm:block", colorClass)} />
@@ -51,7 +51,7 @@ export function StatsCards({ items }: StatsCardsProps) {
                                 {item.value}
                             </div>
                             {item.description && (
-                                <p className="hidden md:flex text-[10px] uppercase font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
+                                <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
                                     <span className={cn("w-2 h-[1px]", accentClass)} />
                                     {item.description}
                                 </p>

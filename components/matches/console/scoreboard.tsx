@@ -41,17 +41,17 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                             )}
                         </div>
                         <div className="space-y-1">
-                            <h2 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter text-foreground truncate group-hover/home:text-secondary transition-colors">
+                            <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/home:text-secondary transition-colors">
                                 {formatTeamName(match.home_team?.name)}
                             </h2>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary/60">HOME</p>
+                            <p className="text-[10px] font-black tracking-[0.3em] text-secondary/60">HOME</p>
                         </div>
                     </div>
 
                     {/* Central Score Area */}
                     <div className="flex flex-col items-center gap-4 md:gap-6 px-0 md:px-6 md:border-x border-foreground/5">
                         <div className="px-4 py-1.5 bg-secondary/10 border border-secondary/20">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary inline-block">
+                            <span className="text-[10px] font-black tracking-[0.2em] text-secondary inline-block">
                                 {match.stage || "Tournament Match"}
                             </span>
                         </div>
@@ -74,7 +74,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         )}
 
                         {match.status === 'finished' && (
-                            <div className="bg-secondary/20 text-secondary border border-secondary/30 px-4 py-1 text-[10px] font-black uppercase tracking-[0.2em]">
+                            <div className="bg-secondary/20 text-secondary border border-secondary/30 px-4 py-1 text-[10px] font-black tracking-[0.2em]">
                                 Final Result
                             </div>
                         )}
@@ -93,10 +93,10 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                             )}
                         </div>
                         <div className="space-y-1">
-                            <h2 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter text-foreground truncate group-hover/away:text-secondary transition-colors">
+                            <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/away:text-secondary transition-colors">
                                 {formatTeamName(match.away_team?.name)}
                             </h2>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/40">AWAY</p>
+                            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">AWAY</p>
                         </div>
                     </div>
                 </div>

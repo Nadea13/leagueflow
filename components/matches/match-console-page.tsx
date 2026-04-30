@@ -380,8 +380,8 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             <div className="bg-card border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
                 <div className="relative z-10 space-y-2 md:space-y-3">
                     <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
-                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground">{name}</h3>
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest">{type === 'home' ? 'Home' : 'Away'} Team Actions</p>
+                        <h3 className="text-xl font-black tracking-tighter text-foreground">{name}</h3>
+                        <p className="text-[9px] text-muted-foreground tracking-widest">{type === 'home' ? 'Home' : 'Away'} Team Actions</p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 md:gap-3">
@@ -396,7 +396,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                 )}
                             >
                                 <action.icon className={cn("h-5 w-5 mb-1 transition-transform group-hover:scale-110", action.iconColor)} />
-                                <span className="hidden md:inline text-[9px] font-black uppercase tracking-widest">{action.label}</span>
+                                <span className="hidden md:inline text-[9px] font-black tracking-widest">{action.label}</span>
                             </Button>
                         ))}
                     </div>
@@ -446,9 +446,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                         </Link>
                     </Button>
                     <div className="text-2xl md:text-4xl flex items-center gap-2 md:gap-3">
-                        <span className="font-black uppercase tracking-tighter text-foreground">{match.home_team?.name || 'Home'}</span>
+                        <span className="font-black tracking-tighter text-foreground">{match.home_team?.name || 'Home'}</span>
                         <span className="text-secondary text-xs md:text-sm font-black tracking-widest opacity-50 px-2 leading-none">VS</span>
-                        <span className="font-black uppercase tracking-tighter text-foreground">{match.away_team?.name || 'Away'}</span>
+                        <span className="font-black tracking-tighter text-foreground">{match.away_team?.name || 'Away'}</span>
                     </div>
                 </div>
 
@@ -465,7 +465,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                 match.status === 'live' ? "bg-secondary" : "bg-amber-500"
                             )}></span>
                         </span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-secondary">
+                        <span className="text-[10px] font-black tracking-widest text-secondary">
                             {match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status)}
                         </span>
                     </div>
@@ -479,23 +479,23 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                     <div className="bg-card border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
                         <div className="relative z-10 space-y-2 md:space-y-3">
                             <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
-                                <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
+                                <h4 className="text-[10px] font-black tracking-widest text-secondary">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
                                 <p className="text-[9px] text-muted-foreground">{readOnly ? "Real-time match updates" : "Real-time session management"}</p>
                             </div>
                             {readOnly ? (
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t("tournament") || "Tournament"}</span>
-                                        <span className="text-[10px] font-black uppercase text-foreground truncate max-w-[120px]">{tournamentName}</span>
+                                        <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("tournament") || "Tournament"}</span>
+                                        <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{tournamentName}</span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
-                                        <span className="text-[10px] font-black uppercase text-secondary">{match.stage || "Regular"}</span>
+                                        <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
+                                        <span className="text-[10px] font-black text-secondary">{match.stage || "Regular"}</span>
                                     </div>
                                     <div className="pt-4 border-t border-foreground/5">
                                         <div className="flex flex-col items-center gap-2 py-4 bg-secondary/5 border border-secondary/10">
                                             <Timer className="w-6 h-6 text-secondary animate-pulse" />
-                                            <span className="text-[8px] font-black uppercase tracking-[0.3em] text-secondary/60">LIVE UPDATES ACTIVE</span>
+                                            <span className="text-[8px] font-black tracking-[0.3em] text-secondary/60">LIVE UPDATES ACTIVE</span>
                                         </div>
                                     </div>
                                 </div>
@@ -519,7 +519,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                         <div className="bg-foreground/5 border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
                             <div className="relative z-10 space-y-2 md:space-y-3">
                                 <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("quick_actions")}</h4>
+                                    <h4 className="text-[10px] font-black tracking-widest text-secondary">{t("quick_actions")}</h4>
                                     <p className="text-[9px] text-muted-foreground">Admin session tools</p>
                                 </div>
                                 <div className="grid grid-cols-3 md:grid-cols-1 gap-2">
@@ -529,7 +529,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-secondary/50 rounded-none transition-all group"
                                     >
                                         <Undo className="h-4 w-4 text-muted-foreground group-hover:text-secondary" />
-                                        <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest">{t("undo")}</span>
+                                        <span className="hidden md:inline text-[10px] font-black tracking-widest">{t("undo")}</span>
                                     </Button>
                                     <PenaltyShootoutDialog
                                         matchId={match.id}
@@ -544,7 +544,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                                 className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-secondary/50 rounded-none transition-all group"
                                             >
                                                 <Target className="h-4 w-4 text-muted-foreground group-hover:text-secondary" />
-                                                <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest">{t("penalty_shootout")}</span>
+                                                <span className="hidden md:inline text-[10px] font-black tracking-widest">{t("penalty_shootout")}</span>
                                             </Button>
                                         }
                                     />
@@ -554,7 +554,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 rounded-none transition-all group"
                                     >
                                         <Ban className="h-4 w-4 text-red-500/50 group-hover:text-red-500" />
-                                        <span className="hidden md:inline text-[10px] font-black uppercase tracking-widest text-red-500/70 group-hover:text-red-500">{t("walkover")}</span>
+                                        <span className="hidden md:inline text-[10px] font-black tracking-widest text-red-500/70 group-hover:text-red-500">{t("walkover")}</span>
                                     </Button>
                                 </div>
                             </div>

@@ -24,7 +24,7 @@ export function MatchTimer({ time, readOnly: _readOnly = false, customText, adde
                 </div>
             </div>
             {addedTime && (
-                <div className="px-3 py-1 bg-secondary text-black text-[9px] font-black uppercase tracking-widest">
+                <div className="px-3 py-1 bg-secondary text-black text-[9px] font-black tracking-widest">
                     +{addedTime} MIN ADDED
                 </div>
             )}

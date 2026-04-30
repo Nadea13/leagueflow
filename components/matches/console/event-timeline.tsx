@@ -23,7 +23,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
         <div className="bg-card border border-foreground/5 relative overflow-hidden group">
             <div className="px-4 pt-2 md:px-6 md:pt-6 flex items-center justify-between px-4 relative z-10">
                 <div className="space-y-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary">{t("match_log") || "Match Log"}</h3>
+                    <h3 className="text-[10px] font-black tracking-widest text-secondary">{t("match_log") || "Match Log"}</h3>
                     <p className="text-[8px] text-muted-foreground">CHRONOLOGICAL EVENT HISTORY</p>
                 </div>
             </div>
@@ -88,7 +88,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                 <div className="flex items-center gap-4 w-full">
                                                     <div className="flex-1 h-[1px] bg-secondary/40" />
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-secondary drop-shadow-md">
+                                                        <span className="text-[10px] font-black tracking-[0.3em] text-secondary drop-shadow-md">
                                                             {t(evtConfig?.label || event.event_type)}
                                                         </span>
                                                         <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                         isNeutral ? "justify-center" : (isHome ? "flex-row" : "flex-row-reverse")
                                                     )}>
                                                         <span className={cn(
-                                                            "text-[9px] font-black uppercase tracking-widest",
+                                                            "text-[9px] font-black tracking-widest",
                                                             event.event_type === 'goal' ? "text-secondary" : (isNeutral ? "text-foreground/60" : "text-foreground/40")
                                                         )}>
                                                             {event.event_type === 'penalty_shot' 
@@ -121,14 +121,14 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                         {!isNeutral && (
                                                             <>
                                                                 <span className="text-[10px] text-foreground/20">•</span>
-                                                                <span className="text-[10px] font-black uppercase tracking-tighter text-foreground truncate max-w-[120px]">
+                                                                <span className="text-[10px] font-black tracking-tighter text-foreground truncate max-w-[120px]">
                                                                     {isHome ? match.home_team?.name : match.away_team?.name}
                                                                 </span>
                                                             </>
                                                         )}
                                                     </div>
                                                     <p className={cn(
-                                                        "text-xs font-black uppercase tracking-widest text-foreground truncate",
+                                                        "text-xs font-black tracking-widest text-foreground truncate",
                                                         isNeutral ? "text-center" : ""
                                                     )}>
                                                         {event.player_name || "Match Event"}

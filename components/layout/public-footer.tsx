@@ -35,14 +35,14 @@ export function PublicFooter({ managerPlans = [], organizerPlans = [], showPrici
                         </svg>
                         <span className="font-black text-foreground text-xl tracking-tighter">LeagueFlow</span>
                     </div>
-                    <div className="flex flex-col items-start gap-2 ml-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 transition-all">
+                    <div className="flex flex-col items-start gap-2 ml-1 text-[10px] font-black tracking-[0.2em] text-muted-foreground/60 transition-all">
                         {showPricing && (managerPlans.length > 0 || organizerPlans.length > 0) && (
                             <PricingFooter managerPlans={managerPlans} organizerPlans={organizerPlans} />
                         )}
                         <Link href="/#results" className="hover:text-primary transition-colors hover:opacity-100">{t('matches')}</Link>
                     </div>
                     <div>
-                        <Button size="lg" asChild className="rounded-none h-12 px-8 font-black uppercase tracking-widest text-xs hover:bg-secondary hover:text-secondary-foreground transition-all">
+                        <Button size="lg" asChild className="rounded-none h-12 px-8 font-black tracking-widest text-xs hover:bg-secondary hover:text-secondary-foreground transition-all">
                             <Link href="/signup">
                                 {tPricing('get_started')} <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>

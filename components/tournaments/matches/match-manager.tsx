@@ -129,22 +129,22 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                             {/* Filter Area */}
                             <div className="flex flex-wrap items-center gap-2 md:gap-3">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
+                                    <Label className="text-[10px] font-black tracking-wider text-muted-foreground/60">{tMatch("status")}</Label>
                                     <Select value={filterStage} onValueChange={setFilterStage}>
-                                        <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold uppercase tracking-tighter text-xs">
+                                        <SelectTrigger className="h-10 w-[200px] bg-card border-foreground/10 rounded-none focus:ring-secondary/50 font-bold tracking-tighter text-xs">
                                             <SelectValue placeholder={tMatch("round")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-card border-foreground/10 rounded-none">
-                                            <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                            <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")}</SelectItem>
-                                            <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} A</SelectItem>
-                                            <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} B</SelectItem>
-                                            <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} C</SelectItem>
-                                            <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("group")} D</SelectItem>
-                                            <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
-                                            <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
-                                            <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("semi_final")}</SelectItem>
-                                            <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 uppercase font-bold text-xs">{tMatch("final")}</SelectItem>
+                                            <SelectItem value="all" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                            <SelectItem value="group" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("group")}</SelectItem>
+                                            <SelectItem value="Group A" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("group")} A</SelectItem>
+                                            <SelectItem value="Group B" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("group")} B</SelectItem>
+                                            <SelectItem value="Group C" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("group")} C</SelectItem>
+                                            <SelectItem value="Group D" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("group")} D</SelectItem>
+                                            <SelectItem value="round_of_16" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("round_of_16")}</SelectItem>
+                                            <SelectItem value="quarter_final" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("quarter_final")}</SelectItem>
+                                            <SelectItem value="semi_final" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("semi_final")}</SelectItem>
+                                            <SelectItem value="final" className="hover:bg-foreground/5 focus:bg-foreground/5 font-bold text-xs">{tMatch("final")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -158,7 +158,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                         onCheckedChange={setIsEditMode}
                                         className="data-[state=checked]:bg-secondary"
                                     />
-                                    <Label htmlFor="edit-mode" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground cursor-pointer">
+                                    <Label htmlFor="edit-mode" className="text-[10px] font-black tracking-wider text-muted-foreground cursor-pointer">
                                         {t("edit_mode") || "Edit Mode"}
                                     </Label>
                                 </div>
@@ -171,7 +171,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                 <Button
                                     onClick={() => setAdvanceDialogOpen(true)}
                                     disabled={isAdvancing}
-                                    className="h-10 px-4 bg-secondary text-secondary-foreground font-black uppercase tracking-tighter hover:bg-secondary/90 transition-all text-[11px]"
+                                    className="h-10 px-4 bg-secondary text-secondary-foreground font-black tracking-tighter hover:bg-secondary/90 transition-all text-[11px]"
                                 >
                                     {isAdvancing ? tFixtures("generating") : (
                                         <span className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <Calendar className="h-4 w-4 text-secondary/70" />
-                                                    <span className="text-xs font-black uppercase tracking-widest text-foreground">
+                                                    <span className="text-xs font-black tracking-widest text-foreground">
                                                         {dateKey === "tbd" ? tMatch("tbd") : new Date(dateKey).toLocaleDateString(undefined, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                                                     </span>
                                                     <span className="text-[10px] font-bold text-muted-foreground/40 ml-2">
@@ -265,7 +265,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                                                 {/* Only show stage header if there are multiple stages on this day OR it's not the default 'group' */}
                                                                 {(sortedStages.length > 1) && (
                                                                     <div className="px-4 py-2 bg-foreground/[0.01] border-b border-foreground/5">
-                                                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-secondary/60">
+                                                                        <span className="text-[9px] font-black tracking-[0.2em] text-secondary/60">
                                                                             {stageLabel}
                                                                         </span>
                                                                     </div>
@@ -300,7 +300,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
             <AlertDialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
                 <AlertDialogContent className="bg-card border rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <ArrowRight className="h-5 w-5 text-secondary" />
                             {tFixtures("proceed_knockout")}
                         </AlertDialogTitle>
@@ -309,7 +309,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {t("cancel") || "Cancel"}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -317,7 +317,7 @@ export function MatchManager({ matches, teams, tournamentId, format, hideControl
                                 e.preventDefault();
                                 handleAdvance();
                             }}
-                            className="rounded-none border border-secondary/20 bg-secondary/90 text-secondary-foreground hover:bg-secondary hover:shadow-[0_0_15_rgba(0,255,157,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-secondary/20 bg-secondary/90 text-secondary-foreground hover:bg-secondary hover:shadow-[0_0_15_rgba(0,255,157,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <ArrowRight className="h-3.5 w-3.5 mr-2" />
                             {tFixtures("proceed") || "Proceed"}

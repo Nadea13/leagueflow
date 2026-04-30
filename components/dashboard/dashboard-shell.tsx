@@ -83,10 +83,10 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
             <div className="flex flex-col gap-4 md:gap-6">
                 <div className="flex items-start justify-between">
                     <div>
-                        <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">
+                        <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] leading-none">
                             {tTeam("dashboard")}
                         </h1>
-                        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                        <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground mt-2 opacity-70">
                             {tTeam("dashboard_desc")}
                         </p>
                     </div>
@@ -149,8 +149,8 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                                         <ArrowRight className="h-7 w-7 transition-transform group-hover:translate-x-1" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-bold uppercase tracking-[0.2em] text-xs">{tCommon("view_all")}</p>
-                                        <p className="text-[9px] uppercase font-bold opacity-50">{teams.length} {t("total_teams")}</p>
+                                        <p className="font-bold tracking-[0.2em] text-xs">{tCommon("view_all")}</p>
+                                        <p className="text-[9px] font-bold opacity-50">{teams.length} {t("total_teams")}</p>
                                     </div>
                                 </Link>
                             )}
@@ -171,8 +171,8 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
         <div className="flex flex-col gap-4 md:gap-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] uppercase leading-none">{t("title")}</h1>
-                    <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground mt-2 opacity-70">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] leading-none">{t("title")}</h1>
+                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground mt-2 opacity-70">
                         {t("welcome")}
                     </p>
                 </div>
@@ -233,8 +233,8 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                                         <ArrowRight className="h-7 w-7 transition-transform -rotate-12 group-hover:rotate-0" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-bold uppercase tracking-[0.2em] text-xs">{tCommon("view_all")}</p>
-                                        <p className="text-[9px] uppercase font-bold opacity-50">{tournaments.length} {t("my_tournaments")}</p>
+                                        <p className="font-bold tracking-[0.2em] text-xs">{tCommon("view_all")}</p>
+                                        <p className="text-[9px] font-bold opacity-50">{tournaments.length} {t("my_tournaments")}</p>
                                     </div>
                                 </Link>
                             )}

@@ -88,26 +88,26 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                            <TableHead className="min-w-[200px] text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("plan_name")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("price")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("duration")}</TableHead>
+                            <TableHead className="min-w-[200px] text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("plan_name")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("price")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("duration")}</TableHead>
                             
                             {role === 'manager' ? (
                                 <>
-                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("max_teams")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("players_per_team")}</TableHead>
+                                    <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("max_teams")}</TableHead>
+                                    <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("players_per_team")}</TableHead>
                                 </>
                             ) : (
                                 <>
-                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("max_tournaments")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("teams_per_tournament")}</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("formats")}</TableHead>
+                                    <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("max_tournaments")}</TableHead>
+                                    <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("teams_per_tournament")}</TableHead>
+                                    <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("formats")}</TableHead>
                                 </>
                             )}
                             
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("support")}</TableHead>
-                            <TableHead className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("recommended")}</TableHead>
-                            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("support")}</TableHead>
+                            <TableHead className="text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("recommended")}</TableHead>
+                            <TableHead className="text-right text-[10px] font-black tracking-[0.15em] text-muted-foreground">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -168,7 +168,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                             <TableCell className="text-sm font-bold">{(plan as OrganizerPlan).max_tournaments === 0 ? t("unlimited") : (plan as OrganizerPlan).max_tournaments}</TableCell>
                                             <TableCell className="text-sm font-bold">{(plan as OrganizerPlan).max_teams_per_tournament === 0 ? t("unlimited") : (plan as OrganizerPlan).max_teams_per_tournament}</TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="text-[10px] rounded-none font-black uppercase">
+                                                <Badge variant="outline" className="text-[10px] rounded-none font-black">
                                                     {(plan as OrganizerPlan).format_support || "Basic"}
                                                 </Badge>
                                             </TableCell>
@@ -176,13 +176,13 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                     )}
                                     
                                     <TableCell>
-                                        <Badge variant="outline" className="text-[10px] rounded-none font-black uppercase">
+                                        <Badge variant="outline" className="text-[10px] rounded-none font-black">
                                             {plan.support_level || "Standard"}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         {plan.recommended && (
-                                            <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[10px] rounded-none font-black uppercase">
+                                            <Badge className="bg-secondary/10 text-secondary border-secondary/20 text-[10px] rounded-none font-black">
                                                 {t("recommended")}
                                             </Badge>
                                         )}
@@ -203,7 +203,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent className="rounded-none border-border">
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle className="font-black uppercase tracking-tighter">
+                                                        <AlertDialogTitle className="font-black tracking-tighter">
                                                             {tCommon("are_you_sure")}
                                                         </AlertDialogTitle>
                                                         <AlertDialogDescription>
@@ -211,12 +211,12 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black uppercase">
+                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black">
                                                             {tCommon("cancel")}
                                                         </AlertDialogCancel>
                                                         <AlertDialogAction
                                                             onClick={() => handleDelete(plan.id)}
-                                                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-none text-[10px] font-black uppercase"
+                                                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-none text-[10px] font-black"
                                                         >
                                                             {deletingId === plan.id ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -238,24 +238,24 @@ export function PlansTable({ plans, role }: PlansTableProps) {
 
             {filteredPlans.length > itemsPerPage && (
                 <div className="flex items-center justify-between py-2">
-                    <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground hidden sm:block">
+                    <div className="text-[10px] tracking-wider font-bold text-muted-foreground hidden sm:block">
                         Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredPlans.length)} of {filteredPlans.length} entries
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
                             Previous
                         </Button>
-                        <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
+                        <span className="text-[10px] tracking-wider font-bold text-muted-foreground px-2">Page {page} of {totalPages}</span>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black uppercase"
+                            className="rounded-none text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >

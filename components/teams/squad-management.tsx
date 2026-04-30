@@ -523,7 +523,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
                     </Button>
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+                    <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-muted-foreground/40">
                         <span>{team.isParticipation ? t("tournament_squad") : t("team_roster")}</span>
                         <ChevronRight className="h-3 w-3" />
                         <span className="text-foreground">{teamName}</span>
@@ -532,7 +532,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                 <div className="flex items-center gap-3">
                     {team.participations && team.participations.length > 0 && (
-                        <Button variant="outline" size="sm" asChild className="rounded-none font-bold uppercase tracking-wider text-[10px] h-10 px-4 border-2">
+                        <Button variant="outline" size="sm" asChild className="rounded-none font-bold tracking-wider text-[10px] h-10 px-4 border-2">
                             <Link href={`/${team.participations[0].tournament_id}`}>
                                 <ExternalLink className="h-3.5 w-3.5 mr-2" />
                                 {tCommon("view_tournament")}
@@ -542,7 +542,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     <Button
                         variant={effectivelyLocked ? "outline" : "default"}
                         size="sm"
-                        className={`rounded-none font-bold uppercase tracking-wider text-[10px] h-10 px-6 transition-all ${!effectivelyLocked ? "bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:scale-[1.02] shadow-[0_0_20px_rgba(0,255,157,0.2)]" : "border-2"}`}
+                        className={`rounded-none font-bold tracking-wider text-[10px] h-10 px-6 transition-all ${!effectivelyLocked ? "bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:scale-[1.02] shadow-[0_0_20px_rgba(0,255,157,0.2)]" : "border-2"}`}
                         onClick={handleToggleLock}
                         disabled={isLocking || isDeadlinePassed}
                     >
@@ -560,16 +560,16 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
             {/* Main Title Area */}
             <div className="pb-6 border-b-4 border-secondary/20 relative">
-                <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase leading-none text-foreground flex items-baseline gap-3">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none text-foreground flex items-baseline gap-3">
                     {teamName}
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-secondary">
+                    <span className="text-xs font-black tracking-[0.2em] text-secondary">
                         {players.length} {tCommon("players") || "Players"}
                     </span>
                 </h1>
 
                 {isLocked && (
                     <div className="absolute top-0 right-0">
-                        <Badge variant="destructive" className="font-black uppercase tracking-tighter rounded-none bg-red-600 text-foreground border-none py-1 px-3">
+                        <Badge variant="destructive" className="font-black tracking-tighter rounded-none bg-red-600 text-foreground border-none py-1 px-3">
                             <Lock className="h-3 w-3 mr-1.5" />
                             {tCommon("secured")}
                         </Badge>
@@ -581,7 +581,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 <div className="bg-red-50 border border-red-200 p-4 rounded-none flex items-start gap-3 text-red-800 animate-in fade-in slide-in-from-top-2 mb-6">
                     <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                     <div>
-                        <h4 className="font-bold text-sm uppercase tracking-tight">{t("deadline_passed")}</h4>
+                        <h4 className="font-bold text-sm tracking-tight">{t("deadline_passed")}</h4>
                         <p className="text-xs opacity-90 mt-1">
                             {t("deadline_locked_desc", { date: new Date(documentDeadline!).toLocaleString() })}
                         </p>
@@ -596,7 +596,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="space-y-1">
-                                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground/60 flex items-center gap-2">
+                                    <h3 className="text-sm font-black tracking-widest text-muted-foreground/60 flex items-center gap-2">
                                         <Plus className="h-4 w-4 text-secondary" />
                                         {t("add_player")}
                                     </h3>
@@ -610,7 +610,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                     }}
                                 >
                                     <PopoverTrigger asChild>
-                                        <Button variant="outline" size="sm" className="h-9 rounded-none bg-foreground/5 border-secondary/20 hover:bg-secondary/10 hover:border-secondary/40 transition-all font-black uppercase tracking-widest text-[10px] gap-2">
+                                        <Button variant="outline" size="sm" className="h-9 rounded-none bg-foreground/5 border-secondary/20 hover:bg-secondary/10 hover:border-secondary/40 transition-all font-black tracking-widest text-[10px] gap-2">
                                             <Search className="h-3.5 w-3.5" />
                                             {t("connect_global") || "Search Global"}
                                         </Button>
@@ -623,7 +623,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                     placeholder="Search database..."
                                                     value={searchQuery}
                                                     onChange={(e) => handleSearch(e.target.value)}
-                                                    className="pl-11 h-12 border-none rounded-none bg-transparent font-black uppercase tracking-widest text-[11px] focus-visible:ring-0"
+                                                    className="pl-11 h-12 border-none rounded-none bg-transparent font-black tracking-widest text-[11px] focus-visible:ring-0"
                                                     autoFocus
                                                 />
                                             </div>
@@ -632,7 +632,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                             {isSearching ? (
                                                 <div className="flex flex-col items-center justify-center py-8 gap-2">
                                                     <Loader2 className="h-5 w-5 animate-spin text-secondary" />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Searching...</span>
+                                                    <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Searching...</span>
                                                 </div>
                                             ) : searchResults.length > 0 ? (
                                                 <div className="py-1">
@@ -643,9 +643,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                             onClick={() => handleSelectGlobalPlayer(gp)}
                                                         >
                                                             <div className="flex flex-col">
-                                                                <span className="font-black uppercase text-xs tracking-tight group-hover:text-secondary">{gp.name}</span>
+                                                                <span className="font-black text-xs tracking-tight group-hover:text-secondary">{gp.name}</span>
                                                                 {gp.date_of_birth && (
-                                                                    <span className="text-[9px] font-mono font-bold text-muted-foreground/40 uppercase mt-0.5">
+                                                                    <span className="text-[9px] font-mono font-bold text-muted-foreground/40 mt-0.5">
                                                                         {gp.date_of_birth}
                                                                     </span>
                                                                 )}
@@ -659,7 +659,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                     <div className="h-10 w-10 bg-foreground/5 border border-foreground/5 flex items-center justify-center mx-auto mb-3">
                                                         <FileText className="h-5 w-5 text-muted-foreground/20" />
                                                     </div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">No records found</p>
+                                                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/40">No records found</p>
                                                 </div>
                                             )}
                                         </div>
@@ -670,7 +670,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-6">
 
                                 <div className="space-y-2 w-[80px] shrink-0">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("number")}</Label>
+                                    <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("number")}</Label>
                                     <Input
                                         value={newNumber}
                                         onChange={e => setNewNumber(e.target.value)}
@@ -682,9 +682,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                                 <div className="space-y-2 flex-1 min-w-[200px] relative transition-all">
                                     <div className="flex items-center justify-between">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("player_name")} *</Label>
+                                        <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("player_name")} *</Label>
                                         {selectedGlobalPlayerId && (
-                                            <Badge variant="secondary" className="h-5 rounded-none bg-secondary/10 text-secondary border-none text-[8px] font-black uppercase tracking-widest px-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
+                                            <Badge variant="secondary" className="h-5 rounded-none bg-secondary/10 text-secondary border-none text-[8px] font-black tracking-widest px-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
                                                 <Link2 className="h-2.5 w-2.5" />
                                                 Connected
                                                 <button 
@@ -705,15 +705,15 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                         }}
                                         placeholder={t("player_name")}
                                         required
-                                        className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black uppercase tracking-tight transition-all p-0"
+                                        className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
                                     />
                                 </div>
 
                                 <div className="flex gap-6 flex-1 md:flex-none md:w-auto w-full items-end">
                                     <div className="space-y-2 shrink-0 w-[120px]">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("position")}</Label>
+                                        <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("position")}</Label>
                                         <Select value={newPosition} onValueChange={setNewPosition}>
-                                            <SelectTrigger className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus:ring-0 focus-visible:ring-0 h-11 text-lg font-black uppercase tracking-tight transition-all p-0 shadow-none hover:bg-transparent dark:hover:bg-transparent [&_svg]:hidden">
+                                            <SelectTrigger className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus:ring-0 focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0 shadow-none hover:bg-transparent dark:hover:bg-transparent [&_svg]:hidden">
                                                 <SelectValue placeholder={t("position")} />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-none border-border">
@@ -725,13 +725,13 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                         </Select>
                                     </div>
                                     <div className="space-y-2 flex-1 md:w-[150px] shrink-0">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("birth_date")}</Label>
+                                        <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("birth_date")}</Label>
                                         <Input
                                             value={newBirthDate}
                                             onChange={e => setNewBirthDate(e.target.value)}
                                             type="date"
                                             lang={locale === 'th' ? 'th-TH' : 'en-US'}
-                                            className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-sm font-bold transition-all p-0 uppercase"
+                                            className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-sm font-bold transition-all p-0"
                                         />
                                     </div>
                                 </div>
@@ -739,7 +739,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 <div className="shrink-0 w-full md:w-[160px] relative mt-4 md:mt-0">
                                     <Button
                                         type="submit"
-                                        className="w-full rounded-none h-12 font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.02] shadow-lg disabled:opacity-50 disabled:hover:scale-100"
+                                        className="w-full rounded-none h-12 font-black tracking-widest text-xs transition-all hover:scale-[1.02] shadow-lg disabled:opacity-50 disabled:hover:scale-100"
                                         disabled={isSaving || !newName.trim() || effectivelyLocked}
                                     >
                                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
@@ -748,7 +748,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                                     {effectivelyLocked && (
                                         <div className="absolute -bottom-6 left-0 w-full text-center">
-                                            <p className="text-[9px] text-red-500 font-black tracking-widest flex items-center justify-center gap-1.5 uppercase">
+                                            <p className="text-[9px] text-red-500 font-black tracking-widest flex items-center justify-center gap-1.5">
                                                 <Lock className="h-3 w-3" /> {isDeadlinePassed ? t("deadline_expired") : t("squad_secured")}
                                             </p>
                                         </div>
@@ -761,7 +761,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                             <div className="flex items-center gap-3">
                                 <Users className="h-6 w-6 text-secondary" />
-                                <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground">
+                                <h3 className="text-3xl font-black tracking-tighter text-foreground">
                                     {t("title")}
                                 </h3>
                             </div>
@@ -769,23 +769,23 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             <div className="flex items-center gap-3">
                                 <Dialog onOpenChange={(open) => open && fetchMyTeams()}>
                                     <DialogTrigger asChild>
-                                        <Button variant="ghost" size="sm" className="rounded-none border border-border/50 font-bold uppercase tracking-wider text-[10px] h-10 px-4 hover:bg-secondary hover:text-black transition-all">
+                                        <Button variant="ghost" size="sm" className="rounded-none border border-border/50 font-bold tracking-wider text-[10px] h-10 px-4 hover:bg-secondary hover:text-black transition-all">
                                             <Copy className="h-3.5 w-3.5 mr-2" />
                                             {t("import_roster")}
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="rounded-none sm:max-w-md border-border bg-card">
                                         <DialogHeader>
-                                            <DialogTitle className="font-black uppercase tracking-tight">{t("import_roster") || "Import Roster"}</DialogTitle>
-                                            <DialogDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground/60">
+                                            <DialogTitle className="font-black tracking-tight">{t("import_roster") || "Import Roster"}</DialogTitle>
+                                            <DialogDescription className="text-xs tracking-wider font-medium text-muted-foreground/60">
                                                 {t("import_roster_desc") + teamName}
                                             </DialogDescription>
                                         </DialogHeader>
 
                                         <Tabs value={importTab} onValueChange={(v) => setImportTab(v as "teams" | "file")} className="w-full">
                                             <TabsList className="grid w-full grid-cols-2 rounded-none mb-6 h-12 bg-muted/20 border-b border-border/40">
-                                                <TabsTrigger value="teams" className="rounded-none text-xs font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-black">{t("from_my_teams") || "From My Teams"}</TabsTrigger>
-                                                <TabsTrigger value="file" className="rounded-none text-xs font-black uppercase data-[state=active]:bg-secondary data-[state=active]:text-black">{t("from_file") || "From File"}</TabsTrigger>
+                                                <TabsTrigger value="teams" className="rounded-none text-xs font-black data-[state=active]:bg-secondary data-[state=active]:text-black">{t("from_my_teams") || "From My Teams"}</TabsTrigger>
+                                                <TabsTrigger value="file" className="rounded-none text-xs font-black data-[state=active]:bg-secondary data-[state=active]:text-black">{t("from_file") || "From File"}</TabsTrigger>
                                             </TabsList>
 
                                             <TabsContent value="teams" className="space-y-4 py-2">
@@ -794,25 +794,25 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                         <Loader2 className="h-8 w-8 animate-spin text-secondary" />
                                                     </div>
                                                 ) : myTeams.length === 0 ? (
-                                                    <div className="text-center py-10 text-xs font-bold uppercase tracking-widest text-muted-foreground/40 border border-dashed border-border/40">
+                                                    <div className="text-center py-10 text-xs font-bold tracking-widest text-muted-foreground/40 border border-dashed border-border/40">
                                                         {t("no_other_teams_found") || "No other teams found to import from."}
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-3">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 text-left">{t("select_source_team") || "Select Source Team"}</Label>
+                                                        <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60 text-left">{t("select_source_team") || "Select Source Team"}</Label>
                                                         <Select value={selectedSourceTeamId} onValueChange={setSelectedSourceTeamId}>
-                                                            <SelectTrigger className="rounded-none h-11 text-sm font-bold uppercase border-t-0 border-x-0 border-border/40 focus:ring-0">
+                                                            <SelectTrigger className="rounded-none h-11 text-sm font-bold border-t-0 border-x-0 border-border/40 focus:ring-0">
                                                                 <SelectValue placeholder={t("select_source_team") || "Select Source Team"} />
                                                             </SelectTrigger>
                                                             <SelectContent className="rounded-none border-border">
                                                                 {myTeams.map((t) => (
-                                                                    <SelectItem key={t.id} value={t.id} className="text-xs font-bold uppercase focus:bg-secondary focus:text-black">
+                                                                    <SelectItem key={t.id} value={t.id} className="text-xs font-bold focus:bg-secondary focus:text-black">
                                                                         {t.name} {(t as Team & { tournament?: { name: string } }).tournament ? `(${(t as Team & { tournament?: { name: string } }).tournament?.name})` : "(No Tournament)"}
                                                                     </SelectItem>
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
-                                                        <p className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider mt-4">
+                                                        <p className="text-[9px] font-medium text-muted-foreground/60 tracking-wider mt-4">
                                                             {t("import_roster_note") || "* THIS WILL COPY ALL PLAYERS AND GLOBAL LINKS."}
                                                         </p>
                                                     </div>
@@ -821,18 +821,18 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
                                             <TabsContent value="file" className="space-y-6 py-2">
                                                 <div className="space-y-3">
-                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("upload_roster_file") || "Upload Roster File (.csv, .xlsx, .xls)"}</Label>
+                                                    <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("upload_roster_file") || "Upload Roster File (.csv, .xlsx, .xls)"}</Label>
                                                     <Input
                                                         ref={importFileRef}
                                                         type="file"
                                                         accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                                                        className="rounded-none border-border/40 bg-muted/20 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-r file:border-border/40 file:text-[10px] file:font-black file:uppercase file:bg-secondary file:text-black hover:file:opacity-90 cursor-pointer text-xs h-12"
+                                                        className="rounded-none border-border/40 bg-muted/20 file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-r file:border-border/40 file:text-[10px] file:font-black file file:bg-secondary file:text-black hover:file:opacity-90 cursor-pointer text-xs h-12"
                                                         onChange={(e) => setImportFile(e.target.files?.[0] || null)}
                                                     />
                                                 </div>
                                                 <div className="bg-muted/10 p-5 border-l-4 border-secondary">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-secondary">{t("column_order_requirement") || "Column Order Requirement:"}</p>
-                                                    <ol className="text-[10px] font-bold text-muted-foreground/80 list-decimal list-inside space-y-2 uppercase tracking-wider">
+                                                    <p className="text-[10px] font-black tracking-[0.2em] mb-3 text-secondary">{t("column_order_requirement") || "Column Order Requirement:"}</p>
+                                                    <ol className="text-[10px] font-bold text-muted-foreground/80 list-decimal list-inside space-y-2 tracking-wider">
                                                         <li>{t("shirt_number") || "Shirt Number"}</li>
                                                         <li>{t("full_name") || "Full Name"}</li>
                                                         <li>{t("position") || "Position (GK, DF, MF, FW)"}</li>
@@ -845,7 +845,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                         <DialogFooter className="mt-6 flex flex-col md:flex-row gap-3">
                                             <Button
                                                 variant="outline"
-                                                className="rounded-none h-12 text-[10px] font-black uppercase tracking-widest flex-1 border-2"
+                                                className="rounded-none h-12 text-[10px] font-black tracking-widest flex-1 border-2"
                                                 onClick={() => {
                                                     setSelectedSourceTeamId("");
                                                     setImportFile(null);
@@ -858,7 +858,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                 {t("cancel") || "Cancel"}
                                             </Button>
                                             <Button
-                                                className="rounded-none h-12 text-[10px] font-black uppercase tracking-widest flex-1 bg-secondary text-black hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]"
+                                                className="rounded-none h-12 text-[10px] font-black tracking-widest flex-1 bg-secondary text-black hover:bg-secondary/90 shadow-[0_0_15px_rgba(0,255,157,0.15)]"
                                                 disabled={
                                                     (importTab === "teams" && !selectedSourceTeamId) ||
                                                     (importTab === "file" && !importFile) ||
@@ -882,8 +882,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 <div className="h-16 w-16 rounded-none bg-muted/10 border border-border/20 flex items-center justify-center mb-6">
                                     <Users className="h-8 w-8 text-muted-foreground/20" />
                                 </div>
-                                <h3 className="text-xl font-black uppercase tracking-tighter text-muted-foreground/40">{t("no_players_desc")}</h3>
-                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/20 mt-2">{t("get_started_by_adding_your_first_player_above") || "Get started by adding your first player above"}</p>
+                                <h3 className="text-xl font-black tracking-tighter text-muted-foreground/40">{t("no_players_desc")}</h3>
+                                <p className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground/20 mt-2">{t("get_started_by_adding_your_first_player_above") || "Get started by adding your first player above"}</p>
                             </div>
                         ) : (
                             <div className="grid gap-4">
@@ -930,8 +930,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                 {/* Shared Global Profile Dialog Content */}
                                                                 <DialogContent className="rounded-none sm:max-w-md border-border bg-card">
                                                                     <DialogHeader>
-                                                                        <DialogTitle className="font-black uppercase text-2xl tracking-tighter">{t("profile_management") || "Profile Management"}</DialogTitle>
-                                                                        <DialogDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+                                                                        <DialogTitle className="font-black text-2xl tracking-tighter">{t("profile_management") || "Profile Management"}</DialogTitle>
+                                                                        <DialogDescription className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/60">
                                                                             {t("global_identity_for") || "Global identity for"} {player.name}
                                                                         </DialogDescription>
                                                                     </DialogHeader>
@@ -967,14 +967,14 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                         />
                                                                                     </div>
                                                                                     <div className="text-center">
-                                                                                        <p className="text-[10px] font-black uppercase tracking-widest text-secondary mb-1">{t("global_profile_photo") || "GLOBAL PROFILE PHOTO"}</p>
-                                                                                        <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">{t("syncs_across_all_tournament_rosters") || "Syncs across all tournament rosters"}</p>
+                                                                                        <p className="text-[10px] font-black tracking-widest text-secondary mb-1">{t("global_profile_photo") || "GLOBAL PROFILE PHOTO"}</p>
+                                                                                        <p className="text-[9px] text-muted-foreground/60 tracking-wider">{t("syncs_across_all_tournament_rosters") || "Syncs across all tournament rosters"}</p>
                                                                                     </div>
                                                                                 </div>
 
                                                                                 <div className="space-y-4">
                                                                                     <div className="flex items-center justify-between">
-                                                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{t("player_identification") || "PLAYER IDENTIFICATION"}</Label>
+                                                                                        <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">{t("player_identification") || "PLAYER IDENTIFICATION"}</Label>
                                                                                         {player.global_player?.id_card_url && (
                                                                                             <div className="h-1.5 w-1.5 rounded-full bg-secondary animate-pulse" />
                                                                                         )}
@@ -984,7 +984,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                             <>
                                                                                                 <Image src={player.global_player.id_card_url} alt="ID Card" width={400} height={250} className="w-full h-full object-contain" unoptimized />
                                                                                                 <div className="absolute inset-0 bg-secondary/80 opacity-0 group-hover/id:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                                                                                    <Button variant="outline" size="sm" className="rounded-none border-black text-black hover:bg-black hover:text-foreground font-black uppercase text-[10px]" asChild>
+                                                                                                    <Button variant="outline" size="sm" className="rounded-none border-black text-black hover:bg-black hover:text-foreground font-black text-[10px]" asChild>
                                                                                                         <a href={player.global_player.id_card_url} target="_blank" rel="noopener noreferrer">
                                                                                                             <View className="h-3.5 w-3.5 mr-2" />
                                                                                                             {t("fullscreen") || "Fullscreen"}
@@ -995,7 +995,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                         ) : (
                                                                                             <div className="text-center p-8 opacity-20">
                                                                                                 <FileText className="h-12 w-12 mx-auto mb-4" />
-                                                                                                <p className="text-[10px] font-black uppercase tracking-widest">{t("no_documents_uploaded") || "No Documents Uploaded"}</p>
+                                                                                                <p className="text-[10px] font-black tracking-widest">{t("no_documents_uploaded") || "No Documents Uploaded"}</p>
                                                                                             </div>
                                                                                         )}
                                                                                     </div>
@@ -1003,7 +1003,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     <div className="relative">
                                                                                         <Label
                                                                                             htmlFor={`id-upload-${player.id}`}
-                                                                                            className="w-full cursor-pointer inline-flex items-center justify-center rounded-none text-[10px] font-black uppercase tracking-widest border-2 border-border h-12 hover:bg-muted transition-all"
+                                                                                            className="w-full cursor-pointer inline-flex items-center justify-center rounded-none text-[10px] font-black tracking-widest border-2 border-border h-12 hover:bg-muted transition-all"
                                                                                         >
                                                                                             <Upload className="mr-3 h-4 w-4" />
                                                                                             {player.global_player?.id_card_url ? "REPLACE IDENTIFICATION" : "UPLOAD PLAYER ID"}
@@ -1026,12 +1026,12 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                         ) : (
                                                                             <div className="text-center py-10 border border-dashed border-border/40">
                                                                                 <Unlink className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
-                                                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60 mb-6 px-6">
+                                                                                <p className="text-xs font-bold tracking-wider text-muted-foreground/60 mb-6 px-6">
                                                                                     {t("profile_must_be_connected_to_a_global_identity_to_manage_documents") || "Profile must be connected to a global identity to manage documents."}
                                                                                 </p>
                                                                                 <div className="px-6">
                                                                                     <Button
-                                                                                        className="w-full rounded-none bg-secondary text-black font-black uppercase tracking-widest text-[10px] h-11"
+                                                                                        className="w-full rounded-none bg-secondary text-black font-black tracking-widest text-[10px] h-11"
                                                                                         onClick={async () => {
                                                                                             const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
                                                                                             if (res.success && res.data) {
@@ -1050,7 +1050,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                         {player.global_player_id && (
                                                                             <div className="space-y-4 pt-4 border-t border-border/20">
                                                                                 <div className="flex items-center justify-between">
-                                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                                                                    <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">
                                                                                         {tSports("title") || "Sports Profile"}
                                                                                     </Label>
                                                                                 </div>
@@ -1061,7 +1061,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                             <Badge
                                                                                                 key={sportKey}
                                                                                                 variant={isActive ? "default" : "outline"}
-                                                                                                className={`rounded-none cursor-pointer pr-1 transition-all text-[9px] font-black uppercase tracking-widest h-7 ${isActive ? "bg-secondary text-black hover:bg-secondary/80" : "border-muted-foreground/20 text-muted-foreground/40 hover:border-secondary hover:text-secondary"}`}
+                                                                                                className={`rounded-none cursor-pointer pr-1 transition-all text-[9px] font-black tracking-widest h-7 ${isActive ? "bg-secondary text-black hover:bg-secondary/80" : "border-muted-foreground/20 text-muted-foreground/40 hover:border-secondary hover:text-secondary"}`}
                                                                                                 onClick={() => {
                                                                                                     const currentTypes = player.global_player?.athlete_types || [];
                                                                                                     const newTypes = isActive 
@@ -1076,7 +1076,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                         );
                                                                                     })}
                                                                                 </div>
-                                                                                <p className="text-[9px] text-muted-foreground/60 uppercase tracking-wider">
+                                                                                <p className="text-[9px] text-muted-foreground/60 tracking-wider">
                                                                                     {t("multi_sport_athlete_desc") || "Select all sports this athlete participates in."}
                                                                                 </p>
                                                                             </div>
@@ -1096,23 +1096,23 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                         <Input
                                                             value={editName}
                                                             onChange={e => setEditName(e.target.value)}
-                                                            className="h-9 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black uppercase tracking-tighter text-secondary focus-visible:ring-0"
+                                                            className="h-9 flex-1 min-w-[200px] rounded-none border-t-0 border-x-0 border-border/40 bg-secondary/10 text-xl font-black tracking-tighter text-secondary focus-visible:ring-0"
                                                             placeholder={t("player_name")}
                                                             autoFocus
                                                         />
                                                     ) : (
-                                                        <h4 className="text-xl font-black uppercase tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
+                                                        <h4 className="text-xl font-black tracking-tighter text-foreground leading-none group-hover:text-secondary transition-colors">
                                                             {player.name}
                                                         </h4>
                                                     )}
 
                                                     {player.global_player_id ? (
-                                                        <Badge variant="secondary" className="rounded-none bg-secondary/10 text-secondary border-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                        <Badge variant="secondary" className="rounded-none bg-secondary/10 text-secondary border-none text-[9px] font-black tracking-widest px-2 py-0.5">
                                                             <Link2 className="h-2.5 w-2.5 mr-1" />
                                                             {t("verified") || "VERIFIED"}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                        <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[9px] font-black tracking-widest px-2 py-0.5">
                                                             {t("local_only") || "LOCAL ONLY"}
                                                         </Badge>
                                                     )}
@@ -1120,18 +1120,18 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                     <div className="flex items-center gap-2">
                                                         {editingPlayerId === player.id ? (
                                                             <Select value={editPosition} onValueChange={setEditPosition}>
-                                                                <SelectTrigger className="h-7 w-20 rounded-none border-t-0 border-x-0 border-border/40 bg-muted/20 text-[9px] font-black uppercase tracking-widest p-1 focus:ring-0 [&_svg]:hidden">
+                                                                <SelectTrigger className="h-7 w-20 rounded-none border-t-0 border-x-0 border-border/40 bg-muted/20 text-[9px] font-black tracking-widest p-1 focus:ring-0 [&_svg]:hidden">
                                                                     <SelectValue placeholder="POS" />
                                                                 </SelectTrigger>
                                                                 <SelectContent className="rounded-none border-border">
-                                                                    <SelectItem value="GK" className="text-[9px] font-black uppercase tracking-widest">{t("gk") || "GK"}</SelectItem>
-                                                                    <SelectItem value="DF" className="text-[9px] font-black uppercase tracking-widest">{t("df") || "DF"}</SelectItem>
-                                                                    <SelectItem value="MF" className="text-[9px] font-black uppercase tracking-widest">{t("mf") || "MF"}</SelectItem>
-                                                                    <SelectItem value="FW" className="text-[9px] font-black uppercase tracking-widest">{t("fw") || "FW"}</SelectItem>
+                                                                    <SelectItem value="GK" className="text-[9px] font-black tracking-widest">{t("gk") || "GK"}</SelectItem>
+                                                                    <SelectItem value="DF" className="text-[9px] font-black tracking-widest">{t("df") || "DF"}</SelectItem>
+                                                                    <SelectItem value="MF" className="text-[9px] font-black tracking-widest">{t("mf") || "MF"}</SelectItem>
+                                                                    <SelectItem value="FW" className="text-[9px] font-black tracking-widest">{t("fw") || "FW"}</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
                                                         ) : (
-                                                            <Badge className="rounded-none bg-muted border-none text-muted-foreground text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                            <Badge className="rounded-none bg-muted border-none text-muted-foreground text-[9px] font-black tracking-widest px-2 py-0.5">
                                                                 {player.position || "N/A"}
                                                             </Badge>
                                                         )}
@@ -1142,10 +1142,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                 onChange={e => setEditBirthDate(e.target.value)}
                                                                 type="date"
                                                                 lang={locale === 'th' ? 'th-TH' : 'en-US'}
-                                                                className="h-7 w-28 border-t-0 border-x-0 border-border/40 bg-muted/20 text-[9px] font-black p-1 focus-visible:ring-0 uppercase shadow-none"
+                                                                className="h-7 w-28 border-t-0 border-x-0 border-border/40 bg-muted/20 text-[9px] font-black p-1 focus-visible:ring-0 shadow-none"
                                                             />
                                                         ) : (
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 font-mono">
+                                                            <span className="text-[10px] font-bold tracking-widest text-muted-foreground/40 font-mono">
                                                                 {formatDate(player.birth_date)}
                                                             </span>
                                                         )}
@@ -1169,7 +1169,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                             }}
                                                         >
                                                             <PopoverTrigger asChild>
-                                                                <Button variant="link" size="sm" className="p-0 h-auto text-[10px] font-black uppercase tracking-widest text-secondary hover:text-secondary/80 flex items-center gap-2">
+                                                                <Button variant="link" size="sm" className="p-0 h-auto text-[10px] font-black tracking-widest text-secondary hover:text-secondary/80 flex items-center gap-2">
                                                                     <Link2 className="h-3.5 w-3.5" />
                                                                     {t("connect_global_id")}
                                                                 </Button>
@@ -1183,7 +1183,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                 placeholder={t("start_typing")}
                                                                                 value={searchQuery}
                                                                                 onChange={(e) => handleSearch(e.target.value)}
-                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black uppercase tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10 relative"
+                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10 relative"
                                                                                 autoFocus
                                                                             />
                                                                             <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-secondary group-focus-within/search:w-full transition-all duration-700 z-20" />
@@ -1194,7 +1194,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                     {isSearching ? (
                                                                         <div className="flex flex-col items-center justify-center py-12 gap-3">
                                                                             <Loader2 className="h-6 w-6 animate-spin text-secondary" />
-                                                                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">{t("scanning_database")}</span>
+                                                                            <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">{t("scanning_database")}</span>
                                                                         </div>
                                                                     ) : searchResults.length > 0 ? (
                                                                         <div className="py-2">
@@ -1205,9 +1205,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                                     onClick={() => handleLinkPlayer(player.id, gp)}
                                                                                 >
                                                                                     <div className="flex flex-col">
-                                                                                        <span className="font-black uppercase text-xs tracking-tight group-hover/item:text-secondary">{gp.name}</span>
+                                                                                        <span className="font-black text-xs tracking-tight group-hover/item:text-secondary">{gp.name}</span>
                                                                                         {formatDate(gp.date_of_birth) && (
-                                                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase mt-0.5">
+                                                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/60 mt-0.5">
                                                                                                 {formatDate(gp.date_of_birth)}
                                                                                             </span>
                                                                                         )}
@@ -1221,14 +1221,14 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                             <div className="h-10 w-10 bg-muted/20 border border-border/40 flex items-center justify-center mx-auto">
                                                                                 {searchQuery ? <FileText className="h-5 w-5 text-muted-foreground/20" /> : <Search className="h-5 w-5 text-muted-foreground/20" />}
                                                                             </div>
-                                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                                                                            <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
                                                                                 {searchQuery ? t("no_records_found") : t("start_typing")}
                                                                             </p>
                                                                             {searchQuery && (
                                                                                 <Button
                                                                                     size="sm"
                                                                                     variant="outline"
-                                                                                    className="rounded-none w-full h-10 text-[9px] font-black uppercase tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
+                                                                                    className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-secondary hover:text-black hover:border-secondary transition-all"
                                                                                     onClick={async () => {
                                                                                         const res = await createGlobalPlayer(searchQuery, null, player.birth_date, [team.sport]);
                                                                                         if (res.success && res.data) {
@@ -1257,7 +1257,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                         >
                                                                             <ChevronLeft className="h-4 w-4" />
                                                                         </Button>
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                                                        <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">
                                                                             {currentPage} / {Math.ceil(totalCount / pageSize)}
                                                                         </span>
                                                                         <Button
@@ -1276,7 +1276,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                             <Button
                                                                                 size="sm"
                                                                                 variant="ghost"
-                                                                                className="w-full h-10 rounded-none text-[9px] font-black uppercase tracking-widest justify-start px-2 hover:text-secondary transition-colors"
+                                                                                className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-secondary transition-colors"
                                                                                 onClick={async () => {
                                                                                     const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
                                                                                     if (res.success && res.data) {
@@ -1299,7 +1299,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                         <Button
                                                             variant="link"
                                                             size="sm"
-                                                            className="p-0 h-auto text-[10px] font-black uppercase tracking-widest text-red-500/60 hover:text-red-500 flex items-center gap-2"
+                                                            className="p-0 h-auto text-[10px] font-black tracking-widest text-red-500/60 hover:text-red-500 flex items-center gap-2"
                                                             onClick={() => handleUnlinkPlayer(player.id)}
                                                         >
                                                             <Unlink className="h-3.5 w-3.5" />
@@ -1310,7 +1310,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                     {player.global_player_id && (
                                                         <div className="flex items-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
                                                             <div className="h-1.5 w-1.5 rounded-full bg-secondary" />
-                                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground">{t("cloud_sync_active")}</span>
+                                                            <span className="text-[9px] font-black tracking-[0.2em] text-foreground">{t("cloud_sync_active")}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1353,7 +1353,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
                                                             <DropdownMenuItem
-                                                                className="rounded-none py-3 px-4 text-[10px] font-black uppercase tracking-widest focus:bg-secondary focus:text-black cursor-pointer transition-all"
+                                                                className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-secondary focus:text-black cursor-pointer transition-all"
                                                                 onClick={() => {
                                                                     setEditingPlayerId(player.id);
                                                                     setEditNumber(player.number?.toString() || "");
@@ -1366,7 +1366,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                                 {tCommon("edit")}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                                className="rounded-none py-3 px-4 text-[10px] font-black uppercase tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
+                                                                className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
                                                                 onClick={() => setPlayerToDelete(player.id)}
                                                             >
                                                                 <Trash2 className="mr-3 h-4 w-4" />
@@ -1399,7 +1399,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                     </div>
                                     <Label
                                         htmlFor="edit-logo-right"
-                                        className="absolute inset-0 flex items-center justify-center bg-secondary/80 text-black opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer font-black uppercase text-[10px] tracking-widest"
+                                        className="absolute inset-0 flex items-center justify-center bg-secondary/80 text-black opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer font-black text-[10px] tracking-widest"
                                     >
                                         <Upload className="h-5 w-5 mr-2" /> {t("change")}
                                     </Label>
@@ -1411,17 +1411,17 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                         onChange={handleFileChange}
                                     />
                                 </div>
-                                <h2 className="text-xl font-black uppercase tracking-tighter text-foreground">
+                                <h2 className="text-xl font-black tracking-tighter text-foreground">
                                     {teamName || "New Team"}
                                 </h2>
-                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60 mt-1">
+                                <p className="text-[10px] font-medium tracking-[0.2em] text-muted-foreground/60 mt-1">
                                     {tTeam("edit_team_desc") || "Customize Identity"}
                                 </p>
                             </div>
 
                             <form onSubmit={handleUpdateTeam} className="space-y-8">
                                 <div className="space-y-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                    <Label className="text-[10px] font-black tracking-widest text-muted-foreground/60">
                                         {tTeam("team_name")}
                                     </Label>
                                     <Input
@@ -1429,14 +1429,14 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                         onChange={e => setTeamName(e.target.value)}
                                         placeholder={tTeam("team_name")}
                                         required
-                                        className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black uppercase tracking-tight transition-all p-0"
+                                        className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
                                     />
                                 </div>
 
                                 <div className="space-y-4">
                                     <Button
                                         type="submit"
-                                        className="w-full rounded-none h-12 font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.02] bg-secondary text-secondary-foreground shadow-lg disabled:opacity-50 disabled:hover:scale-100"
+                                        className="w-full rounded-none h-12 font-black tracking-widest text-xs transition-all hover:scale-[1.02] bg-secondary text-secondary-foreground shadow-lg disabled:opacity-50 disabled:hover:scale-100"
                                         disabled={isUpdatingTeam || isLocked}
                                     >
                                         {isUpdatingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
@@ -1446,7 +1446,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                     {isLocked && (
                                         <div className="bg-red-500/10 border border-red-500/20 p-3 flex items-center justify-center gap-2">
                                             <Lock className="h-3 w-3 text-red-500" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-red-500">{t("team_details_locked")}</span>
+                                            <span className="text-[9px] font-black tracking-widest text-red-500">{t("team_details_locked")}</span>
                                         </div>
                                     )}
                                 </div>
@@ -1454,7 +1454,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 <div className="pt-8 border-t border-border/20">
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="h-px flex-1 bg-red-500/10" />
-                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-500/40">{t("danger_zone")}</span>
+                                        <span className="text-[9px] font-black tracking-[0.2em] text-red-500/40">{t("danger_zone")}</span>
                                         <div className="h-px flex-1 bg-red-500/10" />
                                     </div>
 
@@ -1463,7 +1463,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                             <Button
                                                 type="button"
                                                 variant="outline"
-                                                className="w-full rounded-none h-10 text-[10px] font-black uppercase tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-foreground transition-all"
+                                                className="w-full rounded-none h-10 text-[10px] font-black tracking-widest text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-foreground transition-all"
                                                 disabled={isDeletingTeam || isLocked}
                                             >
                                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
@@ -1472,13 +1472,13 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                         </DialogTrigger>
                                         <DialogContent className="rounded-none sm:max-w-md border-border bg-card">
                                             <DialogHeader>
-                                                <DialogTitle className="font-black uppercase tracking-tight text-red-500">{tTeam("delete_team") || "Delete Team"}</DialogTitle>
-                                                <DialogDescription className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
+                                                <DialogTitle className="font-black tracking-tight text-red-500">{tTeam("delete_team") || "Delete Team"}</DialogTitle>
+                                                <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
                                                     {tTeam("delete_desc") || "This action cannot be undone. This will permanently delete your team and all associated data."}
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <div className="py-6 space-y-3 font-semibold">
-                                                <Label htmlFor="confirm-team-delete" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                                <Label htmlFor="confirm-team-delete" className="text-[10px] font-black tracking-widest text-muted-foreground/60">
                                                     {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
                                                 </Label>
                                                 <Input
@@ -1486,14 +1486,14 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                                     value={deleteConfirmText}
                                                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                                                     autoComplete="off"
-                                                    className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black uppercase tracking-tight transition-all p-0"
+                                                    className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
                                                 />
                                             </div>
                                             <DialogFooter className="gap-3 sm:gap-0">
-                                                <Button variant="outline" className="rounded-none flex-1 font-black uppercase text-[10px] h-11 border-2" onClick={() => { setDeleteTeamDialogOpen(false); setDeleteConfirmText(""); }} disabled={isDeletingTeam}>
+                                                <Button variant="outline" className="rounded-none flex-1 font-black text-[10px] h-11 border-2" onClick={() => { setDeleteTeamDialogOpen(false); setDeleteConfirmText(""); }} disabled={isDeletingTeam}>
                                                     {tCommon("cancel")}
                                                 </Button>
-                                                <Button variant="destructive" className="rounded-none flex-1 font-black uppercase text-[10px] h-11 bg-red-600 hover:bg-red-700" onClick={handleDeleteTeam} disabled={isDeletingTeam || deleteConfirmText !== team.name}>
+                                                <Button variant="destructive" className="rounded-none flex-1 font-black text-[10px] h-11 bg-red-600 hover:bg-red-700" onClick={handleDeleteTeam} disabled={isDeletingTeam || deleteConfirmText !== team.name}>
                                                     {isDeletingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                                                     {tCommon("delete") || "Delete"}
                                                 </Button>
@@ -1510,7 +1510,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
                 <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
                             {t("remove_player") || "Remove Player"}
                         </AlertDialogTitle>
@@ -1519,7 +1519,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -1527,7 +1527,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 e.preventDefault();
                                 confirmDeletePlayer();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {tCommon("delete") || "Delete"}

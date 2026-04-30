@@ -56,16 +56,16 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                 <Table className="min-w-[400px] border-separate border-spacing-0">
                     <TableHeader className="bg-muted/5">
                         <TableRow className="h-10 border-b border-border/10 hover:bg-muted/5 transition-colors">
-                            <TableHead className="w-12 px-0 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">
+                            <TableHead className="w-12 px-0 text-center text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">
                                 {t("rank")}
                             </TableHead>
-                            <TableHead className="px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">
+                            <TableHead className="px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">
                                 {t("player")}
                             </TableHead>
-                            <TableHead className="px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 border-b border-border/10">
+                            <TableHead className="px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">
                                 {t("team") || "Team"}
                             </TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black uppercase tracking-widest text-secondary border-b border-border/10">
+                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-secondary border-b border-border/10">
                                 {t("goals")}
                             </TableHead>
                         </TableRow>
@@ -88,7 +88,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                         </span>
                                     </TableCell>
                                     <TableCell className="px-4 border-b border-border/5">
-                                        <span className="text-sm font-black uppercase tracking-tighter text-foreground group-hover/row:text-primary transition-colors">
+                                        <span className="text-sm font-black tracking-tighter text-foreground group-hover/row:text-primary transition-colors">
                                             {scorer.player_name}
                                         </span>
                                     </TableCell>
@@ -103,7 +103,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground/60 group-hover/row:text-muted-foreground transition-colors truncate max-w-[120px] md:max-w-none">
+                                            <span className="text-[10px] font-black tracking-tighter text-muted-foreground/60 group-hover/row:text-muted-foreground transition-colors truncate max-w-[120px] md:max-w-none">
                                                 {team?.name}
                                             </span>
                                         </div>
@@ -121,7 +121,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
             </div>
             {sortedScorers.length > 0 && (
                 <div className="py-2 flex justify-end">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/30">
+                    <p className="text-[8px] font-black tracking-widest text-muted-foreground/30">
                         {t("showing_top_10") || "Showing TOP 10 Goal Scorers"}
                     </p>
                 </div>

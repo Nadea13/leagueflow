@@ -223,7 +223,7 @@ export function TournamentContent({
         toast({
             title: tCommon("copied"),
             description: tCommon("copied_desc"),
-            className: "rounded-none border-secondary font-bold uppercase"
+            className: "rounded-none border-secondary font-bold"
         });
     };
 
@@ -273,7 +273,7 @@ export function TournamentContent({
 
                         {/* Title Section */}
                         <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                            <h1 className="text-2xl md:text-5xl font-black tracking-tighter uppercase leading-[0.9] text-foreground">
+                            <h1 className="text-2xl md:text-5xl font-black tracking-tighter leading-[0.9] text-foreground">
                                 {tournament?.name}
                             </h1>
                         </div>
@@ -321,7 +321,7 @@ export function TournamentContent({
                                 <>
                                     {/* Action Bar Header */}
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Settings className="h-5 w-5 text-secondary" />
                                             {t("actions")}
                                         </h2>
@@ -332,8 +332,8 @@ export function TournamentContent({
                                         <div className="space-y-2 md:space-y-3">
                                             <div className="space-y-2 md:space-y-3">
                                                 <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
-                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                                    <label className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
+                                                    <Badge variant="outline" className="rounded-none text-[8px] font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
                                                 </div>
                                                 <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
                                                     {mounted ? registrationUrl : tCommon("loading") || "..."}
@@ -344,7 +344,7 @@ export function TournamentContent({
                                                 <Button
                                                     variant="secondary"
                                                     size="default"
-                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                    className="rounded-none w-full font-black text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
                                                     onClick={copyRegistrationLink}
                                                 >
                                                     <Copy className="h-4 w-4 mr-2" />
@@ -353,7 +353,7 @@ export function TournamentContent({
                                                 <Button
                                                     variant="outline"
                                                     size="default"
-                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black text-[11px] tracking-widest h-11"
                                                     onClick={() => window.open(registrationUrl, '_blank')}
                                                 >
                                                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -380,7 +380,7 @@ export function TournamentContent({
                             {/* 1. Match Schedule */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Calendar className="h-5 w-5 text-secondary" />
                                         {t("match_schedule")}
                                     </h2>
@@ -401,11 +401,11 @@ export function TournamentContent({
                             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <GitBranch className="h-5 w-5 text-secondary" />
                                             {t("bracket")}
                                         </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("bracket_desc")}</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground/60">{t("bracket_desc")}</p>
                                     </div>
                                     <div className="relative z-10">
                                         <Bracket matches={matches} />
@@ -418,13 +418,13 @@ export function TournamentContent({
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
-                                            <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                                 <Award className="h-5 w-5 text-secondary" />
                                                 {t("top_scorers")}
                                             </h2>
                                             {/* Pro locks removed */}
                                         </div>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground/60">{t("top_scorers_desc") || "Golden boot race"}</p>
                                     </div>
 
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors shadow-xl shadow-black/20">
@@ -439,11 +439,11 @@ export function TournamentContent({
                             {playerStats.length > 0 && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Users className="h-5 w-5 text-secondary" />
                                             {t("player_stats")}
                                         </h2>
-                                        <p className="text-[10px] font-bold uppercase text-muted-foreground/60">Comprehensive performance tracking</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground/60">Comprehensive performance tracking</p>
                                     </div>
                                     <Card className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/2 transition-colors p-0 shadow-xl shadow-black/20">
                                         <CardContent className="p-0 z-0">
@@ -471,7 +471,7 @@ export function TournamentContent({
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
-                                            <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                                 <ClipboardEdit className="h-5 w-5 text-secondary" />
                                                 {tRegistrations("title")}
                                             </h3>
@@ -487,7 +487,7 @@ export function TournamentContent({
                             {/* Participating Teams */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Users className="h-5 w-5 text-secondary" />
                                         {t("participating_teams")} <span className="text-muted-foreground/40 ml-1">[{teams?.length || 0}]</span>
                                     </h3>
@@ -509,7 +509,7 @@ export function TournamentContent({
                             {tournament?.status !== 'draft' && (
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Settings className="h-5 w-5 text-secondary" />
                                             {t("actions")}
                                         </h3>
@@ -519,8 +519,8 @@ export function TournamentContent({
                                         <div className="space-y-2 md:space-y-3">
                                             <div className="space-y-2 md:space-y-3">
                                                 <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
-                                                    <Badge variant="outline" className="rounded-none text-[8px] uppercase font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
+                                                    <label className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
+                                                    <Badge variant="outline" className="rounded-none text-[8px] font-black border-secondary/20 text-secondary">{t("registration")}</Badge>
                                                 </div>
                                                 <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-secondary/20 line-clamp-2">
                                                     {mounted ? registrationUrl : tCommon("loading") || "..."}
@@ -531,7 +531,7 @@ export function TournamentContent({
                                                 <Button
                                                     variant="secondary"
                                                     size="default"
-                                                    className="rounded-none w-full font-black uppercase text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
+                                                    className="rounded-none w-full font-black text-[11px] tracking-widest shadow-lg shadow-secondary/10 h-11"
                                                     onClick={copyRegistrationLink}
                                                 >
                                                     <Copy className="h-4 w-4 mr-2" />
@@ -540,7 +540,7 @@ export function TournamentContent({
                                                 <Button
                                                     variant="outline"
                                                     size="default"
-                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black uppercase text-[11px] tracking-widest h-11"
+                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black text-[11px] tracking-widest h-11"
                                                     onClick={() => window.open(registrationUrl, '_blank')}
                                                 >
                                                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -562,7 +562,7 @@ export function TournamentContent({
                             {/* Add Team Section */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Plus className="h-5 w-5 text-secondary" />
                                         {t("add_team")}
                                     </h3>
@@ -588,7 +588,7 @@ export function TournamentContent({
                             {/* Unwrapped Header */}
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex justify-start items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex justify-start items-center gap-2 md:gap-3">
                                         <Calendar className="h-5 w-5 text-secondary" />
                                         {t("match_schedule")}
                                     </h3>
@@ -628,7 +628,7 @@ export function TournamentContent({
                             {/* Generation Controls Block */}
                             <div className="space-y-4 md:space-y-6">
                                 <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Trophy className="h-5 w-5 text-secondary" />
                                         {t("standings")}
                                     </h3>
@@ -671,7 +671,7 @@ export function TournamentContent({
                             <div className="lg:col-span-1 space-y-4 md:space-y-6 hidden lg:block">
                                 <div className="space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
-                                        <h3 className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <ClipboardEdit className="h-5 w-5 text-secondary" />
                                             Configuration Overview
                                         </h3>
@@ -680,25 +680,25 @@ export function TournamentContent({
                                     <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
                                         <div className="space-y-4 md:space-y-6">
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Status</span>
-                                                <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black uppercase px-3 py-1">
+                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Status</span>
+                                                <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black px-3 py-1">
                                                     {tournament?.status?.toUpperCase()}
                                                 </Badge>
                                             </div>
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Plan</span>
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-secondary">
+                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Plan</span>
+                                                <span className="text-[10px] font-black tracking-widest text-secondary">
                                                     {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Team Slots</span>
-                                                <span className="text-[11px] font-black uppercase tracking-widest text-foreground">
+                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Team Slots</span>
+                                                <span className="text-[11px] font-black tracking-widest text-foreground">
                                                     {teams.length} / {tournament?.max_teams || 8}
                                                 </span>
                                             </div>
                                             <div className="pt-2 md:pt-3">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
+                                                <p className="text-[9px] font-black tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
                                                 <p className="text-[11px] font-black text-foreground">
                                                     {mounted ? new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}
                                                 </p>
@@ -708,7 +708,7 @@ export function TournamentContent({
 
                                     <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
                                         <div className="space-y-2 md:space-y-3">
-                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-secondary">Quick Help</h5>
+                                            <h5 className="text-[10px] font-black tracking-widest text-secondary">Quick Help</h5>
                                             <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
                                                 Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
                                             </p>

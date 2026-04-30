@@ -49,7 +49,7 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
             <DropdownMenuContent className="w-64 bg-background border-border rounded-none shadow-2xl p-2" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal p-3 bg-muted/30 mb-2">
                     <div className="flex flex-col space-y-1">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-secondary">{tCommon("user")}</p>
+                        <p className="text-[10px] font-bold tracking-widest text-secondary">{tCommon("user")}</p>
                         <p className="text-sm font-medium leading-none text-foreground truncate">
                             {displayName}
                         </p>
@@ -63,7 +63,7 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
                     <DropdownMenuItem asChild className="rounded-none focus:bg-muted focus:text-secondary transition-colors cursor-pointer py-2.5">
                         <Link href={profileHref} className="w-full flex items-center">
                             <User className="mr-3 h-4 w-4 opacity-70" />
-                            <span className="text-xs font-bold uppercase tracking-tight">{t("profile")}</span>
+                            <span className="text-xs font-bold tracking-tight">{t("profile")}</span>
                         </Link>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -73,19 +73,19 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
                     <DropdownMenuSubTrigger className="rounded-none focus:bg-muted focus:text-secondary py-2.5">
                         <Sun className="mr-3 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 opacity-70" />
                         <Moon className="absolute mr-3 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 opacity-70" />
-                        <span className="text-xs font-bold uppercase tracking-tight">{tCommon("theme")}</span>
+                        <span className="text-xs font-bold tracking-tight">{tCommon("theme")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent className="bg-background border-border rounded-none min-w-[120px]">
-                            <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">
+                            <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold">
                                 <Sun className="mr-2 h-3.5 w-3.5" />
                                 {tCommon("light")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">
+                            <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold">
                                 <Moon className="mr-2 h-3.5 w-3.5" />
                                 {tCommon("dark")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold uppercase">
+                            <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-none focus:bg-muted focus:text-secondary text-xs font-bold">
                                 <Laptop className="mr-2 h-3.5 w-3.5" />
                                 {tCommon("system")}
                             </DropdownMenuItem>
@@ -97,7 +97,7 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
                     <form action={signOut} className="w-full">
                         <button className="w-full flex items-center text-left cursor-pointer">
                             <LogOut className="mr-3 h-4 w-4 text-red-500" />
-                            <span className="text-xs font-bold uppercase tracking-tight">{t("logout")}</span>
+                            <span className="text-xs font-bold tracking-tight">{t("logout")}</span>
                         </button>
                     </form>
                 </DropdownMenuItem>

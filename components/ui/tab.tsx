@@ -52,7 +52,7 @@ export function Tab<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black uppercase transition-all rounded-none border-none",
+              "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all rounded-none border-none",
               fullWidth ? "flex-1" : "flex-none",
               "text-muted-foreground hover:text-secondary",
               isActive ? cn(

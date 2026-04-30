@@ -158,17 +158,17 @@ function TeamItem({
                     )}
                 </div>
                 <div className="flex flex-col min-w-0 mr-2 md:mr-3">
-                    <h3 className="font-black uppercase tracking-tighter text-lg md:text-xl leading-none truncate group-hover:text-primary transition-colors">{team.name}</h3>
+                    <h3 className="font-black tracking-tighter text-lg md:text-xl leading-none truncate group-hover:text-primary transition-colors">{team.name}</h3>
                     {team.description && (
-                        <p className="text-[10px] font-bold uppercase text-muted-foreground/40 mt-1.5 line-clamp-1 tracking-wider">{team.description}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground/40 mt-1.5 line-clamp-1 tracking-wider">{team.description}</p>
                     )}
                     <div className="flex items-center gap-2 mt-1.5 overflow-hidden">
                         {(!showGroupSelector && team.group_name) ? (
-                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary bg-secondary/5 text-[9px] font-black uppercase px-2">
+                            <Badge variant="outline" className="rounded-none border-secondary/30 text-secondary bg-secondary/5 text-[9px] font-black px-2">
                                 {t("group")} {team.group_name}
                             </Badge>
                         ) : (
-                            <span className="text-[10px] font-bold uppercase text-muted-foreground/20 tracking-tight">{t("participating_team")}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground/20 tracking-tight">{t("participating_team")}</span>
                         )}
                     </div>
                 </div>
@@ -183,13 +183,13 @@ function TeamItem({
                             onValueChange={handleGroupChange}
                             disabled={isGroupLoading}
                         >
-                            <SelectTrigger className="w-[110px] h-9 text-[10px] bg-muted/5 border-border/10 rounded-none font-black uppercase tracking-widest focus:ring-secondary/20 transition-all hover:bg-muted/10">
+                            <SelectTrigger className="w-[110px] h-9 text-[10px] bg-muted/5 border-border/10 rounded-none font-black tracking-widest focus:ring-secondary/20 transition-all hover:bg-muted/10">
                                 <SelectValue placeholder={tGroup("group")} />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-border/10 rounded-none shadow-2xl">
-                                <SelectItem value="none" className="text-[10px] font-bold uppercase opacity-40">{tCommon("none") || "None"}</SelectItem>
+                                <SelectItem value="none" className="text-[10px] font-bold opacity-40">{tCommon("none") || "None"}</SelectItem>
                                 {["A", "B", "C", "D", "E", "F", "G", "H"].map((g) => (
-                                    <SelectItem key={g} value={g} className="text-[10px] font-black uppercase">
+                                    <SelectItem key={g} value={g} className="text-[10px] font-black">
                                         {tGroup("group")} {g}
                                     </SelectItem>
                                 ))}
@@ -210,7 +210,7 @@ function TeamItem({
                             </DialogTrigger>
                         <DialogContent className="bg-card border-border/10 rounded-none max-w-md shadow-2xl">
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                                     <Edit2 className="h-5 w-5 text-secondary" />
                                     {t("edit_team")}
                                 </DialogTitle>
@@ -250,22 +250,22 @@ function TeamItem({
                                                 }}
                                             />
                                         </label>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{t("click_to_upload")}</span>
+                                        <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("click_to_upload")}</span>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("team_name")}</Label>
+                                    <Label htmlFor="name" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("team_name")}</Label>
                                     <Input
                                         id="name"
                                         value={name}
-                                        className="bg-foreground/5 border-border/10 rounded-none font-black uppercase tracking-tighter h-12 focus-visible:ring-secondary/20"
+                                        className="bg-foreground/5 border-border/10 rounded-none font-black tracking-tighter h-12 focus-visible:ring-secondary/20"
                                         onChange={(e) => setName(e.target.value)}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{t("team_description") || "Team Description"}</Label>
+                                    <Label htmlFor="description" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("team_description") || "Team Description"}</Label>
                                     <Textarea
                                         id="description"
                                         value={description}
@@ -281,7 +281,7 @@ function TeamItem({
                                     onClick={() => setShowDeleteConfirm(true)} 
                                     disabled={isLoading} 
                                     type="button"
-                                    className="rounded-none border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive hover:text-foreground transition-all h-10 px-6 text-[11px] font-black uppercase tracking-widest"
+                                    className="rounded-none border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive hover:text-foreground transition-all h-10 px-6 text-[11px] font-black tracking-widest"
                                 >
                                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                                     {tCommon("delete")}
@@ -289,7 +289,7 @@ function TeamItem({
                                 <Button 
                                     onClick={handleSave} 
                                     disabled={isLoading}
-                                    className="rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all h-10 px-8 text-[11px] font-black uppercase tracking-widest"
+                                    className="rounded-none bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all h-10 px-8 text-[11px] font-black tracking-widest"
                                 >
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     {tCommon("save")}
@@ -302,7 +302,7 @@ function TeamItem({
                     <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                         <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
                             <AlertDialogHeader>
-                                <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground flex items-center gap-2">
+                                <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                                     <Trash2 className="h-5 w-5 text-destructive" />
                                     {t("delete_team")}
                                 </AlertDialogTitle>
@@ -311,7 +311,7 @@ function TeamItem({
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter className="mt-6">
-                                <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black uppercase tracking-widest">
+                                <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                                     {tCommon("cancel")}
                                 </AlertDialogCancel>
                                 <AlertDialogAction
@@ -320,7 +320,7 @@ function TeamItem({
                                         handleDelete();
                                     }}
                                     disabled={isLoading}
-                                    className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black uppercase tracking-widest"
+                                    className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                                 >
                                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-3.5 w-3.5 mr-2" />}
                                     {t("delete_team")}
