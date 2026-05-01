@@ -75,7 +75,8 @@
         "full": "Full",
         "closed": "Registration Closed",
         "generate_qr": "Generate QR Code",
-        "browse_tournaments_desc": "Start your competitive journey today"
+        "browse_tournaments_desc": "Start your competitive journey today",
+        "team": "Team"
     },
     "Dashboard": {
         "title": "Dashboard",
@@ -436,6 +437,7 @@
         "add_team_button": "Add Team",
         "no_description": "No description available",
         "team_description": "Team Description",
+        "team_description_placeholder": "Tell us more about this team...",
         "updated_successfully": "Team updated successfully",
         "created_successfully": "Team created successfully"
     },
@@ -777,7 +779,12 @@
         "importing": "Importing...",
         "profile_management": "Profile Management",
         "global_identity_for": "Global identity for",
-        "global_profile_photo": "GLOBAL PROFILE PHOTO"
+        "global_profile_photo": "GLOBAL PROFILE PHOTO",
+        "no_identity_found": "No identity found",
+        "roster_reset_success": "Roster reset successfully",
+        "reset_roster": "Reset Roster",
+        "reset_roster_desc": "This will delete all players from this team's roster. This action cannot be undone.",
+        "confirm_reset": "Confirm Reset"
     },
     "Landing": {
         "nav_features": "Features",

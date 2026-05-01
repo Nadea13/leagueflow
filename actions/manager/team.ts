@@ -5,6 +5,33 @@ import { revalidatePath } from "next/cache";
 import { ActionResponse, Player } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { logActivity } from "@/lib/audit";
+import { 
+    getGlobalPlayers as getGP, 
+    createGlobalPlayer as createGP, 
+    linkPlayerToGlobal as linkGP, 
+    unlinkPlayerFromGlobal as unlinkGP,
+    updateGlobalPlayerInfo as updateGPInfo
+} from "../organizer/tournaments/global-player";
+
+export async function updateGlobalPlayerInfo(globalPlayerId: string, data: { name?: string; date_of_birth?: string | null }) {
+    return updateGPInfo(globalPlayerId, data);
+}
+
+export async function getGlobalPlayers(page?: number, pageSize?: number, search?: string) {
+    return getGP(page, pageSize, search);
+}
+
+export async function createGlobalPlayer(name: string, photoUrl?: string | null, dateOfBirth?: string | null, athleteTypes?: string[]) {
+    return createGP(name, photoUrl, dateOfBirth, athleteTypes);
+}
+
+export async function linkPlayerToGlobal(playerId: string, globalPlayerId: string) {
+    return linkGP(playerId, globalPlayerId);
+}
+
+export async function unlinkPlayerFromGlobal(playerId: string) {
+    return unlinkGP(playerId);
+}
 
 
 /**
@@ -620,4 +647,29 @@ export async function importRoster(
 
     revalidatePath(`/manager/my-teams/${targetTeamId}`);
     return { success: true, message: `Successfully imported ${newPlayers.length} players.` };
+}
+
+/**
+ * Remove all players from a team roster.
+ */
+export async function resetRoster(teamId: string): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const authorized = await isAuthorizedForTeam(teamId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+
+    const { error } = await adminSupabase
+        .from("players")
+        .delete()
+        .or(`team_id.eq.${teamId},global_team_id.eq.${teamId}`);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath(`/manager/my-teams/${teamId}`);
+    await logActivity('RESET_ROSTER', 'team', teamId, { reset_by: user.id });
+    return { success: true };
 }

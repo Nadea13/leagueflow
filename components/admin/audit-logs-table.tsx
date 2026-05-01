@@ -26,7 +26,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tab } from "@/components/ui/tab";
 
 interface AdminAuditLogsProps {
     initialLogs: AuditLog[];
@@ -39,6 +39,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
 
+    const [activeTab, setActiveTab] = useState<"system" | "auth">("system");
     const [systemPage, setSystemPage] = useState(1);
     const [authPage, setAuthPage] = useState(1);
     const itemsPerPage = 100;
@@ -161,17 +162,18 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                 </Card>
             </div>
 
-            <Tabs defaultValue="system" className="w-full">
-                <TabsList className="mb-4 bg-muted/30 border border-border rounded-none p-1 h-auto">
-                    <TabsTrigger value="system" className="rounded-none text-[10px] font-black tracking-[0.15em] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
-                        System Logs
-                    </TabsTrigger>
-                    <TabsTrigger value="auth" className="rounded-none text-[10px] font-black tracking-[0.15em] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_15px_rgba(0,196,154,0.2)] px-4 py-2">
-                        Auth Logs
-                    </TabsTrigger>
-                </TabsList>
+            <Tab
+                value={activeTab}
+                onChange={(val) => setActiveTab(val as "system" | "auth")}
+                className="mb-6"
+                options={[
+                    { label: "System Logs", value: "system", icon: FileText },
+                    { label: "Auth Logs", value: "auth", icon: ShieldAlert }
+                ]}
+            />
 
-                <TabsContent value="system" className="space-y-4">
+            {activeTab === "system" && (
+                <div className="space-y-4">
                     {/* Filters */}
                     <div className="flex flex-col gap-4 md:flex-row md:items-center">
                         <div className="relative flex-1">
@@ -297,9 +299,11 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                             </div>
                         </div>
                     )}
-                </TabsContent>
+                </div>
+            )}
 
-                <TabsContent value="auth" className="space-y-4">
+            {activeTab === "auth" && (
+                <div className="space-y-4">
                     <div className="rounded-none border border-border bg-card overflow-hidden">
                         <Table>
                             <TableHeader>
@@ -365,8 +369,8 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                             </div>
                         </div>
                     )}
-                </TabsContent>
-            </Tabs>
+                </div>
+            )}
         </div>
     );
 }

@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import { Trophy, Users, Calendar, ArrowLeft, GitBranch, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Tab } from "@/components/ui/tab";
 import { Standings } from "@/components/tournaments/ranking/standings";
 import { PublicMatches } from "@/components/tournaments/public/public-matches-list";
@@ -224,8 +223,8 @@ export function PublicTournamentShell({
                 ]}
             />
 
-            <Tabs defaultValue={currentTab} value={currentTab} onValueChange={handleTabChange} className="w-full">
-                <TabsContent value="overview" className="space-y-4 md:space-y-6">
+            {currentTab === 'overview' && (
+                <div className="space-y-4 md:space-y-6">
                     <div className="grid grid-cols-1 gap-4 md:gap-6">
                         {(tournament.format === 'league' || tournament.format === 'league_ha') && (
                             <div className="space-y-4 md:space-y-6">
@@ -266,9 +265,11 @@ export function PublicTournamentShell({
                             </div>
                         )}
                     </div>
-                </TabsContent>
+                </div>
+            )}
 
-                <TabsContent value="statistics" className="space-y-4 md:space-y-6">
+            {currentTab === 'statistics' && (
+                <div className="space-y-4 md:space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-4">
                         <div className="space-y-4 md:space-y-6">
                             <div className="flex flex-col gap-1">
@@ -298,21 +299,21 @@ export function PublicTournamentShell({
                             )}
                         </div>
                     </div>
-                </TabsContent>
+                </div>
+            )}
 
-                <TabsContent value="matches">
-                    <div className="space-y-4 md:space-y-6">
-                        <div className="flex flex-col gap-1">
-                            <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                <Calendar className="h-5 w-5 text-primary" />
-                                {t("fixtures_results")}
-                            </h2>
-                            <p className="text-[10px] font-bold text-muted-foreground/60">{t("fixtures_results_desc")}</p>
-                        </div>
-                        <PublicMatches matches={matches} tournamentId={tournament.id} events={events} teams={initialTeams} />
+            {currentTab === 'matches' && (
+                <div className="space-y-4 md:space-y-6">
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                            <Calendar className="h-5 w-5 text-primary" />
+                            {t("fixtures_results")}
+                        </h2>
+                        <p className="text-[10px] font-bold text-muted-foreground/60">{t("fixtures_results_desc")}</p>
                     </div>
-                </TabsContent>
-            </Tabs>
+                    <PublicMatches matches={matches} tournamentId={tournament.id} events={events} teams={initialTeams} />
+                </div>
+            )}
         </main>
     );
 }

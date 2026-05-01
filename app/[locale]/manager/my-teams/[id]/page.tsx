@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTeam, getPlayers } from "@/actions/manager/team";
-import { SquadManagement } from "@/components/teams/squad-management";
+import { SquadManagement } from "@/components/squads/squad-management";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ManagerTeamManagementPage({
@@ -32,7 +32,7 @@ export default async function ManagerTeamManagementPage({
             .select("user_id")
             .eq("id", team.tournament_id)
             .single();
-        
+
         if (tournament && tournament.user_id === user.id) {
             isOwner = true;
         }
@@ -49,9 +49,9 @@ export default async function ManagerTeamManagementPage({
 
     return (
         <div className="w-full max-w-[1600px] mx-auto">
-            <SquadManagement 
-                team={team} 
-                initialPlayers={initialPlayers} 
+            <SquadManagement
+                team={team}
+                initialPlayers={initialPlayers}
             />
         </div>
     );
