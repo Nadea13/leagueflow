@@ -5,6 +5,9 @@ import { PublicTournaments } from "@/components/tournaments/public/public-tourna
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { TournamentSearchHeader } from "@/components/tournaments/public/tournament-search-bar";
+import { Suspense } from "react";
+
 export default async function ManagerTournamentsPage() {
     const t = await getTranslations("PublicTournaments");
     const tNav = await getTranslations("Nav");
@@ -18,7 +21,7 @@ export default async function ManagerTournamentsPage() {
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6">
                 <div>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-foreground leading-[0.8] mb-2">
                         {tNav("tournaments")}
@@ -27,71 +30,10 @@ export default async function ManagerTournamentsPage() {
                         {t("subtitle") || "Browse and search for active football tournaments to register your team."}
                     </p>
                 </div>
+                <TournamentSearchHeader />
             </div>
 
-            <div className="grid gap-2 grid-cols-3 md:gap-3 md:grid-cols-3">
-                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-primary/50">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
-                            {tDashboard("total_tournaments")}
-                        </CardTitle>
-                        <Trophy className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
-                    </CardHeader>
-                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{totalCount}</div>
-                        <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
-                            <span className="w-2 h-[1px] bg-primary/40" />
-                            {tDashboard("all_time")}
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-primary/50">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/60" />
-                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
-                            {tDashboard("active_now")}
-                        </CardTitle>
-                        <Activity className="h-4 w-4 text-primary opacity-80 shrink-0 hidden sm:block" />
-                    </CardHeader>
-                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{activeCount}</div>
-                        <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
-                            <span className="w-2 h-[1px] bg-primary/40" />
-                            {tDashboard("currently_running")}
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="border border-border bg-card shadow-none py-4 md:py-6 overflow-hidden relative group transition-all hover:border-primary/30">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
-                    <div className="absolute -right-2 -top-2 w-16 h-16 md:-right-4 md:-top-4 md:w-24 md:h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 px-3 md:px-6 relative z-10 gap-1 md:gap-0">
-                        <CardTitle className="text-[8px] md:text-[10px] tracking-[0.1em] md:tracking-[0.2em] font-black text-muted-foreground truncate pr-1">
-                            {tDashboard("completed")}
-                        </CardTitle>
-                        <CheckCircle className="h-4 w-4 text-primary/70 opacity-80 shrink-0 hidden sm:block" />
-                    </CardHeader>
-                    <CardContent className="relative z-10 px-3 pt-0 md:px-6 md:pt-0">
-                        <div className="text-2xl md:text-5xl font-black tracking-tighter leading-none">{completedCount}</div>
-                        <p className="hidden md:flex text-[10px] font-bold text-muted-foreground mt-2 opacity-60 items-center gap-1">
-                            <span className="w-2 h-[1px] bg-primary/30" />
-                            {tDashboard("successfully_finished")}
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="space-y-4 md:space-y-6">
-                <div className="flex items-center gap-3 mb-4 md:mb-6">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-black tracking-tighter text-foreground">
-                        {t("available_competitions")}
-                    </h3>
-                </div>
-                <PublicTournaments onlyActive={true} isManager={true} />
-            </div>
+            <PublicTournaments onlyActive={true} isManager={true} />
         </div>
     );
 }

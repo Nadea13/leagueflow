@@ -8,9 +8,12 @@ import { Tournament } from "@/types";
 import { PublicTournamentCard } from "./public-tournament-card";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
 
+import { useSearchParams } from "next/navigation";
+
 export function PublicTournaments({ onlyActive = false, isManager = false }: { onlyActive?: boolean, isManager?: boolean }) {
     const t = useTranslations("Home");
-    const [search, setSearch] = useState("");
+    const searchParams = useSearchParams();
+    const search = searchParams.get("search") || "";
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -27,8 +30,7 @@ export function PublicTournaments({ onlyActive = false, isManager = false }: { o
             }
         };
 
-        const timer = setTimeout(fetchTournaments, 300);
-        return () => clearTimeout(timer);
+        fetchTournaments();
     }, [search]);
 
     const activeTournaments = tournaments.filter(t => t.status === "active");
@@ -36,22 +38,8 @@ export function PublicTournaments({ onlyActive = false, isManager = false }: { o
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <div className="relative max-w-2xl ml-0 group">
-                <div className="relative">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
-                    <Input
-                        placeholder={t("search_placeholder")}
-                        className="pl-14 h-16 text-lg bg-muted/5 border-border/40 rounded-none group-focus-within:border-primary group-focus-within:bg-muted/10 transition-all duration-500 font-black tracking-tight placeholder:text-muted-foreground/20"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within:w-full transition-all duration-700" />
-                </div>
-            </div>
-
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-6 bg-muted/5 border border-dashed border-border/40 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex flex-col items-center justify-center py-24 gap-6 bg-muted/5 border border-dashed relative overflow-hidden group">
                     <div className="relative">
                         <Loader2 className="h-12 w-12 animate-spin text-primary relative z-10" />
                         <div className="absolute inset-x-0 bottom-0 h-4 bg-primary/20 blur-xl animate-pulse" />
