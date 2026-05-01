@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Trash2 } from "lucide-react";
 import { createTeam } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionResponse, SportType } from "@/types/index";
 
@@ -39,6 +34,7 @@ export function CreateTeamDialog() {
     const [open, setOpen] = useState(false);
     const [state, formAction] = useActionState(createTeam, initialState);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Close dialog on success
     if (state?.success && open) {
@@ -54,6 +50,13 @@ export function CreateTeamDialog() {
         }
     };
 
+    const handleRemoveLogo = () => {
+        setPreviewUrl(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -63,35 +66,93 @@ export function CreateTeamDialog() {
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
-                <div className="bg-gradient-to-r from-primary/20 to-background p-6 border-b border-border relative">
+                <div className="relative bg-primary/10 p-4 md:p-6 border-b border-border/50">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">{t("add_team")}</DialogTitle>
-                        <DialogDescription className="text-muted-foreground font-medium">
+                        <DialogTitle className="text-3xl font-black tracking-tighter text-foreground leading-none">
+                            {t("add_team")}
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground font-medium pt-2 text-base leading-relaxed">
                             {t("no_teams_desc")}
                         </DialogDescription>
                     </DialogHeader>
                 </div>
-                
-                <form action={formAction} className="p-6 space-y-6">
-                    <div className="space-y-3">
-                        <Label htmlFor="name" className="text-[10px] font-black tracking-widest text-primary">
+
+                <form action={formAction} className="p-4 space-y-2 md:p-6 md:space-y-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="logo" className="text-xs font-black tracking-widest text-primary">
+                            {t("upload_logo")}
+                        </Label>
+                        <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-muted/10 border">
+                            <div className="relative group">
+                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
+                                    {previewUrl ? (
+                                        <Image
+                                            src={previewUrl}
+                                            alt={tCommon("preview")}
+                                            width={80}
+                                            height={80}
+                                            className="h-full w-full object-cover p-1"
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <Upload className="h-8 w-8 text-muted-foreground/30" />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex-1">
+                                <div className="flex gap-2">
+                                    <Label
+                                        htmlFor="logo"
+                                        className="cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 bg-muted/20 hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all"
+                                    >
+                                        {previewUrl ? t("click_to_upload") : t("upload_logo")}
+                                    </Label>
+                                    {previewUrl && (
+                                        <Button 
+                                            type="button" 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                                            onClick={handleRemoveLogo}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                <Input
+                                    id="logo"
+                                    name="logo"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                    ref={fileInputRef}
+                                />
+                                <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 2MB</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <Label htmlFor="name" className="text-xs font-black tracking-widest text-primary">
                             {t("team_name")}
                         </Label>
                         <Input
                             id="name"
                             name="name"
                             placeholder={t("team_name_placeholder")}
-                            className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0"
+                            className="bg-transparent text-foreground focus-visible:ring-0"
                             required
                         />
                     </div>
 
-                    <div className="space-y-3">
-                        <Label htmlFor="sport" className="text-[10px] font-black tracking-widest text-primary">
+                    <div className="space-y-1">
+                        <Label htmlFor="sport" className="text-xs font-black tracking-widest text-primary">
                             {tCommon("sport") || "Sport"}
                         </Label>
                         <Select name="sport" defaultValue="football">
-                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
+                            <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
                                 <SelectValue placeholder={t("select_sport") || "Select Sport"} />
                             </SelectTrigger>
                             <SelectContent className="rounded-none border-border">
@@ -104,49 +165,16 @@ export function CreateTeamDialog() {
                         </Select>
                     </div>
 
-                    <div className="space-y-2 md:space-y-3">
-                        <Label htmlFor="logo" className="text-[10px] font-black tracking-widest text-primary">
-                            {t("upload_logo")}
+                    <div className="space-y-1">
+                        <Label htmlFor="description" className="text-xs font-black tracking-widest text-primary">
+                            {t("team_description")}
                         </Label>
-                        <div className="flex items-center gap-6 p-4 bg-muted/10 border border-border">
-                            <div className="relative group">
-                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border group-hover:border-primary transition-colors overflow-hidden bg-muted/30">
-                                    {previewUrl ? (
-                                        <Image
-                                            src={previewUrl}
-                                            alt={tCommon("preview")}
-                                            width={80}
-                                            height={80}
-                                            className="h-full w-full object-cover p-1"
-                                            unoptimized
-                                        />
-                                    ) : (
-                                        <Upload className="h-8 w-8 text-muted-foreground/30 group-hover:text-primary transition-colors" />
-                                    )}
-                                </div>
-                                {previewUrl && (
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-none border-2 border-background" />
-                                )}
-                            </div>
-                            
-                            <div className="flex-1">
-                                <Label
-                                    htmlFor="logo"
-                                    className="cursor-pointer inline-flex items-center justify-center h-10 px-6 w-full bg-muted/20 hover:bg-muted/30 border border-border text-[10px] font-black tracking-widest text-foreground transition-all active:scale-95"
-                                >
-                                    {previewUrl ? t("click_to_upload") : t("upload_logo")}
-                                </Label>
-                                <Input
-                                    id="logo"
-                                    name="logo"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                />
-                                <p className="text-[9px] text-muted-foreground/50 mt-2 font-bold tracking-tighter">PNG, JPG, max 2MB</p>
-                            </div>
-                        </div>
+                        <Textarea
+                            id="description"
+                            name="description"
+                            placeholder={t("team_description_placeholder")}
+                            className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
+                        />
                     </div>
 
                     {state?.error && (

@@ -199,7 +199,7 @@ function TeamItem({
                 )}
 
                 <div className="flex gap-2 shrink-0">
-                    {isPro && <RosterDialog teamId={team.id} teamName={team.name} readOnly={isReadOnly} />}
+                    {isPro && <RosterDialog team={team} tournamentId={tournamentId} readOnly={isReadOnly} />}
 
                     {!isReadOnly && (
                         <Dialog open={open} onOpenChange={setOpen}>
@@ -271,7 +271,7 @@ function TeamItem({
                                         value={description}
                                         className="bg-foreground/5 border-border/10 rounded-none font-medium text-sm min-h-[100px] focus-visible:ring-primary/20"
                                         onChange={(e) => setDescription(e.target.value)}
-                                        placeholder={t("no_description") || "No description"}
+                                        placeholder={t("team_description_placeholder")}
                                     />
                                 </div>
                             </div>

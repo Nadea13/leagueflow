@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Player, GlobalPlayer } from "@/types/index";
+import { Player, GlobalPlayer, TournamentTeam } from "@/types/index";
 import { addPlayer, getPlayers, deletePlayer, updatePlayer } from "@/actions/organizer/tournaments/player";
 import {  linkPlayerToGlobal, unlinkPlayerFromGlobal } from "@/actions/organizer/tournaments/global-player";
+import { EditTeamForm } from "@/components/squads/edit-team-form";
+import { ImportRosterDialog } from "@/components/squads/import-roster-dialog";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,20 +22,21 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Check } from "lucide-react";
+import { Tab } from "@/components/ui/tab";
+import { Loader2, UserPlus, Trash2, Users, Link2, Unlink, Search, Save, X, Eye, FileText, ArrowRight, MoreVertical, Edit2, Check, LayoutGrid } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 interface RosterDialogProps {
-    teamId: string;
-    teamName: string;
+    team: TournamentTeam;
+    tournamentId: string;
     trigger?: React.ReactNode;
     readOnly?: boolean;
 }
 
-export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: RosterDialogProps) {
+export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: RosterDialogProps) {
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
@@ -41,6 +45,8 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
     const [players, setPlayers] = useState<Player[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [mobileTab, setMobileTab] = useState<'roster' | 'team'>('roster');
+    const [teamName, setTeamName] = useState(team.name);
     const locale = useLocale();
 
     const formatDate = (dateStr: string | null | undefined) => {
@@ -77,7 +83,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
 
     const fetchPlayers = useCallback(async () => {
         setIsLoading(true);
-        const result = await getPlayers(teamId);
+        const result = await getPlayers(team.id);
         if (result.success && result.data) {
             setPlayers(result.data);
         } else {
@@ -88,7 +94,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
             });
         }
         setIsLoading(false);
-    }, [teamId, tCommon, t, toast]);
+    }, [team.id, tCommon, t, toast]);
 
     useEffect(() => {
         if (open) {
@@ -122,7 +128,7 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
         formData.append("position", newPosition);
         formData.append("birthDate", newBirthDate);
 
-        const result = await addPlayer(teamId, { success: false }, formData);
+        const result = await addPlayer(team.id, { success: false }, formData);
 
         setIsSaving(false);
         if (result.success) {
@@ -222,12 +228,26 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{t("title")} - {teamName}</DialogTitle>
-                </DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 border-none rounded-none bg-background">
+                <div className="p-6 pb-0">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black tracking-tighter">{t("title")} - {teamName}</DialogTitle>
+                    </DialogHeader>
+                </div>
 
-                <div className="space-y-6">
+                <div className="px-6 py-4">
+                    <Tab
+                        value={mobileTab}
+                        onChange={(val) => setMobileTab(val as 'roster' | 'team')}
+                        className="mb-6"
+                        fullWidth={true}
+                        options={[
+                            { label: tCommon("players"), value: 'roster', icon: Users },
+                            { label: tCommon("team"), value: 'team', icon: LayoutGrid }
+                        ]}
+                    />
+
+                    <div className={cn("space-y-6", mobileTab !== 'roster' && "hidden")}>
                     {/* Add Player Form */}
                     {!readOnly && (
                         <div className="bg-card border border-border/40 relative overflow-hidden group">
@@ -240,7 +260,18 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                 <UserPlus className="h-5 w-5 text-primary" />
                                                 {t("add_player")}
                                             </h3>
-                                            <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent ml-4 hidden sm:block" />
+                                            <div className="flex items-center gap-2 ml-auto">
+                                                <ImportRosterDialog
+                                                    teamId={team.id}
+                                                    teamName={teamName}
+                                                    onSuccess={() => fetchPlayers()}
+                                                    actions={{
+                                                        addPlayer: (tid: string, fd: FormData) => addPlayer(tid, { success: false }, fd),
+                                                        getPlayers: (tid: string) => getPlayers(tid)
+                                                    }}
+                                                />
+                                                <div className="h-px w-20 bg-gradient-to-r from-primary/20 to-transparent hidden sm:block" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -422,121 +453,6 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                 </div>
 
                                                 <div className="flex items-center gap-4 mt-3">
-                                                    {!player.global_player_id && !readOnly && (
-                                                        <Popover
-                                                            open={linkingPlayerId === player.id}
-                                                            onOpenChange={(isOpen) => {
-                                                                setLinkingPlayerId(isOpen ? player.id : null);
-                                                                if (isOpen) {
-                                                                    setSearchQuery("");
-                                                                    handleSearch("");
-                                                                } else {
-                                                                    setSearchQuery("");
-                                                                    setSearchResults([]);
-                                                                }
-                                                            }}
-                                                        >
-                                                            <PopoverTrigger asChild>
-                                                                <Button variant="link" size="sm" className="p-0 h-auto text-[10px] font-black tracking-widest text-primary hover:text-primary/80 flex items-center gap-2">
-                                                                    <Link2 className="h-3.5 w-3.5" />
-                                                                    {tCommon("search")} Global ID
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="start">
-                                                                <div className="p-0 border-b border-border/40">
-                                                                    <div className="relative group/search">
-                                                                        <div className="relative">
-                                                                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within/search:text-primary group-focus-within/search:scale-110 transition-all duration-300 z-10" />
-                                                                            <Input
-                                                                                placeholder="Start typing..."
-                                                                                value={searchQuery}
-                                                                                onChange={(e) => handleSearch(e.target.value)}
-                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
-                                                                                autoFocus
-                                                                            />
-                                                                            <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within/search:w-full transition-all duration-700 z-20" />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                                                    {isSearching ? (
-                                                                        <div className="flex flex-col items-center justify-center py-12 gap-3">
-                                                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                                                            <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Scanning Database</span>
-                                                                        </div>
-                                                                    ) : searchResults.length > 0 ? (
-                                                                        <div className="py-2">
-                                                                            {searchResults.map((gp) => (
-                                                                                <button
-                                                                                    key={gp.id}
-                                                                                    className="w-full text-left px-5 py-3 hover:bg-primary/10 group/item flex items-center justify-between transition-colors border-b border-border/20 last:border-0"
-                                                                                    onClick={() => handleLinkPlayer(player.id, gp)}
-                                                                                >
-                                                                                    <div className="flex flex-col">
-                                                                                        <span className="font-black text-xs tracking-tight group-hover/item:text-primary">{gp.name}</span>
-                                                                                        {gp.date_of_birth && (
-                                                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/60 mt-0.5">
-                                                                                                {formatDate(gp.date_of_birth)}
-                                                                                            </span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 opacity-0 group-hover/item:opacity-100 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="p-8 text-center space-y-4">
-                                                                            <div className="h-10 w-10 bg-muted/20 border border-border/40 flex items-center justify-center mx-auto">
-                                                                                {searchQuery ? <FileText className="h-5 w-5 text-muted-foreground/20" /> : <Search className="h-5 w-5 text-muted-foreground/20" />}
-                                                                            </div>
-                                                                            <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
-                                                                                {tCommon("no_results") || "No records found"}
-                                                                            </p>
-                                                                            {searchQuery && (
-                                                                                <Button
-                                                                                    size="sm"
-                                                                                    variant="outline"
-                                                                                    className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-primary hover:text-black hover:border-primary transition-all"
-                                                                                    onClick={async () => {
-                                                                                        const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
-                                                                                        const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
-                                                                                        if (res.success && res.data) {
-                                                                                            await handleLinkPlayer(player.id, res.data);
-                                                                                        } else {
-                                                                                            toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                    Create & Sync Global ID
-                                                                                </Button>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <div className="p-4 border-t border-border/40 bg-muted/5">
-                                                                    {!searchQuery && (
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="ghost"
-                                                                            className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-primary transition-colors"
-                                                                            onClick={async () => {
-                                                                                const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
-                                                                                const res = await createGlobalPlayer(player.name, null, player.birth_date);
-                                                                                if (res.success && res.data) {
-                                                                                    await handleLinkPlayer(player.id, res.data);
-                                                                                } else {
-                                                                                    toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            <UserPlus className="h-4 w-4 mr-3 opacity-40" />
-                                                                            Create Global ID
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    )}
 
                                                     {player.global_player_id && !readOnly && (
                                                         <Button
@@ -584,39 +500,170 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                                             </Button>
                                                         </div>
                                                     ) : (
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
+                                                        <div className="flex items-center gap-1">
+                                                            {player.global_player_id ? (
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
+                                                                    className="h-10 w-10 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                                                    onClick={() => handleUnlinkPlayer(player.id)}
+                                                                    title="Unlink Identity"
                                                                 >
-                                                                    <MoreVertical className="h-5 w-5" />
+                                                                    <Unlink className="h-5 w-5" />
                                                                 </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
-                                                                <DropdownMenuItem
-                                                                    className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
-                                                                    onClick={() => {
-                                                                        setEditingPlayerId(player.id);
-                                                                        setEditName(player.name || "");
-                                                                        setEditNumber(player.number?.toString() || "");
-                                                                        setEditPosition(player.position || "");
-                                                                        setEditBirthDate(player.birth_date || "");
+                                                            ) : (
+                                                                <Popover
+                                                                    open={linkingPlayerId === player.id}
+                                                                    onOpenChange={(isOpen) => {
+                                                                        setLinkingPlayerId(isOpen ? player.id : null);
+                                                                        if (isOpen) {
+                                                                            setSearchQuery("");
+                                                                            handleSearch("");
+                                                                        } else {
+                                                                            setSearchQuery("");
+                                                                            setSearchResults([]);
+                                                                        }
                                                                     }}
                                                                 >
-                                                                    <Edit2 className="mr-3 h-4 w-4" />
-                                                                    {tCommon("edit")}
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
-                                                                    onClick={() => setPlayerToDelete(player.id)}
-                                                                >
-                                                                    <Trash2 className="mr-3 h-4 w-4" />
-                                                                    {tCommon("delete")}
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
+                                                                            title={tCommon("search") + " Global ID"}
+                                                                        >
+                                                                            <Link2 className="h-5 w-5" />
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="end">
+                                                                        <div className="p-0 border-b border-border/40">
+                                                                            <div className="relative group/search">
+                                                                                <div className="relative">
+                                                                                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within/search:text-primary group-focus-within/search:scale-110 transition-all duration-300 z-10" />
+                                                                                    <Input
+                                                                                        placeholder="Start typing..."
+                                                                                        value={searchQuery}
+                                                                                        onChange={(e) => handleSearch(e.target.value)}
+                                                                                        className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
+                                                                                        autoFocus
+                                                                                    />
+                                                                                    <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within/search:w-full transition-all duration-700 z-20" />
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                                            {isSearching ? (
+                                                                                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                                                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                                                    <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Scanning Database</span>
+                                                                                </div>
+                                                                            ) : searchResults.length > 0 ? (
+                                                                                <div className="py-2">
+                                                                                    {searchResults.map((gp) => (
+                                                                                        <button
+                                                                                            key={gp.id}
+                                                                                            className="w-full text-left px-5 py-3 hover:bg-primary/10 group/item flex items-center justify-between transition-colors border-b border-border/20 last:border-0"
+                                                                                            onClick={() => handleLinkPlayer(player.id, gp)}
+                                                                                        >
+                                                                                            <div className="flex flex-col">
+                                                                                                <span className="font-black text-xs tracking-tight group-hover/item:text-primary">{gp.name}</span>
+                                                                                                {gp.date_of_birth && (
+                                                                                                    <span className="text-[9px] font-mono font-bold text-muted-foreground/60 mt-0.5">
+                                                                                                        {formatDate(gp.date_of_birth)}
+                                                                                                    </span>
+                                                                                                )}
+                                                                                            </div>
+                                                                                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 opacity-0 group-hover/item:opacity-100 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
+                                                                                        </button>
+                                                                                    ))}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="p-8 text-center space-y-4">
+                                                                                    <div className="h-10 w-10 bg-muted/20 border border-border/40 flex items-center justify-center mx-auto">
+                                                                                        {searchQuery ? <FileText className="h-5 w-5 text-muted-foreground/20" /> : <Search className="h-5 w-5 text-muted-foreground/20" />}
+                                                                                    </div>
+                                                                                    <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
+                                                                                        {tCommon("no_results") || "No records found"}
+                                                                                    </p>
+                                                                                    {searchQuery && (
+                                                                                        <Button
+                                                                                            size="sm"
+                                                                                            variant="outline"
+                                                                                            className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                                            onClick={async () => {
+                                                                                                const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
+                                                                                                const res = await createGlobalPlayer(searchQuery, null, player.birth_date);
+                                                                                                if (res.success && res.data) {
+                                                                                                    await handleLinkPlayer(player.id, res.data);
+                                                                                                } else {
+                                                                                                    toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+                                                                                                }
+                                                                                            }}
+                                                                                        >
+                                                                                            Create & Sync Global ID
+                                                                                        </Button>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="p-4 border-t border-border/40 bg-muted/5">
+                                                                            {!searchQuery && (
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="ghost"
+                                                                                    className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-primary transition-colors"
+                                                                                    onClick={async () => {
+                                                                                        const { createGlobalPlayer } = await import("@/actions/organizer/tournaments/global-player");
+                                                                                        const res = await createGlobalPlayer(player.name, null, player.birth_date);
+                                                                                        if (res.success && res.data) {
+                                                                                            await handleLinkPlayer(player.id, res.data);
+                                                                                        } else {
+                                                                                            toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    <UserPlus className="h-4 w-4 mr-3 opacity-40" />
+                                                                                    Create Global ID
+                                                                                </Button>
+                                                                            )}
+                                                                        </div>
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            )}
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
+                                                                    >
+                                                                        <MoreVertical className="h-5 w-5" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
+                                                                    <DropdownMenuItem
+                                                                        className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
+                                                                        onClick={() => {
+                                                                            setEditingPlayerId(player.id);
+                                                                            setEditName(player.name || "");
+                                                                            setEditNumber(player.number?.toString() || "");
+                                                                            setEditPosition(player.position || "");
+                                                                            setEditBirthDate(player.birth_date || "");
+                                                                        }}
+                                                                    >
+                                                                        <Edit2 className="mr-3 h-4 w-4" />
+                                                                        {tCommon("edit")}
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
+                                                                        onClick={() => setPlayerToDelete(player.id)}
+                                                                    >
+                                                                        <Trash2 className="mr-3 h-4 w-4" />
+                                                                        {tCommon("delete")}
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
                                                     )}
                                                 </div>
                                             )}
@@ -625,6 +672,17 @@ export function RosterDialog({ teamId, teamName, trigger, readOnly = false }: Ro
                                 ))}
                             </div>
                         )}
+                    </div>
+                </div>
+
+                    <div className={cn("space-y-6", mobileTab !== 'team' && "hidden")}>
+                        <EditTeamForm 
+                            team={team} 
+                            onNameChange={setTeamName} 
+                            isLocked={false} 
+                            context="organizer"
+                            tournamentId={tournamentId}
+                        />
                     </div>
                 </div>
 

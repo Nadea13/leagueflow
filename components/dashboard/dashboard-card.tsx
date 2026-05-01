@@ -23,6 +23,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
     const tSettings = useTranslations("Settings");
     const tTeam = useTranslations("Team");
     const tCommon = useTranslations("Common");
+    const tSports = useTranslations("Sports");
     const locale = useLocale();
 
     if (type === 'tournament') {
@@ -108,6 +109,9 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                                             {tTeam("unassigned_badge")}
                                         </Badge>
                                     )}
+                                </div>
+                                <div className="text-[9px] font-black text-muted-foreground/40 tracking-widest mt-1">
+                                    {tSports(team.sport || 'football')}
                                 </div>
                             </div>
                         </div>

@@ -196,6 +196,30 @@ export async function createGlobalPlayer(
     return { success: true, data: data as GlobalPlayer };
 }
 
+export async function updateGlobalPlayerInfo(
+    globalPlayerId: string,
+    data: { name?: string; date_of_birth?: string | null }
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to update this global player" };
+
+    const { error } = await adminSupabase
+        .from("global_players")
+        .update(data)
+        .eq("id", globalPlayerId);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}
+
 export async function updateGlobalPlayerAthleteTypes(
     globalPlayerId: string,
     athleteTypes: string[]

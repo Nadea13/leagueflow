@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTeam, getPlayers } from "@/actions/manager/team";
-import { SquadManagement } from "@/components/teams/squad-management";
+import { SquadManagement } from "@/components/squads/squad-management";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function RegistrationTeamManagementPage({
@@ -41,9 +41,9 @@ export default async function RegistrationTeamManagementPage({
 
     return (
         <div className="w-full max-w-[1600px] mx-auto">
-            <SquadManagement 
-                team={team} 
-                initialPlayers={initialPlayers} 
+            <SquadManagement
+                team={team}
+                initialPlayers={initialPlayers}
             />
         </div>
     );

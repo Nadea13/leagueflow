@@ -31,21 +31,21 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                 // Update local storage
                 localStorage.setItem('dashboard-mode', 'organizer');
                 // Dispatch event for other components (Navbar/Sidebar)
-                window.dispatchEvent(new StorageEvent('storage', { 
-                    key: 'dashboard-mode', 
-                    newValue: 'organizer' 
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'dashboard-mode',
+                    newValue: 'organizer'
                 }));
-                
+
                 toast({
                     title: isThai ? "ยินดีต้อนรับ ผู้จัดการแข่งขัน!" : "Welcome, Organizer!",
                     description: isThai ? "คุณสมัครเป็นผู้จัดการแข่งขันเรียบร้อยแล้ว" : "You have successfully registered as a tournament organizer.",
                 });
 
                 onOpenChange(false);
-                
+
                 // Navigate immediately to organizer dashboard
                 router.push('/organizer/dashboard');
-                
+
                 // Refresh to update server-side role check if any
                 setTimeout(() => {
                     router.refresh();
@@ -73,9 +73,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
             <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl rounded-2xl">
                 {/* Header with Premium Feel */}
                 <div className="relative bg-primary/10 p-4 md:p-6 border-b border-border/50">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -mr-16 -mt-16 animate-pulse" />
-                    
-                    <DialogHeader className="relative z-10">
+                    <DialogHeader>
                         <DialogTitle className="text-3xl font-black tracking-tighter text-foreground leading-none">
                             {tDash("become_organizer").split(' ')[0]} <span className="text-primary">{tDash("become_organizer").split(' ').slice(1).join(' ')}</span>
                         </DialogTitle>
@@ -84,7 +82,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                         </DialogDescription>
                     </DialogHeader>
                 </div>
-                
+
                 {/* Features List */}
                 <div className="p-4 md:p-6 space-y-2 md:space-y-3">
                     <div className="grid gap-2 md:gap-3">
@@ -101,7 +99,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
                             <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
                                 <Shield className="h-5 w-5 text-primary" />
@@ -115,7 +113,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
                             <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
                                 <Zap className="h-5 w-5 text-primary" />

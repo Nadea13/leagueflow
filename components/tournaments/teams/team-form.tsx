@@ -127,7 +127,7 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
                             <Label className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("team_description") || "Team Description"}</Label>
                             <Textarea
                                 name="description"
-                                placeholder={t("no_description") || "No description"}
+                                placeholder={t("team_description_placeholder")}
                                 className="min-h-[80px] bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm"
                                 disabled={isLimitReached}
                             />

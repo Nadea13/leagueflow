@@ -1,0 +1,300 @@
+'use client';
+
+import React, { useState, useCallback, useEffect } from "react";
+import { Player, Team, SportType, Registration, Tournament } from "@/types/index";
+import { cn } from "@/lib/utils";
+import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Loader2, Trash2, Users, Upload, Download, AlertCircle, Lock, Unlock, ExternalLink, LayoutGrid, ArrowLeft, Plus, Edit2 } from "lucide-react";
+import { Tab } from "@/components/ui/tab";
+import { useTranslations, useLocale } from "next-intl";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { EmptyState } from "@/components/shared/empty-state";
+import { AddPlayerForm } from "@/components/squads/add-player-form";
+import { EditTeamForm } from "@/components/squads/edit-team-form";
+import { SquadList } from "@/components/squads/squad-list";
+
+import { Label } from "@/components/ui/label";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface SquadManagementProps {
+    team: Team & {
+        participations?: { tournament_id: string }[];
+        registrations?: Registration[];
+        is_roster_locked?: boolean;
+        isParticipation?: boolean;
+        tournament?: Tournament;
+        team_id?: string | null;
+    };
+    initialPlayers: Player[];
+}
+
+export function SquadManagement({ team, initialPlayers }: SquadManagementProps) {
+    const t = useTranslations("Roster");
+    const tCommon = useTranslations("Common");
+    const tTeam = useTranslations("Team");
+    const tSports = useTranslations("Sports");
+    const locale = useLocale();
+    const { toast } = useToast();
+
+    const [players, setPlayers] = useState<Player[]>(initialPlayers);
+    const router = useRouter();
+
+    const refreshPlayers = useCallback(async () => {
+        const { getPlayers } = await import("@/actions/manager/team");
+        const res = await getPlayers(team.id);
+        if (res.success && res.data) setPlayers(res.data);
+    }, [team.id]);
+
+    // Team Edit State
+    const [teamName, setTeamName] = useState(team.name);
+    const [teamSport, setTeamSport] = useState<SportType>(team.sport || 'football');
+
+    // Import Roster State
+    const [isImporting, setIsImporting] = useState(false);
+    const [mobileTab, setMobileTab] = useState<'roster' | 'team'>('roster');
+
+    // Synergy State
+    const [isLocked, setIsLocked] = useState(team.is_roster_locked || false);
+    const [isLocking, setIsLocking] = useState(false);
+
+    // Deadline check
+    const documentDeadline = team.tournament?.document_deadline;
+    const isDeadlinePassed = documentDeadline ? new Date() > new Date(documentDeadline) : false;
+    const effectivelyLocked = isLocked || isDeadlinePassed;
+
+    // Delete confirmation state
+    const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
+
+    const handleImportRoster = async (sourceId: string) => {
+        setIsImporting(true);
+        const result = await importRoster(team.id, sourceId);
+        setIsImporting(false);
+
+        if (result.success) {
+            toast({
+                title: tCommon("success"),
+                description: "Roster automatically imported from My Team"
+            });
+            // Refresh players list
+            const res = await getPlayers(team.id);
+            if (res.success && res.data) setPlayers(res.data);
+        }
+    };
+
+    // Auto-import roster if participation is empty and has linked team
+    useEffect(() => {
+        if (team.isParticipation && players.length === 0 && team.team_id && !isImporting) {
+            handleImportRoster(team.team_id);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [team.isParticipation, team.team_id]);
+
+    const handleToggleLock = async () => {
+        setIsLocking(true);
+        const result = await toggleRosterLock(team.id, !isLocked);
+        setIsLocking(false);
+
+        if (result.success) {
+            setIsLocked(!isLocked);
+            toast({
+                title: tCommon("success"),
+                description: !isLocked ? "Roster locked. Only Organizer can unlock now." : "Roster unlocked."
+            });
+        } else {
+            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        }
+    };
+
+
+    const confirmDeletePlayer = async () => {
+        if (!playerToDelete) return;
+        const playerId = playerToDelete;
+        setPlayerToDelete(null);
+
+        const result = await deletePlayer(playerId, team.id);
+        if (result.success) {
+            toast({ title: tCommon("success"), description: t("deleted_success") });
+            setPlayers(players.filter(p => p.id !== playerId));
+        } else {
+            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        }
+    };
+
+    return (
+        <div className="space-y-4 md:space-y-6">
+            {/* Top Navigation & Action Bar */}
+            <div className="flex md:items-start justify-between gap-4 md:gap-6">
+                <div className="flex items-start gap-4 md:gap-6">
+                    <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                        <Link href={team.isParticipation ? "/manager/my-registrations" : "/manager/my-teams"}>
+                            <ArrowLeft className="h-5 w-5" />
+                        </Link>
+                    </Button>
+                    <div className="space-y-2 md:space-y-3">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <Badge variant="default" className="text-[10px] font-black tracking-wider">
+                                {tSports(team.sport)}
+                            </Badge>
+                            <span className="text-[10px] font-black tracking-wider text-primary/60">
+                                {players.length} {tCommon("players") || "Players"}
+                            </span>
+                            {isLocked && (
+                                <div>
+                                    <Badge variant="destructive" className="text-[10px] font-black tracking-wider">
+                                        <Lock className="h-3 w-3 mr-1.5" />
+                                        {tCommon("secured")}
+                                    </Badge>
+                                </div>
+                            )}
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none text-foreground flex items-baseline gap-3">
+                            {teamName}
+                        </h1>
+                    </div>
+                </div>
+                <div className="flex items-start gap-2">
+                    {team.participations && team.participations.length > 0 && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="rounded-none font-bold tracking-wider text-[10px] h-10 w-10 md:w-auto p-0 md:px-4 border-2"
+                        >
+                            <Link href={`/${team.participations[0].tournament_id}`}>
+                                <ExternalLink className="h-4 w-4 md:mr-2" />
+                                <span className="hidden md:inline">{tCommon("view_tournament")}</span>
+                            </Link>
+                        </Button>
+                    )}
+                    <Button
+                        variant={effectivelyLocked ? "outline" : "default"}
+                        size="sm"
+                        className={cn(
+                            "rounded-none font-bold tracking-wider text-sm h-10 transition-all",
+                            !effectivelyLocked ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-2",
+                            "w-10 md:w-auto p-0 md:px-4"
+                        )}
+                        onClick={handleToggleLock}
+                        disabled={isLocking || isDeadlinePassed}
+                        title={effectivelyLocked ? t("unlock_roster") : t("submit_lock")}
+                    >
+                        {isLocking ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : effectivelyLocked ? (
+                            <Unlock className="h-4 w-4" />
+                        ) : (
+                            <Lock className="h-4 w-4" />
+                        )}
+                        <span className="hidden md:inline ml-2">
+                            {effectivelyLocked ? t("unlock_roster") : t("submit_lock")}
+                        </span>
+                    </Button>
+                </div>
+            </div>
+
+            {isDeadlinePassed && (
+                <div className="bg-red-50 border border-red-200 p-4 rounded-none flex items-start gap-3 text-red-800 animate-in fade-in slide-in-from-top-2 mb-6">
+                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                    <div>
+                        <h4 className="font-bold text-sm tracking-tight">{t("deadline_passed")}</h4>
+                        <p className="text-xs opacity-90 mt-1">
+                            {t("deadline_locked_desc", { date: new Date(documentDeadline!).toLocaleString() })}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Mobile Tab Switcher */}
+            <div className="lg:hidden mb-6">
+                <Tab
+                    value={mobileTab}
+                    onChange={(val) => setMobileTab(val as 'roster' | 'team')}
+                    className="w-full"
+                    fullWidth={true}
+                    options={[
+                        { label: tCommon("players"), value: 'roster', icon: Users },
+                        { label: tCommon("team"), value: 'team', icon: LayoutGrid }
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+                <div className={cn(
+                    "flex-1 w-full min-w-0 space-y-6",
+                    mobileTab !== 'roster' && "hidden lg:block"
+                )}>
+                    <AddPlayerForm
+                        teamId={team.id}
+                        onSuccess={refreshPlayers}
+                        effectivelyLocked={effectivelyLocked}
+                    />
+                    <SquadList
+                        players={players}
+                        team={team}
+                        effectivelyLocked={effectivelyLocked}
+                        refreshPlayers={refreshPlayers}
+                        onDeletePlayer={setPlayerToDelete}
+                        t={t}
+                        tCommon={tCommon}
+                    />
+                </div>
+
+                <div className={cn(
+                    "w-full lg:w-[380px] shrink-0 space-y-6 lg:sticky lg:top-6",
+                    mobileTab !== 'team' && "hidden lg:block"
+                )}>
+                    <EditTeamForm
+                        team={team}
+                        onNameChange={setTeamName}
+                        isLocked={effectivelyLocked}
+                    />
+                </div>
+            </div>
+
+            <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
+                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
+                            <Trash2 className="h-5 w-5 text-destructive" />
+                            {t("remove_player") || "Remove Player"}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                            {t("delete_confirm")}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                            {tCommon("cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                confirmDeletePlayer();
+                            }}
+                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                        >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {tCommon("delete") || "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    );
+}

@@ -6,7 +6,6 @@ import { Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, ArrowLeft
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Tab } from "@/components/ui/tab";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -310,10 +309,8 @@ export function TournamentContent({
                 ]}
             />
 
-            <Tabs value={currentTab} className="w-full">
-
-                {/* Overview Tab */}
-                <TabsContent value="overview" className="space-y-4 md:space-y-6">
+            {currentTab === 'overview' && (
+                <div className="space-y-4 md:space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Right Column: Sidebar (Actions & Announcements) - First in DOM for mobile top priority */}
                         <div className="lg:col-span-1 space-y-4 md:space-y-6 lg:order-2">
@@ -459,10 +456,12 @@ export function TournamentContent({
                             <BannedPlayers bannedPlayers={bannedPlayers} />
                         </div>
                     </div>
-                </TabsContent>
+                </div>
+            )}
 
-                {/* Teams Tab */}
-                <TabsContent value="teams" className="space-y-4 md:space-y-6 outline-none">
+            {/* Teams Tab */}
+            {currentTab === 'teams' && (
+                <div className="space-y-4 md:space-y-6 outline-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Content: Registrations & Teams List */}
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
@@ -578,10 +577,12 @@ export function TournamentContent({
                             </div>
                         </div>
                     </div>
-                </TabsContent>
+                </div>
+            )}
 
-                {/* Fixtures Tab */}
-                <TabsContent value="fixtures" className="space-y-4 md:space-y-6 outline-none">
+            {/* Fixtures Tab */}
+            {currentTab === 'fixtures' && (
+                <div className="space-y-4 md:space-y-6 outline-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Schedule Column */}
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
@@ -656,11 +657,12 @@ export function TournamentContent({
                             </div>
                         </div>
                     </div>
-                </TabsContent>
+                </div>
+            )}
 
-                {/* Settings Tab */}
-                {userRole === 'admin' && (
-                    <TabsContent value="settings" className="outline-none focus-visible:ring-0">
+            {/* Settings Tab */}
+            {(userRole === 'admin' && currentTab === 'settings') && (
+                <div className="outline-none focus-visible:ring-0">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                             {/* Main Settings Column */}
                             <div className="lg:col-span-2">
@@ -717,9 +719,8 @@ export function TournamentContent({
                                 </div>
                             </div>
                         </div>
-                    </TabsContent>
-                )}
-            </Tabs>
+                    </div>
+            )}
         </div>
     );
 }

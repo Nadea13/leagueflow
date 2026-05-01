@@ -72,7 +72,8 @@
         "full": "เต็มแล้ว",
         "closed": "ปิดรับสมัคร",
         "generate_qr": "สร้าง QR Code",
-        "browse_tournaments_desc": "เริ่มต้นการเดินทางแข่งขันของคุณวันนี้"
+        "browse_tournaments_desc": "เริ่มต้นการเดินทางแข่งขันของคุณวันนี้",
+        "team": "ทีม"
     },
     "Dashboard": {
         "title": "แดชบอร์ด",
@@ -432,6 +433,7 @@
         "add_team_button": "เพิ่มทีม",
         "no_description": "ไม่มีคำอธิบาย",
         "team_description": "รายละเอียดทีม",
+        "team_description_placeholder": "บอกรายละเอียดเกี่ยวกับทีมของคุณ...",
         "updated_successfully": "อัปเดตข้อมูลทีมเรียบร้อยแล้ว",
         "created_successfully": "สร้างทีมเรียบร้อยแล้ว"
     },
@@ -773,7 +775,12 @@
         "importing": "กำลังนำเข้า...",
         "profile_management": "การจัดการโปรไฟล์",
         "global_identity_for": "ข้อมูลตัวตนส่วนกลางของ",
-        "global_profile_photo": "รูปประจำตัวระดับสากล"
+        "global_profile_photo": "รูปประจำตัวระดับสากล",
+        "no_identity_found": "ไม่พบข้อมูลตัวตน",
+        "roster_reset_success": "รีเซ็ตรายชื่อเรียบร้อยแล้ว",
+        "reset_roster": "รีเซ็ตรายชื่อ",
+        "reset_roster_desc": "การดำเนินการนี้จะลบผู้เล่นทั้งหมดออกจากทีมของคุณ การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+        "confirm_reset": "ยืนยันการรีเซ็ต"
     },
     "Landing": {
         "nav_features": "ฟีเจอร์",
