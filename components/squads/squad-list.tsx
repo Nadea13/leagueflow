@@ -202,23 +202,29 @@ export function SquadList({
                                     }
                                 }}
                             >
-                                <div className="p-2 md:p-3 flex flex-col md:flex-row md:items-center gap-6">
+                                <div className={cn(
+                                    "p-2 md:p-3 flex gap-3 md:gap-6",
+                                    editingPlayerId === player.id ? "flex-col md:flex-row" : "flex-row items-center"
+                                )}>
                                     {/* Number & Basic Info */}
-                                        <div className="flex flex-col md:flex-row md:items-end gap-3 flex-1 min-w-0">
+                                        <div className={cn(
+                                            "flex flex-1 min-w-0 gap-3",
+                                            editingPlayerId === player.id ? "flex-col md:flex-row md:items-end" : "flex-row items-center"
+                                        )}>
                                             {editingPlayerId === player.id ? (
                                                 <>
-                                                    <div className="space-y-1 w-[60px] shrink-0">
+                                                    <div className="space-y-1 w-full md:w-[60px] shrink-0">
                                                         <Label className="text-[10px] font-black tracking-widest text-primary">{t("number")}</Label>
                                                         <Input
                                                             value={editNumber}
                                                             onChange={(e) => setEditNumber(e.target.value)}
-                                                            className="w-full text-center bg-transparent font-black text-sm focus-visible:ring-0 p-0 rounded-none"
+                                                            className="w-full text-left md:text-center bg-transparent font-black text-sm focus-visible:ring-0 p-0 rounded-none"
                                                             placeholder="#"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
-
-                                                    <div className="space-y-1 flex-1 min-w-[150px]">
+ 
+                                                    <div className="space-y-1 w-full md:flex-1 md:min-w-[150px]">
                                                         <Label className="text-[10px] font-black tracking-widest text-primary">{t("player_name")}</Label>
                                                         <Input
                                                             value={editName}
@@ -227,8 +233,8 @@ export function SquadList({
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
-
-                                                    <div className="space-y-1 w-[100px] shrink-0">
+ 
+                                                    <div className="space-y-1 w-full md:w-[100px] shrink-0">
                                                         <Label className="text-[10px] font-black tracking-widest text-primary">{t("position")}</Label>
                                                         <Select value={editPosition} onValueChange={setEditPosition}>
                                                             <SelectTrigger 
@@ -245,14 +251,14 @@ export function SquadList({
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
-
-                                                    <div className="space-y-1 w-[130px] shrink-0">
+ 
+                                                    <div className="space-y-1 w-full md:w-[130px] shrink-0">
                                                         <Label className="text-[10px] font-black tracking-widest text-primary">{t("birth_date")}</Label>
                                                         <Input
                                                             value={editBirthDate}
                                                             onChange={(e) => setEditBirthDate(e.target.value)}
                                                             type="date"
-                                                            className="text-sm font-bold bg-transparent focus-visible:ring-0 p-0 rounded-none"
+                                                            className="text-sm font-bold bg-transparent focus-visible:ring-0 p-0 rounded-none w-full border-b border-border/40 md:border-none h-10 md:h-auto"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
@@ -266,26 +272,23 @@ export function SquadList({
                                                         </span>
                                                     </div>
 
-                                                    <div className="min-w-0 flex-1 space-y-1.5 py-1">
-                                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                                            <h4 className="text-base font-black tracking-tight text-foreground truncate">
-                                                                {player.name}
-                                                            </h4>
-                                                            <div className="flex items-center gap-2">
-                                                                <Badge variant="outline" className="rounded-none border-primary/20 text-primary text-[9px] font-black px-1.5 py-0">
-                                                                    {player.position || "N/A"}
-                                                                </Badge>
-                                                                {player.global_player_id && (
-                                                                    <Badge className="rounded-none bg-primary text-black text-[8px] font-black px-1.5 py-0">
-                                                                        <Link2 className="h-2.5 w-2.5 mr-1" />
-                                                                        VERIFIED
-                                                                    </Badge>
-                                                                )}
-                                                                <span className="text-[10px] font-bold tracking-widest text-muted-foreground/40 font-mono ml-1">
-                                                                    {formatDate(player.birth_date)}
-                                                                </span>
-                                                            </div>
+                                                    <div className="min-w-0 flex-1 py-1 flex flex-col gap-0.5">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className="rounded-none border-primary/20 text-primary text-[8px] font-black px-1 py-0">
+                                                                {player.position || "N/A"}
+                                                            </Badge>
+                                                            {player.global_player_id && (
+                                                                <div className="rounded-none text-primary">
+                                                                    <Link2 className="h-3 w-3" />
+                                                                </div>
+                                                            )}
+                                                            <span className="text-[9px] font-bold tracking-widest text-muted-foreground/40 font-mono">
+                                                                {formatDate(player.birth_date)}
+                                                            </span>
                                                         </div>
+                                                        <h4 className="text-base font-black tracking-tight text-foreground truncate">
+                                                            {player.name}
+                                                        </h4>
                                                     </div>
                                                 </>
                                             )}
