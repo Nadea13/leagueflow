@@ -85,7 +85,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
     const team = data as Team & { tournament?: { name: string } | null };
     return (
         <Link href={`/${mode === 'organizer' ? 'organizer/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
-            <Card className="flex flex-col h-full bg-card border border-border transition-all hover:border-primary/50 overflow-hidden relative shadow-lg cursor-pointer">
+            <Card className="flex flex-col h-full bg-card border transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                 <Shield className="absolute right-4 md:right-6 top-4 md:top-6 z-20 h-4 w-4 text-primary" />
                 <CardHeader className="pt-4 md:pt-6 relative z-10">
