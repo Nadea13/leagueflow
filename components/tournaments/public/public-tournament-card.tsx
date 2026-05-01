@@ -29,37 +29,29 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
 
     return (
         <Link href={isManager ? `/manager/tournaments/${tournament.id}` : `/${tournament.id}`} className="block h-full group">
-            <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-5 border border-border transition-all hover:border-primary/50 overflow-hidden relative shadow-lg cursor-pointer">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+            <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-6 border transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                {isPro && (
-                    <div className="absolute right-6 z-20">
-                        <div className="bg-primary/10 text-primary text-[8px] font-black px-2 py-0.5 tracking-[0.2em] border border-primary/20 backdrop-blur-md">
-                            {t("pro")}
-                        </div>
-                    </div>
-                )}
-                <CardHeader className="relative z-10">
+                <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-primary" />
+                <CardHeader className="relative z-10 pb-2">
                     <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                            {tournament.status && tournament.status !== 'active' && (
-                                <div className={cn("text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none",
-                                    tournament.status === 'completed' ? "bg-muted text-muted-foreground/40" : "bg-primary/10 text-primary border border-primary/20"
-                                )}>
-                                    {tSettings(tournament.status as Parameters<typeof tSettings>[0])}
-                                </div>
-                            )}
-                            {isClosed && (
-                                <div className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none bg-red-500/10 text-red-600 border border-red-500/20 ml-2">
-                                    {isFull ? (tSettings("full") || "FULL") : (tSettings("closed") || "CLOSED")}
-                                </div>
-                            )}
-                            <div className="flex items-center gap-1.5 opacity-60">
-                                <Trophy className="h-3 w-3 text-primary" />
-                                <span className="text-[9px] font-black tracking-tighter text-muted-foreground/80">{tournament.format || 'League'}</span>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                {tournament.status && (
+                                    <div className={cn(
+                                        "text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none",
+                                        tournament.status === 'completed' ? "bg-muted text-muted-foreground/40" : "bg-primary/10 text-primary border border-primary/20"
+                                    )}>
+                                        {tSettings(tournament.status as Parameters<typeof tSettings>[0])}
+                                    </div>
+                                )}
+                                {isClosed && (
+                                    <div className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none bg-red-500/10 text-red-600 border border-red-500/20">
+                                        {isFull ? (tSettings("full") || "FULL") : (tSettings("closed") || "CLOSED")}
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        <CardTitle className="text-2xl font-black leading-none tracking-tighter group-hover:text-primary transition-colors truncate">
+                        <CardTitle className="text-lg md:text-xl font-black leading-tight tracking-tighter group-hover:text-primary transition-colors truncate">
                             {tournament.name}
                         </CardTitle>
                     </div>
@@ -67,7 +59,7 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
 
                 <CardContent className="relative z-10 px-6">
                     <div className="flex flex-col gap-4">
-                        <div className="grid grid-cols-2 gap-4 border-t border-border/40 pt-4">
+                        <div className="grid grid-cols-2 gap-4 border-t group-hover:border-primary/40 pt-4">
                             <div className="flex flex-col">
                                 <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{t("kick_off")}</span>
                                 <div className="flex items-center gap-2">
