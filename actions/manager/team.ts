@@ -106,6 +106,8 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
         const logoFile = formData.get("logo") as File;
         const sport = (formData.get("sport") as string) || "football";
         const description = formData.get("description") as string;
+        const contact_name = formData.get("contact_name") as string;
+        const contact_phone = formData.get("contact_phone") as string;
 
         if (!name) {
             return { success: false, error: "Team name is required" };
@@ -146,6 +148,8 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
                 logo_url: logoUrl,
                 sport,
                 description: description || null,
+                contact_name: contact_name || null,
+                contact_phone: contact_phone || null,
                 user_id: user.id,
                 created_at: new Date().toISOString(),
             });
@@ -291,6 +295,8 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
         const logoFile = formData.get("logo") as File;
         const sport = formData.get("sport") as string;
         const description = formData.get("description") as string;
+        const contact_name = formData.get("contact_name") as string;
+        const contact_phone = formData.get("contact_phone") as string;
         const existingLogoUrl = formData.get("existing_logo_url") as string;
 
         if (!name) {
@@ -330,6 +336,8 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
                 logo_url: logoUrl,
                 sport: sport || undefined,
                 description: description || null,
+                contact_name: contact_name || null,
+                contact_phone: contact_phone || null,
             })
             .eq("id", teamId)
             .eq("user_id", user.id);

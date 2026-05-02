@@ -63,19 +63,10 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
     }
 
     return (
-        <div className="bg-card border border-border/10 shadow-2xl rounded-none overflow-hidden max-w-sm mx-auto">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-primary/10 to-transparent px-6 py-4 border-b border-border/10 relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                <h3 className="text-sm font-black tracking-widest text-primary flex items-center gap-2">
-                    <Smartphone className="w-4 h-4" />
-                    {t("scan_to_pay")}
-                </h3>
-            </div>
-
-            <div className="p-8 flex flex-col items-center gap-8">
+        <div className="overflow-hidden space-y-2 md:space-y-3">
+            <div className="flex flex-col items-center gap-2 md:gap-3">
                 {/* QR Code */}
-                <div className="p-2 bg-foreground rounded-none shadow-inner border border-border/50 relative group">
+                <div className="p-2 bg-white border relative group">
                     <Image
                         src={qrCodeUrl}
                         alt="PromptPay QR Code"
@@ -96,49 +87,15 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
                 </div>
 
                 {/* Amount Section */}
-                <div className="text-center space-y-2">
-                    <p className="text-[10px] font-black  tracking-widest text-muted-foreground/60">{t("amount")}</p>
-                    <p className="text-3xl font-black  tracking-tighter text-foreground leading-none">
+                <div className="text-center space-y-2 md:space-y-3">
+                    <p className="text-xs font-black text-muted-foreground/60">{t("amount")}</p>
+                    <p className="text-3xl md:text-5xl font-black tracking-tighter text-foreground leading-none">
                         {amount.toLocaleString("th-TH", {
                             style: "currency",
                             currency: "THB",
                         })}
                     </p>
                 </div>
-            </div>
-
-            {/* Account Details Footer */}
-            <div className="p-6 bg-muted/30 border-t border-border/10 space-y-4">
-                <div className="flex flex-col gap-1">
-                    <p className="text-[10px] font-bold text-muted-foreground/40 leading-none">
-                        {t("account_name_label") || "Account Name"}
-                    </p>
-                    <p className="text-sm font-black  tracking-tight text-foreground">
-                        {accountName || "LeagueFlow"}
-                    </p>
-                </div>
-
-                <button
-                    onClick={copyToClipboard}
-                    className="w-full flex items-center justify-between p-3 bg-background border border-border/10 hover:border-primary/40 hover:bg-primary/[0.02] transition-all group"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                            <Smartphone className="w-4 h-4" />
-                        </div>
-                        <div className="text-left">
-                            <p className="text-[10px] font-bold text-muted-foreground/40 leading-none mb-1">
-                                PromptPay ID
-                            </p>
-                            <p className="text-sm font-mono font-bold text-foreground">
-                                {phoneNumber}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </div>
-                </button>
             </div>
         </div>
     );

@@ -20,6 +20,8 @@ export async function addTeam(
     const name = formData.get("name") as string;
     const sport = (formData.get("sport") as string) || 'football';
     const description = formData.get("description") as string;
+    const contact_name = formData.get("contact_name") as string;
+    const contact_phone = formData.get("contact_phone") as string;
     const logoFile = formData.get("logo") as File;
     const logoUrlInput = formData.get("logo_url") as string;
 
@@ -93,6 +95,8 @@ export async function addTeam(
         name,
         sport,
         description: description || null,
+        contact_name: contact_name || null,
+        contact_phone: contact_phone || null,
         logo_url,
         created_at: new Date().toISOString(),
     }).select().single();
@@ -165,6 +169,8 @@ export async function updateTeam(
     const name = formData.get("name") as string;
     const sport = formData.get("sport") as string;
     const description = formData.get("description") as string;
+    const contact_name = formData.get("contact_name") as string;
+    const contact_phone = formData.get("contact_phone") as string;
     const logoFile = formData.get("logo") as File;
     const existingLogoUrl = formData.get("existing_logo_url") as string;
 
@@ -200,6 +206,8 @@ export async function updateTeam(
             name,
             sport: sport || undefined,
             description: description || null,
+            contact_name: contact_name || null,
+            contact_phone: contact_phone || null,
             logo_url: logo_url || null
         })
         .eq("id", teamId);

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar, MapPin, AlertCircle, CheckCircle2, Users } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/shared/empty-state";
 import { getMyTeams } from "@/actions/manager/team";
 import { Team } from "@/types/index";
 
@@ -91,20 +92,14 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                 </div>
 
                 {!isRegistrationOpen ? (
-                    <Card className="max-w-2xl mx-auto text-center border-yellow-200 bg-yellow-50/50 shadow-lg">
-                        <CardHeader>
-                            <div className="mx-auto w-12 h-12 bg-yellow-100 rounded-none flex items-center justify-center mb-4">
-                                <AlertCircle className="w-6 h-6 text-yellow-600" />
-                            </div>
-                            <CardTitle className="text-xl text-yellow-800">{t("registration_closed_title")}</CardTitle>
-                            <CardDescription className="text-yellow-700 font-medium">
-                                {t("registration_closed_desc")}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-yellow-600">{t("contact_organizer")}</p>
-                        </CardContent>
-                    </Card>
+                    <EmptyState
+                        title={t("registration_closed_title")}
+                        description={t("registration_closed_desc")}
+                        icon={AlertCircle}
+                        action={
+                            <p className="text-sm font-bold text-primary/60 tracking-widest uppercase">{t("contact_organizer")}</p>
+                        }
+                    />
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         {/* Tournament Info Sidebar */}

@@ -163,7 +163,7 @@ export function SquadList({
     };
 
     return (
-        <div className="space-y-4 md:space-y-6 border p-4 md:p-6">
+        <div className="bg-card space-y-4 md:space-y-6 border p-4 md:p-6">
             <div className="flex md:items-center justify-between gap-4 mb-2">
                 <div className="flex items-center gap-3">
                     <Users className="h-6 w-6 text-primary" />

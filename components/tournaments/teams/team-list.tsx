@@ -97,6 +97,8 @@ function TeamItem({
     const [isLoading, setIsLoading] = useState(false);
     const [isGroupLoading, setIsGroupLoading] = useState(false);
     const [description, setDescription] = useState(team.description || "");
+    const [contactName, setContactName] = useState(team.contact_name || "");
+    const [contactPhone, setContactPhone] = useState(team.contact_phone || "");
  
 
     const handleSave = async () => {
@@ -104,6 +106,8 @@ function TeamItem({
         const formData = new FormData();
         formData.append("name", name);
         formData.append("description", description);
+        formData.append("contact_name", contactName);
+        formData.append("contact_phone", contactPhone);
         formData.append("existing_logo_url", existingLogoUrl);
         if (logoFile) {
             formData.append("logo", logoFile);
@@ -273,6 +277,29 @@ function TeamItem({
                                         onChange={(e) => setDescription(e.target.value)}
                                         placeholder={t("team_description_placeholder")}
                                     />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="contact_name" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("contact_name") || "Contact Name"}</Label>
+                                        <Input
+                                            id="contact_name"
+                                            value={contactName}
+                                            className="bg-foreground/5 border-border/10 rounded-none font-black tracking-tighter h-12 focus-visible:ring-primary/20"
+                                            onChange={(e) => setContactName(e.target.value)}
+                                            placeholder="Manager Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="contact_phone" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("contact_phone") || "Phone Number"}</Label>
+                                        <Input
+                                            id="contact_phone"
+                                            value={contactPhone}
+                                            className="bg-foreground/5 border-border/10 rounded-none font-black tracking-tighter h-12 focus-visible:ring-primary/20"
+                                            onChange={(e) => setContactPhone(e.target.value)}
+                                            placeholder="08x-xxx-xxxx"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <DialogFooter className="flex sm:justify-between w-full gap-4">

@@ -44,6 +44,8 @@ export function EditTeamForm({
 
     const [teamName, setTeamName] = useState(team.name);
     const [teamDescription, setTeamDescription] = useState(team.description || "");
+    const [contactName, setContactName] = useState(team.contact_name || "");
+    const [contactPhone, setContactPhone] = useState(team.contact_phone || "");
     const [teamSport, setTeamSport] = useState<SportType>((team as Team).sport || 'football');
     const [previewUrl, setPreviewUrl] = useState<string | null>(team.logo_url || null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -79,6 +81,8 @@ export function EditTeamForm({
         const formData = new FormData();
         formData.append("name", teamName);
         formData.append("description", teamDescription);
+        formData.append("contact_name", contactName);
+        formData.append("contact_phone", contactPhone);
         formData.append("sport", teamSport);
         formData.append("tournament_id", "");
         formData.append("existing_logo_url", previewUrl || "");
@@ -242,6 +246,31 @@ export function EditTeamForm({
                             placeholder={tTeam("team_description_placeholder")}
                             className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
                         />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label className="text-xs font-black tracking-widest text-primary">
+                                {tTeam("contact_name") || "Contact Name"}
+                            </Label>
+                            <Input
+                                value={contactName}
+                                onChange={e => setContactName(e.target.value)}
+                                placeholder="Manager Name"
+                                className="bg-transparent text-foreground focus-visible:ring-0 h-12 text-sm font-bold"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-xs font-black tracking-widest text-primary">
+                                {tTeam("contact_phone") || "Phone Number"}
+                            </Label>
+                            <Input
+                                value={contactPhone}
+                                onChange={e => setContactPhone(e.target.value)}
+                                placeholder="08x-xxx-xxxx"
+                                className="bg-transparent text-foreground focus-visible:ring-0 h-12 text-sm font-bold"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2 md:space-y-3">

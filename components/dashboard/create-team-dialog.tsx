@@ -177,6 +177,31 @@ export function CreateTeamDialog() {
                         />
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="contact_name" className="text-xs font-black tracking-widest text-primary">
+                                {t("contact_name") || "Contact Name"}
+                            </Label>
+                            <Input
+                                id="contact_name"
+                                name="contact_name"
+                                placeholder={t("contact_name_placeholder") || "Manager Name"}
+                                className="bg-transparent text-foreground focus-visible:ring-0"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="contact_phone" className="text-xs font-black tracking-widest text-primary">
+                                {t("contact_phone") || "Phone Number"}
+                            </Label>
+                            <Input
+                                id="contact_phone"
+                                name="contact_phone"
+                                placeholder={t("contact_phone_placeholder") || "08x-xxx-xxxx"}
+                                className="bg-transparent text-foreground focus-visible:ring-0"
+                            />
+                        </div>
+                    </div>
+
                     {state?.error && (
                         <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 border-l-4 border-red-500">
                             {state.error}

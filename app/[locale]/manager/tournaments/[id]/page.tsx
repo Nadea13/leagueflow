@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
-import { Trophy, Calendar, Users, Info, ArrowLeft, Shield, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Trophy, Calendar, Users, Info, ArrowLeft, Shield, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { RegistrationForm } from "@/components/registrations/registration-form";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/date";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import { format } from "date-fns";
 
@@ -69,64 +70,121 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
     };
 
     return (
-        <div className="flex flex-col gap-8 max-w-5xl mx-auto">
-            {/* Header / Breadcrumb */}
-            <div className="flex flex-col gap-4">
-                <Link href="/manager/tournaments" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors w-fit">
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Tournaments
-                </Link>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{tournament.name}</h1>
-                        <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className="capitalize">{tournament.format}</Badge>
-                            <Badge variant={tournament.status === 'active' ? 'default' : 'default'} className="capitalize">
-                                {tournament.status || 'draft'}
+        <div className="w-full max-w-[1600px] mx-auto space-y-2 md:space-y-6">
+            {/* Top Navigation & Header */}
+            <div className="flex md:items-start justify-between gap-4 md:gap-6">
+                <div className="flex items-start gap-4 md:gap-6">
+                    <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                        <Link href="/manager/tournaments">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Link>
+                    </Button>
+                    <div className="space-y-2 md:space-y-3">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <Badge variant="default" className="text-[10px] font-black tracking-wider">
+                                {tournament.format}
                             </Badge>
+                            <span className="text-[10px] font-black tracking-wider text-primary/60">
+                                {tournament.status}
+                            </span>
                             {tournament.registration_fee > 0 ? (
-                                <Badge variant="default" className="bg-primary/10 text-primary border-primary/20">
+                                <Badge variant="default" className="bg-primary/10 text-primary border-primary text-[10px] font-black tracking-wider">
                                     ฿{Number(tournament.registration_fee).toLocaleString()}
                                 </Badge>
                             ) : (
-                                <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/20">
-                                    Free
+                                <Badge variant="default" className="bg-primary/10 text-primary border-primary text-[10px] font-black tracking-wider">
+                                    FREE
                                 </Badge>
                             )}
                         </div>
+                        <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none text-foreground">
+                            {tournament.name}
+                        </h1>
                     </div>
+                </div>
+                <div className="hidden md:flex items-start gap-2">
+                    <Button variant="outline" size="sm" asChild className="rounded-none font-bold tracking-wider text-[10px] h-10 border-2">
+                        <Link href={`/${tournament.id}`} target="_blank">
+                            <Info className="h-4 w-4 mr-2" />
+                            {tCommon("preview")}
+                        </Link>
+                    </Button>
                 </div>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
-                {/* Main Content Area */}
-                <div className="lg:col-span-2 space-y-8">
+            <div className="flex flex-col lg:flex-row gap-2 md:gap-3 items-start">
+                {/* Info Sidebar */}
+                <div className="bg-card w-full lg:w-[380px] shrink-0 space-y-6 lg:sticky lg:top-6 border p-4 md:p-6 order-1 lg:order-2">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Users className="h-6 w-6 text-primary" />
+                            <h3 className="text-2xl font-black tracking-tighter text-foreground">
+                                {tCommon("overview")}
+                            </h3>                        </div>
+                        <div className="relative overflow-hidden">
+                            <div className="space-y-6 relative z-10">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center text-xs font-black tracking-wider border-b pb-3">
+                                        <span className="text-muted-foreground/60 flex items-center gap-2">
+                                            <Trophy className="h-4 w-4" /> {tCommon("format")}
+                                        </span>
+                                        <span className="text-foreground">{tSettings(tournament.format)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs font-black tracking-wider border-b pb-3">
+                                        <span className="text-muted-foreground/60 flex items-center gap-2">
+                                            <Users className="h-4 w-4" /> {tCommon("teams")}
+                                        </span>
+                                        <span className="text-foreground">{tournament.max_teams}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs font-black tracking-wider border-b pb-3">
+                                        <span className="text-muted-foreground/60 flex items-center gap-2">
+                                            <Calendar className="h-4 w-4" /> {tCommon("date")}
+                                        </span>
+                                        <span className="text-foreground">
+                                            {tournament.start_date ? formatDate(tournament.start_date, "MMM d, yyyy", locale) : "TBD"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {tournament.description && (
+                                    <div className="space-y-3 pt-2">
+                                        <div className="flex items-center gap-2 text-xs font-black tracking-wider">
+                                            <span className="text-xs font-black tracking-widest text-primary">
+                                            {tCommon("description")}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs leading-relaxed text-muted-foreground/80 tracking-tight whitespace-pre-wrap">
+                                            {tournament.description}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 w-full min-w-0 space-y-6 order-2 lg:order-1">
                     {/* Already Registered Teams */}
                     {userRegistrations && userRegistrations.length > 0 && (
-                        <Card className="rounded-none shadow-sm border-2 border-green-500/10">
-                            <CardHeader className="bg-green-500/5 border-b">
-                                <CardTitle className="flex items-center gap-2 text-green-700">
-                                    <CheckCircle className="h-5 w-5" />
-                                    {t("registered_teams") || "Your Registered Teams"}
-                                </CardTitle>
-                                <CardDescription>
-                                    {t("my_registrations_desc") || "Track your registration status for this tournament."}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <div className="divide-y">
-                                    {userRegistrations.map((reg) => (
-                                        <div key={reg.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 gap-4">
+                        <div className="space-y-2 md:space-y-3">
+                            <div className="flex items-center gap-4">
+                                <CheckCircle className="h-4 w-4 text-primary" />
+                                <h2 className="text-sm font-black tracking-widest text-foreground">{t("registered_teams")}</h2>
+                            </div>
+                            <div className="grid gap-3">
+                                {userRegistrations.map((reg) => (
+                                    <Card key={reg.id} className="rounded-none border transition-all hover:border-primary/30 relative overflow-hidden group">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                                        <div className="p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="font-bold">{reg.team_name}</h3>
-                                                    <Badge variant={getStatusVariant(reg.payment_status)} className="gap-1.5 px-2 py-0.5 text-xs font-semibold">
-                                                        {getStatusIcon(reg.payment_status)}
+                                                <div className="flex items-center gap-3">
+                                                    <h3 className="text-lg font-black tracking-tight">{reg.team_name}</h3>
+                                                    <Badge variant={getStatusVariant(reg.payment_status)} className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none">
                                                         {reg.payment_status}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                                    <span className="flex items-center gap-1">
+                                                <div className="flex items-center gap-4 text-[10px] font-bold text-muted-foreground/60 tracking-wider">
+                                                    <span className="flex items-center gap-1.5">
                                                         <Clock className="h-3 w-3" />
                                                         {reg.created_at ? format(new Date(reg.created_at), "PPP p") : "Unknown Date"}
                                                     </span>
@@ -134,122 +192,36 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {reg.tournament_team_id && (
-                                                    <Button variant="default" size="sm" asChild className="bg-green-600 hover:bg-green-700">
+                                                    <Button variant="default" size="sm" asChild className="rounded-none font-black tracking-widest text-[10px] h-9 bg-primary text-primary-foreground hover:bg-primary/90">
                                                         <Link href={`/manager/my-registrations/${reg.tournament_team_id}`}>
                                                             <Users className="h-4 w-4 mr-2" />
-                                                            {t("edit_roster") || "Edit Roster"}
+                                                            {t("edit_roster")}
                                                         </Link>
                                                     </Button>
                                                 )}
                                                 {reg.slip_url && (
-                                                    <Button variant="outline" size="sm" asChild>
+                                                    <Button variant="outline" size="sm" asChild className="rounded-none font-black tracking-widest text-[10px] h-9 border-2">
                                                         <a href={reg.slip_url} target="_blank" rel="noopener noreferrer">
-                                                            {t("view_slip") || tCommon("view")}
+                                                            {t("view_slip")}
                                                         </a>
                                                     </Button>
                                                 )}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
-                    {/* Registration Form */}
-                    <Card className="rounded-none shadow-sm border-2 border-primary/10">
-                        <CardHeader className="bg-primary/5 border-b">
-                            <CardTitle className="flex items-center gap-2">
-                                <Shield className="h-5 w-5 text-primary" />
-                                {t("title") || "Tournament Registration"}
-                            </CardTitle>
-                            <CardDescription>
-                                {t("register_desc") || "Fill in the details below to register your team for this tournament."}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            {isRegistrationDisabled ? (
-                                <div className="bg-muted/30 border border-dashed border-border rounded-xl p-8 text-center">
-                                    <div className="bg-red-500/10 h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <AlertCircle className="h-6 w-6 text-red-600" />
-                                    </div>
-                                    <h3 className="text-lg font-black tracking-tight mb-2">
-                                        {t("registration_closed_title")}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-                                        {isFull 
-                                            ? t("registration_closed_full_desc") 
-                                            : (isPastDeadline ? t("registration_closed_deadline_desc") : t("registration_closed_desc"))}
-                                    </p>
-                                    <Button asChild variant="outline" size="sm" className="rounded-full px-6 font-black tracking-tighter">
-                                        <Link href="/manager/tournaments">
-                                            {tCommon("back_to_dashboard")}
-                                        </Link>
-                                    </Button>
-                                </div>
-                            ) : (
-                                <RegistrationForm 
-                                    tournament={tournament} 
-                                    initialTeams={teams || []} 
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Tournament Info / Sidebar */}
-                <div className="space-y-6">
-                    <Card className="rounded-none shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Info className="h-4 w-4 text-primary" />
-                                {tCommon("overview") || "Tournament Info"}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center text-sm border-b pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2">
-                                        <Trophy className="h-4 w-4" /> {tCommon("format") || "Format"}
-                                    </span>
-                                    <span className="font-semibold capitalize">{tSettings(tournament.format) || tournament.format}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm border-b pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2">
-                                        <Users className="h-4 w-4" /> {tCommon("teams") || "Max Teams"}
-                                    </span>
-                                    <span className="font-semibold">{tournament.max_teams || "Unlimited"}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm border-b pb-2">
-                                    <span className="text-muted-foreground flex items-center gap-2">
-                                        <Calendar className="h-4 w-4" /> {tCommon("date") || "Start Date"}
-                                    </span>
-                                    <span className="font-semibold">
-                                        {tournament.start_date ? formatDate(tournament.start_date, "MMM d, yyyy", locale) : "TBD"}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {tournament.description && (
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-bold tracking-wider text-muted-foreground">{tCommon("description") || "Description"}</h4>
-                                    <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                                        {tournament.description}
-                                    </p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Quick Preview Link */}
-                    <Link 
-                        href={`/${tournament.id}`} 
-                        target="_blank"
-                        className="flex items-center justify-center gap-2 p-4 text-sm font-medium border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary group"
-                    >
-                        <Info className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                        {tCommon("preview") || "View Public Tournament Page"}
-                    </Link>
+                    {/* Registration Form Area */}
+                    <RegistrationForm
+                        tournament={tournament}
+                        initialTeams={teams || []}
+                        isRegistrationDisabled={isRegistrationDisabled}
+                        isFull={isFull}
+                        isPastDeadline={isPastDeadline}
+                    />
                 </div>
             </div>
         </div>
