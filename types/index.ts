@@ -348,5 +348,6 @@ export interface Registration {
     payment_status: 'PENDING' | 'PAID' | 'REJECTED';
     trans_ref?: string | null;
     description?: string | null;
+    tournament_team_id?: string | null;
     created_at: string;
 }
