@@ -117,8 +117,8 @@ export async function SettingsView({ user }: SettingsViewProps) {
             </div>
             
             {/* Version Info */}
-            <div className="mt-8 mb-4 flex justify-center items-center gap-2">
-                <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">
+            <div className="flex justify-center items-center gap-2">
+                <span className="text-xs font-black tracking-widest text-muted-foreground">
                     {t("version")} 0.2.1
                 </span>
             </div>
