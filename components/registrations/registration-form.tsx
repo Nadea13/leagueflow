@@ -161,7 +161,7 @@ export function RegistrationForm({
 
     if (success) {
         return (
-            <div className="space-y-2 md:space-y-3 p-4 md:p-6 border">
+            <div className="bg-card space-y-2 md:space-y-3 p-4 md:p-6 border">
                 <div className="flex items-center gap-3">
                     <Users className="h-6 w-6 text-primary" />
                     <h3 className="text-2xl font-black tracking-tighter text-foreground">
