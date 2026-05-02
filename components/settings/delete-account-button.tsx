@@ -34,8 +34,8 @@ export function DeleteAccountButton({ email }: { email: string }) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="destructive" className="w-full sm:w-auto h-12 rounded-none bg-destructive text-foreground hover:bg-red-600 font-black tracking-tighter transition-all px-6 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)]">
-                    <Trash2 className="h-5 w-5 mr-3" />
+                <Button variant="destructive">
+                    <Trash2 className="h-4 w-4" />
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
