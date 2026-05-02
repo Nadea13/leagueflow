@@ -65,6 +65,8 @@ export interface Team {
     name: string;
     description?: string | null;
     logo_url?: string | null;
+    contact_name?: string | null;
+    contact_phone?: string | null;
     tournament_id?: string | null;
     group_name?: string | null;
     sport: SportType;
@@ -78,6 +80,8 @@ export interface TournamentTeam {
     user_id: string | null;
     name: string;
     description?: string | null;
+    contact_name?: string | null;
+    contact_phone?: string | null;
     group_name?: string | null;
     logo_url?: string | null;
     is_roster_locked: boolean;

@@ -137,10 +137,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     };
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-2 md:space-y-6">
             {/* Top Navigation & Action Bar */}
             <div className="flex md:items-start justify-between gap-4 md:gap-6">
-                <div className="flex items-start gap-4 md:gap-6">
+                <div className="flex items-start gap-2 md:gap-6">
                     <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href={team.isParticipation ? "/manager/my-registrations" : "/manager/my-teams"}>
                             <ArrowLeft className="h-5 w-5" />
@@ -221,7 +221,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             )}
 
             {/* Custom Mobile Tab Switcher */}
-            <div className="lg:hidden mb-6">
+            <div className="lg:hidden">
                 <Tab
                     value={mobileTab}
                     onChange={(val) => setMobileTab(val as 'roster' | 'team')}
@@ -236,7 +236,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
             <div className="flex flex-col lg:flex-row gap-6 items-start">
                 <div className={cn(
-                    "flex-1 w-full min-w-0 space-y-6",
+                    "flex-1 w-full min-w-0 space-y-2 md:space-y-6",
                     mobileTab !== 'roster' && "hidden lg:block"
                 )}>
                     <AddPlayerForm

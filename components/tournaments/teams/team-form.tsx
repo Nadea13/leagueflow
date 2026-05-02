@@ -133,6 +133,29 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
                             />
                         </div>
 
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("contact_name") || "Contact Name"}</Label>
+                                <Input
+                                    type="text"
+                                    name="contact_name"
+                                    placeholder={t("contact_name_placeholder") || "Manager Name"}
+                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold tracking-tighter"
+                                    disabled={isLimitReached}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("contact_phone") || "Phone Number"}</Label>
+                                <Input
+                                    type="text"
+                                    name="contact_phone"
+                                    placeholder={t("contact_phone_placeholder") || "08x-xxx-xxxx"}
+                                    className="h-12 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold tracking-tighter"
+                                    disabled={isLimitReached}
+                                />
+                            </div>
+                        </div>
+
                         <div className="flex justify-end pt-4">
                             <SubmitButton disabled={isLimitReached} className="h-12 px-10 rounded-none bg-primary text-primary-foreground font-black tracking-tighter hover:bg-primary/90 transition-all">
                                 <Check className="h-4 w-4 mr-2" />

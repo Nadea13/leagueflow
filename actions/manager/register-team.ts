@@ -219,6 +219,8 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 user_id: user?.id || null,
                 name: teamName,
                 description: description || null,
+                contact_name: contactName,
+                contact_phone: contactPhone,
                 logo_url: finalLogoUrl,
                 sport: tournament.sport,
                 created_at: new Date().toISOString(),
