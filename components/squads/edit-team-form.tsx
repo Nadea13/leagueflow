@@ -214,7 +214,7 @@ export function EditTeamForm({
                             onChange={e => setTeamName(e.target.value)}
                             placeholder={tTeam("team_name")}
                             required
-                            className="bg-transparent text-foreground focus-visible:ring-0 h-12 text-sm font-bold"
+                            className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                         />
                     </div>
 
@@ -257,7 +257,7 @@ export function EditTeamForm({
                                 value={contactName}
                                 onChange={e => setContactName(e.target.value)}
                                 placeholder="Manager Name"
-                                className="bg-transparent text-foreground focus-visible:ring-0 h-12 text-sm font-bold"
+                                className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                             />
                         </div>
                         <div className="space-y-1">
@@ -268,7 +268,7 @@ export function EditTeamForm({
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
                                 placeholder="08x-xxx-xxxx"
-                                className="bg-transparent text-foreground focus-visible:ring-0 h-12 text-sm font-bold"
+                                className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                             />
                         </div>
                     </div>
@@ -276,7 +276,7 @@ export function EditTeamForm({
                     <div className="space-y-2 md:space-y-3">
                         <Button
                             type="submit"
-                            className="w-full h-12 font-black tracking-widest text-sm transition-all bg-primary text-primary-foreground disabled:opacity-50 shadow-[0_0_20px_rgba(0,196,154,0.2)]"
+                            className="w-full font-black tracking-widest text-sm transition-all bg-primary text-primary-foreground disabled:opacity-50"
                             disabled={isUpdatingTeam || isLocked}
                         >
                             {isUpdatingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
