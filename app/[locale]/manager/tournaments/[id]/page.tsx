@@ -73,7 +73,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
         <div className="w-full max-w-[1600px] mx-auto space-y-2 md:space-y-6">
             {/* Top Navigation & Header */}
             <div className="flex md:items-start justify-between gap-4 md:gap-6">
-                <div className="flex items-start gap-4 md:gap-6">
+                <div className="flex items-start gap-2 md:gap-6">
                     <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href="/manager/tournaments">
                             <ArrowLeft className="h-5 w-5" />
