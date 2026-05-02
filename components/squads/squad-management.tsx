@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Trash2, Users, Upload, Download, AlertCircle, Lock, Unlock, ExternalLink, LayoutGrid, ArrowLeft, Plus, Edit2 } from "lucide-react";
+import { Loader2, Trash2, Users, Upload, Download, AlertCircle, Lock, Unlock, ExternalLink, LayoutGrid, ArrowLeft, Plus, Edit2, FileText } from "lucide-react";
 import { Tab } from "@/components/ui/tab";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +49,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const tCommon = useTranslations("Common");
     const tTeam = useTranslations("Team");
     const tSports = useTranslations("Sports");
+    const tReg = useTranslations("Registration");
     const locale = useLocale();
     const { toast } = useToast();
 
@@ -136,6 +137,11 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         }
     };
 
+    const slipUrl = team.registrations?.find(r =>
+        r.tournament_team_id === team.id ||
+        (team.tournament_id && r.tournament_id === team.tournament_id)
+    )?.slip_url;
+
     return (
         <div className="space-y-2 md:space-y-6">
             {/* Top Navigation & Action Bar */}
@@ -182,6 +188,19 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             </Link>
                         </Button>
                     )}
+                    {slipUrl && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="rounded-none font-bold tracking-wider text-[10px] h-10 w-10 md:w-auto p-0 md:px-4 border-2"
+                        >
+                            <a href={slipUrl} target="_blank" rel="noopener noreferrer">
+                                <FileText className="h-4 w-4 md:mr-2" />
+                                <span className="hidden md:inline">{tReg("view_slip")}</span>
+                            </a>
+                        </Button>
+                    )}
                     <Button
                         variant={effectivelyLocked ? "outline" : "default"}
                         size="sm"
@@ -209,11 +228,11 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             </div>
 
             {isDeadlinePassed && (
-                <div className="bg-red-50 border border-red-200 p-4 rounded-none flex items-start gap-3 text-red-800 animate-in fade-in slide-in-from-top-2 mb-6">
-                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                    <div>
+                <div className="bg-destructive/10 border border-destructive p-4 rounded-none flex items-start gap-3 text-destructive animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
                         <h4 className="font-bold text-sm tracking-tight">{t("deadline_passed")}</h4>
-                        <p className="text-xs opacity-90 mt-1">
+                        <p className="text-xs opacity-90">
                             {t("deadline_locked_desc", { date: new Date(documentDeadline!).toLocaleString() })}
                         </p>
                     </div>

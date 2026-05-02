@@ -268,7 +268,7 @@ export async function getTeam(teamId: string) {
     // Fetch Registration Status
     const { data: registrations } = await supabase
         .from("registrations")
-        .select("tournament_id, payment_status")
+        .select("tournament_id, payment_status, slip_url, tournament_team_id")
         .eq("user_id", user.id);
 
     return {
@@ -329,8 +329,18 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             logoUrl = publicUrl;
         }
 
-        const { error } = await supabase
+        // Detect which table to update
+        const { data: globalTeam } = await supabase
             .from("teams")
+            .select("id")
+            .eq("id", teamId)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        const tableName = globalTeam ? "teams" : "tournament_teams";
+
+        const { error } = await supabase
+            .from(tableName)
             .update({
                 name,
                 logo_url: logoUrl,
@@ -347,10 +357,13 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             return { success: false, error: error.message };
         }
 
+        // Revalidate relevant paths
         revalidatePath("/manager/my-teams");
+        revalidatePath("/manager/my-registrations");
         revalidatePath(`/manager/my-teams/${teamId}`);
+        revalidatePath(`/manager/my-registrations/${teamId}`);
         
-        await logActivity('UPDATE_TEAM', 'team', teamId, { name, sport, update_type: 'global' });
+        await logActivity('UPDATE_TEAM', 'team', teamId, { name, sport, update_type: 'global', table: tableName });
         
         return { success: true };
     } catch (error) {
@@ -371,8 +384,18 @@ export async function deleteTeamGlobal(teamId: string, _tournamentId: string): P
             return { success: false, error: "Authentication required" };
         }
 
-        const { error } = await supabase
+        // Detect which table to delete from
+        const { data: globalTeam } = await supabase
             .from("teams")
+            .select("id")
+            .eq("id", teamId)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        const tableName = globalTeam ? "teams" : "tournament_teams";
+
+        const { error } = await supabase
+            .from(tableName)
             .delete()
             .eq("id", teamId)
             .eq("user_id", user.id);
@@ -383,6 +406,7 @@ export async function deleteTeamGlobal(teamId: string, _tournamentId: string): P
         }
 
         revalidatePath("/manager/my-teams");
+        revalidatePath("/manager/my-registrations");
         
         return { success: true };
     } catch (error) {

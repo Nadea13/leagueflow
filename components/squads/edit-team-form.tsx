@@ -154,9 +154,9 @@ export function EditTeamForm({
                         <Label htmlFor="edit-logo-right" className="text-xs font-black tracking-widest text-primary">
                             {tTeam("upload_logo")}
                         </Label>
-                        <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 bg-muted/10 border">
+                        <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 border">
                             <div className="relative group">
-                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden bg-background/50">
+                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
                                     {previewUrl ? (
                                         <Image
                                             src={previewUrl}
