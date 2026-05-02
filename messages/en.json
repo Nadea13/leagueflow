@@ -60,6 +60,7 @@
         "team_limit": "Capacity",
         "open": "Open",
         "approved": "Approved",
+        "paid": "Paid",
         "pending": "Pending",
         "rejected": "Rejected",
         "registration": "Registration",
