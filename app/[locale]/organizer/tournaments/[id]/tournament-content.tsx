@@ -227,7 +227,7 @@ export function TournamentContent({
     };
 
     return (
-        <div className="flex flex-col gap-4 md:gap-6">
+        <div className="flex flex-col gap-2 md:gap-6">
             {/* Unified Header Block */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 relative group">
                 <div className="flex items-start gap-2 md:gap-6 w-full">
@@ -273,7 +273,7 @@ export function TournamentContent({
                         </div>
                     </div>
 
-                    <div className="md:hidden shrink-0 pt-1">
+                    <div className="md:hidden shrink-0">
                         <ShareButton tournamentId={id} />
                     </div>
                 </div>
@@ -306,9 +306,9 @@ export function TournamentContent({
 
             {currentTab === 'overview' && (
                 <div className="space-y-4 md:space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-6 items-start">
                         {/* Right Column: Sidebar (Actions & Announcements) - First in DOM for mobile top priority */}
-                        <div className="lg:col-span-1 space-y-4 md:space-y-6 lg:order-2">
+                        <div className="lg:col-span-1 space-y-2 md:space-y-6 lg:order-2">
                             {tournament?.status !== 'draft' && (
                                 <>
                                     <Card className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
@@ -360,7 +360,7 @@ export function TournamentContent({
                         </div>
 
                         {/* Left Column: Main Tournament Data (Spans 2) - Second in DOM, lg:order-1 for desktop left alignment */}
-                        <div className="lg:col-span-2 space-y-4 md:space-y-6 lg:order-1">
+                        <div className="lg:col-span-2 space-y-2 md:space-y-6 lg:order-1">
 
                             {/* 1. Match Schedule */}
                             <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
