@@ -100,57 +100,55 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
 
     return (
         <div className="w-full">
-            <div className="w-full overflow-x-auto rounded-none">
-                <Table className="min-w-[800px] border-separate border-spacing-0">
-                    <TableHeader className="bg-muted/5">
-                        <TableRow className="h-10 border-b border-border/10 hover:bg-muted/5 transition-colors">
-                            <TableHead className="px-6 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("team_name")}</TableHead>
-                            <TableHead className="px-6 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("contact_info")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("payment_status")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("slip")}</TableHead>
-                            <TableHead className="text-right px-6 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">{t("date")}</TableHead>
-                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/60 border-b border-border/10">Actions</TableHead>
+            <div className="border w-full overflow-x-auto rounded-none">
+                <Table className="min-w-[800px]">
+                    <TableHeader>
+                        <TableRow className="h-10">
+                            <TableHead className="px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("team_name")}</TableHead>
+                            <TableHead className="px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("contact_info")}</TableHead>
+                            <TableHead className="text-center px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("payment_status")}</TableHead>
+                            <TableHead className="text-center px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("slip")}</TableHead>
+                            <TableHead className="px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("date")}</TableHead>
+                            <TableHead className="text-center px-2 md:px-3 text-xs tracking-widest text-muted-foreground"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {registrations.map((reg) => (
-                            <TableRow key={reg.id} className="h-16 border-b border-border/5 hover:bg-muted/5 transition-colors group">
-                                <TableCell className="px-6 border-b border-border/5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-9 w-9 rounded-none bg-muted/10 border border-border/10 flex items-center justify-center shrink-0">
-                                            <Home className="h-4 w-4 text-primary" />
+                            <TableRow key={reg.id} className="h-16 hover:bg-muted/5 transition-colors group">
+                                <TableCell className="px-2 md:px-3">
+                                    <div className="flex items-center gap-2 md:gap-3">
+                                        <div className="h-10 w-10 border flex items-center justify-center shrink-0 overflow-hidden bg-muted/5">
+                                            {reg.logo_url ? (
+                                                <img src={reg.logo_url} alt="" className="w-full h-full object-contain" />
+                                            ) : (
+                                                <Home className="h-5 w-5 text-muted-foreground/30" />
+                                            )}
                                         </div>
                                         <span className="font-black tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell className="px-6 border-b border-border/5">
+                                <TableCell className="px-2 md:px-3">
                                     <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2 text-[11px] font-black tracking-tight text-foreground/80">
+                                        <div className="flex items-center gap-2 text-xs group-hover:text-primary transition-colors font-black tracking-tight">
                                             <User className="h-3 w-3 text-primary" />
                                             {reg.contact_name}
                                         </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground/40 tabular-nums">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground tabular-nums">
                                             <Phone className="h-3 w-3" />
                                             {reg.contact_phone}
                                         </div>
-                                        {reg.description && (
-                                            <div className="flex items-center gap-2 text-[10px] font-black tracking-widest text-primary/60 mt-1">
-                                                <FileText className="h-3 w-3" />
-                                                {reg.description}
-                                            </div>
-                                        )}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-center px-4 border-b border-border/5">
+                                <TableCell className="text-center px-2 md:px-3">
                                     <Badge variant="outline" className={cn(
-                                        "rounded-none border-none text-[10px] font-black px-2.5 py-1 tracking-widest",
-                                        reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground shadow-[0_0_10px_rgba(0,196,154,0.2)]" :
+                                        "",
+                                        reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground" :
                                         reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"
                                     )}>
                                         {reg.payment_status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="text-center px-4 border-b border-border/5">
+                                <TableCell className="text-center px-4">
                                     {reg.slip_url ? (
                                         <Button
                                             variant="ghost"
@@ -165,7 +163,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter">No Slip</span>
                                     )}
                                 </TableCell>
-                                <TableCell className="text-right px-6 border-b border-border/5 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap">
+                                <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap">
                                     {new Date(reg.created_at).toLocaleString('en-US', { 
                                         day: '2-digit', 
                                         month: 'short', 
@@ -174,7 +172,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         hour12: false
                                     }).replace(',', '')}
                                 </TableCell>
-                                <TableCell className="text-right px-6 border-b border-border/5">
+                                <TableCell className="px-2 md:px-3">
                                     {reg.payment_status === 'PENDING' && (
                                         <div className="flex items-center justify-end gap-2">
                                             <Button

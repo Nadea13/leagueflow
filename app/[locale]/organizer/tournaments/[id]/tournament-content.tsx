@@ -450,13 +450,13 @@ export function TournamentContent({
 
             {/* Teams Tab */}
             {currentTab === 'teams' && (
-                <div className="space-y-4 md:space-y-6 outline-none">
+                <div className="space-y-2 md:space-y-6 outline-none">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Content: Registrations & Teams List */}
                         <div className="lg:col-span-2 space-y-4 md:space-y-6">
                             {/* Registrations Section (Admin Only) */}
                             {userRole === 'admin' && (
-                                <div className="space-y-4 md:space-y-6">
+                                <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-4 md:space-y-6">
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -466,7 +466,7 @@ export function TournamentContent({
                                         </div>
                                     </div>
 
-                                    <div className="bg-card border rounded-none relative overflow-hidden transition-colors">
+                                    <div className="relative overflow-hidden transition-colors">
                                         <Registrations tournamentId={id} />
                                     </div>
                                 </div>
