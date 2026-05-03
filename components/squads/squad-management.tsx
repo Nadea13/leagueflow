@@ -178,12 +178,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     {team.participations && team.participations.length > 0 && (
                         <Button
                             variant="outline"
-                            size="sm"
                             asChild
-                            className="rounded-none font-bold tracking-wider text-[10px] h-10 w-10 md:w-auto p-0 md:px-4 border-2"
                         >
                             <Link href={`/${team.participations[0].tournament_id}`}>
-                                <ExternalLink className="h-4 w-4 md:mr-2" />
+                                <ExternalLink className="h-4 w-4" />
                                 <span className="hidden md:inline">{tCommon("view_tournament")}</span>
                             </Link>
                         </Button>
@@ -191,19 +189,16 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     {slipUrl && (
                         <Button
                             variant="outline"
-                            size="sm"
                             asChild
-                            className="rounded-none font-bold tracking-wider text-[10px] h-10 w-10 md:w-auto p-0 md:px-4 border-2"
                         >
                             <a href={slipUrl} target="_blank" rel="noopener noreferrer">
-                                <FileText className="h-4 w-4 md:mr-2" />
+                                <FileText className="h-4 w-4" />
                                 <span className="hidden md:inline">{tReg("view_slip")}</span>
                             </a>
                         </Button>
                     )}
                     <Button
                         variant={effectivelyLocked ? "outline" : "default"}
-                        size="sm"
                         className={cn(
                             "rounded-none font-bold tracking-wider text-sm h-10 transition-all",
                             !effectivelyLocked ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-2",
@@ -220,7 +215,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         ) : (
                             <Lock className="h-4 w-4" />
                         )}
-                        <span className="hidden md:inline ml-2">
+                        <span className="hidden md:inline">
                             {effectivelyLocked ? t("unlock_roster") : t("submit_lock")}
                         </span>
                     </Button>

@@ -231,14 +231,9 @@ export function TournamentContent({
             {/* Unified Header Block */}
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 relative group">
                 <div className="flex items-start gap-2 md:gap-6 w-full">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        asChild
-                        className="bg-background/50 backdrop-blur-sm rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all"
-                    >
+                    <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href="/dashboard">
-                            <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
+                            <ArrowLeft className="h-5 w-5" />
                         </Link>
                     </Button>
 
@@ -316,22 +311,17 @@ export function TournamentContent({
                         <div className="lg:col-span-1 space-y-4 md:space-y-6 lg:order-2">
                             {tournament?.status !== 'draft' && (
                                 <>
-                                    {/* Action Bar Header */}
-                                    <div className="flex flex-col gap-1">
-                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <Settings className="h-5 w-5 text-primary" />
-                                            {t("actions")}
-                                        </h2>
-                                    </div>
+                                    <Card className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
+                                        {/* Action Bar Header */}
+                                        <div>
+                                            <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                                <Settings className="h-5 w-5 text-primary" />
+                                                {t("actions")}
+                                            </h2>
+                                        </div>
 
-                                    {/* Public Link Card */}
-                                    <Card className="bg-card border rounded-none p-2 md:p-3">
                                         <div className="space-y-2 md:space-y-3">
                                             <div className="space-y-2 md:space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
-                                                    <Badge variant="outline" className="rounded-none text-[8px] font-black border-primary/20 text-primary">{t("registration")}</Badge>
-                                                </div>
                                                 <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-primary/20 line-clamp-2">
                                                     {mounted ? registrationUrl : tCommon("loading") || "..."}
                                                 </div>
@@ -341,7 +331,6 @@ export function TournamentContent({
                                                 <Button
                                                     variant="default"
                                                     size="default"
-                                                    className="rounded-none w-full font-black text-[11px] tracking-widest shadow-lg shadow-primary/10 h-11"
                                                     onClick={copyRegistrationLink}
                                                 >
                                                     <Copy className="h-4 w-4 mr-2" />
@@ -350,7 +339,6 @@ export function TournamentContent({
                                                 <Button
                                                     variant="outline"
                                                     size="default"
-                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black text-[11px] tracking-widest h-11"
                                                     onClick={() => window.open(registrationUrl, '_blank')}
                                                 >
                                                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -375,14 +363,14 @@ export function TournamentContent({
                         <div className="lg:col-span-2 space-y-4 md:space-y-6 lg:order-1">
 
                             {/* 1. Match Schedule */}
-                            <div className="space-y-4 md:space-y-6">
+                            <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
                                 <div className="flex flex-col gap-1">
                                     <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Calendar className="h-5 w-5 text-primary" />
                                         {t("match_schedule")}
                                     </h2>
                                 </div>
-                                <div className="bg-card rounded-none relative overflow-hidden transition-colors">
+                                <div className="relative overflow-hidden transition-colors">
                                     <MatchManager
                                         teams={teams}
                                         matches={matches}
@@ -390,6 +378,8 @@ export function TournamentContent({
                                         format={tournament?.format}
                                         isPro={isPro}
                                         hideControls={true}
+                                        startDate={tournament?.start_date}
+                                        endDate={tournament?.end_date}
                                     />
                                 </div>
                             </div>
@@ -617,6 +607,8 @@ export function TournamentContent({
                                         tournamentId={id}
                                         format={tournament?.format}
                                         isPro={isPro}
+                                        startDate={tournament?.start_date}
+                                        endDate={tournament?.end_date}
                                     />
                                 ) : (
                                     <MatchCalendar matches={matches} />
@@ -663,63 +655,63 @@ export function TournamentContent({
             {/* Settings Tab */}
             {(userRole === 'admin' && currentTab === 'settings') && (
                 <div className="outline-none focus-visible:ring-0">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                            {/* Main Settings Column */}
-                            <div className="lg:col-span-2">
-                                <TournamentSettings tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} teams={teams} />
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                        {/* Main Settings Column */}
+                        <div className="lg:col-span-2">
+                            <TournamentSettings tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} teams={teams} />
+                        </div>
 
-                            {/* Sidebar Info Column */}
-                            <div className="lg:col-span-1 space-y-4 md:space-y-6 hidden lg:block">
-                                <div className="space-y-4 md:space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <ClipboardEdit className="h-5 w-5 text-primary" />
-                                            Configuration Overview
-                                        </h3>
-                                    </div>
+                        {/* Sidebar Info Column */}
+                        <div className="lg:col-span-1 space-y-4 md:space-y-6 hidden lg:block">
+                            <div className="space-y-4 md:space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <ClipboardEdit className="h-5 w-5 text-primary" />
+                                        Configuration Overview
+                                    </h3>
+                                </div>
 
-                                    <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
-                                        <div className="space-y-4 md:space-y-6">
-                                            <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Status</span>
-                                                <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black px-3 py-1">
-                                                    {tournament?.status?.toUpperCase()}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Plan</span>
-                                                <span className="text-[10px] font-black tracking-widest text-primary">
-                                                    {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Team Slots</span>
-                                                <span className="text-[11px] font-black tracking-widest text-foreground">
-                                                    {teams.length} / {tournament?.max_teams || 8}
-                                                </span>
-                                            </div>
-                                            <div className="pt-2 md:pt-3">
-                                                <p className="text-[9px] font-black tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
-                                                <p className="text-[11px] font-black text-foreground">
-                                                    {mounted ? new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}
-                                                </p>
-                                            </div>
+                                <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
+                                    <div className="space-y-4 md:space-y-6">
+                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
+                                            <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Status</span>
+                                            <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black px-3 py-1">
+                                                {tournament?.status?.toUpperCase()}
+                                            </Badge>
                                         </div>
-                                    </Card>
-
-                                    <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
-                                        <div className="space-y-2 md:space-y-3">
-                                            <h5 className="text-[10px] font-black tracking-widest text-primary">Quick Help</h5>
-                                            <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
-                                                Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
+                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
+                                            <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Plan</span>
+                                            <span className="text-[10px] font-black tracking-widest text-primary">
+                                                {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
+                                            <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Team Slots</span>
+                                            <span className="text-[11px] font-black tracking-widest text-foreground">
+                                                {teams.length} / {tournament?.max_teams || 8}
+                                            </span>
+                                        </div>
+                                        <div className="pt-2 md:pt-3">
+                                            <p className="text-[9px] font-black tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
+                                            <p className="text-[11px] font-black text-foreground">
+                                                {mounted ? new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}
                                             </p>
                                         </div>
-                                    </Card>
-                                </div>
+                                    </div>
+                                </Card>
+
+                                <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
+                                    <div className="space-y-2 md:space-y-3">
+                                        <h5 className="text-[10px] font-black tracking-widest text-primary">Quick Help</h5>
+                                        <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
+                                            Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
+                                        </p>
+                                    </div>
+                                </Card>
                             </div>
                         </div>
                     </div>
+                </div>
             )}
         </div>
     );
