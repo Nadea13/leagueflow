@@ -28,9 +28,7 @@ export function ShareButton({ tournamentId }: { tournamentId?: string }) {
     return (
         <Button
             variant="outline"
-            size="sm"
             onClick={handleShare}
-            className="gap-2"
         >
             {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
             <span className="hidden sm:inline">

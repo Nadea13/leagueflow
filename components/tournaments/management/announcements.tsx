@@ -112,28 +112,26 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
     if (!isEditable && announcements.length === 0) return null;
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
             <div className="flex items-center justify-between relative z-10">
                 <div className="space-y-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Megaphone className="h-5 w-5 text-primary" />
                         {t("title")}
                     </h3>
-                    <p className="text-[10px] font-bold text-muted-foreground/60">{t("no_announcements_desc")}</p>
                 </div>
                 {isEditable && (
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button
-                                size="sm"
                                 variant="default"
-                                className="rounded-none font-black text-[10px] tracking-widest h-8 shadow-[0_4px_10px_rgba(0,196,154,0.1)] transition-all px-4"
+                                className="h-8"
                             >
-                                <Plus className="h-4 w-4 mr-1" />
+                                <Plus className="h-4 w-4" />
                                 {t("news")}
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-card border-border/40 rounded-none sm:max-w-[500px] shadow-2xl p-0 overflow-hidden">
+                        <DialogContent className="rounded-none sm:max-w-[500px] p-0 overflow-hidden">
                             <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
                                 <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
                                     <Megaphone className="h-6 w-6 text-primary" />
@@ -201,7 +199,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-2 md:p-3 rounded-none border border-border/20 transition-all relative overflow-hidden group/item",
+                                "p-2 md:p-3 border transition-all relative overflow-hidden group/item",
                                 ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >
@@ -209,10 +207,9 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                 <div className="flex-1 space-y-2 md:space-y-3">
                                     <div className="flex items-center gap-3">
                                         {ann.is_pinned && (
-                                            <div className="flex items-center gap-1.5 bg-primary text-primary-foreground px-2 py-0.5 rounded-none shadow-[0_0_10px_rgba(0,196,154,0.3)]">
-                                                <Pin className="h-2.5 w-2.5" />
-                                                <span className="text-[8px] font-black tracking-widest">{t("pinned")}</span>
-                                            </div>
+                                            <span className="rotate-315">
+                                                <Pin className="h-4 w-4 text-primary" />
+                                            </span>
                                         )}
                                         <h4 className="font-black tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-primary transition-colors line-clamp-1">
                                             {ann.title}
@@ -225,7 +222,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                                         </p>
                                     )}
 
-                                    <div className="flex items-center gap-2 pt-2">
+                                    <div className="flex items-center gap-2">
                                         <p className="text-[9px] font-black tracking-widest text-muted-foreground/40">
                                             {formatDate(ann.created_at, "MMM d, yyyy · HH:mm", locale)}
                                         </p>
