@@ -386,13 +386,12 @@ export function TournamentContent({
 
                             {/* 3. Knockout Bracket (For 'knockout' OR 'group_knockout') */}
                             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
-                                <div className="space-y-4 md:space-y-6">
-                                    <div className="flex flex-col gap-1">
+                                <div className="bg-card border p-4 md:p-6 space-y-4 md:space-y-6">
+                                    <div className="flex flex-col">
                                         <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <GitBranch className="h-5 w-5 text-primary" />
                                             {t("bracket")}
                                         </h2>
-                                        <p className="text-[10px] font-bold text-muted-foreground/60">{t("bracket_desc")}</p>
                                     </div>
                                     <div className="relative z-10">
                                         <Bracket matches={matches} />
