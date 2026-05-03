@@ -410,7 +410,7 @@ export function MatchManager({
                                 <div key={date} className="space-y-2 md:space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
                                     {/* Date Header */}
                                     <div className="flex items-center gap-2 md:gap-3">
-                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                        <h2 className="text-base md:text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             {date === "TBD" ? (locale === 'th' ? "รอกำหนดการ" : "To Be Determined") : formatDate(date, "EEEE, d MMM yyyy", locale)}
                                         </h2>
                                     </div>
@@ -429,7 +429,7 @@ export function MatchManager({
                                                     <div className="h-px flex-1 bg-border ml-2 md:ml-3" />
                                                 </div>
 
-                                                <div className="grid grid-cols-1 gap-4">
+                                                <div className="grid grid-cols-1 gap-2 md:gap-3">
                                                     {stageMatches
                                                         .sort((a, b) => (a.match_time || "") > (b.match_time || "") ? 1 : -1)
                                                         .map((match) => (

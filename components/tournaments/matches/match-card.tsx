@@ -132,9 +132,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col md:grid md:grid-cols-[150px_1fr_150px] items-center px-4 md:px-6 py-2 md:py-4 transition-all cursor-pointer group relative overflow-hidden",
-                isFinished ? "bg-[#050505]/60" : "bg-card hover:bg-card/50",
-                "gap-4",
+                "flex flex-col border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-3 transition-all cursor-pointer group relative overflow-hidden",
             )}
         >
             {/* 1. Status/Time/Badge Section */}
@@ -142,19 +140,19 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 {status !== 'scheduled' && (
                     <div
                         className={cn(
-                            "text-[9px] tracking-[0.2em] font-black px-3 py-1",
-                            status === 'scheduled' && "text-muted-foreground/40 border-muted-foreground/20",
+                            "text-xs tracking-widest font-black",
+                            status === 'scheduled' && "text-muted-foreground",
                             isLive && "text-primary border-primary animate-pulse",
-                            isFinished && "text-muted-foreground/60 border-muted-foreground/30",
-                            !match.away_team_id && "text-muted-foreground/40 border-muted-foreground/20"
+                            isFinished && "text-muted-foreground",
+                            !match.away_team_id && "text-muted-foreground"
                         )}
                     >
                         {!match.away_team_id ? t("scheduled") : (
                             isLive ? (
                                 <span className="flex items-center gap-2">
                                     <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-none bg-primary opacity-75"></span>
-                                        <span className="relative inline-flex rounded-none h-2 w-2 bg-primary"></span>
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
                                     </span>
                                 </span>
                             ) : (
@@ -219,8 +217,8 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 {match.home_team?.logo_url ? (
                                     <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" unoptimized />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/5">
-                                        <span className="text-[10px] md:text-xs font-black text-muted-foreground/40">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none flex items-center justify-center shrink-0 border">
+                                        <span className="text-sm md:text-base font-black text-muted-foreground">
                                             {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
                                     </div>
@@ -243,18 +241,18 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
                                         {match.home_score ?? 0}
                                     </span>
-                                    <span className="text-muted-foreground/20 font-black">-</span>
+                                    <span className="text-muted-foreground font-black">-</span>
                                     <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
                                         {match.away_score ?? 0}
                                     </span>
                                 </div>
                                 {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (
-                                    <span className="text-[8px] font-black tracking-tighter mt-1 opacity-60">
+                                    <span className="text-[10px] font-black tracking-tighter">
                                         ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PK)
                                     </span>
                                 )}
                                 {isLiveStatus && (
-                                    <span className="text-[10px] font-black text-primary mt-1 tabular-nums">
+                                    <span className="text-[10px] font-black text-primary tabular-nums">
                                         {formatSeconds(liveTime)}
                                     </span>
                                 )}
@@ -297,8 +295,8 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 {match.away_team?.logo_url ? (
                                     <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" unoptimized />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none bg-foreground/5 flex items-center justify-center shrink-0 border border-foreground/5">
-                                        <span className="text-[10px] md:text-xs font-black text-muted-foreground/40">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none flex items-center justify-center shrink-0 border">
+                                        <span className="text-sm md:text-base font-black text-muted-foreground">
                                             {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
                                     </div>
