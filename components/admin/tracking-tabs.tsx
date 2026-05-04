@@ -6,8 +6,10 @@ import { TrackingDashboard } from "@/components/admin/tracking-dashboard";
 import { TrackingAnalytics } from "@/components/admin/tracking-analytics";
 import { BarChart3, Users } from "lucide-react";
 
+import { AuditLog } from "@/types";
+
 interface AdminTrackingTabsProps {
-    auditLogs: any[];
+    auditLogs: AuditLog[];
 }
 
 export function AdminTrackingTabs({ auditLogs }: AdminTrackingTabsProps) {

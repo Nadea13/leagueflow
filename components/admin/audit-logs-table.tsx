@@ -321,13 +321,13 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    paginatedAuthLogs.map((log: Record<string, any>) => (
-                                        <TableRow key={log.id} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
+                                    paginatedAuthLogs.map((log: Record<string, unknown>) => (
+                                        <TableRow key={log.id as string} className="border-b border-border/50 hover:bg-muted/10 transition-colors">
                                             <TableCell className="font-medium text-xs text-muted-foreground whitespace-nowrap">
-                                                {formatDate(log.created_at, "d MMM yyyy, HH:mm", locale)}
+                                                {formatDate(log.created_at as string, "d MMM yyyy, HH:mm", locale)}
                                             </TableCell>
                                             <TableCell className="font-mono text-xs text-muted-foreground">
-                                                {log.ip_address || 'Unknown'}
+                                                {log.ip_address as string || 'Unknown'}
                                             </TableCell>
                                             <TableCell>
                                                 <code className="relative bg-muted/50 px-2 py-1 font-mono text-xs text-muted-foreground block max-w-full overflow-x-auto whitespace-pre-wrap border border-border/50" title={JSON.stringify(log.payload, null, 2)}>

@@ -6,7 +6,6 @@ import generatePayload from "promptpay-qr";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Copy, Check, Smartphone } from "lucide-react";
 
 interface PromptPayQRProps {
     phoneNumber: string; // Or ID card number
@@ -14,11 +13,9 @@ interface PromptPayQRProps {
     accountName?: string;
 }
 
-export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRProps) {
+export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
     const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
-
-    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         async function generate() {
@@ -45,12 +42,6 @@ export function PromptPayQR({ phoneNumber, amount, accountName }: PromptPayQRPro
             generate();
         }
     }, [phoneNumber, amount]);
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(phoneNumber);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
 
     const t = useTranslations("Billing");
 

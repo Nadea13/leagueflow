@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
-import { FileText } from "lucide-react";
 import { MyRegistrationsList } from "@/components/registrations/my-registrations-list";
+import { FileText } from "lucide-react";
 
 export default async function MyRegistrationsPage() {
     const supabase = await createClient();
-    const t = await getTranslations("Registration");
     const tCommon = await getTranslations("Common");
-    const tNav = await getTranslations("Nav");
+    const tNav = await getTranslations("Navigation");
+    const t = await getTranslations("Registration");
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return null;

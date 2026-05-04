@@ -360,7 +360,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     };
 
     const lastAddTimeEvent = [...events].reverse().find(e => e.event_type === 'add_time');
-    const addedTime = (lastAddTimeEvent?.extra_info as any)?.added_minutes || null;
+    const addedTime = (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null;
 
     // --- Team Action Grid Component ---
     const TeamActionGrid = ({ teamId, name, type }: { teamId: string, name: string, type: 'home' | 'away' }) => {

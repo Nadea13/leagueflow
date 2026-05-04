@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
-import { Button } from "@/components/ui/button";
-import { Trophy, Clock, Users, Activity } from "lucide-react";
+import { Trophy, Clock, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 interface Registration {
     id: string;
@@ -28,7 +28,6 @@ interface MyRegistrationsListProps {
 }
 
 export function MyRegistrationsList({ registrations }: MyRegistrationsListProps) {
-    const t = useTranslations("Registration");
     const tCommon = useTranslations("Common");
 
     const isApproved = (status: string) => status === 'APPROVED' || status === 'PAID';
@@ -54,7 +53,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                 month: 'short',
                 year: 'numeric'
             });
-        } catch (e) {
+        } catch (_e) {
             return dateStr;
         }
     };
@@ -77,11 +76,14 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 border flex items-center justify-center p-1.5 transition-all shrink-0 bg-muted/5 group-hover:border-primary/30">
                                         {reg.logo_url ? (
-                                            <img
-                                                src={reg.logo_url}
-                                                alt={reg.team_name}
-                                                className="w-full h-full object-contain transition-all"
-                                            />
+                                            <div className="relative w-full h-full">
+                                                <Image
+                                                    src={reg.logo_url}
+                                                    alt={reg.team_name}
+                                                    fill
+                                                    className="object-contain"
+                                                />
+                                            </div>
                                         ) : (
                                             <Users className="w-6 h-6 text-muted-foreground/30 group-hover:text-primary/50" />
                                         )}

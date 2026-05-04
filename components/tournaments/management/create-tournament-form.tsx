@@ -32,7 +32,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function TournamentCreate({ isPro = false }: { isPro?: boolean }) {
+export function TournamentCreate() {
     const t = useTranslations("Dialog");
     const tFormat = useTranslations("Format");
     const tCommon = useTranslations("Common");

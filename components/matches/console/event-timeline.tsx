@@ -42,7 +42,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                             className="py-12 min-h-0"
                         />
                     ) : (
-                        events.map((event: any) => {
+                        events.map((event: MatchEvent) => {
                             const evtConfig = EVENT_TYPES.find(e => e.type === event.event_type);
                             const globalEventTypes = ['kick_off', 'half_time', 'full_time', 'match_paused', 'match_resumed', 'add_time'];
                             const isNeutral = !event.team_id || globalEventTypes.includes(event.event_type);
@@ -95,9 +95,9 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                             <span className="text-sm font-black text-foreground/40">
                                                                 {event.minute}&apos;
                                                             </span>
-                                                            {event.extra_info?.added_minutes && (
-                                                                <span className="text-sm1 font-black text-foreground/40">
-                                                                    (+{event.extra_info.added_minutes} MIN)
+                                                            {!!(event.extra_info as any)?.added_minutes && (
+                                                                <span className="text-sm font-black text-foreground/40">
+                                                                    (+{(event.extra_info as any).added_minutes} MIN)
                                                                 </span>
                                                             )}
                                                         </div>
@@ -133,8 +133,8 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                     )}>
                                                         {event.player_name || "Match Event"}
                                                     </p>
-                                                    {event.extra_info?.reason && (
-                                                        <p className="text-[9px] text-foreground/40 mt-1 font-medium">{event.extra_info.reason}</p>
+                                                    {!!(event.extra_info as any)?.reason && (
+                                                        <p className="text-[9px] text-foreground/40 mt-1 font-medium">{(event.extra_info as any).reason}</p>
                                                     )}
                                                 </div>
                                             )}

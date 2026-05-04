@@ -6,10 +6,7 @@ import { cn } from "@/lib/utils";
 import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Trash2, Users, Upload, Download, AlertCircle, Lock, Unlock, ExternalLink, LayoutGrid, ArrowLeft, Plus, Edit2, FileText } from "lucide-react";
+import { Loader2, Trash2, Users, AlertCircle, Lock, Unlock, ExternalLink, LayoutGrid, ArrowLeft, FileText } from "lucide-react";
 import { Tab } from "@/components/ui/tab";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -19,7 +16,6 @@ import { AddPlayerForm } from "@/components/squads/add-player-form";
 import { EditTeamForm } from "@/components/squads/edit-team-form";
 import { SquadList } from "@/components/squads/squad-list";
 
-import { Label } from "@/components/ui/label";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -46,14 +42,11 @@ interface SquadManagementProps {
 export function SquadManagement({ team, initialPlayers }: SquadManagementProps) {
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
-    const tTeam = useTranslations("Team");
     const tSports = useTranslations("Sports");
     const tReg = useTranslations("Registration");
-    const locale = useLocale();
     const { toast } = useToast();
 
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
-    const router = useRouter();
 
     const refreshPlayers = useCallback(async () => {
         const { getPlayers } = await import("@/actions/manager/team");
@@ -63,7 +56,6 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
     // Team Edit State
     const [teamName, setTeamName] = useState(team.name);
-    const [teamSport, setTeamSport] = useState<SportType>(team.sport || 'football');
 
     // Import Roster State
     const [isImporting, setIsImporting] = useState(false);

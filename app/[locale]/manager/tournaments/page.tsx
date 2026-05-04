@@ -33,7 +33,7 @@ export default async function ManagerTournamentsPage() {
                 <TournamentSearchHeader />
             </div>
 
-            <PublicTournaments onlyActive={true} isManager={true} />
+            <PublicTournaments onlyActive={true} />
         </div>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Match, Team } from "@/types/index";
 import { MatchCard } from "@/components/tournaments/matches/match-card";
@@ -19,7 +19,6 @@ import {
 import {
     Calendar as CalendarIcon,
     ArrowRight,
-    ChevronDown,
     ChevronRight,
     ChevronLeft,
     Loader2,
@@ -35,7 +34,6 @@ import {
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
-    AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,7 +17,6 @@ export function SignUpForm() {
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
-    const supabase = createClient();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

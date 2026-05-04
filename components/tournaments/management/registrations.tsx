@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Phone, User, Home, Check, X, FileText, ClipboardEdit } from "lucide-react";
+import { Loader2, ExternalLink, Phone, User, Home, Check, X, ClipboardEdit } from "lucide-react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
 import { approveRegistration, rejectRegistration } from "@/actions/organizer/tournaments/registration";
 import { toast } from "sonner";
 import {
@@ -122,7 +123,9 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <div className="flex items-center gap-2 md:gap-3">
                                             <div className="h-10 w-10 border flex items-center justify-center shrink-0 overflow-hidden bg-muted/5">
                                                 {reg.logo_url ? (
-                                                    <img src={reg.logo_url} alt="" className="w-full h-full object-contain" />
+                                                    <div className="relative w-full h-full">
+                                                        <Image src={reg.logo_url} alt="" fill className="object-contain" />
+                                                    </div>
                                                 ) : (
                                                     <Home className="h-5 w-5 text-muted-foreground/30" />
                                                 )}

@@ -10,7 +10,6 @@ import { UserDropdown } from "@/components/dashboard/user-dropdown"
 import { useState, useEffect } from "react"
 import { getNavItems } from "@/config/nav"
 import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
 import { Tab } from "@/components/ui/tab"
 import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog"
 
@@ -26,7 +25,6 @@ interface DashboardNavbarProps {
 export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initialIsOrganizer, forcedMode, className }: DashboardNavbarProps) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
-    const { toast } = useToast()
     const router = useRouter()
     const [open, setOpen] = useState(false)
     const [mode, setMode] = useState<'organizer' | 'team'>(forcedMode || 'team')

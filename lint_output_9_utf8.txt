@@ -1,0 +1,137 @@
+﻿
+> leagueflow@0.1.1 lint
+> eslint
+
+
+D:\Work\leagueflow\actions\organizer\tournaments\general.ts
+  432:11  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\admin\pricing\page.tsx
+  3:10  warning  'PlanDialog' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  4:10  warning  'PlansTable' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\admin\tracking\page.tsx
+  2:10  warning  'TrackingDashboard' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  3:10  warning  'TrackingAnalytics' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\manager\my-registrations\page.tsx
+  52:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\app\[locale]\manager\tournaments\[id]\page.tsx
+  15:11  warning  't' is assigned a value but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  17:11  warning  'tSettings' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\manager\tournaments\page.tsx
+   2:10  warning  'Trophy' is defined but never used. Allowed unused vars must match /^_/u                   @typescript-eslint/no-unused-vars
+   2:18  warning  'Activity' is defined but never used. Allowed unused vars must match /^_/u                 @typescript-eslint/no-unused-vars
+   2:28  warning  'CheckCircle' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+   6:10  warning  'Card' is defined but never used. Allowed unused vars must match /^_/u                     @typescript-eslint/no-unused-vars
+   6:16  warning  'CardContent' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+   6:29  warning  'CardHeader' is defined but never used. Allowed unused vars must match /^_/u               @typescript-eslint/no-unused-vars
+   6:41  warning  'CardTitle' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   9:10  warning  'Suspense' is defined but never used. Allowed unused vars must match /^_/u                 @typescript-eslint/no-unused-vars
+  14:11  warning  'tDashboard' is assigned a value but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  18:11  warning  'totalCount' is assigned a value but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  19:11  warning  'activeCount' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  20:11  warning  'completedCount' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\organizer\tournaments\[id]\matches\[matchId]\page.tsx
+  34:19  warning  'tournament' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\organizer\tournaments\[id]\tournament-content.tsx
+   5:40   warning  'List' is defined but never used. Allowed unused vars must match /^_/u                     @typescript-eslint/no-unused-vars
+   5:106  warning  'ClipboardEdit' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  60:11   warning  'tRegistrations' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\app\[locale]\register\[id]\page.tsx
+  8:16  warning  'CardContent' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  8:29  warning  'CardDescription' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  8:46  warning  'CardHeader' is defined but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  8:58  warning  'CardTitle' is defined but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\admin\audit-logs-table.tsx
+  324:80  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\admin\pricing-tabs.tsx
+  10:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\admin\tracking-analytics.tsx
+   5:52  warning  'CardDescription' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  44:57  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  64:57  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\admin\tracking-tabs.tsx
+  10:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\auth\email-login-form.tsx
+  19:11  warning  'supabase' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\auth\sign-up-form.tsx
+  21:11  warning  'supabase' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\billing\billing-page-content.tsx
+  29:21  warning  'setHistory' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  85:45  warning  Unexpected any. Specify a different type                                               @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\dashboard\become-organizer-button.tsx
+  6:10  warning  'registerAsOrganizer' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  7:10  warning  'toast' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+  8:18  warning  'Loader2' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+  9:10  warning  'useRouter' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\dashboard\become-organizer-dialog.tsx
+   7:18  warning  'CheckCircle2' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  18:11  warning  't' is assigned a value but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  60:18  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\dashboard\dashboard-card.tsx
+  15:11  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  21:11  warning  't' is assigned a value but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+  38:15  warning  'isPro' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\dashboard\dashboard-navbar.tsx
+  29:13  warning  'toast' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\dashboard\dashboard-shell.tsx
+  71:11  warning  'isPro' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\dashboard\dashboard-sidebar.tsx
+  19:13  warning  'toast' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\dashboard\user-dropdown.tsx
+  9:5  warning  'AvatarImage' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\matches\console\event-timeline.tsx
+  45:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\matches\console\scoreboard.tsx
+  19:115  warning  'onAddTime' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\matches\match-console-page.tsx
+  363:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\pricing\pricing-footer.tsx
+  48:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:64  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\leagueflow\components\registrations\my-registrations-list.tsx
+  31:11  warning  't' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  57:18  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\registrations\promptpay-qr.tsx
+  9:10  warning  'Copy' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  9:16  warning  'Check' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\settings\delete-account-button.tsx
+  13:10  warning  'LucideIcon' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\shared\empty-state.tsx
+   1:18  warning  'Users' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  21:11  warning  'tTeam' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\leagueflow\components\tournaments\public\public-tournament-card.tsx
+  23:11  warning  'isPro' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+Γ£û 66 problems (0 errors, 66 warnings)
+
