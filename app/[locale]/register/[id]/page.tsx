@@ -97,7 +97,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                         description={t("registration_closed_desc")}
                         icon={AlertCircle}
                         action={
-                            <p className="text-sm font-bold text-primary/60 tracking-widest uppercase">{t("contact_organizer")}</p>
+                            <p className="text-sm font-bold text-primary/60 tracking-widest">{t("contact_organizer")}</p>
                         }
                     />
                 ) : (

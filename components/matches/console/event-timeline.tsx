@@ -39,7 +39,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                             icon={Clock}
                             title={t("no_events") || "No events yet"}
                             description="Live match updates will appear here"
-                            className="py-12 border-none bg-transparent min-h-0"
+                            className="py-12 min-h-0"
                         />
                     ) : (
                         events.map((event: any) => {

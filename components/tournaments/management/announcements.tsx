@@ -191,7 +191,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
                     icon={Megaphone}
                     title={t("no_announcements")}
                     description={t("no_announcements_desc")}
-                    className="py-12 border"
+                    className="py-12"
                 />
             ) : (
                 <div className="grid grid-cols-1 gap-2 md:gap-3">
