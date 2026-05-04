@@ -18,13 +18,9 @@ import { GeneralInfo } from "./general-info";
 
 
 
-export function TournamentSettings({ tournament, hasFixtures, teams }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
+export function TournamentSettings({ tournament, hasFixtures }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
     const tournamentId = tournament.id;
-    const t = useTranslations("Settings");
     const tBilling = useTranslations("Billing");
-    const tCommon = useTranslations("Common");
-    const tDialog = useTranslations("Dialog");
-    const tTournament = useTranslations("Tournament");
     const router = useRouter();
 
     const isPro = true; // Pro locks removed for all
@@ -36,14 +32,13 @@ export function TournamentSettings({ tournament, hasFixtures, teams }: { tournam
     const [plans, setPlans] = useState<Plan[]>([]);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isFetchingPlans, setIsFetchingPlans] = useState(false);
-    const [mounted, setMounted] = useState(false);
 
 
 
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        setMounted(true);
+        // Mounted logic kept for billing section if needed later
     }, []);
 
     useEffect(() => {

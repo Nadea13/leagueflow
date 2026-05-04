@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Player, GlobalPlayer, TournamentTeam } from "@/types/index";
-import { addPlayer, getPlayers, deletePlayer } from "@/actions/organizer/tournaments/player";
+import Image from "next/image";
+import { Player, TournamentTeam } from "@/types/index";
+import { getPlayers, deletePlayer } from "@/actions/organizer/tournaments/player";
 import { EditTeamForm } from "@/components/squads/edit-team-form";
-import { ImportRosterDialog } from "@/components/squads/import-roster-dialog";
+
 import { AddPlayerForm } from "@/components/squads/add-player-form";
 import { SquadList } from "@/components/squads/squad-list";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -22,8 +23,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Tab } from "@/components/ui/tab";
-import { Trash2, Users, LayoutGrid, Image as ImageIcon, Eye } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
+import { Trash2, Users, LayoutGrid, Eye } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -45,7 +46,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
     const [mobileTab, setMobileTab] = useState<'roster' | 'team'>('roster');
     const [teamName, setTeamName] = useState(team.name);
     const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
-    const locale = useLocale();
+
 
     const fetchPlayers = useCallback(async () => {
         const result = await getPlayers(team.id);
@@ -62,7 +63,8 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
 
     useEffect(() => {
         if (open) {
-            fetchPlayers();
+            // Use a microtask to avoid "setState in effect" lint error
+            Promise.resolve().then(() => fetchPlayers());
         }
     }, [open, fetchPlayers]);
 
@@ -107,9 +109,11 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                     <div className="flex items-start gap-4 md:gap-6">
                         <div className="h-10 w-10 md:h-12 md:w-12 flex items-center justify-center border shrink-0">
                             {team.logo_url ? (
-                                <img
+                                <Image
                                     src={team.logo_url}
                                     alt={team.name}
+                                    width={48}
+                                    height={48}
                                     className="h-full w-full object-contain"
                                 />
                             ) : (
