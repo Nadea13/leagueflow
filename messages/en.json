@@ -188,7 +188,8 @@
         "type_to_confirm": "Please type \"{text}\" to confirm:",
         "active": "Active",
         "list_view": "List",
-        "calendar_view": "Calendar"
+        "calendar_view": "Calendar",
+        "configuration_overview": "Configuration Overview"
     },
     "Registration": {
         "title": "Tournament Registration",
@@ -461,7 +462,7 @@
         "advancing_teams_per_group_desc": "Number of teams advancing to knockout stage from each group.",
         "description": "Description",
         "description_placeholder": "Tournament rules, prizes, and general information...",
-        "document_deadline": "Document Submission Deadline",
+        "document_deadline": "Deadline",
         "create_button": "Create Tournament",
         "create_title": "Create New Tournament",
         "select_sport": "Select Sport"
@@ -552,7 +553,7 @@
         "checking_status": "Checking payment status automatically...",
         "pro_badge": "PRO",
         "upsell_pro_feature": "This is a Pro feature.",
-        "document_deadline": "Document Submission Deadline"
+        "document_deadline": "Deadline"
     },
     "Bracket": {
         "no_knockout": "No knockout matches yet",

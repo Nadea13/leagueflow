@@ -6,7 +6,8 @@ import { getVenues, addVenue, deleteVenue } from "@/actions/organizer/tournament
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Loader2, Plus, Trash2, MapPin, ExternalLink, Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -109,8 +110,8 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
     };
 
     return (
-        <div className="space-y-4 md:space-y-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+        <div className="bg-card border space-y-2 md:space-y-3 p-4 md:p-6">
+            <div className="flex flex-col md:flex-row justify-between gap-2 md:gap-3">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <MapPin className="h-5 w-5 text-primary" />
@@ -122,7 +123,6 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                     <DialogTrigger asChild>
                         <Button
                             size="sm"
-                            className="h-10 bg-primary text-primary-foreground hover:bg-primary px-4 md:px-6 rounded-none font-black tracking-tighter transition-all relative group overflow-hidden"
                         >
                             <span className="relative z-10 flex items-center gap-2 md:gap-3">
                                 <Plus className="h-4 w-4" />
@@ -130,7 +130,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             </span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] bg-card border-foreground/10 rounded-none p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
+                    <DialogContent className="sm:max-w-[500px] bg-card rounded-none p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                 <MapPin className="h-6 w-6 text-primary" />
@@ -147,7 +147,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         onChange={e => setName(e.target.value)}
                                         placeholder={t("name_placeholder")}
                                         required
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5  rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -156,7 +156,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         value={address}
                                         onChange={e => setAddress(e.target.value)}
                                         placeholder={t("address_placeholder")}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -165,7 +165,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         value={googleMapsUrl}
                                         onChange={e => setGoogleMapsUrl(e.target.value)}
                                         placeholder="https://maps.google.com/..."
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -175,7 +175,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         onChange={e => setCapacity(e.target.value)}
                                         placeholder={t("capacity_placeholder")}
                                         type="number"
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                             </div>
@@ -185,7 +185,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     value={notes}
                                     onChange={e => setNotes(e.target.value)}
                                     placeholder={t("notes_placeholder")}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="flex justify-end gap-2 md:gap-3 pt-4">
@@ -193,7 +193,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     type="button"
                                     variant="ghost"
                                     onClick={() => setOpen(false)}
-                                    className="h-10 rounded-none border-foreground/10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
+                                    className="h-10 rounded-none font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                 >
                                     {tCommon("cancel")}
                                 </Button>
@@ -229,63 +229,52 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             className="py-12"
                         />
                     ) : (
-                        <div className="bg-card border overflow-hidden">
-                            <Table className="border-separate border-spacing-0">
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent border bg-muted/20">
-                                        <TableHead className="text-[11px] font-black tracking-widest text-primary/70 h-11 border-b border-foreground/5">{t("name_header")}</TableHead>
-                                        <TableHead className="text-[11px] font-black tracking-widest text-primary/70 h-11 border-b border-foreground/5">{t("address_header")}</TableHead>
-                                        <TableHead className="text-[11px] font-black tracking-widest text-primary/70 h-11 border-b border-foreground/5 text-right">{t("capacity_header")}</TableHead>
-                                        <TableHead className="w-[80px] h-11 border-b"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {venues.map((venue) => (
-                                        <TableRow key={venue.id} className="hover:bg-muted/5 transition-colors border-foreground/5 group/row">
-                                            <TableCell className="py-3 border-b border-foreground/5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 flex items-center justify-center bg-muted/20 group-hover/row:bg-primary/10 transition-colors">
-                                                        <MapPin className="h-4 w-4 text-primary/40 group-hover/row:text-primary transition-colors" />
-                                                    </div>
-                                                    <span className="text-sm font-black tracking-tight text-foreground">{venue.name}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-3 border-b border-foreground/5">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[13px] text-muted-foreground font-bold tracking-tight truncate max-w-[200px]">
-                                                        {venue.address || "-"}
-                                                    </span>
-                                                    {venue.google_maps_url && (
-                                                        <a
-                                                            href={venue.google_maps_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-primary/60 hover:text-primary transition-colors"
-                                                        >
-                                                            <ExternalLink className="h-4 w-4" />
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-3 text-right border-b border-foreground/5">
-                                                <span className="text-sm font-black text-foreground tracking-tighter">
-                                                    {venue.capacity ? venue.capacity.toLocaleString() : "-"}
+                        <div className="space-y-2 md:space-y-3">
+                            {venues.map((venue) => (
+                                <div
+                                    key={venue.id}
+                                    className="flex items-center justify-between p-2 md:p-3 bg-muted/20 border hover:bg-muted/30 transition-colors group/item"
+                                >
+                                    <div className="flex items-center gap-2 md:gap-4 flex-1">
+                                        <div className="w-10 h-10 bg-muted/20 flex items-center justify-center group-hover/item:bg-primary/10 transition-colors">
+                                            <MapPin className="h-5 w-5 text-primary/40 group-hover/item:text-primary transition-colors" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-sm font-black tracking-tight text-foreground truncate">{venue.name}</span>
+                                                {venue.capacity && (
+                                                     <Badge variant="outline" className="rounded-none border-primary/20 bg-primary/5 text-[9px] font-black tracking-widest px-2 py-0 text-primary/70">
+                                                        {venue.capacity.toLocaleString()} {t("capacity_header")}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-bold tracking-[0.1em] text-muted-foreground/40 truncate max-w-[300px]">
+                                                    {venue.address || "-"}
                                                 </span>
-                                            </TableCell>
-                                            <TableCell className="py-3 border-b border-foreground/5">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
-                                                    onClick={() => setVenueToDelete(venue.id)}
-                                                >
-                                                    <Trash2 className="h-5 w-5" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                                {venue.google_maps_url && (
+                                                    <a
+                                                        href={venue.google_maps_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-primary/60 hover:text-primary transition-colors"
+                                                    >
+                                                        <ExternalLink className="h-3 w-3" />
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                        onClick={() => setVenueToDelete(venue.id)}
+                                    >
+                                        <Trash2 className="h-5 w-5" />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>

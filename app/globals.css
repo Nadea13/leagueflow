@@ -149,7 +149,7 @@
 }
 
 .pro-editor .ql-toolbar.ql-snow {
-  @apply bg-foreground/[0.03] border-foreground/10 border-t-0 border-x-0 rounded-none transition-all;
+  @apply border-foreground/10 border-t-0 border-x-0 rounded-none transition-all;
   padding: 8px;
 }
 
@@ -196,11 +196,16 @@
 }
 
 .pro-editor-wrapper {
-  @apply bg-foreground/5 border border-foreground/10 transition-all duration-300;
+  @apply border border-foreground/10 transition-all duration-500;
+  background-image: linear-gradient(var(--color-primary), var(--color-primary));
+  background-size: 0% 2px;
+  background-repeat: no-repeat;
+  background-position: bottom left;
 }
 
 .pro-editor-wrapper:focus-within {
-  @apply border-primary/40 ring-1 ring-primary/20 transition-all duration-300;
+  @apply border-foreground/20;
+  background-size: 100% 2px;
 }
 
 /* Rich Text / Prose Fixes */

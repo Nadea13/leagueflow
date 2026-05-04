@@ -105,8 +105,8 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
     };
 
     return (
-        <div className="space-y-4 md:space-y-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
+        <div className="bg-card border space-y-2 md:space-y-3 p-4 md:p-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 md:gap-3">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                         <Users className="h-5 w-5 text-primary" />
@@ -120,7 +120,6 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                             size="sm"
                             disabled={!isPro}
                             onClick={() => !isPro && togglePayment?.()}
-                            className="h-10 bg-primary text-primary-foreground hover:bg-primary px-6 rounded-none font-black tracking-tighter transition-all relative group overflow-hidden"
                         >
                             <span className="relative z-10 flex items-center gap-2">
                                 <Plus className="h-4 w-4" />
@@ -174,7 +173,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                 </Dialog>
             </div>
 
-            <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-2 md:p-3">
+            <div className="relative overflow-hidden transition-colors">
                 
                 <div className="relative z-10 space-y-4 md:space-y-6">
 
@@ -218,7 +217,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                             {collaborators.map((collab) => (
                                 <div
                                     key={collab.id}
-                                    className="flex items-center justify-between p-2 md:p-3 bg-muted/20 border border-foreground/5 hover:bg-muted/30 transition-colors group/item"
+                                    className="flex items-center justify-between p-2 md:p-3 bg-muted/20 border hover:bg-muted/30 transition-colors group/item"
                                 >
                                     <div className="flex items-center gap-2 md:gap-4">
                                         <div className="w-10 h-10 bg-muted/20 flex items-center justify-center group-hover/item:bg-primary/10 transition-colors">
@@ -257,7 +256,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
             </div>
 
             <AlertDialog open={!!removeMemberId} onOpenChange={(open) => !open && setRemoveMemberId(null)}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card rounded-none shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />

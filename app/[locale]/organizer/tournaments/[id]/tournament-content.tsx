@@ -680,56 +680,6 @@ export function TournamentContent({
                         <div className="lg:col-span-2">
                             <TournamentSettings tournament={tournament} hasFixtures={hasFixtures} userPlan={userPlan} teams={teams} />
                         </div>
-
-                        {/* Sidebar Info Column */}
-                        <div className="lg:col-span-1 space-y-4 md:space-y-6 hidden lg:block">
-                            <div className="space-y-4 md:space-y-6">
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <ClipboardEdit className="h-5 w-5 text-primary" />
-                                        Configuration Overview
-                                    </h3>
-                                </div>
-
-                                <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
-                                    <div className="space-y-4 md:space-y-6">
-                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                            <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Status</span>
-                                            <Badge className="rounded-none bg-foreground/5 text-foreground border-foreground/10 text-[9px] font-black px-3 py-1">
-                                                {tournament?.status?.toUpperCase()}
-                                            </Badge>
-                                        </div>
-                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                            <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Plan</span>
-                                            <span className="text-[10px] font-black tracking-widest text-primary">
-                                                {isPro ? 'PRO ACCESS' : 'FREE PLAN'}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center border-b border-foreground/5 pb-2 md:pb-3">
-                                            <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">Team Slots</span>
-                                            <span className="text-[11px] font-black tracking-widest text-foreground">
-                                                {teams.length} / {tournament?.max_teams || 8}
-                                            </span>
-                                        </div>
-                                        <div className="pt-2 md:pt-3">
-                                            <p className="text-[9px] font-black tracking-widest text-muted-foreground/40 mb-1">Last Updated</p>
-                                            <p className="text-[11px] font-black text-foreground">
-                                                {mounted ? new Date(tournament?.updated_at || tournament?.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '...'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </Card>
-
-                                <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
-                                    <div className="space-y-2 md:space-y-3">
-                                        <h5 className="text-[10px] font-black tracking-widest text-primary">Quick Help</h5>
-                                        <p className="text-[11px] text-muted-foreground/80 leading-relaxed font-medium">
-                                            Adjust your tournament rules, schedule parameters, and registration details from the main settings panel.
-                                        </p>
-                                    </div>
-                                </Card>
-                            </div>
-                        </div>
                     </div>
                 </div>
             )}
