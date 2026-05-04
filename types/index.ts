@@ -85,6 +85,7 @@ export interface TournamentTeam {
     group_name?: string | null;
     logo_url?: string | null;
     is_roster_locked: boolean;
+    managed_by_manager?: boolean;
     sport: SportType;
     created_at: string;
 }

@@ -5,13 +5,12 @@ import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Phone, User, Home, Check, X, FileText } from "lucide-react";
+import { Loader2, ExternalLink, Phone, User, Home, Check, X, FileText, ClipboardEdit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { approveRegistration, rejectRegistration } from "@/actions/organizer/tournaments/registration";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/shared/empty-state";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -87,121 +86,130 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
         );
     }
 
+    // Hide entire section if no registrations
     if (registrations.length === 0) {
-        return (
-            <EmptyState
-                icon={FileText}
-                title={t("no_registrations")}
-                description="Waiting for the first signup for this tournament"
-                className="py-12 border"
-            />
-        );
+        return null;
     }
 
     return (
-        <div className="w-full">
-            <div className="border w-full overflow-x-auto rounded-none">
-                <Table className="min-w-[800px]">
-                    <TableHeader>
-                        <TableRow className="h-10">
-                            <TableHead className="px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("team_name")}</TableHead>
-                            <TableHead className="px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("contact_info")}</TableHead>
-                            <TableHead className="text-center px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("payment_status")}</TableHead>
-                            <TableHead className="text-center px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("slip")}</TableHead>
-                            <TableHead className="px-2 md:px-3 text-xs tracking-widest text-muted-foreground">{t("date")}</TableHead>
-                            <TableHead className="text-center px-2 md:px-3 text-xs tracking-widest text-muted-foreground"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {registrations.map((reg) => (
-                            <TableRow key={reg.id} className="h-16 hover:bg-muted/5 transition-colors group">
-                                <TableCell className="px-2 md:px-3">
-                                    <div className="flex items-center gap-2 md:gap-3">
-                                        <div className="h-10 w-10 border flex items-center justify-center shrink-0 overflow-hidden bg-muted/5">
-                                            {reg.logo_url ? (
-                                                <img src={reg.logo_url} alt="" className="w-full h-full object-contain" />
-                                            ) : (
-                                                <Home className="h-5 w-5 text-muted-foreground/30" />
-                                            )}
-                                        </div>
-                                        <span className="font-black tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="px-2 md:px-3">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center gap-2 text-xs group-hover:text-primary transition-colors font-black tracking-tight">
-                                            <User className="h-3 w-3 text-primary" />
-                                            {reg.contact_name}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground tabular-nums">
-                                            <Phone className="h-3 w-3" />
-                                            {reg.contact_phone}
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-center px-2 md:px-3">
-                                    <Badge variant="outline" className={cn(
-                                        "",
-                                        reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground" :
-                                        reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground"
-                                    )}>
-                                        {reg.payment_status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-center px-4">
-                                    {reg.slip_url ? (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-9 px-3 text-[10px] font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
-                                            onClick={() => window.open(reg.slip_url!, "_blank")}
-                                        >
-                                            <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                                            {t("view_slip")}
-                                        </Button>
-                                    ) : (
-                                        <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter">No Slip</span>
-                                    )}
-                                </TableCell>
-                                <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap">
-                                    {new Date(reg.created_at).toLocaleString('en-US', { 
-                                        day: '2-digit', 
-                                        month: 'short', 
-                                        hour: '2-digit', 
-                                        minute: '2-digit',
-                                        hour12: false
-                                    }).replace(',', '')}
-                                </TableCell>
-                                <TableCell className="px-2 md:px-3">
-                                    {reg.payment_status === 'PENDING' && (
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-9 w-9 p-0 rounded-none border-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
-                                                disabled={isActing !== null}
-                                                onClick={() => handleApprove(reg.id)}
-                                                title="Approve"
-                                            >
-                                                {isActing === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-5 w-5" />}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-9 w-9 p-0 rounded-none border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-foreground transition-all shadow-sm"
-                                                disabled={isActing !== null}
-                                                onClick={() => setRegistrationToReject(reg.id)}
-                                                title="Reject"
-                                            >
-                                                <X className="h-5 w-5" />
-                                            </Button>
-                                        </div>
-                                    )}
-                                </TableCell>
+        <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-4 md:space-y-6">
+            <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                        <ClipboardEdit className="h-5 w-5 text-primary" />
+                        {t("title")}
+                    </h3>
+                </div>
+            </div>
+
+            <div className="relative overflow-hidden transition-colors">
+                <div className="w-full overflow-x-auto">
+                    <Table className="min-w-[800px]">
+                        <TableHeader>
+                            <TableRow className="h-10 hover:bg-transparent border-border/50">
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("team_name")}</TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("contact_info")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("payment_status")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("slip")}</TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("date")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50"></TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {registrations.map((reg) => (
+                                <TableRow key={reg.id} className="h-16 hover:bg-muted/5 transition-colors group border-border/50">
+                                    <TableCell className="px-2 md:px-3">
+                                        <div className="flex items-center gap-2 md:gap-3">
+                                            <div className="h-10 w-10 border flex items-center justify-center shrink-0 overflow-hidden bg-muted/5">
+                                                {reg.logo_url ? (
+                                                    <img src={reg.logo_url} alt="" className="w-full h-full object-contain" />
+                                                ) : (
+                                                    <Home className="h-5 w-5 text-muted-foreground/30" />
+                                                )}
+                                            </div>
+                                            <span className="font-black tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="px-2 md:px-3">
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2 text-xs group-hover:text-primary transition-colors font-black tracking-tight">
+                                                <User className="h-3 w-3 text-primary" />
+                                                {reg.contact_name}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground tabular-nums tracking-widest">
+                                                <Phone className="h-3 w-3" />
+                                                {reg.contact_phone}
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center px-2 md:px-3">
+                                        <Badge 
+                                            variant="outline" 
+                                            className={cn(
+                                                "rounded-none text-[9px] font-black uppercase tracking-tighter h-5 px-3",
+                                                reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground border-primary" :
+                                                reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground border-destructive" : 
+                                                "bg-muted text-muted-foreground border-muted-foreground/20"
+                                            )}
+                                        >
+                                            {reg.payment_status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-center px-4">
+                                        {reg.slip_url ? (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-9 px-3 text-[10px] font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
+                                                onClick={() => window.open(reg.slip_url!, "_blank")}
+                                            >
+                                                <ExternalLink className="h-3.5 w-3.5 mr-2" />
+                                                {t("view_slip")}
+                                            </Button>
+                                        ) : (
+                                            <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter uppercase">{t("no_slip") || "No Slip"}</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap uppercase tracking-widest">
+                                        {new Date(reg.created_at).toLocaleString('en-US', { 
+                                            day: '2-digit', 
+                                            month: 'short', 
+                                            hour: '2-digit', 
+                                            minute: '2-digit',
+                                            hour12: false
+                                        }).replace(',', '')}
+                                    </TableCell>
+                                    <TableCell className="px-2 md:px-3 text-right">
+                                        {reg.payment_status === 'PENDING' && (
+                                            <div className="flex items-center justify-end gap-2 transition-opacity">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-9 w-9 p-0 rounded-none border-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+                                                    disabled={isActing !== null}
+                                                    onClick={() => handleApprove(reg.id)}
+                                                    title="Approve"
+                                                >
+                                                    {isActing === reg.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-5 w-5" />}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-9 w-9 p-0 rounded-none border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-foreground transition-all shadow-sm"
+                                                    disabled={isActing !== null}
+                                                    onClick={() => setRegistrationToReject(reg.id)}
+                                                    title="Reject"
+                                                >
+                                                    <X className="h-5 w-5" />
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             </div>
 
             <AlertDialog open={!!registrationToReject} onOpenChange={(open) => !open && setRegistrationToReject(null)}>

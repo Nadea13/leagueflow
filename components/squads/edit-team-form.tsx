@@ -214,6 +214,7 @@ export function EditTeamForm({
                             onChange={e => setTeamName(e.target.value)}
                             placeholder={tTeam("team_name")}
                             required
+                            readOnly={isLocked}
                             className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                         />
                     </div>
@@ -222,7 +223,7 @@ export function EditTeamForm({
                         <Label className="text-xs font-black tracking-widest text-primary">
                             {tCommon("sport") || "Sport"}
                         </Label>
-                        <Select value={teamSport} onValueChange={(v) => setTeamSport(v as SportType)}>
+                        <Select value={teamSport} onValueChange={(v) => setTeamSport(v as SportType)} disabled={isLocked}>
                             <SelectTrigger className="bg-transparent text-foreground focus-visible:ring-0 w-full">
                                 <SelectValue placeholder={tCommon("sport") || "Sport"} />
                             </SelectTrigger>
@@ -244,6 +245,7 @@ export function EditTeamForm({
                             value={teamDescription}
                             onChange={e => setTeamDescription(e.target.value)}
                             placeholder={tTeam("team_description_placeholder")}
+                            readOnly={isLocked}
                             className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
                         />
                     </div>
@@ -257,6 +259,7 @@ export function EditTeamForm({
                                 value={contactName}
                                 onChange={e => setContactName(e.target.value)}
                                 placeholder="Manager Name"
+                                readOnly={isLocked}
                                 className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                             />
                         </div>
@@ -268,6 +271,7 @@ export function EditTeamForm({
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
                                 placeholder="08x-xxx-xxxx"
+                                readOnly={isLocked}
                                 className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                             />
                         </div>
@@ -291,12 +295,13 @@ export function EditTeamForm({
                         )}
                     </div>
 
-                    <div className="space-y-2 md:space-y-3">
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <div className="h-px flex-1 bg-destructive" />
-                            <span className="text-xs font-black tracking-widest text-destructive">{t("danger_zone")}</span>
-                            <div className="h-px flex-1 bg-destructive" />
-                        </div>
+                    {!isLocked && (
+                        <div className="space-y-2 md:space-y-3">
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <div className="h-px flex-1 bg-destructive" />
+                                <span className="text-xs font-black tracking-widest text-destructive">{t("danger_zone")}</span>
+                                <div className="h-px flex-1 bg-destructive" />
+                            </div>
 
                         <Dialog open={resetRosterDialogOpen} onOpenChange={setResetRosterDialogOpen}>
                             <DialogTrigger asChild>
@@ -390,6 +395,7 @@ export function EditTeamForm({
                             </DialogContent>
                         </Dialog>
                     </div>
+                )}
                 </form>
             </div>
         </div>

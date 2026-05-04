@@ -58,7 +58,8 @@ export async function addPlayer(
     const name = formData.get("name") as string;
     const number = formData.get("number") as string;
     const position = formData.get("position") as string;
-    const birthDate = formData.get("birthDate") as string;
+    const birthDate = formData.get("birth_date") as string;
+    const globalPlayerId = formData.get("global_player_id") as string;
 
     if (!name) {
         return { success: false, error: "Player name is required" };
@@ -76,6 +77,7 @@ export async function addPlayer(
     const { error } = await adminSupabase.from("players").insert({
         team_id: participation ? teamId : null,
         global_team_id: globalTeam ? teamId : null,
+        global_player_id: globalPlayerId || null,
         name,
         number: number ? parseInt(number) : null,
         position: position || null,

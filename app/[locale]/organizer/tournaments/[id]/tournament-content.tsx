@@ -71,6 +71,7 @@ export function TournamentContent({
     const [teams, setTeams] = useState<(TournamentTeam & { team?: { user_id: string | null } })[]>(initialTeams);
     const [goals, setGoals] = useState<Goal[]>(initialGoals);
     const [fixtureView, setFixtureView] = useState<'list' | 'calendar'>('list');
+    const [teamSubTab, setTeamSubTab] = useState<'list' | 'add'>('list');
     const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
     const [mounted, setMounted] = useState(false);
 
@@ -450,37 +451,49 @@ export function TournamentContent({
 
             {/* Teams Tab */}
             {currentTab === 'teams' && (
-                <div className="space-y-2 md:space-y-6 outline-none">
+                <div className="space-y-4 md:space-y-6 outline-none">
+                    {/* Mobile Sub-Tabs */}
+                    <div className="md:hidden">
+                        <Tab
+                            value={teamSubTab}
+                            onChange={(val) => setTeamSubTab(val as 'list' | 'add')}
+                            className="w-full"
+                            fullWidth={true}
+                            options={[
+                                { value: 'list', label: t("participating_teams"), icon: Users },
+                                { value: 'add', label: t("add_team"), icon: Plus }
+                            ]}
+                        />
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Content: Registrations & Teams List */}
-                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
+                        <div className={cn(
+                            "lg:col-span-2 space-y-4 md:space-y-6",
+                            teamSubTab !== 'list' && "hidden md:block"
+                        )}>
                             {/* Registrations Section (Admin Only) */}
                             {userRole === 'admin' && (
-                                <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-4 md:space-y-6">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                                <ClipboardEdit className="h-5 w-5 text-primary" />
-                                                {tRegistrations("title")}
-                                            </h3>
-                                        </div>
-                                    </div>
-
-                                    <div className="relative overflow-hidden transition-colors">
+                                <div className={cn(teamSubTab !== 'list' && "hidden md:block")}>
+                                    {tournament.is_registration_open && (
                                         <Registrations tournamentId={id} />
-                                    </div>
+                                    )}
                                 </div>
                             )}
 
                             {/* Participating Teams */}
-                            <div className="space-y-4 md:space-y-6">
+                            <div className={cn(
+                                "bg-card border p-4 md:p-6 space-y-4 md:space-y-6",
+                                teamSubTab !== 'list' && "hidden md:block"
+                            )}>
                                 <div className="flex flex-col gap-1">
                                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Users className="h-5 w-5 text-primary" />
-                                        {t("participating_teams")} <span className="text-muted-foreground/40 ml-1">[{teams?.length || 0}]</span>
+                                        <span>{t("participating_teams")}</span>
+                                        <span className="text-muted-foreground/40">[{teams?.length || 0}]</span>
                                     </h3>
                                 </div>
-                                <div className="bg-card border rounded-none relative overflow-hidden transition-colors">
+                                <div className="relative overflow-hidden transition-colors">
                                     <Teams
                                         teams={teams}
                                         tournamentId={id}
@@ -492,10 +505,13 @@ export function TournamentContent({
                             </div>
                         </div>
 
-                        <div className="lg:col-span-1 space-y-4 md:space-y-6">
+                        <div className={cn(
+                            "lg:col-span-1 space-y-4 md:space-y-6",
+                            teamSubTab !== 'add' && "hidden md:block"
+                        )}>
                             {/* Tournament Actions - Matching Overview Tab Style */}
                             {tournament?.status !== 'draft' && (
-                                <div className="space-y-4 md:space-y-6">
+                                <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                             <Settings className="h-5 w-5 text-primary" />
@@ -503,40 +519,32 @@ export function TournamentContent({
                                         </h3>
                                     </div>
 
-                                    <Card className="bg-card border rounded-none relative overflow-hidden p-2 md:p-3">
+                                    <div className="space-y-2 md:space-y-3">
                                         <div className="space-y-2 md:space-y-3">
-                                            <div className="space-y-2 md:space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/40 text-xs">{t("public_link")}</label>
-                                                    <Badge variant="outline" className="rounded-none text-[8px] font-black border-primary/20 text-primary">{t("registration")}</Badge>
-                                                </div>
-                                                <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-primary/20 line-clamp-2">
-                                                    {mounted ? registrationUrl : tCommon("loading") || "..."}
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2 md:gap-3">
-                                                <Button
-                                                    variant="default"
-                                                    size="default"
-                                                    className="rounded-none w-full font-black text-[11px] tracking-widest shadow-lg shadow-primary/10 h-11"
-                                                    onClick={copyRegistrationLink}
-                                                >
-                                                    <Copy className="h-4 w-4 mr-2" />
-                                                    {tCommon("copy_link")}
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="default"
-                                                    className="rounded-none w-full border-border hover:bg-foreground/5 hover:text-foreground transition-all font-black text-[11px] tracking-widest h-11"
-                                                    onClick={() => window.open(registrationUrl, '_blank')}
-                                                >
-                                                    <ExternalLink className="h-4 w-4 mr-2" />
-                                                    {tCommon("open_link")}
-                                                </Button>
+                                            <div className="p-2 md:p-3 bg-muted/10 border border-border/40 text-[11px] break-all font-mono text-muted-foreground/70 relative transition-all group-hover:bg-muted/20 group-hover:border-primary/20 line-clamp-2">
+                                                {mounted ? registrationUrl : tCommon("loading") || "..."}
                                             </div>
                                         </div>
-                                    </Card>
+
+                                        <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                            <Button
+                                                variant="default"
+                                                size="default"
+                                                onClick={copyRegistrationLink}
+                                            >
+                                                <Copy className="h-4 w-4" />
+                                                {tCommon("copy_link")}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="default"
+                                                onClick={() => window.open(registrationUrl, '_blank')}
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                                {tCommon("open_link")}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                             {/* Registration Settings (Administrative) */}
@@ -548,7 +556,7 @@ export function TournamentContent({
                             )}
 
                             {/* Add Team Section */}
-                            <div className="space-y-4 md:space-y-6">
+                            <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
                                 <div className="flex flex-col gap-1">
                                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                         <Plus className="h-5 w-5 text-primary" />
@@ -556,13 +564,10 @@ export function TournamentContent({
                                     </h3>
                                 </div>
 
-                                <Card className="bg-card border rounded-none relative overflow-hidden transition-all p-2 md:p-3">
-                                    <TeamForm
-                                        tournamentId={id}
-                                        isLimitReached={false}
-                                    />
-                                </Card>
-
+                                <TeamForm
+                                    tournamentId={id}
+                                    isLimitReached={false}
+                                />
                             </div>
                         </div>
                     </div>
