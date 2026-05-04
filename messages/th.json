@@ -260,6 +260,7 @@
         "active": "กำลังแข่งขัน",
         "list_view": "รายการ",
         "calendar_view": "ปฏิทิน",
+        "configuration_overview": "ภาพรวมการตั้งค่า",
         "group_header": "กลุ่ม {group}",
         "stats_participating_teams": "ทีมที่เข้าร่วม",
         "stats_teams_registered": "ทีมที่ลงทะเบียน",
@@ -457,7 +458,7 @@
         "advancing_teams_per_group_desc": "จำนวนทีมในแต่ละกลุ่มที่จะได้ผ่านเข้ารอบน็อคเอาท์",
         "description": "รายละเอียดเพิ่มเติม",
         "description_placeholder": "ข้อมูลกติกา รางวัล และรายละเอียดอื่นๆ...",
-        "document_deadline": "ระยะเวลาส่งเอกสาร",
+        "document_deadline": "วันปิดรับเอกสาร",
         "create_button": "สร้างทัวร์นาเมนต์",
         "create_title": "สร้างทัวร์นาเมนต์ใหม่",
         "select_sport": "เลือกชนิดกีฬา"
@@ -548,7 +549,7 @@
         "checking_status": "ระบบกำลังตรวจสอบสถานะอัตโนมัติ...",
         "pro_badge": "PRO",
         "upsell_pro_feature": "นี่คือฟีเจอร์ระดับ Pro",
-        "document_deadline": "ระยะเวลาส่งเอกสาร"
+        "document_deadline": "วันปิดรับเอกสาร"
     },
     "Registrations": {
         "title": "การการสมัครสมาชิก",

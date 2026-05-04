@@ -64,7 +64,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
     };
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
             <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                     <Settings2 className="h-5 w-5 text-primary" />
@@ -72,40 +72,40 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                 </h3>
             </div>
 
-            <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-2 md:p-3">
+            <div className="relative overflow-hidden transition-colors">
                 <div className="relative z-10 space-y-4 md:space-y-6">
                     <form onSubmit={handleSave} className="space-y-2 md:space-y-3">
                     {/* Match Duration */}
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("half_duration")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("half_duration")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.half_duration}
                                     onChange={e => updateField('half_duration', parseInt(e.target.value) || 0)}
                                     min={1}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("extra_time")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("extra_time")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.extra_time_duration}
                                     onChange={e => updateField('extra_time_duration', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("max_substitutions")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("max_substitutions")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.max_substitutions}
                                     onChange={e => updateField('max_substitutions', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                         </div>
@@ -115,25 +115,25 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("min_squad_size")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("min_squad_size")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.min_squad_size || ""}
                                     onChange={e => updateField('min_squad_size', e.target.value ? parseInt(e.target.value) : null)}
                                     placeholder={t("no_limit")}
                                     min={1}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("max_squad_size")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("max_squad_size")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.max_squad_size || ""}
                                     onChange={e => updateField('max_squad_size', e.target.value ? parseInt(e.target.value) : null)}
                                     placeholder={t("no_limit")}
                                     min={1}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                         </div>
@@ -143,24 +143,24 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("yellow_ban_threshold")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("yellow_ban_threshold")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.yellow_card_ban_threshold}
                                     onChange={e => updateField('yellow_card_ban_threshold', parseInt(e.target.value) || 1)}
                                     min={1}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                                 <p className="text-[9px] font-bold text-muted-foreground/40 tracking-wider px-1">{t("yellow_ban_desc")}</p>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("red_ban_matches")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("red_ban_matches")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.red_card_ban_matches}
                                     onChange={e => updateField('red_card_ban_matches', parseInt(e.target.value) || 1)}
                                     min={1}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                                 <p className="text-[9px] font-bold text-muted-foreground/40 tracking-wider px-1">{t("red_ban_desc")}</p>
                             </div>
@@ -171,33 +171,33 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                     <div className="space-y-2 md:space-y-3">
                         <div className="grid grid-cols-3 gap-2 md:gap-3">
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("win")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("win")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.points_for_win}
                                     onChange={e => updateField('points_for_win', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("draw")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("draw")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.points_for_draw}
                                     onChange={e => updateField('points_for_draw', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("loss")}</Label>
+                                <Label className="text-xs font-black tracking-widest text-primary">{t("loss")}</Label>
                                 <Input
                                     type="number"
                                     value={rules.points_for_loss}
                                     onChange={e => updateField('points_for_loss', parseInt(e.target.value) || 0)}
                                     min={0}
-                                    className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
                         </div>
@@ -207,7 +207,7 @@ export function RulesConfig({ tournamentId }: RulesConfigProps) {
                         <Button 
                             type="submit" 
                             disabled={isSaving}
-                            className="h-10 bg-primary hover:bg-primary px-10 rounded-none font-black tracking-tighter transition-all relative overflow-hidden"
+                            className="md:w-fit w-full"
                         >
                             <span className="relative z-10 flex items-center gap-2">
                                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
