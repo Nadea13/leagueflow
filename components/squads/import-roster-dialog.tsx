@@ -213,9 +213,8 @@ export function ImportRosterDialog({
             <DialogTrigger asChild>
                 {trigger || (
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="rounded-none border border-border/50 font-bold tracking-wider text-[10px] h-10 w-10 md:w-auto p-0 md:px-4 hover:bg-primary hover:text-black transition-all"
                     >
                         <Download className="h-4 w-4 md:mr-2" />
                         <span className="hidden md:inline">{t("import_roster")}</span>

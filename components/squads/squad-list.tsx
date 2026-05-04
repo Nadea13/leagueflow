@@ -195,9 +195,12 @@ export function SquadList({
                         <Dialog key={player.id} open={openProfileId === player.id} onOpenChange={(isOpen) => setOpenProfileId(isOpen ? player.id : null)}>
                             <>
                                 <div
-                                className="group bg-card border relative overflow-hidden transition-all hover:border-primary hover:shadow-md cursor-pointer"
+                                className={cn(
+                                    "group bg-card border relative overflow-hidden transition-all",
+                                    !effectivelyLocked && "hover:border-primary hover:shadow-md cursor-pointer"
+                                )}
                                 onClick={() => {
-                                    if (editingPlayerId !== player.id) {
+                                    if (!effectivelyLocked && editingPlayerId !== player.id) {
                                         setOpenProfileId(player.id);
                                     }
                                 }}
@@ -325,176 +328,179 @@ export function SquadList({
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-1">
-                                                {player.global_player_id ? (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-10 w-10 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleUnlinkPlayer(player.id);
-                                                        }}
-                                                        title="Unlink Identity"
-                                                    >
-                                                        <Unlink className="h-5 w-5" />
-                                                    </Button>
-                                                ) : (
-                                                    <Popover
-                                                        open={linkingPlayerId === player.id}
-                                                        onOpenChange={(isOpen) => {
-                                                            setLinkingPlayerId(isOpen ? player.id : null);
-                                                            if (isOpen) {
-                                                                setSearchQuery("");
-                                                                handleSearch("");
-                                                            } else {
-                                                                setSearchQuery("");
-                                                                setSearchResults([]);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <PopoverTrigger asChild>
+                                                {!effectivelyLocked && (
+                                                    player.global_player_id ? (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-10 w-10 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleUnlinkPlayer(player.id);
+                                                            }}
+                                                            title="Unlink Identity"
+                                                        >
+                                                            <Unlink className="h-5 w-5" />
+                                                        </Button>
+                                                    ) : (
+                                                        <Popover
+                                                            open={linkingPlayerId === player.id}
+                                                            onOpenChange={(isOpen) => {
+                                                                setLinkingPlayerId(isOpen ? player.id : null);
+                                                                if (isOpen) {
+                                                                    setSearchQuery("");
+                                                                    handleSearch("");
+                                                                } else {
+                                                                    setSearchQuery("");
+                                                                    setSearchResults([]);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    title={t("connect_identity") || "Connect Identity"}
+                                                                >
+                                                                    <Link2 className="h-5 w-5" />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="end" onClick={(e) => e.stopPropagation()}>
+                                                                <div className="p-0 border-b border-border/40">
+                                                                    <div className="relative group/search">
+                                                                        <div className="relative">
+                                                                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within/search:text-primary group-focus-within/search:scale-110 transition-all duration-300 z-10" />
+                                                                            <Input
+                                                                                placeholder="Start typing..."
+                                                                                value={searchQuery}
+                                                                                onChange={(e) => handleSearch(e.target.value)}
+                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
+                                                                                autoFocus
+                                                                            />
+                                                                            <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within/search:w-full transition-all duration-700 z-20" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                                    {isSearching ? (
+                                                                        <div className="flex flex-col items-center justify-center py-12 gap-3">
+                                                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                                            <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Scanning Database</span>
+                                                                        </div>
+                                                                    ) : searchResults.length > 0 ? (
+                                                                        <div className="py-2">
+                                                                            {searchResults.map((gp) => (
+                                                                                <button
+                                                                                    key={gp.id}
+                                                                                    className="w-full text-left px-5 py-3 hover:bg-primary/10 group/item flex items-center justify-between transition-colors border-b border-border/20 last:border-0"
+                                                                                    onClick={() => handleLinkPlayer(player.id, gp)}
+                                                                                >
+                                                                                    <div className="flex flex-col">
+                                                                                        <span className="font-black text-xs tracking-tight group-hover/item:text-primary">{gp.name}</span>
+                                                                                        {gp.date_of_birth && (
+                                                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/60 mt-0.5">
+                                                                                                {formatDate(gp.date_of_birth)}
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 opacity-0 group-hover/item:opacity-100 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="p-8 text-center space-y-4">
+                                                                            <div className="h-10 w-10 bg-muted/20 border border-border/40 flex items-center justify-center mx-auto">
+                                                                                {searchQuery ? <FileText className="h-5 w-5 text-muted-foreground/20" /> : <Search className="h-5 w-5 text-muted-foreground/20" />}
+                                                                            </div>
+                                                                            <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
+                                                                                {tCommon("no_results") || "No records found"}
+                                                                            </p>
+                                                                            {searchQuery && (
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="outline"
+                                                                                    className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                                    onClick={async () => {
+                                                                                        const res = await createGlobalPlayer(searchQuery, null, player.birth_date, [team.sport]);
+                                                                                        if (res.success && res.data) {
+                                                                                            await handleLinkPlayer(player.id, res.data);
+                                                                                        } else {
+                                                                                            toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    Create & Sync Global ID
+                                                                                </Button>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="p-4 border-t border-border/40 bg-muted/5">
+                                                                    {!searchQuery && (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="ghost"
+                                                                            className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-primary transition-colors"
+                                                                            onClick={async () => {
+                                                                                const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
+                                                                                if (res.success && res.data) {
+                                                                                    await handleLinkPlayer(player.id, res.data);
+                                                                                } else {
+                                                                                    toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <UserPlus className="h-4 w-4 mr-3 opacity-40" />
+                                                                            Create Global ID
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    )
+                                                )}
+                                                {!effectivelyLocked && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
                                                                 onClick={(e) => e.stopPropagation()}
-                                                                title={t("connect_identity") || "Connect Identity"}
                                                             >
-                                                                <Link2 className="h-5 w-5" />
+                                                                <MoreVertical className="h-5 w-5" />
                                                             </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="end" onClick={(e) => e.stopPropagation()}>
-                                                            <div className="p-0 border-b border-border/40">
-                                                                <div className="relative group/search">
-                                                                    <div className="relative">
-                                                                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within/search:text-primary group-focus-within/search:scale-110 transition-all duration-300 z-10" />
-                                                                        <Input
-                                                                            placeholder="Start typing..."
-                                                                            value={searchQuery}
-                                                                            onChange={(e) => handleSearch(e.target.value)}
-                                                                            className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
-                                                                            autoFocus
-                                                                        />
-                                                                        <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within/search:w-full transition-all duration-700 z-20" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                                                {isSearching ? (
-                                                                    <div className="flex flex-col items-center justify-center py-12 gap-3">
-                                                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                                                        <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Scanning Database</span>
-                                                                    </div>
-                                                                ) : searchResults.length > 0 ? (
-                                                                    <div className="py-2">
-                                                                        {searchResults.map((gp) => (
-                                                                            <button
-                                                                                key={gp.id}
-                                                                                className="w-full text-left px-5 py-3 hover:bg-primary/10 group/item flex items-center justify-between transition-colors border-b border-border/20 last:border-0"
-                                                                                onClick={() => handleLinkPlayer(player.id, gp)}
-                                                                            >
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="font-black text-xs tracking-tight group-hover/item:text-primary">{gp.name}</span>
-                                                                                    {gp.date_of_birth && (
-                                                                                        <span className="text-[9px] font-mono font-bold text-muted-foreground/60 mt-0.5">
-                                                                                            {formatDate(gp.date_of_birth)}
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 opacity-0 group-hover/item:opacity-100 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all" />
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="p-8 text-center space-y-4">
-                                                                        <div className="h-10 w-10 bg-muted/20 border border-border/40 flex items-center justify-center mx-auto">
-                                                                            {searchQuery ? <FileText className="h-5 w-5 text-muted-foreground/20" /> : <Search className="h-5 w-5 text-muted-foreground/20" />}
-                                                                        </div>
-                                                                        <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
-                                                                            {tCommon("no_results") || "No records found"}
-                                                                        </p>
-                                                                        {searchQuery && (
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="outline"
-                                                                                className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-primary hover:text-black hover:border-primary transition-all"
-                                                                                onClick={async () => {
-                                                                                    const res = await createGlobalPlayer(searchQuery, null, player.birth_date, [team.sport]);
-                                                                                    if (res.success && res.data) {
-                                                                                        await handleLinkPlayer(player.id, res.data);
-                                                                                    } else {
-                                                                                        toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                Create & Sync Global ID
-                                                                            </Button>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="p-4 border-t border-border/40 bg-muted/5">
-                                                                {!searchQuery && (
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="ghost"
-                                                                        className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-primary transition-colors"
-                                                                        onClick={async () => {
-                                                                            const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
-                                                                            if (res.success && res.data) {
-                                                                                await handleLinkPlayer(player.id, res.data);
-                                                                            } else {
-                                                                                toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <UserPlus className="h-4 w-4 mr-3 opacity-40" />
-                                                                        Create Global ID
-                                                                    </Button>
-                                                                )}
-                                                            </div>
-                                                        </PopoverContent>
-                                                    </Popover>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
+                                                            <DropdownMenuItem
+                                                                className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditingPlayerId(player.id);
+                                                                    setEditNumber(player.number?.toString() || "");
+                                                                    setEditPosition(player.position || "");
+                                                                    setEditBirthDate(player.birth_date || "");
+                                                                    setEditName(player.name || "");
+                                                                }}
+                                                            >
+                                                                <Edit2 className="mr-3 h-4 w-4" />
+                                                                {tCommon("edit")}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onDeletePlayer(player.id);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="mr-3 h-4 w-4" />
+                                                                {tCommon("delete")}
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 )}
-                                                <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
-                                                        disabled={effectivelyLocked}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <MoreVertical className="h-5 w-5" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
-                                                    <DropdownMenuItem
-                                                        className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingPlayerId(player.id);
-                                                            setEditNumber(player.number?.toString() || "");
-                                                            setEditPosition(player.position || "");
-                                                            setEditBirthDate(player.birth_date || "");
-                                                            setEditName(player.name || "");
-                                                        }}
-                                                    >
-                                                        <Edit2 className="mr-3 h-4 w-4" />
-                                                        {tCommon("edit")}
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            onDeletePlayer(player.id);
-                                                        }}
-                                                    >
-                                                        <Trash2 className="mr-3 h-4 w-4" />
-                                                        {tCommon("delete")}
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
                                             </div>
                                         )}
                                     </div>

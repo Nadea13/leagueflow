@@ -60,7 +60,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
 
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
             <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -75,8 +75,8 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                 )}
             </div>
 
-            <div className="bg-card border rounded-none relative overflow-hidden group transition-colors p-2 md:p-3">             
-                <div className="relative z-10 space-y-4 md:space-y-6">
+            <div className="relative overflow-hidden group transition-colors">             
+                <div className="relative z-10 space-y-2 md:space-y-3">
                     {!isPro && (
                         <div className="p-4 bg-primary/5 border border-primary/20 text-[11px] text-primary font-black tracking-wider flex items-center gap-3">
                             <AlertTriangle className="h-4 w-4" />
@@ -94,12 +94,12 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                         <input type="hidden" name="format" value={tournament.format || "league"} />
                         <input type="hidden" name="max_teams" value={tournament.max_teams || 8} />
 
-                        <div className="flex items-center justify-between p-2 md:p-3 bg-foreground/5 border-none rounded-none">
+                        <div className="flex items-center justify-between p-2 md:p-3 border">
                             <div className="space-y-1">
-                                <Label htmlFor="is_registration_open" className="text-sm md:text-lg font-black tracking-tight text-foreground">
+                                <Label htmlFor="is_registration_open" className="text-xs font-black tracking-widest text-primary">
                                     {t("allow_registration")}
                                 </Label>
-                                <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">
+                                <p className="text-[10px] font-bold text-muted-foreground tracking-wider">
                                     {t("allow_registration_desc")}
                                 </p>
                             </div>
@@ -115,7 +115,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
 
                         <div className="space-y-2 md:space-y-3">
                             <div className="space-y-1">
-                                <Label htmlFor="registration_fee" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("registration_fee")}</Label>
+                                <Label htmlFor="registration_fee" className="text-xs font-black tracking-widest text-primary">{t("registration_fee")}</Label>
                                 <Input
                                     type="number"
                                     id="registration_fee"
@@ -125,11 +125,11 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                     min="0"
                                     step="0.01"
                                     disabled={!isPro}
-                                    className="h-10 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold tracking-tighter"
+                                    className="bg-transparent"
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label htmlFor="bank_account_number" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("promptpay_id")}</Label>
+                                <Label htmlFor="bank_account_number" className="text-xs font-black tracking-widest text-primary">{t("promptpay_id")}</Label>
                                 <Input
                                     type="text"
                                     id="bank_account_number"
@@ -137,14 +137,14 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                     defaultValue={tournament.bank_account_number ?? undefined}
                                     placeholder="08xxxxxxxx or ID Card"
                                     disabled={!isPro}
-                                    className="h-10 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold tracking-tighter"
+                                    className="bg-transparent"
                                 />
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
                                 <div className="space-y-1">
-                                    <Label htmlFor="bank_name" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("bank_name")}</Label>
+                                    <Label htmlFor="bank_name" className="text-xs font-black tracking-widest text-primary">{t("bank_name")}</Label>
                                     <Select name="bank_name" defaultValue={tournament.bank_name || "PromptPay"} disabled={!isPro}>
-                                        <SelectTrigger id="bank_name" className="h-10 bg-foreground/5 border-none rounded-none focus:ring-1 focus:ring-primary/50 transition-all font-bold tracking-tighter">
+                                        <SelectTrigger id="bank_name" className="bg-transparent w-full">
                                             <SelectValue placeholder={t("select_bank")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
@@ -153,7 +153,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                     </Select>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label htmlFor="bank_account_name" className="text-[10px] font-black tracking-wider text-muted-foreground/60">{t("account_name")}</Label>
+                                    <Label htmlFor="bank_account_name" className="text-xs font-black tracking-widest text-primary">{t("account_name")}</Label>
                                     <Input
                                         type="text"
                                         id="bank_account_name"
@@ -161,16 +161,16 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                         defaultValue={tournament.bank_account_name ?? undefined}
                                         placeholder={t("account_name")}
                                         disabled={!isPro}
-                                        className="h-10 bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-bold tracking-tighter"
+                                        className="bg-transparent"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex justify-end pt-4">
+                            <div className="flex justify-end">
                                 <Button 
                                     type="submit" 
                                     disabled={!isPro || isPending}
-                                    className="h-10 px-10 rounded-none font-black tracking-tighter bg-primary hover:bg-primary transition-all relative overflow-hidden"
+                                    className="w-full"
                                 >
                                     <div className="absolute inset-0 bg-foreground/20 translate-y-full transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center justify-center gap-2">
