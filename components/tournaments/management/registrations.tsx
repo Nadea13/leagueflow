@@ -92,7 +92,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
     }
 
     return (
-        <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-4 md:space-y-6 mb-2 md:mb-3">
             <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">

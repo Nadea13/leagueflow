@@ -37,7 +37,7 @@ export function Tab<T extends string>({
   return (
     <div
       className={cn(
-        "flex p-1 bg-muted/20 rounded-none gap-1 border border-border h-auto",
+        "flex p-1 bg-card rounded-none gap-1 border border-border h-auto",
         orientation === "vertical" ? "flex-col" : "flex-row",
         className
       )}

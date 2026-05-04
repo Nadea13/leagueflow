@@ -35,15 +35,15 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, c
                 icon={Trophy}
                 title={t("group_standings")}
                 description={t("group_standings_empty") || "No groups have been defined for this tournament yet. Assign teams to groups to see standings."}
-                className="py-12 border bg-background/50"
+                className="py-12"
             />
         );
     }
 
     return (
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-2 md:space-y-3">
             <div id="group-standings-canvas" className={cn(
-                "grid grid-cols-1 gap-4 md:gap-6",
+                "grid grid-cols-1 gap-2 md:gap-3",
                 columns === 2 && "xl:grid-cols-2"
             )}>
                 {sortedGroups.map((group) => {
@@ -58,7 +58,7 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, c
                     const groupStandings = calculateStandings(groupTeams, groupMatches);
 
                     return (
-                        <div key={group} className="space-y-4 md:space-y-6">
+                        <div key={group} className="space-y-2 md:space-y-3">
                             <div className="flex flex-col">
                                 <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3 relative z-10">
                                     <span className="w-2 h-2 bg-primary rounded-none" />

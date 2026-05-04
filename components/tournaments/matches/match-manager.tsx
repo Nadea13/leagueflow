@@ -173,7 +173,7 @@ export function MatchManager({
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2 md:space-y-3">
             {matches.length === 0 ? (
                 <EmptyState
                     icon={CalendarIcon}
@@ -198,13 +198,13 @@ export function MatchManager({
                                 <button
                                     onClick={() => setSelectedDate(null)}
                                     className={cn(
-                                        "p-3 text-xs font-black tracking-tighter transition-all shrink-0",
+                                        "p-2 ml-1 text-xs font-black tracking-tighter transition-all shrink-0",
                                         selectedDate === null
                                             ? "bg-primary text-primary-foreground"
                                             : "text-muted-foreground/60 hover:text-primary"
                                     )}
                                 >
-                                    {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                    {locale === 'th' ? "ทั้งหมด" : "All"}
                                 </button>
 
                                 <div className="flex items-center flex-1">
@@ -333,7 +333,7 @@ export function MatchManager({
 
                         {/* Management Controls */}
                         {!hideControls && (
-                            <div className="flex flex-wrap items-center justify-between gap-4 bg-muted/5 border border-border/40 p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3 border p-2 md:p-3">
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <div className="flex items-center gap-3">
                                         <Switch
@@ -344,14 +344,13 @@ export function MatchManager({
                                         />
                                         <Label htmlFor="edit-mode" className="text-[10px] font-black tracking-widest text-muted-foreground cursor-pointer flex items-center gap-2">
                                             <Settings2 className="h-3 w-3" />
-                                            {t("edit_mode") || "Edit Mode"}
+                                            {t("edit_mode")}
                                         </Label>
                                     </div>
-                                    <div className="h-4 w-px bg-border/40" />
                                     <div className="flex items-center gap-2 text-primary/40">
                                         <CalendarCheck className="h-4 w-4" />
                                         <span className="text-[10px] font-black tracking-widest">
-                                            {matches.length} {tFixtures("matches") || "Matches"}
+                                            {matches.length} {tFixtures("matches")}
                                         </span>
                                     </div>
                                 </div>

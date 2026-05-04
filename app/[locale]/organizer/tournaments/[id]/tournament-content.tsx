@@ -21,7 +21,7 @@ import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
 import { calculateStandings } from "@/lib/standings";
 import { TournamentSettings } from "@/components/tournaments/settings/tournament-settings";
 import { MatchManager } from "@/components/tournaments/matches/match-manager";
-import { MatchCalendar } from "@/components/tournaments/matches/match-calendar";
+
 import { ProgressionLogic } from "@/components/tournaments/matches/progression-logic";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -70,8 +70,8 @@ export function TournamentContent({
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [teams, setTeams] = useState<(TournamentTeam & { team?: { user_id: string | null } })[]>(initialTeams);
     const [goals, setGoals] = useState<Goal[]>(initialGoals);
-    const [fixtureView, setFixtureView] = useState<'list' | 'calendar'>('list');
     const [teamSubTab, setTeamSubTab] = useState<'list' | 'add'>('list');
+    const [fixtureSubTab, setFixtureSubTab] = useState<'schedule' | 'standings'>('schedule');
     const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
     const [mounted, setMounted] = useState(false);
 
@@ -209,6 +209,8 @@ export function TournamentContent({
 
     // Calculate Standings
     const calculatedStandings = calculateStandings(teams, matches);
+    const isLeague = tournament?.format === 'league' || tournament?.format === 'league_ha';
+    const hasStandings = isLeague ? teams.length > 0 : teams.some(t => t.group_name);
 
     // Player stats
     const playerStats = calculatePlayerStats(matchEvents, allPlayersForStats, null);
@@ -451,7 +453,7 @@ export function TournamentContent({
 
             {/* Teams Tab */}
             {currentTab === 'teams' && (
-                <div className="space-y-4 md:space-y-6 outline-none">
+                <div className="space-y-2 md:space-y-3 outline-none">
                     {/* Mobile Sub-Tabs */}
                     <div className="md:hidden">
                         <Tab
@@ -466,10 +468,10 @@ export function TournamentContent({
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-3 items-start">
                         {/* Main Content: Registrations & Teams List */}
                         <div className={cn(
-                            "lg:col-span-2 space-y-4 md:space-y-6",
+                            "lg:col-span-2",
                             teamSubTab !== 'list' && "hidden md:block"
                         )}>
                             {/* Registrations Section (Admin Only) */}
@@ -576,35 +578,40 @@ export function TournamentContent({
 
             {/* Fixtures Tab */}
             {currentTab === 'fixtures' && (
-                <div className="space-y-4 md:space-y-6 outline-none">
+                <div className="space-y-2 md:space-y-3 outline-none">
+                    {/* Mobile Sub-Tabs */}
+                    <div className="md:hidden">
+                        <Tab
+                            value={fixtureSubTab}
+                            onChange={(val) => setFixtureSubTab(val as 'schedule' | 'standings')}
+                            options={[
+                                { value: 'schedule', label: t("match_schedule"), icon: Calendar },
+                                { value: 'standings', label: t("standings"), icon: Trophy }
+                            ]}
+                            className="h-10 border w-full"
+                            itemClassName="flex-1 px-4"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Schedule Column */}
-                        <div className="lg:col-span-2 space-y-4 md:space-y-6">
-                            {/* Unwrapped Header */}
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex justify-start items-center gap-2 md:gap-3">
-                                        <Calendar className="h-5 w-5 text-primary" />
-                                        {t("match_schedule")}
-                                    </h3>
+                        <div className={cn(
+                            "lg:col-span-2 space-y-2 md:space-y-3",
+                            fixtureSubTab !== 'schedule' && "hidden md:block"
+                        )}>
+                            <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
+                                {/* Unwrapped Header */}
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 md:gap-3">
+                                    <div className="flex flex-col">
+                                        <h3 className="text-xl font-black tracking-tighter text-foreground flex justify-start items-center gap-2 md:gap-3">
+                                            <Calendar className="h-5 w-5 text-primary" />
+                                            {t("match_schedule")}
+                                        </h3>
+                                    </div>
                                 </div>
 
-                                {/* View Toggle - Moved to Header */}
-                                <Tab
-                                    value={fixtureView}
-                                    onChange={(val) => setFixtureView(val as 'list' | 'calendar')}
-                                    options={[
-                                        { value: 'list', label: t("list_view"), icon: List },
-                                        { value: 'calendar', label: t("calendar_view"), icon: Calendar }
-                                    ]}
-                                    className="h-10 border w-full md:w-auto"
-                                    itemClassName="flex-1 md:flex-none px-4"
-                                />
-                            </div>
-
-                            {/* Fixtures View */}
-                            <div className="min-h-[400px] bg-background rounded-none relative overflow-hidden transition-colors">
-                                {fixtureView === 'list' ? (
+                                {/* Fixtures View */}
+                                <div className="min-h-[400px] relative overflow-hidden transition-colors">
                                     <MatchManager
                                         teams={teams}
                                         matches={matches}
@@ -614,44 +621,53 @@ export function TournamentContent({
                                         startDate={tournament?.start_date}
                                         endDate={tournament?.end_date}
                                     />
-                                ) : (
-                                    <MatchCalendar matches={matches} />
-                                )}
+                                </div>
                             </div>
                         </div>
 
                         {/* Sidebar Management Column */}
-                        <div className="lg:col-span-1 space-y-4 md:space-y-6">
-                            {/* Generation Controls Block */}
-                            <div className="space-y-4 md:space-y-6">
-                                <div className="flex flex-col gap-1">
-                                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                        <Trophy className="h-5 w-5 text-primary" />
-                                        {t("standings")}
-                                    </h3>
-                                </div>
+                        {(hasStandings || (!isLeague && matches.length > 0)) && (
+                            <div className={cn(
+                                "lg:col-span-1 space-y-4 md:space-y-6",
+                                fixtureSubTab !== 'standings' && "hidden md:block"
+                            )}>
+                                {/* Generation Controls Block */}
+                                <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
+                                    {hasStandings && (
+                                        <>
+                                            <div className="flex flex-col gap-1">
+                                                <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                                    <Trophy className="h-5 w-5 text-primary" />
+                                                    {t("standings")}
+                                                </h3>
+                                            </div>
 
-                                <div className="space-y-4 md:space-y-6">
-                                    {(tournament?.format === 'league' || tournament?.format === 'league_ha') ? (
-                                        <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
-                                            <Standings standings={calculatedStandings} />
-                                        </div>
-                                    ) : (
-                                        <div className="relative z-10">
-                                            <StandingsGroups teams={teams} matches={matches} columns={1} />
-                                        </div>
+                                            <div className="space-y-2 md:space-y-3">
+                                                {isLeague ? (
+                                                    <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
+                                                        <Standings standings={calculatedStandings} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="relative z-10">
+                                                        <StandingsGroups teams={teams} matches={matches} columns={1} />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
                                     )}
 
-                                    {!(tournament?.format === 'league' || tournament?.format === 'league_ha') && (
-                                        <ProgressionLogic
-                                            tournamentId={id}
-                                            matches={matches}
-                                            format={tournament?.format || 'league'}
-                                        />
+                                    {(!isLeague && matches.length > 0) && (
+                                        <div className={cn(hasStandings && "pt-4 border-t border-border/40")}>
+                                            <ProgressionLogic
+                                                tournamentId={id}
+                                                matches={matches}
+                                                format={tournament?.format || 'league'}
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             )}
