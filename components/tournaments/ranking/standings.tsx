@@ -31,7 +31,7 @@ export function Standings({ standings }: StandingsProps) {
                 icon={List}
                 title={t("no_stats")}
                 description="Awaiting match results to calculate rankings"
-                className="py-12 border"
+                className="py-12"
             />
         );
     }

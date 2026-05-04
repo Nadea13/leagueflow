@@ -164,19 +164,13 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
 
                 {/* Date/Time Info (Edit Mode only) */}
                 {!isFinished && !isLive && !isPublic && isEditMode && (
-                    <div className="w-full">
+                    <div className="w-full pr-2 md:pr-3">
                         <div className="flex flex-col gap-2 w-full" onClick={(e) => e.stopPropagation()}>
                             <Input
                                 type="date"
-                                className="h-8 bg-[#0A0A0A] border-foreground/5 rounded-none text-[10px] font-black tracking-tighter"
                                 value={matchDate}
+                                className="bg-card"
                                 onChange={(e) => handleDateUpdate(e.target.value)}
-                            />
-                            <Input
-                                type="time"
-                                className="h-8 bg-[#0A0A0A] border-foreground/5 rounded-none text-[10px] font-black tracking-tighter"
-                                value={formatTime(matchTime) || ""}
-                                onChange={(e) => handleTimeUpdate(e.target.value)}
                             />
                         </div>
                     </div>
@@ -184,7 +178,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
             </div>
 
             {/* 2. Teams & Score Section */}
-            <div className="flex flex-row items-center justify-between w-full gap-4 md:gap-8">
+            <div className="flex flex-row items-center justify-between w-full gap-2 md:gap-3">
 
                 {/* Home Team */}
                 <div className="flex-1 flex items-center justify-end gap-3 md:gap-6 text-right w-[40%]">
@@ -198,13 +192,13 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     value={match.home_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-primary/50 font-black tracking-tighter text-xs">
+                                    <SelectTrigger className="w-[120px] md:w-[180px]">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-[#111] border-foreground/5">
-                                        <SelectItem value="tbd" className="font-black text-xs">{tMatch("tbd")}</SelectItem>
+                                    <SelectContent className="bg-card">
+                                        <SelectItem value="tbd" className="font-black text-xs text-foreground">{tMatch("tbd")}</SelectItem>
                                         {teams.map((t) => (
-                                            <SelectItem key={t.id} value={t.id} className="font-black text-xs">{t.name}</SelectItem>
+                                            <SelectItem key={t.id} value={t.id} className="font-black text-xs text-foreground">{t.name}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -232,8 +226,8 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 <div className="flex items-center justify-center shrink-0">
                     <div className={cn(
                         "flex flex-col items-center justify-center transition-all duration-300",
-                        isLive ? " text-primary-foreground scale-110" : 
-                        isFinished ? " text-foreground" : " text-muted-foreground/40"
+                        isLive ? " text-primary-foreground scale-110" :
+                            isFinished ? " text-foreground" : " text-muted-foreground/40"
                     )}>
                         {isLive || isFinished ? (
                             <div className="flex flex-col w-[5rem] items-center leading-none">
@@ -257,6 +251,15 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     </span>
                                 )}
                             </div>
+                        ) : isEditMode ? (
+                            <div className="flex flex-col items-center justify-center transition-transform duration-300">
+                                <Input
+                                    type="time"
+                                    value={formatTime(matchTime) || ""}
+                                    className="bg-card text-foreground"
+                                    onChange={(e) => handleTimeUpdate(e.target.value)}
+                                />
+                            </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center min-w-[5rem] transition-transform duration-300">
                                 <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-primary transition-colors">
@@ -279,10 +282,10 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     value={match.away_team_id || "tbd"}
                                     onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                 >
-                                    <SelectTrigger className="h-10 w-[120px] md:w-[180px] bg-[#0A0A0A] border-foreground/5 rounded-none focus:ring-primary/50 font-black tracking-tighter text-xs">
+                                    <SelectTrigger className="w-[120px] md:w-[180px]">
                                         <SelectValue placeholder={tMatch("select_team")} />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-[#111] border-foreground/5">
+                                    <SelectContent className="bg-card">
                                         <SelectItem value="tbd" className="font-black text-xs">{tMatch("tbd")}</SelectItem>
                                         {teams.map((t) => (
                                             <SelectItem key={t.id} value={t.id} className="font-black text-xs">{t.name}</SelectItem>
@@ -331,8 +334,8 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const canOpen = isPublic || !!match.away_team_id;
     const currentTab = searchParams.get('tab');
     const querySuffix = currentTab ? `?from=${currentTab}` : '';
-    
-    const url = isPublic 
+
+    const url = isPublic
         ? `/${tournamentId}/matches/${match.id}${querySuffix}`
         : `/organizer/tournaments/${tournamentId}/matches/${match.id}${querySuffix}`;
 
