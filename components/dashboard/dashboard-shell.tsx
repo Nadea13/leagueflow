@@ -177,7 +177,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                     </p>
                 </div>
                 <div className="flex items-center">
-                    <TournamentCreate isPro={userPlan !== 'free'} />
+                    <TournamentCreate />
                 </div>
             </div>
 
@@ -209,7 +209,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
 
             {!hasTournaments ? (
                 <EmptyState
-                    action={<TournamentCreate isPro={userPlan !== 'free'} />}
+                    action={<TournamentCreate />}
                 />
             ) : (
                 <div>

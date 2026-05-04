@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Search, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 import { Tournament } from "@/types";
 import { PublicTournamentCard } from "./public-tournament-card";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
 
 import { useSearchParams } from "next/navigation";
 
-export function PublicTournaments({ onlyActive = false, isManager = false }: { onlyActive?: boolean, isManager?: boolean }) {
+export function PublicTournaments({ onlyActive = false }: { onlyActive?: boolean }) {
     const t = useTranslations("Home");
     const searchParams = useSearchParams();
     const search = searchParams.get("search") || "";
@@ -66,7 +65,7 @@ export function PublicTournaments({ onlyActive = false, isManager = false }: { o
                             )}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                                 {activeTournaments.map((tournament) => (
-                                    <PublicTournamentCard key={tournament.id} tournament={tournament} isManager={isManager} />
+                                    <PublicTournamentCard key={tournament.id} tournament={tournament} />
                                 ))}
                             </div>
                         </div>
@@ -80,7 +79,7 @@ export function PublicTournaments({ onlyActive = false, isManager = false }: { o
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-700">
                                 {completedTournaments.map((tournament) => (
-                                    <PublicTournamentCard key={tournament.id} tournament={tournament} isManager={isManager} />
+                                    <PublicTournamentCard key={tournament.id} tournament={tournament} />
                                 ))}
                             </div>
                         </div>

@@ -40,7 +40,7 @@ export default async function TournamentsPage({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <TournamentCreate isPro={isPro} />
+                    <TournamentCreate />
                 </div>
             </div>
 
@@ -64,7 +64,7 @@ export default async function TournamentsPage({
                 <EmptyState
                     title={query ? "No tournaments found" : undefined}
                     description={query ? `Search query: "${query}"` : undefined}
-                    action={<TournamentCreate isPro={isPro} />}
+                    action={<TournamentCreate />}
                 />
             ) : (
                 <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

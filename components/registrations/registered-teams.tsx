@@ -8,8 +8,10 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { Registration } from "@/types";
+
 interface RegisteredTeamsProps {
-    userRegistrations: any[];
+    userRegistrations: Registration[];
 }
 
 export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {

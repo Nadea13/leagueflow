@@ -4,14 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Trophy, Calendar } from "lucide-react";
 import { formatDate } from "date-fns";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
+
+import { Tournament, Registration } from "@/types";
 
 interface TournamentOverviewProps {
-    tournament: any;
-    allApprovedRegistrations: any[] | null;
-    locale: string;
+    tournament: Tournament;
+    allApprovedRegistrations: Registration[] | null;
 }
 
-export function TournamentOverview({ tournament, allApprovedRegistrations, locale }: TournamentOverviewProps) {
+export function TournamentOverview({ tournament, allApprovedRegistrations }: TournamentOverviewProps) {
     const tCommon = useTranslations("Common");
     const tSettings = useTranslations("Settings");
     const t = useTranslations("Registration");
@@ -81,11 +83,14 @@ export function TournamentOverview({ tournament, allApprovedRegistrations, local
                                     <div key={i} className="flex items-center gap-2 group border-b border-foreground/[0.03] pb-2 last:border-0 last:pb-0">
                                         <div className="w-10 h-10 border flex items-center justify-center p-1 transition-all shrink-0">
                                             {reg.logo_url ? (
-                                                <img 
-                                                    src={reg.logo_url} 
-                                                    alt={reg.team_name} 
-                                                    className="w-full h-full object-contain transition-all"
-                                                />
+                                                <div className="relative w-full h-full">
+                                                    <Image 
+                                                        src={reg.logo_url} 
+                                                        alt={reg.team_name} 
+                                                        fill
+                                                        className="object-contain"
+                                                    />
+                                                </div>
                                             ) : (
                                                 <Users className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50" />
                                             )}

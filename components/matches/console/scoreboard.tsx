@@ -12,11 +12,10 @@ interface ScoreboardProps {
     timerTime?: number;
     timerReadOnly?: boolean;
     timerCustomText?: string | number | null;
-    onAddTime?: () => void;
     addedTime?: number | null;
 }
 
-export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime, timerReadOnly, timerCustomText, onAddTime, addedTime }: ScoreboardProps) {
+export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime, timerReadOnly, timerCustomText, addedTime }: ScoreboardProps) {
 
 
     const formatTeamName = (name: string | undefined) => {

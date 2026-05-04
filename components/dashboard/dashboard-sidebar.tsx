@@ -11,12 +11,10 @@ import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
 import { LayoutGrid, Users as UsersIcon } from "lucide-react"
 import { Tab } from "@/components/ui/tab"
 import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog"
-import { useToast } from "@/hooks/use-toast"
 
 export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team' }) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
-    const { toast } = useToast()
     const router = useRouter()
     const [mode, setMode] = useState<'organizer' | 'team'>(forcedMode || 'team')
     const [isOrganizer, setIsOrganizer] = useState(initialIsOrganizer)

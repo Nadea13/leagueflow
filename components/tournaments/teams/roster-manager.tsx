@@ -161,7 +161,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                         
                         <SquadList 
                             players={players} 
-                            team={team as any} 
+                            team={team as TournamentTeam} 
                             effectivelyLocked={readOnly} 
                             refreshPlayers={fetchPlayers} 
                             onDeletePlayer={setPlayerToDelete} 

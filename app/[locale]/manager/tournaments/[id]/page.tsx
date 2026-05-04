@@ -53,7 +53,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
     // 4. Fetch All Approved Registrations for this tournament
     const { data: allApprovedRegistrations } = await supabase
         .from("registrations")
-        .select("team_name, logo_url")
+        .select("*")
         .eq("tournament_id", id)
         .eq("payment_status", "PAID")
         .order("created_at", { ascending: true });
@@ -108,7 +108,6 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                     <TournamentOverview 
                         tournament={tournament}
                         allApprovedRegistrations={allApprovedRegistrations}
-                        locale={locale}
                     />
                 </div>
 

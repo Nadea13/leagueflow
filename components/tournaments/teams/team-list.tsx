@@ -27,7 +27,7 @@ interface TeamsProps {
     organizerId?: string;
 }
 
-export function Teams({ teams, tournamentId, isPro, showGroupSelector = false, organizerId }: TeamsProps) {
+export function Teams({ teams, tournamentId, showGroupSelector = false, organizerId }: TeamsProps) {
     const t = useTranslations("Team");
 
     if (!teams || teams.length === 0) {
@@ -48,7 +48,6 @@ export function Teams({ teams, tournamentId, isPro, showGroupSelector = false, o
                     key={team.id}
                     team={team}
                     tournamentId={tournamentId}
-                    isPro={isPro}
                     showGroupSelector={showGroupSelector}
                     isReadOnly={!!((team.user_id || team.team?.user_id) && (team.user_id !== organizerId && team.team?.user_id !== organizerId))}
                 />
@@ -60,13 +59,11 @@ export function Teams({ teams, tournamentId, isPro, showGroupSelector = false, o
 function TeamItem({
     team,
     tournamentId,
-    isPro,
     showGroupSelector,
     isReadOnly
 }: {
     team: TournamentTeam & { team?: { user_id: string | null } };
     tournamentId: string;
-    isPro: boolean;
     showGroupSelector: boolean;
     isReadOnly: boolean;
 }) {
@@ -96,10 +93,11 @@ function TeamItem({
                     <div className="p-2 md:p-3 flex flex-col md:flex-row md:items-center gap-4 cursor-pointer">
                         <div className="h-10 w-10 flex items-center justify-center shrink-0 overflow-hidden border relative transition-all group-hover:border-primary">
                             {team.logo_url ? (
-                                <img
+                                <Image
                                     src={team.logo_url}
                                     alt={team.name}
-                                    className="h-full w-full object-contain"
+                                    fill
+                                    className="object-cover"
                                 />
                             ) : (
                                 <span className="text-sm font-black text-primary">

@@ -10,17 +10,16 @@ import { Tournament } from "@/types";
 
 interface PublicTournamentCardProps {
     tournament: Tournament & { tournament_teams?: { count: number }[] };
-    isManager?: boolean;
 }
 
-export function PublicTournamentCard({ tournament, isManager = false }: PublicTournamentCardProps) {
+export function PublicTournamentCard({ tournament }: PublicTournamentCardProps) {
     const t = useTranslations("Common");
     const locale = useLocale();
     const tSettings = useTranslations("Settings");
     const tDashboard = useTranslations("Dashboard");
 
     // Assuming we want to show a PRO badge if the tournament is on a paid plan
-    const isPro = tournament.plan && tournament.plan !== 'free';
+    const _isPro = tournament.plan && tournament.plan !== 'free';
 
     const currentTeams = tournament.tournament_teams?.[0]?.count || 0;
     const isFull = tournament.max_teams && currentTeams >= tournament.max_teams;
@@ -28,7 +27,7 @@ export function PublicTournamentCard({ tournament, isManager = false }: PublicTo
     const isClosed = isFull || isPastDeadline;
 
     return (
-        <Link href={isManager ? `/manager/tournaments/${tournament.id}` : `/${tournament.id}`} className="block h-full group">
+        <Link href={`/${tournament.id}`} className="block h-full group">
             <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-6 border transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                 <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-primary" />

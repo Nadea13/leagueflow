@@ -6,9 +6,11 @@ import { PlansTable } from "@/components/admin/plans-table";
 import { PlanDialog } from "@/components/admin/plan-dialog";
 import { Shield, User } from "lucide-react";
 
+import { Plan } from "@/types";
+
 interface AdminPricingTabsProps {
-    managerPlans: any[];
-    organizerPlans: any[];
+    managerPlans: Plan[];
+    organizerPlans: Plan[];
     translations: {
         organizer_plans: string;
         manager_plans: string;
