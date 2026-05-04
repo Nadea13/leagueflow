@@ -179,7 +179,7 @@ export function MatchManager({
                     icon={CalendarIcon}
                     title={tFixtures("ready_to_start")}
                     description={tFixtures("generate_instruction")}
-                    className="py-24 border border-dashed border-border/40 bg-muted/5"
+                    className="py-24 border border-dashed"
                     action={!hideControls && (
                         <MatchGenerator
                             tournamentId={tournamentId}

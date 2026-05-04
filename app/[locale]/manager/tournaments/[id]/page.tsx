@@ -8,7 +8,6 @@ import { RegistrationForm } from "@/components/registrations/registration-form";
 import { TournamentOverview } from "@/components/registrations/tournament-overview";
 import { RegisteredTeams } from "@/components/registrations/registered-teams";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/shared/empty-state";
 
 export default async function ManagerTournamentRegisterPage({ params }: { params: Promise<{ id: string, locale: string }> }) {
     const { id, locale } = await params;

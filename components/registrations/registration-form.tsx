@@ -173,7 +173,7 @@ export function RegistrationForm({
                         title={t("success_title")}
                         description={`${t("success_desc")} ${!isFree ? t("success_desc_paid") : ""}`}
                         icon={CheckCircle2}
-                        className="border-none bg-transparent py-12"
+                        className="py-12"
                         action={
                             <div className="flex gap-4">
                                 <Button variant="outline" className="rounded-none font-black tracking-widest text-xs" onClick={() => window.location.reload()}>
@@ -212,7 +212,7 @@ export function RegistrationForm({
                                 : (isPastDeadline ? t("registration_closed_deadline_desc") : t("registration_closed_desc"))
                         }
                         icon={AlertCircle}
-                        className="min-h-[300px] border-none bg-transparent"
+                        className="min-h-[300px]"
                         action={
                             <Button asChild variant="outline" size="sm" className="rounded-none px-8 h-12 border-2 font-black tracking-widest text-xs">
                                 <Link href="/manager/tournaments">

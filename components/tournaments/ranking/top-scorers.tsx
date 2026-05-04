@@ -45,7 +45,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                 icon={Activity}
                 title={t("no_goals")}
                 description="Awaiting match events and goal scoring activity"
-                className="py-12 border"
+                className="py-12"
             />
         );
     }

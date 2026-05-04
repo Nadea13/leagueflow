@@ -15,7 +15,6 @@ import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { EmptyState } from "@/components/shared/empty-state";
 import { AddPlayerForm } from "@/components/squads/add-player-form";
 import { EditTeamForm } from "@/components/squads/edit-team-form";
 import { SquadList } from "@/components/squads/squad-list";
