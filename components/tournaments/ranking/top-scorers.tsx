@@ -75,8 +75,8 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                             const team = getTeam(scorer.team_id);
                             const isTop3 = index < 3;
                             return (
-                                <TableRow 
-                                    key={`${scorer.team_id}-${scorer.player_name}`} 
+                                <TableRow
+                                    key={`${scorer.team_id}-${scorer.player_name}`}
                                     className="h-12 border-b border-border/5 hover:bg-muted/5 transition-colors group/row"
                                 >
                                     <TableCell className="text-center px-0 border-b border-border/5">
@@ -96,7 +96,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                         <div className="flex items-center gap-3">
                                             <div className="w-7 h-7 bg-muted/10 border border-border/10 p-1 rounded-none flex items-center justify-center overflow-hidden shrink-0">
                                                 {team?.logo_url ? (
-                                                    <Image src={team.logo_url} alt="" width={28} height={28} className="w-full h-full object-contain" unoptimized />
+                                                    <img src={team.logo_url} alt="" width={28} height={28} className="w-full h-full object-contain p-1" />
                                                 ) : (
                                                     <span className="text-[8px] font-black text-muted-foreground/30 capitalize">
                                                         {team?.name.charAt(0)}

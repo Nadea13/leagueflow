@@ -150,14 +150,12 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                 <div className="relative group">
                                     <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden bg-background/50">
                                         {player.global_player?.photo_url || player.photo_url ? (
-                                            <Image
+                                            <img
                                                 src={player.global_player?.photo_url || player.photo_url || ""}
                                                 alt={player.name}
                                                 width={80}
                                                 height={80}
-                                                className="h-full w-full object-contain p-1"
-                                                unoptimized
-                                            />
+                                                className="h-full w-full object-contain p-1"                                            />
                                         ) : (
                                             <Upload className="h-8 w-8 text-muted-foreground/30" />
                                         )}
@@ -256,13 +254,12 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                 <div className="relative group">
                                     <div className="h-20 w-32 flex items-center justify-center border-2 border-dashed border-border overflow-hidden bg-background/50">
                                         {player.global_player?.id_card_url ? (
-                                            <Image
+                                            <img
                                                 src={player.global_player.id_card_url}
                                                 alt="ID Card"
                                                 width={128}
                                                 height={80}
                                                 className="h-full w-full object-contain p-1"
-                                                unoptimized
                                             />
                                         ) : (
                                             <FileText className="h-8 w-8 text-muted-foreground/30" />

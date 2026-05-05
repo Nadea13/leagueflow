@@ -93,11 +93,12 @@ function TeamItem({
                     <div className="p-2 md:p-3 flex flex-col md:flex-row md:items-center gap-4 cursor-pointer">
                         <div className="h-10 w-10 flex items-center justify-center shrink-0 overflow-hidden border relative transition-all group-hover:border-primary">
                             {team.logo_url ? (
-                                <Image
+                                <img
                                     src={team.logo_url}
                                     alt={team.name}
-                                    fill
-                                    className="object-cover"
+                                    width={40}
+                                    height={40}
+                                    className="p-1 h-full w-full object-contain"
                                 />
                             ) : (
                                 <span className="text-sm font-black text-primary">

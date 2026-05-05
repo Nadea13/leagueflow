@@ -1,6 +1,5 @@
 import { Match } from "@/types";
 
-import Image from "next/image";
 import { MatchTimer } from "./match-timer";
 
 interface ScoreboardProps {
@@ -34,7 +33,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-none bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
                             <div className="absolute inset-0 bg-primary/5 scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
                             {match.home_team?.logo_url ? (
-                                <Image src={match.home_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" unoptimized />
+                                <img src={match.home_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{match.home_team?.name?.substring(0, 2).toUpperCase() || 'H'}</span>
                             )}
@@ -86,7 +85,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-none bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
                             <div className="absolute inset-0 bg-foreground/5 scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
                             {match.away_team?.logo_url ? (
-                                <Image src={match.away_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" unoptimized />
+                                <img src={match.away_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{match.away_team?.name?.substring(0, 2).toUpperCase() || 'A'}</span>
                             )}

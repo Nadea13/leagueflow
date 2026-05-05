@@ -86,13 +86,12 @@ export function CreateTeamDialog() {
                             <div className="relative group">
                                 <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
                                     {previewUrl ? (
-                                        <Image
+                                        <img
                                             src={previewUrl}
                                             alt={tCommon("preview")}
                                             width={80}
                                             height={80}
                                             className="h-full w-full object-cover p-1"
-                                            unoptimized
                                         />
                                     ) : (
                                         <Upload className="h-8 w-8 text-muted-foreground/30" />
@@ -109,10 +108,10 @@ export function CreateTeamDialog() {
                                         {previewUrl ? t("click_to_upload") : t("upload_logo")}
                                     </Label>
                                     {previewUrl && (
-                                        <Button 
-                                            type="button" 
-                                            variant="ghost" 
-                                            size="icon" 
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
                                             className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
                                             onClick={handleRemoveLogo}
                                         >

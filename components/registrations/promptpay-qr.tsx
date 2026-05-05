@@ -58,13 +58,12 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
             <div className="flex flex-col items-center gap-2 md:gap-3">
                 {/* QR Code */}
                 <div className="p-2 bg-white border relative group">
-                    <Image
+                    <img
                         src={qrCodeUrl}
                         alt="PromptPay QR Code"
                         width={200}
                         height={200}
                         className="w-[200px] h-[200px] mix-blend-multiply"
-                        unoptimized
                     />
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[60px] h-[60px] rounded-none p-1 shadow-sm flex items-center justify-center overflow-hidden">
                         <svg viewBox="0 0 651 492" fill="none" className="w-10" xmlns="http://www.w3.org/2000/svg">

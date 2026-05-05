@@ -261,13 +261,12 @@ export function RegistrationForm({
                                     <div className="relative group">
                                         <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
                                             {logoPreviewUrl ? (
-                                                <Image
+                                                <img
                                                     src={logoPreviewUrl}
                                                     alt="Logo preview"
                                                     width={80}
                                                     height={80}
                                                     className="h-full w-full object-contain p-1"
-                                                    unoptimized
                                                 />
                                             ) : (
                                                 <Upload className="h-8 w-8 text-muted-foreground/30" />
@@ -462,13 +461,12 @@ export function RegistrationForm({
                                                     <div className="relative rounded-none overflow-hidden border bg-muted/30 p-4">
                                                         <div className="flex flex-col gap-2 md:gap-3">
                                                             <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-foreground flex items-center justify-center">
-                                                                <Image
+                                                                <img
                                                                     src={slipPreviewUrl}
                                                                     alt="Slip preview"
                                                                     width={300}
                                                                     height={400}
                                                                     className="object-contain w-full h-full"
-                                                                    unoptimized
                                                                 />
                                                                 <Button
                                                                     type="button"

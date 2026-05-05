@@ -78,13 +78,12 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
                         <div className="relative group">
                             <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden bg-muted/5">
                                 {preview ? (
-                                    <Image
+                                    <img
                                         src={preview}
                                         alt="Preview"
                                         width={80}
                                         height={80}
                                         className="h-full w-full object-contain p-1"
-                                        unoptimized
                                     />
                                 ) : (
                                     <Upload className="h-8 w-8 text-muted-foreground/30" />
