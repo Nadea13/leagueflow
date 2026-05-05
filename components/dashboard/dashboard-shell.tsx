@@ -127,6 +127,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                             icon={Users}
                             title={tTeam("no_teams_yet")}
                             description={tTeam("my_teams_desc")}
+                            className="bg-card"
                             action={<CreateTeamDialog />}
                         />
                     ) : (
@@ -210,6 +211,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
             {!hasTournaments ? (
                 <EmptyState
                     action={<TournamentCreate />}
+                    className="bg-card"
                 />
             ) : (
                 <div>

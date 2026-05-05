@@ -69,6 +69,7 @@ export default function InvitesPage() {
                     title={t("no_pending_invites")}
                     description={t("pending_invites_desc")}
                     icon={Users}
+                    className="bg-card"
                     action={<div />}
                 />
             ) : (

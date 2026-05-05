@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search, Trophy } from "lucide-react";
 import { Tournament } from "@/types";
 import { PublicTournamentCard } from "./public-tournament-card";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import { useSearchParams } from "next/navigation";
 
 export function PublicTournaments({ onlyActive = false }: { onlyActive?: boolean }) {
-    const t = useTranslations("Home");
+    const t = useTranslations("PublicTournaments");
     const searchParams = useSearchParams();
     const search = searchParams.get("search") || "";
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -46,12 +47,12 @@ export function PublicTournaments({ onlyActive = false }: { onlyActive?: boolean
                     <p className="text-primary font-black tracking-[0.3em] text-xs animate-pulse relative z-10">{t("searching")}</p>
                 </div>
             ) : tournaments.length === 0 ? (
-                <div className="text-center py-24 border border-dashed border-border/40 bg-muted/5 relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-muted/10" />
-                    <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <p className="text-4xl font-black tracking-tighter text-muted-foreground/10 mb-2">{t("no_results")}</p>
-                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("try_adjusting_filters") || "Try adjusting your search query"}</p>
-                </div>
+                <EmptyState
+                    icon={search ? Search : Trophy}
+                    title={search ? t("no_results_title") : t("no_results_empty")}
+                    description={search ? t("no_results_query", { query: search }) : undefined}
+                    className="bg-card"
+                />
             ) : (
                 <div className="space-y-20">
                     {activeTournaments.length > 0 && (
