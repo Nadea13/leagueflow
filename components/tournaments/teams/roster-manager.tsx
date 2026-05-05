@@ -109,12 +109,12 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                     <div className="flex items-start gap-4 md:gap-6">
                         <div className="h-10 w-10 md:h-12 md:w-12 flex items-center justify-center border shrink-0">
                             {team.logo_url ? (
-                                <Image
+                                <img
                                     src={team.logo_url}
                                     alt={team.name}
                                     width={48}
                                     height={48}
-                                    className="h-full w-full object-contain"
+                                    className="p-1 h-full w-full object-contain"
                                 />
                             ) : (
                                 <span className="text-sm font-black text-primary">

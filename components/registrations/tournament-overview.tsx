@@ -83,14 +83,11 @@ export function TournamentOverview({ tournament, allApprovedRegistrations }: Tou
                                     <div key={i} className="flex items-center gap-2 group border-b border-foreground/[0.03] pb-2 last:border-0 last:pb-0">
                                         <div className="w-10 h-10 border flex items-center justify-center p-1 transition-all shrink-0">
                                             {reg.logo_url ? (
-                                                <div className="relative w-full h-full">
-                                                    <Image 
-                                                        src={reg.logo_url} 
-                                                        alt={reg.team_name} 
-                                                        fill
-                                                        className="object-contain"
-                                                    />
-                                                </div>
+                                                <img
+                                                    src={reg.logo_url}
+                                                    alt={reg.team_name}
+                                                    className="w-full h-full object-contain"
+                                                />
                                             ) : (
                                                 <Users className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50" />
                                             )}

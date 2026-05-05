@@ -158,7 +158,7 @@ export function EditTeamForm({
                             <div className="relative group">
                                 <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
                                     {previewUrl ? (
-                                        <Image
+                                        <img
                                             src={previewUrl}
                                             alt={tCommon("preview")}
                                             width={80}

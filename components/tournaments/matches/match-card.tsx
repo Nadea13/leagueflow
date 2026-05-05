@@ -209,7 +209,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     {match.home_team?.name || tMatch("tbd")}
                                 </span>
                                 {match.home_team?.logo_url ? (
-                                    <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" unoptimized />
+                                    <img src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt=""/>
                                 ) : (
                                     <div className="w-8 h-8 md:w-12 md:h-12 rounded-none flex items-center justify-center shrink-0 border">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">
@@ -296,7 +296,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         ) : (
                             <>
                                 {match.away_team?.logo_url ? (
-                                    <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" unoptimized />
+                                    <img src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
                                 ) : (
                                     <div className="w-8 h-8 md:w-12 md:h-12 rounded-none flex items-center justify-center shrink-0 border">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">
