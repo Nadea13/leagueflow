@@ -1,23 +1,14 @@
 import { getTranslations } from "next-intl/server";
-import { Trophy, Activity, CheckCircle } from "lucide-react";
 
 import { PublicTournaments } from "@/components/tournaments/public/public-tournaments-list";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { TournamentSearchHeader } from "@/components/tournaments/public/tournament-search-bar";
-import { Suspense } from "react";
 
 export default async function ManagerTournamentsPage() {
     const t = await getTranslations("PublicTournaments");
     const tNav = await getTranslations("Nav");
-    const tDashboard = await getTranslations("Dashboard");
 
-    // Fetch initial tournaments to get counts for stats
-    const tournaments = await getPublicTournaments("");
-    const totalCount = tournaments.length;
-    const activeCount = tournaments.filter((t: { status: string }) => t.status === "active").length;
-    const completedCount = tournaments.filter((t: { status: string }) => t.status === "completed").length;
+    await getPublicTournaments("");
 
     return (
         <div className="flex flex-col gap-4 md:gap-6">

@@ -47,6 +47,7 @@ export default async function MyTeamsPage() {
                             icon={Users}
                             title={t("no_teams_yet")}
                             description={t("no_teams_desc") || "Create your first team to start participating in tournaments."}
+                            className="bg-card"
                             action={<CreateTeamDialog />}
                         />
                     </div>

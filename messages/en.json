@@ -839,6 +839,7 @@
         "no_results_title": "No Tournaments Found",
         "no_results_query": "We couldn't find any tournaments matching \"{query}\".",
         "no_results_empty": "There are no public tournaments available right now. Check back later.",
+        "searching": "Searching Tournaments...",
         "available_competitions": "Available Competitions"
     },
     "Login": {

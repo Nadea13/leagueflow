@@ -40,10 +40,10 @@ export function TournamentSearchHeader() {
     return (
         <div className="relative group w-full max-w-md">
             <div className="relative">
-                <Search className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground/50 group-focus-within:text-primary transition-all duration-300" />
+                <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground/50 group-focus-within:text-primary transition-all duration-300" />
                 <Input
                     placeholder={t("search_placeholder")}
-                    className="pl-10 md:pl-12 bg-transparent text-foreground focus-visible:ring-0"
+                    className="bg-card"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
                 />

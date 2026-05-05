@@ -47,12 +47,12 @@ export default async function TournamentsPage({
             <div className="relative max-w-2xl ml-0 group">
                 <form action="/organizer/tournaments" method="GET" className="relative">
                     <div className="relative">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
+                        <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
                         <Input
                             type="search"
                             name="q"
                             placeholder="Search tournaments by name, location, or status..."
-                            className="pl-14 h-16 text-lg bg-muted/5 border-border/40 rounded-none group-focus-within:border-primary group-focus-within:bg-muted/10 transition-all duration-500 font-black tracking-tight placeholder:text-muted-foreground/20"
+                            className="bg-card"
                             defaultValue={query}
                         />
                         <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within:w-full transition-all duration-700" />
@@ -65,6 +65,7 @@ export default async function TournamentsPage({
                     title={query ? "No tournaments found" : undefined}
                     description={query ? `Search query: "${query}"` : undefined}
                     action={<TournamentCreate />}
+                    className="bg-card"
                 />
             ) : (
                 <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
