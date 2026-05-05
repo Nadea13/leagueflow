@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
 import { Trophy, Clock, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 
 interface Registration {
@@ -29,6 +29,7 @@ interface MyRegistrationsListProps {
 
 export function MyRegistrationsList({ registrations }: MyRegistrationsListProps) {
     const tCommon = useTranslations("Common");
+    const locale = useLocale();
 
     const isApproved = (status: string) => status === 'APPROVED' || status === 'PAID';
     const isRejected = (status: string) => status === 'REJECTED';
@@ -48,7 +49,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
 
     const formatDate = (dateStr: string) => {
         try {
-            return new Date(dateStr).toLocaleDateString(undefined, {
+            return new Date(dateStr).toLocaleDateString(locale, {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric'
@@ -74,13 +75,12 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                     </Badge>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 border flex items-center justify-center p-1.5 transition-all shrink-0 bg-muted/5 group-hover:border-primary/30">
+                                    <div className="w-12 h-12 border flex items-center justify-center p-1 transition-all shrink-0 group-hover:border-primary/30">
                                         {reg.logo_url ? (
                                             <div className="relative w-full h-full">
-                                                <Image
+                                                <img
                                                     src={reg.logo_url}
                                                     alt={reg.team_name}
-                                                    fill
                                                     className="object-contain"
                                                 />
                                             </div>
