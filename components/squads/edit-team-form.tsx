@@ -164,7 +164,6 @@ export function EditTeamForm({
                                             width={80}
                                             height={80}
                                             className="h-full w-full object-contain p-1"
-                                            unoptimized
                                         />
                                     ) : (
                                         <Upload className="h-8 w-8 text-muted-foreground/30" />

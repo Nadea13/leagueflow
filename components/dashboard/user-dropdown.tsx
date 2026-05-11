@@ -22,11 +22,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "@/actions/common/auth"
 import { LanguageSubMenu } from "@/components/layout/language-sub-menu"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
 export function UserDropdown({ email, name, mode = 'team' }: { email: string | undefined, name?: string | null, mode?: 'organizer' | 'team' }) {
     const { setTheme } = useTheme()
+    const locale = useLocale()
     const t = useTranslations("Nav")
     const tCommon = useTranslations("Common")
 
@@ -93,6 +94,7 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
                 <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuItem asChild className="rounded-none text-destructive focus:text-red-400 focus:bg-red-500/10 py-2.5">
                     <form action={signOut} className="w-full">
+                        <input type="hidden" name="locale" value={locale} />
                         <button className="w-full flex items-center text-left cursor-pointer">
                             <LogOut className="mr-3 h-4 w-4 text-red-500" />
                             <span className="text-xs font-bold tracking-tight">{t("logout")}</span>

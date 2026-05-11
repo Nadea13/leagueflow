@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "@/i18n/routing";
-import { Copy, ExternalLink, Calendar, List, Trophy, GitBranch, Award, ArrowLeft, Settings, Users, Plus, ClipboardEdit } from "lucide-react";
+import { Copy, ExternalLink, Calendar, Trophy, GitBranch, Award, ArrowLeft, Settings, Users, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +15,7 @@ import { Standings } from "@/components/tournaments/ranking/standings";
 import { Teams } from "@/components/tournaments/teams/team-list";
 import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";
 import { Bracket } from "@/components/tournaments/ranking/bracket";
+import { BracketCanvas } from "@/components/tournaments/bracket-builder/bracket-canvas";
 import { Match, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/shared/share-button";
 import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
@@ -57,8 +58,8 @@ export function TournamentContent({
     const t = useTranslations("Tournament");
     const tCommon = useTranslations("Common");
     const tSettings = useTranslations("Settings");
-    const tRegistrations = useTranslations("Registrations");
     const tSports = useTranslations("Sports");
+    const [isEditingBracket, setIsEditingBracket] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -387,20 +388,6 @@ export function TournamentContent({
                                 </div>
                             </div>
 
-                            {/* 3. Knockout Bracket (For 'knockout' OR 'group_knockout') */}
-                            {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
-                                <div className="bg-card border p-4 md:p-6 space-y-4 md:space-y-6">
-                                    <div className="flex flex-col">
-                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <GitBranch className="h-5 w-5 text-primary" />
-                                            {t("bracket")}
-                                        </h2>
-                                    </div>
-                                    <div className="relative z-10">
-                                        <Bracket matches={matches} />
-                                    </div>
-                                </div>
-                            )}
 
                             {/* 4. Top Scorers */}
                             {goals.length > 0 && (
@@ -596,9 +583,52 @@ export function TournamentContent({
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 items-start">
                         {/* Main Schedule Column */}
                         <div className={cn(
-                            "lg:col-span-2 space-y-2 md:space-y-3",
+                            "lg:col-span-3 space-y-2 md:space-y-3",
                             fixtureSubTab !== 'schedule' && "hidden md:block"
                         )}>
+                            {/* 3. Knockout Bracket (For 'knockout' OR 'group_knockout') */}
+                            {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
+                                <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                                            <GitBranch className="h-5 w-5 text-primary" />
+                                            {t("bracket")}
+                                        </h2>
+                                        {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (userRole === 'admin' || userRole === 'editor') && (
+                                            <Button
+                                                variant={isEditingBracket ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setIsEditingBracket(!isEditingBracket)}
+                                                className="h-8 text-[10px] font-black tracking-widest uppercase transition-all"
+                                            >
+                                                {isEditingBracket ? (
+                                                    <X className="h-3 w-3" />
+                                                ) : (
+                                                    <Settings className="h-3 w-3" />
+                                                )}
+                                                {isEditingBracket ? "" : "Build Bracket"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="relative z-10">
+                                        {isEditingBracket ? (
+                                            <BracketCanvas
+                                                tournamentId={id}
+                                                tournamentName={tournament.name}
+                                                initialCanvasData={tournament.canvas_data ?? null}
+                                                isCompact={true}
+                                                onClose={() => setIsEditingBracket(false)}
+                                            />
+                                        ) : (
+                                            <Bracket
+                                                matches={matches}
+                                                canvasData={tournament.canvas_data}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
                                 {/* Unwrapped Header */}
                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-2 md:gap-3">

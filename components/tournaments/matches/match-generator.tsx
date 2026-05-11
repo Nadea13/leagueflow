@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { generateFixtures } from "@/actions/organizer/tournaments/general"
 import { Button } from "@/components/ui/button"
-import { Wand2 } from "lucide-react"
+import { Settings2, Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
@@ -19,44 +19,22 @@ export function MatchGenerator({
   className?: string 
 }) {
   const t = useTranslations("Fixtures")
+  const tCommon = useTranslations("Common")
   const [isLoading, setIsLoading] = useState(false)
 
-
-
   const getButtonText = () => {
-    if (isLoading) return t("generating");
+    if (isLoading) return tCommon("loading");
     if (!hasFixtures) return t("generate_fixtures");
-    if (format === 'knockout') return "Refill Bracket";
-    return "Regenerate";
+    return t("reset_fixtures") || "Reset Bracket";
   };
 
   const handleGenerate = async () => {
-    let confirmMsg = t("confirm_generate");
-    if (hasFixtures) {
-      if (format === 'knockout') confirmMsg = "This will refill the bracket with actual teams. Continue?";
-      else confirmMsg = "This will delete current scheduled fixtures and shuffle teams to generate a new schedule. Continue?";
-    }
-    const confirmPopup = window.confirm(confirmMsg)
-    if (!confirmPopup) return
-
-    setIsLoading(true)
-    try {
-      const result = await generateFixtures(tournamentId)
-      if (!result.success && result.error) {
-        alert(result.error)
-      }
-    } catch (e) {
-      console.error(e)
-      alert("An unexpected error occurred.")
-    } finally {
-      setIsLoading(false)
-    }
+    // No action performed as requested
   }
 
   return (
     <Button 
       onClick={handleGenerate} 
-      disabled={isLoading} 
       variant="ghost"
       className={cn(
         "w-full h-12 rounded-none border border-foreground/5 font-black tracking-tighter transition-all duration-300 group overflow-hidden relative",
@@ -65,7 +43,7 @@ export function MatchGenerator({
       )}
     >
       {!hasFixtures && <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />}
-      <Wand2 className={cn("mr-2 h-4 w-4 relative z-10", !hasFixtures && "animate-pulse")} />
+      <Settings2 className={cn("mr-2 h-4 w-4 relative z-10")} />
       <span className="relative z-10 hidden md:inline">{getButtonText()}</span>
     </Button>
   )
