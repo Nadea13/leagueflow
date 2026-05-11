@@ -260,7 +260,11 @@ export function PublicTournamentShell({
                                     <p className="text-[10px] font-bold text-muted-foreground/60">{t("bracket_desc")}</p>
                                 </div>
                                 <div className="relative z-10 overflow-x-auto pb-4">
-                                    <Bracket matches={matches} isPublic={true} />
+                                    <Bracket 
+                                        matches={matches} 
+                                        isPublic={true} 
+                                        canvasData={tournament.canvas_data}
+                                    />
                                 </div>
                             </div>
                         )}

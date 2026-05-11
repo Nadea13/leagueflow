@@ -5,10 +5,12 @@ import { redirect } from "next/navigation";
 import { ActionResponse } from "@/types";
 import { logActivity } from "@/lib/audit";
 
-export async function signOut() {
+export async function signOut(formData: FormData) {
     const supabase = await createClient();
     await supabase.auth.signOut();
-    return redirect("/login");
+    const locale = formData.get("locale");
+    const safeLocale = typeof locale === "string" && locale.length > 0 ? locale : "th";
+    return redirect(`/${safeLocale}/login`);
 }
 
 export async function signIn(formData: FormData, _locale: string): Promise<ActionResponse> {

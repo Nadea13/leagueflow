@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Admin Dashboard",
-    description: "Platform administration — audit logs, user management, and system health.",
+    description: "Platform administration | audit logs, user management, and system health.",
 };
 
 export default async function AdminDashboardPage() {

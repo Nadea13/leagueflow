@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { data: tournament } = await supabase.from("tournaments").select("name, format, status").eq("id", id).single();
     if (!tournament) return { title: "Tournament Not Found" };
     return {
-        title: `${tournament.name} — Live Standings & Results`,
+        title: `${tournament.name} | Live Standings & Results`,
         description: `Follow ${tournament.name} live. View standings, fixtures, results, and bracket in real-time. Format: ${tournament.format}.`,
         openGraph: {
-            title: `${tournament.name} — LeagueFlow`,
+            title: `${tournament.name} | LeagueFlow`,
             description: `Live standings and results for ${tournament.name}.`,
         },
     };

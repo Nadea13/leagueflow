@@ -21,7 +21,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         supabase.from("tournaments").select(`
             id, name, format, description, status, start_date, end_date, number_of_pitches, user_id, created_at, sport,
             max_teams, advancing_teams, is_registration_open, registration_fee, bank_name, bank_account_name, bank_account_number,
-            document_deadline,
+            document_deadline, canvas_data,
             payments(plan, status)
         `).eq("id", id).single(),
         getUserSubscriptionPlan(),

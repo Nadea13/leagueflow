@@ -1,6 +1,13 @@
+import type { Edge, Node } from "@xyflow/react";
+
 export type TournamentStatus = 'draft' | 'active' | 'completed';
 export type MatchStatus = 'scheduled' | 'live' | 'finished';
 export type SportType = 'football';
+
+export interface BracketCanvasData {
+    nodes: Node[];
+    edges: Edge[];
+}
 
 export interface Tournament {
     id: string;
@@ -27,6 +34,7 @@ export interface Tournament {
     created_at: string;
     updated_at?: string;
     document_deadline?: string | null;
+    canvas_data?: BracketCanvasData | null;
 }
 
 export interface Match {
@@ -47,6 +55,10 @@ export interface Match {
     venue_id?: string | null;
     pitch_number?: number | null;
     match_index?: number | null;
+    node_id?: string | null;
+    placeholder_a?: string | null;
+    placeholder_b?: string | null;
+    winner_to_node_id?: string | null;
     created_at: string;
     // Timer Fields
     timer_status?: 'playing' | 'paused' | 'stopped';

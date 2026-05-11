@@ -1,41 +1,99 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { Match } from "@/types/index";
-import { Trophy } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import {
+    Background,
+    BackgroundVariant,
+    ConnectionMode,
+    ReactFlow,
+    ReactFlowProvider,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { ByeNode } from "@/components/tournaments/bracket-builder/bye-node";
+import { GroupNode } from "@/components/tournaments/bracket-builder/group-node";
+import { MatchNode } from "@/components/tournaments/bracket-builder/match-node";
 import { EmptyState } from "@/components/shared/empty-state";
-
 import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
+import { BracketCanvasData, Match } from "@/types/index";
+import { Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
 
-interface BracketProps {
-    matches: Match[];
-    isPublic?: boolean;
-}
+const nodeTypes = {
+    matchNode: MatchNode,
+    byeNode: ByeNode,
+    groupNode: GroupNode,
+};
 
 const CONNECTOR_W = 48;
 const CARD_W = 232;
-const MATCH_SLOT_H = 80; // Base height per match slot in the first round
-const MATCH_GAP = 12;    // Gap between cards in a pair
+const MATCH_SLOT_H = 80;
+const MATCH_GAP = 12;
+type KnockoutStage = Exclude<Match["stage"], "league" | "group">;
 
-export function Bracket({ matches, isPublic = false }: BracketProps) {
+interface BracketProps {
+    matches: Match[];
+    canvasData?: BracketCanvasData | null;
+    isPublic?: boolean;
+}
+
+function CanvasBracket({ canvasData }: { canvasData: BracketCanvasData }) {
+    if (canvasData.nodes.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="h-[600px] w-full border bg-card overflow-hidden relative">
+            <ReactFlow
+                nodes={canvasData.nodes}
+                edges={canvasData.edges}
+                nodeTypes={nodeTypes}
+                fitView
+                nodesDraggable={false}
+                nodesConnectable={false}
+                elementsSelectable={false}
+                zoomOnScroll
+                panOnScroll
+                colorMode="light"
+                connectionMode={ConnectionMode.Loose}
+                defaultEdgeOptions={{
+                    type: "smoothstep",
+                    style: {
+                        strokeWidth: 3,
+                    },
+                }}
+            >
+                <Background
+                    color="hsl(var(--muted-foreground))"
+                    variant={BackgroundVariant.Dots}
+                    gap={20}
+                    size={1}
+                    style={{ opacity: 0.15 }}
+                />
+            </ReactFlow>
+        </div>
+    );
+}
+
+function LegacyBracket({ matches, isPublic = false }: { matches: Match[]; isPublic?: boolean }) {
     const t = useTranslations("Bracket");
-
-    // Measure actual card height for precise slot sizing
     const [cardHeight, setCardHeight] = useState(MATCH_SLOT_H);
     const measureRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (measureRef.current) {
-            const h = measureRef.current.getBoundingClientRect().height;
-            if (h > 0) setCardHeight(h);
+        if (!measureRef.current) {
+            return;
+        }
+
+        const height = measureRef.current.getBoundingClientRect().height;
+        if (height > 0) {
+            setCardHeight(height);
         }
     }, []);
 
     const knockoutMatches = matches.filter(
-        (m) => m.stage !== "league" && m.stage !== "group"
+        (match) => match.stage !== "league" && match.stage !== "group"
     );
 
     if (knockoutMatches.length === 0) {
@@ -49,8 +107,15 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
         );
     }
 
-    const allStages = ["round_of_64", "round_of_32", "round_of_16", "quarter_final", "semi_final", "final"];
-    const stageLabels: Record<string, string> = {
+    const allStages: KnockoutStage[] = [
+        "round_of_64",
+        "round_of_32",
+        "round_of_16",
+        "quarter_final",
+        "semi_final",
+        "final",
+    ];
+    const stageLabels: Record<KnockoutStage, string> = {
         round_of_64: t("round_of_64"),
         round_of_32: t("round_of_32"),
         round_of_16: t("round_of_16"),
@@ -58,22 +123,18 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
         semi_final: t("semi_final"),
         final: t("final"),
     };
-
-    const matchesByStage = knockoutMatches.reduce((acc, match) => {
-        const stage = match.stage;
-        if (!acc[stage]) acc[stage] = [];
-        acc[stage].push(match);
-        return acc;
-    }, {} as Record<string, Match[]>);
-
-    const activeStages = allStages.filter(stage => matchesByStage[stage] && matchesByStage[stage].length > 0);
-
-    // The base slot height = card height + gap
-    const baseSlotH = cardHeight + MATCH_GAP;
+    const matchesByStage = knockoutMatches.reduce<Record<string, Match[]>>((accumulator, match) => {
+        if (!accumulator[match.stage]) {
+            accumulator[match.stage] = [];
+        }
+        accumulator[match.stage].push(match);
+        return accumulator;
+    }, {});
+    const activeStages = allStages.filter((stage) => (matchesByStage[stage]?.length ?? 0) > 0);
+    const baseSlotHeight = cardHeight + MATCH_GAP;
 
     return (
         <div className="space-y-4 md:space-y-6">
-            {/* Hidden measurement card */}
             <div className="absolute opacity-0 pointer-events-none" style={{ width: CARD_W }}>
                 <div ref={measureRef}>
                     <BracketMatchCard match={knockoutMatches[0]} isPublic={isPublic} />
@@ -83,40 +144,34 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
             <div className="w-full overflow-auto custom-scrollbar scroll-smooth">
                 <div id="tournament-bracket-canvas" className="inline-flex items-start">
                     {activeStages.map((stage, stageIndex) => {
-                        let stageMatches = matchesByStage[stage];
-                        stageMatches = [...stageMatches].sort((a, b) => (a.match_index ?? 0) - (b.match_index ?? 0));
-
-                        const isFinal = stage === 'final';
+                        const stageMatches = [...(matchesByStage[stage] ?? [])].sort(
+                            (a, b) => (a.match_index ?? 0) - (b.match_index ?? 0)
+                        );
+                        const isFinal = stage === "final";
                         const isLast = stageIndex === activeStages.length - 1;
-
-                        // Each successive round doubles its slot height
-                        // stageIndex 0 = first active round = multiplier 1
-                        const multiplier = Math.pow(2, stageIndex);
-                        const slotHeight = baseSlotH * multiplier;
+                        const slotHeight = baseSlotHeight * Math.pow(2, stageIndex);
 
                         return (
                             <div key={stage} className="flex flex-col shrink-0">
-                                {/* Stage label */}
                                 <div
                                     className="text-center mb-4 md:mb-6 pr-12"
                                     style={{ width: CARD_W + (!isLast ? CONNECTOR_W : 0) }}
                                 >
                                     <span className="text-xs font-black tracking-tighter text-primary bg-primary/10 px-3 py-1">
-                                        {stageLabels[stage] || stage.replace('_', ' ')}
+                                        {stageLabels[stage]}
                                     </span>
                                 </div>
 
-                                {/* Matches in this stage */}
                                 <div className="flex flex-col">
-                                    {stageMatches.map((match, idx) => (
+                                    {stageMatches.map((match, index) => (
                                         <BracketSlot
                                             key={match.id}
                                             match={match}
                                             slotHeight={slotHeight}
                                             isFinal={isFinal}
                                             showConnector={!isLast}
-                                            isTopOfPair={idx % 2 === 0}
-                                            isBottomOfPair={idx % 2 === 1}
+                                            isTopOfPair={index % 2 === 0}
+                                            isBottomOfPair={index % 2 === 1}
                                             hasPairPartner={!isFinal && stageMatches.length > 1}
                                             isPublic={isPublic}
                                         />
@@ -131,15 +186,20 @@ export function Bracket({ matches, isPublic = false }: BracketProps) {
     );
 }
 
-/**
- * Each match occupies a fixed-height slot. The slot height doubles per round,
- * so matches in round N+1 naturally center between two feeder matches from round N.
- *
- * Connector lines:
- *   - Horizontal stub from card center-right
- *   - Vertical bar from top-of-pair center to bottom-of-pair center (on right edge)
- *   - Output horizontal from vertical bar midpoint to next round
- */
+export function Bracket({ matches, canvasData, isPublic = false }: BracketProps) {
+    const hasCanvasData = (canvasData?.nodes.length ?? 0) > 0;
+
+    return (
+        <ReactFlowProvider>
+            {hasCanvasData ? (
+                <CanvasBracket canvasData={canvasData!} />
+            ) : (
+                <LegacyBracket matches={matches} isPublic={isPublic} />
+            )}
+        </ReactFlowProvider>
+    );
+}
+
 function BracketSlot({
     match,
     slotHeight,
@@ -160,39 +220,32 @@ function BracketSlot({
     isPublic?: boolean;
 }) {
     return (
-        <div
-            className="flex items-center relative"
-            style={{ height: slotHeight }}
-        >
-            {/* Match card */}
+        <div className="flex items-center relative" style={{ height: slotHeight }}>
             <div style={{ width: CARD_W }} className="shrink-0">
                 <BracketMatchCard match={match} isFinal={isFinal} isPublic={isPublic} />
             </div>
 
-            {/* Connector lines */}
             {showConnector && (
-                <div className="relative shrink-0" style={{ width: CONNECTOR_W, alignSelf: 'stretch' }}>
-                    {/* Horizontal stub from card center to vertical bar position */}
+                <div className="relative shrink-0" style={{ width: CONNECTOR_W, alignSelf: "stretch" }}>
                     <div
                         className="absolute bg-primary"
                         style={{
                             left: 0,
-                            top: '50%',
+                            top: "50%",
                             width: CONNECTOR_W / 2,
                             height: 1,
-                            transform: 'translateY(-0.5px)',
+                            transform: "translateY(-0.5px)",
                         }}
                     />
 
-                    {hasPairPartner && (
+                    {hasPairPartner ? (
                         <>
-                            {/* Vertical bar: top-of-pair extends downward, bottom-of-pair extends upward */}
                             {isTopOfPair && (
                                 <div
                                     className="absolute bg-primary"
                                     style={{
                                         left: CONNECTOR_W / 2 - 0.5,
-                                        top: '50%',
+                                        top: "50%",
                                         width: 1,
                                         bottom: 0,
                                     }}
@@ -206,10 +259,9 @@ function BracketSlot({
                                             left: CONNECTOR_W / 2 - 0.5,
                                             top: 0,
                                             width: 1,
-                                            height: '50%',
+                                            height: "50%",
                                         }}
                                     />
-                                    {/* Output horizontal from vertical bar to next round */}
                                     <div
                                         className="absolute bg-primary"
                                         style={{
@@ -222,18 +274,15 @@ function BracketSlot({
                                 </>
                             )}
                         </>
-                    )}
-
-                    {/* Single match (no pair): straight horizontal through */}
-                    {!hasPairPartner && (
+                    ) : (
                         <div
                             className="absolute bg-primary"
                             style={{
                                 left: CONNECTOR_W / 2,
-                                top: '50%',
+                                top: "50%",
                                 width: CONNECTOR_W / 2,
                                 height: 1,
-                                transform: 'translateY(-0.5px)',
+                                transform: "translateY(-0.5px)",
                             }}
                         />
                     )}
@@ -251,7 +300,6 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
     const homeWinner = match.winner_id && match.winner_id === match.home_team_id;
     const awayWinner = match.winner_id && match.winner_id === match.away_team_id;
     const hasPenalties = !isScheduled && ((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0);
-
     const url = isPublic
         ? `/${tournamentId}/matches/${match.id}`
         : `/organizer/tournaments/${tournamentId}/matches/${match.id}`;
@@ -264,15 +312,13 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
                 isFinal && "border-primary"
             )}
         >
-
-            {/* Header */}
             <div className="flex justify-between items-center px-2 md:px-3 py-1.5 border-b">
                 <span className="text-[10px] font-black tracking-widest text-muted-foreground flex items-center gap-2 md:gap-3">
                     {isFinal && <Trophy className="h-3 w-3 text-primary" />}
-                    {t("match")} {(match.match_index !== undefined && match.match_index !== null) ? `#${match.match_index}` : ""}
+                    {t("match")} {match.match_index != null ? `#${match.match_index}` : ""}
                 </span>
                 <div className="flex items-center gap-1">
-                    {match.status === 'live' && (
+                    {match.status === "live" && (
                         <div className="flex items-center gap-1">
                             <span className="h-2 w-2 bg-destructive rounded-full animate-pulse" />
                             <span className="text-[10px] font-black text-destructive tracking-tighter">
@@ -288,23 +334,20 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
                 </div>
             </div>
 
-            {/* Home Team */}
             <TeamRow
                 name={match.home_team?.name}
                 logoUrl={match.home_team?.logo_url}
                 score={isScheduled ? null : match.home_score}
                 penaltyScore={hasPenalties ? match.penalty_home_score : undefined}
-                isWinner={!!homeWinner}
+                isWinner={Boolean(homeWinner)}
                 tbd={t("tbd")}
             />
-
-            {/* Away Team */}
             <TeamRow
                 name={match.away_team?.name}
                 logoUrl={match.away_team?.logo_url}
                 score={isScheduled ? null : match.away_score}
                 penaltyScore={hasPenalties ? match.penalty_away_score : undefined}
-                isWinner={!!awayWinner}
+                isWinner={Boolean(awayWinner)}
                 tbd={t("tbd")}
             />
         </Link>
@@ -327,10 +370,12 @@ function TeamRow({
     tbd: string;
 }) {
     return (
-        <div className={cn(
-            "flex justify-between items-center px-3 py-2 gap-2 transition-colors relative",
-            isWinner ? "bg-primary/10" : ""
-        )}>
+        <div
+            className={cn(
+                "flex justify-between items-center px-3 py-2 gap-2 transition-colors relative",
+                isWinner && "bg-primary/10"
+            )}
+        >
             <div className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0">
                 <div className="w-5 h-5 border shrink-0 flex items-center justify-center overflow-hidden">
                     {logoUrl ? (
@@ -341,10 +386,12 @@ function TeamRow({
                         </span>
                     )}
                 </div>
-                <span className={cn(
-                    "truncate text-xs font-black tracking-tighter transition-colors",
-                    isWinner ? "text-primary" : "text-foreground"
-                )}>
+                <span
+                    className={cn(
+                        "truncate text-xs font-black tracking-tighter transition-colors",
+                        isWinner ? "text-primary" : "text-foreground"
+                    )}
+                >
                     {name || tbd}
                 </span>
             </div>
@@ -354,10 +401,12 @@ function TeamRow({
                         ({penaltyScore})
                     </span>
                 )}
-                <span className={cn(
-                    "text-xs min-w-[16px] text-center font-black tracking-tighter",
-                    isWinner ? "text-primary" : "text-foreground"
-                )}>
+                <span
+                    className={cn(
+                        "text-xs min-w-[16px] text-center font-black tracking-tighter",
+                        isWinner ? "text-primary" : "text-foreground"
+                    )}
+                >
                     {score ?? "-"}
                 </span>
             </div>

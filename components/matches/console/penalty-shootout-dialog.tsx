@@ -78,12 +78,12 @@ export function PenaltyShootoutDialog({
         const bothComplete = completedHomRounds === completedAwayRounds;
 
         if (isTied && bothComplete) {
-            // Tied and both teams shot same number — show one more empty row for sudden death
+            // Tied and both teams shot same number | show one more empty row for sudden death
             return maxCompleted + 1;
         }
 
         if (!bothComplete) {
-            // One team hasn't shot yet this round — show current max
+            // One team hasn't shot yet this round | show current max
             return maxCompleted;
         }
 
