@@ -12,7 +12,7 @@ export default async function BracketBuilderPage({
     const supabase = await createClient();
 
     // Validate access
-    const access = await validateTournamentAccess(id, "editor");
+    const access = await validateTournamentAccess(id, "viewer");
     if (!access.success) {
         notFound();
     }
@@ -38,6 +38,7 @@ export default async function BracketBuilderPage({
             tournamentId={id}
             tournamentName={tournament.name}
             initialCanvasData={tournament.canvas_data ?? null}
+            readonly={access.role === 'viewer'}
         />
     );
 }

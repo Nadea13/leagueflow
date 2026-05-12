@@ -53,8 +53,11 @@ function CanvasBracket({ canvasData }: { canvasData: BracketCanvasData }) {
                 nodesDraggable={false}
                 nodesConnectable={false}
                 elementsSelectable={false}
-                zoomOnScroll
-                panOnScroll
+                zoomOnScroll={false}
+                panOnScroll={false}
+                panOnDrag={false}
+                zoomOnPinch={false}
+                zoomOnDoubleClick={false}
                 colorMode="light"
                 connectionMode={ConnectionMode.Loose}
                 defaultEdgeOptions={{

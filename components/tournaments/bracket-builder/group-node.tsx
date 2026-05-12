@@ -56,41 +56,7 @@ export const GroupNode = memo(({
                 </button>
             </div>
 
-            <div className="p-4 space-y-4">
-                <div className="space-y-1.5">
-                    <Label className="text-[9px] font-bold text-muted-foreground">Group Name</Label>
-                    <Input
-                        value={data.label}
-                        onChange={(event) => updateNodeData(id, { label: event.target.value })}
-                        className="h-8 text-xs font-bold bg-muted/30 focus-visible:ring-violet-500"
-                        placeholder="Group A"
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <Label className="text-[9px] font-bold text-muted-foreground">Team Count</Label>
-                        <Input
-                            type="number"
-                            value={data.teamCount}
-                            onChange={(event) => updateNodeData(id, { teamCount: parseInt(event.target.value, 10) || 0 })}
-                            className="h-8 text-xs font-bold bg-muted/30 focus-visible:ring-violet-500"
-                            min={1}
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-[9px] font-bold text-muted-foreground">Advancing</Label>
-                        <Input
-                            type="number"
-                            value={data.advancingCount}
-                            onChange={(event) => updateNodeData(id, { advancingCount: parseInt(event.target.value, 10) || 0 })}
-                            className="h-8 text-xs font-bold bg-muted/30 border-violet-500/30 focus-visible:ring-violet-500"
-                            min={1}
-                            max={8}
-                        />
-                    </div>
-                </div>
-            </div>
+            {/* Config inputs moved to sidebar */}
 
             <div className="flex flex-col border-t divide-y divide-border bg-muted/5">
                 {Array.from({ length: Math.max(0, data.teamCount || 0) }).map((_, index) => {
@@ -99,7 +65,7 @@ export const GroupNode = memo(({
                     return (
                         <div
                             key={index}
-                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-violet-500/5 transition-colors group/slot cursor-default"
+                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-violet-500/5 transition-colors group/slot cursor-default relative"
                             onDragOver={(event) => {
                                 event.preventDefault();
                                 event.dataTransfer.dropEffect = "move";
@@ -117,6 +83,13 @@ export const GroupNode = memo(({
                                 updateNodeData(id, { teams: nextTeams });
                             }}
                         >
+                            <Handle
+                                type="target"
+                                position={Position.Left}
+                                id={`team-in-${index}`}
+                                className="!w-3 !h-3 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
+                                style={{ left: "-6px" }}
+                            />
                             <div className="w-5 h-5 border flex items-center justify-center bg-muted/50 group-hover/slot:border-violet-500/50 group-hover/slot:bg-violet-500/10 transition-colors text-muted-foreground group-hover/slot:text-violet-500">
                                 <span className="text-[10px] font-black">{index + 1}</span>
                             </div>
@@ -146,22 +119,20 @@ export const GroupNode = memo(({
                 })}
             </div>
 
-            <div className="flex flex-col border-t divide-y divide-border bg-muted/10">
-                {Array.from({ length: advancingCount }).map((_, index) => (
-                    <div key={index} className="relative flex justify-end items-center px-3 py-2 h-10">
-                        <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
-                            {index === 0 ? "1st Place" : index === 1 ? "2nd Place" : `${index + 1}th Place`}
-                            <ChevronRight className="h-3 w-3 text-violet-500" />
-                        </span>
-                        <Handle
-                            type="source"
-                            position={Position.Right}
-                            id={`rank-${index}`}
-                            className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                            style={{ right: "-8px" }}
-                        />
-                    </div>
-                ))}
+            {/* Bottom handles for Standing and Matches */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-8 translate-y-[8px]">
+                <Handle
+                    type="source"
+                    position={Position.Bottom}
+                    id="standing"
+                    className="!w-4 !h-4 !bg-emerald-500 !border-none !rounded-full hover:!scale-125 transition-all z-50 !static"
+                />
+                <Handle
+                    type="source"
+                    position={Position.Bottom}
+                    id="group-matches"
+                    className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50 !static"
+                />
             </div>
         </div>
     );

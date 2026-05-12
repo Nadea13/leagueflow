@@ -15,6 +15,7 @@ export const MatchNode = memo(function MatchNode({
 }: NodeProps<MatchNodeType>) {
     const deleteNode = useBracketStore((s) => s.deleteNode);
     const updateNodeData = useBracketStore((s) => s.updateNodeData);
+    const matches = Array.isArray(data.matches) ? data.matches : [];
 
     return (
         <div
@@ -25,36 +26,25 @@ export const MatchNode = memo(function MatchNode({
                     : "border-border hover:border-primary/50"
             )}
         >
-            {/* ── Left Handles (2 inputs: slot-a top, slot-b bottom) ── */}
+            {/* Top Target Handle for Group Connection */}
             <Handle
                 type="target"
-                position={Position.Left}
-                id="slot-a"
-                className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!bg-primary hover:!scale-125 transition-all z-50"
-                style={{ top: "30%", left: "-8px" }}
-            />
-            <Handle
-                type="target"
-                position={Position.Left}
-                id="slot-b"
-                className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!bg-primary hover:!scale-125 transition-all z-50"
-                style={{ top: "70%", left: "-8px" }}
-            />
-
-            {/* ── Right Handle (1 output: winner) ── */}
-            <Handle
-                type="source"
-                position={Position.Right}
-                id="winner"
-                className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!bg-primary hover:!scale-125 transition-all z-50"
-                style={{ top: "50%", right: "-8px" }}
+                position={Position.Top}
+                id="group-in"
+                className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
+                style={{ top: "-8px" }}
             />
 
             {/* ── Header ── */}
             <div className="flex justify-between items-center px-3 py-1.5 border-b bg-muted/30">
-                <span className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">
-                    {data.label}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black tracking-widest text-primary uppercase">
+                        {matches.length > 1 ? "ROUND" : "MATCH"}
+                    </span>
+                    <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">
+                        {data.label}
+                    </span>
+                </div>
                 <button
                     type="button"
                     onClick={(e) => {
@@ -67,35 +57,93 @@ export const MatchNode = memo(function MatchNode({
                 </button>
             </div>
 
-            {/* ── Slots ── */}
+            {/* ── Match List ── */}
             <div className="flex flex-col divide-y divide-border">
-                <SlotRow
-                    handleId="slot-a"
-                    label={data.placeholderA}
-                    position="top"
-                    onDropTeam={(teamName) => updateNodeData(id, { placeholderA: teamName })}
-                    onClear={() => updateNodeData(id, { placeholderA: "TBD" })}
-                />
-                <SlotRow
-                    handleId="slot-b"
-                    label={data.placeholderB}
-                    position="bottom"
-                    onDropTeam={(teamName) => updateNodeData(id, { placeholderB: teamName })}
-                    onClear={() => updateNodeData(id, { placeholderB: "TBD" })}
-                />
+                {matches.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-[10px] text-muted-foreground italic">
+                        No matches in this round
+                    </div>
+                ) : (
+                    matches.map((match, index) => (
+                        <div key={match.id || index} className="relative py-3 space-y-1">
+                            {/* Match Number Indicator (only if > 1 matches) */}
+                            {matches.length > 1 && (
+                                <div className="px-3">
+                                    <span className="text-[9px] font-black text-primary/60 uppercase tracking-tighter">
+                                        Match #{index + 1}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Target Handles */}
+                            <Handle
+                                type="target"
+                                position={Position.Left}
+                                id={`slot-a-${index}`}
+                                className="!w-3 !h-3 !bg-primary !border-none !rounded-full hover:!scale-125 transition-all z-50"
+                                style={{ top: matches.length > 1 ? "45%" : "25%", left: "-6px" }}
+                            />
+                            <Handle
+                                type="target"
+                                position={Position.Left}
+                                id={`slot-b-${index}`}
+                                className="!w-3 !h-3 !bg-primary !border-none !rounded-full hover:!scale-125 transition-all z-50"
+                                style={{ top: matches.length > 1 ? "85%" : "75%", left: "-6px" }}
+                            />
+
+                            {/* Source Handle (Winner) */}
+                            <Handle
+                                type="source"
+                                position={Position.Right}
+                                id={`winner-${index}`}
+                                className="!w-3 !h-3 !bg-primary !border-none !rounded-full hover:!scale-125 transition-all z-50"
+                                style={{ top: matches.length > 1 ? "65%" : "50%", right: "-6px" }}
+                            />
+
+                            <div className="pl-0">
+                                <SlotRow
+                                    label={match.placeholderA}
+                                    position="top"
+                                    onDropTeam={(teamName) => {
+                                        const nextMatches = [...matches];
+                                        nextMatches[index] = { ...nextMatches[index], placeholderA: teamName };
+                                        updateNodeData(id, { matches: nextMatches });
+                                    }}
+                                    onClear={() => {
+                                        const nextMatches = [...matches];
+                                        nextMatches[index] = { ...nextMatches[index], placeholderA: "TBD" };
+                                        updateNodeData(id, { matches: nextMatches });
+                                    }}
+                                />
+                                <SlotRow
+                                    label={match.placeholderB}
+                                    position="bottom"
+                                    onDropTeam={(teamName) => {
+                                        const nextMatches = [...matches];
+                                        nextMatches[index] = { ...nextMatches[index], placeholderB: teamName };
+                                        updateNodeData(id, { matches: nextMatches });
+                                    }}
+                                    onClear={() => {
+                                        const nextMatches = [...matches];
+                                        nextMatches[index] = { ...nextMatches[index], placeholderB: "TBD" };
+                                        updateNodeData(id, { matches: nextMatches });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div> 
     );
 });
 
 function SlotRow({
-    handleId: _handleId,
     label,
     position,
     onDropTeam,
     onClear,
 }: {
-    handleId: string;
     label: string;
     position: "top" | "bottom";
     onDropTeam?: (teamName: string) => void;
@@ -103,7 +151,7 @@ function SlotRow({
 }) {
     return (
         <div 
-            className="flex items-center gap-2 px-3 py-2 transition-colors hover:bg-primary/5 group/slot cursor-default"
+            className="flex items-center gap-2 px-3 py-1 transition-colors hover:bg-primary/5 group/slot cursor-default"
             onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
@@ -116,14 +164,14 @@ function SlotRow({
                 }
             }}
         >
-            <div className="w-5 h-5 border flex items-center justify-center bg-muted/50 group-hover/slot:border-primary/50 group-hover/slot:bg-primary/10 transition-colors">
-                <span className="text-[10px] font-black text-muted-foreground group-hover/slot:text-primary">
-                    {position === "top" ? "A" : "B"}
+            <div className="w-4 h-4 border flex items-center justify-center bg-muted/50 group-hover/slot:border-primary/50 group-hover/slot:bg-primary/10 transition-colors">
+                <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-primary">
+                    {position === "top" ? "H" : "A"}
                 </span>
             </div>
             <span className={cn(
-                "text-[11px] font-black tracking-tight truncate flex-1",
-                label === "TBD" ? "text-muted-foreground/50 italic" : "text-foreground"
+                "text-[10px] font-bold tracking-tight truncate flex-1",
+                label === "TBD" ? "text-muted-foreground/50 italic font-medium" : "text-foreground"
             )}>
                 {label}
             </span>

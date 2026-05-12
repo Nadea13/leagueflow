@@ -12,11 +12,12 @@ import {
 import { BracketCanvasData, Match } from "@/types";
 
 export interface MatchNodeData {
-    matchIndex: number;
     label: string;
-    placeholderA: string;
-    placeholderB: string;
-    matchId?: string;
+    matches: {
+        id: string;
+        placeholderA: string;
+        placeholderB: string;
+    }[];
     [key: string]: unknown;
 }
 
@@ -33,6 +34,8 @@ interface BracketState {
     addMatchNode: (position?: { x: number; y: number }) => void;
     addByeNode: (position?: { x: number; y: number }) => void;
     addGroupNode: (position?: { x: number; y: number }) => void;
+    addStandingNode: (position?: { x: number; y: number }) => void;
+    generateRoundRobinMatches: (groupId: string) => void;
     deleteNode: (id: string) => void;
     hydrate: (data: BracketCanvasData | null) => void;
     reset: () => void;
@@ -63,27 +66,163 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     onConnect: (connection: Connection) => {
-        const isFromGroup = connection.source?.startsWith("group-");
-        const isFromBye = connection.source?.startsWith("bye-");
-        
         const { nodes, updateNodeData } = get();
         const sourceNode = nodes.find(n => n.id === connection.source);
         const targetNode = nodes.find(n => n.id === connection.target);
 
+        if (!sourceNode || !targetNode) return;
+
+        const isFromGroup = sourceNode.type === 'groupNode';
+        const isFromBye = sourceNode.type === 'byeNode';
+        const isStandingConn = sourceNode.type === 'standingNode' || targetNode.type === 'standingNode';
+        
         // Propagate team from Bye/Group to Match slot on connect
-        if (sourceNode && targetNode && targetNode.type === 'matchNode') {
-            const teamName = sourceNode.type === 'byeNode' 
-                ? sourceNode.data.placeholder 
-                : sourceNode.type === 'groupNode'
-                    ? "Group Winner" // Placeholder for group, can be refined
-                    : null;
+        if (targetNode.type === 'matchNode') {
+            let teamName = null;
+            if (sourceNode.type === 'byeNode') {
+                teamName = (sourceNode.data.placeholder as string) || "TBD";
+            } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
+                const sourceHandle = connection.sourceHandle || '';
+                const rankMatch = sourceHandle.match(/rank-(\d+)/);
+                if (rankMatch) {
+                    const rankIndex = parseInt(rankMatch[1], 10);
+                    const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
+                    teamName = `${rankSuffix} Place (${sourceNode.data.label})`;
+                } else {
+                    teamName = "Group Winner";
+                }
+            }
 
             if (teamName && teamName !== "TBD") {
-                if (connection.targetHandle === 'slot-a') {
-                    updateNodeData(targetNode.id, { placeholderA: teamName });
-                } else if (connection.targetHandle === 'slot-b') {
-                    updateNodeData(targetNode.id, { placeholderB: teamName });
+                const targetHandle = connection.targetHandle || '';
+                const matchIndexMatch = targetHandle.match(/slot-(a|b)-(\d+)/);
+                
+                if (matchIndexMatch) {
+                    const [_, slot, indexStr] = matchIndexMatch;
+                    const index = parseInt(indexStr, 10);
+                    const matches = Array.isArray(targetNode.data.matches) ? [...targetNode.data.matches] : [];
+                    
+                    if (matches[index]) {
+                        matches[index] = {
+                            ...matches[index],
+                            [slot === 'a' ? 'placeholderA' : 'placeholderB']: teamName
+                        };
+                        updateNodeData(targetNode.id, { matches });
+                    }
+                } else if (targetHandle === 'slot-a' || targetHandle === 'slot-b') {
+                    // Legacy support
+                    const field = targetHandle === 'slot-a' ? 'placeholderA' : 'placeholderB';
+                    updateNodeData(targetNode.id, { [field]: teamName });
                 }
+            }
+        }
+
+        // Propagate group data to StandingNode on connect (handle both directions)
+        const groupNode = sourceNode.type === 'groupNode' ? sourceNode : targetNode.type === 'groupNode' ? targetNode : null;
+        const standingNode = sourceNode.type === 'standingNode' ? sourceNode : targetNode.type === 'standingNode' ? targetNode : null;
+
+        if (groupNode && standingNode) {
+            updateNodeData(standingNode.id, { 
+                sourceGroupId: groupNode.id,
+                teamCount: groupNode.data.teamCount,
+                teams: groupNode.data.teams,
+                label: `Standings: ${groupNode.data.label}`
+            });
+        }
+
+        // Special handling for Group -> MatchNode (top handle)
+        if (targetNode.type === 'matchNode' && connection.targetHandle === 'group-in') {
+            if (sourceNode.type === 'groupNode') {
+                // Sync teams to the CURRENT node instead of creating a new one
+                
+                // Balanced Round Robin Algorithm (Circle Method)
+                const teamCount = (sourceNode.data.teamCount as number) || 0;
+                const teams = (sourceNode.data.teams as string[]) || [];
+                
+                const pairings = [];
+                if (teamCount >= 2) {
+                    let n = teamCount;
+                    const isOdd = n % 2 !== 0;
+                    if (isOdd) n++;
+
+                    const indices = Array.from({ length: n }).map((_, i) => i);
+                    
+                    for (let r = 0; r < n - 1; r++) {
+                        for (let i = 0; i < n / 2; i++) {
+                            const a = indices[i];
+                            const b = indices[n - 1 - i];
+
+                            // Skip dummy team if odd
+                            if (isOdd && (a === n - 1 || b === n - 1)) continue;
+
+                            // Balance Home/Away: alternate based on round and position
+                            const isHome = (i + r) % 2 === 0;
+                            pairings.push({
+                                id: `m-${Date.now()}-${r}-${i}`,
+                                placeholderA: teams[isHome ? a : b] || `Team ${(isHome ? a : b) + 1}`,
+                                placeholderB: teams[isHome ? b : a] || `Team ${(isHome ? b : a) + 1}`
+                            });
+                        }
+                        // Rotate indices (keep first fixed)
+                        indices.splice(1, 0, indices.pop()!);
+                    }
+                }
+
+                updateNodeData(targetNode.id, { 
+                    label: `Matches: ${sourceNode.data.label}`,
+                    matches: pairings 
+                });
+            } else {
+                return; // Only allow GroupNode to connect to group-in
+            }
+        }
+
+        // Special handling for Team Source -> GroupNode (left handles)
+        const teamInMatch = connection.targetHandle?.match(/team-in-(\d+)/);
+        if (targetNode.type === 'groupNode' && teamInMatch) {
+            const index = parseInt(teamInMatch[1], 10);
+            let teamName = null;
+            if (sourceNode.type === 'byeNode') {
+                teamName = (sourceNode.data.placeholder as string) || "TBD";
+            } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
+                const sourceHandle = connection.sourceHandle || '';
+                const rankMatch = sourceHandle.match(/rank-(\d+)/);
+                if (rankMatch) {
+                    const rankIndex = parseInt(rankMatch[1], 10);
+                    const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
+                    teamName = `${rankSuffix} Place (${sourceNode.data.label})`;
+                } else {
+                    teamName = sourceNode.type === 'groupNode' ? "Group Winner" : "Standing Advancer";
+                }
+            }
+
+            if (typeof teamName === "string" && teamName !== "TBD") {
+                const nextTeams = [...((targetNode.data.teams as string[]) || [])];
+                while (nextTeams.length <= index) nextTeams.push("TBD");
+                nextTeams[index] = teamName;
+                updateNodeData(targetNode.id, { teams: nextTeams });
+            }
+        }
+
+        // Special handling for Team Source -> ByeNode (left handle)
+        if (targetNode.type === 'byeNode' && connection.targetHandle === 'team-in') {
+            let teamName = null;
+            if (sourceNode.type === 'byeNode') {
+                teamName = (sourceNode.data.placeholder as string) || "TBD";
+            } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
+                const sourceHandle = connection.sourceHandle || '';
+                const rankMatch = sourceHandle.match(/rank-(\d+)/);
+                if (rankMatch) {
+                    const rankIndex = parseInt(rankMatch[1], 10);
+                    const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
+                    teamName = `${rankSuffix} Place (${sourceNode.data.label})`;
+                } else {
+                    teamName = "Group Winner";
+                }
+            }
+
+            if (typeof teamName === "string" && teamName !== "TBD") {
+                updateNodeData(targetNode.id, { placeholder: teamName });
             }
         }
 
@@ -94,11 +233,13 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     type: "smoothstep",
                     animated: false,
                     style: { 
-                        stroke: isFromGroup 
-                            ? "#8b5cf6" 
-                            : isFromBye 
-                                ? "#fd9a00" 
-                                : "#00c692", 
+                        stroke: isStandingConn
+                            ? "#10b981" // Emerald for standings
+                            : isFromGroup 
+                                ? "#8b5cf6" 
+                                : isFromBye 
+                                    ? "#fd9a00" 
+                                    : "#00c692", 
                         strokeWidth: 2,
                     },
                 },
@@ -122,10 +263,8 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             type: "matchNode",
             position: pos,
             data: {
-                matchIndex: nextIndex,
                 label: `Match #${nextIndex}`,
-                placeholderA: "TBD",
-                placeholderB: "TBD",
+                matches: [],
             },
         };
 
@@ -173,14 +312,104 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             position: pos,
             data: {
                 label: "Group A",
-                teamCount: 4,
-                advancingCount: 2,
+                teamCount: 0,
+                advancingCount: 0,
             },
         };
 
         set({
             nodes: [...nodes, newNode],
             isDirty: true,
+        });
+    },
+
+    addStandingNode: (position) => {
+        const { nodes } = get();
+        
+        const col = Math.floor(nodes.length / 4);
+        const row = nodes.length % 4;
+        const pos = position ?? { x: col * 320, y: row * 160 + 150 };
+
+        const newNode: Node = {
+            id: `standing-${Date.now()}`,
+            type: "standingNode",
+            position: pos,
+            data: {
+                label: "Standings",
+                teamCount: 0,
+            },
+        };
+
+        set({
+            nodes: [...nodes, newNode],
+            isDirty: true,
+        });
+    },
+
+    generateRoundRobinMatches: (groupId: string) => {
+        const { nodes, edges } = get();
+        const groupNode = nodes.find(n => n.id === groupId);
+        if (!groupNode || groupNode.type !== 'groupNode') return;
+
+        const teamCount = (groupNode.data.teamCount as number) || 0;
+        const teams = (groupNode.data.teams as string[]) || [];
+        const label = groupNode.data.label as string;
+        
+        // Balanced Round Robin Algorithm (Circle Method)
+        const pairings = [];
+        if (teamCount >= 2) {
+            let n = teamCount;
+            const isOdd = n % 2 !== 0;
+            if (isOdd) n++;
+
+            const indices = Array.from({ length: n }).map((_, i) => i);
+            
+            for (let r = 0; r < n - 1; r++) {
+                for (let i = 0; i < n / 2; i++) {
+                    const a = indices[i];
+                    const b = indices[n - 1 - i];
+
+                    if (isOdd && (a === n - 1 || b === n - 1)) continue;
+
+                    const isHome = (i + r) % 2 === 0;
+                    pairings.push({
+                        id: `m-${Date.now()}-${r}-${i}`,
+                        placeholderA: teams[isHome ? a : b] || `Team ${(isHome ? a : b) + 1}`,
+                        placeholderB: teams[isHome ? b : a] || `Team ${(isHome ? b : a) + 1}`
+                    });
+                }
+                indices.splice(1, 0, indices.pop()!);
+            }
+        }
+
+        if (pairings.length === 0) return;
+
+        // Create new match node
+        const matchNodeId = `match-rr-${Date.now()}`;
+        const newMatchNode: Node = {
+            id: matchNodeId,
+            type: "matchNode",
+            position: { x: groupNode.position.x + 350, y: groupNode.position.y },
+            data: {
+                label: `Matches: ${label}`,
+                matches: pairings
+            }
+        };
+
+        // Create edge
+        const newEdge: Edge = {
+            id: `edge-rr-${Date.now()}`,
+            source: groupId,
+            target: matchNodeId,
+            sourceHandle: 'group-matches',
+            type: 'smoothstep',
+            style: { stroke: '#8b5cf6', strokeWidth: 2 }
+        };
+
+        set({
+            nodes: [...nodes, newMatchNode],
+            edges: [...edges, newEdge],
+            isDirty: true
         });
     },
 
@@ -290,6 +519,23 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                                 } else if (edge.targetHandle === 'slot-b') {
                                     target.data = { ...target.data, placeholderB: teamName };
                                 }
+                            }
+                        }
+                    });
+                }
+
+                // If a group node changed, find all standing nodes connected to it and update them
+                if (updatedNode.type === 'groupNode') {
+                    state.edges.forEach(edge => {
+                        if (edge.source === id) {
+                            const target = updatedNodes.find(n => n.id === edge.target);
+                            if (target && target.type === 'standingNode') {
+                                target.data = { 
+                                    ...target.data, 
+                                    teamCount: updatedNode.data.teamCount,
+                                    teams: updatedNode.data.teams,
+                                    label: `Standings: ${updatedNode.data.label}`
+                                };
                             }
                         }
                     });

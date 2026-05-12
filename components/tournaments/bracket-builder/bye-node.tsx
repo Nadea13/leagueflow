@@ -23,6 +23,15 @@ export const ByeNode = memo(function ByeNode({
                     : "border-border hover:border-chart-5/50"
             )}
         >
+            {/* ── Left Handle (1 input) ── */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                id="team-in"
+                className="!w-4 !h-4 !bg-chart-5 !border-none !rounded-full hover:!bg-chart-5 hover:!scale-125 transition-all z-50"
+                style={{ top: "50%", left: "-8px" }}
+            />
+
             {/* ── Right Handle (1 output: winner) ── */}
             <Handle
                 type="source"
