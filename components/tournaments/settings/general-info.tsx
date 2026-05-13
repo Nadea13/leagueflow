@@ -50,7 +50,7 @@ export function GeneralInfo({ tournament }: GeneralInfoProps) {
     }, [state, tCommon, t, toast]);
 
     return (
-        <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
+        <div className="space-y-2 md:space-y-3">
             <div className="flex flex-col gap-1">
                 <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                     <ClipboardEdit className="h-5 w-5 text-primary" />

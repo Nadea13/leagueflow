@@ -18,7 +18,18 @@ import { GeneralInfo } from "./general-info";
 
 
 
-export function TournamentSettings({ tournament, hasFixtures }: { tournament: Tournament; hasFixtures: boolean; userPlan?: string; teams: TournamentTeam[] }) {
+export function TournamentSettings({ 
+    tournament, 
+    hasFixtures, 
+    teams,
+    activeTab = 'general'
+}: { 
+    tournament: Tournament; 
+    hasFixtures: boolean; 
+    userPlan?: string; 
+    teams: TournamentTeam[];
+    activeTab?: string;
+}) {
     const tournamentId = tournament.id;
     const tBilling = useTranslations("Billing");
     const router = useRouter();
@@ -33,20 +44,7 @@ export function TournamentSettings({ tournament, hasFixtures }: { tournament: To
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isFetchingPlans, setIsFetchingPlans] = useState(false);
 
-
-
     const searchParams = useSearchParams();
-
-    useEffect(() => {
-        // Mounted logic kept for billing section if needed later
-    }, []);
-
-    useEffect(() => {
-        if (searchParams.get("action") === "upgrade" && !isPro && !showPayment) {
-            setShowPayment(true);
-        }
-    }, [searchParams, isPro, showPayment]);
-
 
     // Fetch plans on mount if not provided
     useEffect(() => {
@@ -64,54 +62,25 @@ export function TournamentSettings({ tournament, hasFixtures }: { tournament: To
         fetchPlans();
     }, []);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const tournamentPlan = plans.find(p =>
-        p.name?.trim() === 'Per Tournament' ||
-        p.duration?.toLowerCase().includes('tournament')
-    );
-
     const togglePayment = () => {
         setShowPayment(!showPayment);
     };
 
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handlePaymentSuccess = () => {
-        setShowPayment(false);
-        router.refresh();
-        toast({ title: tBilling("payment_success"), description: tBilling("payment_success_desc") });
-    };
-
-
-
-
-
     return (
-        <div className="space-y-2 md:space-y-6">
-            <GeneralInfo tournament={tournament} />
-
-            {/* Rules and Venue Section */}
-            <RulesConfig tournamentId={tournamentId} />
-
-            <VenueManager tournamentId={tournamentId} />
-
-            {/* Collaborators */}
-            <Collaborators tournamentId={tournamentId} togglePayment={togglePayment} />
-
-            {/* Billing & Subscription */}
-            {/* Temporarily hidden during development */}
-            {/*
-            <div className="space-y-4 md:space-y-6">
-                ... (billing section hidden)
-            </div>
-            */}
-
-            {/* Danger Zone */}
-            <DangerZone 
-                tournamentId={tournamentId} 
-                tournamentName={tournament.name} 
-                hasFixtures={hasFixtures} 
-            />
+        <div className="space-y-6">
+            {activeTab === 'general' && <GeneralInfo tournament={tournament} />}
+            {activeTab === 'rules' && <RulesConfig tournamentId={tournamentId} />}
+            {activeTab === 'venue' && <VenueManager tournamentId={tournamentId} />}
+            {activeTab === 'collaborators' && (
+                <Collaborators tournamentId={tournamentId} togglePayment={togglePayment} />
+            )}
+            {activeTab === 'danger' && (
+                <DangerZone 
+                    tournamentId={tournamentId} 
+                    tournamentName={tournament.name} 
+                    hasFixtures={hasFixtures} 
+                />
+            )}
         </div>
     );
 }

@@ -85,7 +85,7 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
     };
 
     return (
-        <div className="bg-card border border-destructive/50 p-4 md:p-6 space-y-2 md:space-y-3">
+        <div className="space-y-2 md:space-y-3">
             <div className="flex items-center gap-2 md:gap-3">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
                 <h3 className="text-xl font-black tracking-tighter text-destructive">

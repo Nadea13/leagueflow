@@ -59,7 +59,6 @@ export function TournamentContent({
     const tCommon = useTranslations("Common");
     const tSettings = useTranslations("Settings");
     const tSports = useTranslations("Sports");
-    const [isEditingBracket, setIsEditingBracket] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -588,44 +587,24 @@ export function TournamentContent({
                         )}>
                             {/* 3. Knockout Bracket (For 'knockout' OR 'group_knockout') */}
                             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
-                                <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                            <GitBranch className="h-5 w-5 text-primary" />
-                                            {t("bracket")}
-                                        </h2>
-                                        {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (userRole === 'admin' || userRole === 'editor') && (
-                                            <Button
-                                                variant={isEditingBracket ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => setIsEditingBracket(!isEditingBracket)}
-                                                className="h-8 text-[10px] font-black tracking-widest uppercase transition-all"
-                                            >
-                                                {isEditingBracket ? (
-                                                    <X className="h-3 w-3" />
-                                                ) : (
-                                                    <Settings className="h-3 w-3" />
-                                                )}
-                                                {isEditingBracket ? "" : "Build Bracket"}
-                                            </Button>
-                                        )}
-                                    </div>
-                                    <div className="relative z-10">
-                                        {isEditingBracket ? (
-                                            <BracketCanvas
-                                                tournamentId={id}
-                                                tournamentName={tournament.name}
-                                                initialCanvasData={tournament.canvas_data ?? null}
-                                                isCompact={true}
-                                                onClose={() => setIsEditingBracket(false)}
-                                            />
-                                        ) : (
-                                            <Bracket
-                                                matches={matches}
-                                                canvasData={tournament.canvas_data}
-                                            />
-                                        )}
-                                    </div>
+                                <div className="relative z-10">
+                                    {(userRole === 'admin' || userRole === 'editor') ? (
+                                        <BracketCanvas
+                                            tournamentId={id}
+                                            tournamentName={tournament.name}
+                                            initialCanvasData={tournament.canvas_data ?? null}
+                                            isCompact={true}
+                                            tournament={tournament}
+                                            hasFixtures={hasFixtures}
+                                            teams={teams}
+                                            matches={matches}
+                                        />
+                                    ) : (
+                                        <Bracket
+                                            matches={matches}
+                                            canvasData={tournament.canvas_data}
+                                        />
+                                    )}
                                 </div>
                             )}
 
@@ -654,50 +633,6 @@ export function TournamentContent({
                                 </div>
                             </div>
                         </div>
-
-                        {/* Sidebar Management Column */}
-                        {(hasStandings || (!isLeague && matches.length > 0)) && (
-                            <div className={cn(
-                                "lg:col-span-1 space-y-4 md:space-y-6",
-                                fixtureSubTab !== 'standings' && "hidden md:block"
-                            )}>
-                                {/* Generation Controls Block */}
-                                <div className="bg-card border relative overflow-hidden transition-colors p-4 md:p-6 space-y-2 md:space-y-3">
-                                    {hasStandings && (
-                                        <>
-                                            <div className="flex flex-col gap-1">
-                                                <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                                    <Trophy className="h-5 w-5 text-primary" />
-                                                    {t("standings")}
-                                                </h3>
-                                            </div>
-
-                                            <div className="space-y-2 md:space-y-3">
-                                                {isLeague ? (
-                                                    <div className="bg-background border rounded-none relative overflow-hidden transition-colors shadow-xl shadow-black/20">
-                                                        <Standings standings={calculatedStandings} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="relative z-10">
-                                                        <StandingsGroups teams={teams} matches={matches} columns={1} />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {(!isLeague && matches.length > 0) && (
-                                        <div className={cn(hasStandings && "pt-4 border-t border-border/40")}>
-                                            <ProgressionLogic
-                                                tournamentId={id}
-                                                matches={matches}
-                                                format={tournament?.format || 'league'}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}

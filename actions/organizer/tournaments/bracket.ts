@@ -8,7 +8,7 @@ import { validateTournamentAccess } from "@/lib/security";
 export async function saveBracketCanvas(
     tournamentId: string,
     canvasData: BracketCanvasData
-): Promise<ActionResponse> {
+): Promise<ActionResponse<BracketCanvasData>> {
     const access = await validateTournamentAccess(tournamentId, "editor");
     if (!access.success) {
         return { success: false, error: access.error };
@@ -16,6 +16,68 @@ export async function saveBracketCanvas(
 
     const supabase = await createClient();
 
+    // 1. Fetch teams for auto-mapping placeholders to IDs
+    const { data: teams } = await supabase
+        .from('tournament_teams')
+        .select('id, name')
+        .eq('tournament_id', tournamentId);
+
+    // 2. Process matches in nodes
+    const updatedNodes = [...canvasData.nodes];
+    
+    for (const node of updatedNodes) {
+        if (node.type === 'matchNode') {
+            const nodeData = node.data as any;
+            const matches = nodeData.matches || [];
+            
+            for (let i = 0; i < matches.length; i++) {
+                const match = matches[i];
+                
+                // Try to map placeholders to real team IDs
+                const homeTeam = teams?.find(t => t.name === match.placeholderA);
+                const awayTeam = teams?.find(t => t.name === match.placeholderB);
+                
+                const matchRecord = {
+                    tournament_id: tournamentId,
+                    node_id: node.id,
+                    placeholder_a: match.placeholderA,
+                    placeholder_b: match.placeholderB,
+                    home_team_id: homeTeam?.id || null,
+                    away_team_id: awayTeam?.id || null,
+                    match_date: match.match_date || null,
+                    match_time: match.match_time || null,
+                    round: 1, // Default round
+                    stage: matches.length > 1 ? 'group' : 'quarter_final', // Heuristic
+                    status: 'scheduled',
+                    is_manual: true,
+                    match_index: i + 1
+                };
+
+                const matchId = match.dbId || match.matchId;
+
+                if (matchId) {
+                    // Update existing
+                    await supabase
+                        .from('matches')
+                        .update(matchRecord)
+                        .eq('id', matchId);
+                } else {
+                    // Create new
+                    const { data: newMatch, error: createError } = await supabase
+                        .from('matches')
+                        .insert(matchRecord)
+                        .select('id')
+                        .single();
+                    
+                    if (newMatch) {
+                        matches[i] = { ...match, dbId: newMatch.id };
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. Save the final updated canvas data
     const { error } = await supabase
         .from("tournaments")
         .update({ canvas_data: canvasData })
@@ -26,5 +88,5 @@ export async function saveBracketCanvas(
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
+    return { success: true, data: canvasData };
 }

@@ -16,6 +16,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
 
     useEffect(() => {
         const supabase = createClient();
+        let isMounted = true;
 
         // Client-side fetch using browser Supabase (works for unauthenticated public users)
         const fetchEventsClient = async () => {
@@ -25,7 +26,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                 .eq('match_id', matchId)
                 .order('created_at', { ascending: false });
 
-            if (!error && data) {
+            if (isMounted && !error && data) {
                 const mapped = data.map((e) => ({
                     ...e,
                     player_name: (e.players as { name: string } | null)?.name || (e as { player_name?: string }).player_name || "Unknown",
@@ -45,37 +46,42 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             } else {
                 // Admin view: use server action (has proper auth context)
                 const res = await getMatchEvents(matchId);
-                if (res.success && res.data) setEvents(res.data);
+                if (isMounted && res.success && res.data) setEvents(res.data);
             }
-            setIsLoading(false);
+            if (isMounted) setIsLoading(false);
         };
 
         loadEvents();
         
         // --- Realtime Subscription ---
-        const channel = supabase
-            .channel(`match-events-${matchId}`)
+        // Use a unique channel name for this specific hook instance to avoid collisions
+        // when multiple components use the same matchId or during rapid re-mounts.
+        const channelId = Math.random().toString(36).substring(7);
+        const channel = supabase.channel(`match-events-${matchId}-${channelId}`);
+        
+        channel
             .on('postgres_changes', { 
                 event: '*', 
                 schema: 'public', 
                 table: 'match_events', 
                 filter: `match_id=eq.${matchId}` 
             }, async (payload) => {
+                if (!isMounted) return;
+
                 if (payload.eventType === 'INSERT') {
                     const newEvent = payload.new as MatchEvent;
-                    // Immediately add to state for instant UI update
                     setEvents((prev: MatchEvent[]) => {
                         if (prev.some((e: MatchEvent) => e.id === newEvent.id)) return prev;
                         return [newEvent, ...prev].sort((a: MatchEvent, b: MatchEvent) => {
                             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                         });
                     });
-                    // Re-fetch with joins for complete data
+                    
                     if (isReadOnly) {
                         await fetchEventsClient();
                     } else {
                         const res = await getMatchEvents(matchId);
-                        if (res.success && res.data) setEvents(res.data);
+                        if (isMounted && res.success && res.data) setEvents(res.data);
                     }
                 } else if (payload.eventType === 'DELETE') {
                     setEvents((prev: MatchEvent[]) => prev.filter((e: MatchEvent) => e.id !== payload.old.id));
@@ -89,19 +95,20 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             })
             .subscribe();
 
-        // Polling fallback for public/read-only views (uses client-side Supabase)
+        // Polling fallback for public/read-only views
         let pollInterval: NodeJS.Timeout | null = null;
         if (isReadOnly) {
             pollInterval = setInterval(() => {
-                fetchEventsClient();
+                if (isMounted) fetchEventsClient();
             }, 5000);
         }
 
         return () => {
+            isMounted = false;
             supabase.removeChannel(channel);
             if (pollInterval) clearInterval(pollInterval);
         };
-    }, [matchId, isReadOnly, initialData]);
+    }, [matchId, isReadOnly]);
 
     const addEvent = async (
         teamId: string | null,

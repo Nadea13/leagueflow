@@ -13,6 +13,51 @@ export const ByeNode = memo(function ByeNode({
 }: NodeProps<Node<{ label: string; placeholder?: string }>>) {
     const deleteNode = useBracketStore((s) => s.deleteNode);
     const updateNodeData = useBracketStore((s) => s.updateNodeData);
+    const edges = useBracketStore((s) => s.edges);
+    const nodes = useBracketStore((s) => s.nodes);
+
+    // Resolve live team from edges
+    const getResolvedTeam = () => {
+        const handleId = "team-in";
+        const edge = edges.find(e => e.target === id && e.targetHandle === handleId);
+        if (!edge) return null;
+
+        const sourceNode = nodes.find(n => n.id === edge.source);
+        if (!sourceNode) return null;
+
+        // Handle TeamListNode propagation
+        if (sourceNode.type === 'teamListNode') {
+            const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
+            if (teamIdMatch) {
+                const teamId = teamIdMatch[1];
+                const sourceTeams = (sourceNode.data.teams as any[]) || [];
+                const team = sourceTeams.find(t => t.id === teamId);
+                return team?.name || null;
+            }
+        }
+
+        // Handle StandingNode/GroupNode propagation
+        if (sourceNode.type === 'standingNode' || sourceNode.type === 'groupNode') {
+            const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
+            if (rankMatch) {
+                const rankIndex = parseInt(rankMatch[1], 10);
+                const rankings = (sourceNode.data as any).rankings as string[] || [];
+                if (rankings[rankIndex]) return rankings[rankIndex];
+                
+                const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
+                return `${rankSuffix} Place (${sourceNode.data.label})`;
+            }
+        }
+        
+        // Handle ByeNode propagation
+        if (sourceNode.type === 'byeNode') {
+            return (sourceNode.data as any).placeholder as string;
+        }
+
+        return null;
+    };
+
+    const liveTeam = getResolvedTeam();
 
     return (
         <div
@@ -44,8 +89,8 @@ export const ByeNode = memo(function ByeNode({
             {/* ── Content ── */}
             <div className="flex justify-between items-center px-3 py-1.5 border-b bg-muted/30">
                 <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black tracking-widest text-chart-5 uppercase">
-                        {data.label || "BYE"}
+                    <span className="text-[11px] font-black tracking-widest text-chart-5">
+                        {data.label || "Bye"}
                     </span>
                 </div>
                 <button
@@ -63,7 +108,8 @@ export const ByeNode = memo(function ByeNode({
             <div className="flex flex-col divide-y divide-border">
                 <SlotRow
                     handleId="slot"
-                    label={data.placeholder || "TBD"}
+                    label={liveTeam || data.placeholder || "TBD"}
+                    isResolved={!!liveTeam}
                     position="top"
                     onDropTeam={(teamName) => updateNodeData(id, { placeholder: teamName })}
                     onClear={() => updateNodeData(id, { placeholder: "TBD" })}
@@ -76,12 +122,14 @@ export const ByeNode = memo(function ByeNode({
 function SlotRow({
     handleId: _handleId,
     label = "TBD",
+    isResolved,
     position,
     onDropTeam,
     onClear,
 }: {
     handleId: string;
     label?: string;
+    isResolved?: boolean;
     position: "top" | "bottom";
     onDropTeam?: (teamName: string) => void;
     onClear?: () => void;

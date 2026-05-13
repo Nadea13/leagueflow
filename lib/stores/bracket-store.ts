@@ -17,6 +17,10 @@ export interface MatchNodeData {
         id: string;
         placeholderA: string;
         placeholderB: string;
+        match_date?: string;
+        match_time?: string;
+        dbId?: string;
+        matchId?: string;
     }[];
     [key: string]: unknown;
 }
@@ -35,6 +39,7 @@ interface BracketState {
     addByeNode: (position?: { x: number; y: number }) => void;
     addGroupNode: (position?: { x: number; y: number }) => void;
     addStandingNode: (position?: { x: number; y: number }) => void;
+    addTeamListNode: (teams: any[], position?: { x: number; y: number }) => void;
     generateRoundRobinMatches: (groupId: string) => void;
     deleteNode: (id: string) => void;
     hydrate: (data: BracketCanvasData | null) => void;
@@ -43,6 +48,9 @@ interface BracketState {
     markClean: () => void;
     syncMatches: (matches: Match[]) => void;
     updateNodeData: (id: string, newData: Record<string, unknown>) => void;
+    selectNode: (id: string | null) => void;
+    teams: any[];
+    setTeams: (teams: any[]) => void;
 }
 
 export const useBracketStore = create<BracketState>((set, get) => ({
@@ -50,19 +58,46 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     edges: [],
     nodeCounter: 0,
     isDirty: false,
+    teams: [],
+
+    setTeams: (teams) => set({ teams }),
 
     onNodesChange: (changes) => {
-        set((state) => ({
-            nodes: applyNodeChanges(changes, state.nodes),
-            isDirty: true,
-        }));
+        set((state) => {
+            const nextNodes = applyNodeChanges(changes, state.nodes);
+            
+            const hasRealChange = changes.some(c => 
+                c.type === 'position' || 
+                c.type === 'remove' || 
+                c.type === 'add' ||
+                (c.type === 'dimensions' && c.dimensions)
+            );
+
+            if (hasRealChange) {
+                console.log("Real Node Change Detected:", changes.map(c => c.type));
+            }
+
+            return {
+                nodes: nextNodes,
+                isDirty: state.isDirty || hasRealChange,
+            };
+        });
     },
 
     onEdgesChange: (changes) => {
-        set((state) => ({
-            edges: applyEdgeChanges(changes, state.edges),
-            isDirty: true,
-        }));
+        set((state) => {
+            const nextEdges = applyEdgeChanges(changes, state.edges);
+            const hasRealChange = changes.some(c => c.type === 'remove' || c.type === 'add');
+            
+            if (hasRealChange) {
+                console.log("Real Edge Change Detected:", changes.map(c => c.type));
+            }
+
+            return {
+                edges: nextEdges,
+                isDirty: state.isDirty || hasRealChange,
+            };
+        });
     },
 
     onConnect: (connection: Connection) => {
@@ -76,11 +111,20 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const isFromBye = sourceNode.type === 'byeNode';
         const isStandingConn = sourceNode.type === 'standingNode' || targetNode.type === 'standingNode';
         
-        // Propagate team from Bye/Group to Match slot on connect
+        // Propagate team from Bye/Group/TeamList to Match slot on connect
         if (targetNode.type === 'matchNode') {
             let teamName = null;
             if (sourceNode.type === 'byeNode') {
                 teamName = (sourceNode.data.placeholder as string) || "TBD";
+            } else if (sourceNode.type === 'teamListNode') {
+                const sourceHandle = connection.sourceHandle || '';
+                const teamIdMatch = sourceHandle.match(/team-(.+)/);
+                if (teamIdMatch) {
+                    const teamId = teamIdMatch[1];
+                    const teams = (sourceNode.data.teams as any[]) || [];
+                    const team = teams.find(t => t.id === teamId);
+                    teamName = team?.name || "TBD";
+                }
             } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
                 const sourceHandle = connection.sourceHandle || '';
                 const rankMatch = sourceHandle.match(/rank-(\d+)/);
@@ -184,6 +228,15 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             let teamName = null;
             if (sourceNode.type === 'byeNode') {
                 teamName = (sourceNode.data.placeholder as string) || "TBD";
+            } else if (sourceNode.type === 'teamListNode') {
+                const sourceHandle = connection.sourceHandle || '';
+                const teamIdMatch = sourceHandle.match(/team-(.+)/);
+                if (teamIdMatch) {
+                    const teamId = teamIdMatch[1];
+                    const teams = (sourceNode.data.teams as any[]) || [];
+                    const team = teams.find(t => t.id === teamId);
+                    teamName = team?.name || "TBD";
+                }
             } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
                 const sourceHandle = connection.sourceHandle || '';
                 const rankMatch = sourceHandle.match(/rank-(\d+)/);
@@ -209,6 +262,15 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             let teamName = null;
             if (sourceNode.type === 'byeNode') {
                 teamName = (sourceNode.data.placeholder as string) || "TBD";
+            } else if (sourceNode.type === 'teamListNode') {
+                const sourceHandle = connection.sourceHandle || '';
+                const teamIdMatch = sourceHandle.match(/team-(.+)/);
+                if (teamIdMatch) {
+                    const teamId = teamIdMatch[1];
+                    const teams = (sourceNode.data.teams as any[]) || [];
+                    const team = teams.find(t => t.id === teamId);
+                    teamName = team?.name || "TBD";
+                }
             } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
                 const sourceHandle = connection.sourceHandle || '';
                 const rankMatch = sourceHandle.match(/rank-(\d+)/);
@@ -230,7 +292,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             edges: addEdge(
                 {
                     ...connection,
-                    type: "smoothstep",
+                    type: "bezier",
                     animated: false,
                     style: { 
                         stroke: isStandingConn
@@ -346,6 +408,28 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         });
     },
 
+    addTeamListNode: (teams, position) => {
+        const { nodes } = get();
+        
+        const col = Math.floor(nodes.length / 4);
+        const row = nodes.length % 4;
+        const pos = position ?? { x: col * 320, y: row * 160 + 200 };
+
+        const newNode: Node = {
+            id: `team-list-${Date.now()}`,
+            type: "teamListNode",
+            position: pos,
+            data: {
+                label: "Participating Teams",
+            },
+        };
+
+        set({
+            nodes: [...nodes, newNode],
+            isDirty: true,
+        });
+    },
+
     generateRoundRobinMatches: (groupId: string) => {
         const { nodes, edges } = get();
         const groupNode = nodes.find(n => n.id === groupId);
@@ -402,7 +486,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             source: groupId,
             target: matchNodeId,
             sourceHandle: 'group-matches',
-            type: 'smoothstep',
+            type: 'bezier',
             style: { stroke: '#8b5cf6', strokeWidth: 2 }
         };
 
@@ -498,10 +582,23 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
     updateNodeData: (id, newData) => {
         set((state) => {
-            const updatedNodes = state.nodes.map((node) =>
-                node.id === id
-                    ? { ...node, data: { ...node.data, ...newData } }
-                    : node
+            const node = state.nodes.find((n) => n.id === id);
+            if (!node) return state;
+
+            // Check if any value actually changed (shallow comparison + JSON for arrays/objects)
+            const hasChange = Object.keys(newData).some((key) => {
+                const oldVal = node.data[key];
+                const newVal = newData[key];
+                if (typeof newVal === 'object' && newVal !== null) {
+                    return JSON.stringify(oldVal) !== JSON.stringify(newVal);
+                }
+                return oldVal !== newVal;
+            });
+
+            if (!hasChange) return state;
+
+            const updatedNodes = state.nodes.map((n) =>
+                n.id === id ? { ...n, data: { ...n.data, ...newData } } : n
             );
 
             // Handle propagation if a 'source' node changed (e.g. ByeNode team changed)
@@ -524,7 +621,6 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     });
                 }
 
-                // If a group node changed, find all standing nodes connected to it and update them
                 if (updatedNode.type === 'groupNode') {
                     state.edges.forEach(edge => {
                         if (edge.source === id) {
@@ -547,5 +643,14 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 isDirty: true,
             };
         });
+    },
+
+    selectNode: (id) => {
+        set((state) => ({
+            nodes: state.nodes.map((n) => ({
+                ...n,
+                selected: n.id === id,
+            })),
+        }));
     },
 }));

@@ -61,8 +61,9 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     // Supabase Realtime Subscription
     useEffect(() => {
         const supabase = createClient();
+        const channelId = Math.random().toString(36).substring(7);
         const channel = supabase
-            .channel(`match-card-${match.id}`)
+            .channel(`match-card-${match.id}-${channelId}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload: { new: Match }) => {
                 setMatchState(prev => ({ ...prev, ...payload.new }));
                 // No router.refresh() here to avoid full page reloads on every card update, local state is enough for the card itself

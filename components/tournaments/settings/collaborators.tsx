@@ -104,7 +104,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
     };
 
     return (
-        <div className="bg-card border space-y-2 md:space-y-3 p-4 md:p-6">
+        <div className="space-y-2 md:space-y-3">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 md:gap-3">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -201,9 +201,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
 
                 <div className={cn("space-y-2 md:space-y-3", !isPro && "opacity-40 grayscale pointer-events-none")}>
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
+                        null
                     ) : collaborators.length === 0 ? (
                         <EmptyState
                             icon={Users}

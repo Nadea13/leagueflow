@@ -61,7 +61,7 @@ function CanvasBracket({ canvasData }: { canvasData: BracketCanvasData }) {
                 colorMode="light"
                 connectionMode={ConnectionMode.Loose}
                 defaultEdgeOptions={{
-                    type: "smoothstep",
+                    type: "bezier",
                     style: {
                         strokeWidth: 3,
                     },

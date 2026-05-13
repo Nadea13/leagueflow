@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Match, Team } from "@/types/index";
 import { MatchCard } from "@/components/tournaments/matches/match-card";
@@ -51,6 +51,9 @@ interface FixturesManagerProps {
     hideControls?: boolean;
     startDate?: string | null;
     endDate?: string | null;
+    externalEditMode?: boolean;
+    externalFilterStage?: string;
+    externalSelectedDate?: string | null;
 }
 
 export function MatchManager({
@@ -60,7 +63,10 @@ export function MatchManager({
     format: tournamentFormat,
     hideControls = false,
     startDate,
-    endDate
+    endDate,
+    externalEditMode = false,
+    externalFilterStage = "all",
+    externalSelectedDate = null
 }: FixturesManagerProps) {
     const t = useTranslations("Tournament");
     const tMatch = useTranslations("Match");
@@ -68,13 +74,25 @@ export function MatchManager({
     const tBracket = useTranslations("Bracket");
     const locale = useLocale();
 
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [filterStage, setFilterStage] = useState<string>("all");
+    const [isEditMode, setIsEditMode] = useState(externalEditMode);
+    const [filterStage, setFilterStage] = useState<string>(externalFilterStage);
+    const [selectedDate, setSelectedDate] = useState<string | null>(externalSelectedDate);
+
+    // Sync external states
+    useEffect(() => {
+        setIsEditMode(externalEditMode);
+    }, [externalEditMode]);
+
+    useEffect(() => {
+        setFilterStage(externalFilterStage);
+    }, [externalFilterStage]);
+
+    useEffect(() => {
+        setSelectedDate(externalSelectedDate);
+    }, [externalSelectedDate]);
+
     const [isAdvancing, setIsAdvancing] = useState(false);
     const [advanceDialogOpen, setAdvanceDialogOpen] = useState(false);
-
-    // Date filtering states
-    const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [viewDate, setViewDate] = useState(new Date());
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -178,19 +196,12 @@ export function MatchManager({
                     title={tFixtures("ready_to_start")}
                     description={tFixtures("generate_instruction")}
                     className="py-24 border border-dashed"
-                    action={!hideControls && (
-                        <MatchGenerator
-                            tournamentId={tournamentId}
-                            hasFixtures={false}
-                            format={tournamentFormat}
-                            className="h-12 w-auto px-10 rounded-none font-black tracking-tighter shadow-[0_0_20px_rgba(var(--primary),0.2)]"
-                        />
-                    )}
                 />
             ) : (
                 <>
                     {/* Navigation & Filter Header */}
                     <div className="flex flex-col gap-2 md:gap-3">
+                        {!hideControls && (
                         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3">
                             <div className="flex items-center border w-full md:w-auto md:min-w-[400px]">
                                 <button
@@ -328,6 +339,7 @@ export function MatchManager({
                                 </Select>
                             </div>
                         </div>
+                        )}
 
                         {/* Management Controls */}
                         {!hideControls && (

@@ -109,7 +109,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
     };
 
     return (
-        <div className="bg-card border space-y-2 md:space-y-3 p-4 md:p-6">
+        <div className="space-y-2 md:space-y-3">
             <div className="flex flex-col md:flex-row justify-between gap-2 md:gap-3">
                 <div className="flex flex-col gap-1">
                     <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
@@ -217,9 +217,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                 <div className="relative z-0 space-y-4">
                     {/* Venue List */}
                     {isLoading ? (
-                        <div className="flex justify-center py-12">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
+                        null
                     ) : venues.length === 0 ? (
                         <EmptyState
                             icon={MapPin}
