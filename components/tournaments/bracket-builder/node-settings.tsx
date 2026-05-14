@@ -8,7 +8,6 @@ import { Settings, Users, Trophy, Zap, Trash2, ListOrdered, Calendar, Clock, Ext
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/client";
 import { TournamentTeam } from "@/types";
 import { useParams } from "next/navigation";
 import {
@@ -18,30 +17,28 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Teams } from "@/components/tournaments/teams/team-list";
+import { Registrations } from "@/components/tournaments/management/registrations";
+import { TeamForm } from "@/components/tournaments/teams/team-form";
+import { Plus } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { useTranslations } from "next-intl";
 
 export function NodeSettings() {
-    const { nodes, edges, updateNodeData, deleteNode } = useBracketStore();
+    const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, setActiveNodeId } = useBracketStore();
     const params = useParams();
     const tournamentId = params.id as string;
-    const selectedNode = nodes.find((node) => node.selected);
-    const supabase = createClient();
+    const selectedNode = nodes.find((node) => node.id === activeNodeId);
+    const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+    const t = useTranslations("Team");
 
-    const [teams, setTeams] = React.useState<TournamentTeam[]>([]);
-
-    React.useEffect(() => {
-        async function fetchTeams() {
-            if (!tournamentId) return;
-            const { data } = await supabase
-                .from("tournament_teams")
-                .select("*")
-                .eq("tournament_id", tournamentId)
-                .order("name");
-            if (data) setTeams(data);
-        }
-        fetchTeams();
-    }, [tournamentId]);
-
-    if (!selectedNode) {
+    if (!selectedNode || !activeNodeId) {
         return null;
     }
 
@@ -98,11 +95,13 @@ export function NodeSettings() {
                     <div className={`w-8 h-8 rounded flex items-center justify-center ${
                         type === 'groupNode' ? 'bg-violet-500' :
                         type === 'matchNode' ? 'bg-primary' : 
-                        type === 'standingNode' ? 'bg-emerald-500' : 'bg-amber-500'
+                        type === 'standingNode' ? 'bg-emerald-500' : 
+                        type === 'teamListNode' ? 'bg-blue-500' : 'bg-amber-500'
                     }`}>
                         {type === 'groupNode' ? <Users className="h-4 w-4 text-white" /> :
                          type === 'matchNode' ? <Trophy className="h-4 w-4 text-white" /> :
                          type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-white" /> :
+                         type === 'teamListNode' ? <Users className="h-4 w-4 text-white" /> :
                          <Zap className="h-4 w-4 text-white" />}
                     </div>
                     <div className="flex flex-col">
@@ -361,6 +360,66 @@ export function NodeSettings() {
                                 disabled={!!getResolvedTeam(id, "team-in")}
                                 className={`h-8 text-xs font-bold bg-muted/30 focus-visible:ring-amber-500 ${getResolvedTeam(id, "team-in") ? "text-violet-600 border-violet-200 opacity-100" : ""}`}
                             />
+                        </div>
+                    )}
+
+                    {type === "teamListNode" && (
+                        <div className="space-y-2 md:space-y-3">
+                            <div className="space-y-2 md:space-y-3">
+                                <div className="flex flex-col gap-1">
+                                    <h4 className="text-[10px] font-black tracking-widest text-amber-500 flex items-center gap-2">
+                                        <ExternalLink className="h-3 w-3" />
+                                        Tournament Registrations
+                                    </h4>
+                                </div>
+                                <div className="custom-scrollbar">
+                                    <Registrations tournamentId={tournamentId} />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 md:space-y-3 pt-4 border-t">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-[10px] font-black tracking-widest text-primary flex items-center gap-2 uppercase">
+                                        <Users className="h-3 w-3" />
+                                        {t("participating_teams") || "Participating Teams"}
+                                    </h4>
+
+                                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-7 px-2 text-[9px] font-black tracking-widest uppercase border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all rounded-none"
+                                            >
+                                                <Plus className="h-3.5 w-3.5 mr-1" />
+                                                {t("add_team_button") || "Add Team"}
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[500px] rounded-none border-border/50">
+                                            <DialogHeader>
+                                                <DialogTitle className="text-xl font-black tracking-tighter uppercase">{t("add_team")}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="py-4">
+                                                <TeamForm 
+                                                    tournamentId={tournamentId} 
+                                                    isLimitReached={false}
+                                                    onSuccess={() => {
+                                                        setIsAddDialogOpen(false);
+                                                        fetchTeams(tournamentId);
+                                                    }}
+                                                />
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                                <div className="custom-scrollbar max-h-[400px]">
+                                    <Teams
+                                        teams={teams as any}
+                                        tournamentId={tournamentId}
+                                        isPro={true}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

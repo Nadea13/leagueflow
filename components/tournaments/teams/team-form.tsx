@@ -26,7 +26,7 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentId: string; isLimitReached?: boolean }) {
+export function TeamForm({ tournamentId, isLimitReached = false, onSuccess }: { tournamentId: string; isLimitReached?: boolean; onSuccess?: () => void }) {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");
@@ -41,9 +41,10 @@ export function TeamForm({ tournamentId, isLimitReached = false }: { tournamentI
         if (state.success) {
             formRef.current?.reset();
             const timer = setTimeout(() => setPreview(""), 0);
+            onSuccess?.();
             return () => clearTimeout(timer);
         }
-    }, [state.success]);
+    }, [state.success, onSuccess]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

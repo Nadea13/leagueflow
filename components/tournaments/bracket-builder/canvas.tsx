@@ -16,9 +16,10 @@ import "@xyflow/react/dist/style.css";
 import {
     Loader2, Plus, RefreshCw, RotateCcw, Save, Users, X, Zap,
     List, ListOrdered, Settings, Info, MapPin, Hammer, ShieldAlert,
-    Calendar, Settings2, CalendarCheck, ArrowRight, ChevronLeft, ChevronRight,
-    Calendar as CalendarIcon
+    Calendar, Settings2, CalendarCheck, ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
+    Calendar as CalendarIcon, ClipboardEdit
 } from "lucide-react";
+import { Link } from "@/i18n/routing";
 import {
     Popover,
     PopoverContent,
@@ -55,8 +56,17 @@ import { GroupNode } from "./group-node";
 import { MatchNode } from "./match-node";
 import { StandingNode } from "./standing-node";
 import { TeamListNode } from "./team-list-node";
+import { AnnouncementNode } from "./announcement-node";
 import { NodeSettings } from "./node-settings";
+import { Announcements } from "@/components/tournaments/management/announcements";
 import { Input } from "@/components/ui/input";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 const nodeTypes = {
     matchNode: MatchNode,
@@ -64,9 +74,10 @@ const nodeTypes = {
     groupNode: GroupNode,
     standingNode: StandingNode,
     teamListNode: TeamListNode,
+    announcementNode: AnnouncementNode,
 };
 
-interface BracketCanvasProps {
+interface CanvasProps {
     tournamentId: string;
     tournamentName: string;
     initialCanvasData: BracketCanvasData | null;
@@ -85,7 +96,7 @@ interface BracketCanvasTeam {
     logo_url?: string | null;
 }
 
-function BracketCanvasInternal({
+function CanvasInternal({
     tournamentId,
     tournamentName,
     initialCanvasData,
@@ -96,7 +107,7 @@ function BracketCanvasInternal({
     hasFixtures = false,
     teams: initialTeamsData = [],
     matches: initialMatchesData = [],
-}: BracketCanvasProps) {
+}: CanvasProps) {
     const t = useTranslations("Bracket");
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
@@ -126,28 +137,45 @@ function BracketCanvasInternal({
         return new Set(initialMatchesData.map(m => m.match_date).filter(Boolean));
     }, [initialMatchesData]);
 
-    const { setTeams: setStoreTeams } = useBracketStore();
-    const [isSaving, setIsSaving] = useState(false);
-    const [teams, setTeamsState] = useState<BracketCanvasTeam[]>(initialTeamsData as any);
+    const {
+        nodes,
+        edges,
+        isDirty,
+        onNodesChange,
+        onEdgesChange,
+        onConnect,
+        addMatchNode,
+        addByeNode,
+        addGroupNode,
+        addStandingNode,
+        addTeamListNode,
+        addAnnouncementNode,
+        hydrate,
+        updateNodeData,
+        selectNode,
+        setActiveNodeId,
+        markClean,
+        getCanvasData,
+        fetchTeams,
+        teams,
+        setTeams: setStoreTeams,
+        reset,
+    } = useBracketStore();
 
-    const setTeams = useCallback((newTeams: BracketCanvasTeam[]) => {
-        setTeamsState(newTeams);
-        setStoreTeams(newTeams);
-    }, [setStoreTeams]);
-
-    // Sync initial teams to store
+    // Initial sync
     useEffect(() => {
         if (initialTeamsData && initialTeamsData.length > 0) {
             setStoreTeams(initialTeamsData as any);
         }
     }, [initialTeamsData, setStoreTeams]);
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
-    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'rules' | 'venue' | 'collaborators' | 'danger'>('general');
+    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'registration' | 'rules' | 'venue' | 'collaborators' | 'danger'>('general');
     const [isEditMode, setIsEditMode] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(tournamentName);
     const [tempName, setTempName] = useState(tournamentName);
     const { screenToFlowPosition } = useReactFlow();
+    const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
 
     const getCenterPos = () => {
         return screenToFlowPosition({
@@ -170,70 +198,18 @@ function BracketCanvasInternal({
         setSelectedDate(format(next, 'yyyy-MM-dd'));
     };
 
-    const handleAdvance = async () => {
-        setIsAdvancing(true);
-        try {
-            const result = await advanceStage(tournamentId);
-            if (!result.success) {
-                toast({ title: "Error", description: result.error, variant: "destructive" });
-            } else {
-                toast({ title: "Success", description: "Stage advanced successfully" });
-            }
-        } catch (error) {
-            console.error(error);
-            toast({ title: "Error", description: "Failed to advance stage", variant: "destructive" });
-        } finally {
-            setIsAdvancing(false);
-        }
-    };
-
     useEffect(() => {
-        const fetchTeams = async () => {
-            const supabase = createClient();
-            const { data } = await supabase
-                .from("tournament_teams")
-                .select("*, registrations(payment_status)")
-                .eq("tournament_id", tournamentId)
-                .order("name", { ascending: true });
-
-            if (data) {
-                const filteredTeams = (data as any[]).filter((t) => {
-                    const registration = Array.isArray(t.registrations) ? t.registrations[0] : t.registrations;
-                    if (registration) {
-                        return (registration as { payment_status: string }).payment_status === 'PAID';
-                    }
-                    return true; // Manual teams
-                });
-                setTeams(filteredTeams);
-            }
-        };
-
-        fetchTeams();
-    }, [tournamentId]);
+        if (tournamentId) {
+            fetchTeams(tournamentId);
+        }
+    }, [tournamentId, fetchTeams]);
 
     const onDragStart = (event: React.DragEvent, teamName: string) => {
         event.dataTransfer.setData("application/reactflow-team", teamName);
         event.dataTransfer.effectAllowed = "move";
     };
 
-    const {
-        nodes,
-        edges,
-        isDirty,
-        onNodesChange,
-        onEdgesChange,
-        onConnect,
-        addMatchNode,
-        addByeNode,
-        addGroupNode,
-        addStandingNode,
-        addTeamListNode,
-        hydrate,
-        reset,
-        getCanvasData,
-        markClean,
-        selectNode,
-    } = useBracketStore();
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         hydrate(initialCanvasData);
@@ -308,6 +284,34 @@ function BracketCanvasInternal({
         }
     }, [reset]);
 
+    const handleCopyLinkRegister = useCallback(() => {
+        const url = `${window.location.origin}/${locale}/register/${tournamentId}`;
+        navigator.clipboard.writeText(url);
+        toast({
+            title: locale === 'th' ? "คัดลอกลิงก์แล้ว" : "Link Copied",
+            description: locale === 'th' ? "คัดลอกลิงก์ทัวร์นาเมนต์ไปยังคลิปบอร์ดแล้ว" : "Tournament link copied to clipboard.",
+        });
+    }, [tournamentId, locale, toast]);
+
+    const handleOpenLinkRegister = useCallback(() => {
+        const url = `${window.location.origin}/${locale}/register/${tournamentId}`;
+        window.open(url, '_blank');
+    }, [tournamentId, locale]);
+
+    const handleCopyLink = useCallback(() => {
+        const url = `${window.location.origin}/${locale}/${tournamentId}`;
+        navigator.clipboard.writeText(url);
+        toast({
+            title: locale === 'th' ? "คัดลอกลิงก์แล้ว" : "Link Copied",
+            description: locale === 'th' ? "คัดลอกลิงก์ทัวร์นาเมนต์ไปยังคลิปบอร์ดแล้ว" : "Tournament link copied to clipboard.",
+        });
+    }, [tournamentId, locale, toast]);
+
+    const handleOpenLink = useCallback(() => {
+        const url = `${window.location.origin}/${locale}/${tournamentId}`;
+        window.open(url, '_blank');
+    }, [tournamentId, locale]);
+
     const handleNameSave = async () => {
         if (!tempName || tempName === currentName) {
             setIsEditingName(false);
@@ -344,9 +348,14 @@ function BracketCanvasInternal({
 
 
     return (
-        <div className={cn("flex flex-col bg-background border", isCompact ? "h-[700px]" : "h-[calc(100vh-64px)]")}>
-            <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
+        <div className={cn("flex flex-col bg-background", isCompact ? "h-[700px]" : "h-[calc(100vh-64px)]")}>
+            <div className="flex items-center justify-between p-2 md:p-3 border-b bg-card">
                 <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="icon" asChild className="rounded-none h-8 w-8 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                        <Link href={`/organizer/tournaments`}>
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                    </Button>
                     <div className="flex flex-col">
                         {isEditingName && !readonly ? (
                             <Input
@@ -393,13 +402,91 @@ function BracketCanvasInternal({
                         )}
                         {!readonly && (
                             <div className="flex items-center gap-2">
+                                <Badge 
+                                    variant="outline" 
+                                    className={cn(
+                                        "h-8 px-3 text-[10px] font-black tracking-widest rounded-none border transition-all",
+                                        tournament?.status === 'active' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                                        tournament?.status === 'completed' ? "bg-primary/10 text-primary border-primary/20" :
+                                        "bg-muted/50 text-muted-foreground border-muted-foreground/20"
+                                    )}
+                                >
+                                    {tournament?.status === 'active' ? (locale === 'th' ? "กำลังดำเนินการ" : "ACTIVE") :
+                                     tournament?.status === 'completed' ? (locale === 'th' ? "เสร็จสิ้น" : "COMPLETE") :
+                                     (locale === 'th' ? "แบบร่าง" : "DRAFT")}
+                                </Badge>
+
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={handleReset}
-                                    className="h-8 text-[10px] font-black tracking-widest uppercase border-rose-500/20 text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all"
+                                    className="h-8 text-[10px] font-black tracking-widest border-rose-500/20 text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all"
                                 >
                                     <RotateCcw className="h-3 w-3" />
+                                </Button>
+
+                                <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all rounded-none"
+                                        >
+                                            <Megaphone className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[500px] p-0 rounded-none border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                                        <div className="p-4 md:p-6 pb-0">
+                                            <DialogHeader>
+                                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
+                                                    <Megaphone className="h-6 w-6 text-primary" />
+                                                    {locale === 'th' ? "ประกาศใหม่" : "New Announcement"}
+                                                </DialogTitle>
+                                            </DialogHeader>
+                                        </div>
+                                        <Announcements 
+                                            tournamentId={tournamentId} 
+                                            isEditable={!readonly} 
+                                            mode="form"
+                                            onSuccess={() => setIsAnnouncementOpen(false)}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={handleCopyLinkRegister}
+                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                >
+                                    <Link2 className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={handleOpenLinkRegister}
+                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={handleCopyLink}
+                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                >
+                                    <Link2 className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={handleOpenLink}
+                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
                                 </Button>
 
                                 <Button
@@ -407,7 +494,7 @@ function BracketCanvasInternal({
                                     size="sm"
                                     onClick={() => setActiveSidebar(activeSidebar === 'schedule' ? 'teams' : 'schedule')}
                                     className={cn(
-                                        "h-8 text-[10px] font-black tracking-widest uppercase transition-all px-3",
+                                        "h-8 text-[10px] font-black tracking-widest transition-all px-3",
                                         activeSidebar === 'schedule'
                                             ? "bg-primary text-black hover:bg-primary/90"
                                             : "border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30"
@@ -421,7 +508,7 @@ function BracketCanvasInternal({
                                     size="sm"
                                     onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
                                     className={cn(
-                                        "h-8 text-[10px] font-black tracking-widest uppercase transition-all",
+                                        "h-8 text-[10px] font-black tracking-widest transition-all",
                                         activeSidebar === 'settings'
                                             ? "bg-primary text-black hover:bg-primary/90"
                                             : "border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30"
@@ -446,7 +533,7 @@ function BracketCanvasInternal({
                                         <div className="flex items-center justify-between gap-3 py-3 bg-muted/20 border border-border/5">
                                             <div className="flex items-center gap-3">
                                                 <Settings2 className={cn("h-4 w-4 transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")} />
-                                                <span className={cn("text-[11px] font-black tracking-widest uppercase transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")}>
+                                                <span className={cn("text-[11px] font-black tracking-widest transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")}>
                                                     Edit Mode
                                                 </span>
                                             </div>
@@ -463,7 +550,7 @@ function BracketCanvasInternal({
                                     <div className="space-y-4">
                                         {/* Date Filter */}
                                         <div className="space-y-2">
-                                            <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60 uppercase">Date Selection</Label>
+                                            <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60">Date Selection</Label>
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center border border-border/40 bg-muted/5">
                                                     <button
@@ -497,7 +584,7 @@ function BracketCanvasInternal({
                                                                     <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                                         <ChevronLeft className="h-4 w-4" />
                                                                     </button>
-                                                                    <span className="text-xs font-black tracking-widest uppercase">
+                                                                    <span className="text-xs font-black tracking-widest">
                                                                         {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
                                                                     </span>
                                                                     <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
@@ -553,7 +640,7 @@ function BracketCanvasInternal({
                                                                             setViewDate(new Date());
                                                                             setIsCalendarOpen(false);
                                                                         }}
-                                                                        className="w-full text-[10px] font-black tracking-widest uppercase h-9 rounded-none hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                        className="w-full text-[10px] font-black tracking-widest h-9 rounded-none hover:bg-primary hover:text-black hover:border-primary transition-all"
                                                                     >
                                                                         {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
                                                                     </Button>
@@ -570,28 +657,28 @@ function BracketCanvasInternal({
 
                                         {/* Stage Filter */}
                                         <div className="space-y-2">
-                                            <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60 uppercase">Stage Filter</Label>
+                                            <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60">Stage Filter</Label>
                                             <Select value={filterStage} onValueChange={setFilterStage}>
-                                                <SelectTrigger className="w-full h-10 rounded-none border-border/40 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest uppercase">
+                                                <SelectTrigger className="w-full h-10 rounded-none border-border/40 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
                                                     <SelectValue placeholder={tMatch("round")} />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-card border-border/10 rounded-none shadow-2xl">
-                                                    <SelectItem value="all" className="font-black text-[10px] tracking-widest uppercase">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                                    <SelectItem value="group" className="font-black text-[10px] tracking-widest uppercase">{tMatch("group")}</SelectItem>
+                                                    <SelectItem value="all" className="font-black text-[10px] tracking-widest">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                                    <SelectItem value="group" className="font-black text-[10px] tracking-widest">{tMatch("group")}</SelectItem>
                                                     {['A', 'B', 'C', 'D'].map(l => (
-                                                        <SelectItem key={l} value={`Group ${l}`} className="font-black text-[10px] tracking-widest uppercase">{tMatch("group")} {l}</SelectItem>
+                                                        <SelectItem key={l} value={`Group ${l}`} className="font-black text-[10px] tracking-widest">{tMatch("group")} {l}</SelectItem>
                                                     ))}
-                                                    <SelectItem value="round_of_16" className="font-black text-[10px] tracking-widest uppercase">{tMatch("round_of_16")}</SelectItem>
-                                                    <SelectItem value="quarter_final" className="font-black text-[10px] tracking-widest uppercase">{tMatch("quarter_final")}</SelectItem>
-                                                    <SelectItem value="semi_final" className="font-black text-[10px] tracking-widest uppercase">{tMatch("semi_final")}</SelectItem>
-                                                    <SelectItem value="final" className="font-black text-[10px] tracking-widest uppercase">{tMatch("final")}</SelectItem>
+                                                    <SelectItem value="round_of_16" className="font-black text-[10px] tracking-widest">{tMatch("round_of_16")}</SelectItem>
+                                                    <SelectItem value="quarter_final" className="font-black text-[10px] tracking-widest">{tMatch("quarter_final")}</SelectItem>
+                                                    <SelectItem value="semi_final" className="font-black text-[10px] tracking-widest">{tMatch("semi_final")}</SelectItem>
+                                                    <SelectItem value="final" className="font-black text-[10px] tracking-widest">{tMatch("final")}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="mt-auto">
+                                <div className="">
                                     <ExportToImageButton
                                         targetId="fixtures-canvas"
                                         filename="fixtures"
@@ -631,19 +718,30 @@ function BracketCanvasInternal({
                                     variant="ghost"
                                     onClick={() => setActiveSettingsTab('general')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] uppercase tracking-wider",
+                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
                                         activeSettingsTab === 'general' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
                                     )}
                                 >
                                     <Info className="h-4 w-4" />
                                     General Info
                                 </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setActiveSettingsTab('registration')}
+                                    className={cn(
+                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
+                                        activeSettingsTab === 'registration' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                    )}
+                                >
+                                    <ClipboardEdit className="h-4 w-4" />
+                                    Registration
+                                </Button>
 
                                 <Button
                                     variant="ghost"
                                     onClick={() => setActiveSettingsTab('rules')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] uppercase tracking-wider",
+                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
                                         activeSettingsTab === 'rules' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
                                     )}
                                 >
@@ -655,7 +753,7 @@ function BracketCanvasInternal({
                                     variant="ghost"
                                     onClick={() => setActiveSettingsTab('venue')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] uppercase tracking-wider",
+                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
                                         activeSettingsTab === 'venue' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
                                     )}
                                 >
@@ -667,7 +765,7 @@ function BracketCanvasInternal({
                                     variant="ghost"
                                     onClick={() => setActiveSettingsTab('collaborators')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] uppercase tracking-wider",
+                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
                                         activeSettingsTab === 'collaborators' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
                                     )}
                                 >
@@ -675,12 +773,12 @@ function BracketCanvasInternal({
                                     Collaborators
                                 </Button>
 
-                                <div className="mt-auto pt-4 border-t">
+                                <div className="">
                                     <Button
                                         variant="ghost"
                                         onClick={() => setActiveSettingsTab('danger')}
                                         className={cn(
-                                            "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] uppercase tracking-wider",
+                                            "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
                                             activeSettingsTab === 'danger' ? "bg-rose-500 text-white hover:bg-rose-600" : "hover:bg-rose-500/10 text-rose-500"
                                         )}
                                     >
@@ -695,6 +793,7 @@ function BracketCanvasInternal({
                                 <div className="max-w-3xl">
                                     <TournamentSettings
                                         tournament={tournament}
+                                        
                                         hasFixtures={hasFixtures}
                                         teams={initialTeamsData as any}
                                         activeTab={activeSettingsTab} // Note: We need to update TournamentSettings to support this
@@ -707,10 +806,10 @@ function BracketCanvasInternal({
                     <>
                         {!readonly && (
                             <aside className="w-64 border-r bg-card flex flex-col shrink-0">
-                                <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
-                                    <div className="flex flex-col h-full gap-6">
+                                <div className="flex-1 overflow-auto p-4">
+                                    <div className="flex flex-col gap-6">
                                         <div className="space-y-3">
-                                            <h3 className="text-xs font-black tracking-widest text-muted-foreground uppercase">
+                                            <h3 className="text-xs font-black tracking-widest text-muted-foreground">
                                                 Tools
                                             </h3>
                                             <div className="flex flex-col gap-2">
@@ -793,6 +892,22 @@ function BracketCanvasInternal({
                                                         </span>
                                                     </div>
                                                 </Button>
+
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
+                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/30 transition-all group"
+                                                >
+                                                    <div className="w-8 h-8 bg-amber-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                                                        <Megaphone className="h-4 w-4 text-amber-500" />
+                                                    </div>
+                                                    <div className="flex flex-col items-start gap-0.5">
+                                                        <span className="text-[11px] font-black tracking-tight">Announcement Node</span>
+                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
+                                                            Display Live Updates
+                                                        </span>
+                                                    </div>
+                                                </Button>
                                             </div>
                                         </div>
 
@@ -807,55 +922,6 @@ function BracketCanvasInternal({
                                             </div>
                                         </div>
 
-                                        <div className="flex-1 flex flex-col min-h-0 text-[10px] text-muted-foreground border-t pt-3">
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <List className="h-4 w-4 text-primary" />
-                                                <h3 className="text-[11px] font-black tracking-widest text-foreground uppercase">
-                                                    Participating Teams
-                                                </h3>
-                                            </div>
-
-                                            {teams.length === 0 ? (
-                                                <div className="text-center py-4 border border-dashed rounded-sm bg-muted/20">
-                                                    <span className="text-[10px] text-muted-foreground font-bold">No teams registered</span>
-                                                </div>
-                                            ) : (
-                                                <div className="grid gap-2">
-                                                    {teams.map((team) => (
-                                                        <div
-                                                            key={team.id}
-                                                            draggable
-                                                            onDragStart={(event) => onDragStart(event, team.name)}
-                                                            className="flex items-center gap-3 p-3 bg-muted/40 border border-border/50 rounded-sm cursor-grab active:cursor-grabbing hover:bg-primary/5 hover:border-primary/30 transition-all group"
-                                                        >
-                                                            <div className="w-6 h-6 rounded-full border bg-background flex items-center justify-center shrink-0 overflow-hidden group-hover:border-primary/50 transition-colors">
-                                                                {team.logo_url ? (
-                                                                    <img
-                                                                        src={team.logo_url}
-                                                                        alt={team.name}
-                                                                        width={24}
-                                                                        height={24}
-                                                                        className="w-full h-full object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <Users className="h-3 w-3 text-muted-foreground/40" />
-                                                                )}
-                                                            </div>
-                                                            <span className="text-[11px] font-black truncate flex-1 tracking-tight">
-                                                                {team.name}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            <div className="mt-8 p-4 bg-primary/5 border border-primary/10 rounded-sm">
-                                                <p className="text-[10px] text-primary/70 font-bold leading-relaxed">
-                                                    <Zap className="h-3 w-3 inline mr-1 mb-1" />
-                                                    Pro Tip: Drag a team from this list and drop it onto a &quot;TBD&quot; slot to assign it!
-                                                </p>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </aside>
@@ -871,15 +937,25 @@ function BracketCanvasInternal({
                                 onNodeDragStart={readonly ? undefined : onNodeDragStart}
                                 onNodeDragStop={readonly ? undefined : onDragStop}
                                 onSelectionDragStop={readonly ? undefined : onDragStop}
+                                onNodeClick={(_, node) => {
+                                    setActiveNodeId(node.id);
+                                    selectNode(node.id);
+                                }}
+                                onPaneClick={() => {
+                                    setActiveNodeId(null);
+                                    selectNode(null);
+                                }}
+                                onEdgeClick={() => {
+                                    setActiveNodeId(null);
+                                    selectNode(null);
+                                }}
                                 nodeTypes={nodeTypes}
                                 fitView
                                 minZoom={0.1}
                                 maxZoom={1.5}
                                 nodesDraggable={!readonly}
                                 nodesConnectable={!readonly}
-                                elementsSelectable={false}
-                                onNodeClick={(_, node) => selectNode(node.id)}
-                                onPaneClick={() => selectNode(null)}
+                                elementsSelectable={!readonly}
                                 panOnDrag={!readonly}
                                 panOnScroll={!readonly}
                                 zoomOnScroll={!readonly}
@@ -892,7 +968,7 @@ function BracketCanvasInternal({
                                 connectionMode={ConnectionMode.Loose}
                                 connectionRadius={50}
                                 connectionLineStyle={{ stroke: "#00c692", strokeWidth: 2 }}
-                                connectionLineType={ConnectionLineType.Step}
+                                connectionLineType={ConnectionLineType.Bezier}
                                 snapToGrid
                                 snapGrid={[10, 10]}
                                 defaultEdgeOptions={{
@@ -927,10 +1003,10 @@ function BracketCanvasInternal({
     );
 }
 
-export function BracketCanvas(props: BracketCanvasProps) {
+export function Canvas(props: CanvasProps) {
     return (
         <ReactFlowProvider>
-            <BracketCanvasInternal {...props} />
+            <CanvasInternal {...props} />
         </ReactFlowProvider>
     );
 }

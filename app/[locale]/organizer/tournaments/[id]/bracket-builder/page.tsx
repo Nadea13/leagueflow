@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { validateTournamentAccess } from "@/lib/security";
-import { BracketCanvas } from "@/components/tournaments/bracket-builder/bracket-canvas";
+import { BracketCanvas } from "@/components/tournaments/bracket-builder/canvas";
 
 export default async function BracketBuilderPage({
     params,

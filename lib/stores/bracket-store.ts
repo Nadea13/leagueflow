@@ -9,7 +9,8 @@ import {
     NodeChange,
     EdgeChange,
 } from "@xyflow/react";
-import { BracketCanvasData, Match } from "@/types";
+import { BracketCanvasData, Match, TournamentTeam } from "@/types";
+import { createClient } from "@/lib/supabase/client";
 
 export interface MatchNodeData {
     label: string;
@@ -40,6 +41,7 @@ interface BracketState {
     addGroupNode: (position?: { x: number; y: number }) => void;
     addStandingNode: (position?: { x: number; y: number }) => void;
     addTeamListNode: (teams: any[], position?: { x: number; y: number }) => void;
+    addAnnouncementNode: (tournamentId: string, readonly: boolean, position?: { x: number; y: number }) => void;
     generateRoundRobinMatches: (groupId: string) => void;
     deleteNode: (id: string) => void;
     hydrate: (data: BracketCanvasData | null) => void;
@@ -51,6 +53,9 @@ interface BracketState {
     selectNode: (id: string | null) => void;
     teams: any[];
     setTeams: (teams: any[]) => void;
+    fetchTeams: (tournamentId: string) => Promise<void>;
+    activeNodeId: string | null;
+    setActiveNodeId: (id: string | null) => void;
 }
 
 export const useBracketStore = create<BracketState>((set, get) => ({
@@ -59,8 +64,29 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     nodeCounter: 0,
     isDirty: false,
     teams: [],
+    activeNodeId: null,
+    setActiveNodeId: (id) => set({ activeNodeId: id }),
 
     setTeams: (teams) => set({ teams }),
+    fetchTeams: async (tournamentId) => {
+        const supabase = createClient();
+        const { data } = await supabase
+            .from("tournament_teams")
+            .select("*, registrations(payment_status)")
+            .eq("tournament_id", tournamentId)
+            .order("name", { ascending: true });
+
+        if (data) {
+            const filteredTeams = (data as any[]).filter((t) => {
+                const registration = Array.isArray(t.registrations) ? t.registrations[0] : t.registrations;
+                if (registration) {
+                    return (registration as { payment_status: string }).payment_status === 'PAID';
+                }
+                return true; // Manual teams
+            });
+            set({ teams: filteredTeams });
+        }
+    },
 
     onNodesChange: (changes) => {
         set((state) => {
@@ -421,6 +447,28 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             position: pos,
             data: {
                 label: "Participating Teams",
+            },
+        };
+
+        set({
+            nodes: [...nodes, newNode],
+            isDirty: true,
+        });
+    },
+    
+    addAnnouncementNode: (tournamentId, readonly, position) => {
+        const { nodes } = get();
+        const col = Math.floor(nodes.length / 4);
+        const row = nodes.length % 4;
+        const pos = position ?? { x: col * 320, y: row * 160 + 250 };
+
+        const newNode: Node = {
+            id: `announcement-${Date.now()}`,
+            type: "announcementNode",
+            position: pos,
+            data: {
+                tournamentId,
+                readonly
             },
         };
 

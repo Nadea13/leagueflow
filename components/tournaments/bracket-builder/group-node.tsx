@@ -25,6 +25,7 @@ export const GroupNode = memo(({
     const updateNodeData = useBracketStore((state) => state.updateNodeData);
     const edges = useBracketStore((state) => state.edges);
     const nodes = useBracketStore((state) => state.nodes);
+    const storeTeams = useBracketStore((state) => state.teams);
     
     const teams = Array.isArray(data.teams) ? data.teams : [];
     const advancingCount = Math.max(1, Math.min(8, data.advancingCount || 1));
@@ -43,8 +44,8 @@ export const GroupNode = memo(({
             const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
             if (teamIdMatch) {
                 const teamId = teamIdMatch[1];
-                const sourceTeams = (sourceNode.data.teams as any[]) || [];
-                const team = sourceTeams.find(t => t.id === teamId);
+                const sourceTeams = (sourceNode.data.teams as any[]) || storeTeams;
+                const team = sourceTeams.find(t => String(t.id) === String(teamId));
                 return team?.name || null;
             }
         }

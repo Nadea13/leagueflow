@@ -6,7 +6,7 @@ import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Phone, User, Home, Check, X, ClipboardEdit } from "lucide-react";
+import { Loader2, ExternalLink, Phone, User, Users, Check, X, ClipboardEdit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 import { approveRegistration, rejectRegistration } from "@/actions/organizer/tournaments/registration";
@@ -63,11 +63,11 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
 
     const confirmReject = async () => {
         if (!registrationToReject) return;
-        
+
         setIsActing(registrationToReject);
         const id = registrationToReject;
         setRegistrationToReject(null);
-        
+
         const res = await rejectRegistration(id, tournamentId);
         if (res.success) {
             toast.success(res.message);
@@ -92,16 +92,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
     }
 
     return (
-        <div className="bg-card border rounded-none relative overflow-hidden transition-colors p-4 md:p-6 space-y-4 md:space-y-6 mb-2 md:mb-3">
-            <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <ClipboardEdit className="h-5 w-5 text-primary" />
-                        {t("title")}
-                    </h3>
-                </div>
-            </div>
-
+        <div className="relative overflow-hidden transition-colors space-y-4 md:space-y-6">
             <div className="relative overflow-hidden transition-colors">
                 <div className="w-full overflow-x-auto">
                     <Table className="min-w-[800px]">
@@ -117,19 +108,21 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                         </TableHeader>
                         <TableBody>
                             {registrations.map((reg) => (
-                                <TableRow key={reg.id} className="h-16 hover:bg-muted/5 transition-colors group border-border/50">
-                                    <TableCell className="px-2 md:px-3">
+                                <TableRow key={reg.id} className="hover:bg-muted/5 transition-colors group border-border/50">
+                                    <TableCell className="px-2 md:px-3 py-3">
                                         <div className="flex items-center gap-2 md:gap-3">
-                                            <div className="h-10 w-10 border flex items-center justify-center shrink-0 overflow-hidden bg-muted/5">
-                                                {reg.logo_url ? (
-                                                    <div className="relative w-full h-full">
-                                                        <img src={reg.logo_url} alt="" className="p-1 object-contain" />
-                                                    </div>
-                                                ) : (
-                                                    <Home className="h-5 w-5 text-muted-foreground/30" />
-                                                )}
-                                            </div>
-                                            <span className="font-black tracking-tighter text-base text-foreground group-hover:text-primary transition-colors">{reg.team_name}</span>
+                                            {reg.logo_url ? (
+                                                <img 
+                                                    src={reg.logo_url} 
+                                                    alt="" 
+                                                    className="h-6 w-6 rounded-full object-cover border border-border" 
+                                                />
+                                            ) : (
+                                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
+                                                    <Users className="h-3 w-3 text-muted-foreground" />
+                                                </div>
+                                            )}
+                                            <span className="font-black tracking-tight text-xs text-foreground group-hover:text-primary transition-colors uppercase truncate max-w-[150px]">{reg.team_name}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-2 md:px-3">
@@ -145,13 +138,13 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-center px-2 md:px-3">
-                                        <Badge 
-                                            variant="outline" 
+                                        <Badge
+                                            variant="outline"
                                             className={cn(
                                                 "rounded-none text-[9px] font-black uppercase tracking-tighter h-5 px-3",
                                                 reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground border-primary" :
-                                                reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground border-destructive" : 
-                                                "bg-muted text-muted-foreground border-muted-foreground/20"
+                                                    reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground border-destructive" :
+                                                        "bg-muted text-muted-foreground border-muted-foreground/20"
                                             )}
                                         >
                                             {reg.payment_status}
@@ -173,10 +166,10 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         )}
                                     </TableCell>
                                     <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap uppercase tracking-widest">
-                                        {new Date(reg.created_at).toLocaleString('en-US', { 
-                                            day: '2-digit', 
-                                            month: 'short', 
-                                            hour: '2-digit', 
+                                        {new Date(reg.created_at).toLocaleString('en-US', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            hour: '2-digit',
                                             minute: '2-digit',
                                             hour12: false
                                         }).replace(',', '')}

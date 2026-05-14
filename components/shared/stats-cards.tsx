@@ -19,7 +19,7 @@ export function StatsCards({ items }: StatsCardsProps) {
     const displayItems = items;
 
     return (
-        <div className="grid gap-3 grid-cols-3 md:gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 md:gap-4">
             {displayItems.map((item, index) => {
                 // Safely handle dynamic colors
                 const colorClass = item.color === 'primary' ? 'text-primary' : 

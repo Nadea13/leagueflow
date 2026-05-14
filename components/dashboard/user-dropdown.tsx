@@ -24,8 +24,9 @@ import { signOut } from "@/actions/common/auth"
 import { LanguageSubMenu } from "@/components/layout/language-sub-menu"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
-export function UserDropdown({ email, name, mode = 'team' }: { email: string | undefined, name?: string | null, mode?: 'organizer' | 'team' }) {
+export function UserDropdown({ email, name, mode = 'team', className }: { email: string | undefined, name?: string | null, mode?: 'organizer' | 'team', className?: string }) {
     const { setTheme } = useTheme()
     const locale = useLocale()
     const t = useTranslations("Nav")
@@ -37,12 +38,13 @@ export function UserDropdown({ email, name, mode = 'team' }: { email: string | u
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-none group">
-                    <Avatar>
-                        <AvatarFallback className="text-primary text-sm font-black">
-                            {displayName?.slice(0, 1).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                <Button variant="ghost" className={cn("w-full justify-start p-2", className)}>
+                    <div className="flex justify-center items-center gap-2">
+                        <div className="h-8 w-8 border rounded-full flex justify-center items-center">
+                            {displayName?.slice(0, 2).toUpperCase()}
+                        </div>
+                        <p className="text-sm font-medium leading-none text-foreground truncate">{name}</p>
+                    </div>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-64 bg-card shadow-2xl p-3" align="end" forceMount>

@@ -36,6 +36,7 @@ export const StandingNode = memo(({
     const nodes = useBracketStore((state) => state.nodes);
     const deleteNode = useBracketStore((state) => state.deleteNode);
     const updateNodeData = useBracketStore((state) => state.updateNodeData);
+    const storeTeams = useBracketStore((state) => state.teams);
     const params = useParams();
     const tournamentId = params.id as string;
     const supabase = createClient();
@@ -69,8 +70,8 @@ export const StandingNode = memo(({
                 const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const sTeams = (sNode.data.teams as any[]) || [];
-                    const team = sTeams.find(t => t.id === teamId);
+                    const sTeams = (sNode.data.teams as any[]) || storeTeams;
+                    const team = sTeams.find(t => String(t.id) === String(teamId));
                     return team?.name || "TBD";
                 }
             }
@@ -265,7 +266,7 @@ export const StandingNode = memo(({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border/30">
-                        {teamCount === 0 ? (
+                        {effectiveTeams.length === 0 ? (
                             <tr>
                                 <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground italic">
                                     Connect to a group node to show standings

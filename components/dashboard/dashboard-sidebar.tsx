@@ -10,9 +10,10 @@ import { useAnalytics } from "@/hooks/use-analytics"
 import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
 import { LayoutGrid, Users as UsersIcon } from "lucide-react"
 import { Tab } from "@/components/ui/tab"
+import { UserDropdown } from "@/components/dashboard/user-dropdown"
 import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog"
 
-export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team' }) {
+export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode, userEmail, userName }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team', userEmail?: string, userName?: string | null }) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
     const router = useRouter()
@@ -73,8 +74,8 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
     const navItems = getNavItems(mode, role)
 
     return (
-        <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[220px] lg:w-[280px] bg-background border-r border-border z-50", className)}>
-            <div className="flex h-20 items-center px-4 lg:px-8 border-b border-border">
+        <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[200px] lg:w-[220px] bg-background border-r z-50", className)}>
+            <div className="flex items-center p-2 md:p-4 border-b border-border">
                 <Link href="/" className="flex items-center gap-3 transition-transform group">
                     <div className="relative">
                         <svg viewBox="0 0 160 160" className="w-8 h-8 drop-shadow-[0_0_8px_rgba(0,196,154,0.3)] transition-all group-hover:drop-shadow-[0_0_12px_rgba(0,196,154,0.5)]" xmlns="http://www.w3.org/2000/svg">
@@ -87,8 +88,8 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                         </svg>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xl font-black leading-[0.8] tracking-tighter text-foreground">LeagueFlow</span>
-                        <span className="text-[10px] font-bold tracking-[0.3em] text-primary/80 ml-0.5">
+                        <span className="text-xl font-black tracking-tighter text-foreground">LeagueFlow</span>
+                        <span className="text-[10px] font-bold tracking-widest text-primary/80 ml-0.5">
                             {mode === 'organizer' ? 'Organizer' : 'Manager'}
                         </span>
                     </div>
@@ -96,7 +97,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
             </div>
 
             {/* Mode Switcher */}
-            <div className="p-3">
+            <div className="p-2 md:p-4">
                 <Tab
                     value={mode}
                     onChange={handleModeChange}
@@ -109,7 +110,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                 />
             </div>
 
-            <nav className="grid items-start px-2 lg:px-3">
+            <nav className="grid items-start px-2 lg:px-4 space-y-2">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                     return (
@@ -119,21 +120,25 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                             target={item.openInNewTab ? "_blank" : undefined}
                             onClick={() => trackClick('NAV_ITEM', 'navigation', { target: item.href })}
                             className={cn(
-                                "flex items-center gap-3 p-3 transition-all relative group",
+                                "flex items-center gap-2 p-2 transition-all relative group tracking-wide",
                                 isActive
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:text-primary"
                             )}
                         >
-                            <item.icon className={cn("h-5 w-5 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
+                            <item.icon className={cn("h-4 w-4 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
                             <span className="text-sm font-medium whitespace-nowrap">{t(item.titleKey)}</span>
                         </Link>
                     );
                 })}
             </nav>
-
-            <div className="mt-auto p-4 flex flex-col items-start gap-2 border-t border-border">
-                <BugReportDialog />
+            <div className="mt-auto">
+                <div className="p-4 border-t">
+                    <BugReportDialog />
+                </div>
+                <div className="p-4 border-t">
+                    <UserDropdown email={userEmail} name={userName} mode={mode} />
+                </div>
             </div>
 
             <BecomeOrganizerDialog open={showRegDialog} onOpenChange={setShowRegDialog} />

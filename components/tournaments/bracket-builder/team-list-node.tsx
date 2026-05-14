@@ -29,7 +29,7 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
         <div
             className={cn(
                 "relative w-[280px] border bg-card text-card-foreground transition-all",
-                selected 
+                selected
                     ? "border-primary ring-2 ring-primary/30"
                     : "border-border hover:border-primary/50"
             )}

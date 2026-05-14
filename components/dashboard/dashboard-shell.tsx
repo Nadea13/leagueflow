@@ -169,13 +169,10 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
     }
 
     return (
-        <div className="flex flex-col gap-4 md:gap-6">
+        <div className="flex flex-col gap-2 md:gap-4">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] leading-none">{t("title")}</h1>
-                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground mt-2 opacity-70">
-                        {t("welcome")}
-                    </p>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter">{t("title")}</h1>
                 </div>
                 <div className="flex items-center">
                     <TournamentCreate />
@@ -215,8 +212,8 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                 />
             ) : (
                 <div>
-                    <div className="space-y-4 md:space-y-6">
-                        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className="space-y-2 md:space-y-4">
+                        <div className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {recentTournaments.map((tournament) => (
                                 <DashboardCard
                                     key={tournament.id}

@@ -21,6 +21,7 @@ export const MatchNode = memo(function MatchNode({
     const updateNodeData = useBracketStore((s) => s.updateNodeData);
     const edges = useBracketStore((s) => s.edges);
     const nodes = useBracketStore((s) => s.nodes);
+    const storeTeams = useBracketStore((s) => s.teams);
     const params = useParams();
     const tournamentId = params.id as string;
     const supabase = createClient();
@@ -122,8 +123,8 @@ export const MatchNode = memo(function MatchNode({
                                     const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
                                     if (teamIdMatch) {
                                         const teamId = teamIdMatch[1];
-                                        const sourceTeams = (sourceNode.data.teams as any[]) || [];
-                                        const team = sourceTeams.find(t => t.id === teamId);
+                                        const sourceTeams = (sourceNode.data.teams as any[]) || storeTeams;
+                                        const team = sourceTeams.find(t => String(t.id) === String(teamId));
                                         return team?.name || null;
                                     }
                                 }

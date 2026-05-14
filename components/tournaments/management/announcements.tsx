@@ -38,14 +38,28 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export function Announcements({ tournamentId, isEditable = true }: { tournamentId: string, isEditable: boolean }) {
+export function Announcements({ 
+    tournamentId, 
+    isEditable = true, 
+    isCompact = false,
+    defaultAddOpen = false,
+    mode = 'both',
+    onSuccess
+}: { 
+    tournamentId: string, 
+    isEditable: boolean, 
+    isCompact?: boolean,
+    defaultAddOpen?: boolean,
+    mode?: 'both' | 'list' | 'form',
+    onSuccess?: () => void
+}) {
     const { toast } = useToast();
     const t = useTranslations("Announcements");
     const tCommon = useTranslations("Common");
     const locale = useLocale();
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(defaultAddOpen);
     const [isSaving, setIsSaving] = useState(false);
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -78,6 +92,7 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
             setTitle("");
             setContent("");
             setIsDialogOpen(false);
+            if (onSuccess) onSuccess();
             fetchData();
         } else {
             toast({ title: "Error", description: result.error, variant: "destructive" });
@@ -111,79 +126,182 @@ export function Announcements({ tournamentId, isEditable = true }: { tournamentI
 
     if (!isEditable && announcements.length === 0) return null;
 
-    return (
-        <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
-            <div className="flex items-center justify-between relative z-10">
-                <div className="space-y-1">
-                    <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                        <Megaphone className="h-5 w-5 text-primary" />
-                        {t("title")}
-                    </h3>
-                </div>
-                {isEditable && (
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button
-                                variant="default"
-                                className="h-8"
-                            >
-                                <Plus className="h-4 w-4" />
-                                {t("news")}
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="rounded-none sm:max-w-[500px] p-0 overflow-hidden">
-                            <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
-                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
-                                    <Megaphone className="h-6 w-6 text-primary" />
-                                    {t("news")}
-                                </DialogTitle>
-                            </DialogHeader>
-                            <form onSubmit={handleAdd} className="p-4 md:p-6 space-y-2 md:space-y-3">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black  tracking-widest text-muted-foreground/60 px-1">{t("title_placeholder")}</label>
-                                    <Input
-                                        value={title}
-                                        onChange={e => setTitle(e.target.value)}
-                                        placeholder={t("title_placeholder")}
-                                        className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 h-11 font-bold"
-                                        required
-                                    />
+    if (mode === 'form') {
+        return (
+            <div className="bg-card">
+                <form onSubmit={handleAdd} className="p-4 md:p-6 space-y-2 md:space-y-3">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black  tracking-widest text-muted-foreground/60 px-1">{t("title_placeholder")}</label>
+                        <Input
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder={t("title_placeholder")}
+                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 h-11 font-bold"
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 px-1">{t("content_placeholder")}</label>
+                        <Textarea
+                            value={content}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
+                            placeholder={t("content_placeholder")}
+                            rows={5}
+                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
+                        />
+                    </div>
+                    <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
+                        <Button
+                            type="submit"
+                            size="sm"
+                            className="text-[10px] font-black tracking-widest rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                            disabled={isSaving || !title.trim()}
+                        >
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                            {t("post")}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        );
+    }
+
+    if (isCompact && mode === 'list') {
+        return (
+            <div className="space-y-2">
+                {announcements.length === 0 ? (
+                    <div className="py-8 text-center border border-dashed border-border/20">
+                        <Megaphone className="h-4 w-4 text-muted-foreground/30 mx-auto mb-2" />
+                        <p className="text-[10px] text-muted-foreground/50 font-medium">{t("no_announcements")}</p>
+                    </div>
+                ) : (
+                    announcements.map(ann => (
+                        <div
+                            key={ann.id}
+                            className={cn(
+                                "p-2 border transition-all relative overflow-hidden group/item",
+                                ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
+                            )}
+                        >
+                            <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                    {ann.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
+                                    <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
+                                        {ann.title}
+                                    </h4>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 px-1">{t("content_placeholder")}</label>
-                                    <Textarea
-                                        value={content}
-                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-                                        placeholder={t("content_placeholder")}
-                                        rows={5}
-                                        className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
-                                    />
+                                {ann.content && (
+                                    <p className="text-muted-foreground/70 text-[10px] leading-relaxed font-medium">
+                                        {ann.content}
+                                    </p>
+                                )}
+                                <div className="flex items-center justify-between pt-1">
+                                    <span className="text-[8px] font-black tracking-widest text-muted-foreground/30">
+                                        {formatDate(ann.created_at, "MMM d, HH:mm", locale)}
+                                    </span>
+                                    {isEditable && (
+                                        <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                            <button 
+                                                onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
+                                                className="hover:text-primary transition-colors"
+                                            >
+                                                {ann.is_pinned ? <PinOff className="h-2.5 w-2.5" /> : <Pin className="h-2.5 w-2.5" />}
+                                            </button>
+                                            <button 
+                                                onClick={() => setDeleteId(ann.id)}
+                                                className="hover:text-destructive transition-colors"
+                                            >
+                                                <Trash2 className="h-2.5 w-2.5" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-[10px] font-black tracking-widest rounded-none hover:bg-foreground/5 h-10 px-6"
-                                        onClick={() => setIsDialogOpen(false)}
-                                    >
-                                        {tCommon("cancel")}
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        size="sm"
-                                        className="text-[10px] font-black tracking-widest rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
-                                        disabled={isSaving || !title.trim()}
-                                    >
-                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                                        {t("post")}
-                                    </Button>
-                                </div>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
+        );
+    }
+
+    return (
+        <div className={cn(
+            "bg-card space-y-2 md:space-y-3",
+            !isCompact && mode === 'both' && "border p-4 md:p-6"
+        )}>
+            {!isCompact && mode === 'both' && (
+                <div className="flex items-center justify-between relative z-10">
+                    <div className="space-y-1">
+                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                            <Megaphone className="h-5 w-5 text-primary" />
+                            {t("title")}
+                        </h3>
+                    </div>
+                    {isEditable && (
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant="default"
+                                    className="h-8"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    {t("news")}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="rounded-none sm:max-w-[500px] p-0 overflow-hidden">
+                                <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
+                                    <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
+                                        <Megaphone className="h-6 w-6 text-primary" />
+                                        {t("news")}
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handleAdd} className="p-4 md:p-6 space-y-2 md:space-y-3">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black  tracking-widest text-muted-foreground/60 px-1">{t("title_placeholder")}</label>
+                                        <Input
+                                            value={title}
+                                            onChange={e => setTitle(e.target.value)}
+                                            placeholder={t("title_placeholder")}
+                                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 h-11 font-bold"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 px-1">{t("content_placeholder")}</label>
+                                        <Textarea
+                                            value={content}
+                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
+                                            placeholder={t("content_placeholder")}
+                                            rows={5}
+                                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-[10px] font-black tracking-widest rounded-none hover:bg-foreground/5 h-10 px-6"
+                                            onClick={() => setIsDialogOpen(false)}
+                                        >
+                                            {tCommon("cancel")}
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            size="sm"
+                                            className="text-[10px] font-black tracking-widest rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                                            disabled={isSaving || !title.trim()}
+                                        >
+                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                                            {t("post")}
+                                        </Button>
+                                    </div>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    )}
+                </div>
+            )}
 
             {/* Announcement List */}
             {announcements.length === 0 ? (

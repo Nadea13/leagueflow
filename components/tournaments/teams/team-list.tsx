@@ -42,7 +42,7 @@ export function Teams({ teams, tournamentId, showGroupSelector = false, organize
     }
 
     return (
-        <div className="grid gap-4">
+        <div className="flex flex-col border border-border bg-card divide-y divide-border overflow-hidden">
             {teams.map((team) => (
                 <TeamItem
                     key={team.id}
@@ -84,43 +84,45 @@ function TeamItem({
     };
 
     return (
-        <div className="group bg-card border relative overflow-hidden transition-all hover:border-primary">
-            <RosterDialog 
-                team={{ ...team, managed_by_manager: isReadOnly }} 
-                tournamentId={tournamentId} 
+        <div className="group relative transition-all">
+            <RosterDialog
+                team={{ ...team, managed_by_manager: isReadOnly }}
+                tournamentId={tournamentId}
                 readOnly={isReadOnly}
                 trigger={
-                    <div className="p-2 md:p-3 flex flex-col md:flex-row md:items-center gap-4 cursor-pointer">
-                        <div className="h-10 w-10 flex items-center justify-center shrink-0 overflow-hidden border relative transition-all group-hover:border-primary">
-                            {team.logo_url ? (
-                                <img
-                                    src={team.logo_url}
-                                    alt={team.name}
-                                    width={40}
-                                    height={40}
-                                    className="p-1 h-full w-full object-contain"
-                                />
-                            ) : (
-                                <span className="text-sm font-black text-primary">
-                                    {team.name.substring(0, 2).toUpperCase()}
-                                </span>
-                            )}
-                        </div>
+                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer">
+                        {team.logo_url ? (
+                            <img
+                                src={team.logo_url}
+                                alt={team.name}
+                                className="h-6 w-6 rounded-full object-cover border border-border"
+                            />
+                        ) : (
+                            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
+                                <Users className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                        )}
 
-                        <div className="flex justify-between items-center w-full">
-                            <div className="flex items-center flex-wrap gap-3 mb-1">
-                                <h3 className="text-xl font-black tracking-tighter text-foreground leading-none group-hover:text-primary transition-colors truncate">
-                                    {team.name}
-                                </h3>
-
-                                {isReadOnly && (
-                                    <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[9px] font-black tracking-widest px-2 py-0.5">
-                                        {t("managed_by_manager")}
-                                    </Badge>
+                        <div className="flex justify-between items-center w-full min-w-0">
+                            <div className="flex flex-col overflow-hidden">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <span className="text-xs font-black tracking-tight truncate uppercase">
+                                        {team.name}
+                                    </span>
+                                    {isReadOnly && (
+                                        <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[8px] font-black tracking-widest px-1.5 py-0">
+                                            {t("managed_by_manager")}
+                                        </Badge>
+                                    )}
+                                </div>
+                                {team.group_name && !showGroupSelector && (
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        {tGroup("group")} {team.group_name}
+                                    </span>
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-2 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
                                 {showGroupSelector && !isReadOnly ? (
                                     <div className="flex items-center gap-2">
                                         {isGroupLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
@@ -129,13 +131,13 @@ function TeamItem({
                                             onValueChange={handleGroupChange}
                                             disabled={isGroupLoading}
                                         >
-                                            <SelectTrigger className="text-[10px] font-black tracking-widest focus:ring-0">
+                                            <SelectTrigger className="h-7 text-[9px] font-black tracking-widest focus:ring-0 uppercase">
                                                 <SelectValue placeholder={tGroup("group")} />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-none border-border">
-                                                <SelectItem value="none" className="text-[10px] font-bold">{tCommon("none")}</SelectItem>
+                                                <SelectItem value="none" className="text-[9px] font-bold uppercase">{tCommon("none")}</SelectItem>
                                                 {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map((g) => (
-                                                    <SelectItem key={g} value={g} className="text-[10px] font-black">
+                                                    <SelectItem key={g} value={g} className="text-[9px] font-black uppercase">
                                                         {tGroup("group")} {g}
                                                     </SelectItem>
                                                 ))}
@@ -143,11 +145,11 @@ function TeamItem({
                                         </Select>
                                     </div>
                                 ) : team.group_name ? (
-                                    <Badge className="rounded-none bg-primary/10 text-primary border-none text-[9px] font-black tracking-widest px-2 py-0.5">
+                                    <Badge className="rounded-none bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase">
                                         {tGroup("group")} {team.group_name}
                                     </Badge>
                                 ) : (
-                                    <span className="text-[10px] font-bold text-muted-foreground/40 tracking-widest">{t("participating_team")}</span>
+                                    <span className="text-[9px] font-bold text-muted-foreground/40 tracking-widest uppercase">{t("participating_team")}</span>
                                 )}
                             </div>
                         </div>
@@ -157,3 +159,4 @@ function TeamItem({
         </div>
     );
 }
+

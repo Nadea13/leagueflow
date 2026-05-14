@@ -27,10 +27,16 @@ export default async function OrganizerLayout({ children, params }: { children: 
     const isOrganizer = profile?.is_organizer || false;
 
     return (
-        <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+        <div className="grid min-h-screen w-full md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr]">
             <div className="border-r bg-muted/40 hidden md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
-                    <DashboardSidebar role={userRole} isOrganizer={isOrganizer} forcedMode="organizer" />
+                    <DashboardSidebar 
+                        role={userRole} 
+                        isOrganizer={isOrganizer} 
+                        forcedMode="organizer" 
+                        userEmail={user?.email}
+                        userName={profile?.full_name}
+                    />
                 </div>
             </div>
             <div className="flex flex-col">
@@ -40,8 +46,9 @@ export default async function OrganizerLayout({ children, params }: { children: 
                     role={userRole} 
                     isOrganizer={isOrganizer} 
                     forcedMode="organizer" 
+                    className="md:hidden"
                 />
-                <main className="flex flex-1 flex-col gap-4 p-2 md:p-4 lg:gap-6 lg:p-6">
+                <main className="flex-1 h-full overflow-hidden p-2 md:p-4">
                     {children}
                 </main>
             </div>

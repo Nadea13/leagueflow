@@ -15,6 +15,7 @@ export const ByeNode = memo(function ByeNode({
     const updateNodeData = useBracketStore((s) => s.updateNodeData);
     const edges = useBracketStore((s) => s.edges);
     const nodes = useBracketStore((s) => s.nodes);
+    const storeTeams = useBracketStore((state) => state.teams);
 
     // Resolve live team from edges
     const getResolvedTeam = () => {
@@ -30,8 +31,8 @@ export const ByeNode = memo(function ByeNode({
             const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
             if (teamIdMatch) {
                 const teamId = teamIdMatch[1];
-                const sourceTeams = (sourceNode.data.teams as any[]) || [];
-                const team = sourceTeams.find(t => t.id === teamId);
+                const sourceTeams = (sourceNode.data.teams as any[]) || storeTeams;
+                const team = sourceTeams.find(t => String(t.id) === String(teamId));
                 return team?.name || null;
             }
         }

@@ -61,8 +61,8 @@ export function BugReportDialog({ className }: BugReportDialogProps) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant="ghost"
-                    className={cn("w-full justify-start gap-3 rounded-none px-3 py-2 text-muted-foreground hover:text-primary relative", className)}
+                    variant="outline"
+                    className={cn("w-full justify-start gap-2 text-muted-foreground hover:text-primary", className)}
                 >
                     <MessageSquareWarning className="h-4 w-4" />
                     <span>{t("title")}</span>

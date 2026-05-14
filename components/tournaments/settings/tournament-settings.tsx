@@ -15,6 +15,7 @@ import { Collaborators } from "@/components/tournaments/settings/collaborators";
 import { VenueManager } from "@/components/tournaments/settings/venue-manager";
 import { RulesConfig } from "@/components/tournaments/settings/rules-config";
 import { GeneralInfo } from "./general-info";
+import { RegistrationSettings } from "./registration-settings";
 
 
 
@@ -69,6 +70,12 @@ export function TournamentSettings({
     return (
         <div className="space-y-6">
             {activeTab === 'general' && <GeneralInfo tournament={tournament} />}
+            {activeTab === 'registration' && (
+                <RegistrationSettings 
+                    tournament={tournament} 
+                    onUpgrade={() => router.push(`${window.location.pathname}?tab=settings&action=upgrade`)} 
+                />
+            )}
             {activeTab === 'rules' && <RulesConfig tournamentId={tournamentId} />}
             {activeTab === 'venue' && <VenueManager tournamentId={tournamentId} />}
             {activeTab === 'collaborators' && (
