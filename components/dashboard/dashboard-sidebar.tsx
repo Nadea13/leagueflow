@@ -65,9 +65,9 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
 
         // Navigate to the respective dashboard
         if (newMode === 'organizer') {
-            router.push('/organizer/dashboard')
+            router.push('/organizer/tournaments')
         } else {
-            router.push('/manager/dashboard')
+            router.push('/manager/my-teams')
         }
     }
 

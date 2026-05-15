@@ -15,7 +15,7 @@ import { Standings } from "@/components/tournaments/ranking/standings";
 import { Teams } from "@/components/tournaments/teams/team-list";
 import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";
 import { Bracket } from "@/components/tournaments/ranking/bracket";
-import { Canvas } from "@/components/tournaments/bracket-builder/canvas";
+import { Canvas } from "@/components/tournaments/builder/canvas";
 import { Match, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
 import { ShareButton } from "@/components/tournaments/shared/share-button";
 import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
@@ -230,7 +230,7 @@ export function TournamentContent({
     };
 
     return (
-        <div className="h-[calc(100vh-0px)] w-full overflow-hidden">
+        <div className="h-full w-full overflow-hidden">
             {(tournament?.format === 'knockout' || tournament?.format === 'group_knockout') && (
                 <div className="h-full relative z-10">
                     {(userRole === 'admin' || userRole === 'editor') ? (

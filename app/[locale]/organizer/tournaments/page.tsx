@@ -29,15 +29,10 @@ export default async function TournamentsPage({
     const t = await getTranslations("Dashboard");
 
     return (
-        <div className="flex flex-col gap-4 md:gap-6">
+        <div className="flex flex-col gap-2 md:gap-4">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-[calc(-0.05em)] leading-none">
-                        {t("my_tournaments")}
-                    </h1>
-                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground mt-2 opacity-70">
-                        {t("my_tournaments_desc")}
-                    </p>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter">{t("my_tournaments")}</h1>
                 </div>
                 <div className="flex items-center gap-2">
                     <TournamentCreate />
@@ -68,7 +63,7 @@ export default async function TournamentsPage({
                     className="bg-card"
                 />
             ) : (
-                <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {tournaments.map((tournament: Tournament) => (
                         <DashboardCard key={tournament.id} type="tournament" data={tournament} userPlan={userPlan} />
                     ))}

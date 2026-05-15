@@ -1,5 +1,7 @@
 "use client";
 
+import { NodeTools } from "./node-tools";
+
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
     Background,
@@ -7,7 +9,6 @@ import {
     ConnectionLineType,
     ConnectionMode,
     Controls,
-    MiniMap,
     ReactFlow,
     ReactFlowProvider,
     useReactFlow,
@@ -17,7 +18,7 @@ import {
     Loader2, Plus, RefreshCw, RotateCcw, Save, Users, X, Zap,
     List, ListOrdered, Settings, Info, MapPin, Hammer, ShieldAlert,
     Calendar, Settings2, CalendarCheck, ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, ClipboardEdit
+    Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import {
@@ -176,6 +177,12 @@ function CanvasInternal({
     const [tempName, setTempName] = useState(tournamentName);
     const { screenToFlowPosition } = useReactFlow();
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
+    const [isLocked, setIsLocked] = useState(readonly);
+
+    // Sync isLocked with readonly prop if it changes
+    useEffect(() => {
+        setIsLocked(readonly);
+    }, [readonly]);
 
     const getCenterPos = () => {
         return screenToFlowPosition({
@@ -348,14 +355,9 @@ function CanvasInternal({
 
 
     return (
-        <div className={cn("flex flex-col bg-background", isCompact ? "h-[700px]" : "h-[calc(100vh-64px)]")}>
-            <div className="flex items-center justify-between p-2 md:p-3 border-b bg-card">
-                <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" asChild className="rounded-none h-8 w-8 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
-                        <Link href={`/organizer/tournaments`}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </Button>
+        <div className={cn("flex flex-col h-full w-full border bg-background")}>
+            <div className="flex items-center justify-between p-2 md:p-4 border-b">
+                <div className="flex items-center gap-2">
                     <div className="flex flex-col">
                         {isEditingName && !readonly ? (
                             <Input
@@ -369,13 +371,13 @@ function CanvasInternal({
                                         setTempName(currentName);
                                     }
                                 }}
-                                className="h-7 text-sm font-bold w-[250px] bg-background"
+                                className="h-8 text-sm font-bold"
                                 autoFocus
                             />
                         ) : (
                             <span
                                 className={cn(
-                                    "font-bold tracking-tight truncate max-w-[300px] cursor-pointer hover:text-primary transition-colors",
+                                    "font-bold tracking-tight cursor-pointer hover:text-primary transition-colors",
                                     readonly && "cursor-default hover:text-foreground"
                                 )}
                                 onClick={() => !readonly && setIsEditingName(true)}
@@ -402,18 +404,18 @@ function CanvasInternal({
                         )}
                         {!readonly && (
                             <div className="flex items-center gap-2">
-                                <Badge 
-                                    variant="outline" 
+                                <Badge
+                                    variant="outline"
                                     className={cn(
                                         "h-8 px-3 text-[10px] font-black tracking-widest rounded-none border transition-all",
                                         tournament?.status === 'active' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                                        tournament?.status === 'completed' ? "bg-primary/10 text-primary border-primary/20" :
-                                        "bg-muted/50 text-muted-foreground border-muted-foreground/20"
+                                            tournament?.status === 'completed' ? "bg-primary/10 text-primary border-primary/20" :
+                                                "bg-muted/50 text-muted-foreground border-muted-foreground/20"
                                     )}
                                 >
                                     {tournament?.status === 'active' ? (locale === 'th' ? "กำลังดำเนินการ" : "ACTIVE") :
-                                     tournament?.status === 'completed' ? (locale === 'th' ? "เสร็จสิ้น" : "COMPLETE") :
-                                     (locale === 'th' ? "แบบร่าง" : "DRAFT")}
+                                        tournament?.status === 'completed' ? (locale === 'th' ? "เสร็จสิ้น" : "COMPLETE") :
+                                            (locale === 'th' ? "แบบร่าง" : "DRAFT")}
                                 </Badge>
 
                                 <Button
@@ -444,9 +446,9 @@ function CanvasInternal({
                                                 </DialogTitle>
                                             </DialogHeader>
                                         </div>
-                                        <Announcements 
-                                            tournamentId={tournamentId} 
-                                            isEditable={!readonly} 
+                                        <Announcements
+                                            tournamentId={tournamentId}
+                                            isEditable={!readonly}
                                             mode="form"
                                             onSuccess={() => setIsAnnouncementOpen(false)}
                                         />
@@ -516,6 +518,20 @@ function CanvasInternal({
                                 >
                                     <Settings className="h-3 w-3" />
                                 </Button>
+
+                                <Button
+                                    variant={isLocked ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setIsLocked(!isLocked)}
+                                    className={cn(
+                                        "h-8 text-[10px] font-black tracking-widest transition-all px-3",
+                                        isLocked
+                                            ? "bg-amber-500 text-white hover:bg-amber-600"
+                                            : "border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30"
+                                    )}
+                                >
+                                    {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -524,28 +540,23 @@ function CanvasInternal({
 
             <div className="flex flex-1 overflow-hidden relative">
                 {activeSidebar === 'schedule' && tournament ? (
-                    <div className="absolute inset-0 bg-background z-20 flex flex-col">
-                        <div className="flex flex-1 overflow-hidden">
+                    <div className="absolute inset-0 z-20 flex flex-col">
+                        <div className="flex flex-1 overflow-hidden bg-background">
                             {/* Left Controls Sidebar (w-64 like settings) */}
-                            <div className="w-64 border-r flex flex-col p-2 md:p-3 gap-2 bg-card shrink-0 z-10">
-                                <div className="">
-                                    <div className="">
-                                        <div className="flex items-center justify-between gap-3 py-3 bg-muted/20 border border-border/5">
-                                            <div className="flex items-center gap-3">
-                                                <Settings2 className={cn("h-4 w-4 transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")} />
-                                                <span className={cn("text-[11px] font-black tracking-widest transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")}>
-                                                    Edit Mode
-                                                </span>
-                                            </div>
-                                            <Switch
-                                                checked={isEditMode}
-                                                onCheckedChange={setIsEditMode}
-                                                className="data-[state=checked]:bg-primary"
-                                            />
-                                        </div>
+                            <div className="w-64 border-r flex flex-col p-2 md:p-3 gap-2 shrink-0 z-10">
+                                <div className="flex items-center justify-between gap-3 p-2 bg-muted/20 border border-border/5">
+                                    <div className="flex items-center gap-3">
+                                        <Settings2 className={cn("h-4 w-4 transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")} />
+                                        <span className={cn("text-[11px] font-black tracking-widest transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")}>
+                                            Edit Mode
+                                        </span>
                                     </div>
+                                    <Switch
+                                        checked={isEditMode}
+                                        onCheckedChange={setIsEditMode}
+                                        className="data-[state=checked]:bg-primary"
+                                    />
                                 </div>
-
                                 <div>
                                     <div className="space-y-4">
                                         {/* Date Filter */}
@@ -689,8 +700,8 @@ function CanvasInternal({
                             </div>
 
                             {/* Main Content */}
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-muted/5">
-                                <div className="max-w-5xl mx-auto">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                <div className="p-2 md:p-4">
                                     <MatchManager
                                         matches={initialMatchesData}
                                         teams={teams as any}
@@ -710,10 +721,10 @@ function CanvasInternal({
                 ) : null}
 
                 {activeSidebar === 'settings' && tournament ? (
-                    <div className="absolute inset-0 bg-background z-20 flex flex-col">
+                    <div className="absolute inset-0 z-20 flex flex-col">
                         <div className="flex flex-1 overflow-hidden">
                             {/* Settings Sidebar */}
-                            <aside className="w-64 border-r bg-card flex flex-col shrink-0 p-4 gap-2">
+                            <aside className="w-64 border-r bg-background flex flex-col shrink-0 p-4 gap-2">
                                 <Button
                                     variant="ghost"
                                     onClick={() => setActiveSettingsTab('general')}
@@ -793,7 +804,7 @@ function CanvasInternal({
                                 <div className="max-w-3xl">
                                     <TournamentSettings
                                         tournament={tournament}
-                                        
+
                                         hasFixtures={hasFixtures}
                                         teams={initialTeamsData as any}
                                         activeTab={activeSettingsTab} // Note: We need to update TournamentSettings to support this
@@ -804,130 +815,50 @@ function CanvasInternal({
                     </div>
                 ) : (
                     <>
-                        {!readonly && (
-                            <aside className="w-64 border-r bg-card flex flex-col shrink-0">
-                                <div className="flex-1 overflow-auto p-4">
-                                    <div className="flex flex-col gap-6">
-                                        <div className="space-y-3">
-                                            <h3 className="text-xs font-black tracking-widest text-muted-foreground">
-                                                Tools
-                                            </h3>
-                                            <div className="flex flex-col gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => addMatchNode(getCenterPos())}
-                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-all group"
-                                                >
-                                                    <div className="w-8 h-8 bg-primary/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                                                        <Plus className="h-4 w-4 text-primary" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-0.5">
-                                                        <span className="text-[11px] font-black tracking-tight">Add Match</span>
-                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                                                            Knockout Slot
-                                                        </span>
-                                                    </div>
-                                                </Button>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => addByeNode(getCenterPos())}
-                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/30 transition-all group"
-                                                >
-                                                    <div className="w-8 h-8 bg-amber-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                                                        <Zap className="h-4 w-4 text-amber-500" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-0.5">
-                                                        <span className="text-[11px] font-black tracking-tight">Add Bye Team</span>
-                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                                                            Skip Round
-                                                        </span>
-                                                    </div>
-                                                </Button>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => addGroupNode(getCenterPos())}
-                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-violet-500/10 border border-transparent hover:border-violet-500/30 transition-all group"
-                                                >
-                                                    <div className="w-8 h-8 bg-violet-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-violet-500/20 transition-colors">
-                                                        <Users className="h-4 w-4 text-violet-500" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-0.5">
-                                                        <span className="text-[11px] font-black tracking-tight">Add Group</span>
-                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                                                            Stage / Pool
-                                                        </span>
-                                                    </div>
-                                                </Button>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => addStandingNode(getCenterPos())}
-                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 transition-all group"
-                                                >
-                                                    <div className="w-8 h-8 bg-emerald-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-                                                        <ListOrdered className="h-4 w-4 text-emerald-500" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-0.5">
-                                                        <span className="text-[11px] font-black tracking-tight">Add Standing</span>
-                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                                                            Group Ranking
-                                                        </span>
-                                                    </div>
-                                                </Button>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => addTeamListNode(teams, getCenterPos())}
-                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/30 transition-all group"
-                                                >
-                                                    <div className="w-8 h-8 bg-blue-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                                                        <Users className="h-4 w-4 text-blue-500" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-0.5">
-                                                        <span className="text-[11px] font-black tracking-tight">Teams List</span>
-                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                                                            Participating Teams
-                                                        </span>
-                                                    </div>
-                                                </Button>
-
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
-                                                    className="w-full justify-start gap-3 h-auto py-3 px-3 bg-muted/30 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/30 transition-all group"
-                                                >
-                                                    <div className="w-8 h-8 bg-amber-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                                                        <Megaphone className="h-4 w-4 text-amber-500" />
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-0.5">
-                                                        <span className="text-[11px] font-black tracking-tight">Announcement Node</span>
-                                                        <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                                                            Display Live Updates
-                                                        </span>
-                                                    </div>
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        <div className="text-[10px] text-muted-foreground space-y-1.5 border-t pt-3">
-                                            <div className="flex justify-between">
-                                                <span>Elements</span>
-                                                <span className="text-foreground font-bold">{nodes.length}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Connections</span>
-                                                <span className="text-foreground font-bold">{edges.length}</span>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </aside>
-                        )}
-
                         <div className="flex-1 relative">
+                            {!readonly && !isLocked && (
+                                <div className="absolute top-4 right-4 z-50">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="default"
+                                                className=""
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                NEW
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            side="bottom"
+                                            align="end"
+                                            className="w-64 p-1 bg-card border-border/50 shadow-2xl rounded-none mt-2"
+                                            sideOffset={5}
+                                        >
+                                            <div className="p-2 border-b border-border/10 mb-1">
+                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">Add Components</span>
+                                            </div>
+                                            <NodeTools
+                                                onAddMatch={() => addMatchNode(getCenterPos())}
+                                                onAddBye={() => addByeNode(getCenterPos())}
+                                                onAddGroup={() => addGroupNode(getCenterPos())}
+                                                onAddStanding={() => addStandingNode(getCenterPos())}
+                                                onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
+                                                onAddAnnouncement={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
+                                            />
+                                            <div className="p-2 border-t border-border/10 mt-1 flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Elements</span>
+                                                    <span className="text-[11px] font-black">{nodes.length}</span>
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Connections</span>
+                                                    <span className="text-[11px] font-black">{edges.length}</span>
+                                                </div>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                            )}
                             <ReactFlow
                                 nodes={nodes}
                                 edges={edges}
@@ -938,14 +869,17 @@ function CanvasInternal({
                                 onNodeDragStop={readonly ? undefined : onDragStop}
                                 onSelectionDragStop={readonly ? undefined : onDragStop}
                                 onNodeClick={(_, node) => {
+                                    if (isLocked) return;
                                     setActiveNodeId(node.id);
                                     selectNode(node.id);
                                 }}
                                 onPaneClick={() => {
+                                    if (isLocked) return;
                                     setActiveNodeId(null);
                                     selectNode(null);
                                 }}
                                 onEdgeClick={() => {
+                                    if (isLocked) return;
                                     setActiveNodeId(null);
                                     selectNode(null);
                                 }}
@@ -953,17 +887,17 @@ function CanvasInternal({
                                 fitView
                                 minZoom={0.1}
                                 maxZoom={1.5}
-                                nodesDraggable={!readonly}
-                                nodesConnectable={!readonly}
-                                elementsSelectable={!readonly}
+                                nodesDraggable={!readonly && !isLocked}
+                                nodesConnectable={!readonly && !isLocked}
+                                elementsSelectable={!readonly && !isLocked}
                                 panOnDrag={!readonly}
                                 panOnScroll={!readonly}
                                 zoomOnScroll={!readonly}
                                 zoomOnPinch={!readonly}
                                 zoomOnDoubleClick={!readonly}
-                                deleteKeyCode={readonly ? null : ["Backspace", "Delete"]}
-                                autoPanOnConnect={!readonly}
-                                autoPanOnNodeDrag={!readonly}
+                                deleteKeyCode={readonly || isLocked ? null : ["Backspace", "Delete"]}
+                                autoPanOnConnect={!readonly && !isLocked}
+                                autoPanOnNodeDrag={!readonly && !isLocked}
                                 colorMode="light"
                                 connectionMode={ConnectionMode.Loose}
                                 connectionRadius={50}
@@ -979,23 +913,15 @@ function CanvasInternal({
                                     },
                                 }}
                             >
-                                <Background color="#333" variant={BackgroundVariant.Dots} gap={20} size={1} style={{ opacity: 1 }} />
-                                <Controls className="!bg-card !border-border !rounded-none !shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted" />
-                                <MiniMap
-                                    className="!bg-card !border-border !shadow-none"
-                                    nodeColor="hsl(var(--primary))"
-                                    maskColor="hsl(var(--card) / 0.5)"
-                                    style={{
-                                        background: "hsl(var(--card))",
-                                        height: 120,
-                                    }}
-                                    zoomable
-                                    pannable
+                                <Background color="#333" variant={BackgroundVariant.Dots} gap={40} size={4} style={{ opacity: 1 }} />
+                                <Controls 
+                                    showInteractive={false}
+                                    className="!bg-card !border-border !rounded-none !shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted" 
                                 />
                             </ReactFlow>
                         </div>
 
-                        {!readonly && <NodeSettings />}
+                        {!readonly && !isLocked && <NodeSettings />}
                     </>
                 )}
             </div>

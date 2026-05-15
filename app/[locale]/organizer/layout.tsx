@@ -27,7 +27,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
     const isOrganizer = profile?.is_organizer || false;
 
     return (
-        <div className="grid min-h-screen w-full md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr]">
+        <div className="grid h-screen w-full md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr] overflow-hidden">
             <div className="border-r bg-muted/40 hidden md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <DashboardSidebar 
@@ -39,7 +39,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
                     />
                 </div>
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col h-full overflow-hidden">
                 <DashboardNavbar 
                     userEmail={user?.email || undefined} 
                     userName={profile?.full_name}

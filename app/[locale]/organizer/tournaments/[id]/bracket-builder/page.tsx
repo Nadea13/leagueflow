@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { validateTournamentAccess } from "@/lib/security";
-import { BracketCanvas } from "@/components/tournaments/bracket-builder/canvas";
+import { Canvas } from "@/components/tournaments/builder/canvas";
 
 export default async function BracketBuilderPage({
     params,
@@ -34,7 +34,7 @@ export default async function BracketBuilderPage({
     }
 
     return (
-        <BracketCanvas
+        <Canvas
             tournamentId={id}
             tournamentName={tournament.name}
             initialCanvasData={tournament.canvas_data ?? null}

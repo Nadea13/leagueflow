@@ -61,7 +61,7 @@ export function NodeSettings() {
                 return rankings[rankIndex] || `${rankIndex + 1}st Place (${sourceNode.data.label})`;
             }
         }
-        
+
         // Handle ByeNode propagation
         if (sourceNode.type === 'byeNode') {
             return (sourceNode.data as any).placeholder as string;
@@ -73,12 +73,6 @@ export function NodeSettings() {
     return (
         <aside className="w-[512px] border-l bg-card flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
             <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Settings className="h-4 w-4 text-primary" />
-                    <h3 className="text-xs font-black tracking-widest text-foreground">
-                        Node Settings
-                    </h3>
-                </div>
                 <Button
                     variant="ghost"
                     size="icon"
@@ -92,17 +86,16 @@ export function NodeSettings() {
             <div className="p-4 space-y-6">
                 {/* ── Header based on type ── */}
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-sm border">
-                    <div className={`w-8 h-8 rounded flex items-center justify-center ${
-                        type === 'groupNode' ? 'bg-violet-500' :
-                        type === 'matchNode' ? 'bg-primary' : 
-                        type === 'standingNode' ? 'bg-emerald-500' : 
-                        type === 'teamListNode' ? 'bg-blue-500' : 'bg-amber-500'
-                    }`}>
+                    <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-violet-500' :
+                            type === 'matchNode' ? 'bg-primary' :
+                                type === 'standingNode' ? 'bg-emerald-500' :
+                                    type === 'teamListNode' ? 'bg-blue-500' : 'bg-amber-500'
+                        }`}>
                         {type === 'groupNode' ? <Users className="h-4 w-4 text-white" /> :
-                         type === 'matchNode' ? <Trophy className="h-4 w-4 text-white" /> :
-                         type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-white" /> :
-                         type === 'teamListNode' ? <Users className="h-4 w-4 text-white" /> :
-                         <Zap className="h-4 w-4 text-white" />}
+                            type === 'matchNode' ? <Trophy className="h-4 w-4 text-white" /> :
+                                type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-white" /> :
+                                    type === 'teamListNode' ? <Users className="h-4 w-4 text-white" /> :
+                                        <Zap className="h-4 w-4 text-white" />}
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -185,7 +178,7 @@ export function NodeSettings() {
                                         </Label>
                                         <Switch
                                             id={item.key}
-                                            checked={item.composite 
+                                            checked={item.composite
                                                 ? item.composite.every(k => item.defaultOff ? !!data[k] : data[k] !== false)
                                                 : item.defaultOff ? !!data[item.key] : data[item.key] !== false
                                             }
@@ -386,9 +379,9 @@ export function NodeSettings() {
 
                                     <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                                         <DialogTrigger asChild>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
                                                 className="h-7 px-2 text-[9px] font-black tracking-widest uppercase border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all rounded-none"
                                             >
                                                 <Plus className="h-3.5 w-3.5 mr-1" />
@@ -400,8 +393,8 @@ export function NodeSettings() {
                                                 <DialogTitle className="text-xl font-black tracking-tighter uppercase">{t("add_team")}</DialogTitle>
                                             </DialogHeader>
                                             <div className="py-4">
-                                                <TeamForm 
-                                                    tournamentId={tournamentId} 
+                                                <TeamForm
+                                                    tournamentId={tournamentId}
                                                     isLimitReached={false}
                                                     onSuccess={() => {
                                                         setIsAddDialogOpen(false);

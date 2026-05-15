@@ -14,11 +14,6 @@ export interface NavItem {
  */
 export const organizerNavItems: NavItem[] = [
     {
-        titleKey: "home",
-        href: "/organizer/dashboard",
-        icon: LayoutDashboard,
-    },
-    {
         titleKey: "leagues",
         href: "/organizer/tournaments",
         icon: Trophy,
