@@ -225,7 +225,7 @@ export function TournamentContent({
         toast({
             title: tCommon("copied"),
             description: tCommon("copied_desc"),
-            className: "rounded-none border-primary font-bold"
+            className: "border-primary font-bold"
         });
     };
 

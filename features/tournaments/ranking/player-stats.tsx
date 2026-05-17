@@ -27,7 +27,7 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
     }
 
     return (
-        <div className="w-full overflow-x-auto rounded-none border">
+        <div className="w-full overflow-x-auto border">
             <Table className="min-w-[600px] text-xs md:text-sm">
                 <TableHeader>
                     <TableRow className="h-8 md:h-10">
@@ -57,7 +57,7 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
                                     {stat.teamLogoUrl ? (
                                         <img src={stat.teamLogoUrl} alt="" width={16} height={16} className="w-4 h-4 p-1 object-contain" />
                                     ) : (
-                                        <div className="w-4 h-4 bg-muted rounded-none flex items-center justify-center text-[8px] font-bold">
+                                        <div className="w-4 h-4 bg-muted flex items-center justify-center text-[8px] font-bold">
                                             {stat.teamName?.charAt(0)}
                                         </div>
                                     )}

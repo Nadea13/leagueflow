@@ -176,10 +176,10 @@ export function RegistrationForm({
                         className="py-12"
                         action={
                             <div className="flex gap-4">
-                                <Button variant="outline" className="rounded-none font-black tracking-widest text-xs" onClick={() => window.location.reload()}>
+                                <Button variant="outline" className="font-black tracking-widest text-xs" onClick={() => window.location.reload()}>
                                     {t("register_another")}
                                 </Button>
-                                <Button className="rounded-none font-black tracking-widest text-xs" onClick={() => window.location.href = `/manager/tournaments`}>
+                                <Button className="font-black tracking-widest text-xs" onClick={() => window.location.href = `/manager/tournaments`}>
                                     {t("go_to_dashboard")}
                                 </Button>
                             </div>
@@ -214,7 +214,7 @@ export function RegistrationForm({
                         icon={AlertCircle}
                         className="min-h-[300px]"
                         action={
-                            <Button asChild variant="outline" size="sm" className="rounded-none px-8 h-12 border-2 font-black tracking-widest text-xs">
+                            <Button asChild variant="outline" size="sm" className="px-8 h-12 border-2 font-black tracking-widest text-xs">
                                 <Link href="/manager/tournaments">
                                     {tCommon("back_to_dashboard")}
                                 </Link>
@@ -224,7 +224,7 @@ export function RegistrationForm({
                 ) : (
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2 md:space-y-3">
                         {isRegistrationClosed && (
-                            <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-none">
+                            <div className="flex items-center gap-3 p-4 bg-destructive/10 border border-destructive/20 text-destructive">
                                 <AlertCircle className="h-5 w-5 flex-shrink-0" />
                                 <div>
                                     <p className="font-bold">{t("registration_closed_title")}</p>
@@ -290,7 +290,7 @@ export function RegistrationForm({
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 rounded-none border"
+                                                    className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
                                                     onClick={() => {
                                                         form.setValue("logoFile", undefined);
                                                         setLogoPreviewUrl(null);
@@ -444,7 +444,7 @@ export function RegistrationForm({
                                                             })}
                                                         />
                                                         <div className="flex flex-col items-center gap-4">
-                                                            <div className="p-4 bg-primary/10 rounded-none text-primary transition-transform shadow-[0_0_15px_rgba(var(--primary),0.1)]">
+                                                            <div className="p-4 bg-primary/10 text-primary transition-transform shadow-[0_0_15px_rgba(var(--primary),0.1)]">
                                                                 <Upload className="w-8 h-8" />
                                                             </div>
                                                             <div className="space-y-1">
@@ -458,9 +458,9 @@ export function RegistrationForm({
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="relative rounded-none overflow-hidden border bg-muted/30 p-4">
+                                                    <div className="relative overflow-hidden border bg-muted/30 p-4">
                                                         <div className="flex flex-col gap-2 md:gap-3">
-                                                            <div className="relative aspect-[3/4] w-full max-h-[400px] rounded-none overflow-hidden border bg-foreground flex items-center justify-center">
+                                                            <div className="relative aspect-[3/4] w-full max-h-[400px] overflow-hidden border bg-foreground flex items-center justify-center">
                                                                 <img
                                                                     src={slipPreviewUrl}
                                                                     alt="Slip preview"
@@ -472,7 +472,7 @@ export function RegistrationForm({
                                                                     type="button"
                                                                     variant="destructive"
                                                                     size="icon"
-                                                                    className="absolute top-2 right-2 h-8 w-8 rounded-none shadow-md"
+                                                                    className="absolute top-2 right-2 h-8 w-8 shadow-md"
                                                                     onClick={() => {
                                                                         form.setValue("slipFile", undefined);
                                                                         setSlipPreviewUrl(null);

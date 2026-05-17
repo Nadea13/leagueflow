@@ -190,12 +190,12 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogTrigger asChild>
                 {children || (
-                    <Button className="rounded-none text-[10px] font-black tracking-wider">
+                    <Button className="text-[10px] font-black tracking-wider">
                         <Plus className="mr-2 h-4 w-4" /> {t("add_plan")}
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto rounded-none border-border p-0">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto border-border p-0">
                 <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
                     <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                     <DialogHeader>
@@ -236,7 +236,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                                     variant="outline"
                                     size="sm"
                                     onClick={() => append({ value: "" })}
-                                    className="w-full rounded-none text-[10px] font-black"
+                                    className="w-full text-[10px] font-black"
                                 >
                                     <Plus className="mr-2 h-4 w-4" /> {t("add_feature")}
                                 </Button>
@@ -369,7 +369,7 @@ export function PlanDialog({ initialPlan, role, open: controlledOpen, onOpenChan
                         </div>
                     </div>
                     <DialogFooter className="pt-4 border-t border-border">
-                        <Button type="submit" disabled={isLoading} className="w-full rounded-none font-black tracking-wider">
+                        <Button type="submit" disabled={isLoading} className="w-full font-black tracking-wider">
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {tCommon("save")}
                         </Button>

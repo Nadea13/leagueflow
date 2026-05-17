@@ -71,7 +71,7 @@ export function TournamentOverview({ tournament, allApprovedRegistrations }: Tou
                                 {t("registered_teams")}
                             </span>
                             {allApprovedRegistrations && allApprovedRegistrations.length > 0 && (
-                                <Badge variant="default" className="text-[10px] h-4 min-w-4 px-1 flex items-center justify-center font-black rounded-none">
+                                <Badge variant="default" className="text-[10px] h-4 min-w-4 px-1 flex items-center justify-center font-black">
                                     {allApprovedRegistrations.length}
                                 </Badge>
                             )}

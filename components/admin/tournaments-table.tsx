@@ -94,7 +94,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                 />
             </div>
 
-            <div className="rounded-none border border-border bg-card overflow-hidden">
+            <div className="border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -132,7 +132,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                     <TableCell>
                                         <Badge
                                             variant={getStatusColor(tournament.status)}
-                                            className="rounded-none text-[10px] font-black"
+                                            className="text-[10px] font-black"
                                         >
                                             {tournament.status}
                                         </Badge>
@@ -154,7 +154,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </AlertDialogTrigger>
-                                                <AlertDialogContent className="rounded-none border-border">
+                                                <AlertDialogContent className="border-border">
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle className="font-black tracking-tighter">
                                                             {tSettings("delete_tournament")}?
@@ -164,11 +164,11 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black">
+                                                        <AlertDialogCancel className="text-[10px] font-black">
                                                             {tCommon("cancel")}
                                                         </AlertDialogCancel>
                                                         <AlertDialogAction
-                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-none text-[10px] font-black"
+                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-[10px] font-black"
                                                             onClick={() => handleDelete(tournament.id, tournament.name)}
                                                         >
                                                             {tCommon("delete")}
@@ -193,7 +193,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
@@ -203,7 +203,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >

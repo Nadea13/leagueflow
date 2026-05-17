@@ -219,7 +219,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
             </div>
 
             {/* Table */}
-            <div className="rounded-none border border-border bg-card overflow-hidden">
+            <div className="border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -279,7 +279,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                     <TableCell className="text-right">
                                         <Badge
                                             variant={getStatusColor(payment.status)}
-                                            className="rounded-none text-[10px] font-black"
+                                            className="text-[10px] font-black"
                                         >
                                             {payment.status}
                                         </Badge>
@@ -290,7 +290,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleVerify(payment)}
-                                                className="rounded-none text-[10px] font-black"
+                                                className="text-[10px] font-black"
                                             >
                                                 Verify
                                             </Button>
@@ -312,7 +312,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
@@ -322,7 +322,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >
@@ -334,7 +334,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
 
             {/* Verify Dialog */}
             <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-                <DialogContent className="sm:max-w-[425px] rounded-none border-border p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-[425px] border-border p-0 overflow-hidden">
                     <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
                         <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                         <DialogHeader>
@@ -373,7 +373,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                             variant="destructive"
                             onClick={handleReject}
                             disabled={isVerifying}
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                         >
                             {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                             Reject
@@ -383,7 +383,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 variant="outline"
                                 onClick={() => setIsVerifyDialogOpen(false)}
                                 disabled={isVerifying}
-                                className="rounded-none text-[10px] font-black"
+                                className="text-[10px] font-black"
                             >
                                 Cancel
                             </Button>
@@ -391,7 +391,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 variant="default"
                                 onClick={handleApprove}
                                 disabled={isVerifying}
-                                className="rounded-none text-[10px] font-black"
+                                className="text-[10px] font-black"
                             >
                                 {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                 Approve

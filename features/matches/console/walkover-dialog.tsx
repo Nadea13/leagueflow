@@ -16,7 +16,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md">
                 <DialogHeader className="p-4 md:p-6">
                     <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
                         <div className="p-2 md:p-3 bg-red-500/10 border border-red-500/20">
@@ -31,7 +31,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
+                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary flex flex-col items-center justify-center gap-3 transition-all group"
                             onClick={() => match.home_team_id && onConfirm(match.home_team_id)}
                         >
                             <div className="p-3 bg-foreground/5 group-hover:bg-black/10 transition-colors">
@@ -45,7 +45,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary rounded-none flex flex-col items-center justify-center gap-3 transition-all group"
+                            className="h-32 bg-foreground/5 border-foreground/5 hover:bg-primary hover:text-black hover:border-primary flex flex-col items-center justify-center gap-3 transition-all group"
                             onClick={() => match.away_team_id && onConfirm(match.away_team_id)}
                         >
                             <div className="p-3 bg-foreground/5 group-hover:bg-black/10 transition-colors">
@@ -62,7 +62,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
                         <Button 
                             variant="ghost" 
                             onClick={() => onOpenChange(false)}
-                            className="w-full h-10 text-[10px] font-black tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
+                            className="w-full h-10 text-[10px] font-black tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5"
                         >
                             {t("cancel") || "CANCEL"}
                         </Button>

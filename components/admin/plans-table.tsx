@@ -84,7 +84,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                 />
             </div>
 
-            <div className="rounded-none border border-border bg-card overflow-x-auto overflow-hidden">
+            <div className="border border-border bg-card overflow-x-auto overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -130,7 +130,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                 {plan.description && plan.description.length > 0 && (
                                                     <div className="flex flex-wrap gap-1 mt-1">
                                                         {plan.description.slice(0, 3).map((feature, i) => (
-                                                            <Badge key={i} variant="default" className="text-[9px] font-medium px-1 rounded-none">
+                                                            <Badge key={i} variant="default" className="text-[9px] font-medium px-1">
                                                                 {feature}
                                                             </Badge>
                                                         ))}
@@ -168,7 +168,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                             <TableCell className="text-sm font-bold">{(plan as OrganizerPlan).max_tournaments === 0 ? t("unlimited") : (plan as OrganizerPlan).max_tournaments}</TableCell>
                                             <TableCell className="text-sm font-bold">{(plan as OrganizerPlan).max_teams_per_tournament === 0 ? t("unlimited") : (plan as OrganizerPlan).max_teams_per_tournament}</TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="text-[10px] rounded-none font-black">
+                                                <Badge variant="outline" className="text-[10px] font-black">
                                                     {(plan as OrganizerPlan).format_support || "Basic"}
                                                 </Badge>
                                             </TableCell>
@@ -176,13 +176,13 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                     )}
                                     
                                     <TableCell>
-                                        <Badge variant="outline" className="text-[10px] rounded-none font-black">
+                                        <Badge variant="outline" className="text-[10px] font-black">
                                             {plan.support_level || "Standard"}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         {plan.recommended && (
-                                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] rounded-none font-black">
+                                            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-black">
                                                 {t("recommended")}
                                             </Badge>
                                         )}
@@ -201,7 +201,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </AlertDialogTrigger>
-                                                <AlertDialogContent className="rounded-none border-border">
+                                                <AlertDialogContent className="border-border">
                                                     <AlertDialogHeader>
                                                         <AlertDialogTitle className="font-black tracking-tighter">
                                                             {tCommon("are_you_sure")}
@@ -211,12 +211,12 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel className="rounded-none text-[10px] font-black">
+                                                        <AlertDialogCancel className="text-[10px] font-black">
                                                             {tCommon("cancel")}
                                                         </AlertDialogCancel>
                                                         <AlertDialogAction
                                                             onClick={() => handleDelete(plan.id)}
-                                                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-none text-[10px] font-black"
+                                                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground text-[10px] font-black"
                                                         >
                                                             {deletingId === plan.id ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -245,7 +245,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
@@ -255,7 +255,7 @@ export function PlansTable({ plans, role }: PlansTableProps) {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >

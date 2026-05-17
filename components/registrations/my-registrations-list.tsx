@@ -70,7 +70,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                         <CardHeader className="relative z-10 pb-2">
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
-                                    <Badge variant={getStatusVariant(reg.payment_status)} className="rounded-none font-black text-[9px] tracking-widest px-2 py-0.5 border-0 ring-1 ring-inset ring-foreground/10">
+                                    <Badge variant={getStatusVariant(reg.payment_status)} className="font-black text-[9px] tracking-widest px-2 py-0.5 border-0 ring-1 ring-inset ring-foreground/10">
                                         {getDisplayStatus(reg.payment_status)}
                                     </Badge>
                                 </div>

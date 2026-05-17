@@ -50,7 +50,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
         const finalMatch = matches.find(m => m.stage === 'final');
         if (finalMatch?.status === 'finished') {
             return (
-                <div className="mt-6 flex items-center justify-center p-4 bg-green-50 text-green-700 rounded-none border border-green-200">
+                <div className="mt-6 flex items-center justify-center p-4 bg-green-50 text-green-700 border border-green-200">
                     <Trophy className="mr-2 h-5 w-5" />
                     <span className="font-semibold">{t("tournament_completed")}{finalMatch.winner_id ? t("completed") : ''}</span>
                 </div>
@@ -97,7 +97,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
             )}
 
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <ArrowRight className="h-5 w-5 text-primary" />
@@ -108,7 +108,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -116,7 +116,7 @@ export function ProgressionLogic({ tournamentId, matches, format }: NextRoundPro
                                 e.preventDefault();
                                 handleAdvance();
                             }}
-                            className="rounded-none border border-primary/20 bg-primary/90 text-foreground hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-primary/20 bg-primary/90 text-foreground hover:bg-primary hover:shadow-[0_0_15_rgba(34,197,94,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <ArrowRight className="h-3.5 w-3.5 mr-2" />
                             Advance

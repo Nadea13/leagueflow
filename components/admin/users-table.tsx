@@ -75,7 +75,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                 />
             </div>
 
-            <div className="rounded-none border border-border bg-card overflow-hidden">
+            <div className="border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -109,7 +109,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                     <TableCell>
                                         <Badge
                                             variant={user.role === 'admin' ? 'default' : 'outline'}
-                                            className="rounded-none text-[10px] font-black"
+                                            className="text-[10px] font-black"
                                         >
                                             {user.role === 'admin' && <Shield className="mr-1 h-3 w-3" />}
                                             {user.role}
@@ -128,7 +128,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="rounded-none border-border">
+                                            <DropdownMenuContent align="end" className="border-border">
                                                 <DropdownMenuLabel className="text-[10px] font-black tracking-wider">{t("actions")}</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.id)}>
                                                     {t("copy_user_id")}
@@ -164,7 +164,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                             id="pagination-prev"
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => {
                                 setPage(p => Math.max(1, p - 1));
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -180,7 +180,7 @@ export function AdminUsersTable({ initialUsers }: AdminUsersTableProps) {
                             id="pagination-next"
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => {
                                 setPage(p => Math.min(totalPages, p + 1));
                                 window.scrollTo({ top: 0, behavior: 'smooth' });

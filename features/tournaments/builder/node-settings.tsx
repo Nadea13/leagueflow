@@ -382,13 +382,13 @@ export function NodeSettings() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-7 px-2 text-[9px] font-black tracking-widest uppercase border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all rounded-none"
+                                                className="h-7 px-2 text-[9px] font-black tracking-widest uppercase border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
                                             >
                                                 <Plus className="h-3.5 w-3.5 mr-1" />
                                                 {t("add_team_button") || "Add Team"}
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[500px] rounded-none border-border/50">
+                                        <DialogContent className="sm:max-w-[500px] border-border/50">
                                             <DialogHeader>
                                                 <DialogTitle className="text-xl font-black tracking-tighter uppercase">{t("add_team")}</DialogTitle>
                                             </DialogHeader>

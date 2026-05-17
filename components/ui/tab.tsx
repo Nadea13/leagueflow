@@ -37,7 +37,7 @@ export function Tab<T extends string>({
   return (
     <div
       className={cn(
-        "flex p-1 bg-card rounded-none gap-1 border border-border h-auto",
+        "flex p-1 bg-card gap-1 border border-border h-auto",
         orientation === "vertical" ? "flex-col" : "flex-row",
         className
       )}
@@ -52,7 +52,7 @@ export function Tab<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all rounded-none border-none",
+              "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none",
               fullWidth ? "flex-1" : "flex-none",
               "text-muted-foreground hover:text-primary",
               isActive ? cn(

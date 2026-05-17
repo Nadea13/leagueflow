@@ -138,7 +138,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             {/* Top Navigation & Action Bar */}
             <div className="flex md:items-start justify-between gap-4 md:gap-6">
                 <div className="flex items-start gap-2 md:gap-6">
-                    <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                    <Button variant="ghost" size="icon" asChild className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href={team.isParticipation ? "/manager/my-registrations" : "/manager/my-teams"}>
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
@@ -191,7 +191,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     <Button
                         variant={effectivelyLocked ? "outline" : "default"}
                         className={cn(
-                            "rounded-none font-bold tracking-wider text-sm h-10 transition-all",
+                            "font-bold tracking-wider text-sm h-10 transition-all",
                             !effectivelyLocked ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-2",
                             "w-10 md:w-auto p-0 md:px-4"
                         )}
@@ -214,7 +214,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             </div>
 
             {isDeadlinePassed && (
-                <div className="bg-destructive/10 border border-destructive p-4 rounded-none flex items-start gap-3 text-destructive animate-in fade-in slide-in-from-top-2">
+                <div className="bg-destructive/10 border border-destructive p-4 flex items-start gap-3 text-destructive animate-in fade-in slide-in-from-top-2">
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                     <div className="space-y-1">
                         <h4 className="font-bold text-sm tracking-tight">{t("deadline_passed")}</h4>
@@ -273,7 +273,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             </div>
 
             <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
@@ -284,7 +284,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -292,7 +292,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 e.preventDefault();
                                 confirmDeletePlayer();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <Trash2 className="h-4 w-4 mr-2" />
                             {tCommon("delete") || "Delete"}

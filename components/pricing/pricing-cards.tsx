@@ -88,7 +88,7 @@ export function PricingCards({
     const isManagerPlans = plans.length > 0 && ('max_teams' in plans[0] || (plans[0] as PricingPlan).target_role === 'manager');
 
     return (
-        <div className="overflow-x-auto rounded-none border bg-background shadow-sm pt-6">
+        <div className="overflow-x-auto border bg-background shadow-sm pt-6">
             <table className="w-full text-sm min-w-[600px] table-fixed border-separate border-spacing-0">
                 <thead>
                     <tr className="bg-muted/50">
@@ -101,7 +101,7 @@ export function PricingCards({
                                     isRecommended && "border-2 border-primary/20 bg-primary/5 rounded-t-lg border-b-0"
                                 )}>
                                     {isRecommended && (
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-none shadow-sm whitespace-nowrap z-10">
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 shadow-sm whitespace-nowrap z-10">
                                             {t('recommended')}
                                         </div>
                                     )}

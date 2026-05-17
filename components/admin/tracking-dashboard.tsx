@@ -267,7 +267,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                         />
                     </div>
                     
-                    <div className="border border-border bg-card overflow-y-auto flex-1 rounded-none p-2 space-y-2">
+                    <div className="border border-border bg-card overflow-y-auto flex-1 p-2 space-y-2">
                         {filteredGroups.length === 0 ? (
                             <div className="text-center p-8 text-muted-foreground text-sm">
                                 No users found.
@@ -393,7 +393,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                                     <div className="text-[9px] mt-1 opacity-50">{formatDate(log.created_at, "d MMM yyyy", locale)}</div>
                                                 </TableCell>
                                                 <TableCell className="align-top pt-3">
-                                                    <Badge variant={log.action === 'PAGE_VIEW' ? 'outline' : 'default'} className="text-[9px] px-1.5 py-0.5 h-auto rounded-none font-black">
+                                                    <Badge variant={log.action === 'PAGE_VIEW' ? 'outline' : 'default'} className="text-[9px] px-1.5 py-0.5 h-auto font-black">
                                                         {log.action}
                                                     </Badge>
                                                 </TableCell>
@@ -420,7 +420,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-7 rounded-none text-[9px] font-black"
+                                    className="h-7 text-[9px] font-black"
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1}
                                 >
@@ -430,7 +430,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-7 rounded-none text-[9px] font-black"
+                                    className="h-7 text-[9px] font-black"
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
                                 >

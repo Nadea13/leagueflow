@@ -58,7 +58,7 @@ export function GeneralInfo({ tournament }: GeneralInfoProps) {
                 </h3>
             </div>
 
-            <div className="rounded-none relative overflow-hidden">
+            <div className="relative overflow-hidden">
                 <div className="relative z-10">
                     <form action={formAction} className="space-y-2 md:space-y-3">
                         <input type="hidden" name="form_type" value="general" />
@@ -165,7 +165,7 @@ export function GeneralInfo({ tournament }: GeneralInfoProps) {
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-card border-foreground/10 rounded-none">
+                                        <SelectContent className="bg-card border-foreground/10">
                                             {[1, 2, 3, 4].map((num) => (
                                                 <SelectItem key={num} value={num.toString()} className="focus:bg-foreground/10 focus:text-primary">
                                                     {num}

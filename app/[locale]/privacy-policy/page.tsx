@@ -54,7 +54,7 @@ export default async function PrivacyPolicyPage() {
                                 t("data_usage")
                             ].map((item, index) => (
                                 <li key={index} className="flex items-center gap-3 text-sm font-medium text-muted-foreground group/item">
-                                    <div className="w-1.5 h-1.5 bg-primary/40 rounded-none transform rotate-45 group-hover/item:bg-primary transition-colors" />
+                                    <div className="w-1.5 h-1.5 bg-primary/40 transform rotate-45 group-hover/item:bg-primary transition-colors" />
                                     {item}
                                 </li>
                             ))}

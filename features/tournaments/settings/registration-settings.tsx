@@ -69,7 +69,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                     </h3>
                 </div>
                 {!isPro && (
-                    <Badge variant="default" className="rounded-none bg-primary text-primary-foreground text-[10px] font-black px-3 py-1 tracking-widest">
+                    <Badge variant="default" className="bg-primary text-primary-foreground text-[10px] font-black px-3 py-1 tracking-widest">
                         {t("pro_badge")}
                     </Badge>
                 )}
@@ -147,7 +147,7 @@ export function RegistrationSettings({ tournament, onUpgrade }: Omit<Registratio
                                         <SelectTrigger id="bank_name" className="bg-transparent w-full">
                                             <SelectValue placeholder={t("select_bank")} />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-neutral-950 border-foreground/10 rounded-none">
+                                        <SelectContent className="bg-neutral-950 border-foreground/10">
                                             <SelectItem value="PromptPay">PromptPay</SelectItem>
                                         </SelectContent>
                                     </Select>

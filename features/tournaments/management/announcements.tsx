@@ -136,7 +136,7 @@ export function Announcements({
                             value={title}
                             onChange={e => setTitle(e.target.value)}
                             placeholder={t("title_placeholder")}
-                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 h-11 font-bold"
+                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 h-11 font-bold"
                             required
                         />
                     </div>
@@ -147,14 +147,14 @@ export function Announcements({
                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                             placeholder={t("content_placeholder")}
                             rows={5}
-                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
+                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
                         />
                     </div>
                     <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
                         <Button
                             type="submit"
                             size="sm"
-                            className="text-[10px] font-black tracking-widest rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                            className="text-[10px] font-black tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
                             disabled={isSaving || !title.trim()}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
@@ -248,7 +248,7 @@ export function Announcements({
                                     {t("news")}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="rounded-none sm:max-w-[500px] p-0 overflow-hidden">
+                            <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
                                 <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
                                     <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
                                         <Megaphone className="h-6 w-6 text-primary" />
@@ -262,7 +262,7 @@ export function Announcements({
                                             value={title}
                                             onChange={e => setTitle(e.target.value)}
                                             placeholder={t("title_placeholder")}
-                                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 h-11 font-bold"
+                                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 h-11 font-bold"
                                             required
                                         />
                                     </div>
@@ -273,7 +273,7 @@ export function Announcements({
                                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                                             placeholder={t("content_placeholder")}
                                             rows={5}
-                                            className="bg-background/50 border-border/20 rounded-none focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
+                                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
                                         />
                                     </div>
                                     <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
@@ -281,7 +281,7 @@ export function Announcements({
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="text-[10px] font-black tracking-widest rounded-none hover:bg-foreground/5 h-10 px-6"
+                                            className="text-[10px] font-black tracking-widest hover:bg-foreground/5 h-10 px-6"
                                             onClick={() => setIsDialogOpen(false)}
                                         >
                                             {tCommon("cancel")}
@@ -289,7 +289,7 @@ export function Announcements({
                                         <Button
                                             type="submit"
                                             size="sm"
-                                            className="text-[10px] font-black tracking-widest rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                                            className="text-[10px] font-black tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
                                             disabled={isSaving || !title.trim()}
                                         >
                                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
@@ -354,7 +354,7 @@ export function Announcements({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 rounded-none border border-border/20 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
+                                                className="h-8 w-8 border border-border/20 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                 title={ann.is_pinned ? t("unpin") : t("pin")}
                                             >
@@ -363,7 +363,7 @@ export function Announcements({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 rounded-none border border-border/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
+                                                className="h-8 w-8 border border-border/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
                                                 onClick={() => setDeleteId(ann.id)}
                                                 title={tCommon("delete")}
                                             >
@@ -375,11 +375,11 @@ export function Announcements({
                                         <div className="md:hidden">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border border-border/20">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 border border-border/20">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="rounded-none border-border/40">
+                                                <DropdownMenuContent align="end" className="border-border/40">
                                                     <DropdownMenuItem
                                                         onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                         className="font-bold  text-[10px] tracking-widest"
@@ -415,7 +415,7 @@ export function Announcements({
             )}
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
@@ -426,7 +426,7 @@ export function Announcements({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -434,7 +434,7 @@ export function Announcements({
                                 e.preventDefault();
                                 confirmDelete();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {tCommon("delete")}

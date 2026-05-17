@@ -208,7 +208,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                     </div>
 
                     {/* Table */}
-                    <div className="rounded-none border border-border bg-card overflow-hidden">
+                    <div className="border border-border bg-card overflow-hidden">
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -247,7 +247,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                                 {log.ip_address || '-'}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={getActionColor(log.action)} className="text-[10px] px-1.5 py-0.5 h-auto rounded-none font-black">
+                                                <Badge variant={getActionColor(log.action)} className="text-[10px] px-1.5 py-0.5 h-auto font-black">
                                                     {log.action}
                                                 </Badge>
                                             </TableCell>
@@ -280,7 +280,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="rounded-none text-[10px] font-black"
+                                    className="text-[10px] font-black"
                                     onClick={() => setSystemPage(p => Math.max(1, p - 1))}
                                     disabled={systemPage === 1}
                                 >
@@ -290,7 +290,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="rounded-none text-[10px] font-black"
+                                    className="text-[10px] font-black"
                                     onClick={() => setSystemPage(p => Math.min(totalSystemPages, p + 1))}
                                     disabled={systemPage === totalSystemPages}
                                 >
@@ -304,7 +304,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
 
             {activeTab === "auth" && (
                 <div className="space-y-4">
-                    <div className="rounded-none border border-border bg-card overflow-hidden">
+                    <div className="border border-border bg-card overflow-hidden">
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -350,7 +350,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="rounded-none text-[10px] font-black"
+                                    className="text-[10px] font-black"
                                     onClick={() => setAuthPage(p => Math.max(1, p - 1))}
                                     disabled={authPage === 1}
                                 >
@@ -360,7 +360,7 @@ export function AdminAuditLogs({ initialLogs, authLogs = [] }: AdminAuditLogsPro
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="rounded-none text-[10px] font-black"
+                                    className="text-[10px] font-black"
                                     onClick={() => setAuthPage(p => Math.min(totalAuthPages, p + 1))}
                                     disabled={authPage === totalAuthPages}
                                 >

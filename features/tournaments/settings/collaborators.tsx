@@ -127,7 +127,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                         </Button>
                     </DialogTrigger>
                     {isPro && (
-                        <DialogContent className="sm:max-w-[500px] bg-card border rounded-none shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
+                        <DialogContent className="sm:max-w-[500px] bg-card border shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                     <Mail className="h-6 w-6 text-primary" />
@@ -143,21 +143,21 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-                                        className="bg-foreground/5 border-foreground/10 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-12"
+                                        className="bg-foreground/5 border-foreground/10 focus:border-primary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
                                 <div className="flex justify-end gap-2 md:gap-3">
                                     <Button 
                                         variant="ghost" 
                                         onClick={() => setDialogOpen(false)}
-                                        className="h-12 rounded-none border-foreground/10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
+                                        className="h-12 border-foreground/10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                     >
                                         {tCommon("cancel")}
                                     </Button>
                                     <Button 
                                         onClick={handleInvite} 
                                         disabled={isInviting || !email.trim()}
-                                        className="h-12 bg-primary text-primary-foreground hover:bg-primary/90 px-8 rounded-none font-black tracking-tighter transition-all relative group/save overflow-hidden"
+                                        className="h-12 bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-black tracking-tighter transition-all relative group/save overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
                                         <span className="relative z-10 flex items-center gap-2">
@@ -187,7 +187,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                             </div>
                             <Button
                                 onClick={togglePayment}
-                                className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-8 rounded-none font-black tracking-tighter transition-all relative group/upbtn overflow-hidden"
+                                className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-black tracking-tighter transition-all relative group/upbtn overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
                                 <span className="relative z-10 flex items-center gap-2">
@@ -227,7 +227,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                         <div>
                                             <div className="flex items-center gap-3">
                                                 <span className="text-sm font-black tracking-tight text-foreground">{collab.email}</span>
-                                                <Badge variant="outline" className="rounded-none border-primary/20 bg-primary/5 text-[9px] font-black tracking-widest px-2 py-0 text-primary/70">
+                                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-[9px] font-black tracking-widest px-2 py-0 text-primary/70">
                                                     {collab.role}
                                                 </Badge>
                                             </div>
@@ -239,7 +239,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                        className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 transition-all"
                                         onClick={() => setRemoveMemberId(collab.id)}
                                         disabled={isPending}
                                     >
@@ -253,7 +253,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
             </div>
 
             <AlertDialog open={!!removeMemberId} onOpenChange={(open) => !open && setRemoveMemberId(null)}>
-                <AlertDialogContent className="bg-card rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Trash2 className="h-5 w-5 text-destructive" />
@@ -264,7 +264,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -272,7 +272,7 @@ export function Collaborators({ tournamentId, togglePayment }: Omit<Collaborator
                                 e.preventDefault();
                                 confirmRemove();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {t("remove") || "Remove"}

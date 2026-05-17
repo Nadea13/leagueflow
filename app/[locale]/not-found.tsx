@@ -13,7 +13,7 @@ export default function NotFound() {
             </p>
             <Link
                 href="/"
-                className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-none hover:bg-primary/90 transition-colors shadow-sm"
+                className="px-6 py-3 bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors shadow-sm"
             >
                 {t("button")}
             </Link>

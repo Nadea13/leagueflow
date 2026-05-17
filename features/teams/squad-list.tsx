@@ -221,7 +221,7 @@ export function SquadList({
                                                         <Input
                                                             value={editNumber}
                                                             onChange={(e) => setEditNumber(e.target.value)}
-                                                            className="w-full text-left md:text-center bg-transparent font-black text-sm focus-visible:ring-0 p-0 rounded-none"
+                                                            className="w-full text-left md:text-center bg-transparent font-black text-sm focus-visible:ring-0 p-0"
                                                             placeholder="#"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
@@ -232,7 +232,7 @@ export function SquadList({
                                                         <Input
                                                             value={editName}
                                                             onChange={(e) => setEditName(e.target.value)}
-                                                            className="text-sm font-black bg-transparent focus-visible:ring-0 p-0 rounded-none w-full"
+                                                            className="text-sm font-black bg-transparent focus-visible:ring-0 p-0 w-full"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
@@ -241,7 +241,7 @@ export function SquadList({
                                                         <Label className="text-[10px] font-black tracking-widest text-primary">{t("position")}</Label>
                                                         <Select value={editPosition} onValueChange={setEditPosition}>
                                                             <SelectTrigger 
-                                                                className="w-full text-sm font-black bg-transparent focus:ring-0 p-0 rounded-none [&_svg]:hidden"
+                                                                className="w-full text-sm font-black bg-transparent focus:ring-0 p-0 [&_svg]:hidden"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
                                                                 <SelectValue placeholder="POS" />
@@ -261,7 +261,7 @@ export function SquadList({
                                                             value={editBirthDate}
                                                             onChange={(e) => setEditBirthDate(e.target.value)}
                                                             type="date"
-                                                            className="text-sm font-bold bg-transparent focus-visible:ring-0 p-0 rounded-none w-full border-b border-border/40 md:border-none h-10 md:h-auto"
+                                                            className="text-sm font-bold bg-transparent focus-visible:ring-0 p-0 w-full border-b border-border/40 md:border-none h-10 md:h-auto"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
@@ -277,11 +277,11 @@ export function SquadList({
 
                                                     <div className="min-w-0 flex-1 py-1 flex flex-col gap-0.5">
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="rounded-none border-primary/20 text-primary text-[8px] font-black px-1 py-0">
+                                                            <Badge variant="outline" className="border-primary/20 text-primary text-[8px] font-black px-1 py-0">
                                                                 {player.position || "N/A"}
                                                             </Badge>
                                                             {player.global_player_id && (
-                                                                <div className="rounded-none text-primary">
+                                                                <div className="text-primary">
                                                                     <Link2 className="h-3 w-3" />
                                                                 </div>
                                                             )}
@@ -304,7 +304,7 @@ export function SquadList({
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 text-primary hover:bg-primary/10 rounded-none transition-all"
+                                                    className="h-10 w-10 text-primary hover:bg-primary/10 transition-all"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleUpdatePlayer(player.id);
@@ -316,7 +316,7 @@ export function SquadList({
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                                    className="h-10 w-10 text-red-500 hover:bg-red-500/10 transition-all"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setEditingPlayerId(null);
@@ -333,7 +333,7 @@ export function SquadList({
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-10 w-10 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                                            className="h-10 w-10 text-red-500/60 hover:text-red-500 hover:bg-red-500/10 transition-all"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 handleUnlinkPlayer(player.id);
@@ -360,14 +360,14 @@ export function SquadList({
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
+                                                                    className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 transition-all"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     title={t("connect_identity") || "Connect Identity"}
                                                                 >
                                                                     <Link2 className="h-5 w-5" />
                                                                 </Button>
                                                             </PopoverTrigger>
-                                                            <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="end" onClick={(e) => e.stopPropagation()}>
+                                                            <PopoverContent className="w-80 p-0 border-border bg-card shadow-2xl" align="end" onClick={(e) => e.stopPropagation()}>
                                                                 <div className="p-0 border-b border-border/40">
                                                                     <div className="relative group/search">
                                                                         <div className="relative">
@@ -376,7 +376,7 @@ export function SquadList({
                                                                                 placeholder="Start typing..."
                                                                                 value={searchQuery}
                                                                                 onChange={(e) => handleSearch(e.target.value)}
-                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none rounded-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
+                                                                                className="pl-14 h-16 text-xs bg-muted/5 border-none group-focus-within/search:bg-muted/10 transition-all duration-500 font-black tracking-widest placeholder:text-muted-foreground/20 focus-visible:ring-0 shadow-none relative z-10"
                                                                                 autoFocus
                                                                             />
                                                                             <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-primary group-focus-within/search:w-full transition-all duration-700 z-20" />
@@ -421,7 +421,7 @@ export function SquadList({
                                                                                 <Button
                                                                                     size="sm"
                                                                                     variant="outline"
-                                                                                    className="rounded-none w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                                    className="w-full h-10 text-[9px] font-black tracking-widest border-2 hover:bg-primary hover:text-black hover:border-primary transition-all"
                                                                                     onClick={async () => {
                                                                                         const res = await createGlobalPlayer(searchQuery, null, player.birth_date, [team.sport]);
                                                                                         if (res.success && res.data) {
@@ -442,7 +442,7 @@ export function SquadList({
                                                                         <Button
                                                                             size="sm"
                                                                             variant="ghost"
-                                                                            className="w-full h-10 rounded-none text-[9px] font-black tracking-widest justify-start px-2 hover:text-primary transition-colors"
+                                                                            className="w-full h-10 text-[9px] font-black tracking-widest justify-start px-2 hover:text-primary transition-colors"
                                                                             onClick={async () => {
                                                                                 const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
                                                                                 if (res.success && res.data) {
@@ -467,15 +467,15 @@ export function SquadList({
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 rounded-none transition-all"
+                                                                className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 transition-all"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
                                                                 <MoreVertical className="h-5 w-5" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="rounded-none border-border bg-card w-48 p-0">
+                                                        <DropdownMenuContent align="end" className="border-border bg-card w-48 p-0">
                                                             <DropdownMenuItem
-                                                                className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
+                                                                className="py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     setEditingPlayerId(player.id);
@@ -489,7 +489,7 @@ export function SquadList({
                                                                 {tCommon("edit")}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                                className="rounded-none py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
+                                                                className="py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     onDeletePlayer(player.id);
@@ -506,7 +506,7 @@ export function SquadList({
                                     </div>
                                 </div>
                             </div>
-                            <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
+                            <DialogContent className="sm:max-w-[450px] bg-background border-border p-0 overflow-hidden shadow-2xl">
                                 <ProfileManagement
                                     player={player}
                                     team={team}

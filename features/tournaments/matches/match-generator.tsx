@@ -37,7 +37,7 @@ export function MatchGenerator({
       onClick={handleGenerate} 
       variant="ghost"
       className={cn(
-        "w-full h-12 rounded-none border border-foreground/5 font-black tracking-tighter transition-all duration-300 group overflow-hidden relative",
+        "w-full h-12 border border-foreground/5 font-black tracking-tighter transition-all duration-300 group overflow-hidden relative",
         hasFixtures ? "bg-foreground/5 hover:bg-foreground/10 text-muted-foreground/60 hover:text-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/10",
         className
       )}

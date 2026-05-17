@@ -184,7 +184,7 @@ export function EditTeamForm({
                                             type="button" 
                                             variant="ghost" 
                                             size="icon" 
-                                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 rounded-none border"
+                                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
                                             onClick={handleRemoveLogo}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -226,7 +226,7 @@ export function EditTeamForm({
                             <SelectTrigger className="bg-transparent text-foreground focus-visible:ring-0 w-full">
                                 <SelectValue placeholder={tCommon("sport") || "Sport"} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-none border-border">
+                            <SelectContent className="border-border">
                                 {(['football'] as SportType[]).map((sportKey) => (
                                     <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}
@@ -314,7 +314,7 @@ export function EditTeamForm({
                                     {t("reset_roster") || "Reset Roster"}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="rounded-none sm:max-w-md border-border bg-card">
+                            <DialogContent className="sm:max-w-md border-border bg-card">
                                 <DialogHeader>
                                     <DialogTitle className="font-black tracking-tight text-destructive">{t("reset_roster") || "Reset Roster"}</DialogTitle>
                                     <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
@@ -324,14 +324,14 @@ export function EditTeamForm({
                                 <DialogFooter className="gap-2 sm:gap-0 mt-4">
                                     <Button
                                         variant="ghost"
-                                        className="rounded-none font-black text-[10px] tracking-widest"
+                                        className="font-black text-[10px] tracking-widest"
                                         onClick={() => setResetRosterDialogOpen(false)}
                                     >
                                         {tCommon("cancel")}
                                     </Button>
                                     <Button
                                         variant="default"
-                                        className="rounded-none font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/60 hover:text-destructive"
+                                        className="font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/60 hover:text-destructive"
                                         onClick={handleResetRoster}
                                         disabled={isResettingRoster}
                                     >
@@ -354,7 +354,7 @@ export function EditTeamForm({
                                     {tTeam("delete_team") || "Delete Team"}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="rounded-none sm:max-w-md border-border bg-card">
+                            <DialogContent className="sm:max-w-md border-border bg-card">
                                 <DialogHeader>
                                     <DialogTitle className="font-black tracking-tight text-red-500">{tTeam("delete_team") || "Delete Team"}</DialogTitle>
                                     <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
@@ -370,20 +370,20 @@ export function EditTeamForm({
                                         value={deleteConfirmText}
                                         onChange={(e) => setDeleteConfirmText(e.target.value)}
                                         autoComplete="off"
-                                        className="rounded-none border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
+                                        className="border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
                                     />
                                 </div>
                                 <DialogFooter className="gap-2 sm:gap-0">
                                     <Button
                                         variant="ghost"
-                                        className="rounded-none font-black text-[10px] tracking-widest"
+                                        className="font-black text-[10px] tracking-widest"
                                         onClick={() => { setDeleteTeamDialogOpen(false); setDeleteConfirmText(""); }}
                                     >
                                         {tCommon("cancel")}
                                     </Button>
                                     <Button
                                         variant="destructive"
-                                        className="rounded-none font-black text-[10px] tracking-widest bg-red-500 hover:bg-red-600"
+                                        className="font-black text-[10px] tracking-widest bg-red-500 hover:bg-red-600"
                                         onClick={handleDeleteTeam}
                                         disabled={isDeletingTeam || deleteConfirmText !== team.name}
                                     >

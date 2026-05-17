@@ -94,7 +94,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     };
 
     return (
-        <div className="bg-card border relative rounded-none">
+        <div className="bg-card border relative">
             <div className="p-4 md:p-6">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                     <div className="flex items-center gap-3">
@@ -117,14 +117,14 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                 {t("connect_global") || "Search Global"}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80 p-0 rounded-none border-border bg-card shadow-2xl" align="end">
+                        <PopoverContent className="w-80 p-0 border-border bg-card shadow-2xl" align="end">
                             <div className="p-0 border-b border-border/40">
                                 <div className="relative">
                                     <Input
                                         placeholder="Search database..."
                                         value={searchQuery}
                                         onChange={(e) => handleSearch(e.target.value)}
-                                        className="pl-11 h-12 border-none rounded-none bg-transparent font-black tracking-widest text-[11px] focus-visible:ring-0"
+                                        className="pl-11 h-12 border-none bg-transparent font-black tracking-widest text-[11px] focus-visible:ring-0"
                                         autoFocus
                                     />
                                 </div>
@@ -184,7 +184,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                         <div className="flex items-center justify-between">
                             <Label className="text-xs font-black tracking-widest text-primary">{t("player_name")} <span className="text-destructive">*</span></Label>
                             {selectedGlobalPlayerId && (
-                                <Badge variant="default" className="h-5 rounded-none bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
+                                <Badge variant="default" className="h-5 bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
                                     <Link2 className="h-2.5 w-2.5" />
                                     Connected
                                     <button
@@ -239,7 +239,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                     <div className="shrink-0 w-full md:w-[160px] relative">
                         <Button
                             type="submit"
-                            className="w-full rounded-none h-10 font-black tracking-widest text-sm transition-all disabled:opacity-50"
+                            className="w-full h-10 font-black tracking-widest text-sm transition-all disabled:opacity-50"
                             disabled={isSaving || !newName.trim() || effectivelyLocked}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}

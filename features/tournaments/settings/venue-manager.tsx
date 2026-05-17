@@ -129,7 +129,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             </span>
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] bg-card rounded-none p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
+                    <DialogContent className="sm:max-w-[500px] bg-card p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                                 <MapPin className="h-6 w-6 text-primary" />
@@ -146,7 +146,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         onChange={e => setName(e.target.value)}
                                         placeholder={t("name_placeholder")}
                                         required
-                                        className="bg-foreground/5  rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -155,7 +155,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         value={address}
                                         onChange={e => setAddress(e.target.value)}
                                         placeholder={t("address_placeholder")}
-                                        className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -164,7 +164,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         value={googleMapsUrl}
                                         onChange={e => setGoogleMapsUrl(e.target.value)}
                                         placeholder="https://maps.google.com/..."
-                                        className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -174,7 +174,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                         onChange={e => setCapacity(e.target.value)}
                                         placeholder={t("capacity_placeholder")}
                                         type="number"
-                                        className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-10"
+                                        className="bg-foreground/5 focus:border-primary/50 focus:ring-0 transition-all h-10"
                                     />
                                 </div>
                             </div>
@@ -184,7 +184,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     value={notes}
                                     onChange={e => setNotes(e.target.value)}
                                     placeholder={t("notes_placeholder")}
-                                    className="bg-foreground/5 rounded-none focus:border-primary/50 focus:ring-0 transition-all h-12"
+                                    className="bg-foreground/5 focus:border-primary/50 focus:ring-0 transition-all h-12"
                                 />
                             </div>
                             <div className="flex justify-end gap-2 md:gap-3 pt-4">
@@ -192,14 +192,14 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     type="button"
                                     variant="ghost"
                                     onClick={() => setOpen(false)}
-                                    className="h-10 rounded-none font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
+                                    className="h-10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
                                 >
                                     {tCommon("cancel")}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={isSaving || !name.trim()}
-                                    className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-8 rounded-none font-black tracking-tighter transition-all relative group overflow-hidden"
+                                    className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-black tracking-tighter transition-all relative group overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                                     <span className="relative z-10 flex items-center gap-2">
@@ -213,7 +213,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                 </Dialog>
             </div>
 
-            <div className="bg-card rounded-none relative overflow-hidden transition-colors">
+            <div className="bg-card relative overflow-hidden transition-colors">
                 <div className="relative z-0 space-y-4">
                     {/* Venue List */}
                     {isLoading ? (
@@ -240,7 +240,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                             <div className="flex items-center gap-3">
                                                 <span className="text-sm font-black tracking-tight text-foreground truncate">{venue.name}</span>
                                                 {venue.capacity && (
-                                                     <Badge variant="outline" className="rounded-none border-primary/20 bg-primary/5 text-[9px] font-black tracking-widest px-2 py-0 text-primary/70">
+                                                     <Badge variant="outline" className="border-primary/20 bg-primary/5 text-[9px] font-black tracking-widest px-2 py-0 text-primary/70">
                                                         {venue.capacity.toLocaleString()} {t("capacity_header")}
                                                     </Badge>
                                                 )}
@@ -265,7 +265,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                        className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 transition-all"
                                         onClick={() => setVenueToDelete(venue.id)}
                                     >
                                         <Trash2 className="h-5 w-5" />
@@ -277,7 +277,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                 </div>
 
                 <AlertDialog open={!!venueToDelete} onOpenChange={(open) => !open && setVenueToDelete(null)}>
-                    <AlertDialogContent className="bg-card border-border/10 rounded-none max-w-md">
+                    <AlertDialogContent className="bg-card border-border/10 max-w-md">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                                 <Trash2 className="h-5 w-5 text-destructive" />
@@ -288,7 +288,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="mt-6">
-                            <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                            <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -296,7 +296,7 @@ export function VenueManager({ tournamentId }: VenueManagerProps) {
                                     e.preventDefault();
                                     confirmDeleteVenue();
                                 }}
-                                className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive transition-all h-10 text-[11px] font-black tracking-widest"
+                                className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive transition-all h-10 text-[11px] font-black tracking-widest"
                             >
                                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 {tCommon("delete")}

@@ -145,16 +145,16 @@
 
 /* ReactQuill Obsidian Styling */
 .pro-editor.ql-container.ql-snow {
-  @apply border-0 bg-transparent rounded-none;
+  @apply border-0 bg-transparent;
 }
 
 .pro-editor .ql-toolbar.ql-snow {
-  @apply border-foreground/10 border-t-0 border-x-0 rounded-none transition-all;
+  @apply border-foreground/10 border-t-0 border-x-0 transition-all;
   padding: 8px;
 }
 
 .pro-editor .ql-container.ql-snow {
-  @apply bg-transparent border-none rounded-none text-foreground text-[13px] transition-all;
+  @apply bg-transparent border-none text-foreground text-[13px] transition-all;
   font-family: inherit;
 }
 

@@ -212,7 +212,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 {match.home_team?.logo_url ? (
                                     <img src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt=""/>
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none flex items-center justify-center shrink-0 border">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">
                                             {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
@@ -299,7 +299,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 {match.away_team?.logo_url ? (
                                     <img src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 rounded-none flex items-center justify-center shrink-0 border">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">
                                             {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
@@ -320,7 +320,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                     <Button
                         size="icon"
                         variant="ghost"
-                        className="h-10 w-10 text-muted-foreground/20 hover:text-destructive hover:bg-destructive/10 rounded-none transition-colors"
+                        className="h-10 w-10 text-muted-foreground/20 hover:text-destructive hover:bg-destructive/10 transition-colors"
                         onClick={() => setClearDialogOpen(true)}
                         disabled={isLoading}
                     >
@@ -349,7 +349,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
             ) : CardContent}
 
             <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <Eraser className="h-5 w-5 text-destructive" />
@@ -360,7 +360,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -368,7 +368,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                 e.preventDefault();
                                 handleClear();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <Eraser className="h-3.5 w-3.5 mr-2" />
                             {t("clear") || "Clear"}

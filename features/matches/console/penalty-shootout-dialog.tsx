@@ -140,13 +140,13 @@ export function PenaltyShootoutDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {trigger || (
-                    <Button variant="outline" size="sm" className="h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 rounded-none transition-all group">
+                    <Button variant="outline" size="sm" className="h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group">
                         <Target className="h-4 w-4" />
                         <span className="text-[10px] font-black tracking-widest">Penalty Shootout</span>
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md rounded-none">
+            <DialogContent className="bg-card border-foreground/5 p-0 overflow-hidden max-w-md">
                 <DialogHeader className="p-4 md:p-6 text-left">
                     <DialogTitle className="flex items-center gap-4 text-2xl font-black tracking-tighter text-foreground">
                         <div className="p-2 md:p-3 bg-primary/10 border border-primary/20">
@@ -196,7 +196,7 @@ export function PenaltyShootoutDialog({
                             </div>
                         ) : isSuddenDeath ? (
                             <div className="flex items-center justify-center relative z-10">
-                                <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 rounded-none px-4 py-1 animate-pulse">
+                                <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-4 py-1 animate-pulse">
                                     <AlertTriangle className="h-3 w-3 mr-2" />
                                     <span className="text-[10px] font-black tracking-[0.2em]">{t("sudden_death")}</span>
                                 </Badge>
@@ -297,7 +297,7 @@ export function PenaltyShootoutDialog({
                             {shots.length > 0 && (
                                 <Button
                                     variant="ghost"
-                                    className="h-10 text-[9px] font-black tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 rounded-none transition-all"
+                                    className="h-10 text-[9px] font-black tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all"
                                     onClick={handleClear}
                                 >
                                     <Trash2 className="h-3 w-3 mr-2" />
@@ -307,7 +307,7 @@ export function PenaltyShootoutDialog({
                             <Button
                                 variant="ghost"
                                 onClick={() => setOpen(false)}
-                                className="h-10 text-[9px] font-black tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5 rounded-none"
+                                className="h-10 text-[9px] font-black tracking-widest text-foreground/40 hover:text-foreground hover:bg-foreground/5"
                             >
                                 {t("close_session")}
                             </Button>

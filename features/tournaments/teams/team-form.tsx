@@ -105,7 +105,7 @@ export function TeamForm({ tournamentId, isLimitReached = false, onSuccess }: { 
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 rounded-none border"
+                                        className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
                                         onClick={handleRemoveLogo}
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -151,7 +151,7 @@ export function TeamForm({ tournamentId, isLimitReached = false, onSuccess }: { 
                             <SelectTrigger className="bg-transparent w-full">
                                 <SelectValue placeholder={tDialog("select_sport")} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-none border-border">
+                            <SelectContent className="border-border">
                                 {['football'].map((sportKey) => (
                                     <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}

@@ -71,7 +71,7 @@ export default function AuthConfirmPage() {
             <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4">
                 {/* Background gradient effects */}
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10" />
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-destructive/10 rounded-none blur-3xl -z-10" />
+                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-destructive/10 blur-3xl -z-10" />
 
                 <Card className="w-full max-w-sm backdrop-blur-sm bg-background/80 shadow-xl border">
                     <CardContent className="pt-6 space-y-6 text-center">
@@ -92,7 +92,7 @@ export default function AuthConfirmPage() {
                         <p className="text-muted-foreground text-sm">{error}</p>
                         <button
                             onClick={() => router.push(`/${locale}/login`)}
-                            className="px-6 py-2 bg-primary text-primary-foreground rounded-none hover:bg-primary/90 transition-colors"
+                            className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                         >
                             Back to Login
                         </button>
@@ -106,7 +106,7 @@ export default function AuthConfirmPage() {
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4">
             {/* Background gradient effects */}
             <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10" />
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-none blur-3xl -z-10" />
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 blur-3xl -z-10" />
 
             <Card className="w-full max-w-sm backdrop-blur-sm bg-background/80 shadow-xl border">
                 <CardContent className="pt-6 space-y-6 text-center">

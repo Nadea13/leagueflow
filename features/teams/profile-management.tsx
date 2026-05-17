@@ -176,7 +176,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 rounded-none border"
+                                                className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
                                                 onClick={async () => {
                                                     // Note: We don't have a direct "delete" for global photo yet, 
                                                     // but we can set it to null or empty string if the API supports it.
@@ -224,7 +224,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                         setHasChanges(true);
                                     }}
                                     placeholder="Player Name"
-                                    className="rounded-none border-2 h-11 font-bold"
+                                    className="border-2 h-11 font-bold"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -238,7 +238,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                         setEditBirthDate(e.target.value);
                                         setHasChanges(true);
                                     }}
-                                    className="rounded-none border-2 h-11 font-bold"
+                                    className="border-2 h-11 font-bold"
                                 />
                             </div>
                         </div>
@@ -281,7 +281,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                                 <Button
                                                     variant="outline"
                                                     size="icon"
-                                                    className="h-10 w-10 border rounded-none hover:bg-primary/10 hover:text-primary transition-all"
+                                                    className="h-10 w-10 border hover:bg-primary/10 hover:text-primary transition-all"
                                                     asChild
                                                 >
                                                     <a href={player.global_player.id_card_url} target="_blank" rel="noopener noreferrer">
@@ -292,7 +292,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 rounded-none border"
+                                                    className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
                                                     onClick={async () => {
                                                         const res = await updateGlobalPlayerIdCard(player.global_player_id!, new FormData());
                                                         if (res.success) {
@@ -334,7 +334,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                         </p>
                         <div className="px-6">
                             <Button
-                                className="w-full rounded-none bg-primary text-black font-black tracking-widest text-[10px] h-11"
+                                className="w-full bg-primary text-black font-black tracking-widest text-[10px] h-11"
                                 disabled={isSaving}
                                 onClick={async () => {
                                     const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
@@ -366,7 +366,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                                     <Badge
                                         key={sportKey}
                                         variant={isActive ? "default" : "outline"}
-                                        className={`rounded-none cursor-pointer pr-1 transition-all text-[9px] font-black tracking-widest h-7 ${isActive ? "bg-primary text-black hover:bg-primary/80" : "border-muted-foreground/20 text-muted-foreground/40 hover:border-primary hover:text-primary"}`}
+                                        className={`cursor-pointer pr-1 transition-all text-[9px] font-black tracking-widest h-7 ${isActive ? "bg-primary text-black hover:bg-primary/80" : "border-muted-foreground/20 text-muted-foreground/40 hover:border-primary hover:text-primary"}`}
                                         onClick={() => {
                                             if (isSaving) return;
                                             const currentTypes = player.global_player?.athlete_types || [];
@@ -389,7 +389,7 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                 )}
                 {hasChanges && (
                     <Button
-                        className="w-full rounded-none bg-primary text-black font-black tracking-widest text-[10px] h-11"
+                        className="w-full bg-primary text-black font-black tracking-widest text-[10px] h-11"
                         onClick={handleUpdateInfo}
                         disabled={isSaving}
                     >

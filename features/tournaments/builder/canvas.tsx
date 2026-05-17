@@ -407,7 +407,7 @@ function CanvasInternal({
                                 <Badge
                                     variant="outline"
                                     className={cn(
-                                        "h-8 px-3 text-[10px] font-black tracking-widest rounded-none border transition-all",
+                                        "h-8 px-3 text-[10px] font-black tracking-widest border transition-all",
                                         tournament?.status === 'active' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
                                             tournament?.status === 'completed' ? "bg-primary/10 text-primary border-primary/20" :
                                                 "bg-muted/50 text-muted-foreground border-muted-foreground/20"
@@ -432,12 +432,12 @@ function CanvasInternal({
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="h-8 w-8 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all rounded-none"
+                                            className="h-8 w-8 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all"
                                         >
                                             <Megaphone className="h-3.5 w-3.5" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[500px] p-0 rounded-none border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                                    <DialogContent className="sm:max-w-[500px] p-0 border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
                                         <div className="p-4 md:p-6 pb-0">
                                             <DialogHeader>
                                                 <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
@@ -459,7 +459,7 @@ function CanvasInternal({
                                     variant="outline"
                                     size="icon"
                                     onClick={handleCopyLinkRegister}
-                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all"
                                 >
                                     <Link2 className="h-4 w-4" />
                                 </Button>
@@ -468,7 +468,7 @@ function CanvasInternal({
                                     variant="outline"
                                     size="icon"
                                     onClick={handleOpenLinkRegister}
-                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all"
                                 >
                                     <ExternalLink className="h-4 w-4" />
                                 </Button>
@@ -477,7 +477,7 @@ function CanvasInternal({
                                     variant="outline"
                                     size="icon"
                                     onClick={handleCopyLink}
-                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all"
                                 >
                                     <Link2 className="h-4 w-4" />
                                 </Button>
@@ -486,7 +486,7 @@ function CanvasInternal({
                                     variant="outline"
                                     size="icon"
                                     onClick={handleOpenLink}
-                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all rounded-none"
+                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all"
                                 >
                                     <ExternalLink className="h-4 w-4" />
                                 </Button>
@@ -626,7 +626,7 @@ function CanvasInternal({
                                                                                         setIsCalendarOpen(false);
                                                                                     }}
                                                                                     className={cn(
-                                                                                        "h-9 flex flex-col items-center justify-center relative transition-all rounded-none",
+                                                                                        "h-9 flex flex-col items-center justify-center relative transition-all",
                                                                                         isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
                                                                                         isToday && !isSel && "border border-primary text-primary",
                                                                                         isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
@@ -651,7 +651,7 @@ function CanvasInternal({
                                                                             setViewDate(new Date());
                                                                             setIsCalendarOpen(false);
                                                                         }}
-                                                                        className="w-full text-[10px] font-black tracking-widest h-9 rounded-none hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                        className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
                                                                     >
                                                                         {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
                                                                     </Button>
@@ -670,10 +670,10 @@ function CanvasInternal({
                                         <div className="space-y-2">
                                             <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60">Stage Filter</Label>
                                             <Select value={filterStage} onValueChange={setFilterStage}>
-                                                <SelectTrigger className="w-full h-10 rounded-none border-border/40 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
+                                                <SelectTrigger className="w-full h-10 border-border/40 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
                                                     <SelectValue placeholder={tMatch("round")} />
                                                 </SelectTrigger>
-                                                <SelectContent className="bg-card border-border/10 rounded-none shadow-2xl">
+                                                <SelectContent className="bg-card border-border/10 shadow-2xl">
                                                     <SelectItem value="all" className="font-black text-[10px] tracking-widest">{tMatch("round")} ({tMatch("all")})</SelectItem>
                                                     <SelectItem value="group" className="font-black text-[10px] tracking-widest">{tMatch("group")}</SelectItem>
                                                     {['A', 'B', 'C', 'D'].map(l => (
@@ -694,7 +694,7 @@ function CanvasInternal({
                                         targetId="fixtures-canvas"
                                         filename="fixtures"
                                         label="EXPORT TO IMAGE"
-                                        className="w-full justify-start gap-3 h-11 px-3 border-none shadow-none bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted rounded-none"
+                                        className="w-full justify-start gap-3 h-11 px-3 border-none shadow-none bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
                                     />
                                 </div>
                             </div>
@@ -831,7 +831,7 @@ function CanvasInternal({
                                         <PopoverContent
                                             side="bottom"
                                             align="end"
-                                            className="w-64 p-1 bg-card border-border/50 shadow-2xl rounded-none mt-2"
+                                            className="w-64 p-1 bg-card border-border/50 shadow-2xl mt-2"
                                             sideOffset={5}
                                         >
                                             <div className="p-2 border-b border-border/10 mb-1">
@@ -916,7 +916,7 @@ function CanvasInternal({
                                 <Background color="#333" variant={BackgroundVariant.Dots} gap={40} size={4} style={{ opacity: 1 }} />
                                 <Controls
                                     showInteractive={false}
-                                    className="!bg-card !border-border !rounded-none !shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
+                                    className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
                                 />
                             </ReactFlow>
                         </div>

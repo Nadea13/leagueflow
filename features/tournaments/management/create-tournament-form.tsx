@@ -50,7 +50,7 @@ export function TournamentCreate() {
     }, [state.success, open]);
 
     const labelStyle = "text-[10px] font-black tracking-widest text-primary";
-    const inputStyle = "bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30 font-bold tracking-tighter";
+    const inputStyle = "bg-transparent border-t-0 border-x-0 border-border/40 text-foreground h-12 focus-visible:ring-0 px-0 placeholder:text-muted-foreground/30 font-bold tracking-tighter";
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -60,7 +60,7 @@ export function TournamentCreate() {
                     <span className="hidden sm:inline">{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col bg-background border-border rounded-none p-0 shadow-2xl">
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col bg-background border-border p-0 shadow-2xl">
                 {/* Premium Header */}
                 <div className="bg-gradient-to-r from-primary/20 to-background p-6 border-b border-border relative shrink-0">
                     <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
@@ -96,10 +96,10 @@ export function TournamentCreate() {
                             {tCommon("sport")}
                         </Label>
                         <Select name="sport" defaultValue="football">
-                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
                                 <SelectValue placeholder={t("select_sport")} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-none border-border">
+                            <SelectContent className="border-border">
                                 {(['football'] as SportType[]).map((sportKey) => (
                                     <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}
@@ -116,10 +116,10 @@ export function TournamentCreate() {
                             defaultValue="league"
                             onValueChange={(v) => setFormat(v)}
                         >
-                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
+                            <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
                                 <SelectValue placeholder={t("select_format")} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-none border-border">
+                            <SelectContent className="border-border">
                                 <SelectItem value="league" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">{tFormat("league")}</SelectItem>
                                 <SelectItem value="league_ha" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">{tFormat("league_ha")}</SelectItem>
                                 <SelectItem value="knockout" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">{tFormat("knockout")}</SelectItem>
@@ -164,10 +164,10 @@ export function TournamentCreate() {
                         <div className="space-y-3">
                             <Label htmlFor="advancing_teams" className={labelStyle}>{t("advancing_teams")}</Label>
                             <Select name="advancing_teams" defaultValue="2">
-                                <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 rounded-none text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
+                                <SelectTrigger className="bg-transparent border-t-0 border-x-0 border-border/40 text-foreground h-12 focus:ring-0 px-0 font-bold tracking-tighter">
                                     <SelectValue placeholder="Select" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-none border-border">
+                                <SelectContent className="border-border">
                                     <SelectItem value="1" className="focus:bg-primary/10 focus:text-primary font-bold text-xs">1</SelectItem>
                                     <SelectItem value="2" className="focus:bg-primary/10 focus:text-primary font-bold text-xs">2</SelectItem>
                                 </SelectContent>
@@ -197,7 +197,7 @@ export function TournamentCreate() {
                             id="description"
                             name="description"
                             placeholder={t("description_placeholder")}
-                            className="min-h-[100px] bg-foreground/5 border-none rounded-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm p-4 w-full"
+                            className="min-h-[100px] bg-foreground/5 border-none focus-visible:ring-1 focus-visible:ring-primary/50 transition-all placeholder:text-muted-foreground/30 font-medium text-sm p-4 w-full"
                         />
                     </div>
 
@@ -208,7 +208,7 @@ export function TournamentCreate() {
                     )}
 
                     <div>
-                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-primary/90 transition-all rounded-none bg-primary text-primary-foreground font-black tracking-tighter">
+                        <SubmitButton className="w-full h-12 shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:bg-primary/90 transition-all bg-primary text-primary-foreground font-black tracking-tighter">
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>
                     </div>

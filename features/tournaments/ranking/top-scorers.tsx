@@ -52,7 +52,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
 
     return (
         <div className="w-full">
-            <div className="w-full overflow-x-auto rounded-none">
+            <div className="w-full overflow-x-auto">
                 <Table className="min-w-[400px] border-separate border-spacing-0">
                     <TableHeader className="bg-muted/5">
                         <TableRow className="h-10 border-b border-border/10 hover:bg-muted/5 transition-colors">
@@ -94,7 +94,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                     </TableCell>
                                     <TableCell className="px-4 border-b border-border/5">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-7 h-7 bg-muted/10 border border-border/10 p-1 rounded-none flex items-center justify-center overflow-hidden shrink-0">
+                                            <div className="w-7 h-7 bg-muted/10 border border-border/10 p-1 flex items-center justify-center overflow-hidden shrink-0">
                                                 {team?.logo_url ? (
                                                     <img src={team.logo_url} alt="" width={28} height={28} className="w-full h-full object-contain p-1" />
                                                 ) : (

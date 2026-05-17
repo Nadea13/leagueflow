@@ -39,7 +39,7 @@ export function DeleteAccountButton({ email }: { email: string }) {
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md p-6">
+            <DialogContent className="bg-card border-border/10 shadow-2xl max-w-md p-6">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                         <Trash2 className="h-5 w-5 text-destructive" />
@@ -58,7 +58,7 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         value={confirmText} 
                         onChange={(e) => setConfirmText(e.target.value)} 
                         autoComplete="off"
-                        className="bg-muted/30 dark:bg-foreground/5 border-border/10 rounded-none h-10 focus-visible:ring-0 focus-visible:border-destructive transition-all font-bold text-foreground"
+                        className="bg-muted/30 dark:bg-foreground/5 border-border/10 h-10 focus-visible:ring-0 focus-visible:border-destructive transition-all font-bold text-foreground"
                     />
                 </div>
                 <DialogFooter className="flex flex-row justify-end gap-3">
@@ -66,7 +66,7 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         variant="ghost"
                         onClick={() => { setIsOpen(false); setConfirmText(""); }} 
                         disabled={isPending}
-                        className="rounded-none border-border/10 bg-muted/30 dark:bg-foreground/5 hover:bg-muted dark:hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest px-6"
+                        className="border-border/10 bg-muted/30 dark:bg-foreground/5 hover:bg-muted dark:hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest px-6"
                     >
                         {tCommon("cancel")}
                     </Button>
@@ -74,7 +74,7 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         variant="destructive"
                         onClick={handleDelete} 
                         disabled={isPending || confirmText !== email}
-                        className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest px-6"
+                        className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest px-6"
                     >
                         {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Trash2 className="h-3.5 w-3.5 mr-2" />}
                         {t("delete_button")}

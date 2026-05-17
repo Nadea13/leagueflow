@@ -154,7 +154,7 @@ export function PublicTournamentShell({
                         variant="outline"
                         size="icon"
                         asChild
-                        className="bg-background/50 backdrop-blur-sm rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all"
+                        className="bg-background/50 backdrop-blur-sm h-8 w-8 md:h-10 md:w-10 shrink-0 border-border/10 hover:border-primary/30 text-muted-foreground/40 hover:text-primary transition-all"
                     >
                         <Link href="/">
                             <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
@@ -164,7 +164,7 @@ export function PublicTournamentShell({
                     <div className="flex flex-col flex-1 gap-1 md:gap-2 min-w-0">
                         {/* Metadata Badges */}
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <Badge variant="outline" className="rounded-none font-black text-[10px] border-none bg-primary/10 text-primary tracking-widest">
+                            <Badge variant="outline" className="font-black text-[10px] border-none bg-primary/10 text-primary tracking-widest">
                                 {tournament?.format?.replace('_', ' ')}
                             </Badge>
 

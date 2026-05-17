@@ -86,12 +86,12 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
 
     const getStatusBadge = (status: string) => {
         if (status === 'unread') {
-            return <Badge variant="destructive" className="rounded-none text-[10px] font-black">{t("report_status_new")}</Badge>
+            return <Badge variant="destructive" className="text-[10px] font-black">{t("report_status_new")}</Badge>
         }
         if (status === 'read') {
-            return <Badge variant="default" className="rounded-none text-[10px] font-black">{t("report_status_read")}</Badge>
+            return <Badge variant="default" className="text-[10px] font-black">{t("report_status_read")}</Badge>
         }
-        return <Badge variant="outline" className="rounded-none text-[10px] font-black">{t("report_status_resolved")}</Badge>
+        return <Badge variant="outline" className="text-[10px] font-black">{t("report_status_resolved")}</Badge>
     }
 
     return (
@@ -109,7 +109,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                 />
             </div>
 
-            <div className="rounded-none border border-border bg-card overflow-hidden">
+            <div className="border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -168,7 +168,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                         >
@@ -178,7 +178,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                         <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-none text-[10px] font-black"
+                            className="text-[10px] font-black"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
                         >
@@ -189,7 +189,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
             )}
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="sm:max-w-[525px] rounded-none border-border p-0 overflow-hidden">
+                <DialogContent className="sm:max-w-[525px] border-border p-0 overflow-hidden">
                     <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
                         <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                         <DialogHeader>
@@ -214,7 +214,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                             <Button
                                 variant="outline"
                                 onClick={() => setDialogOpen(false)}
-                                className="rounded-none text-[10px] font-black"
+                                className="text-[10px] font-black"
                             >
                                 {t("close")}
                             </Button>
@@ -222,7 +222,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                                 <Button
                                     variant="default"
                                     onClick={() => handleMarkAsRead(selectedReport.id)}
-                                    className="rounded-none text-[10px] font-black"
+                                    className="text-[10px] font-black"
                                 >
                                     {t("mark_as_read")}
                                 </Button>
@@ -230,7 +230,7 @@ export function BugReportList({ initialReports }: { initialReports: BugReport[] 
                             {selectedReport && selectedReport.status !== 'resolved' && (
                                 <Button
                                     onClick={() => handleResolve(selectedReport.id)}
-                                    className="rounded-none text-[10px] font-black"
+                                    className="text-[10px] font-black"
                                 >
                                     {t("mark_as_resolved")}
                                 </Button>

@@ -33,7 +33,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
             </div>
 
             {history && history.length > 0 ? (
-                <div className="bg-background border rounded-none relative overflow-hidden group hover:bg-muted/5 transition-colors">
+                <div className="bg-background border relative overflow-hidden group hover:bg-muted/5 transition-colors">
                     <Table>
                         <TableHeader className="bg-muted/0">
                             <TableRow className="hover:bg-transparent border-border/40">
@@ -53,7 +53,7 @@ export function BillingHistory({ history = [] }: BillingHistoryProps) {
                                         #{record.id.slice(0, 8).toUpperCase()}
                                     </TableCell>
                                     <TableCell className="py-4">
-                                        <Badge variant="outline" className={`rounded-none font-black tracking-tighter text-[9px] py-0 px-2 h-5 border-none ${
+                                        <Badge variant="outline" className={`font-black tracking-tighter text-[9px] py-0 px-2 h-5 border-none ${
                                             record.status === 'success' ? "bg-green-500/10 text-green-500" :
                                                 record.status === 'pending' ? "bg-yellow-500/10 text-yellow-500" :
                                                     "bg-red-500/10 text-red-500"

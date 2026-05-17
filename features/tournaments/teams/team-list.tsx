@@ -110,7 +110,7 @@ function TeamItem({
                                         {team.name}
                                     </span>
                                     {isReadOnly && (
-                                        <Badge variant="outline" className="rounded-none border-muted-foreground/20 text-muted-foreground/40 text-[8px] font-black tracking-widest px-1.5 py-0">
+                                        <Badge variant="outline" className="border-muted-foreground/20 text-muted-foreground/40 text-[8px] font-black tracking-widest px-1.5 py-0">
                                             {t("managed_by_manager")}
                                         </Badge>
                                     )}
@@ -134,7 +134,7 @@ function TeamItem({
                                             <SelectTrigger className="h-7 text-[9px] font-black tracking-widest focus:ring-0 uppercase">
                                                 <SelectValue placeholder={tGroup("group")} />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-none border-border">
+                                            <SelectContent className="border-border">
                                                 <SelectItem value="none" className="text-[9px] font-bold uppercase">{tCommon("none")}</SelectItem>
                                                 {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map((g) => (
                                                     <SelectItem key={g} value={g} className="text-[9px] font-black uppercase">
@@ -145,7 +145,7 @@ function TeamItem({
                                         </Select>
                                     </div>
                                 ) : team.group_name ? (
-                                    <Badge className="rounded-none bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase">
+                                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase">
                                         {tGroup("group")} {team.group_name}
                                     </Badge>
                                 ) : (

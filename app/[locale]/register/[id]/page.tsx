@@ -156,7 +156,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                                             <div className="space-y-4">
                                                 {teams.map((team) => (
                                                     <div key={team.id} className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-none bg-muted flex items-center justify-center overflow-hidden border">
+                                                        <div className="w-10 h-10 bg-muted flex items-center justify-center overflow-hidden border">
                                                             {team.logo_url ? (
                                                                 <img src={team.logo_url} alt={team.name} width={40} height={40} className="w-full h-full object-cover" />
                                                             ) : (
@@ -179,7 +179,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                                     </div>
                                 </div>
 
-                                <div className="bg-blue-50 p-4 rounded-none border border-blue-100 text-sm text-blue-800">
+                                <div className="bg-blue-50 p-4 border border-blue-100 text-sm text-blue-800">
                                     <p className="font-medium mb-1">{t("need_help")}</p>
                                     <p className="text-blue-700/80">{t("contact_organizer_support")}</p>
                                 </div>
@@ -188,7 +188,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
 
                         {/* Registration Form */}
                         <div className="lg:col-span-8">
-                            <div className="bg-card rounded-none shadow-sm border border-border overflow-hidden">
+                            <div className="bg-card shadow-sm border border-border overflow-hidden">
                                 <div className="p-4 md:p-6">
                                     <div className="mb-6">
                                         <h3 className="text-lg font-semibold text-foreground">{t("title")}</h3>

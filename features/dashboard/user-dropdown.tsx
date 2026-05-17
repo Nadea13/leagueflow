@@ -77,16 +77,16 @@ export function UserDropdown({ email, name, mode = 'team', className }: { email:
                         <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="bg-background border-border rounded-none min-w-[120px]">
-                            <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">
+                        <DropdownMenuSubContent className="bg-background border-border min-w-[120px]">
+                            <DropdownMenuItem onClick={() => setTheme("light")} className="focus:bg-muted focus:text-primary text-xs font-bold">
                                 <Sun className="mr-3 h-4 w-4" />
                                 {tCommon("light")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">
+                            <DropdownMenuItem onClick={() => setTheme("dark")} className="focus:bg-muted focus:text-primary text-xs font-bold">
                                 <Moon className="mr-3 h-4 w-4" />
                                 {tCommon("dark")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold">
+                            <DropdownMenuItem onClick={() => setTheme("system")} className="focus:bg-muted focus:text-primary text-xs font-bold">
                                 <Laptop className="mr-3 h-4 w-4" />
                                 {tCommon("system")}
                             </DropdownMenuItem>
@@ -94,7 +94,7 @@ export function UserDropdown({ email, name, mode = 'team', className }: { email:
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem asChild className="rounded-none text-destructive focus:text-red-400 focus:bg-red-500/10 py-2.5">
+                <DropdownMenuItem asChild className="text-destructive focus:text-red-400 focus:bg-red-500/10 py-2.5">
                     <form action={signOut} className="w-full">
                         <input type="hidden" name="locale" value={locale} />
                         <button className="w-full flex items-center text-left cursor-pointer">

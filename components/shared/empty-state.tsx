@@ -29,7 +29,7 @@ export function EmptyState({
 
     return (
         <div className={cn(
-            "flex min-h-[400px] flex-col items-center justify-center rounded-none border border-border bg-muted/5 p-8 text-center animate-in fade-in-50 relative overflow-hidden group",
+            "flex min-h-[400px] flex-col items-center justify-center border border-border bg-muted/5 p-8 text-center animate-in fade-in-50 relative overflow-hidden group",
             className
         )}>
             <div className="p-4 bg-card border border-border rotate-12 transition-transform group-hover:rotate-0 mb-6 relative z-10">

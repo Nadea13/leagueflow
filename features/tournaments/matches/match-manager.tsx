@@ -325,7 +325,7 @@ export function MatchManager({
                                                 <SelectValue placeholder={tMatch("round")} />
                                             </div>
                                         </SelectTrigger>
-                                        <SelectContent className="bg-background rounded-none shadow-2xl">
+                                        <SelectContent className="bg-background shadow-2xl">
                                             <SelectItem value="all" className="font-black text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
                                             <SelectItem value="group" className="font-black text-xs">{tMatch("group")}</SelectItem>
                                             {['A', 'B', 'C', 'D'].map(l => (
@@ -375,7 +375,7 @@ export function MatchManager({
                                     <Button
                                         onClick={() => setAdvanceDialogOpen(true)}
                                         disabled={isAdvancing}
-                                        className="h-10 px-4 bg-primary text-primary-foreground font-black tracking-tighter hover:bg-primary/90 transition-all text-[10px] rounded-none"
+                                        className="h-10 px-4 bg-primary text-primary-foreground font-black tracking-tighter hover:bg-primary/90 transition-all text-[10px]"
                                     >
                                         {isAdvancing ? (
                                             <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
@@ -388,7 +388,7 @@ export function MatchManager({
                                         targetId="fixtures-canvas"
                                         filename="fixtures"
                                         label={t("export") || "Export"}
-                                        className="h-10 px-4 border-border/40 text-[10px] font-black tracking-tighter rounded-none"
+                                        className="h-10 px-4 border-border/40 text-[10px] font-black tracking-tighter"
                                     />
                                 </div>
                             </div>
@@ -462,7 +462,7 @@ export function MatchManager({
             )}
 
             <AlertDialog open={advanceDialogOpen} onOpenChange={setAdvanceDialogOpen}>
-                <AlertDialogContent className="bg-background border-border/40 rounded-none shadow-2xl max-w-md p-0 overflow-hidden">
+                <AlertDialogContent className="bg-background border-border/40 shadow-2xl max-w-md p-0 overflow-hidden">
                     <div className="p-6 space-y-6">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
@@ -480,12 +480,12 @@ export function MatchManager({
                                     e.preventDefault();
                                     handleAdvance();
                                 }}
-                                className="w-full rounded-none bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all h-12 text-xs font-black tracking-widest"
+                                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all h-12 text-xs font-black tracking-widest"
                             >
                                 <ArrowRight className="h-4 w-4 mr-2" />
                                 {tFixtures("proceed") || "Proceed"}
                             </AlertDialogAction>
-                            <AlertDialogCancel className="w-full rounded-none border-border/40 bg-muted/5 hover:bg-muted/10 hover:text-foreground transition-all h-12 text-xs font-black tracking-widest">
+                            <AlertDialogCancel className="w-full border-border/40 bg-muted/5 hover:bg-muted/10 hover:text-foreground transition-all h-12 text-xs font-black tracking-widest">
                                 {t("cancel") || "Cancel"}
                             </AlertDialogCancel>
                         </div>

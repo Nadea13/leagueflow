@@ -221,7 +221,7 @@ export function ImportRosterDialog({
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
+            <DialogContent className="sm:max-w-[450px] bg-background border-border p-0 overflow-hidden shadow-2xl">
                 <div className="relative bg-primary/10 p-4 md:p-6 border-b border-border/50">
                     <DialogHeader>
                         <DialogTitle className="text-3xl font-black tracking-tighter text-foreground leading-none">
@@ -261,9 +261,9 @@ export function ImportRosterDialog({
                                         <SelectTrigger className="h-12 bg-foreground/5 focus:ring-0 px-3 font-bold tracking-tighter text-left">
                                             <SelectValue placeholder={t("select_team")} />
                                         </SelectTrigger>
-                                        <SelectContent className="rounded-none border-border max-h-[300px]">
+                                        <SelectContent className="border-border max-h-[300px]">
                                             {myTeamsList.map((team) => (
-                                                <SelectItem key={team.id} value={team.id} className="rounded-none font-bold py-3">
+                                                <SelectItem key={team.id} value={team.id} className="font-bold py-3">
                                                     {team.name}
                                                 </SelectItem>
                                             ))}
@@ -279,7 +279,7 @@ export function ImportRosterDialog({
                             <div className="space-y-2">
                                 <Label className="text-xs font-black tracking-widest text-primary text-left">{t("upload_roster_file")}</Label>
                                 <div 
-                                    className={`border-2 border-dashed rounded-none p-8 text-center transition-all cursor-pointer ${importFile ? 'border-primary bg-primary/5' : 'border-border/40 hover:border-primary/40 hover:bg-muted/5'}`}
+                                    className={`border-2 border-dashed p-8 text-center transition-all cursor-pointer ${importFile ? 'border-primary bg-primary/5' : 'border-border/40 hover:border-primary/40 hover:bg-muted/5'}`}
                                     onClick={() => importFileRef.current?.click()}
                                 >
                                     <input
@@ -318,7 +318,7 @@ export function ImportRosterDialog({
 
                 <DialogFooter className="p-4 md:p-6 bg-muted/5 pt-0 border-t border-border/10">
                     <Button
-                        className="w-full rounded-none h-12 font-black tracking-widest transition-all"
+                        className="w-full h-12 font-black tracking-widest transition-all"
                         disabled={isImporting || (importTab === "teams" ? !selectedSourceTeamId : !importFile)}
                         onClick={importTab === "teams" ? handleImportRoster : processFileImport}
                     >

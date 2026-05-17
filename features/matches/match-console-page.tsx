@@ -391,7 +391,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
                                 className={cn(
-                                    "group flex flex-col items-center justify-center h-20 border-foreground/5 bg-foreground/5 transition-all duration-300 rounded-none",
+                                    "group flex flex-col items-center justify-center h-20 border-foreground/5 bg-foreground/5 transition-all duration-300",
                                     action.color
                                 )}
                             >
@@ -438,7 +438,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                     <Button
                         variant="outline"
                         size="icon"
-                        className="rounded-none h-8 w-8 md:h-10 md:w-10 shrink-0 border border-border/50 hover:bg-primary hover:text-black transition-all"
+                        className="h-8 w-8 md:h-10 md:w-10 shrink-0 border border-border/50 hover:bg-primary hover:text-black transition-all"
                         asChild
                     >
                         <Link href={backUrl}>
@@ -526,7 +526,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                     <Button
                                         variant="outline"
                                         onClick={handleUndo}
-                                        className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 rounded-none transition-all group"
+                                        className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
                                     >
                                         <Undo className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
                                         <span className="hidden md:inline text-[10px] font-black tracking-widest">{t("undo")}</span>
@@ -541,7 +541,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         trigger={
                                             <Button
                                                 variant="outline"
-                                                className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 rounded-none transition-all group"
+                                                className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
                                             >
                                                 <Target className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
                                                 <span className="hidden md:inline text-[10px] font-black tracking-widest">{t("penalty_shootout")}</span>
@@ -551,7 +551,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                     <Button
                                         variant="outline"
                                         onClick={() => setWoDialogOpen(true)}
-                                        className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 rounded-none transition-all group"
+                                        className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
                                     >
                                         <Ban className="h-4 w-4 text-red-500/50 group-hover:text-red-500" />
                                         <span className="hidden md:inline text-[10px] font-black tracking-widest text-red-500/70 group-hover:text-red-500">{t("walkover")}</span>

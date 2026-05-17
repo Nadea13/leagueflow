@@ -141,7 +141,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <Badge
                                             variant="outline"
                                             className={cn(
-                                                "rounded-none text-[9px] font-black uppercase tracking-tighter h-5 px-3",
+                                                "text-[9px] font-black uppercase tracking-tighter h-5 px-3",
                                                 reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground border-primary" :
                                                     reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground border-destructive" :
                                                         "bg-muted text-muted-foreground border-muted-foreground/20"
@@ -155,7 +155,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-9 px-3 text-[10px] font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 rounded-none border border-primary/20 hover:border-primary/40 transition-all"
+                                                className="h-9 px-3 text-[10px] font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 border border-primary/20 hover:border-primary/40 transition-all"
                                                 onClick={() => window.open(reg.slip_url!, "_blank")}
                                             >
                                                 <ExternalLink className="h-3.5 w-3.5 mr-2" />
@@ -180,7 +180,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-9 w-9 p-0 rounded-none border-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
+                                                    className="h-9 w-9 p-0 border-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-sm"
                                                     disabled={isActing !== null}
                                                     onClick={() => handleApprove(reg.id)}
                                                     title="Approve"
@@ -190,7 +190,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="h-9 w-9 p-0 rounded-none border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-foreground transition-all shadow-sm"
+                                                    className="h-9 w-9 p-0 border-none bg-destructive/10 text-destructive hover:bg-destructive hover:text-foreground transition-all shadow-sm"
                                                     disabled={isActing !== null}
                                                     onClick={() => setRegistrationToReject(reg.id)}
                                                     title="Reject"
@@ -208,7 +208,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
             </div>
 
             <AlertDialog open={!!registrationToReject} onOpenChange={(open) => !open && setRegistrationToReject(null)}>
-                <AlertDialogContent className="bg-card border-border/10 rounded-none shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
                             <X className="h-5 w-5 text-destructive" />
@@ -219,7 +219,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="rounded-none border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -227,7 +227,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                 e.preventDefault();
                                 confirmReject();
                             }}
-                            className="rounded-none border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             <X className="h-3.5 w-3.5 mr-2" />
                             Reject

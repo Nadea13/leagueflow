@@ -42,7 +42,7 @@ export function PublicFooter({ managerPlans = [], organizerPlans = [], showPrici
                         <Link href="/#results" className="hover:text-primary transition-colors hover:opacity-100">{t('matches')}</Link>
                     </div>
                     <div>
-                        <Button size="lg" asChild className="rounded-none h-12 px-8 font-black tracking-widest text-xs hover:bg-primary hover:text-primary-foreground transition-all">
+                        <Button size="lg" asChild className="h-12 px-8 font-black tracking-widest text-xs hover:bg-primary hover:text-primary-foreground transition-all">
                             <Link href="/signup">
                                 {tPricing('get_started')} <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>

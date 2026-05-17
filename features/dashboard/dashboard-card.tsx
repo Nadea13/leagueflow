@@ -91,9 +91,9 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                 <CardHeader className="pt-4 md:pt-6 relative z-10">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
-                            <Avatar className="h-14 w-14 rounded-none border border-border group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
+                            <Avatar className="h-14 w-14 border border-border group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
                                 <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain" />
-                                <AvatarFallback className="rounded-none bg-primary/5 text-primary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                <AvatarFallback className="bg-primary/5 text-primary font-black">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="grid gap-1">
                                 <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
@@ -101,11 +101,11 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                                 </CardTitle>
                                 <div className="flex items-center gap-2">
                                     {team.tournament ? (
-                                        <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-primary/20 bg-primary/5 text-primary font-black rounded-none shrink-0">
+                                        <Badge variant="outline" className="w-fit text-[9px] px-2 py-0.5 border border-primary/20 bg-primary/5 text-primary font-black shrink-0">
                                             {tCommon("active")}
                                         </Badge>
                                     ) : (
-                                        <Badge variant="default" className="w-fit text-[9px] px-2 py-0.5 border-none font-black rounded-none shrink-0 opacity-70">
+                                        <Badge variant="default" className="w-fit text-[9px] px-2 py-0.5 border-none font-black shrink-0 opacity-70">
                                             {tTeam("unassigned_badge")}
                                         </Badge>
                                     )}

@@ -37,7 +37,7 @@ export function Standings({ standings }: StandingsProps) {
     }
 
     return (
-        <div className="w-full overflow-x-auto rounded-none">
+        <div className="w-full overflow-x-auto">
             <Table className="min-w-[600px] text-xs md:text-sm border-separate border-spacing-0">
                 <TableHeader className="bg-card">
                     <TableRow className="h-10 border-b border-border/10 hover:bg-card transition-colors">
@@ -67,7 +67,7 @@ export function Standings({ standings }: StandingsProps) {
                             </TableCell>
                             <TableCell className="px-6 sticky left-10 z-10 bg-card group-hover:bg-muted/10 transition-colors border-b border-border/5 border-r border-border/5">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-8 h-8 bg-muted/10 border border-border/10 p-1 rounded-none shrink-0 relative overflow-hidden flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-muted/10 border border-border/10 p-1 shrink-0 relative overflow-hidden flex items-center justify-center">
                                         {team.team?.logo_url ? (
                                             <Image src={team.team.logo_url} alt={team.team.name} width={32} height={32} className="w-full h-full object-contain relative z-10" unoptimized />
                                         ) : (

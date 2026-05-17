@@ -37,14 +37,14 @@ export function PublicTournamentCard({ tournament }: PublicTournamentCardProps) 
                             <div className="flex items-center gap-2">
                                 {tournament.status && (
                                     <div className={cn(
-                                        "text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none",
+                                        "text-[9px] font-black tracking-widest px-2 py-0.5",
                                         tournament.status === 'completed' ? "bg-muted text-muted-foreground/40" : "bg-primary/10 text-primary border border-primary/20"
                                     )}>
                                         {tSettings(tournament.status as Parameters<typeof tSettings>[0])}
                                     </div>
                                 )}
                                 {isClosed && (
-                                    <div className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-none bg-red-500/10 text-red-600 border border-red-500/20">
+                                    <div className="text-[9px] font-black tracking-widest px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20">
                                         {isFull ? (tSettings("full") || "FULL") : (tSettings("closed") || "CLOSED")}
                                     </div>
                                 )}

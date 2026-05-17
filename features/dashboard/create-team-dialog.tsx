@@ -65,7 +65,7 @@ export function CreateTeamDialog() {
                     <span className="hidden sm:inline">{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[450px] bg-background border-border rounded-none p-0 overflow-hidden shadow-2xl">
+            <DialogContent className="sm:max-w-[450px] bg-background border-border p-0 overflow-hidden shadow-2xl">
                 <div className="relative bg-primary/10 p-4 md:p-6 border-b border-border/50">
                     <DialogHeader>
                         <DialogTitle className="text-3xl font-black tracking-tighter text-foreground leading-none">
@@ -154,7 +154,7 @@ export function CreateTeamDialog() {
                             <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
                                 <SelectValue placeholder={t("select_sport") || "Select Sport"} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-none border-border">
+                            <SelectContent>
                                 {(['football'] as SportType[]).map((sportKey) => (
                                     <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                         {tSports(sportKey)}

@@ -30,7 +30,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         className="flex-1 text-center md:text-right space-y-2 md:space-y-3 cursor-pointer group/home"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-none bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
+                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
                             <div className="absolute inset-0 bg-primary/5 scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
                             {match.home_team?.logo_url ? (
                                 <img src={match.home_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
@@ -82,7 +82,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         className="flex-1 text-center md:text-left space-y-4 cursor-pointer group/away"
                         onClick={() => onTeamClick?.(match.away_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 rounded-none bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
+                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
                             <div className="absolute inset-0 bg-foreground/5 scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
                             {match.away_team?.logo_url ? (
                                 <img src={match.away_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />

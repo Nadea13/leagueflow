@@ -177,7 +177,7 @@ export function PublicMatchesHome() {
                                     </button>
                                 </PopoverTrigger>
 
-                                <PopoverContent className="w-80 p-0 bg-background border-border/40 rounded-none shadow-2xl" align="center">
+                                <PopoverContent className="w-80 p-0 bg-background border-border/40 shadow-2xl" align="center">
                                     <div className="p-4 border-b border-border/40 flex items-center justify-between bg-muted/5">
                                         <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary">
                                             <ChevronLeft className="h-4 w-4" />
@@ -270,7 +270,7 @@ export function PublicMatchesHome() {
                                 onClick={() => {
                                     setSelectedDate(null);
                                 }}
-                                className="rounded-none font-black tracking-tighter"
+                                className="font-black tracking-tighter"
                             >
                                 {locale === 'th' ? "ดูแมตช์ทั้งหมด" : "SEE ALL MATCHES"}
                             </Button>

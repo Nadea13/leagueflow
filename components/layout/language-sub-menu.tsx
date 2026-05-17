@@ -30,12 +30,12 @@ export function LanguageSubMenu() {
             <DropdownMenuSubContent className="bg-background border-border min-w-[120px]">
                 <DropdownMenuItem onClick={() => switchLocale("en")}>
                     <span className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary">🇺🇸</span>
-                    <span className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">English</span>
+                    <span className="focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">English</span>
                     {locale === "en" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => switchLocale("th")}>
                     <span className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary">🇹🇭</span>
-                    <span className="rounded-none focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">ไทย</span>
+                    <span className="focus:bg-muted focus:text-primary text-xs font-bold group-hover:text-primary">ไทย</span>
                     {locale === "th" && <Check className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
             </DropdownMenuSubContent>

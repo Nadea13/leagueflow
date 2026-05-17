@@ -64,7 +64,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
             {/* Top Navigation & Header */}
             <div className="flex md:items-start justify-between gap-4 md:gap-6">
                 <div className="flex items-start gap-2 md:gap-6">
-                    <Button variant="ghost" size="icon" asChild className="rounded-none h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+                    <Button variant="ghost" size="icon" asChild className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href="/manager/tournaments">
                             <ArrowLeft className="h-5 w-5" />
                         </Link>
@@ -93,7 +93,7 @@ export default async function ManagerTournamentRegisterPage({ params }: { params
                     </div>
                 </div>
                 <div className="hidden md:flex items-start gap-2">
-                    <Button variant="outline" size="sm" asChild className="rounded-none font-bold tracking-wider text-[10px] h-10 border-2">
+                    <Button variant="outline" size="sm" asChild className="font-bold tracking-wider text-[10px] h-10 border-2">
                         <Link href={`/${tournament.id}`} target="_blank">
                             <Info className="h-4 w-4 mr-2" />
                             {tCommon("preview")}

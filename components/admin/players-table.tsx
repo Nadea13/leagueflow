@@ -85,12 +85,12 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
 
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="rounded-none text-[10px] font-black tracking-wider h-10 px-6">
+                        <Button className="text-[10px] font-black tracking-wider h-10 px-6">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("add_player")}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] rounded-none border-border p-0 overflow-hidden">
+                    <DialogContent className="sm:max-w-[500px] border-border p-0 overflow-hidden">
                         <div className="bg-primary/10 px-6 py-5 border-b border-border relative">
                             <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                             <DialogHeader>
@@ -114,7 +114,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                     value={newPlayerName}
                                     onChange={(e) => setNewPlayerName(e.target.value)}
                                     placeholder={t("player_name_placeholder")}
-                                    className="rounded-none border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
+                                    className="border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -126,7 +126,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                     value={newPlayerPhoto}
                                     onChange={(e) => setNewPlayerPhoto(e.target.value)}
                                     placeholder="https://..."
-                                    className="rounded-none border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
+                                    className="border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -138,7 +138,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                     type="date"
                                     value={newPlayerDOB}
                                     onChange={(e) => setNewPlayerDOB(e.target.value)}
-                                    className="rounded-none border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
+                                    className="border-muted-foreground/20 focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                         </div>
@@ -147,13 +147,13 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                             <Button 
                                 variant="outline" 
                                 onClick={() => setIsAddDialogOpen(false)}
-                                className="rounded-none text-[10px] font-black tracking-wider"
+                                className="text-[10px] font-black tracking-wider"
                             >
                                 {commonT("cancel")}
                             </Button>
                             <Button 
                                 onClick={handleAddPlayer}
-                                className="rounded-none text-[10px] font-black tracking-wider"
+                                className="text-[10px] font-black tracking-wider"
                             >
                                 {t("add_player")}
                             </Button>
@@ -162,7 +162,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                 </Dialog>
             </div>
 
-            <div className="rounded-none border border-border bg-card overflow-hidden">
+            <div className="border border-border bg-card overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">

@@ -36,7 +36,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onStart}
-                    className="w-full h-12 md:h-14 bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40 rounded-none transition-all group active:scale-[0.98]"
+                    className="w-full h-12 md:h-14 bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40 transition-all group active:scale-[0.98]"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
@@ -50,7 +50,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onPause}
-                    className="w-full h-12 md:h-14 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20 hover:border-orange-500/40 rounded-none transition-all group active:scale-[0.98]"
+                    className="w-full h-12 md:h-14 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20 hover:border-orange-500/40 transition-all group active:scale-[0.98]"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
@@ -64,7 +64,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onResume}
-                    className="w-full h-12 md:h-14 bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40 rounded-none transition-all group active:scale-[0.98]"
+                    className="w-full h-12 md:h-14 bg-primary/10 border-primary/20 hover:bg-primary/20 hover:border-primary/40 transition-all group active:scale-[0.98]"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     disabled
-                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/10 rounded-none opacity-50 cursor-not-allowed"
+                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/10 opacity-50 cursor-not-allowed"
                 >
                     <div className="flex items-center gap-3">
                         <Play className="h-4 w-4 text-foreground/20" /> 
@@ -91,7 +91,7 @@ export function MatchControls({
                 variant="outline"
                 onClick={onEnd}
                 disabled={status === 'finished'}
-                className="w-full h-12 md:h-14 bg-red-500/10 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 rounded-none transition-all group active:scale-[0.98]"
+                className="w-full h-12 md:h-14 bg-red-500/10 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 transition-all group active:scale-[0.98]"
             >
                 <div className="flex flex-col items-center md:items-start">
                     <div className="flex items-center gap-2 md:gap-3">
@@ -106,7 +106,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onSetTime}
-                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 rounded-none transition-all group"
+                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 transition-all group"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">
@@ -122,7 +122,7 @@ export function MatchControls({
                 <Button 
                     variant="outline"
                     onClick={onAddTime}
-                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-primary/40 rounded-none transition-all group"
+                    className="w-full h-12 md:h-14 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-primary/40 transition-all group"
                 >
                     <div className="flex flex-col items-center md:items-start">
                         <div className="flex items-center gap-3">

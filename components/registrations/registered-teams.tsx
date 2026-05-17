@@ -43,13 +43,13 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
             </div>
             <div className="grid gap-3">
                 {userRegistrations.map((reg) => (
-                    <Card key={reg.id} className="border p-4 md:p-6 transition-all hover:border-primary relative overflow-hidden group rounded-none">
+                    <Card key={reg.id} className="border p-4 md:p-6 transition-all hover:border-primary relative overflow-hidden group">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-3">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <h3 className="text-md font-black tracking-tight group-hover:text-primary">{reg.team_name}</h3>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant={getStatusVariant(reg.payment_status)} className="rounded-none font-black text-[10px] tracking-widest">
+                                        <Badge variant={getStatusVariant(reg.payment_status)} className="font-black text-[10px] tracking-widest">
                                             {reg.payment_status}
                                         </Badge>
                                         {getStatusIcon(reg.payment_status)}
@@ -64,7 +64,7 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
                             </div>
                             <div className="flex items-center gap-2">
                                 {reg.tournament_team_id && (
-                                    <Button variant="default" size="sm" asChild className="rounded-none font-black tracking-widest text-[10px] h-9 bg-primary text-primary-foreground hover:bg-primary/90">
+                                    <Button variant="default" size="sm" asChild className="font-black tracking-widest text-[10px] h-9 bg-primary text-primary-foreground hover:bg-primary/90">
                                         <Link href={`/manager/my-registrations/${reg.tournament_team_id}`}>
                                             <Users className="h-4 w-4 mr-2" />
                                             {t("edit_roster")}
@@ -72,7 +72,7 @@ export function RegisteredTeams({ userRegistrations }: RegisteredTeamsProps) {
                                     </Button>
                                 )}
                                 {reg.slip_url && (
-                                    <Button variant="outline" size="sm" asChild className="rounded-none font-black tracking-widest text-[10px] h-9 border-2">
+                                    <Button variant="outline" size="sm" asChild className="font-black tracking-widest text-[10px] h-9 border-2">
                                         <a href={reg.slip_url} target="_blank" rel="noopener noreferrer">
                                             {t("view_slip")}
                                         </a>
