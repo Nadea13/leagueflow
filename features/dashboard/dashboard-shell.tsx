@@ -1,15 +1,15 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { TournamentCreate } from "@/components/tournaments/management/create-tournament-form";
-import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
+import { TournamentCreate } from "@/features/tournaments/management/create-tournament-form";
+import { CreateTeamDialog } from "@/features/dashboard/create-team-dialog";
 import { StatsCards } from "@/components/shared/stats-cards";
-import { DashboardCard } from "@/components/dashboard/dashboard-card";
+import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Link } from "@/i18n/routing";
 import { ArrowRight, Users, FileText, Trophy, Activity, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { BecomeOrganizerButton } from "@/components/dashboard/become-organizer-button";
+import { BecomeOrganizerButton } from "@/features/dashboard/become-organizer-button";
 import { Tournament, Team } from "@/types/index";
 
 interface DashboardShellProps {

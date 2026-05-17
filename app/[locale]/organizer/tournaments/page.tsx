@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { getDashboardTournaments } from "@/actions/organizer/dashboard";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
-import { TournamentCreate } from "@/components/tournaments/management/create-tournament-form";
-import { DashboardCard } from "@/components/dashboard/dashboard-card";
+import { TournamentCreate } from "@/features/tournaments/management/create-tournament-form";
+import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";

@@ -5,12 +5,12 @@ import { Trophy, Users, Calendar, ArrowLeft, GitBranch, Award } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tab } from "@/components/ui/tab";
-import { Standings } from "@/components/tournaments/ranking/standings";
-import { PublicMatches } from "@/components/tournaments/public/public-matches-list";
-import { StandingsGroups } from "@/components/tournaments/ranking/standings-groups";
-import { Bracket } from "@/components/tournaments/ranking/bracket";
-import { ShareButton } from "@/components/tournaments/shared/share-button";
-import { PrintButton } from "@/components/tournaments/shared/print-button";
+import { Standings } from "@/features/tournaments/ranking/standings";
+import { PublicMatches } from "@/features/tournaments/public/public-matches-list";
+import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups";
+import { Bracket } from "@/features/tournaments/ranking/bracket";
+import { ShareButton } from "@/features/tournaments/shared/share-button";
+import { PrintButton } from "@/features/tournaments/shared/print-button";
 import { Match, MatchEvent, Team, Goal, Tournament, Player } from "@/types";
 import { calculateStandings } from "@/lib/standings";
 import { createClient } from "@/lib/supabase/client";
@@ -19,10 +19,10 @@ import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-import { TournamentStats } from "@/components/tournaments/shared/overview-stats";
-import { PlayerStats } from "@/components/tournaments/ranking/player-stats";
-import { BannedPlayers } from "@/components/tournaments/ranking/banned-players";
-import { TopScorers } from "@/components/tournaments/ranking/top-scorers";
+import { TournamentStats } from "@/features/tournaments/shared/overview-stats";
+import { PlayerStats } from "@/features/tournaments/ranking/player-stats";
+import { BannedPlayers } from "@/features/tournaments/ranking/banned-players";
+import { TopScorers } from "@/features/tournaments/ranking/top-scorers";
 import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
 
 interface PublicTournamentShellProps {
@@ -260,9 +260,9 @@ export function PublicTournamentShell({
                                     <p className="text-[10px] font-bold text-muted-foreground/60">{t("bracket_desc")}</p>
                                 </div>
                                 <div className="relative z-10 overflow-x-auto pb-4">
-                                    <Bracket 
-                                        matches={matches} 
-                                        isPublic={true} 
+                                    <Bracket
+                                        matches={matches}
+                                        isPublic={true}
                                         canvasData={tournament.canvas_data}
                                     />
                                 </div>

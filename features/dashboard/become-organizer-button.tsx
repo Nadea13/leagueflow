@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Trophy, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog";
+import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog";
 
 export function BecomeOrganizerButton() {
     const t = useTranslations("Dashboard");
@@ -27,8 +27,8 @@ export function BecomeOrganizerButton() {
                     <p className="text-sm text-muted-foreground mt-1 max-w-md">
                         {t("become_organizer_desc")}
                     </p>
-                    <Button 
-                        onClick={() => setShowDialog(true)} 
+                    <Button
+                        onClick={() => setShowDialog(true)}
                         className="mt-4 bg-primary hover:bg-primary/90 text-primary-foreground font-black"
                     >
                         <Trophy className="mr-2 h-4 w-4" />
@@ -37,9 +37,9 @@ export function BecomeOrganizerButton() {
                 </div>
             </div>
 
-            <BecomeOrganizerDialog 
-                open={showDialog} 
-                onOpenChange={setShowDialog} 
+            <BecomeOrganizerDialog
+                open={showDialog}
+                onOpenChange={setShowDialog}
             />
         </>
     );

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Match, MatchEvent, Goal, Player } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { PublicTournamentShell } from "@/components/tournaments/public/public-tournament-shell";
+import { PublicTournamentShell } from "@/features/tournaments/public/public-tournament-shell";
 import { PublicFooter } from "@/components/layout/public-footer";
 import { getPlans } from "@/actions/admin/plans";
 
@@ -137,7 +137,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             </nav>
 
             <main className="flex-1">
-                <PublicTournamentShell 
+                <PublicTournamentShell
                     tournament={tournament}
                     initialTeams={teams || []}
                     initialMatches={matches as Match[] || []}

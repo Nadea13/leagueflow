@@ -6,12 +6,12 @@ import { Menu, LayoutGrid, Users as UsersIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { UserDropdown } from "@/components/dashboard/user-dropdown"
+import { UserDropdown } from "@/features/dashboard/user-dropdown"
 import { useState, useEffect } from "react"
 import { getNavItems } from "@/config/nav"
 import { useRouter } from "next/navigation"
 import { Tab } from "@/components/ui/tab"
-import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog"
+import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog"
 
 interface DashboardNavbarProps {
     userEmail?: string

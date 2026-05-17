@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Match, Team } from "@/types/index";
-import { MatchCard } from "@/components/tournaments/matches/match-card";
-import { MatchGenerator } from "@/components/tournaments/matches/match-generator";
+import { MatchCard } from "@/features/tournaments/matches/match-card";
+import { MatchGenerator } from "@/features/tournaments/matches/match-generator";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -202,143 +202,143 @@ export function MatchManager({
                     {/* Navigation & Filter Header */}
                     <div className="flex flex-col gap-2 md:gap-3">
                         {!hideControls && (
-                        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3">
-                            <div className="flex items-center border w-full md:w-auto md:min-w-[400px]">
-                                <button
-                                    onClick={() => setSelectedDate(null)}
-                                    className={cn(
-                                        "p-2 ml-1 text-xs font-black tracking-tighter transition-all shrink-0",
-                                        selectedDate === null
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground/60 hover:text-primary"
-                                    )}
-                                >
-                                    {locale === 'th' ? "ทั้งหมด" : "All"}
-                                </button>
-
-                                <div className="flex items-center flex-1">
+                            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3">
+                                <div className="flex items-center border w-full md:w-auto md:min-w-[400px]">
                                     <button
-                                        onClick={goToPrevDay}
-                                        className="p-2 md:p- hover:text-primary text-muted-foreground/60 transition-colors shrink-0"
+                                        onClick={() => setSelectedDate(null)}
+                                        className={cn(
+                                            "p-2 ml-1 text-xs font-black tracking-tighter transition-all shrink-0",
+                                            selectedDate === null
+                                                ? "bg-primary text-primary-foreground"
+                                                : "text-muted-foreground/60 hover:text-primary"
+                                        )}
                                     >
-                                        <ChevronLeft className="h-6 w-6" />
+                                        {locale === 'th' ? "ทั้งหมด" : "All"}
                                     </button>
 
-                                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                        <PopoverTrigger asChild>
-                                            <button className="group flex items-center justify-center gap-2 md:gap-3 transition-all flex-1">
-                                                <CalendarIcon className="h-6 w-6 text-primary animate-pulse shrink-0" />
-                                                <div className="flex flex-col items-center">
-                                                    <span className="text-[10px] font-black tracking-tighter text-primary leading-none">
-                                                        {selectedDate ? formatDate(selectedDate, "EEE", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
+                                    <div className="flex items-center flex-1">
+                                        <button
+                                            onClick={goToPrevDay}
+                                            className="p-2 md:p- hover:text-primary text-muted-foreground/60 transition-colors shrink-0"
+                                        >
+                                            <ChevronLeft className="h-6 w-6" />
+                                        </button>
+
+                                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                            <PopoverTrigger asChild>
+                                                <button className="group flex items-center justify-center gap-2 md:gap-3 transition-all flex-1">
+                                                    <CalendarIcon className="h-6 w-6 text-primary animate-pulse shrink-0" />
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-[10px] font-black tracking-tighter text-primary leading-none">
+                                                            {selectedDate ? formatDate(selectedDate, "EEE", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
+                                                        </span>
+                                                        <span className="text-sm font-black tracking-tight group-hover:text-primary transition-colors">
+                                                            {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : formatDate(new Date(), "d MMM yyyy", locale)}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            </PopoverTrigger>
+
+                                            <PopoverContent className="w-80 p-0 bg-card shadow-2xl" align="center">
+                                                <div className="p-2 border-b flex items-center justify-between bg-muted/5">
+                                                    <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary">
+                                                        <ChevronLeft className="h-4 w-4" />
+                                                    </button>
+                                                    <span className="text-sm font-black tracking-tighter">
+                                                        {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
                                                     </span>
-                                                    <span className="text-sm font-black tracking-tight group-hover:text-primary transition-colors">
-                                                        {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : formatDate(new Date(), "d MMM yyyy", locale)}
-                                                    </span>
+                                                    <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary">
+                                                        <ChevronRight className="h-4 w-4" />
+                                                    </button>
                                                 </div>
-                                            </button>
-                                        </PopoverTrigger>
+                                                <div className="p-2 space-y-2 md:space-y-3">
+                                                    <div className="grid grid-cols-7 gap-1">
+                                                        {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
+                                                            <div key={`${d}-${idx}`} className="text-[10px] text-center font-black opacity-30">{d}</div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="grid grid-cols-7 gap-1">
+                                                        {calendarDays.map((day, i) => {
+                                                            if (!day) return <div key={`empty-${i}`} />;
+                                                            const dateStr = format(day, 'yyyy-MM-dd');
+                                                            const isSel = selectedDate === dateStr;
+                                                            const hasMatch = datesWithMatches.has(dateStr);
+                                                            const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
 
-                                        <PopoverContent className="w-80 p-0 bg-card shadow-2xl" align="center">
-                                            <div className="p-2 border-b flex items-center justify-between bg-muted/5">
-                                                <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary">
-                                                    <ChevronLeft className="h-4 w-4" />
-                                                </button>
-                                                <span className="text-sm font-black tracking-tighter">
-                                                    {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
-                                                </span>
-                                                <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary">
-                                                    <ChevronRight className="h-4 w-4" />
-                                                </button>
+                                                            // Check if date is within tournament range
+                                                            const isOutsideRange = !!((startDate && dateStr < startDate) || (endDate && dateStr > endDate));
+
+                                                            return (
+                                                                <button
+                                                                    key={dateStr}
+                                                                    disabled={isOutsideRange}
+                                                                    onClick={() => {
+                                                                        setSelectedDate(dateStr);
+                                                                        setIsCalendarOpen(false);
+                                                                    }}
+                                                                    className={cn(
+                                                                        "h-8 flex flex-col items-center justify-center relative transition-all",
+                                                                        isSel ? "bg-primary text-primary-foreground font-black" : "hover:bg-muted",
+                                                                        isToday && !isSel && "border border-primary text-primary",
+                                                                        isOutsideRange && "opacity-30 cursor-not-allowed grayscale"
+                                                                    )}
+                                                                >
+                                                                    <span className="text-xs">{format(day, 'd')}</span>
+                                                                    {hasMatch && (
+                                                                        <div className={cn(
+                                                                            "absolute bottom-1 h-1 w-1 rounded-full",
+                                                                            isSel ? "bg-primary-foreground" : "bg-primary"
+                                                                        )} />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+                                                            setViewDate(new Date());
+                                                            setIsCalendarOpen(false);
+                                                        }}
+                                                        className="w-full py-2 border text-[10px] font-black hover:border-primary transition-all"
+                                                    >
+                                                        {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
+                                                    </button>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+
+                                        <button
+                                            onClick={goToNextDay}
+                                            className="p-2 hover:text-primary text-muted-foreground/60 transition-colors shrink-0"
+                                        >
+                                            <ChevronRight className="h-6 w-6" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Stage Filter - Integrated Style */}
+                                <div className="w-full">
+                                    <Select value={filterStage} onValueChange={setFilterStage}>
+                                        <SelectTrigger className="w-full focus:ring-0 font-black">
+                                            <div className="flex flex-col items-start">
+                                                <SelectValue placeholder={tMatch("round")} />
                                             </div>
-                                            <div className="p-2 space-y-2 md:space-y-3">
-                                                <div className="grid grid-cols-7 gap-1">
-                                                    {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
-                                                        <div key={`${d}-${idx}`} className="text-[10px] text-center font-black opacity-30">{d}</div>
-                                                    ))}
-                                                </div>
-                                                <div className="grid grid-cols-7 gap-1">
-                                                    {calendarDays.map((day, i) => {
-                                                        if (!day) return <div key={`empty-${i}`} />;
-                                                        const dateStr = format(day, 'yyyy-MM-dd');
-                                                        const isSel = selectedDate === dateStr;
-                                                        const hasMatch = datesWithMatches.has(dateStr);
-                                                        const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
-
-                                                        // Check if date is within tournament range
-                                                        const isOutsideRange = !!((startDate && dateStr < startDate) || (endDate && dateStr > endDate));
-
-                                                        return (
-                                                            <button
-                                                                key={dateStr}
-                                                                disabled={isOutsideRange}
-                                                                onClick={() => {
-                                                                    setSelectedDate(dateStr);
-                                                                    setIsCalendarOpen(false);
-                                                                }}
-                                                                className={cn(
-                                                                    "h-8 flex flex-col items-center justify-center relative transition-all",
-                                                                    isSel ? "bg-primary text-primary-foreground font-black" : "hover:bg-muted",
-                                                                    isToday && !isSel && "border border-primary text-primary",
-                                                                    isOutsideRange && "opacity-30 cursor-not-allowed grayscale"
-                                                                )}
-                                                            >
-                                                                <span className="text-xs">{format(day, 'd')}</span>
-                                                                {hasMatch && (
-                                                                    <div className={cn(
-                                                                        "absolute bottom-1 h-1 w-1 rounded-full",
-                                                                        isSel ? "bg-primary-foreground" : "bg-primary"
-                                                                    )} />
-                                                                )}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
-                                                        setViewDate(new Date());
-                                                        setIsCalendarOpen(false);
-                                                    }}
-                                                    className="w-full py-2 border text-[10px] font-black hover:border-primary transition-all"
-                                                >
-                                                    {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
-                                                </button>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-
-                                    <button
-                                        onClick={goToNextDay}
-                                        className="p-2 hover:text-primary text-muted-foreground/60 transition-colors shrink-0"
-                                    >
-                                        <ChevronRight className="h-6 w-6" />
-                                    </button>
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-background rounded-none shadow-2xl">
+                                            <SelectItem value="all" className="font-black text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
+                                            <SelectItem value="group" className="font-black text-xs">{tMatch("group")}</SelectItem>
+                                            {['A', 'B', 'C', 'D'].map(l => (
+                                                <SelectItem key={l} value={`Group ${l}`} className="font-black text-xs">{tMatch("group")} {l}</SelectItem>
+                                            ))}
+                                            <SelectItem value="round_of_16" className="font-black text-xs">{tMatch("round_of_16")}</SelectItem>
+                                            <SelectItem value="quarter_final" className="font-black text-xs">{tMatch("quarter_final")}</SelectItem>
+                                            <SelectItem value="semi_final" className="font-black text-xs">{tMatch("semi_final")}</SelectItem>
+                                            <SelectItem value="final" className="font-black text-xs">{tMatch("final")}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
-
-                            {/* Stage Filter - Integrated Style */}
-                            <div className="w-full">
-                                <Select value={filterStage} onValueChange={setFilterStage}>
-                                    <SelectTrigger className="w-full focus:ring-0 font-black">
-                                        <div className="flex flex-col items-start">
-                                            <SelectValue placeholder={tMatch("round")} />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-background rounded-none shadow-2xl">
-                                        <SelectItem value="all" className="font-black text-xs">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                        <SelectItem value="group" className="font-black text-xs">{tMatch("group")}</SelectItem>
-                                        {['A', 'B', 'C', 'D'].map(l => (
-                                            <SelectItem key={l} value={`Group ${l}`} className="font-black text-xs">{tMatch("group")} {l}</SelectItem>
-                                        ))}
-                                        <SelectItem value="round_of_16" className="font-black text-xs">{tMatch("round_of_16")}</SelectItem>
-                                        <SelectItem value="quarter_final" className="font-black text-xs">{tMatch("quarter_final")}</SelectItem>
-                                        <SelectItem value="semi_final" className="font-black text-xs">{tMatch("semi_final")}</SelectItem>
-                                        <SelectItem value="final" className="font-black text-xs">{tMatch("final")}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
                         )}
 
                         {/* Management Controls */}

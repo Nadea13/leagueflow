@@ -1,6 +1,6 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
-import { MatchConsolePage } from "@/components/matches/match-console-page";
+import { MatchConsolePage } from "@/features/matches/match-console-page";
 import { MatchEvent } from "@/types";
 
 export default async function AdminMatchConsole(props: {

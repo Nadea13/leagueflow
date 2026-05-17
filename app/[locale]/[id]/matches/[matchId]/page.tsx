@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { MatchConsolePage } from "@/components/matches/match-console-page";
+import { MatchConsolePage } from "@/features/matches/match-console-page";
 import { MatchEvent } from "@/types";
 import { PublicFooter } from "@/components/layout/public-footer";
 import { getPlans } from "@/actions/admin/plans";
@@ -54,7 +54,7 @@ export default async function PublicMatchConsole(props: {
         `)
         .eq('id', id)
         .single();
-    
+
     // Fetch initial events
     const { data: events } = await supabase
         .from('match_events')

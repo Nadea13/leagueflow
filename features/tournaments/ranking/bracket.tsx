@@ -10,9 +10,9 @@ import {
     ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { ByeNode } from "@/components/tournaments/builder/bye-node";
-import { GroupNode } from "@/components/tournaments/builder/group-node";
-import { MatchNode } from "@/components/tournaments/builder/match-node";
+import { ByeNode } from "@/features/tournaments/builder/bye-node";
+import { GroupNode } from "@/features/tournaments/builder/group-node";
+import { MatchNode } from "@/features/tournaments/builder/match-node";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";

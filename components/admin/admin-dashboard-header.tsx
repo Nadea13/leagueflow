@@ -6,7 +6,7 @@ import { Menu } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { UserDropdown } from "@/components/dashboard/user-dropdown"
+import { UserDropdown } from "@/features/dashboard/user-dropdown"
 import { useState } from "react"
 import { LayoutDashboard, Users, Trophy, CreditCard, UserSearch } from "lucide-react"
 

@@ -11,23 +11,23 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslations } from "next-intl";
 import { Tournament, TournamentTeam } from "@/types/index";
 
-import { Collaborators } from "@/components/tournaments/settings/collaborators";
-import { VenueManager } from "@/components/tournaments/settings/venue-manager";
-import { RulesConfig } from "@/components/tournaments/settings/rules-config";
+import { Collaborators } from "@/features/tournaments/settings/collaborators";
+import { VenueManager } from "@/features/tournaments/settings/venue-manager";
+import { RulesConfig } from "@/features/tournaments/settings/rules-config";
 import { GeneralInfo } from "./general-info";
 import { RegistrationSettings } from "./registration-settings";
 
 
 
-export function TournamentSettings({ 
-    tournament, 
-    hasFixtures, 
+export function TournamentSettings({
+    tournament,
+    hasFixtures,
     teams,
     activeTab = 'general'
-}: { 
-    tournament: Tournament; 
-    hasFixtures: boolean; 
-    userPlan?: string; 
+}: {
+    tournament: Tournament;
+    hasFixtures: boolean;
+    userPlan?: string;
     teams: TournamentTeam[];
     activeTab?: string;
 }) {
@@ -71,9 +71,9 @@ export function TournamentSettings({
         <div className="space-y-6">
             {activeTab === 'general' && <GeneralInfo tournament={tournament} />}
             {activeTab === 'registration' && (
-                <RegistrationSettings 
-                    tournament={tournament} 
-                    onUpgrade={() => router.push(`${window.location.pathname}?tab=settings&action=upgrade`)} 
+                <RegistrationSettings
+                    tournament={tournament}
+                    onUpgrade={() => router.push(`${window.location.pathname}?tab=settings&action=upgrade`)}
                 />
             )}
             {activeTab === 'rules' && <RulesConfig tournamentId={tournamentId} />}
@@ -82,10 +82,10 @@ export function TournamentSettings({
                 <Collaborators tournamentId={tournamentId} togglePayment={togglePayment} />
             )}
             {activeTab === 'danger' && (
-                <DangerZone 
-                    tournamentId={tournamentId} 
-                    tournamentName={tournament.name} 
-                    hasFixtures={hasFixtures} 
+                <DangerZone
+                    tournamentId={tournamentId}
+                    tournamentName={tournament.name}
+                    hasFixtures={hasFixtures}
                 />
             )}
         </div>

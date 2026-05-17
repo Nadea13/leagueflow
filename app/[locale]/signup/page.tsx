@@ -1,8 +1,8 @@
 "use client";
 
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
-import { SignUpForm } from "@/components/auth/sign-up-form";
-import { AuthNavbar } from "@/components/auth/auth-navbar";
+import { OAuthButtons } from "@/features/auth/oauth-buttons";
+import { SignUpForm } from "@/features/auth/sign-up-form";
+import { AuthNavbar } from "@/features/auth/auth-navbar";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";

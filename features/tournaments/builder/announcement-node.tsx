@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { Megaphone, Trash2 } from "lucide-react";
-import { Announcements } from "@/components/tournaments/management/announcements";
+import { Announcements } from "@/features/tournaments/management/announcements";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ export const AnnouncementNode = memo(({ id, data, selected }: NodeProps) => {
     return (
         <div className={cn(
             "relative w-[300px] border bg-card text-card-foreground transition-all",
-            selected 
+            selected
                 ? "border-amber-500 ring-2 ring-amber-500/30"
                 : "border-border hover:border-amber-500/50"
         )}>
@@ -40,9 +40,9 @@ export const AnnouncementNode = memo(({ id, data, selected }: NodeProps) => {
 
             {/* Content */}
             <div className="p-4 max-h-[400px] overflow-y-auto custom-scrollbar bg-background/30">
-                <Announcements 
-                    tournamentId={tournamentId} 
-                    isEditable={!readonly} 
+                <Announcements
+                    tournamentId={tournamentId}
+                    isEditable={!readonly}
                     isCompact={true}
                     mode="list"
                 />

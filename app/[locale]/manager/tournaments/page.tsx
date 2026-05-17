@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 
-import { PublicTournaments } from "@/components/tournaments/public/public-tournaments-list";
+import { PublicTournaments } from "@/features/tournaments/public/public-tournaments-list";
 import { getPublicTournaments } from "@/actions/public/public-tournaments";
-import { TournamentSearchHeader } from "@/components/tournaments/public/tournament-search-bar";
+import { TournamentSearchHeader } from "@/features/tournaments/public/tournament-search-bar";
 
 export default async function ManagerTournamentsPage() {
     const t = await getTranslations("PublicTournaments");

@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
-import { DashboardCard } from "@/components/dashboard/dashboard-card";
+import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { Users } from "lucide-react";
-import { CreateTeamDialog } from "@/components/dashboard/create-team-dialog";
+import { CreateTeamDialog } from "@/features/dashboard/create-team-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export default async function MyTeamsPage() {
@@ -53,16 +53,16 @@ export default async function MyTeamsPage() {
                     </div>
                 ) : (
                     teams.map((team) => (
-                        <DashboardCard 
-                            key={team.id} 
-                            type="team" 
+                        <DashboardCard
+                            key={team.id}
+                            type="team"
                             data={{
                                 ...team,
-                                tournament: (team.participations && (team.participations as Array<{ tournament: { name: string } }>).length > 0) 
-                                    ? (team.participations as Array<{ tournament: { name: string } }>)[0].tournament 
+                                tournament: (team.participations && (team.participations as Array<{ tournament: { name: string } }>).length > 0)
+                                    ? (team.participations as Array<{ tournament: { name: string } }>)[0].tournament
                                     : null
-                            }} 
-                            mode="team" 
+                            }}
+                            mode="team"
                         />
                     ))
                 )}

@@ -7,11 +7,11 @@ import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
 import { useAnalytics } from "@/hooks/use-analytics"
 
-import { BugReportDialog } from "@/components/dashboard/bug-report-dialog"
+import { BugReportDialog } from "@/features/dashboard/bug-report-dialog"
 import { LayoutGrid, Users as UsersIcon } from "lucide-react"
 import { Tab } from "@/components/ui/tab"
-import { UserDropdown } from "@/components/dashboard/user-dropdown"
-import { BecomeOrganizerDialog } from "@/components/dashboard/become-organizer-dialog"
+import { UserDropdown } from "@/features/dashboard/user-dropdown"
+import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog"
 
 export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode, userEmail, userName }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team', userEmail?: string, userName?: string | null }) {
     const pathname = usePathname()

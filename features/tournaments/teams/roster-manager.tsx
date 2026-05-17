@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { Player, TournamentTeam } from "@/types/index";
 import { getPlayers, deletePlayer } from "@/actions/organizer/tournaments/player";
-import { EditTeamForm } from "@/components/squads/edit-team-form";
+import { EditTeamForm } from "@/features/teams/edit-team-form";
 
-import { AddPlayerForm } from "@/components/squads/add-player-form";
-import { SquadList } from "@/components/squads/squad-list";
+import { AddPlayerForm } from "@/features/teams/add-player-form";
+import { SquadList } from "@/features/teams/squad-list";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";

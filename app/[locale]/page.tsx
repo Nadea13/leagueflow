@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 import { getPlans } from "@/actions/admin/plans";
 
-import { PublicMatchesHome } from "@/components/tournaments/public/public-matches-home";
+import { PublicMatchesHome } from "@/features/tournaments/public/public-matches-home";
 import { createClient } from "@/lib/supabase/server";
 import { PublicFooter } from "@/components/layout/public-footer";
 

@@ -45,9 +45,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
 import { BracketCanvasData, Match, Tournament, TournamentTeam } from "@/types";
-import { MatchManager } from "@/components/tournaments/matches/match-manager";
-import { TournamentSettings } from "@/components/tournaments/settings/tournament-settings";
-import { MatchGenerator } from "@/components/tournaments/matches/match-generator";
+import { MatchManager } from "@/features/tournaments/matches/match-manager";
+import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
+import { MatchGenerator } from "@/features/tournaments/matches/match-generator";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -59,7 +59,7 @@ import { StandingNode } from "./standing-node";
 import { TeamListNode } from "./team-list-node";
 import { AnnouncementNode } from "./announcement-node";
 import { NodeSettings } from "./node-settings";
-import { Announcements } from "@/components/tournaments/management/announcements";
+import { Announcements } from "@/features/tournaments/management/announcements";
 import { Input } from "@/components/ui/input";
 import {
     Dialog,
@@ -914,9 +914,9 @@ function CanvasInternal({
                                 }}
                             >
                                 <Background color="#333" variant={BackgroundVariant.Dots} gap={40} size={4} style={{ opacity: 1 }} />
-                                <Controls 
+                                <Controls
                                     showInteractive={false}
-                                    className="!bg-card !border-border !rounded-none !shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted" 
+                                    className="!bg-card !border-border !rounded-none !shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
                                 />
                             </ReactFlow>
                         </div>

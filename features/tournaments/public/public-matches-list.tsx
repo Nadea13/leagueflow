@@ -1,27 +1,27 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { MatchCard } from "@/components/tournaments/matches/match-card";
+import { MatchCard } from "@/features/tournaments/matches/match-card";
 import { useTranslations } from "next-intl";
 import { Match, MatchEvent, Team } from "@/types";
 
 import { Calendar, ChevronDown } from "lucide-react";
 
-export function PublicMatches({ 
-    matches, 
-    tournamentId, 
+export function PublicMatches({
+    matches,
+    tournamentId,
     teams = [],
-    events: _events = [] 
-}: { 
-    matches: Match[]; 
-    tournamentId: string; 
+    events: _events = []
+}: {
+    matches: Match[];
+    tournamentId: string;
     teams?: Team[];
-    events?: MatchEvent[] 
+    events?: MatchEvent[]
 }) {
     const t = useTranslations("PublicView");
     const tMatch = useTranslations("Match");
     const tBracket = useTranslations("Bracket");
-    
+
     const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
     const hasInitialized = useRef(false);
@@ -124,7 +124,7 @@ export function PublicMatches({
                             <div className="animate-in fade-in slide-in-from-top-1 duration-200">
                                 {sortedStages.map((stageKey) => {
                                     const stageMatches = stageGroups[stageKey];
-                                    
+
                                     // Determine stage label
                                     let stageLabel = "";
                                     if (stageKey === 'round_of_16') stageLabel = tBracket("round_of_16");

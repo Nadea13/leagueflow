@@ -17,9 +17,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Teams } from "@/components/tournaments/teams/team-list";
-import { Registrations } from "@/components/tournaments/management/registrations";
-import { TeamForm } from "@/components/tournaments/teams/team-form";
+import { Teams } from "@/features/tournaments/teams/team-list";
+import { Registrations } from "@/features/tournaments/management/registrations";
+import { TeamForm } from "@/features/tournaments/teams/team-form";
 import { Plus } from "lucide-react";
 import {
     Dialog,
@@ -87,9 +87,9 @@ export function NodeSettings() {
                 {/* ── Header based on type ── */}
                 <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-sm border">
                     <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-violet-500' :
-                            type === 'matchNode' ? 'bg-primary' :
-                                type === 'standingNode' ? 'bg-emerald-500' :
-                                    type === 'teamListNode' ? 'bg-blue-500' : 'bg-amber-500'
+                        type === 'matchNode' ? 'bg-primary' :
+                            type === 'standingNode' ? 'bg-emerald-500' :
+                                type === 'teamListNode' ? 'bg-blue-500' : 'bg-amber-500'
                         }`}>
                         {type === 'groupNode' ? <Users className="h-4 w-4 text-white" /> :
                             type === 'matchNode' ? <Trophy className="h-4 w-4 text-white" /> :
