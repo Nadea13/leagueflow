@@ -44,7 +44,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                 onOpenChange(false);
 
                 // Navigate immediately to organizer dashboard
-                router.push('/organizer/dashboard');
+                router.push('/dashboard');
 
                 // Refresh to update server-side role check if any
                 setTimeout(() => {

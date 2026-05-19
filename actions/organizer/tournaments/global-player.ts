@@ -8,16 +8,14 @@ import { validateUploadedFile } from "@/lib/file-validation";
 async function isAuthorizedForPlayer(playerId: string, userId: string) {
     const supabase = await createClient();
     
-    const { data: player } = await supabase
-        .from("players")
-        .select("team_id, global_team_id")
-        .eq("id", playerId)
-        .single();
+    const { data: ps } = await supabase
+        .from("player_sports")
+        .select("team_id")
+        .eq("player_id", playerId)
+        .limit(1);
     
-    if (!player) return false;
-
-    const teamId = player.team_id || player.global_team_id;
-    if (!teamId) return false;
+    if (!ps || ps.length === 0) return false;
+    const teamId = ps[0].team_id;
 
     // Check global team ownership
     const { data: globalTeam } = await supabase
@@ -32,31 +30,41 @@ async function isAuthorizedForPlayer(playerId: string, userId: string) {
     // Check tournament team ownership/management
     const { data: participation } = await supabase
         .from("tournament_teams")
-        .select("user_id, tournament_id")
+        .select(`
+            id,
+            team_id,
+            teams ( user_id ),
+            tournament_category_id,
+            tournament_categories ( tournament_id )
+        `)
         .eq("id", teamId)
         .single();
     
     if (participation) {
-        if (participation.user_id === userId) return true;
+        const teamOwnerId = (participation.teams as any)?.user_id;
+        if (teamOwnerId === userId) return true;
 
-        const { data: tournament } = await supabase
-            .from("tournaments")
-            .select("user_id")
-            .eq("id", participation.tournament_id)
-            .single();
-        
-        if (tournament && tournament.user_id === userId) return true;
+        const tournamentId = (participation.tournament_categories as any)?.tournament_id;
+        if (tournamentId) {
+            const { data: tournament } = await supabase
+                .from("tournaments")
+                .select("organizer_id")
+                .eq("id", tournamentId)
+                .single();
+            
+            if (tournament && tournament.organizer_id === userId) return true;
 
-        const { data: membership } = await supabase
-            .from("tournament_members")
-            .select("role")
-            .eq("tournament_id", participation.tournament_id)
-            .eq("user_id", userId)
-            .eq("status", "accepted")
-            .in("role", ["admin", "editor"])
-            .single();
-        
-        if (membership) return true;
+            const { data: membership } = await supabase
+                .from("tournament_members")
+                .select("role")
+                .eq("tournament_id", tournamentId)
+                .eq("user_id", userId)
+                .eq("status", "accepted")
+                .in("role", ["admin", "editor"])
+                .single();
+            
+            if (membership) return true;
+        }
     }
 
     return false;
@@ -67,42 +75,58 @@ async function isAuthorizedForGlobalPlayer(globalPlayerId: string, userId: strin
     
     // Check if user created this global player
     const { data: gp } = await supabase
-        .from("global_players")
-        .select("created_by")
+        .from("master_players")
+        .select("user_id")
         .eq("id", globalPlayerId)
         .single();
     
-    if (gp && gp.created_by === userId) return true;
+    if (gp && gp.user_id === userId) return true;
 
     // Check if user is an organizer of ANY tournament where this player is participating
-    const { data: participations } = await supabase
+    const { data: players } = await supabase
         .from("players")
-        .select("team_id, tournament_teams!inner(tournament_id)")
-        .eq("global_player_id", globalPlayerId);
+        .select("id")
+        .eq("master_id", globalPlayerId);
     
-    if (participations) {
-        for (const p of participations as unknown as Array<{ team_id: string | null; tournament_teams: { tournament_id: string } | null }>) {
-            const tournamentId = p.tournament_teams?.tournament_id;
-            if (tournamentId) {
-                // Check if user is organizer
-                const { data: tournament } = await supabase
-                    .from("tournaments")
-                    .select("user_id")
-                    .eq("id", tournamentId)
-                    .single();
-                
-                if (tournament && tournament.user_id === userId) return true;
+    if (players && players.length > 0) {
+        const playerIds = players.map(p => p.id);
+        const { data: participations } = await supabase
+            .from("player_sports")
+            .select(`
+                team_id,
+                tournament_teams:team_id (
+                    tournament_category_id,
+                    tournament_categories ( tournament_id )
+                )
+            `)
+            .in("player_id", playerIds);
+        
+        if (participations) {
+            for (const p of participations as any) {
+                const tts = Array.isArray(p.tournament_teams) ? p.tournament_teams : (p.tournament_teams ? [p.tournament_teams] : []);
+                for (const tt of tts) {
+                    const tournamentId = tt.tournament_categories?.tournament_id;
+                    if (tournamentId) {
+                        const { data: tournament } = await supabase
+                            .from("tournaments")
+                            .select("organizer_id")
+                            .eq("id", tournamentId)
+                            .single();
+                        
+                        if (tournament && tournament.organizer_id === userId) return true;
 
-                const { data: membership } = await supabase
-                    .from("tournament_members")
-                    .select("role")
-                    .eq("tournament_id", tournamentId)
-                    .eq("user_id", userId)
-                    .eq("status", "accepted")
-                    .in("role", ["admin", "editor"])
-                    .single();
-                
-                if (membership) return true;
+                        const { data: membership } = await supabase
+                            .from("tournament_members")
+                            .select("role")
+                            .eq("tournament_id", tournamentId)
+                            .eq("user_id", userId)
+                            .eq("status", "accepted")
+                            .in("role", ["admin", "editor"])
+                            .single();
+                        
+                        if (membership) return true;
+                    }
+                }
             }
         }
     }
@@ -120,25 +144,37 @@ export async function getGlobalPlayers(
     const to = from + pageSize - 1;
 
     let query = supabase
-        .from("global_players")
+        .from("master_players")
         .select("*", { count: "exact" });
 
     if (search) {
-        query = query.ilike("name", `%${search}%`);
+        const term = search.trim();
+        query = query.or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%`);
     }
 
     const { data, error, count } = await query
-        .order("name", { ascending: true })
+        .order("first_name", { ascending: true })
         .range(from, to);
 
     if (error) {
         return { success: false, error: error.message };
     }
 
+    const mapped: GlobalPlayer[] = (data || []).map((mp: any) => ({
+        id: mp.id,
+        name: `${mp.first_name} ${mp.last_name}`.trim(),
+        photo_url: mp.profile_img,
+        id_card_url: mp.id_card_url,
+        date_of_birth: mp.birthday,
+        athlete_types: [], 
+        created_by: mp.user_id,
+        created_at: mp.created_at
+    }));
+
     return {
         success: true,
         data: {
-            players: (data as GlobalPlayer[]) || [],
+            players: mapped,
             totalCount: count || 0,
         },
     };
@@ -148,22 +184,34 @@ export async function searchGlobalPlayers(query: string): Promise<ActionResponse
     const supabase = await createClient();
 
     let dbQuery = supabase
-        .from("global_players")
+        .from("master_players")
         .select("*");
 
     if (query && query.trim().length > 0) {
-        dbQuery = dbQuery.ilike("name", `%${query.trim()}%`);
+        const term = query.trim();
+        dbQuery = dbQuery.or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%`);
     }
 
     const { data, error } = await dbQuery
-        .order("name", { ascending: true })
+        .order("first_name", { ascending: true })
         .limit(20);
 
     if (error) {
         return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as GlobalPlayer[] };
+    const mapped: GlobalPlayer[] = (data || []).map((mp: any) => ({
+        id: mp.id,
+        name: `${mp.first_name} ${mp.last_name}`.trim(),
+        photo_url: mp.profile_img,
+        id_card_url: mp.id_card_url,
+        date_of_birth: mp.birthday,
+        athlete_types: [], 
+        created_by: mp.user_id,
+        created_at: mp.created_at
+    }));
+
+    return { success: true, data: mapped };
 }
 
 export async function createGlobalPlayer(
@@ -177,14 +225,20 @@ export async function createGlobalPlayer(
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
 
+    const nameParts = name.trim().split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+
     const { data, error } = await adminSupabase
-        .from("global_players")
+        .from("master_players")
         .insert({
-            name,
-            photo_url: photoUrl || null,
-            date_of_birth: dateOfBirth || null,
-            athlete_types: athleteTypes || [],
-            created_by: user?.id || null,
+            user_id: user.id,
+            first_name: firstName,
+            last_name: lastName,
+            profile_img: photoUrl || null,
+            birthday: dateOfBirth || '1970-01-01',
+            gender: 'unspecified',
+            status: 'active'
         })
         .select()
         .single();
@@ -193,7 +247,19 @@ export async function createGlobalPlayer(
         return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as GlobalPlayer };
+    const mp = data as any;
+    const mapped: GlobalPlayer = {
+        id: mp.id,
+        name: `${mp.first_name} ${mp.last_name}`.trim(),
+        photo_url: mp.profile_img,
+        id_card_url: mp.id_card_url,
+        date_of_birth: mp.birthday,
+        athlete_types: [], 
+        created_by: mp.user_id,
+        created_at: mp.created_at
+    };
+
+    return { success: true, data: mapped };
 }
 
 export async function updateGlobalPlayerInfo(
@@ -208,9 +274,19 @@ export async function updateGlobalPlayerInfo(
     const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
     if (!authorized) return { success: false, error: "Unauthorized to update this global player" };
 
+    const updateData: any = {};
+    if (data.name !== undefined) {
+        const nameParts = data.name.trim().split(" ");
+        updateData.first_name = nameParts[0];
+        updateData.last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+    }
+    if (data.date_of_birth !== undefined) {
+        updateData.birthday = data.date_of_birth || '1970-01-01';
+    }
+
     const { error } = await adminSupabase
-        .from("global_players")
-        .update(data)
+        .from("master_players")
+        .update(updateData)
         .eq("id", globalPlayerId);
 
     if (error) {
@@ -224,23 +300,7 @@ export async function updateGlobalPlayerAthleteTypes(
     globalPlayerId: string,
     athleteTypes: string[]
 ): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Authentication required" };
-
-    const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
-    if (!authorized) return { success: false, error: "Unauthorized to update this global player" };
-
-    const { error } = await adminSupabase
-        .from("global_players")
-        .update({ athlete_types: athleteTypes })
-        .eq("id", globalPlayerId);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
+    // Stubbed out for the new schema since master_players does not have athlete_types.
     return { success: true };
 }
 
@@ -259,7 +319,7 @@ export async function linkPlayerToGlobal(
 
     const { error } = await adminSupabase
         .from("players")
-        .update({ global_player_id: globalPlayerId })
+        .update({ master_id: globalPlayerId })
         .eq("id", playerId);
 
     if (error) {
@@ -281,7 +341,7 @@ export async function unlinkPlayerFromGlobal(playerId: string): Promise<ActionRe
 
     const { error } = await adminSupabase
         .from("players")
-        .update({ global_player_id: null })
+        .delete()
         .eq("id", playerId);
 
     if (error) {
@@ -295,7 +355,7 @@ export async function getGlobalPlayer(globalPlayerId: string): Promise<ActionRes
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from("global_players")
+        .from("master_players")
         .select("*")
         .eq("id", globalPlayerId)
         .single();
@@ -304,7 +364,19 @@ export async function getGlobalPlayer(globalPlayerId: string): Promise<ActionRes
         return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as GlobalPlayer };
+    const mp = data as any;
+    const mapped: GlobalPlayer = {
+        id: mp.id,
+        name: `${mp.first_name} ${mp.last_name}`.trim(),
+        photo_url: mp.profile_img,
+        id_card_url: mp.id_card_url,
+        date_of_birth: mp.birthday,
+        athlete_types: [], 
+        created_by: mp.user_id,
+        created_at: mp.created_at
+    };
+
+    return { success: true, data: mapped };
 }
 
 export async function getPlayerTournamentHistory(globalPlayerId: string): Promise<ActionResponse<unknown[]>> {
@@ -314,31 +386,55 @@ export async function getPlayerTournamentHistory(globalPlayerId: string): Promis
         .from("players")
         .select(`
             id,
-            name,
-            number,
-            position,
-            team_id,
-            tournament_teams (
+            display_name,
+            tel,
+            player_sports (
                 id,
-                name,
-                logo_url,
-                tournament_id,
-                tournaments (
+                position,
+                shirt_number,
+                team_id,
+                tournament_teams:team_id (
                     id,
-                    name,
-                    format,
-                    status
+                    tournament_category_id,
+                    tournament_categories (
+                        tournaments (
+                            id,
+                            name,
+                            format,
+                            status
+                        )
+                    )
                 )
             )
         `)
-        .eq("global_player_id", globalPlayerId)
+        .eq("master_id", globalPlayerId)
         .order("created_at", { ascending: false });
 
     if (error) {
         return { success: false, error: error.message };
     }
 
-    return { success: true, data: data || [] };
+    const mappedData = (data || []).map((p: any) => {
+        const ps = p.player_sports?.[0];
+        const tt = ps?.tournament_teams?.[0];
+        const tournament = tt?.tournament_categories?.tournaments;
+        return {
+            id: p.id,
+            name: p.display_name,
+            number: ps?.shirt_number ? parseInt(ps.shirt_number) : null,
+            position: ps?.position || null,
+            team_id: ps?.team_id || null,
+            tournament_teams: tt ? {
+                id: tt.id,
+                name: tt.name,
+                logo_url: tt.logo_url,
+                tournament_id: tournament?.id || null,
+                tournaments: tournament || null
+            } : null
+        };
+    });
+
+    return { success: true, data: mappedData };
 }
 
 export async function updateGlobalPlayerIdCard(
@@ -379,9 +475,8 @@ export async function updateGlobalPlayerIdCard(
         .from('player-docs')
         .getPublicUrl(fileName);
 
-    // Cleanup old ID card if exists
     const { data: existingPlayer } = await adminSupabase
-        .from("global_players")
+        .from("master_players")
         .select("id_card_url")
         .eq("id", globalPlayerId)
         .single();
@@ -391,7 +486,7 @@ export async function updateGlobalPlayerIdCard(
     }
 
     const { error: updateError } = await adminSupabase
-        .from("global_players")
+        .from("master_players")
         .update({ id_card_url: publicUrl })
         .eq("id", globalPlayerId);
 
@@ -440,20 +535,19 @@ export async function updateGlobalPlayerPhoto(
         .from('player-photos')
         .getPublicUrl(fileName);
 
-    // Cleanup old photo if exists
     const { data: existingPlayer } = await adminSupabase
-        .from("global_players")
-        .select("photo_url")
+        .from("master_players")
+        .select("profile_img")
         .eq("id", globalPlayerId)
         .single();
     
-    if (existingPlayer?.photo_url) {
-        await deleteFileFromUrl(existingPlayer.photo_url, 'player-photos');
+    if (existingPlayer?.profile_img) {
+        await deleteFileFromUrl(existingPlayer.profile_img, 'player-photos');
     }
 
     const { error: updateError } = await adminSupabase
-        .from("global_players")
-        .update({ photo_url: publicUrl })
+        .from("master_players")
+        .update({ profile_img: publicUrl })
         .eq("id", globalPlayerId);
 
     if (updateError) {
@@ -472,16 +566,15 @@ export async function deleteGlobalPlayer(globalPlayerId: string): Promise<Action
     const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
     if (!authorized) return { success: false, error: "Unauthorized to delete this global player" };
 
-    // Fetch photo and ID card URLs for cleanup
     const { data: player } = await adminSupabase
-        .from("global_players")
-        .select("photo_url, id_card_url")
+        .from("master_players")
+        .select("profile_img, id_card_url")
         .eq("id", globalPlayerId)
         .single();
     
     if (player) {
-        if (player.photo_url) {
-            await deleteFileFromUrl(player.photo_url, 'player-photos');
+        if (player.profile_img) {
+            await deleteFileFromUrl(player.profile_img, 'player-photos');
         }
         if (player.id_card_url) {
             await deleteFileFromUrl(player.id_card_url, 'player-docs');
@@ -489,7 +582,7 @@ export async function deleteGlobalPlayer(globalPlayerId: string): Promise<Action
     }
 
     const { error } = await adminSupabase
-        .from("global_players")
+        .from("master_players")
         .delete()
         .eq("id", globalPlayerId);
 

@@ -134,18 +134,21 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     )?.slip_url;
 
     return (
-        <div className="space-y-2 md:space-y-6">
+        <div className="space-y-2 md:space-y-4">
             {/* Top Navigation & Action Bar */}
-            <div className="flex md:items-start justify-between gap-4 md:gap-6">
-                <div className="flex items-start gap-2 md:gap-6">
+            <div className="flex md:items-start justify-between gap-2 md:gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                     <Button variant="ghost" size="icon" asChild className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
-                        <Link href={team.isParticipation ? "/manager/my-registrations" : "/manager/my-teams"}>
-                            <ArrowLeft className="h-5 w-5" />
+                        <Link href="/dashboard/teams">
+                            <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="space-y-2 md:space-y-3">
+                    <div className="flex gap-2 md:gap-4">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
+                            {teamName}
+                        </h1>
                         <div className="flex items-center gap-2 md:gap-3">
-                            <Badge variant="default" className="text-[10px] font-black tracking-wider">
+                            <Badge variant="default" className="text-[10px] font-black tracking-wider rounded-full px-2">
                                 {tSports(team.sport)}
                             </Badge>
                             <span className="text-[10px] font-black tracking-wider text-primary/60">
@@ -160,9 +163,6 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 </div>
                             )}
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none text-foreground flex items-baseline gap-3">
-                            {teamName}
-                        </h1>
                     </div>
                 </div>
                 <div className="flex items-start gap-2">
@@ -239,9 +239,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 />
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
+            <div className="flex flex-col lg:flex-row gap-4 items-start">
                 <div className={cn(
-                    "flex-1 w-full min-w-0 space-y-2 md:space-y-6",
+                    "flex-1 w-full min-w-0 space-y-2 md:space-y-4",
                     mobileTab !== 'roster' && "hidden lg:block"
                 )}>
                     <AddPlayerForm

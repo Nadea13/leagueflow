@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PenaltyShot } from "@/types/index";
-import { getPenaltyShootout, addPenaltyShot, clearPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/penalty-actions";
+import { getPenaltyShootout, addPenaltyShot, clearPenaltyShootout } from "@/app/[locale]/dashboard/tournaments/[id]/penalty-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Target, Check, X, Trash2, AlertTriangle } from "lucide-react";

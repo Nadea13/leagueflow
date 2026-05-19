@@ -73,7 +73,7 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                     title: tCommon("success"),
                     description: t("delete_success_desc") || "Tournament deleted successfully",
                 });
-                router.push("/organizer/tournaments");
+                router.push("/dashboard/tournaments");
             } else {
                 toast({
                     title: tCommon("error"),
@@ -189,12 +189,12 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest uppercase">
+                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleReset}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest uppercase"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             {t("reset_confirm")}
                         </AlertDialogAction>

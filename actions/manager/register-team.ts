@@ -233,40 +233,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             return { success: false, error: "Failed to initialize tournament squad" };
         }
 
-        // 6. Copy Players immediately if from existing team
-        if (existingTeamId) {
-            console.log(`[Registration] Copying players from team ${existingTeamId} to ${teamData.id}`);
-            const { data: sourcePlayers, error: fetchPlayersError } = await adminSupabase
-                .from("players")
-                .select("*")
-                .or(`team_id.eq.${existingTeamId},global_team_id.eq.${existingTeamId}`);
-
-            if (fetchPlayersError) {
-                console.error("[Registration] Error fetching source players:", fetchPlayersError);
-            } else if (sourcePlayers && sourcePlayers.length > 0) {
-                const playersToInsert = sourcePlayers.map(p => ({
-                    team_id: teamData.id,
-                    global_team_id: null,
-                    name: p.name,
-                    number: p.number,
-                    position: p.position,
-                    global_player_id: p.global_player_id,
-                    created_at: new Date().toISOString()
-                }));
-
-                const { error: playersInsertError } = await adminSupabase
-                    .from("players")
-                    .insert(playersToInsert);
-
-                if (playersInsertError) {
-                    console.error("[Registration] Error inserting players into tournament squad:", playersInsertError);
-                } else {
-                    console.log(`[Registration] Successfully copied ${playersToInsert.length} players.`);
-                }
-            } else {
-                console.log("[Registration] Source team has no players to copy.");
-            }
-        }
+        // 6. Roster is shared globally via player_sports, so no player copy is required.
 
         // 7. Insert Registration (Using Admin Client to bypass RLS)
         console.log("[registerTeam] Inserting registration record...");

@@ -317,7 +317,7 @@ export function NodeSettings() {
                                                         size="sm"
                                                         className="w-full h-7 text-[9px] font-black tracking-widest gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none"
                                                     >
-                                                        <Link href={`/organizer/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || data.matchId}`}>
+                                                        <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || data.matchId}`}>
                                                             <ExternalLink className="h-2.5 w-2.5" />
                                                             MATCH CONSOLE
                                                         </Link>
@@ -372,7 +372,7 @@ export function NodeSettings() {
 
                             <div className="space-y-2 md:space-y-3 pt-4 border-t">
                                 <div className="flex items-center justify-between">
-                                    <h4 className="text-[10px] font-black tracking-widest text-primary flex items-center gap-2 uppercase">
+                                    <h4 className="text-[10px] font-black tracking-widest text-primary flex items-center gap-2">
                                         <Users className="h-3 w-3" />
                                         {t("participating_teams") || "Participating Teams"}
                                     </h4>
@@ -382,7 +382,7 @@ export function NodeSettings() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-7 px-2 text-[9px] font-black tracking-widest uppercase border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                                                className="h-7 px-2 text-[9px] font-black tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
                                             >
                                                 <Plus className="h-3.5 w-3.5 mr-1" />
                                                 {t("add_team_button") || "Add Team"}
@@ -390,7 +390,7 @@ export function NodeSettings() {
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-[500px] border-border/50">
                                             <DialogHeader>
-                                                <DialogTitle className="text-xl font-black tracking-tighter uppercase">{t("add_team")}</DialogTitle>
+                                                <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
                                             </DialogHeader>
                                             <div className="py-4">
                                                 <TeamForm

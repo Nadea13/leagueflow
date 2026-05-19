@@ -52,15 +52,14 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
             const { data: profile } = await supabase
-                .from("profiles")
+                .from("users")
                 .select("is_organizer")
                 .eq("id", user.id)
                 .single();
 
-            const rolePath = profile?.is_organizer ? "/organizer" : "/manager";
             const finalDestination = redirectTo
                 ? (redirectTo.startsWith('http') ? redirectTo : `${origin}${redirectTo}`)
-                : `${origin}${rolePath}/dashboard`;
+                : `${origin}/dashboard`;
             
             return NextResponse.redirect(finalDestination);
         }

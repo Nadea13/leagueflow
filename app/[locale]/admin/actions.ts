@@ -16,7 +16,7 @@ export async function getAdminStats() {
     const supabase = createAdminClient();
 
     // Total Users
-    const { count: totalUsers } = await supabase.from("profiles").select("*", { count: 'exact', head: true });
+    const { count: totalUsers } = await supabase.from("users").select("*", { count: 'exact', head: true });
 
     // Active Tournaments
     const { count: activeTournaments } = await supabase.from("tournaments").select("*", { count: 'exact', head: true }).eq("status", "active");
@@ -45,7 +45,7 @@ export async function getUsers() {
     const supabase = createAdminClient();
 
     const { data, error } = await supabase
-        .from("profiles")
+        .from("users")
         .select("id, email, full_name, role")
         .limit(5000);
 
@@ -62,7 +62,7 @@ export async function updateUserRole(userId: string, newRole: string): Promise<A
     if (!auth.authorized) return { success: false, error: auth.error };
 
     const { error } = await auth.supabase
-        .from("profiles")
+        .from("users")
         .update({ role: newRole })
         .eq("id", userId);
 
@@ -191,7 +191,7 @@ export async function getAllTournaments() {
 
     // Fetch users for mapping
     const { data: users } = await supabase
-        .from("profiles")
+        .from("users")
         .select("id, email, full_name");
 
     const userMap = new Map(users?.map((u: { id: string; email?: string | null; full_name?: string | null }) => [u.id, u]) || []);

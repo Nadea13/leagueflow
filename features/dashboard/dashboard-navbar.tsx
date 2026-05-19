@@ -2,16 +2,13 @@
 
 import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
-import { Menu, LayoutGrid, Users as UsersIcon } from "lucide-react"
+import { Menu } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { UserDropdown } from "@/features/dashboard/user-dropdown"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { getNavItems } from "@/config/nav"
-import { useRouter } from "next/navigation"
-import { Tab } from "@/components/ui/tab"
-import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog"
 
 interface DashboardNavbarProps {
     userEmail?: string
@@ -22,66 +19,12 @@ interface DashboardNavbarProps {
     className?: string
 }
 
-export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initialIsOrganizer, forcedMode, className }: DashboardNavbarProps) {
+export function DashboardNavbar({ userEmail, userName, role, className }: DashboardNavbarProps) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
-    const router = useRouter()
     const [open, setOpen] = useState(false)
-    const [mode, setMode] = useState<'organizer' | 'team'>(forcedMode || 'team')
-    const [isOrganizer, setIsOrganizer] = useState(initialIsOrganizer)
-    const [showRegDialog, setShowRegDialog] = useState(false)
 
-    // Sync mode from localStorage
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (forcedMode) {
-                setMode(forcedMode);
-                return;
-            }
-            const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team'
-            if (savedMode === 'organizer' && !isOrganizer) {
-                setMode('team')
-                localStorage.setItem('dashboard-mode', 'team')
-            } else if (savedMode) {
-                setMode(savedMode)
-            }
-        }, 0);
-
-        // Listen for storage changes to sync between Sidebar and Header
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'dashboard-mode') {
-                setMode(e.newValue as 'organizer' | 'team')
-                if (e.newValue === 'organizer') {
-                    setIsOrganizer(true)
-                }
-            }
-        }
-        window.addEventListener('storage', handleStorageChange)
-        return () => {
-            clearTimeout(timer);
-            window.removeEventListener('storage', handleStorageChange);
-        }
-    }, [isOrganizer, forcedMode])
-
-    const handleModeChange = (newMode: 'organizer' | 'team') => {
-        if (newMode === 'organizer' && !isOrganizer) {
-            setShowRegDialog(true)
-            return
-        }
-
-        setMode(newMode)
-        localStorage.setItem('dashboard-mode', newMode)
-        // Dispatch event for same-window sync
-        window.dispatchEvent(new StorageEvent('storage', { key: 'dashboard-mode', newValue: newMode }))
-
-        // Navigate to the respective dashboard
-        if (newMode === 'organizer') {
-            router.push('/organizer/dashboard')
-        } else {
-            router.push('/manager/dashboard')
-        }
-    }
-
+    const mode = 'organizer'
     const navItems = getNavItems(mode, role)
 
     return (
@@ -123,21 +66,7 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
                         </Link>
                     </div>
 
-                    {/* Mode Switcher for Mobile */}
-                    <div className="px-2">
-                        <Tab
-                            value={mode}
-                            onChange={handleModeChange}
-                            className="w-full"
-                            fullWidth={true}
-                            options={[
-                                { label: t("organizer_mode"), value: 'organizer', icon: LayoutGrid },
-                                { label: t("team_mode"), value: 'team', icon: UsersIcon }
-                            ]}
-                        />
-                    </div>
-
-                    <nav className="grid gap-1 px-2 font-medium overflow-y-auto pb-4">
+                    <nav className="grid gap-1 px-2 font-medium overflow-y-auto pb-4 mt-4">
                         {navItems.map((item) => {
                             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                             return (
@@ -183,10 +112,8 @@ export function DashboardNavbar({ userEmail, userName, role, isOrganizer: initia
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserDropdown email={userEmail} name={userName} mode={mode} />
+                <UserDropdown email={userEmail} name={userName} />
             </div>
-
-            <BecomeOrganizerDialog open={showRegDialog} onOpenChange={setShowRegDialog} />
         </header>
     )
 }

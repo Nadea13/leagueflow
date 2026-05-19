@@ -200,7 +200,7 @@ export async function registerAsOrganizer(): Promise<ActionResponse> {
 
         const adminClient = createAdminClient();
         const { error } = await adminClient
-            .from("profiles")
+            .from("users")
             .update({ 
                 is_organizer: true,
                 role: 'organizer' 

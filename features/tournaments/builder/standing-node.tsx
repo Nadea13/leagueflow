@@ -231,7 +231,7 @@ export const StandingNode = memo(({
                     <div className="w-5 h-5 bg-emerald-500 rounded flex items-center justify-center">
                         <ListOrdered className="h-3 w-3 text-white" />
                     </div>
-                    <span className="text-[11px] font-black tracking-widest text-emerald-500 uppercase">
+                    <span className="text-[11px] font-black tracking-widest text-emerald-500">
                         {data.label || "STANDINGS"}
                     </span>
                 </div>

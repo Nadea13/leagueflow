@@ -142,7 +142,7 @@ export function AdminTournamentsTable({ initialTournaments }: AdminTournamentsTa
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
-                                            <Link href={`/organizer/tournaments/${tournament.id}`} target="_blank">
+                                            <Link href={`/dashboard/tournaments/${tournament.id}`} target="_blank">
                                                 <Button variant="ghost" size="icon" title={tCommon("manage")} className="hover:bg-muted/30">
                                                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
                                                 </Button>

@@ -122,7 +122,7 @@ export function TeamForm({ tournamentId, isLimitReached = false, onSuccess }: { 
                                 ref={fileInputRef}
                                 disabled={isLimitReached}
                             />
-                            <p className="text-[10px] text-muted-foreground/50 mt-1 uppercase tracking-tighter">PNG, JPG up to 2MB</p>
+                            <p className="text-[10px] text-muted-foreground/50 mt-1 tracking-tighter">PNG, JPG up to 2MB</p>
                         </div>
                     </div>
                 </div>
@@ -200,7 +200,7 @@ export function TeamForm({ tournamentId, isLimitReached = false, onSuccess }: { 
                         </div>
                     </div>
 
-                    {state.error && <p className="text-[10px] font-bold text-destructive uppercase tracking-widest">{state.error}</p>}
+                    {state.error && <p className="text-[10px] font-bold text-destructive tracking-widest">{state.error}</p>}
 
                     <div className="flex justify-end">
                         <SubmitButton
@@ -216,7 +216,7 @@ export function TeamForm({ tournamentId, isLimitReached = false, onSuccess }: { 
 
             {isLimitReached && (
                 <div className="mt-6 p-3 bg-destructive/10 border-l-2 border-destructive">
-                    <p className="text-[10px] font-bold text-destructive leading-tight uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-destructive leading-tight tracking-widest">
                         {t.rich("limit_reached_desc", {
                             link: (chunks) => <Link href="/dashboard/billing" className="underline font-black">{chunks}</Link>
                         })}

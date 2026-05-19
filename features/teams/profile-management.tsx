@@ -45,9 +45,34 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
     const tSports = useTranslations("Sports");
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
+    const [isInitializing, setIsInitializing] = useState(!player.global_player_id);
     const [editName, setEditName] = useState(player.global_player?.name || player.name);
     const [editBirthDate, setEditBirthDate] = useState(player.global_player?.date_of_birth || player.birth_date || "");
     const [hasChanges, setHasChanges] = useState(false);
+
+    useEffect(() => {
+        const autoInitialize = async () => {
+            if (!player.global_player_id) {
+                setIsInitializing(true);
+                try {
+                    const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
+                    if (res.success && res.data) {
+                        await linkPlayerToGlobal(player.id, res.data.id);
+                        await onSuccess();
+                    } else {
+                        toast({ title: tCommon("error"), description: res.error || "Failed to initialize profile", variant: "destructive" });
+                    }
+                } catch (err: any) {
+                    toast({ title: tCommon("error"), description: err.message || "An error occurred", variant: "destructive" });
+                } finally {
+                    setIsInitializing(false);
+                }
+            } else {
+                setIsInitializing(false);
+            }
+        };
+        autoInitialize();
+    }, [player.id, player.global_player_id]);
 
     useEffect(() => {
         setEditName(player.global_player?.name || player.name);
@@ -127,6 +152,15 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
         setIsSaving(false);
     };
 
+    if (isInitializing || !player.global_player_id) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12 gap-3 min-h-[300px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-xs font-black tracking-widest text-muted-foreground/40">Initializing Profile...</p>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="relative bg-primary/10 p-4 md:p-6">
@@ -135,13 +169,12 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                         {t("profile_management") || "Profile Management"}
                     </DialogTitle>
                     <DialogDescription className="text-muted-foreground font-medium pt-2 text-base leading-relaxed">
-                        {t("global_identity_for") || "Global identity for"} {player.name}
+                        Manage documentation for {player.name}
                     </DialogDescription>
                 </DialogHeader>
             </div>
             <div className="p-4 space-y-2 md:p-6 md:space-y-3">
-                {player.global_player_id ? (
-                    <div className="space-y-2 md:space-y-3">
+                <div className="space-y-2 md:space-y-3">
                         <div className="space-y-1">
                             <Label className="text-xs font-black tracking-widest text-primary">
                                 {t("global_profile_photo")}
@@ -326,31 +359,6 @@ export function ProfileManagement({ player, team, onSuccess }: ProfileManagement
                             </div>
                         </div>
                     </div>
-                ) : (
-                    <div className="text-center py-10 border border-dashed border-border/40">
-                        <Unlink className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4" />
-                        <p className="text-xs font-bold tracking-wider text-muted-foreground/60 mb-6 px-6">
-                            {t("profile_must_be_connected_to_a_global_identity_to_manage_documents") || "Profile must be connected to a global identity to manage documents."}
-                        </p>
-                        <div className="px-6">
-                            <Button
-                                className="w-full bg-primary text-black font-black tracking-widest text-[10px] h-11"
-                                disabled={isSaving}
-                                onClick={async () => {
-                                    const res = await createGlobalPlayer(player.name, null, player.birth_date, [team.sport]);
-                                    if (res.success && res.data) {
-                                        await handleLinkPlayer(player.id, res.data);
-                                    } else {
-                                        toast({ title: tCommon("error"), description: res.error, variant: "destructive" });
-                                    }
-                                }}
-                            >
-                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                                {t("initialize_global_profile") || "Initialize Global Profile"}
-                            </Button>
-                        </div>
-                    </div>
-                )}
 
                 {player.global_player_id && (
                     <div className="space-y-4 pt-4 border-t border-border/20">

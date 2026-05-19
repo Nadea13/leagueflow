@@ -29,6 +29,7 @@ export async function getUserTeams() {
 
     const { data: teams } = await query
         .or(conditions.join(','))
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
     const formattedTeams = (teams || []).map(team => ({

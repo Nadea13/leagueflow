@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useCallback } from "react";
-import { Plus, Search, Loader2, Link2, X, ArrowRight, FileText, UserPlus } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, Loader2, UserPlus, Search, ArrowRight, FileText } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { addPlayer } from "@/actions/manager/team";
-import { getGlobalPlayers } from "@/actions/organizer/tournaments/global-player";
-import { GlobalPlayer } from "@/types/index";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { searchMasterPlayers } from "@/actions/common/user";
 
 interface AddPlayerFormProps {
     teamId: string;
@@ -29,38 +27,68 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     const [newName, setNewName] = useState("");
     const [newNumber, setNewNumber] = useState("");
     const [newPosition, setNewPosition] = useState("");
-    const [newBirthDate, setNewBirthDate] = useState("");
+    const [newTel, setNewTel] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    // Global Player Search State
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<GlobalPlayer[]>([]);
+    const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [selectedGlobalPlayerId, setSelectedGlobalPlayerId] = useState<string | null>(null);
-    const pageSize = 10;
+    const [selectedMasterPlayerId, setSelectedMasterPlayerId] = useState<string | null>(null);
 
-    const fetchGlobalPlayersData = useCallback(async (page: number, query: string) => {
+    const handleSearch = async (val: string) => {
+        setSearchQuery(val);
         setIsSearching(true);
-        const result = await getGlobalPlayers(page, pageSize, query);
-        if (result.success && result.data) {
-            setSearchResults(result.data.players);
+        try {
+            const res = await searchMasterPlayers(val);
+            if (res.success && res.data) {
+                const mapped = res.data.map((mp: any) => ({
+                    id: mp.id,
+                    name: `${mp.first_name} ${mp.last_name}`.trim(),
+                    date_of_birth: mp.birthday,
+                    tel: mp.tel
+                }));
+                setSearchResults(mapped);
+            } else {
+                setSearchResults([]);
+            }
+        } catch (err) {
+            console.error("Error searching global players:", err);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
         }
-        setIsSearching(false);
-    }, []);
+    };
 
-    const handleSearch = useCallback(async (query: string) => {
-        setSearchQuery(query);
-        fetchGlobalPlayersData(1, query);
-    }, [fetchGlobalPlayersData]);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-    const handleSelectGlobalPlayer = (gp: GlobalPlayer) => {
-        setNewName(gp.name);
-        setSelectedGlobalPlayerId(gp.id);
-        if (gp.date_of_birth) {
-            setNewBirthDate(gp.date_of_birth);
+    const handleSelectGlobalPlayer = async (gp: any) => {
+        setIsPopoverOpen(false);
+        setIsSaving(true);
+        try {
+            const formData = new FormData();
+            formData.append("name", gp.name);
+            formData.append("number", "");
+            formData.append("position", "");
+            formData.append("tel", gp.tel || "");
+            formData.append("master_player_id", gp.id);
+
+            const result = await addPlayer(teamId, formData);
+            if (result.success) {
+                toast({ title: tCommon("success"), description: t("added_success") });
+                setNewName("");
+                setNewNumber("");
+                setNewPosition("");
+                setNewTel("");
+                setSelectedMasterPlayerId(null);
+                await onSuccess();
+            } else {
+                toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+            }
+        } catch (err: any) {
+            toast({ title: tCommon("error"), description: err.message || "Failed to add player", variant: "destructive" });
+        } finally {
+            setIsSaving(false);
         }
-        setSearchQuery("");
-        setSearchResults([]);
     };
 
     const handleAddPlayer = async (e: React.FormEvent) => {
@@ -72,9 +100,9 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
         formData.append("name", newName);
         formData.append("number", newNumber);
         formData.append("position", newPosition);
-        formData.append("birthDate", newBirthDate);
-        if (selectedGlobalPlayerId) {
-            formData.append("global_player_id", selectedGlobalPlayerId);
+        formData.append("tel", newTel);
+        if (selectedMasterPlayerId) {
+            formData.append("master_player_id", selectedMasterPlayerId);
         }
 
         const result = await addPlayer(teamId, formData);
@@ -85,8 +113,8 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
             setNewName("");
             setNewNumber("");
             setNewPosition("");
-            setNewBirthDate("");
-            setSelectedGlobalPlayerId(null);
+            setNewTel("");
+            setSelectedMasterPlayerId(null);
             onSuccess();
         } else {
             toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
@@ -94,9 +122,9 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     };
 
     return (
-        <div className="bg-card border relative">
-            <div className="p-4 md:p-6">
-                <div className="flex items-center justify-between mb-2 md:mb-3">
+        <div className="bg-background border relative rounded-xl">
+            <div className="p-2 md:p-4">
+                <div className="flex items-center justify-between mb-2 md:mb-4">
                     <div className="flex items-center gap-3">
                         <Plus className="h-6 w-6 text-primary" />
                         <h3 className="text-2xl font-black tracking-tighter text-foreground">
@@ -105,7 +133,9 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                     </div>
 
                     <Popover
+                        open={isPopoverOpen}
                         onOpenChange={(isOpen) => {
+                            setIsPopoverOpen(isOpen);
                             if (isOpen) {
                                 handleSearch("");
                             }
@@ -114,7 +144,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                         <PopoverTrigger asChild>
                             <Button variant="outline" size="sm" className="h-8 border-primary transition-all text-[10px] text-primary hover:text-primary hover:bg-primary/10 gap-2 md:gap-3">
                                 <Search className="h-4 w-4" />
-                                {t("connect_global") || "Search Global"}
+                                Search Players
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-0 border-border bg-card shadow-2xl" align="end">
@@ -140,7 +170,8 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                         {searchResults.map((gp) => (
                                             <button
                                                 key={gp.id}
-                                                className="w-full text-left px-4 py-3 hover:bg-primary/10 group flex items-center justify-between transition-colors border-b border-foreground/5 last:border-0"
+                                                disabled={isSaving}
+                                                className="w-full text-left px-4 py-3 hover:bg-primary/10 group flex items-center justify-between transition-colors border-b border-foreground/5 last:border-0 disabled:opacity-50"
                                                 onClick={() => handleSelectGlobalPlayer(gp)}
                                             >
                                                 <div className="flex flex-col">
@@ -170,38 +201,25 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
 
                 <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-2 md:gap-3">
                     <div className="space-y-1 w-[80px] shrink-0">
-                        <Label className="text-xs font-black tracking-widest text-primary">{t("number")}</Label>
+                        <Label>{t("number")}</Label>
                         <Input
                             value={newNumber}
                             onChange={e => setNewNumber(e.target.value)}
                             placeholder="00"
-                            type="number"
+                            type="text"
                             className="bg-transparent text-foreground focus-visible:ring-0"
                         />
                     </div>
 
                     <div className="space-y-1 flex-1 min-w-[200px] relative transition-all">
                         <div className="flex items-center justify-between">
-                            <Label className="text-xs font-black tracking-widest text-primary">{t("player_name")} <span className="text-destructive">*</span></Label>
-                            {selectedGlobalPlayerId && (
-                                <Badge variant="default" className="h-5 bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 flex items-center gap-1 animate-in fade-in zoom-in-95">
-                                    <Link2 className="h-2.5 w-2.5" />
-                                    Connected
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedGlobalPlayerId(null)}
-                                        className="ml-0.5 hover:text-foreground transition-colors"
-                                    >
-                                        <X className="h-2.5 w-2.5" />
-                                    </button>
-                                </Badge>
-                            )}
+                            <Label>{t("player_name")} <span className="text-destructive">*</span></Label>
                         </div>
                         <Input
                             value={newName}
                             onChange={e => {
                                 setNewName(e.target.value);
-                                if (selectedGlobalPlayerId) setSelectedGlobalPlayerId(null);
+                                if (selectedMasterPlayerId) setSelectedMasterPlayerId(null);
                             }}
                             placeholder={t("player_name")}
                             required
@@ -211,7 +229,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
 
                     <div className="flex gap-2 md:gap-3 flex-1 md:flex-none md:w-auto w-full items-end">
                         <div className="space-y-1 shrink-0 w-[120px]">
-                            <Label className="text-xs font-black tracking-widest text-primary">{t("position")}</Label>
+                            <Label>{t("position")}</Label>
                             <Select value={newPosition} onValueChange={setNewPosition}>
                                 <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
                                     <SelectValue placeholder={t("position")} />
@@ -225,12 +243,12 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             </Select>
                         </div>
                         <div className="space-y-1 flex-1 md:w-[150px] shrink-0">
-                            <Label className="text-xs font-black tracking-widest text-primary">{t("birth_date")}</Label>
+                            <Label>{t("tel") || "Telephone"}</Label>
                             <Input
-                                value={newBirthDate}
-                                onChange={e => setNewBirthDate(e.target.value)}
-                                type="date"
-                                lang={locale === 'th' ? 'th-TH' : 'en-US'}
+                                value={newTel}
+                                onChange={e => setNewTel(e.target.value)}
+                                type="tel"
+                                placeholder="08X-XXX-XXXX"
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                             />
                         </div>

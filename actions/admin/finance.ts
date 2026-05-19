@@ -9,7 +9,7 @@ export async function getAllPayments() {
         .from("payments")
         .select(`
             *,
-            user:profiles!user_id (
+            user:users!user_id (
                 email,
                 full_name
             )

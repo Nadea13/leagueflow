@@ -38,7 +38,7 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
             <div className="flex justify-between items-center px-4 py-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-primary" />
-                    <span className="text-[11px] font-black tracking-[0.2em] uppercase text-primary">
+                    <span className="text-[11px] font-black tracking-[0.2em] text-primary">
                         {data.label}
                     </span>
                 </div>
@@ -58,7 +58,7 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
             <div className="flex flex-col divide-y divide-border">
                 {paidTeams.length === 0 ? (
                     <div className="p-8 text-center">
-                        <span className="text-[10px] font-black uppercase text-muted-foreground/40 tracking-widest">
+                        <span className="text-[10px] font-black text-muted-foreground/40 tracking-widest">
                             No paid teams found
                         </span>
                     </div>
@@ -77,11 +77,11 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
                                 </div>
                             )}
                             <div className="flex flex-col overflow-hidden">
-                                <span className="text-xs font-black tracking-tight truncate uppercase">
+                                <span className="text-xs font-black tracking-tight truncate">
                                     {team.name}
                                 </span>
                                 {team.group_name && (
-                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                                    <span className="text-[9px] font-bold text-muted-foreground tracking-widest">
                                         Group {team.group_name}
                                     </span>
                                 )}

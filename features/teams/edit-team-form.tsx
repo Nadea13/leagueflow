@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Team, SportType, TournamentTeam } from "@/types/index";
-import { updateTeamGlobal, deleteTeamGlobal, resetRoster } from "@/actions/manager/team";
+import { updateTeamGlobal, deleteTeamGlobal, resetRoster, restoreRoster, hasSoftDeletedPlayers } from "@/actions/manager/team";
 import { updateTeam, deleteTeam } from "@/actions/organizer/tournaments/general";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -56,6 +56,41 @@ export function EditTeamForm({
     const [resetRosterDialogOpen, setResetRosterDialogOpen] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const [hasResetRoster, setHasResetRoster] = useState(false);
+    const [isRestoringRoster, setIsRestoringRoster] = useState(false);
+
+    useEffect(() => {
+        const checkRestore = async () => {
+            const res = await hasSoftDeletedPlayers(team.id);
+            if (res.success && res.data) {
+                setHasResetRoster(true);
+            } else {
+                setHasResetRoster(false);
+            }
+        };
+        checkRestore();
+    }, [team.id]);
+
+    const handleRestoreRoster = async () => {
+        setIsRestoringRoster(true);
+        const res = await restoreRoster(team.id);
+        setIsRestoringRoster(false);
+        if (res.success) {
+            toast({
+                title: tCommon("success"),
+                description: t("roster_restored") || "Roster restored successfully"
+            });
+            setHasResetRoster(false);
+            router.refresh();
+        } else {
+            toast({
+                title: tCommon("error"),
+                description: res.error,
+                variant: "destructive"
+            });
+        }
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -115,7 +150,7 @@ export function EditTeamForm({
             toast({ title: tCommon("success"), description: tTeam("deleted_successfully") || "Team deleted successfully" });
             setDeleteTeamDialogOpen(false);
             if (context === 'manager') {
-                router.push(`/${team.isParticipation ? "manager/my-registrations" : "manager/my-teams"}`);
+                router.push("/dashboard/teams");
             }
         } else {
             toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
@@ -131,6 +166,7 @@ export function EditTeamForm({
         if (result.success) {
             toast({ title: tCommon("success"), description: t("roster_reset_success") || "Roster reset successfully" });
             setResetRosterDialogOpen(false);
+            setHasResetRoster(true);
             router.refresh();
         } else {
             toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
@@ -138,25 +174,20 @@ export function EditTeamForm({
     };
 
     return (
-        <div className="bg-card border relative overflow-hidden">
-            <div className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center mb-6">
+        <div className="bg-background border rounded-xl relative overflow-hidden">
+            <div className="p-2 md:p-4">
+                <div className="flex flex-col items-center text-center mb-2 md:mb-4">
                     <h2 className="text-2xl font-black tracking-tighter text-foreground">
-                        {teamName || "New Team"}
+                        {teamName}
                     </h2>
-                    <p className="text-[10px] font-black tracking-widest text-muted-foreground/40 mt-1">
-                        {tTeam("edit_team_desc") || "Customize Identity"}
-                    </p>
                 </div>
 
-                <form onSubmit={handleUpdateTeam} className="space-y-4 md:space-y-6">
+                <form onSubmit={handleUpdateTeam} className="space-y-2 md:space-y-4">
                     <div className="space-y-1">
-                        <Label htmlFor="edit-logo-right" className="text-xs font-black tracking-widest text-primary">
-                            {tTeam("upload_logo")}
-                        </Label>
-                        <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 border">
+                        <Label>{tTeam("upload_logo")}</Label>
+                        <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-lg">
                             <div className="relative group">
-                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
+                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm">
                                     {previewUrl ? (
                                         <img
                                             src={previewUrl}
@@ -166,7 +197,7 @@ export function EditTeamForm({
                                             className="h-full w-full object-contain p-1"
                                         />
                                     ) : (
-                                        <Upload className="h-8 w-8 text-muted-foreground/30" />
+                                        <Upload className="h-8 w-8 text-primary" />
                                     )}
                                 </div>
                             </div>
@@ -175,7 +206,7 @@ export function EditTeamForm({
                                 <div className="flex gap-2">
                                     <Label
                                         htmlFor="edit-logo-right"
-                                        className="cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 bg-muted/20 hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all"
+                                        className="cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 rounded-sm hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all"
                                     >
                                         {previewUrl ? tTeam("click_to_upload") : tTeam("upload_logo")}
                                     </Label>
@@ -205,7 +236,7 @@ export function EditTeamForm({
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-xs font-black tracking-widest text-primary">
+                        <Label>
                             {tTeam("team_name")}
                         </Label>
                         <Input
@@ -219,7 +250,7 @@ export function EditTeamForm({
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-xs font-black tracking-widest text-primary">
+                        <Label>
                             {tCommon("sport") || "Sport"}
                         </Label>
                         <Select value={teamSport} onValueChange={(v) => setTeamSport(v as SportType)} disabled={isLocked}>
@@ -237,7 +268,7 @@ export function EditTeamForm({
                     </div>
 
                     <div className="space-y-1">
-                        <Label className="text-xs font-black tracking-widest text-primary">
+                        <Label>
                             {tTeam("team_description")}
                         </Label>
                         <Textarea
@@ -251,7 +282,7 @@ export function EditTeamForm({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <Label className="text-xs font-black tracking-widest text-primary">
+                            <Label>
                                 {tTeam("contact_name") || "Contact Name"}
                             </Label>
                             <Input
@@ -263,7 +294,7 @@ export function EditTeamForm({
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-xs font-black tracking-widest text-primary">
+                            <Label>
                                 {tTeam("contact_phone") || "Phone Number"}
                             </Label>
                             <Input
@@ -277,14 +308,30 @@ export function EditTeamForm({
                     </div>
 
                     <div className="space-y-2 md:space-y-3">
-                        <Button
-                            type="submit"
-                            className="w-full font-black tracking-widest text-sm transition-all bg-primary text-primary-foreground disabled:opacity-50"
-                            disabled={isUpdatingTeam || isLocked}
-                        >
-                            {isUpdatingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            {tCommon("save")}
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                type="submit"
+                                className="flex-1"
+                                disabled={isUpdatingTeam || isLocked}
+                            >
+                                {isUpdatingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                                {tCommon("save")}
+                            </Button>
+
+                            {hasResetRoster && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className="shrink-0 border-primary text-primary hover:bg-primary/10 transition-all h-10 w-10 flex items-center justify-center"
+                                    onClick={handleRestoreRoster}
+                                    disabled={isRestoringRoster || isLocked}
+                                    title={t("restore_roster") || "Restore Roster"}
+                                >
+                                    {isRestoringRoster ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                                </Button>
+                            )}
+                        </div>
 
                         {isLocked && (
                             <div className="bg-destructive/10 border border-destructive p-2 flex items-center justify-center gap-2 md:gap-3">

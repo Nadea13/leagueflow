@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { ensureProfileExists } from "@/lib/profile";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -17,7 +17,7 @@ export async function getUserSubscriptionPlan() {
 
     // Check if user is an admin - Admins get Pro features by default for management
     const { data: profile } = await supabase
-        .from("profiles")
+        .from("users")
         .select("role")
         .eq("id", user.id)
         .single();
@@ -97,7 +97,7 @@ export async function getUserProfile() {
     if (!user) return null;
 
     const { data: profile } = await supabase
-        .from("profiles")
+        .from("users")
         .select("*")
         .eq("id", user.id)
         .single();
@@ -115,6 +115,16 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
 
     if (error) {
         return { success: false, error: error.message };
+    }
+
+    // Direct database update using service role client as well
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        const adminSupabase = createAdminClient();
+        await adminSupabase
+            .from("users")
+            .update({ full_name: fullName })
+            .eq("id", user.id);
     }
 
     revalidatePath("/", "layout");
@@ -139,3 +149,109 @@ export async function deleteAccount() {
     redirect("/");
 }
 
+export async function getMasterPlayer() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const adminSupabase = createAdminClient();
+    const { data, error } = await adminSupabase
+        .from("master_players")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Error fetching master player profile:", error);
+        return null;
+    }
+    return data;
+}
+
+export async function createMasterPlayer(formData: FormData): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const firstName = formData.get("firstName") as string;
+        const lastName = formData.get("lastName") as string;
+        const gender = formData.get("gender") as string;
+        const birthday = formData.get("birthday") as string;
+        const tel = formData.get("tel") as string;
+
+        if (!firstName || !lastName || !gender || !birthday) {
+            return { success: false, error: "First name, last name, gender, and birthday are required" };
+        }
+
+        const adminSupabase = createAdminClient();
+        const { data, error } = await adminSupabase
+            .from("master_players")
+            .insert({
+                user_id: user.id,
+                first_name: firstName,
+                last_name: lastName,
+                gender,
+                birthday,
+                tel,
+                status: 'active',
+                verified: true
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Error creating master player:", error);
+            return { success: false, error: error.message };
+        }
+
+        revalidatePath("/", "layout");
+        return { success: true, data };
+    } catch (e: any) {
+        return { success: false, error: e.message || "Failed to create master player profile" };
+    }
+}
+
+export async function getAllPublicTournaments() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("tournaments")
+        .select(`
+            id, name, logo_img, cover_img, description, status, registration_fee, start_date, end_date, max_teams,
+            organizer:users!organizer_id(full_name, email)
+        `)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching all tournaments:", error);
+        return [];
+    }
+    return data || [];
+}
+
+export async function searchMasterPlayers(query: string) {
+    const adminSupabase = createAdminClient();
+
+    let dbQuery = adminSupabase
+        .from("master_players")
+        .select("*");
+
+    if (query && query.trim().length > 0) {
+        // Search in both first_name and last_name
+        dbQuery = dbQuery.or(`first_name.ilike.%${query.trim()}%,last_name.ilike.%${query.trim()}%`);
+    }
+
+    const { data, error } = await dbQuery
+        .order("first_name", { ascending: true })
+        .limit(20);
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+}

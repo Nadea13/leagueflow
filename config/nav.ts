@@ -14,18 +14,23 @@ export interface NavItem {
  */
 export const organizerNavItems: NavItem[] = [
     {
+        titleKey: "home",
+        href: "/dashboard",
+        icon: Home,
+    },
+    {
         titleKey: "leagues",
-        href: "/organizer/tournaments",
+        href: "/dashboard/tournaments",
         icon: Trophy,
     },
     {
-        titleKey: "invites",
-        href: "/organizer/invites",
-        icon: Mail,
+        titleKey: "teams",
+        href: "/dashboard/teams",
+        icon: Users,
     },
     {
         titleKey: "settings",
-        href: "/organizer/settings",
+        href: "/dashboard/settings",
         icon: Settings,
     },
 ]

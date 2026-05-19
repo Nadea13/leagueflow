@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { getPlayers } from "@/app/[locale]/organizer/tournaments/[id]/player-actions";
-import { updateMatch, advanceStage } from "@/app/[locale]/organizer/tournaments/[id]/actions";
-import { getPenaltyShootout } from "@/app/[locale]/organizer/tournaments/[id]/penalty-actions";
+import { getPlayers } from "@/app/[locale]/dashboard/tournaments/[id]/player-actions";
+import { updateMatch, advanceStage } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { getPenaltyShootout } from "@/app/[locale]/dashboard/tournaments/[id]/penalty-actions";
 import { createClient } from "@/lib/supabase/client";
 
 import { Button } from "@/components/ui/button";

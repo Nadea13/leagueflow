@@ -338,7 +338,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
 
     const url = isPublic
         ? `/${tournamentId}/matches/${match.id}${querySuffix}`
-        : `/organizer/tournaments/${tournamentId}/matches/${match.id}${querySuffix}`;
+        : `/dashboard/tournaments/${tournamentId}/matches/${match.id}${querySuffix}`;
 
     return (
         <>

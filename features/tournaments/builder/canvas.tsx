@@ -835,7 +835,7 @@ function CanvasInternal({
                                             sideOffset={5}
                                         >
                                             <div className="p-2 border-b border-border/10 mb-1">
-                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">Add Components</span>
+                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground">Add Components</span>
                                             </div>
                                             <NodeTools
                                                 onAddMatch={() => addMatchNode(getCenterPos())}
@@ -847,11 +847,11 @@ function CanvasInternal({
                                             />
                                             <div className="p-2 border-t border-border/10 mt-1 flex items-center justify-between">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Elements</span>
+                                                    <span className="text-[9px] text-muted-foreground font-bold">Elements</span>
                                                     <span className="text-[11px] font-black">{nodes.length}</span>
                                                 </div>
                                                 <div className="flex flex-col items-end">
-                                                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Connections</span>
+                                                    <span className="text-[9px] text-muted-foreground font-bold">Connections</span>
                                                     <span className="text-[11px] font-black">{edges.length}</span>
                                                 </div>
                                             </div>

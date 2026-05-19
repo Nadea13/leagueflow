@@ -82,7 +82,7 @@ export function TrackingDashboard({ initialLogs }: TrackingDashboardProps) {
                         // Try to fetch user info for the new log
                         if (newLog.user_id) {
                             const { data: profile } = await supabase
-                                .from('profiles')
+                                .from('users')
                                 .select('email')
                                 .eq('id', newLog.user_id)
                                 .single();

@@ -98,12 +98,12 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                     <Table className="min-w-[800px]">
                         <TableHeader>
                             <TableRow className="h-10 hover:bg-transparent border-border/50">
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("team_name")}</TableHead>
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("contact_info")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("payment_status")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("slip")}</TableHead>
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{t("date")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/50"></TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("team_name")}</TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("contact_info")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("payment_status")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("slip")}</TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("date")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -122,7 +122,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                                     <Users className="h-3 w-3 text-muted-foreground" />
                                                 </div>
                                             )}
-                                            <span className="font-black tracking-tight text-xs text-foreground group-hover:text-primary transition-colors uppercase truncate max-w-[150px]">{reg.team_name}</span>
+                                            <span className="font-black tracking-tight text-xs text-foreground group-hover:text-primary transition-colors truncate max-w-[150px]">{reg.team_name}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell className="px-2 md:px-3">
@@ -141,7 +141,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                         <Badge
                                             variant="outline"
                                             className={cn(
-                                                "text-[9px] font-black uppercase tracking-tighter h-5 px-3",
+                                                "text-[9px] font-black tracking-tighter h-5 px-3",
                                                 reg.payment_status === 'PAID' ? "bg-primary text-primary-foreground border-primary" :
                                                     reg.payment_status === 'REJECTED' ? "bg-destructive text-destructive-foreground border-destructive" :
                                                         "bg-muted text-muted-foreground border-muted-foreground/20"
@@ -162,10 +162,10 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                                 {t("view_slip")}
                                             </Button>
                                         ) : (
-                                            <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter uppercase">{t("no_slip") || "No Slip"}</span>
+                                            <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter">{t("no_slip") || "No Slip"}</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap uppercase tracking-widest">
+                                    <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap tracking-widest">
                                         {new Date(reg.created_at).toLocaleString('en-US', {
                                             day: '2-digit',
                                             month: 'short',

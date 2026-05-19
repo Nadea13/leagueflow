@@ -13,7 +13,7 @@ export async function requireAdminAuth() {
     }
 
     const { data: profile } = await supabase
-        .from("profiles")
+        .from("users")
         .select("role")
         .eq("id", user.id)
         .single();

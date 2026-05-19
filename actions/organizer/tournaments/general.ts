@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -227,25 +227,48 @@ export async function deleteTeam(teamId: string, tournamentId: string): Promise<
     if (!access.success) return { success: false, error: access.error };
     
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
 
-    // Fetch logo_url for cleanup
+    // Fetch the tournament_team to get its global team_id (if any)
     const { data: team } = await supabase
         .from("tournament_teams")
-        .select("logo_url")
+        .select("team_id")
         .eq("id", teamId)
         .single();
-    
-    if (team?.logo_url) {
-        await deleteFileFromUrl(team.logo_url, 'team-logos');
-    }
 
-    const { error } = await supabase
+    const now = new Date().toISOString();
+
+    // 1. Soft-delete the tournament_team
+    const { error: ttError } = await adminSupabase
         .from("tournament_teams")
-        .delete()
+        .update({ deleted_at: now })
         .eq("id", teamId);
 
-    if (error) {
-        return { success: false, error: error.message };
+    if (ttError) {
+        return { success: false, error: ttError.message };
+    }
+
+    const globalTeamId = team?.team_id || teamId;
+
+    // Fetch player_ids from player_sports
+    const { data: psRecords } = await adminSupabase
+        .from("player_sports")
+        .select("player_id")
+        .or(`team_id.eq.${globalTeamId},team_id.eq.${teamId}`);
+
+    // 2. Soft-delete player_sports
+    await adminSupabase
+        .from("player_sports")
+        .update({ deleted_at: now })
+        .or(`team_id.eq.${globalTeamId},team_id.eq.${teamId}`);
+
+    // 3. Soft-delete players
+    if (psRecords && psRecords.length > 0) {
+        const playerIds = psRecords.map((r: any) => r.player_id);
+        await adminSupabase
+            .from("players")
+            .update({ deleted_at: now })
+            .in("id", playerIds);
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
@@ -780,7 +803,8 @@ export async function advanceStage(tournamentId: string): Promise<ActionResponse
     const { data: teams } = await supabase
         .from('tournament_teams')
         .select('*')
-        .eq('tournament_id', tournamentId);
+        .eq('tournament_id', tournamentId)
+        .is("deleted_at", null);
 
     if (!matches || matches.length === 0) {
         return { success: false, error: "No matches found." };

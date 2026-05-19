@@ -38,6 +38,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
         .from("tournament_teams")
         .select("id, name, logo_url")
         .eq("tournament_id", id)
+        .is("deleted_at", null)
         .order("created_at", { ascending: true });
 
     if (error || !tournament) {

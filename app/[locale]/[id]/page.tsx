@@ -56,6 +56,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         .from("tournament_teams")
         .select("*")
         .eq("tournament_id", id)
+        .is("deleted_at", null)
         .order("created_at", { ascending: true });
 
     // 3. Fetch Matches
@@ -79,16 +80,15 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         .select(`
             *,
             players (
-                name,
-                number
+                display_name
             )
         `)
         .in("match_id", matchIds)
         .order("minute", { ascending: true });
 
-    const allEvents = allEventsResult?.map((event: MatchEvent & { players?: { name: string } | null }) => ({
+    const allEvents = allEventsResult?.map((event: any) => ({
         ...event,
-        player_name: event.players?.name || "Unknown"
+        player_name: event.players?.display_name || "Unknown"
     })) || [];
 
     // 5. Fetch Goals for Stats (Admin Client)
@@ -104,11 +104,33 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
     // 6. Fetch Players for Stats (Admin Client)
     let initialPlayers: { id: string; name: string; team_id: string }[] = [];
     if (teams && teams.length > 0) {
-        const { data: playersData } = await adminSupa
-            .from("players")
-            .select("id, name, team_id")
-            .in("team_id", teams.map(t => t.id));
-        initialPlayers = playersData || [];
+        const globalTeamIds = teams.map(t => t.team_id).filter(Boolean);
+        const { data: psData } = await adminSupa
+            .from("player_sports")
+            .select(`
+                team_id,
+                player_id,
+                deleted_at,
+                player:player_id!inner (
+                    id,
+                    display_name,
+                    deleted_at
+                )
+            `)
+            .in("team_id", globalTeamIds)
+            .is("deleted_at", null)
+            .is("player.deleted_at", null);
+
+        if (psData) {
+            initialPlayers = psData.map((ps: any) => {
+                const tournamentTeam = teams.find(t => t.team_id === ps.team_id);
+                return {
+                    id: ps.player?.id || ps.player_id,
+                    name: ps.player?.display_name || "Unknown",
+                    team_id: tournamentTeam?.id || ps.team_id
+                };
+            });
+        }
     }
 
     const t = await getTranslations("PublicView");

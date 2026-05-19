@@ -1,81 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Link, usePathname, useRouter } from "@/i18n/routing"
+import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
 import { useAnalytics } from "@/hooks/use-analytics"
 
 import { BugReportDialog } from "@/features/dashboard/bug-report-dialog"
-import { LayoutGrid, Users as UsersIcon } from "lucide-react"
-import { Tab } from "@/components/ui/tab"
 import { UserDropdown } from "@/features/dashboard/user-dropdown"
-import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog"
 
-export function DashboardSidebar({ className, role, isOrganizer: initialIsOrganizer, forcedMode, userEmail, userName }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team', userEmail?: string, userName?: string | null }) {
+export function DashboardSidebar({ className, role, userEmail, userName }: { className?: string, role?: string, isOrganizer?: boolean, forcedMode?: 'organizer' | 'team', userEmail?: string, userName?: string | null }) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
-    const router = useRouter()
-    const [mode, setMode] = useState<'organizer' | 'team'>(forcedMode || 'team')
-    const [isOrganizer, setIsOrganizer] = useState(initialIsOrganizer)
-    const [showRegDialog, setShowRegDialog] = useState(false)
-    const { trackAction, trackClick } = useAnalytics()
+    const { trackClick } = useAnalytics()
 
-    // Persist mode in localStorage
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            const savedMode = localStorage.getItem('dashboard-mode') as 'organizer' | 'team'
-            if (savedMode === 'organizer' && !isOrganizer) {
-                setMode('team')
-                localStorage.setItem('dashboard-mode', 'team')
-            } else if (savedMode) {
-                setMode(savedMode)
-            }
-        }, 0);
-
-        // Sync with DashboardNavbar
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'dashboard-mode') {
-                setMode(e.newValue as 'organizer' | 'team')
-                if (e.newValue === 'organizer') {
-                    setIsOrganizer(true)
-                }
-            }
-        }
-        window.addEventListener('storage', handleStorageChange)
-        return () => {
-            clearTimeout(timer);
-            window.removeEventListener('storage', handleStorageChange);
-        }
-    }, [isOrganizer])
-
-    const handleModeChange = (newMode: 'organizer' | 'team') => {
-        if (newMode === 'organizer' && !isOrganizer) {
-            setShowRegDialog(true)
-            return
-        }
-
-        setMode(newMode)
-        localStorage.setItem('dashboard-mode', newMode)
-        // Dispatch event for same-window sync
-        window.dispatchEvent(new StorageEvent('storage', { key: 'dashboard-mode', newValue: newMode }))
-
-        trackAction('CHANGE_DASHBOARD_MODE', 'ui_element', newMode, { isOrganizer })
-
-        // Navigate to the respective dashboard
-        if (newMode === 'organizer') {
-            router.push('/organizer/tournaments')
-        } else {
-            router.push('/manager/my-teams')
-        }
-    }
-
+    const mode = 'organizer'
     const navItems = getNavItems(mode, role)
 
     return (
         <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[200px] lg:w-[220px] bg-background border-r z-50", className)}>
-            <div className="flex items-center p-2 md:p-4 border-b border-border">
+            <div className="flex items-center p-2 md:p-4">
                 <Link href="/" className="flex items-center gap-3 transition-transform group">
                     <div className="relative">
                         <svg viewBox="0 0 160 160" className="w-8 h-8 drop-shadow-[0_0_8px_rgba(0,196,154,0.3)] transition-all group-hover:drop-shadow-[0_0_12px_rgba(0,196,154,0.5)]" xmlns="http://www.w3.org/2000/svg">
@@ -89,25 +33,8 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                     </div>
                     <div className="flex flex-col">
                         <span className="text-xl font-black tracking-tighter text-foreground">LeagueFlow</span>
-                        <span className="text-[10px] font-bold tracking-widest text-primary/80 ml-0.5">
-                            {mode === 'organizer' ? 'Organizer' : 'Manager'}
-                        </span>
                     </div>
                 </Link>
-            </div>
-
-            {/* Mode Switcher */}
-            <div className="p-2 md:p-4">
-                <Tab
-                    value={mode}
-                    onChange={handleModeChange}
-                    className="w-full"
-                    fullWidth={true}
-                    options={[
-                        { label: t("organizer_mode"), value: 'organizer', icon: LayoutGrid },
-                        { label: t("team_mode"), value: 'team', icon: UsersIcon }
-                    ]}
-                />
             </div>
 
             <nav className="grid items-start px-2 lg:px-4 space-y-2">
@@ -120,7 +47,7 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                             target={item.openInNewTab ? "_blank" : undefined}
                             onClick={() => trackClick('NAV_ITEM', 'navigation', { target: item.href })}
                             className={cn(
-                                "flex items-center gap-2 p-2 transition-all relative group tracking-wide",
+                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide",
                                 isActive
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:text-primary"
@@ -137,11 +64,9 @@ export function DashboardSidebar({ className, role, isOrganizer: initialIsOrgani
                     <BugReportDialog />
                 </div>
                 <div className="p-4 border-t">
-                    <UserDropdown email={userEmail} name={userName} mode={mode} />
+                    <UserDropdown email={userEmail} name={userName} />
                 </div>
             </div>
-
-            <BecomeOrganizerDialog open={showRegDialog} onOpenChange={setShowRegDialog} />
         </div>
     )
 }

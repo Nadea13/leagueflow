@@ -29,11 +29,11 @@ export function EmptyState({
 
     return (
         <div className={cn(
-            "flex min-h-[400px] flex-col items-center justify-center border border-border bg-muted/5 p-8 text-center animate-in fade-in-50 relative overflow-hidden group",
+            "flex min-h-[400px] flex-col items-center justify-center border border-border rounded-xl p-8 text-center animate-in fade-in-50 relative overflow-hidden group",
             className
         )}>
-            <div className="p-4 bg-card border border-border rotate-12 transition-transform group-hover:rotate-0 mb-6 relative z-10">
-                <Icon className="h-8 w-8 text-muted-foreground opacity-30 -rotate-12 group-hover:rotate-0 transition-transform" />
+            <div className="p-4 border border-border rotate-12 transition-transform group-hover:rotate-0 mb-6 relative z-10">
+                <Icon className="h-8 w-8 text-primary -rotate-12 group-hover:rotate-0 transition-transform" />
             </div>
 
             <h3 className="text-2xl font-black tracking-tight mb-2 relative z-10">

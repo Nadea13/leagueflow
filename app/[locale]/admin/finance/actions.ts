@@ -23,7 +23,7 @@ export async function getAllPayments() {
 
     // Fetch users for mapping (Email is key)
     const { data: users } = await supabase
-        .from("profiles")
+        .from("users")
         .select("id, email, full_name");
 
     const userMap = new Map(users?.map((u: { id: string; email?: string | null; full_name?: string | null }) => [u.id, u]) || []);

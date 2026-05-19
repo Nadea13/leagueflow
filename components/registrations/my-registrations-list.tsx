@@ -119,7 +119,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                             <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{tCommon("format")}</span>
                                             <div className="flex items-center gap-2">
                                                 <Trophy className="h-3.5 w-3.5 text-primary/40 shrink-0" />
-                                                <span className="text-[11px] font-black tracking-tight uppercase">
+                                                <span className="text-[11px] font-black tracking-tight">
                                                     {reg.tournament?.format || "N/A"}
                                                 </span>
                                             </div>

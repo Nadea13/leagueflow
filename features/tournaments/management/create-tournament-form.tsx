@@ -55,9 +55,9 @@ export function TournamentCreate() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="sm:gap-2 h-8 w-8 md:h-full md:w-full shadow-[0_0_20px_rgba(0,196,154,0.2)] hover:shadow-[0_0_30px_rgba(0,196,154,0.4)] transition-all">
+                <Button>
                     <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">{t("create_button")}</span>
+                    <span>{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden flex flex-col bg-background border-border p-0 shadow-2xl">

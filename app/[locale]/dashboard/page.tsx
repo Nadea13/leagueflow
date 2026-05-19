@@ -1,24 +1,22 @@
-import { getUserProfile } from "@/actions/common/user";
-import { redirect } from "next/navigation";
+import { getAllPublicTournaments, getMasterPlayer } from "@/actions/common/user";
+import { DashboardClient } from "../../../features/dashboard/dashboard-client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Dashboard",
-    description: "Manage your tournaments, view stats, and track your leagues.",
+    title: "LeagueFlow Dashboard",
+    description: "View tournaments and manage your master player profile.",
 };
 
-export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
-    const { locale } = await params;
-    // Parallel data fetching
-    const [profile] = await Promise.all([
-        getUserProfile()
+export default async function DashboardPage() {
+    const [tournaments, masterPlayer] = await Promise.all([
+        getAllPublicTournaments(),
+        getMasterPlayer()
     ]);
 
-    if (profile?.is_organizer) {
-        redirect(`/${locale}/organizer/dashboard`);
-    } else {
-        redirect(`/${locale}/manager/dashboard`);
-    }
-
-    return null; // Should redirect before reaching here
+    return (
+        <DashboardClient
+            initialTournaments={tournaments}
+            initialMasterPlayer={masterPlayer}
+        />
+    );
 }

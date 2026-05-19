@@ -701,6 +701,7 @@
         "error": "Error"
     },
     "Roster": {
+        "player": "Player",
         "title": "Squad List",
         "view_squad": "View Squad",
         "manage_squad": "Manage Squad",
@@ -713,6 +714,7 @@
         "number": "Number",
         "position": "Position",
         "birth_date": "Birth Date",
+        "tel": "Phone Number",
         "photo": "Photo",
         "upload_photo": "Upload Photo",
         "position_placeholder": "e.g. Forward, GK",

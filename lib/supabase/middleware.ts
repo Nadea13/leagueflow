@@ -64,15 +64,14 @@ export async function updateSession(request: NextRequest) {
         if (isLoginPage || isRootPage) {
             const url = request.nextUrl.clone();
 
-            // Fetch profile to check role for correct dashboard redirection
+                        // Fetch profile to check role for correct dashboard redirection
             const { data: profile } = await supabase
-                .from('profiles')
+                .from('users')
                 .select('role, is_organizer')
                 .eq('id', user.id)
                 .single();
 
-            const isOrganizer = profile?.role === 'organizer' || profile?.is_organizer;
-            const dashboardPath = isOrganizer ? '/organizer/dashboard' : '/dashboard';
+            const dashboardPath = '/dashboard';
 
             // If it's a login page, we want to replace 'login' with the dashboard path to preserve locale if present
             if (isLoginPage) {

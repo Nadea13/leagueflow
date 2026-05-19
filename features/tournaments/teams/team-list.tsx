@@ -106,7 +106,7 @@ function TeamItem({
                         <div className="flex justify-between items-center w-full min-w-0">
                             <div className="flex flex-col overflow-hidden">
                                 <div className="flex items-center gap-2 overflow-hidden">
-                                    <span className="text-xs font-black tracking-tight truncate uppercase">
+                                    <span className="text-xs font-black tracking-tight truncate">
                                         {team.name}
                                     </span>
                                     {isReadOnly && (
@@ -116,7 +116,7 @@ function TeamItem({
                                     )}
                                 </div>
                                 {team.group_name && !showGroupSelector && (
-                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                                    <span className="text-[9px] font-bold text-muted-foreground tracking-widest">
                                         {tGroup("group")} {team.group_name}
                                     </span>
                                 )}
@@ -131,13 +131,13 @@ function TeamItem({
                                             onValueChange={handleGroupChange}
                                             disabled={isGroupLoading}
                                         >
-                                            <SelectTrigger className="h-7 text-[9px] font-black tracking-widest focus:ring-0 uppercase">
+                                            <SelectTrigger className="h-7 text-[9px] font-black tracking-widest focus:ring-0">
                                                 <SelectValue placeholder={tGroup("group")} />
                                             </SelectTrigger>
                                             <SelectContent className="border-border">
-                                                <SelectItem value="none" className="text-[9px] font-bold uppercase">{tCommon("none")}</SelectItem>
+                                                <SelectItem value="none" className="text-[9px] font-bold">{tCommon("none")}</SelectItem>
                                                 {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map((g) => (
-                                                    <SelectItem key={g} value={g} className="text-[9px] font-black uppercase">
+                                                    <SelectItem key={g} value={g} className="text-[9px] font-black">
                                                         {tGroup("group")} {g}
                                                     </SelectItem>
                                                 ))}
@@ -145,11 +145,11 @@ function TeamItem({
                                         </Select>
                                     </div>
                                 ) : team.group_name ? (
-                                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 py-0.5 uppercase">
+                                    <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black tracking-widest px-1.5 py-0.5">
                                         {tGroup("group")} {team.group_name}
                                     </Badge>
                                 ) : (
-                                    <span className="text-[9px] font-bold text-muted-foreground/40 tracking-widest uppercase">{t("participating_team")}</span>
+                                    <span className="text-[9px] font-bold text-muted-foreground/40 tracking-widest">{t("participating_team")}</span>
                                 )}
                             </div>
                         </div>

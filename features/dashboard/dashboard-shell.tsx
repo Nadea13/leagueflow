@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { TournamentCreate } from "@/features/tournaments/management/create-tournament-form";
-import { CreateTeamDialog } from "@/features/dashboard/create-team-dialog";
+import { CreateTeamForm as CreateTeamDialog } from "@/features/teams/create-team-form";
 import { StatsCards } from "@/components/shared/stats-cards";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { EmptyState } from "@/components/shared/empty-state";

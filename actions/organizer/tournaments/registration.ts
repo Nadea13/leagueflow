@@ -70,26 +70,7 @@ export async function approveRegistration(
             .update({ tournament_team_id: teamId })
             .eq("id", registrationId);
             
-        // Copy Players for fallback case
-        if (reg.existing_team_id) {
-            const { data: sourcePlayers } = await adminSupabase
-                .from("players")
-                .select("*")
-                .or(`team_id.eq.${reg.existing_team_id},global_team_id.eq.${reg.existing_team_id}`);
-
-            if (sourcePlayers && sourcePlayers.length > 0) {
-                const playersToInsert = sourcePlayers.map(p => ({
-                    team_id: teamId,
-                    global_team_id: null,
-                    name: p.name,
-                    number: p.number,
-                    position: p.position,
-                    global_player_id: p.global_player_id,
-                    created_at: new Date().toISOString()
-                }));
-                await adminSupabase.from("players").insert(playersToInsert);
-            }
-        }
+        // Copy Players is not required as the roster is shared globally via player_sports.
     }
 
     // 4. Create Team Payment for Financial Summary

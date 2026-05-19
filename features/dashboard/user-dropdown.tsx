@@ -26,13 +26,13 @@ import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function UserDropdown({ email, name, mode = 'team', className }: { email: string | undefined, name?: string | null, mode?: 'organizer' | 'team', className?: string }) {
+export function UserDropdown({ email, name, className }: { email: string | undefined, name?: string | null, className?: string }) {
     const { setTheme } = useTheme()
     const locale = useLocale()
     const t = useTranslations("Nav")
     const tCommon = useTranslations("Common")
 
-    const profileHref = mode === 'organizer' ? '/organizer/settings' : '/manager/settings'
+    const profileHref = '/dashboard/settings'
     const displayName = name || email;
 
     return (

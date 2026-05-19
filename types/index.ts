@@ -115,6 +115,8 @@ export interface Player {
     created_at: string;
     // Join
     global_player?: GlobalPlayer | null;
+    deleted_at?: string | null;
+    tel?: string | null;
 }
 
 export interface GlobalPlayer {

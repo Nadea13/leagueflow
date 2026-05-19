@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
     // Check if user has admin role
     const { data: profile } = await supabase
-        .from("profiles")
+        .from("users")
         .select("role, full_name")
         .eq("id", user.id)
         .single();

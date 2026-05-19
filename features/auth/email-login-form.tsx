@@ -41,13 +41,8 @@ export function EmailLoginForm() {
                 return;
             }
 
-            // Redirect based on role
-            const userData = result.data as { role?: string; is_organizer?: boolean };
-            if (userData?.role === 'organizer' || userData?.is_organizer) {
-                router.push(`/${locale}/organizer/dashboard`);
-            } else {
-                router.push(`/${locale}/dashboard`);
-            }
+            // Redirect to dashboard
+            router.push(`/${locale}/dashboard`);
             router.refresh();
         } catch (_err) {
             setError(t('invalid_credentials'));
