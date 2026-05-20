@@ -31,7 +31,7 @@ import {
 import { useTranslations } from "next-intl";
 
 export function NodeSettings() {
-    const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, setActiveNodeId } = useBracketStore();
+    const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, setActiveNodeId, activeCategoryId } = useBracketStore();
     const params = useParams();
     const tournamentId = params.id as string;
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
@@ -398,7 +398,9 @@ export function NodeSettings() {
                                                     isLimitReached={false}
                                                     onSuccess={() => {
                                                         setIsAddDialogOpen(false);
-                                                        fetchTeams(tournamentId);
+                                                        if (activeCategoryId) {
+                                                            fetchTeams(activeCategoryId);
+                                                        }
                                                     }}
                                                 />
                                             </div>

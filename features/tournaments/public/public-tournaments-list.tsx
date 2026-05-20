@@ -33,8 +33,8 @@ export function PublicTournaments({ onlyActive = false }: { onlyActive?: boolean
         fetchTournaments();
     }, [search]);
 
-    const activeTournaments = tournaments.filter(t => t.status === "active");
-    const completedTournaments = tournaments.filter(t => t.status === "completed");
+    const activeTournaments = tournaments.filter(t => t.status === "ongoing" || t.status === "upcoming");
+    const completedTournaments = tournaments.filter(t => t.status === "finished");
 
     return (
         <div className="space-y-4 md:space-y-6">

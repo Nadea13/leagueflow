@@ -18,7 +18,7 @@ import {
     Loader2, Plus, RefreshCw, RotateCcw, Save, Users, X, Zap,
     List, ListOrdered, Settings, Info, MapPin, Hammer, ShieldAlert,
     Calendar, Settings2, CalendarCheck, ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock
+    Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import {
@@ -33,10 +33,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/organizer/tournaments/bracket";
 import { updateTournament } from "@/actions/organizer/tournaments/general";
+import { createTournamentCategory } from "@/actions/organizer/dashboard";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
@@ -44,7 +53,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
-import { BracketCanvasData, Match, Tournament, TournamentTeam } from "@/types";
+import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus } from "@/types";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
 import { MatchGenerator } from "@/features/tournaments/matches/match-generator";
@@ -160,15 +170,16 @@ function CanvasInternal({
         fetchTeams,
         teams,
         setTeams: setStoreTeams,
+        setActiveCategoryId: setStoreCategoryId,
         reset,
     } = useBracketStore();
 
-    // Initial sync
+    // Sync server-provided teams as initial state (before category-specific fetch runs)
     useEffect(() => {
         if (initialTeamsData && initialTeamsData.length > 0) {
             setStoreTeams(initialTeamsData as any);
         }
-    }, [initialTeamsData, setStoreTeams]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
     const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'registration' | 'rules' | 'venue' | 'collaborators' | 'danger'>('general');
     const [isEditMode, setIsEditMode] = useState(false);
@@ -177,7 +188,8 @@ function CanvasInternal({
     const [tempName, setTempName] = useState(tournamentName);
     const { screenToFlowPosition } = useReactFlow();
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
-    const [isLocked, setIsLocked] = useState(readonly);
+    const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
+    const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
     const [initialFitDone, setInitialFitDone] = useState(false);
 
     // Only set initialFitDone to true once nodes are loaded
@@ -187,10 +199,139 @@ function CanvasInternal({
         }
     }, [nodes.length, initialFitDone]);
 
-    // Sync isLocked with readonly prop if it changes
+    // Sync isLocked with readonly prop or finished status if it changes
     useEffect(() => {
-        setIsLocked(readonly);
-    }, [readonly]);
+        if (currentStatus === 'finished') {
+            setIsLocked(true);
+        } else {
+            setIsLocked(readonly);
+        }
+    }, [readonly, currentStatus]);
+
+    const [isStatusUpdating, setIsStatusUpdating] = useState(false);
+    const router = useRouter();
+
+    const [categories, setCategories] = useState<any[]>([]);
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    // Read persisted category from URL (?category=id), fallback to null (first category)
+    const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
+        searchParams.get("category")
+    );
+    const [ageCategories, setAgeCategories] = useState<{ id: number; category_name: string }[]>([]);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    // Fetch categories and age categories.
+    // Pass targetCategoryId to switch to a specific category after loading (e.g. after creating one).
+    const loadCategories = useCallback(async (targetCategoryId?: string) => {
+        const supabase = createClient();
+        const { data: catData } = await supabase
+            .from("tournament_categories")
+            .select(`
+                *,
+                age_categories(category_name)
+            `)
+            .eq("tournament_id", tournamentId)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: true });
+
+        if (catData && catData.length > 0) {
+            setCategories(catData);
+
+            if (targetCategoryId) {
+                // Explicit switch — hydrate and activate without using the callback form
+                const targetCat = catData.find((c: any) => c.id === targetCategoryId);
+                hydrate(targetCat?.canvas_data ?? null);
+                setActiveCategoryId(targetCategoryId);
+            } else {
+                setActiveCategoryId(prev => {
+                    if (!prev) {
+                        hydrate(catData[0].canvas_data ?? null);
+                        return catData[0].id;
+                    }
+                    const current = catData.find((c: any) => c.id === prev);
+                    if (current) {
+                        hydrate(current.canvas_data ?? null);
+                        return prev;
+                    }
+                    // URL category no longer exists — fall back to first
+                    hydrate(catData[0].canvas_data ?? null);
+                    return catData[0].id;
+                });
+            }
+        }
+
+        return catData ?? [];
+    }, [tournamentId, hydrate]);
+
+    useEffect(() => {
+        loadCategories();
+    }, [loadCategories]);
+
+    useEffect(() => {
+        async function loadAgeCategories() {
+            const supabase = createClient();
+            const { data } = await supabase
+                .from("age_categories")
+                .select("id, category_name")
+                .is("deleted_at", null)
+                .order("id", { ascending: true });
+            if (data) {
+                setAgeCategories(data);
+            }
+        }
+        loadAgeCategories();
+    }, []);
+
+    // (Hydration is now handled directly in loadCategories and handleCategorySwitch)
+
+    const getCategoryDisplayName = useCallback((cat: any) => {
+        const ageName = cat.age_categories?.category_name || "General";
+        const gender = cat.gender_type === 'open' ? (locale === 'th' ? 'รุ่นทั่วไป' : 'Open')
+            : cat.gender_type === 'male' ? (locale === 'th' ? 'ชาย' : 'Male')
+            : cat.gender_type === 'female' ? (locale === 'th' ? 'หญิง' : 'Female')
+            : (locale === 'th' ? 'ผสม' : 'Mixed');
+        return `${ageName} (${gender})`;
+    }, [locale]);
+
+    useEffect(() => {
+        if (tournament?.status) {
+            setCurrentStatus(tournament.status);
+        }
+    }, [tournament?.status]);
+
+    const handleStatusChange = async (newStatus: string) => {
+        setIsStatusUpdating(true);
+        const formData = new FormData();
+        formData.append("status", newStatus);
+        formData.append("form_type", "general");
+
+        try {
+            const res = await updateTournament(tournamentId, null, formData);
+            if (res.success) {
+                setCurrentStatus(newStatus as TournamentStatus);
+                toast({
+                    title: "Success",
+                    description: "Tournament status updated successfully",
+                });
+                router.refresh();
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to update tournament status",
+                    variant: "destructive",
+                });
+            }
+        } catch {
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred",
+                variant: "destructive",
+            });
+        } finally {
+            setIsStatusUpdating(false);
+        }
+    };
 
     const getCenterPos = () => {
         return screenToFlowPosition({
@@ -213,11 +354,13 @@ function CanvasInternal({
         setSelectedDate(format(next, 'yyyy-MM-dd'));
     };
 
+    // Re-fetch teams whenever activeCategoryId changes
     useEffect(() => {
-        if (tournamentId) {
-            fetchTeams(tournamentId);
+        if (activeCategoryId) {
+            fetchTeams(activeCategoryId);
+            setStoreCategoryId(activeCategoryId);
         }
-    }, [tournamentId, fetchTeams]);
+    }, [activeCategoryId, fetchTeams, setStoreCategoryId]);
 
     const onDragStart = (event: React.DragEvent, teamName: string) => {
         event.dataTransfer.setData("application/reactflow-team", teamName);
@@ -226,9 +369,8 @@ function CanvasInternal({
 
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        hydrate(initialCanvasData);
-    }, [hydrate, initialCanvasData]);
+    // initialCanvasData is intentionally NOT used to hydrate here.
+    // Each category's canvas_data is loaded independently via loadCategories.
 
     const handleSave = useCallback(async (showToast = false) => {
         if (!isDirty || isSaving || readonly) return;
@@ -236,10 +378,16 @@ function CanvasInternal({
         setIsSaving(true);
         try {
             const canvasData = getCanvasData();
-            const result = await saveBracketCanvas(tournamentId, canvasData);
+            const result = await saveBracketCanvas(tournamentId, canvasData, activeCategoryId || undefined);
             if (result.success) {
                 if (result.data) {
                     hydrate(result.data);
+                    // Update local categories list
+                    setCategories(prev => prev.map(c => 
+                        c.id === activeCategoryId 
+                            ? { ...c, canvas_data: result.data } 
+                            : c
+                    ));
                 }
                 markClean();
                 if (showToast) {
@@ -265,7 +413,24 @@ function CanvasInternal({
         } finally {
             setIsSaving(false);
         }
-    }, [getCanvasData, hydrate, isDirty, isSaving, markClean, readonly, toast, tournamentId]);
+    }, [getCanvasData, hydrate, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId]);
+
+    const handleCategorySwitch = useCallback(async (newCategoryId: string) => {
+        if (newCategoryId === activeCategoryId) return;
+        if (isDirty) {
+            await handleSave(false);
+        }
+        // Hydrate canvas from local cache and fetch teams for the new category
+        const cached = categories.find(c => c.id === newCategoryId);
+        hydrate(cached?.canvas_data ?? null);
+        setActiveCategoryId(newCategoryId);
+        setStoreCategoryId(newCategoryId);
+        fetchTeams(newCategoryId);
+        // Persist to URL without adding a history entry
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("category", newCategoryId);
+        window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+    }, [activeCategoryId, isDirty, handleSave, categories, hydrate, fetchTeams, setStoreCategoryId, searchParams, pathname]);
 
     const [isDragging, setIsDragging] = useState(false);
 
@@ -360,13 +525,14 @@ function CanvasInternal({
             setIsEditingName(false);
         }
     };
-
+    const activeCategory = categories.find(c => c.id === activeCategoryId);
+    const activeCategoryName = activeCategory ? getCategoryDisplayName(activeCategory) : null;
 
     return (
         <div className={cn("flex flex-col h-full w-full border bg-background rounded-xl")}>
             <div className="flex items-center justify-between p-2 md:p-4 border-b">
-                <div className="flex items-center gap-2">
-                    <div className="flex flex-col">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="flex items-center gap-2 md:gap-4">
                         {isEditingName && !readonly ? (
                             <Input
                                 value={tempName}
@@ -379,13 +545,12 @@ function CanvasInternal({
                                         setTempName(currentName);
                                     }
                                 }}
-                                className="h-8 text-sm font-bold"
                                 autoFocus
                             />
                         ) : (
                             <span
                                 className={cn(
-                                    "font-bold tracking-tight cursor-pointer hover:text-primary transition-colors",
+                                    "text-lg font-bold tracking-tight cursor-pointer hover:text-primary transition-colors",
                                     readonly && "cursor-default hover:text-foreground"
                                 )}
                                 onClick={() => !readonly && setIsEditingName(true)}
@@ -393,16 +558,89 @@ function CanvasInternal({
                                 {currentName}
                             </span>
                         )}
+                        <Button
+                            variant={isLocked ? "default" : "outline"}
+                            onClick={() => setIsLocked(!isLocked)}
+                            disabled={currentStatus === 'finished' || readonly}
+                            className={cn(
+                                "transition-all w-10",
+                                isLocked
+                                    ? "bg-amber-500 text-white"
+                                    : "text-amber-500"
+                            )}
+                        >
+                            {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                        </Button>
+
+                        {/* Category Dropdown Selector */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-1.5 font-bold text-xs tracking-tight border-slate-200 dark:border-foreground/10 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 h-10 px-3"
+                                >
+                                    <Trophy className="h-4 w-4 text-primary animate-pulse" />
+                                    <span>
+                                        {activeCategoryName ? activeCategoryName : (locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category")}
+                                    </span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-64 bg-card shadow-2xl rounded-sm">
+                                <DropdownMenuLabel className="text-xs font-black tracking-widest uppercase opacity-60">
+                                    {locale === 'th' ? "ประเภทการแข่งขัน" : "Tournament Categories"}
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="border-border/10" />
+                                
+                                {categories.length === 0 ? (
+                                    <div className="px-2 py-3 text-xs text-muted-foreground font-semibold text-center">
+                                        {locale === 'th' ? "ยังไม่ได้ตั้งค่าประเภทการแข่งขัน" : "No categories configured yet"}
+                                    </div>
+                                ) : (
+                                    categories.map((cat) => {
+                                        const catName = getCategoryDisplayName(cat);
+                                        const isActive = cat.id === activeCategoryId;
+                                        return (
+                                            <DropdownMenuItem
+                                                key={cat.id}
+                                                onClick={() => handleCategorySwitch(cat.id)}
+                                                className={cn(
+                                                    "cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary flex items-center justify-between font-bold",
+                                                    isActive && "text-primary bg-primary/5"
+                                                )}
+                                            >
+                                                <span>{catName}</span>
+                                                <Badge variant="outline" className="text-[9px] px-1 py-0 scale-90">
+                                                    {cat.max_teams} Teams
+                                                </Badge>
+                                            </DropdownMenuItem>
+                                        );
+                                    })
+                                )}
+
+                                {!readonly && (
+                                    <>
+                                        <DropdownMenuSeparator className="border-border/10" />
+                                        <DropdownMenuItem
+                                            onClick={() => setIsCreateOpen(true)}
+                                            className="cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary font-bold text-primary flex items-center gap-1.5"
+                                        >
+                                            <Plus className="h-3.5 w-3.5" />
+                                            <span>{locale === 'th' ? "สร้างประเภทการแข่งขัน..." : "Create Category..."}</span>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 md:gap-4">
                     {onClose && (
-                        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                        <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
                             <X className="h-4 w-4" />
                         </Button>
                     )}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-4">
                         {isSaving ? (
                             <RefreshCw className="h-4 w-4 text-primary animate-spin" />
                         ) : isDirty ? (
@@ -411,28 +649,45 @@ function CanvasInternal({
                             <RefreshCw className="h-4 w-4 text-primary transition-all duration-300" />
                         )}
                         {!readonly && (
-                            <div className="flex items-center gap-2">
-                                <Badge
-                                    variant="outline"
-                                    className={cn(
-                                        "h-8 px-3 text-[10px] font-black tracking-widest border transition-all",
-                                        tournament?.status === 'active' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                                            tournament?.status === 'completed' ? "bg-primary/10 text-primary border-primary/20" :
-                                                "bg-muted/50 text-muted-foreground border-muted-foreground/20"
-                                    )}
+                            <div className="flex items-center gap-2 md:gap-4">
+                                <Select
+                                    value={currentStatus}
+                                    onValueChange={handleStatusChange}
+                                    disabled={isStatusUpdating}
                                 >
-                                    {tournament?.status === 'active' ? (locale === 'th' ? "กำลังดำเนินการ" : "ACTIVE") :
-                                        tournament?.status === 'completed' ? (locale === 'th' ? "เสร็จสิ้น" : "COMPLETE") :
-                                            (locale === 'th' ? "แบบร่าง" : "DRAFT")}
-                                </Badge>
+                                    <SelectTrigger
+                                        className={cn(
+                                            "",
+                                            currentStatus === 'ongoing' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" :
+                                                currentStatus === 'finished' ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
+                                                    currentStatus === 'upcoming' ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
+                                                        "bg-muted/50 text-muted-foreground border-muted-foreground/20 hover:bg-muted"
+                                        )}
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card border-border/50 text-[10px] font-black tracking-widest">
+                                        <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
+                                            {locale === 'th' ? "แบบร่าง" : "DRAFT"}
+                                        </SelectItem>
+                                        <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
+                                            {locale === 'th' ? "เร็วๆ นี้" : "UPCOMING"}
+                                        </SelectItem>
+                                        <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
+                                            {locale === 'th' ? "กำลังดำเนินการ" : "ONGOING"}
+                                        </SelectItem>
+                                        <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
+                                            {locale === 'th' ? "เสร็จสิ้น" : "FINISHED"}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
 
                                 <Button
                                     variant="outline"
-                                    size="sm"
                                     onClick={handleReset}
-                                    className="h-8 text-[10px] font-black tracking-widest border-rose-500/20 text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all"
+                                    className="border-rose-500/20 text-rose-500 transition-all w-10"
                                 >
-                                    <RotateCcw className="h-3 w-3" />
+                                    <RotateCcw className="h-4 w-4" />
                                 </Button>
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
@@ -440,9 +695,9 @@ function CanvasInternal({
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="h-8 w-8 border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all"
+                                            className="text-amber-500 transition-all"
                                         >
-                                            <Megaphone className="h-3.5 w-3.5" />
+                                            <Megaphone className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="sm:max-w-[500px] p-0 border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -463,82 +718,89 @@ function CanvasInternal({
                                     </DialogContent>
                                 </Dialog>
 
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={handleCopyLinkRegister}
-                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all"
-                                >
-                                    <Link2 className="h-4 w-4" />
-                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="text-primary transition-all"
+                                        >
+                                            <Share2 className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm">
+                                        <DropdownMenuLabel className="text-xs font-black tracking-widest">
+                                            {locale === 'th' ? "แชร์ทัวร์นาเมนต์" : "Share Tournament"}
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator className="border-border/10" />
+                                        
+                                        <div className="p-1">
+                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
+                                                {locale === 'th' ? "หน้าทัวร์นาเมนต์ (สาธารณะ)" : "Tournament View (Public)"}
+                                            </div>
+                                            <DropdownMenuItem
+                                                onClick={handleCopyLink}
+                                                className="cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary"
+                                            >
+                                                <Link2 className="mr-2 h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "คัดลอกลิงก์" : "Copy Link"}</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={handleOpenLink}
+                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary"
+                                            >
+                                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "เปิดลิงก์" : "Open Link"}</span>
+                                            </DropdownMenuItem>
+                                        </div>
 
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={handleOpenLinkRegister}
-                                    className="h-8 w-8 border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30 transition-all"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                </Button>
 
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={handleCopyLink}
-                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all"
-                                >
-                                    <Link2 className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={handleOpenLink}
-                                    className="h-8 w-8 border-primary/20 text-chart-5 hover:bg-primary/10 hover:border-primary/30 transition-all"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                </Button>
+                                        <div className="p-1">
+                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
+                                                {locale === 'th' ? "หน้าลงทะเบียนทีม" : "Team Registration"}
+                                            </div>
+                                            <DropdownMenuItem
+                                                onClick={handleCopyLinkRegister}
+                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary"
+                                            >
+                                                <Link2 className="mr-2 h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "คัดลอกลิงก์ลงทะเบียน" : "Copy Reg. Link"}</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={handleOpenLinkRegister}
+                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary"
+                                            >
+                                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "เปิดลิงก์ลงทะเบียน" : "Open Reg. Link"}</span>
+                                            </DropdownMenuItem>
+                                        </div>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
 
                                 <Button
                                     variant={activeSidebar === 'schedule' ? "default" : "outline"}
-                                    size="sm"
                                     onClick={() => setActiveSidebar(activeSidebar === 'schedule' ? 'teams' : 'schedule')}
                                     className={cn(
-                                        "h-8 text-[10px] font-black tracking-widest transition-all px-3",
+                                        "transition-all w-10",
                                         activeSidebar === 'schedule'
-                                            ? "bg-primary text-black hover:bg-primary/90"
-                                            : "border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30"
+                                            ? "bg-primary"
+                                            : "text-primary"
                                     )}
                                 >
-                                    <Calendar className="h-3 w-3" />
+                                    <Calendar className="h-4 w-4" />
                                 </Button>
 
                                 <Button
                                     variant={activeSidebar === 'settings' ? "default" : "outline"}
-                                    size="sm"
                                     onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
                                     className={cn(
-                                        "h-8 text-[10px] font-black tracking-widest transition-all",
+                                        "transition-all w-10",
                                         activeSidebar === 'settings'
-                                            ? "bg-primary text-black hover:bg-primary/90"
-                                            : "border-primary/20 text-primary hover:bg-primary/10 hover:border-primary/30"
+                                            ? "bg-primary"
+                                            : "text-primary"
                                     )}
                                 >
-                                    <Settings className="h-3 w-3" />
-                                </Button>
-
-                                <Button
-                                    variant={isLocked ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setIsLocked(!isLocked)}
-                                    className={cn(
-                                        "h-8 text-[10px] font-black tracking-widest transition-all px-3",
-                                        isLocked
-                                            ? "bg-amber-500 text-white hover:bg-amber-600"
-                                            : "border-amber-500/20 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500/30"
-                                    )}
-                                >
-                                    {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+                                    <Settings className="h-4 w-4" />
                                 </Button>
                             </div>
                         )}
@@ -830,7 +1092,6 @@ function CanvasInternal({
                                         <PopoverTrigger asChild>
                                             <Button
                                                 variant="default"
-                                                className=""
                                             >
                                                 <Plus className="h-4 w-4" />
                                                 NEW
@@ -839,11 +1100,11 @@ function CanvasInternal({
                                         <PopoverContent
                                             side="bottom"
                                             align="end"
-                                            className="w-64 p-1 bg-card border-border/50 shadow-2xl mt-2"
+                                            className="w-64 p-0 bg-card shadow-2xl mt-1 rounded-sm"
                                             sideOffset={5}
                                         >
-                                            <div className="p-2 border-b border-border/10 mb-1">
-                                                <span className="text-[10px] font-black tracking-widest text-muted-foreground">Add Components</span>
+                                            <div className="p-2 border-b">
+                                                <span className="text-xs font-bold tracking-wider">Add Components</span>
                                             </div>
                                             <NodeTools
                                                 onAddMatch={() => addMatchNode(getCenterPos())}
@@ -922,7 +1183,7 @@ function CanvasInternal({
                                     },
                                 }}
                             >
-                                <Background color="#333" variant={BackgroundVariant.Dots} gap={16} size={2} style={{ opacity: 1 }} />
+                                <Background color="#555" variant={BackgroundVariant.Dots} gap={16} size={1} style={{ opacity: 1 }} />
                                 <Controls
                                     showInteractive={false}
                                     className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
@@ -934,6 +1195,35 @@ function CanvasInternal({
                     </>
                 )}
             </div>
+            
+            {/* Create Category Dialog */}
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <DialogContent className="sm:max-w-[450px] p-6 border-border/50 bg-background/95 backdrop-blur-md">
+                    <DialogHeader className="space-y-2">
+                        <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2">
+                            <Trophy className="h-6 w-6 text-primary animate-bounce" />
+                            {locale === 'th' ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
+                        </DialogTitle>
+                    </DialogHeader>
+                    
+                    <CreateCategoryMiniForm
+                        tournamentId={tournamentId}
+                        ageCategories={ageCategories}
+                        onSuccess={async (newCatId) => {
+                            setIsCreateOpen(false);
+                            await loadCategories(newCatId || undefined);
+                            if (newCatId) {
+                                setStoreCategoryId(newCatId);
+                                fetchTeams(newCatId);
+                                // Persist new category to URL
+                                const params = new URLSearchParams(searchParams.toString());
+                                params.set("category", newCatId);
+                                window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+                            }
+                        }}
+                    />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -943,5 +1233,155 @@ export function Canvas(props: CanvasProps) {
         <ReactFlowProvider>
             <CanvasInternal {...props} />
         </ReactFlowProvider>
+    );
+}
+
+function CreateCategoryMiniForm({
+    tournamentId,
+    ageCategories,
+    onSuccess
+}: {
+    tournamentId: string;
+    ageCategories: { id: number; category_name: string }[];
+    onSuccess: (id: string) => void;
+}) {
+    const locale = useLocale();
+    const { toast } = useToast();
+    const [ageCategoryId, setAgeCategoryId] = useState<string>("");
+    const [genderType, setGenderType] = useState<string>("open");
+    const [maxTeams, setMaxTeams] = useState<string>("8");
+    const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        if (ageCategories && ageCategories.length > 0 && !ageCategoryId) {
+            setAgeCategoryId(ageCategories[0].id.toString());
+        }
+    }, [ageCategories, ageCategoryId]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!ageCategoryId) {
+            toast({
+                title: "Error",
+                description: "Please select an age category.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setIsPending(true);
+        try {
+            const res = await createTournamentCategory(
+                tournamentId,
+                parseInt(ageCategoryId),
+                genderType,
+                parseInt(maxTeams)
+            );
+            if (res.success) {
+                toast({
+                    title: locale === 'th' ? "สร้างสำเร็จ" : "Created Successfully",
+                    description: locale === 'th' ? "สร้างประเภทการแข่งขันเรียบร้อยแล้ว" : "New category has been created."
+                });
+                
+                const supabase = createClient();
+                const { data } = await supabase
+                    .from("tournament_categories")
+                    .select("id")
+                    .eq("tournament_id", tournamentId)
+                    .eq("age_category_id", parseInt(ageCategoryId))
+                    .eq("gender_type", genderType)
+                    .is("deleted_at", null)
+                    .single();
+
+                if (data) {
+                    onSuccess(data.id);
+                } else {
+                    onSuccess("");
+                }
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to create category",
+                    variant: "destructive"
+                });
+            }
+        } catch (err: any) {
+            toast({
+                title: "Error",
+                description: err.message || "An unexpected error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setIsPending(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {locale === 'th' ? "รุ่นอายุ" : "Age Category"}
+                </Label>
+                <Select value={ageCategoryId} onValueChange={setAgeCategoryId}>
+                    <SelectTrigger className="w-full h-10 border-border/50">
+                        <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นอายุ" : "Select Age Category"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {ageCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                                {cat.category_name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {locale === 'th' ? "ประเภทเพศ" : "Gender Group"}
+                </Label>
+                <Select value={genderType} onValueChange={setGenderType}>
+                    <SelectTrigger className="w-full h-10 border-border/50">
+                        <SelectValue placeholder={locale === 'th' ? "เลือกประเภทเพศ" : "Select Gender Group"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="open">{locale === 'th' ? "รุ่นทั่วไป (ไม่จำกัดเพศ)" : "Open (All Genders)"}</SelectItem>
+                        <SelectItem value="male">{locale === 'th' ? "ชาย" : "Male"}</SelectItem>
+                        <SelectItem value="female">{locale === 'th' ? "หญิง" : "Female"}</SelectItem>
+                        <SelectItem value="mixed">{locale === 'th' ? "คู่ผสม / ผสม" : "Mixed"}</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {locale === 'th' ? "จำนวนทีมสูงสุด" : "Team Limit"}
+                </Label>
+                <Select value={maxTeams} onValueChange={setMaxTeams}>
+                    <SelectTrigger className="w-full h-10 border-border/50">
+                        <SelectValue placeholder={locale === 'th' ? "เลือกจำนวนทีม" : "Select Team Limit"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="4">4 Teams</SelectItem>
+                        <SelectItem value="8">8 Teams</SelectItem>
+                        <SelectItem value="16">16 Teams</SelectItem>
+                        <SelectItem value="32">32 Teams</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+                <Button type="submit" disabled={isPending} className="font-bold">
+                    {isPending ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            {locale === 'th' ? "กำลังสร้าง..." : "Creating..."}
+                        </>
+                    ) : (
+                        locale === 'th' ? "สร้างรุ่นการแข่งขัน" : "Create Category"
+                    )}
+                </Button>
+            </div>
+        </form>
     );
 }

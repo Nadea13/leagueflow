@@ -38,7 +38,7 @@ export function PublicTournamentCard({ tournament }: PublicTournamentCardProps) 
                                 {tournament.status && (
                                     <div className={cn(
                                         "text-[9px] font-black tracking-widest px-2 py-0.5",
-                                        tournament.status === 'completed' ? "bg-muted text-muted-foreground/40" : "bg-primary/10 text-primary border border-primary/20"
+                                        tournament.status === 'finished' ? "bg-muted text-muted-foreground/40" : "bg-primary/10 text-primary border border-primary/20"
                                     )}>
                                         {tSettings(tournament.status as Parameters<typeof tSettings>[0])}
                                     </div>

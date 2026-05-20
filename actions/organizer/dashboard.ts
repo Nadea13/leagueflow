@@ -204,3 +204,84 @@ export async function registerAsOrganizer(): Promise<ActionResponse> {
         return { success: false, error: (error as Error).message };
     }
 }
+
+export async function createTournamentCategory(
+    tournamentId: string,
+    ageCategoryId: number,
+    genderType: string,
+    maxTeams: number
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // Validate that user is organizer or has admin/editor role for this tournament
+        const { data: tournament } = await supabase
+            .from("tournaments")
+            .select("organizer_id")
+            .eq("id", tournamentId)
+            .single();
+
+        if (!tournament) {
+            return { success: false, error: "Tournament not found" };
+        }
+
+        const isOwner = tournament.organizer_id === user.id;
+        let isMember = false;
+
+        if (!isOwner) {
+            const { data: membership } = await supabase
+                .from("tournament_members")
+                .select("role")
+                .eq("tournament_id", tournamentId)
+                .eq("user_id", user.id)
+                .eq("status", "accepted")
+                .in("role", ["admin", "editor"])
+                .single();
+            
+            if (membership) {
+                isMember = true;
+            }
+        }
+
+        if (!isOwner && !isMember) {
+            return { success: false, error: "Unauthorized to modify this tournament" };
+        }
+
+        // Insert category
+        const { data: newCategory, error } = await supabase
+            .from("tournament_categories")
+            .insert({
+                tournament_id: tournamentId,
+                age_category_id: ageCategoryId,
+                gender_type: genderType,
+                max_teams: maxTeams
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Create tournament category error:", error);
+            return { success: false, error: error.message };
+        }
+
+        await logActivity('CREATE_TOURNAMENT_CATEGORY', 'tournament_category', newCategory.id, { 
+            tournament_id: tournamentId,
+            age_category_id: ageCategoryId,
+            gender_type: genderType,
+            max_teams: maxTeams
+        });
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/${tournamentId}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Unexpected error in createTournamentCategory:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+

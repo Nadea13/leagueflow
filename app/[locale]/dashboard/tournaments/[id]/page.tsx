@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Match, Goal, TournamentTeam } from "@/types/index";
+import { CategorySetup } from "@/features/tournaments/management/category-setup";
+import { Trophy } from "lucide-react";
 import { TournamentContent } from "./tournament-content";
 import { getUserRole } from "@/actions/organizer/tournaments/collaborator";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
@@ -25,32 +27,45 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         notFound();
     }
 
-    // Ensure a default tournament category exists for the tournament
-    let { data: categories } = await supabase
+    const userRole = roleRes.success && roleRes.data ? roleRes.data.role : null;
+
+    // Fetch tournament categories
+    const { data: categories } = await supabase
         .from("tournament_categories")
         .select("*")
         .eq("tournament_id", id);
 
-    let category = categories && categories.length > 0 ? categories[0] : null;
+    const category = categories && categories.length > 0 ? categories[0] : null;
     if (!category) {
-        // Create default category
-        const { data: newCategory, error: createCatError } = await supabase
-            .from("tournament_categories")
-            .insert({
-                tournament_id: id,
-                age_category_id: 1, // General / Open
-                gender_type: 'open',
-                max_teams: 8
-            })
-            .select()
-            .single();
-        
-        if (createCatError) {
-            console.error("Failed to create default category:", createCatError);
+        if (userRole === "admin" || userRole === "editor") {
+            const { data: ageCategories } = await supabase
+                .from("age_categories")
+                .select("id, category_name")
+                .is("deleted_at", null)
+                .order("id", { ascending: true });
+
+            return (
+                <CategorySetup
+                    tournamentId={id}
+                    ageCategories={ageCategories || []}
+                    tournamentName={tournamentData.name}
+                />
+            );
         } else {
-            category = newCategory;
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-8 space-y-4">
+                    <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                        <Trophy className="h-8 w-8" />
+                    </div>
+                    <h2 className="text-2xl font-black tracking-tight">Tournament Not Initialized</h2>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-sm">
+                        The organizer has not set up the tournament category yet. Please check back later.
+                    </p>
+                </div>
+            );
         }
     }
+
 
     const categoryId = category ? category.id : null;
     const canvasData = category ? category.canvas_data : null;
@@ -142,7 +157,6 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         }));
     }
 
-    const userRole = roleRes.success && roleRes.data ? roleRes.data.role : null;
     const isPro = true; // Pro locks removed for all users
 
     return (

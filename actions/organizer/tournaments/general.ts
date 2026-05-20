@@ -686,10 +686,10 @@ export async function updateMatch(
             .eq('id', tournamentId)
             .single();
 
-        if (tourney && tourney.status !== 'active') {
+        if (tourney && tourney.status !== 'ongoing') {
             const { error: activateError } = await supabase
                 .from('tournaments')
-                .update({ status: 'active' })
+                .update({ status: 'ongoing' })
                 .eq('id', tournamentId);
                 
             if (activateError) {
@@ -750,7 +750,7 @@ export async function confirmPayment(
     const { error } = await supabase
         .from("tournaments")
         .update({
-            status: 'active',
+            status: 'ongoing',
             plan: 'tournament',
             is_registration_open: true
         })

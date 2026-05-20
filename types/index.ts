@@ -1,6 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 
-export type TournamentStatus = 'draft' | 'active' | 'completed';
+export type TournamentStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished';
 export type MatchStatus = 'scheduled' | 'live' | 'finished';
 export type SportType = 'football';
 

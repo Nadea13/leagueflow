@@ -88,7 +88,7 @@ export async function approvePayment(paymentId: string) {
     if (payment.plan === 'tournament' && payment.tournament_id) {
         const { error: tourneyError } = await supabase
             .from("tournaments")
-            .update({ status: 'active', plan: 'tournament' })
+            .update({ status: 'ongoing', plan: 'tournament' })
             .eq("id", payment.tournament_id);
 
         if (tourneyError) console.error("Failed to update tournament:", tourneyError);

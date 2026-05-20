@@ -174,8 +174,9 @@ export function PublicTournamentShell({
 
                             <Badge className={cn(
                                 "font-black border-none px-3 py-1 shadow-lg text-[10px] h-5 tracking-widest",
-                                tournament?.status === 'active' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
-                                tournament?.status === 'completed' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
+                                tournament?.status === 'ongoing' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
+                                tournament?.status === 'finished' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
+                                tournament?.status === 'upcoming' && "bg-amber-600 hover:bg-amber-700 shadow-amber-900/20",
                                 (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
                             )}>
                                 {tTournament(tournament?.status || 'draft')}

@@ -7,7 +7,8 @@ import { validateTournamentAccess } from "@/lib/security";
 
 export async function saveBracketCanvas(
     tournamentId: string,
-    canvasData: BracketCanvasData
+    canvasData: BracketCanvasData,
+    inputCategoryId?: string
 ): Promise<ActionResponse<BracketCanvasData>> {
     const access = await validateTournamentAccess(tournamentId, "editor");
     if (!access.success) {
@@ -16,16 +17,21 @@ export async function saveBracketCanvas(
 
     const supabase = await createClient();
 
-    // Fetch category first
-    const { data: categories } = await supabase
-        .from("tournament_categories")
-        .select("id")
-        .eq("tournament_id", tournamentId);
+    let targetCategoryId = inputCategoryId;
+    if (!targetCategoryId) {
+        // Fetch first category as fallback
+        const { data: categories } = await supabase
+            .from("tournament_categories")
+            .select("id")
+            .eq("tournament_id", tournamentId);
+        targetCategoryId = categories && categories.length > 0 ? categories[0].id : undefined;
+    }
 
-    const categoryId = categories && categories.length > 0 ? categories[0].id : null;
-    if (!categoryId) {
+    if (!targetCategoryId) {
         return { success: false, error: "Tournament category not found" };
     }
+
+    const categoryId = targetCategoryId;
 
     // 1. Fetch teams for auto-mapping placeholders to IDs
     const { data: tournamentTeams } = await supabase

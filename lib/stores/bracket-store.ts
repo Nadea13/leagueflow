@@ -53,9 +53,11 @@ interface BracketState {
     selectNode: (id: string | null) => void;
     teams: any[];
     setTeams: (teams: any[]) => void;
-    fetchTeams: (tournamentId: string) => Promise<void>;
+    fetchTeams: (categoryId: string) => Promise<void>;
     activeNodeId: string | null;
     setActiveNodeId: (id: string | null) => void;
+    activeCategoryId: string | null;
+    setActiveCategoryId: (id: string | null) => void;
 }
 
 export const useBracketStore = create<BracketState>((set, get) => ({
@@ -66,25 +68,27 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     teams: [],
     activeNodeId: null,
     setActiveNodeId: (id) => set({ activeNodeId: id }),
+    activeCategoryId: null,
+    setActiveCategoryId: (id) => set({ activeCategoryId: id }),
 
     setTeams: (teams) => set({ teams }),
-    fetchTeams: async (tournamentId) => {
+    fetchTeams: async (categoryId) => {
+        if (!categoryId) return;
         const supabase = createClient();
         const { data } = await supabase
             .from("tournament_teams")
-            .select("*, registrations(payment_status)")
-            .eq("tournament_id", tournamentId)
-            .order("name", { ascending: true });
+            .select("*, team:teams(id, name, logo_img), registrations(payment_status)")
+            .eq("tournament_category_id", categoryId)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: true });
 
         if (data) {
-            const filteredTeams = (data as any[]).filter((t) => {
-                const registration = Array.isArray(t.registrations) ? t.registrations[0] : t.registrations;
-                if (registration) {
-                    return (registration as { payment_status: string }).payment_status === 'PAID';
-                }
-                return true; // Manual teams
-            });
-            set({ teams: filteredTeams });
+            const mappedTeams = (data as any[]).map((t) => ({
+                ...t,
+                name: t.team?.name || t.name || "Unknown Team",
+                logo_url: t.team?.logo_img || null,
+            }));
+            set({ teams: mappedTeams });
         }
     },
 

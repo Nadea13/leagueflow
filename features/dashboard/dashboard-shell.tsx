@@ -75,8 +75,8 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
     // Stats for organizer
     const ownedTournaments = tournaments.filter((t) => t.role === 'owner');
     const totalTournaments = ownedTournaments.length;
-    const activeTournaments = ownedTournaments.filter((t) => t.status === 'active').length;
-    const completedTournaments = ownedTournaments.filter((t) => t.status === 'completed').length;
+    const activeTournaments = ownedTournaments.filter((t) => t.status === 'ongoing').length;
+    const completedTournaments = ownedTournaments.filter((t) => t.status === 'finished').length;
 
     if (mode === 'team') {
         return (

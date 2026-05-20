@@ -83,8 +83,9 @@ export function GeneralInfo({ tournament }: GeneralInfoProps) {
                                     </SelectTrigger>
                                     <SelectContent className="bg-card">
                                         <SelectItem value="draft" className="focus:bg-foreground/10 focus:text-primary">{t("draft")}</SelectItem>
-                                        <SelectItem value="active" className="focus:bg-foreground/10 focus:text-primary">{t("active")}</SelectItem>
-                                        <SelectItem value="completed" className="focus:bg-foreground/10 focus:text-primary">{t("completed")}</SelectItem>
+                                        <SelectItem value="upcoming" className="focus:bg-foreground/10 focus:text-primary">{t("upcoming")}</SelectItem>
+                                        <SelectItem value="ongoing" className="focus:bg-foreground/10 focus:text-primary">{t("ongoing")}</SelectItem>
+                                        <SelectItem value="finished" className="focus:bg-foreground/10 focus:text-primary">{t("finished")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
