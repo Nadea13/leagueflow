@@ -134,11 +134,11 @@ export async function getUserRole(
     // Check if user is the owner
     const { data: tournament } = await supabase
         .from("tournaments")
-        .select("user_id")
+        .select("organizer_id")
         .eq("id", tournamentId)
         .single();
 
-    if (tournament && tournament.user_id === user.id) {
+    if (tournament && tournament.organizer_id === user.id) {
         return { success: true, data: { role: 'admin', isOwner: true } };
     }
 

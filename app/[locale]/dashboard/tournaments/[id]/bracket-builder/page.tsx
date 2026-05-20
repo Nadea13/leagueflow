@@ -17,10 +17,10 @@ export default async function BracketBuilderPage({
         notFound();
     }
 
-    // Fetch tournament name and canvas data
+    // Fetch tournament name
     const { data: tournament, error } = await supabase
         .from("tournaments")
-        .select("name, canvas_data, format")
+        .select("name")
         .eq("id", id)
         .single();
 
@@ -28,16 +28,20 @@ export default async function BracketBuilderPage({
         notFound();
     }
 
-    // Only allow for knockout format
-    if (tournament.format !== "knockout") {
-        notFound();
-    }
+    // Fetch category canvas data
+    const { data: categories } = await supabase
+        .from("tournament_categories")
+        .select("canvas_data")
+        .eq("tournament_id", id);
+
+    const category = categories && categories.length > 0 ? categories[0] : null;
+    const canvasData = category ? category.canvas_data : null;
 
     return (
         <Canvas
             tournamentId={id}
             tournamentName={tournament.name}
-            initialCanvasData={tournament.canvas_data ?? null}
+            initialCanvasData={canvasData ?? null}
             readonly={access.role === 'viewer'}
         />
     );

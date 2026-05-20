@@ -178,6 +178,14 @@ function CanvasInternal({
     const { screenToFlowPosition } = useReactFlow();
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
     const [isLocked, setIsLocked] = useState(readonly);
+    const [initialFitDone, setInitialFitDone] = useState(false);
+
+    // Only set initialFitDone to true once nodes are loaded
+    useEffect(() => {
+        if (nodes.length > 0 && !initialFitDone) {
+            setInitialFitDone(true);
+        }
+    }, [nodes.length, initialFitDone]);
 
     // Sync isLocked with readonly prop if it changes
     useEffect(() => {
@@ -355,7 +363,7 @@ function CanvasInternal({
 
 
     return (
-        <div className={cn("flex flex-col h-full w-full border bg-background")}>
+        <div className={cn("flex flex-col h-full w-full border bg-background rounded-xl")}>
             <div className="flex items-center justify-between p-2 md:p-4 border-b">
                 <div className="flex items-center gap-2">
                     <div className="flex flex-col">
@@ -862,6 +870,7 @@ function CanvasInternal({
                             <ReactFlow
                                 nodes={nodes}
                                 edges={edges}
+                                proOptions={{ hideAttribution: true }}
                                 onNodesChange={readonly ? undefined : onNodesChange}
                                 onEdgesChange={readonly ? undefined : onEdgesChange}
                                 onConnect={readonly ? undefined : onConnectWithSave}
@@ -884,7 +893,7 @@ function CanvasInternal({
                                     selectNode(null);
                                 }}
                                 nodeTypes={nodeTypes}
-                                fitView
+                                fitView={!initialFitDone}
                                 minZoom={0.1}
                                 maxZoom={1.5}
                                 nodesDraggable={!readonly && !isLocked}
@@ -913,7 +922,7 @@ function CanvasInternal({
                                     },
                                 }}
                             >
-                                <Background color="#333" variant={BackgroundVariant.Dots} gap={40} size={4} style={{ opacity: 1 }} />
+                                <Background color="#333" variant={BackgroundVariant.Dots} gap={16} size={2} style={{ opacity: 1 }} />
                                 <Controls
                                     showInteractive={false}
                                     className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"

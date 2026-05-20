@@ -29,9 +29,9 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
     if (type === 'tournament') {
         const tournament = data as Tournament & { current_teams?: number };
         const statusColors = {
-            active: "bg-green-500/10 text-green-600 border-none font-bold",
-            completed: "bg-blue-500/10 text-blue-600 border-none font-bold",
-            draft: "bg-yellow-500/10 text-yellow-600 border-none font-bold",
+            active: "bg-green-500",
+            completed: "bg-blue-500",
+            draft: "bg-yellow-500",
         };
 
         const statusColor = statusColors[tournament.status as keyof typeof statusColors] || statusColors.draft;
@@ -39,40 +39,43 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
 
         return (
             <Link href={`/dashboard/tournaments/${tournament.id}`} className="block h-full group">
-                <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-5 border border-border transition-all hover:border-primary/50 overflow-hidden relative shadow-sm hover:shadow-md cursor-pointer">
+                <Card className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
                     <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-primary" />
-                    <CardHeader className="relative z-10">
-                        <div className="flex flex-col gap-2">
-                            <div className={cn("text-[9px] font-bold tracking-widest opacity-80", statusColor.split(' ').filter(c => c.startsWith('text-')).join(' '))}>
-                                {tournament.status ? tSettings(tournament.status) : tSettings('draft')}
+                    <Trophy className="absolute right-2 md:right-4 top-2 md:top-4 z-20 h-4 w-4 text-primary" />
+                    <CardHeader className="pt-2 md:pt-4 relative z-10">
+                        <div className="flex gap-2 md:gap-4 overflow-hidden">
+                            <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
+                                <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name} className="object-contain" />
+                                <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col gap-1">
+                                <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
+                                    {tournament.name}
+                                </CardTitle>
+                                <Badge className={cn("w-fit text-[9px] px-2 py-0.5 border-none font-black shrink-0 rounded", statusColor.split(' ').filter(c => c.startsWith('bg-')).join(' '))}>
+                                    {tournament.status ? tSettings(tournament.status) : tSettings('draft')}
+                                </Badge>
                             </div>
-                            <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
-                                {tournament.name}
-                            </CardTitle>
                         </div>
                     </CardHeader>
 
-                    <CardContent className="relative z-10">
+                    <CardContent className="pb-2 md:pb-4 text-sm relative z-10">
                         <div className="flex flex-col gap-2 md:gap-3">
-                            <div className="grid grid-cols-2 gap-4 border-t border-border pt-2 md:pt-3">
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-bold text-muted-foreground/50 tracking-widest">Start Date</span>
-                                    <span className="text-[10px] font-bold tabular-nums">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground/50 tracking-widest">Start Date</span>
+                                    <span className="text-xs font-bold tabular-nums">
                                         {tournament.start_date
                                             ? formatDate(tournament.start_date, "MMM d", locale)
                                             : tDashboard("card_not_scheduled")}
                                     </span>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-bold text-muted-foreground/50 tracking-widest">Capacity</span>
-                                    <span className="text-[10px] font-bold tabular-nums">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-bold text-muted-foreground/50 tracking-widest">Capacity</span>
+                                    <span className="text-xs font-bold tabular-nums">
                                         {tournament.current_teams || 0}/{tournament.max_teams || 8}
                                     </span>
                                 </div>
-                            </div>
-                            <div className="text-[9px] font-bold text-primary/70 tracking-[0.2em]">
-                                {tournament.format || 'League'} • Championship
                             </div>
                         </div>
                     </CardContent>
@@ -105,7 +108,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                                             {tCommon("active")}
                                         </Badge>
                                     ) : (
-                                        <Badge variant="default" className="w-fit text-[9px] px-2 py-0.5 border-none font-black shrink-0 opacity-70 rounded">
+                                        <Badge variant="default" className="w-fit text-[9px] px-2 py-0.5 border-none font-black shrink-0 rounded">
                                             {tTeam("unassigned_badge")}
                                         </Badge>
                                     )}
@@ -120,7 +123,7 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
                 <CardContent className="pb-2 md:pb-4 text-sm relative z-10">
                     <div className="grid gap-4">
                         <div className="flex items-center gap-2 rounded text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2">
-                            <Trophy className="h-3.5 w-3.5 text-primary" />
+                            <Trophy className="h- w-3.5 text-primary" />
                             <span className="truncate tracking-tight">
                                 {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
                             </span>

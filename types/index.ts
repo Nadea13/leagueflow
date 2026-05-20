@@ -35,6 +35,8 @@ export interface Tournament {
     updated_at?: string;
     document_deadline?: string | null;
     canvas_data?: BracketCanvasData | null;
+    logo_img?: string | null;
+    cover_img?: string | null;
 }
 
 export interface Match {

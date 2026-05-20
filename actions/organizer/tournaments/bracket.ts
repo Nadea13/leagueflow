@@ -16,11 +16,27 @@ export async function saveBracketCanvas(
 
     const supabase = await createClient();
 
+    // Fetch category first
+    const { data: categories } = await supabase
+        .from("tournament_categories")
+        .select("id")
+        .eq("tournament_id", tournamentId);
+
+    const categoryId = categories && categories.length > 0 ? categories[0].id : null;
+    if (!categoryId) {
+        return { success: false, error: "Tournament category not found" };
+    }
+
     // 1. Fetch teams for auto-mapping placeholders to IDs
-    const { data: teams } = await supabase
+    const { data: tournamentTeams } = await supabase
         .from('tournament_teams')
-        .select('id, name')
-        .eq('tournament_id', tournamentId);
+        .select('team_id, team:teams(name)')
+        .eq('tournament_category_id', categoryId);
+
+    const teams = (tournamentTeams || []).map((tt: any) => ({
+        id: tt.team_id,
+        name: tt.team?.name || ""
+    }));
 
     // 2. Process matches in nodes
     const updatedNodes = [...canvasData.nodes];
@@ -38,17 +54,18 @@ export async function saveBracketCanvas(
                 const awayTeam = teams?.find(t => t.name === match.placeholderB);
                 
                 const matchRecord = {
-                    tournament_id: tournamentId,
+                    tournament_category_id: categoryId,
                     node_id: node.id,
-                    placeholder_a: match.placeholderA,
-                    placeholder_b: match.placeholderB,
+                    placeholder_home: match.placeholderA || null,
+                    placeholder_away: match.placeholderB || null,
                     home_team_id: homeTeam?.id || null,
                     away_team_id: awayTeam?.id || null,
-                    match_date: match.match_date || null,
-                    match_time: match.match_time || null,
+                    scheduled_at: match.match_date && match.match_time 
+                        ? `${match.match_date}T${match.match_time}:00Z` 
+                        : null,
                     round: 1, // Default round
-                    stage: matches.length > 1 ? 'group' : 'quarter_final', // Heuristic
-                    status: 'scheduled',
+                    stage: (matches.length > 1 ? 'group' : 'knockout') as any, // match_stage_enum
+                    status: 'scheduled' as any,
                     is_manual: true,
                     match_index: i + 1
                 };
@@ -79,9 +96,9 @@ export async function saveBracketCanvas(
 
     // 3. Save the final updated canvas data
     const { error } = await supabase
-        .from("tournaments")
+        .from("tournament_categories")
         .update({ canvas_data: canvasData })
-        .eq("id", tournamentId);
+        .eq("id", categoryId);
 
     if (error) {
         return { success: false, error: error.message };

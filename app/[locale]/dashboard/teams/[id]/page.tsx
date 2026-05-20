@@ -29,11 +29,11 @@ export default async function TeamDetailPage({
         // Check if user is manager of the tournament this team belongs to (for cross-role support)
         const { data: tournament } = await supabase
             .from("tournaments")
-            .select("user_id")
+            .select("organizer_id")
             .eq("id", team.tournament_id)
             .single();
 
-        if (tournament && tournament.user_id === user.id) {
+        if (tournament && tournament.organizer_id === user.id) {
             isOwner = true;
         }
     }

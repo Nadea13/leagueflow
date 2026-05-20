@@ -41,11 +41,11 @@ async function isAuthorizedForPlayer(playerId: string, userId: string) {
 
                 const { data: tournament } = await supabase
                     .from("tournaments")
-                    .select("user_id")
+                    .select("organizer_id")
                     .eq("id", participation.tournament_id)
                     .single();
                 
-                if (tournament && tournament.user_id === userId) return true;
+                if (tournament && tournament.organizer_id === userId) return true;
 
                 const { data: membership } = await supabase
                     .from("tournament_members")
@@ -103,11 +103,11 @@ async function isAuthorizedForGlobalPlayer(globalPlayerId: string, userId: strin
                         // Check if user is organizer
                         const { data: tournament } = await supabase
                             .from("tournaments")
-                            .select("user_id")
+                            .select("organizer_id")
                             .eq("id", tournamentId)
                             .single();
                         
-                        if (tournament && tournament.user_id === userId) return true;
+                        if (tournament && tournament.organizer_id === userId) return true;
 
                         const { data: membership } = await supabase
                             .from("tournament_members")

@@ -24,11 +24,11 @@ export async function validateTournamentAccess(
     // 1. Check if the user is the owner (Admin)
     const { data: tournament } = await supabase
         .from("tournaments")
-        .select("user_id")
+        .select("organizer_id")
         .eq("id", tournamentId)
         .single();
 
-    if (tournament && tournament.user_id === user.id) {
+    if (tournament && tournament.organizer_id === user.id) {
         return { success: true, user, role: 'admin' };
     }
 

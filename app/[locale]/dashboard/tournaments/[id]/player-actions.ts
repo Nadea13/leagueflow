@@ -10,11 +10,11 @@ async function isAuthorizedOrganizer(tournamentId: string, userId: string) {
     // Check if user is the owner of the tournament
     const { data: tournament } = await supabase
         .from("tournaments")
-        .select("user_id")
+        .select("organizer_id")
         .eq("id", tournamentId)
         .single();
     
-    if (tournament && tournament.user_id === userId) return true;
+    if (tournament && tournament.organizer_id === userId) return true;
 
     // Check if user is a member with admin/editor role
     const { data: membership } = await supabase

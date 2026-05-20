@@ -815,8 +815,6 @@ export async function addPlayer(
                 name: "Default Tournament",
                 start_date: todayStr,
                 end_date: todayStr,
-                document_deadline: todayStr,
-                registration_fee: 0.00,
                 status: "draft"
             })
             .select("id")
@@ -825,6 +823,15 @@ export async function addPlayer(
             console.error("[addPlayer] Failed to create fallback tournament:", tourErr);
         } else if (newTour) {
             tournamentId = newTour.id;
+            // Create default category
+            await adminSupabase
+                .from("tournament_categories")
+                .insert({
+                    tournament_id: tournamentId,
+                    age_category_id: 1,
+                    gender_type: 'open',
+                    max_teams: 8
+                });
         }
     }
 

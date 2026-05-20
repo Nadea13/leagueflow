@@ -13,12 +13,12 @@ export async function getPublicTournaments(query?: string) {
             status, 
             start_date, 
             end_date,
-            format,
-            max_teams,
-            plan,
-            user_id,
+            organizer_id,
             document_deadline,
-            tournament_teams(count)
+            logo_img,
+            cover_img,
+            tournament_teams(count),
+            tournament_categories(max_teams)
         `)
         .in("status", ["active", "completed"])
         .order("start_date", { ascending: false });
@@ -37,5 +37,18 @@ export async function getPublicTournaments(query?: string) {
 
     console.log("Fetched public tournaments:", tournaments?.length);
 
-    return tournaments || [];
+    const mappedTournaments = (tournaments || []).map((t: any) => {
+        const maxTeams = t.tournament_categories && t.tournament_categories.length > 0
+            ? t.tournament_categories[0].max_teams
+            : 8;
+        return {
+            ...t,
+            user_id: t.organizer_id,
+            format: 'knockout',
+            max_teams: maxTeams,
+            plan: 'free',
+        };
+    });
+
+    return mappedTournaments;
 }

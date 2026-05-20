@@ -27,6 +27,8 @@ import {
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionResponse, SportType } from "@/types/index";
 
+import { getSports } from "@/actions/manager/team";
+
 const initialState: ActionResponse = {
     success: false,
     error: undefined,
@@ -34,11 +36,28 @@ const initialState: ActionResponse = {
 
 export function TournamentCreate() {
     const t = useTranslations("Dialog");
-    const tFormat = useTranslations("Format");
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");
     const [open, setOpen] = useState(false);
     const [state, formAction, isPending] = useActionState(createTournament, initialState);
+    const [sportsList, setSportsList] = useState<any[]>([]);
+    const [selectedSport, setSelectedSport] = useState<string>("");
+
+    // Load sports dynamically from database
+    useEffect(() => {
+        async function loadSports() {
+            const res = await getSports();
+            if (res.success && res.data) {
+                setSportsList(res.data);
+                if (res.data.length > 0) {
+                    setSelectedSport(res.data[0].id);
+                }
+            }
+        }
+        if (open) {
+            loadSports();
+        }
+    }, [open]);
 
     // Close dialog on success
     useEffect(() => {
@@ -56,8 +75,8 @@ export function TournamentCreate() {
                     <span>{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
-            <form action={formAction}>
-                <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-background p-0 rounded-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-background p-0 rounded-xl shadow-2xl">
+                <form action={formAction}>
                     {/* Premium Header */}
                     <div className="p-2 md:p-4 border-b">
                         <DialogHeader>
@@ -83,42 +102,27 @@ export function TournamentCreate() {
 
                         <div className="space-y-1">
                             <Label>{tCommon("sport")}</Label>
-                            <Select name="sport" defaultValue="football">
+                            <Select name="sport_id" value={selectedSport} onValueChange={setSelectedSport}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder={t("select_sport")} />
                                 </SelectTrigger>
                                 <SelectContent className="border-border">
-                                    {(['football'] as SportType[]).map((sportKey) => (
-                                        <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
-                                            {tSports(sportKey)}
+                                    {sportsList.map((sport) => (
+                                        <SelectItem key={sport.id} value={sport.id} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
+                                            {sport.sport_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 md:gap-4">
-                            <div className="space-y-1">
-                                <Label>{t("max_teams")}</Label>
-                                <Input
-                                    id="max_teams"
-                                    name="max_teams"
-                                    type="number"
-                                    defaultValue={8}
-                                    min={2}
-                                    max={128}
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>{t("document_deadline")}</Label>
-                                <Input
-                                    id="document_deadline"
-                                    name="document_deadline"
-                                    type="date" required
-                                />
-                            </div>
+                        <div className="space-y-1">
+                            <Label>{t("document_deadline")}</Label>
+                            <Input
+                                id="document_deadline"
+                                name="document_deadline"
+                                type="date" required
+                            />
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 md:gap-4">
@@ -154,8 +158,8 @@ export function TournamentCreate() {
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>
                     </DialogFooter>
-                </DialogContent>
-            </form>
+                </form>
+            </DialogContent>
         </Dialog>
     );
 }

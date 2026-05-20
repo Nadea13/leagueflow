@@ -197,10 +197,14 @@ export async function getAllTournaments() {
     const userMap = new Map(users?.map((u: { id: string; email?: string | null; full_name?: string | null }) => [u.id, u]) || []);
 
     // Map profile to owner_email for convenience
-    return tournaments.map((t: Tournament) => {
-        const user = userMap.get(t.user_id);
+    return tournaments.map((t: any) => {
+        const userId = t.organizer_id || t.user_id;
+        const user = userMap.get(userId);
         return {
             ...t,
+            user_id: userId,
+            format: 'knockout',
+            sport: 'football',
             owner_email: user?.email || 'Unknown',
             profiles: user ? { email: user.email, full_name: user.full_name } : null
         };
