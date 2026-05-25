@@ -15,10 +15,13 @@ import { Team } from "@/types/index";
 
 interface RegisterPageProps {
     params: Promise<{ id: string }>;
+    searchParams?: Promise<{ category?: string | string[] }>;
 }
 
-export default async function RegisterPage({ params }: RegisterPageProps) {
+export default async function RegisterPage({ params, searchParams }: RegisterPageProps) {
     const { id } = await params;
+    const categoryParam = (await searchParams)?.category;
+    const tournamentCategoryId = typeof categoryParam === "string" ? categoryParam : undefined;
     const t = await getTranslations("Registration");
     const t_common = await getTranslations("Common");
     const locale = await getLocale();
@@ -34,12 +37,37 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
 
     // Fetch Registered Teams
     // Use admin client to bypass RLS for public view of teams
-    const { data: teams } = await adminSupabase
+    const { data: registeredTeams } = await adminSupabase
         .from("tournament_teams")
-        .select("id, name, logo_url")
-        .eq("tournament_id", id)
+        .select(`
+            id,
+            payment_status,
+            registration_status,
+            team:teams (
+                name,
+                logo_img
+            ),
+            tournament_categories!inner (
+                tournament_id
+            )
+        `)
+        .eq("tournament_categories.tournament_id", id)
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
+    const teams = (registeredTeams || [])
+        .filter((team) => (
+            String(team.payment_status || "").toLowerCase() === "paid" ||
+            String(team.registration_status || "").toLowerCase() === "approved"
+        ))
+        .map((team) => {
+            const globalTeam = Array.isArray(team.team) ? team.team[0] : team.team;
+            return {
+                id: team.id,
+                name: globalTeam?.name || "",
+                logo_url: globalTeam?.logo_img || null,
+            };
+        })
+        .filter((team) => team.name);
 
     if (error || !tournament) {
         notFound();
@@ -197,6 +225,7 @@ export default async function RegisterPage({ params }: RegisterPageProps) {
                                     </div>
                                     <RegistrationForm 
                                         tournament={tournament} 
+                                        tournamentCategoryId={tournamentCategoryId}
                                         initialTeams={((await getMyTeams()).data as Team[]) || []}
                                     />
                                 </div>

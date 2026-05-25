@@ -10,6 +10,7 @@ import { Loader2, ExternalLink, Phone, User, Users, Check, X, ClipboardEdit } fr
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 import { approveRegistration, rejectRegistration } from "@/actions/organizer/tournaments/registration";
+import { useBracketStore } from "@/lib/stores/bracket-store";
 import { toast } from "sonner";
 import {
     AlertDialog,
@@ -33,13 +34,49 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
     const fetchRegistrations = useCallback(async () => {
         setIsLoading(true);
         const { data, error } = await supabase
-            .from("registrations")
-            .select("*")
-            .eq("tournament_id", tournamentId)
+            .from("tournament_teams")
+            .select(`
+                id,
+                payment_status,
+                registration_status,
+                slip_img,
+                remark,
+                created_at,
+                teams!inner (
+                    id,
+                    name,
+                    contact_name,
+                    contact_phone,
+                    logo_img,
+                    description
+                ),
+                tournament_categories!inner (
+                    tournament_id
+                )
+            `)
+            .eq("tournament_categories.tournament_id", tournamentId)
+            .is("deleted_at", null)
             .order("created_at", { ascending: false });
 
         if (!error && data) {
-            setRegistrations(data as Registration[]);
+            const mapped: Registration[] = (data as any[]).map((item) => ({
+                id: item.id,
+                tournament_id: item.tournament_categories?.tournament_id || tournamentId,
+                team_name: item.teams?.name || '',
+                contact_name: item.teams?.contact_name || '',
+                contact_phone: item.teams?.contact_phone || '',
+                logo_url: item.teams?.logo_img || null,
+                existing_team_id: item.teams?.id || null,
+                slip_url: item.slip_img || null,
+                payment_status: item.payment_status === 'paid' ? 'PAID' : item.payment_status === 'rejected' ? 'REJECTED' : 'PENDING',
+                trans_ref: item.remark || null,
+                description: item.teams?.description || null,
+                tournament_team_id: item.id,
+                created_at: item.created_at,
+            }));
+            setRegistrations(mapped);
+        } else if (error) {
+            console.error("Error fetching registrations:", error);
         }
         setIsLoading(false);
     }, [tournamentId, supabase]);
@@ -55,6 +92,11 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
         if (res.success) {
             toast.success(res.message);
             fetchRegistrations();
+            // Re-fetch bracket store teams so sidebar + canvas update in real-time
+            const activeCategoryId = useBracketStore.getState().activeCategoryId;
+            if (activeCategoryId) {
+                useBracketStore.getState().fetchTeams(activeCategoryId);
+            }
         } else {
             toast.error(res.error);
         }
@@ -72,6 +114,11 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
         if (res.success) {
             toast.success(res.message);
             fetchRegistrations();
+            // Re-fetch bracket store teams so sidebar + canvas update in real-time
+            const activeCategoryId = useBracketStore.getState().activeCategoryId;
+            if (activeCategoryId) {
+                useBracketStore.getState().fetchTeams(activeCategoryId);
+            }
         } else {
             toast.error(res.error);
         }

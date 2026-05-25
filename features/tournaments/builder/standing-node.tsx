@@ -211,7 +211,7 @@ export const StandingNode = memo(({
     return (
         <div
             className={cn(
-                "relative border bg-card text-card-foreground transition-all cursor-pointer min-w-[320px]",
+                "relative border bg-card text-card-foreground transition-all cursor-pointer min-w-[320px] rounded-sm",
                 selected
                     ? "border-emerald-500 ring-2 ring-emerald-500/30"
                     : "border-border hover:border-emerald-500/50"
@@ -226,12 +226,12 @@ export const StandingNode = memo(({
                 style={{ left: "-8px" }}
             />
 
-            <div className="flex justify-between items-center px-3 py-1.5 border-b bg-muted/30">
+            <div className="flex justify-between items-center p-2 border-b bg-muted/30">
                 <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 bg-emerald-500 rounded flex items-center justify-center">
-                        <ListOrdered className="h-3 w-3 text-white" />
+                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                        <ListOrdered className="h-4 w-4 text-background" />
                     </div>
-                    <span className="text-[11px] font-black tracking-widest text-emerald-500">
+                    <span className="text-xs font-black tracking-wide text-primary">
                         {data.label || "STANDINGS"}
                     </span>
                 </div>
@@ -268,7 +268,7 @@ export const StandingNode = memo(({
                     <tbody className="divide-y divide-border/30">
                         {effectiveTeams.length === 0 ? (
                             <tr>
-                                <td colSpan={10} className="px-3 py-6 text-center text-muted-foreground italic">
+                                <td colSpan={10} className="py-4 text-center text-muted-foreground">
                                     Connect to a group node to show standings
                                 </td>
                             </tr>
@@ -300,7 +300,7 @@ export const StandingNode = memo(({
                                             <div className="flex items-center gap-1.5">
                                                 <span className={cn(
                                                     "font-bold truncate max-w-[120px]",
-                                                    teamName === "TBD" ? "text-muted-foreground/30 italic font-normal" : "text-foreground"
+                                                    teamName === "TBD" ? "text-muted-foreground/30 font-normal" : "text-foreground"
                                                 )}>
                                                     {teamName}
                                                 </span>
@@ -337,7 +337,7 @@ export const StandingNode = memo(({
                                         )}
                                         {showNextMatch && (
                                             <td className="px-2 py-1.5 text-[9px] font-bold text-primary truncate max-w-[80px]">
-                                                {team.nextMatch ? `${team.nextMatch}` : <span className="text-muted-foreground/40 italic font-normal">None</span>}
+                                                {team.nextMatch ? `${team.nextMatch}` : <span className="text-muted-foreground/40 font-normal">None</span>}
                                             </td>
                                         )}
                                     </tr>

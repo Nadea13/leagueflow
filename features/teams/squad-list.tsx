@@ -1,25 +1,16 @@
 "use client";
-import React, { useState, useCallback, useRef } from "react";
-import { Player, Team, ActionResponse } from "@/types/index";
+import React, { useState, useRef } from "react";
+import { Player, Team } from "@/types/index";
 import { cn } from "@/lib/utils";
-import { 
-    updatePlayer, 
-    getPlayers
-} from "@/actions/manager/team";
+import { updatePlayer } from "@/actions/manager/team";
+import { updateGlobalPlayerPhoto } from "@/actions/organizer/tournaments/global-player";
+import { validateUploadedFile } from "@/lib/file-validation";
+import { compressAndConvertToAvif } from "@/lib/image-compression";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
-    DialogTrigger, 
-    DialogDescription, 
-    DialogFooter 
-} from "@/components/ui/dialog";
-import { 
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
     DropdownMenu, 
     DropdownMenuContent, 
     DropdownMenuItem, 
@@ -32,16 +23,14 @@ import {
     X, 
     MoreVertical, 
     Edit2, 
-    Trash2
+    Trash2,
+    Camera
 } from "lucide-react";
 import { PlayerDetailsView } from "./player-details-view";
-import { ImportRosterDialog } from "./import-roster-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { Tab } from "@/components/ui/tab";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
-import { useTranslations } from "next-intl";
 
 interface SquadListProps {
     players: Player[];
@@ -49,7 +38,7 @@ interface SquadListProps {
     effectivelyLocked: boolean;
     refreshPlayers: () => Promise<void>;
     onDeletePlayer: (playerId: string) => void;
-    t: (key: string, values?: any) => string;
+    t: (key: string, values?: Record<string, string | number | Date>) => string;
     tCommon: (key: string) => string;
 }
 
@@ -71,31 +60,47 @@ export function SquadList({
     const [editTel, setEditTel] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleUpdatePlayer = async (playerId: string) => {
+    const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+    const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+    const editFileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleUpdatePlayer = async (player: Player) => {
         setIsSaving(true);
-        const updateData = {
-            name: editName,
-            number: editNumber ? parseInt(editNumber) : null,
-            position: editPosition,
-            tel: editTel
-        };
+        try {
+            if (editPhotoFile && player.global_player_id) {
+                const formData = new FormData();
+                formData.append("photo", editPhotoFile);
+                const photoResult = await updateGlobalPlayerPhoto(player.global_player_id, formData);
+                if (!photoResult.success) {
+                    toast({ title: tCommon("error"), description: photoResult.error || "Failed to update photo", variant: "destructive" });
+                    setIsSaving(false);
+                    return;
+                }
+            }
 
-        const result = await updatePlayer(playerId, team.id, updateData);
-        setIsSaving(false);
-        if (result.success) {
-            toast({ title: tCommon("success"), description: t("updated_success") });
-            setEditingPlayerId(null);
-            refreshPlayers();
-        } else {
-            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+            const updateData = {
+                name: editName,
+                number: editNumber ? parseInt(editNumber) : null,
+                position: editPosition,
+                tel: editTel
+            };
+
+            const result = await updatePlayer(player.id, team.id, updateData);
+            if (result.success) {
+                toast({ title: tCommon("success"), description: t("updated_success") });
+                setEditingPlayerId(null);
+                setEditPhotoFile(null);
+                setEditPhotoPreview(null);
+                refreshPlayers();
+            } else {
+                toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+            }
+        } catch (e) {
+            const errorMessage = e instanceof Error ? e.message : "An error occurred";
+            toast({ title: tCommon("error"), description: errorMessage, variant: "destructive" });
+        } finally {
+            setIsSaving(false);
         }
-    };
-
-    const formatDate = (dateStr: string | null | undefined) => {
-        if (!dateStr || dateStr === "0000-00-00") return "";
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return "";
-        return date.toLocaleDateString();
     };
 
     const activePlayers = players.filter((player) => !player.deleted_at);
@@ -110,14 +115,7 @@ export function SquadList({
                     </h3>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <ImportRosterDialog
-                        teamId={team.id}
-                        teamName={team.name}
-                        effectivelyLocked={effectivelyLocked}
-                        onSuccess={() => refreshPlayers()}
-                    />
-                </div>
+
             </div>
 
             {activePlayers.length === 0 ? (
@@ -154,6 +152,58 @@ export function SquadList({
                                         )}>
                                             {editingPlayerId === player.id ? (
                                                 <>
+                                                    <div className="space-y-1 shrink-0 flex flex-col items-center">
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={async (e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    const fileCheck = validateUploadedFile(file);
+                                                                    if (!fileCheck.valid) {
+                                                                        toast({ title: tCommon("error"), description: fileCheck.error, variant: "destructive" });
+                                                                        return;
+                                                                    }
+                                                                    try {
+                                                                        const compressed = await compressAndConvertToAvif(file);
+                                                                        setEditPhotoFile(compressed);
+                                                                        setEditPhotoPreview(URL.createObjectURL(compressed));
+                                                                    } catch (err) {
+                                                                        const errorMessage = err instanceof Error ? err.message : "Failed to compress image";
+                                                                        toast({ title: tCommon("error"), description: errorMessage, variant: "destructive" });
+                                                                    }
+                                                                }
+                                                            }}
+                                                            ref={editFileInputRef}
+                                                            className="hidden"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                editFileInputRef.current?.click();
+                                                            }}
+                                                            className="h-10 w-10 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group"
+                                                        >
+                                                            {(() => {
+                                                                const photoUrl = player.photo_url || player.profile_img || player.master_player?.profile_img || player.global_player?.photo_url || player.global_player?.profile_img;
+                                                                return editPhotoPreview ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={editPhotoPreview} alt="Preview" className="h-full w-full object-cover" />
+                                                                ) : photoUrl ? (
+                                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                                    <img src={photoUrl} alt="Current" className="h-full w-full object-cover" />
+                                                                ) : (
+                                                                    <Camera className="h-4 w-4 text-primary" />
+                                                                );
+                                                            })()}
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <Camera className="h-4 w-4 text-foreground" />
+                                                            </div>
+                                                        </button>
+                                                    </div>
+
                                                     <div className="space-y-1 w-full md:w-[60px] shrink-0">
                                                         <Label>{t("number")}</Label>
                                                         <Input
@@ -206,16 +256,36 @@ export function SquadList({
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="h-10 w-10 shrink-0 rounded-full bg-muted/20 flex items-center justify-center relative overflow-hidden">
-                                                        <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                                                        <span className="text-xl font-black text-primary relative z-10">
-                                                            {player.number || "-"}
-                                                        </span>
+                                                    <div className="relative h-10 w-10 shrink-0">
+                                                        {(() => {
+                                                            const photoUrl = player.photo_url || player.profile_img || player.master_player?.profile_img || player.global_player?.photo_url || player.global_player?.profile_img;
+                                                            return photoUrl ? (
+                                                                <>
+                                                                    <div className="h-full w-full rounded-full bg-muted/20 flex items-center justify-center overflow-hidden border border-border">
+                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                        <img
+                                                                            src={photoUrl}
+                                                                            alt={player.name}
+                                                                            className="h-full w-full object-cover"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="absolute -bottom-0 -right-0 bg-primary px-0.5 text-black text-[10px] font-black h-4 rounded-full flex items-center justify-center border border-background">
+                                                                        {player.number ?? "-"}
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="h-full w-full rounded-full bg-muted/20 flex items-center justify-center overflow-hidden border border-border">
+                                                                    <span className="text-xl font-black text-primary">
+                                                                        {player.number || "-"}
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </div>
 
                                                     <div className="min-w-0 flex-1 flex flex-col gap-0.5">
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="border-primary/20 text-primary text-[8px] font-black px-1 py-0">
+                                                            <Badge variant="outline" className="border-muted text-forground text-[8px] font-black px-1 py-0 rounded">
                                                                 {player.position || "N/A"}
                                                             </Badge>
                                                             <span className="text-[9px] font-bold tracking-widest text-muted-foreground/40 font-mono">
@@ -240,7 +310,7 @@ export function SquadList({
                                                     className="h-10 w-10 text-primary hover:bg-primary/10 transition-all"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleUpdatePlayer(player.id);
+                                                        handleUpdatePlayer(player);
                                                     }}
                                                     disabled={isSaving}
                                                 >
@@ -253,6 +323,8 @@ export function SquadList({
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setEditingPlayerId(null);
+                                                        setEditPhotoFile(null);
+                                                        setEditPhotoPreview(null);
                                                     }}
                                                     disabled={isSaving}
                                                 >
@@ -283,6 +355,8 @@ export function SquadList({
                                                                     setEditPosition(player.position || "");
                                                                     setEditTel(player.tel || "");
                                                                     setEditName(player.name || "");
+                                                                    setEditPhotoFile(null);
+                                                                    setEditPhotoPreview(null);
                                                                 }}
                                                             >
                                                                 <Edit2 className="mr-3 h-4 w-4" />
@@ -306,7 +380,7 @@ export function SquadList({
                                     </div>
                                 </div>
                             </div>
-                            <DialogContent className="sm:max-w-[450px] bg-background border-border p-0 overflow-hidden shadow-2xl">
+                            <DialogContent className="sm:max-w-[450px] bg-background border-border p-0 overflow-hidden shadow-2xl rounded-xl">
                                 <PlayerDetailsView
                                     player={player}
                                     team={team}

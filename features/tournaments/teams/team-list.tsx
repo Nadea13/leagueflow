@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { EmptyState } from "@/components/shared/empty-state";
 
 import { assignTeamGroup } from "@/actions/organizer/tournaments/general";

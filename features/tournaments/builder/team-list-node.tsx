@@ -16,29 +16,33 @@ interface TeamListNodeProps {
 
 export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => {
     const { teams: storeTeams, deleteNode } = useBracketStore();
-    
-    // Filter paid teams if status exists, otherwise show all
-    // Based on user request, we look for 'paid' status. 
+
+    // Filter to only show approved/paid teams (null status = legacy team, treat as approved)
     const paidTeams = storeTeams.filter((team: any) => {
-        const registration = Array.isArray(team.registrations) ? team.registrations[0] : team.registrations;
-        if (!registration) return true;
-        return registration.payment_status === 'PAID';
+        const ps = team.payment_status;
+        const rs = team.registration_status;
+        // Legacy teams with no status set — treat as approved
+        if (!ps && !rs) return true;
+        return String(ps || '').toLowerCase() === 'paid' ||
+               String(rs || '').toLowerCase() === 'approved';
     });
 
     return (
         <div
             className={cn(
-                "relative w-[280px] border bg-card text-card-foreground transition-all",
+                "relative w-[280px] border bg-card text-card-foreground transition-all rounded-sm",
                 selected
                     ? "border-primary ring-2 ring-primary/30"
                     : "border-border hover:border-primary/50"
             )}
         >
             {/* Header */}
-            <div className="flex justify-between items-center px-4 py-2 border-b bg-muted/50">
+            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span className="text-[11px] font-black tracking-[0.2em] text-primary">
+                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                        <Users className="h-4 w-4 text-background" />
+                    </div>
+                    <span className="text-xs font-black tracking-wide text-primary">
                         {data.label}
                     </span>
                 </div>
@@ -57,8 +61,8 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
             {/* Teams List */}
             <div className="flex flex-col divide-y divide-border">
                 {paidTeams.length === 0 ? (
-                    <div className="p-8 text-center">
-                        <span className="text-[10px] font-black text-muted-foreground/40 tracking-widest">
+                    <div className="p-3 text-center">
+                        <span className="text-[10px] text-center text-muted-foreground">
                             No paid teams found
                         </span>
                     </div>
@@ -66,9 +70,9 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
                     paidTeams.map((team) => (
                         <div key={team.id} className="group relative flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
                             {team.logo_url ? (
-                                <img 
-                                    src={team.logo_url} 
-                                    alt={team.name} 
+                                <img
+                                    src={team.logo_url}
+                                    alt={team.name}
                                     className="h-6 w-6 rounded-full object-cover border border-border"
                                 />
                             ) : (

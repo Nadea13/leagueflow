@@ -1,11 +1,20 @@
 import { ActionResponse, Match } from "@/types/index";
 import { SupabaseClient } from "@supabase/supabase-js";
 
+const getScoreTotal = (scoreObj: any): number => {
+    if (!scoreObj) return 0;
+    if (typeof scoreObj === 'object') {
+        return scoreObj.total || 0;
+    }
+    const val = Number(scoreObj);
+    return isNaN(val) ? 0 : val;
+};
+
 export async function initTournamentStructure(tournamentId: string, supabase: SupabaseClient): Promise<ActionResponse> {
-    // 1. Fetch tournament format and teams
+    // 1. Fetch tournament dates and pitches
     const { data: tournament } = await supabase
         .from('tournaments')
-        .select('format, start_date, end_date, number_of_pitches, max_teams, advancing_teams')
+        .select('start_date, end_date, number_of_pitches')
         .eq('id', tournamentId)
         .single();
 
@@ -13,67 +22,60 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
         return { success: false, error: "Tournament not found" };
     }
 
+    // 2. Fetch the category (default to the first category setup)
+    const { data: category } = await supabase
+        .from('tournament_categories')
+        .select('id, max_teams')
+        .eq('tournament_id', tournamentId)
+        .limit(1)
+        .single();
+
+    if (!category) {
+        return { success: false, error: "No tournament category setup found" };
+    }
+
+    const tournamentCategoryId = category.id;
+    const maxTeams = category.max_teams || 8;
+    const format: string = 'knockout'; // Fallback format since it's removed from tournaments table
+    const advancingTeams = 2;  // Default fallback
+
+    // 3. Fetch registered teams for this category
     const { data: teams } = await supabase
         .from('tournament_teams')
-        .select('id, team_id, group_name')
-        .eq('tournament_id', tournamentId);
+        .select('id, team_id')
+        .eq('tournament_category_id', tournamentCategoryId)
+        .is('deleted_at', null);
 
-    const maxTeams = tournament.max_teams || 8;
     const fixtures: Partial<Match>[] = [];
-    
-    // We assume this is a fresh start, no matches yet. 
-    // In actual server action, we might have lastRound check if they regenerate mid-way, 
-    // but for "init", it's usually round 1.
     const startRound = 1;
 
-    if (tournament.format === 'group_knockout') {
-        let assignedGroups = Array.from(new Set(teams?.map((t) => t.group_name).filter(Boolean) || [])).sort();
-        
-        // If groups aren't defined yet, or we want to force re-distribution, 
-        // we figure out how many groups we need. 
-        // A simple way is to default to 2 groups if undefined.
-        if (assignedGroups.length === 0) {
-            assignedGroups = ["Group A", "Group B"];
-        }
+    if (format === 'group_knockout') {
+        // Group knockout format - fallback/simplified: Treat as knockout if no groups can be assigned
+        const slotsPerGroup = Math.ceil(maxTeams / 2);
+        const assignedGroups = ["Group A", "Group B"];
+        const teamsInGroups: Record<string, (string | null)[]> = {
+            "Group A": [],
+            "Group B": []
+        };
 
-        const teamsInGroups: Record<string, (string | null)[]> = {};
-        assignedGroups.forEach(g => teamsInGroups[g as string] = []);
-        
-        // *** SHUFFLE AND RE-ASSIGN LOGIC ***
-        // To make "Regenerate" actually shuffle teams, we ignore their previous group_name 
-        // and randomly distribute all existing teams into the available groups evenly.
         if (teams && teams.length > 0) {
-            // 1. Shuffle teams
             const shuffledTeams = [...teams].sort(() => Math.random() - 0.5);
-            
-            // 2. Distribute evenly and collect promises
-            const updatePromises = shuffledTeams.map((t, index) => {
+            shuffledTeams.forEach((t, index) => {
                 const groupName = assignedGroups[index % assignedGroups.length];
-                teamsInGroups[groupName as string].push(t.id);
-                // Return the update promise to await it properly
-                return supabase.from('tournament_teams').update({ group_name: groupName }).eq('id', t.id);
+                teamsInGroups[groupName].push(t.id);
             });
-
-            // Await all group assignment updates before continuing
-            const updateResults = await Promise.all(updatePromises);
-            const updateError = updateResults.find(res => res.error);
-            if (updateError) {
-                console.error("Error updating team groups:", updateError.error);
-                return { success: false, error: "Failed to distribute teams into groups." };
-            }
         }
 
-        const slotsPerGroup = Math.ceil(maxTeams / assignedGroups.length);
         assignedGroups.forEach(g => {
-            while (teamsInGroups[g as string].length < slotsPerGroup) {
-                teamsInGroups[g as string].push(null);
+            while (teamsInGroups[g].length < slotsPerGroup) {
+                teamsInGroups[g].push(null);
             }
         });
 
         const allGroupMatches: Partial<Match>[] = [];
         assignedGroups.forEach(groupName => {
-            const groupTeams = teamsInGroups[groupName as string];
-            const groupFixtures = generateRoundRobinMatches(groupTeams, tournamentId, 'group', startRound);
+            const groupTeams = teamsInGroups[groupName];
+            const groupFixtures = generateRoundRobinMatches(groupTeams, tournamentCategoryId, 'group', startRound);
             allGroupMatches.push(...groupFixtures);
         });
 
@@ -95,10 +97,8 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
         });
 
         const numGroups = assignedGroups.length;
-        const advancingTeamsPerGroup = tournament.advancing_teams || 2;
-        const knockoutTeamCount = numGroups * advancingTeamsPerGroup;
+        const knockoutTeamCount = numGroups * advancingTeams;
         
-        // Calculate required bracket size (next power of 2)
         let bracketSize = 2;
         while (bracketSize < knockoutTeamCount) {
             bracketSize *= 2;
@@ -126,7 +126,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
 
                 for (let i = 0; i < currentRoundMatchCount; i++) {
                     fixtures.push({
-                        tournament_id: tournamentId,
+                        tournament_category_id: tournamentCategoryId,
                         round: currentRound,
                         stage: stageName,
                         status: 'scheduled',
@@ -134,6 +134,8 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
                         match_index: kIndex++,
                         home_team_id: null,
                         away_team_id: null,
+                        home_score: { total: 0 },
+                        away_score: { total: 0 }
                     });
                 }
                 currentRound++;
@@ -141,7 +143,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
             }
         }
 
-    } else if (tournament.format === 'knockout') {
+    } else if (format === 'knockout') {
         const totalSlots = maxTeams;
         let bracketSize = 2;
         while (bracketSize < totalSlots) {
@@ -172,7 +174,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
 
             for (let i = 0; i < currentRoundMatchCount; i++) {
                 const match: Partial<Match> = {
-                    tournament_id: tournamentId,
+                    tournament_category_id: tournamentCategoryId,
                     round: currentRound,
                     stage: stage,
                     status: 'scheduled',
@@ -180,6 +182,8 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
                     match_index: globalMatchIndex++,
                     home_team_id: null,
                     away_team_id: null,
+                    home_score: { total: 0 },
+                    away_score: { total: 0 }
                 };
 
                 if (isFirstRound) {
@@ -188,14 +192,12 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
 
                     if (match.home_team_id && !match.away_team_id) {
                         match.status = 'finished';
-                        match.home_score = 3;
-                        match.away_score = 0;
-                        match.winner_id = match.home_team_id;
+                        match.home_score = { total: 3 };
+                        match.away_score = { total: 0 };
                     } else if (!match.home_team_id && match.away_team_id) {
                         match.status = 'finished';
-                        match.home_score = 0;
-                        match.away_score = 3;
-                        match.winner_id = match.away_team_id;
+                        match.home_score = { total: 0 };
+                        match.away_score = { total: 3 };
                     }
                 }
                 fixtures.push(match);
@@ -211,22 +213,28 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
             const matchesInRound = roundFixtures(r);
             const nextRoundMatches = roundFixtures(r + 1);
             matchesInRound.forEach((m: Partial<Match>, idxInRound: number) => {
-                if (m.status === 'finished' && m.winner_id) {
-                    const nextMatchIdx = Math.floor(idxInRound / 2);
-                    const isHome = idxInRound % 2 === 0;
-                    const nextMatch = nextRoundMatches[nextMatchIdx];
-                    if (nextMatch) {
-                        if (isHome) nextMatch.home_team_id = m.winner_id;
-                        else nextMatch.away_team_id = m.winner_id;
+                if (m.status === 'finished') {
+                    const homeTotal = getScoreTotal(m.home_score);
+                    const awayTotal = getScoreTotal(m.away_score);
+                    const winnerId = homeTotal > awayTotal ? m.home_team_id : m.away_team_id;
+
+                    if (winnerId) {
+                        const nextMatchIdx = Math.floor(idxInRound / 2);
+                        const isHome = idxInRound % 2 === 0;
+                        const nextMatch = nextRoundMatches[nextMatchIdx];
+                        if (nextMatch) {
+                            if (isHome) nextMatch.home_team_id = winnerId;
+                            else nextMatch.away_team_id = winnerId;
+                        }
                     }
                 }
             });
         }
 
-    } else if (tournament.format === 'league_ha' || tournament.format === 'league') {
+    } else if (format === 'league_ha' || format === 'league') {
         const actualTeams = teams ? [...teams].sort(() => Math.random() - 0.5) : [];
         const teamIds = Array(maxTeams).fill(null).map((_, i) => actualTeams[i]?.id || null);
-        const leagueFixtures = generateRoundRobinMatches(teamIds, tournamentId, 'league', startRound, tournament.format === 'league_ha');
+        const leagueFixtures = generateRoundRobinMatches(teamIds, tournamentCategoryId, 'league', startRound, format === 'league_ha');
 
         let globalMatchIndex = 1;
         const matchesByRound: Record<number, Partial<Match>[]> = {};
@@ -253,16 +261,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
         return { success: false, error: "No fixtures generated." };
     }
 
-    console.log(`Inserting ${fixtures.length} matches for tournament ${tournamentId}`);
-    if (fixtures.length > 0) {
-        console.log("Sample fixture:", JSON.stringify(fixtures[0], null, 2));
-        const invalidHome = fixtures.filter(f => f.home_team_id !== null && typeof f.home_team_id !== 'string');
-        const invalidAway = fixtures.filter(f => f.away_team_id !== null && typeof f.away_team_id !== 'string');
-        if (invalidHome.length > 0 || invalidAway.length > 0) {
-            console.error("Invalid IDs found in fixtures!");
-        }
-    }
-
+    console.log(`Inserting ${fixtures.length} matches for tournament ${tournamentId} / category ${tournamentCategoryId}`);
     const { error } = await supabase.from('matches').insert(fixtures);
 
     if (error) {
@@ -273,7 +272,7 @@ export async function initTournamentStructure(tournamentId: string, supabase: Su
     return { success: true };
 }
 
-function generateRoundRobinMatches(teamIds: (string | null)[], tournamentId: string, stage: 'league' | 'group', startRound: number = 1, doubleRoundRobin: boolean = false): Partial<Match>[] {
+function generateRoundRobinMatches(teamIds: (string | null)[], tournamentCategoryId: string, stage: 'league' | 'group', startRound: number = 1, doubleRoundRobin: boolean = false): Partial<Match>[] {
     const fixtures: Partial<Match>[] = [];
     const leagueTeams = [...teamIds];
 
@@ -298,15 +297,15 @@ function generateRoundRobinMatches(teamIds: (string | null)[], tournamentId: str
 
             if (home !== null || away !== null) {
                 fixtures.push({
-                    tournament_id: tournamentId,
+                    tournament_category_id: tournamentCategoryId,
                     home_team_id: home || null,
                     away_team_id: away || null,
                     round: startRound + round,
                     stage: stage,
                     status: 'scheduled',
                     is_manual: false,
-                    home_score: 0,
-                    away_score: 0
+                    home_score: { total: 0 },
+                    away_score: { total: 0 }
                 });
             }
         }
@@ -324,15 +323,15 @@ function generateRoundRobinMatches(teamIds: (string | null)[], tournamentId: str
         for (let i = 0; i < firstLegCount; i++) {
             const match = fixtures[i];
             fixtures.push({
-                tournament_id: tournamentId,
+                tournament_category_id: tournamentCategoryId,
                 home_team_id: match.away_team_id,
                 away_team_id: match.home_team_id,
                 round: (match.round || 0) + totalRounds,
                 stage: stage,
                 status: 'scheduled',
                 is_manual: false,
-                home_score: 0,
-                away_score: 0
+                home_score: { total: 0 },
+                away_score: { total: 0 }
             });
         }
     }
@@ -353,9 +352,7 @@ function assignMatchTimes(fixtures: Partial<Match>[], startDateStr: string, endD
     let currentPitch = 1;
 
     for (const match of fixtures) {
-        match.match_date = currentDate.toISOString().split('T')[0];
-        match.match_time = currentDate.toTimeString().split(' ')[0].substring(0, 5);
-        match.venue = `Pitch ${currentPitch}`;
+        match.scheduled_at = currentDate.toISOString();
 
         if (currentPitch < numberOfPitches) {
             currentPitch++;

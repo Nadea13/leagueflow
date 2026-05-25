@@ -61,32 +61,73 @@ export async function getUserDashboardMetrics() {
 
     if (!user) return { totalTeams: 0, assignedTeams: 0, pendingRegistrations: 0 };
 
-    // Get tournaments owned by the user
+    // 1. Get user owned teams
+    const { data: userOwnedTeams } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("user_id", user.id)
+        .is("deleted_at", null);
+    
+    const ownedTeamIds = userOwnedTeams?.map(t => t.id) || [];
+
+    // 2. Get tournaments owned by the user
     const { data: ownedTournaments } = await supabase
         .from("tournaments")
         .select("id")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .is("deleted_at", null);
     
     const ownedTournamentIds = ownedTournaments?.map(t => t.id) || [];
 
-    // Construct conditions for teams
-    const teamConditions = [`user_id.eq.${user.id}`];
+    // 3. Find teams registered in user's tournaments
+    let organizerTeamIds: string[] = [];
     if (ownedTournamentIds.length > 0) {
-        teamConditions.push(`tournament_id.in.(${ownedTournamentIds.join(',')})`);
+        const { data: orgTeamsData } = await supabase
+            .from("tournament_teams")
+            .select(`
+                team_id,
+                tournament_categories!inner (
+                    tournament_id
+                )
+            `)
+            .in("tournament_categories.tournament_id", ownedTournamentIds)
+            .is("deleted_at", null);
+        
+        if (orgTeamsData) {
+            organizerTeamIds = orgTeamsData.map((t: any) => t.team_id);
+        }
     }
 
-    const [teamsRes, regsRes] = await Promise.all([
-        supabase.from("teams").select("id, tournament_id").or(teamConditions.join(',')),
-        supabase.from("registrations").select("id").eq("user_id", user.id).eq("payment_status", "PENDING")
-    ]);
+    // Combine to get unique set of total teams
+    const totalTeamIds = new Set([...ownedTeamIds, ...organizerTeamIds]);
 
-    const teams = teamsRes.data || [];
-    const regs = regsRes.data || [];
+    // 4. Find how many of total teams are assigned to a tournament category
+    let assignedCount = 0;
+    if (totalTeamIds.size > 0) {
+        const { count } = await supabase
+            .from("tournament_teams")
+            .select("team_id", { count: 'exact', head: true })
+            .in("team_id", Array.from(totalTeamIds))
+            .is("deleted_at", null);
+        assignedCount = count || 0;
+    }
+
+    // 5. Find pending registrations for the user's owned teams
+    let pendingCount = 0;
+    if (ownedTeamIds.length > 0) {
+        const { count } = await supabase
+            .from("tournament_teams")
+            .select("id", { count: 'exact', head: true })
+            .in("team_id", ownedTeamIds)
+            .eq("payment_status", "pending")
+            .is("deleted_at", null);
+        pendingCount = count || 0;
+    }
 
     return {
-        totalTeams: teams.length,
-        assignedTeams: teams.filter(t => t.tournament_id).length,
-        pendingRegistrations: regs.length
+        totalTeams: totalTeamIds.size,
+        assignedTeams: assignedCount,
+        pendingRegistrations: pendingCount
     };
 }
 
@@ -221,9 +262,10 @@ export async function getAllPublicTournaments() {
     const { data, error } = await supabase
         .from("tournaments")
         .select(`
-            id, name, logo_img, cover_img, description, status, registration_fee, start_date, end_date, max_teams,
-            organizer:users!organizer_id(full_name, email)
+            id, name, logo_img, cover_img, description, location_name, google_map_url, status, start_date, end_date, document_deadline, registration_fee, bank_name, bank_account_name, bank_account_number
         `)
+        .in("status", ["upcoming", "ongoing"])
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
     if (error) {

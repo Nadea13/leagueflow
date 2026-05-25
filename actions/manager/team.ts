@@ -2,7 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { ActionResponse, Player } from "@/types/index";
+import { ActionResponse, Player, Sport } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { logActivity } from "@/lib/audit";
 import { 
@@ -103,7 +103,7 @@ async function isAuthorizedForTeam(teamId: string, userId: string) {
 /**
  * Get all available sports.
  */
-export async function getSports(): Promise<ActionResponse<any[]>> {
+export async function getSports(): Promise<ActionResponse<Sport[]>> {
     try {
         const supabase = await createClient();
         const { data: sports, error } = await supabase
@@ -357,10 +357,37 @@ export async function getTeam(teamId: string) {
     }
 
     // Fetch Registration Status
-    const { data: registrations } = await supabase
-        .from("registrations")
-        .select("tournament_id, payment_status, slip_url, tournament_team_id")
+    const { data: userTeams } = await supabase
+        .from("teams")
+        .select("id")
         .eq("user_id", user.id);
+    
+    const ownedTeamIds = userTeams?.map((t: any) => t.id) || [];
+    
+    let registrations: any[] = [];
+    if (ownedTeamIds.length > 0) {
+        const { data: regData } = await supabase
+            .from("tournament_teams")
+            .select(`
+                id,
+                payment_status,
+                slip_img,
+                tournament_categories!inner (
+                    tournament_id
+                )
+            `)
+            .in("team_id", ownedTeamIds)
+            .is("deleted_at", null);
+        
+        if (regData) {
+            registrations = regData.map((r: any) => ({
+                tournament_team_id: r.id,
+                payment_status: (r.payment_status || 'pending').toUpperCase(),
+                slip_url: r.slip_img,
+                tournament_id: r.tournament_categories?.tournament_id
+            }));
+        }
+    }
 
     // Map database columns to match expected types in frontend (logo_img -> logo_url, sport_id -> sport)
     const mappedData = {
@@ -636,6 +663,7 @@ export async function toggleRosterLock(teamId: string, isLocked: boolean): Promi
  */
 export async function getPlayers(teamId: string): Promise<ActionResponse<Player[]>> {
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
     
     // First, check if teamId matches a tournament_teams (participation)
     const { data: participation } = await supabase
@@ -649,7 +677,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
         .eq("id", teamId)
         .single();
 
-    let query = supabase.from("player_sports").select(`
+    let query = adminSupabase.from("player_sports").select(`
         id,
         position,
         shirt_number,
@@ -733,8 +761,15 @@ export async function addPlayer(
     const position = formData.get("position") as string;
     const tel = formData.get("tel") as string;
     const masterPlayerId = formData.get("master_player_id") as string;
+    const photoFile = formData.get("photo") as File;
 
     if (!name) return { success: false, error: "Name is required" };
+
+    // Validate photo if present
+    if (photoFile && photoFile.size > 0) {
+        const fileCheck = validateUploadedFile(photoFile);
+        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+    }
 
     // Fetch team info
     const { data: participation } = await adminSupabase
@@ -878,6 +913,27 @@ export async function addPlayer(
             return { success: false, error: "Failed to create master player profile" };
         }
         finalMasterId = newMaster.id;
+
+        // If a photo file is provided, upload it and link to master player
+        if (photoFile && photoFile.size > 0) {
+            const fileExt = photoFile.name.split('.').pop();
+            const fileName = `${finalMasterId}/photo_${Date.now()}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage
+                .from('player-photos')
+                .upload(fileName, photoFile);
+            
+            if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('player-photos')
+                    .getPublicUrl(fileName);
+                await adminSupabase
+                    .from("master_players")
+                    .update({ profile_img: publicUrl })
+                    .eq("id", finalMasterId);
+            } else {
+                console.error("[addPlayer] Photo upload failed:", uploadError);
+            }
+        }
     }
 
     // 2. Insert into players

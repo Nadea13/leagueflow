@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from "react";
-import { Plus, Loader2, UserPlus, Search, ArrowRight, FileText } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
+import React, { useState, useRef } from "react";
+import { Plus, Loader2, UserPlus, Search, ArrowRight, FileText, Camera } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { addPlayer } from "@/actions/manager/team";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { searchMasterPlayers } from "@/actions/common/user";
+import { validateUploadedFile } from "@/lib/file-validation";
+import { compressAndConvertToAvif } from "@/lib/image-compression";
 
 interface AddPlayerFormProps {
     teamId: string;
@@ -18,10 +20,24 @@ interface AddPlayerFormProps {
     effectivelyLocked: boolean;
 }
 
+interface MasterPlayerSearchResult {
+    id: string;
+    name: string;
+    date_of_birth: string | null;
+    tel: string | null;
+}
+
+interface MasterPlayerRow {
+    id: string;
+    first_name: string;
+    last_name: string;
+    birthday: string | null;
+    tel: string | null;
+}
+
 export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlayerFormProps) {
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
-    const locale = useLocale();
     const { toast } = useToast();
 
     const [newName, setNewName] = useState("");
@@ -30,10 +46,33 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     const [newTel, setNewTel] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<MasterPlayerSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedMasterPlayerId, setSelectedMasterPlayerId] = useState<string | null>(null);
+
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const fileCheck = validateUploadedFile(file);
+            if (!fileCheck.valid) {
+                toast({ title: tCommon("error"), description: fileCheck.error, variant: "destructive" });
+                return;
+            }
+            try {
+                const compressed = await compressAndConvertToAvif(file);
+                setPhotoFile(compressed);
+                setPhotoPreview(URL.createObjectURL(compressed));
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : "Failed to compress image";
+                toast({ title: tCommon("error"), description: errorMessage, variant: "destructive" });
+            }
+        }
+    };
 
     const handleSearch = async (val: string) => {
         setSearchQuery(val);
@@ -41,7 +80,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
         try {
             const res = await searchMasterPlayers(val);
             if (res.success && res.data) {
-                const mapped = res.data.map((mp: any) => ({
+                const mapped = (res.data as MasterPlayerRow[]).map((mp) => ({
                     id: mp.id,
                     name: `${mp.first_name} ${mp.last_name}`.trim(),
                     date_of_birth: mp.birthday,
@@ -61,7 +100,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
 
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
-    const handleSelectGlobalPlayer = async (gp: any) => {
+    const handleSelectGlobalPlayer = async (gp: MasterPlayerSearchResult) => {
         setIsPopoverOpen(false);
         setIsSaving(true);
         try {
@@ -80,12 +119,16 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                 setNewPosition("");
                 setNewTel("");
                 setSelectedMasterPlayerId(null);
+                setPhotoFile(null);
+                setPhotoPreview(null);
+                if (fileInputRef.current) fileInputRef.current.value = "";
                 await onSuccess();
             } else {
                 toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
             }
-        } catch (err: any) {
-            toast({ title: tCommon("error"), description: err.message || "Failed to add player", variant: "destructive" });
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to add player";
+            toast({ title: tCommon("error"), description: errorMessage, variant: "destructive" });
         } finally {
             setIsSaving(false);
         }
@@ -104,6 +147,9 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
         if (selectedMasterPlayerId) {
             formData.append("master_player_id", selectedMasterPlayerId);
         }
+        if (photoFile) {
+            formData.append("photo", photoFile);
+        }
 
         const result = await addPlayer(teamId, formData);
         setIsSaving(false);
@@ -115,6 +161,9 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
             setNewPosition("");
             setNewTel("");
             setSelectedMasterPlayerId(null);
+            setPhotoFile(null);
+            setPhotoPreview(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
             onSuccess();
         } else {
             toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
@@ -200,6 +249,31 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                 </div>
 
                 <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-2 md:gap-3">
+                    <div className="space-y-1 shrink-0 flex flex-col items-center">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePhotoChange}
+                            ref={fileInputRef}
+                            className="hidden"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-10 w-10 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group"
+                        >
+                            {photoPreview ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" />
+                            ) : (
+                                <Camera className="h-4 w-4 text-primary" />
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Camera className="h-4 w-4 text-foreground" />
+                            </div>
+                        </button>
+                    </div>
+
                     <div className="space-y-1 w-[80px] shrink-0">
                         <Label>{t("number")}</Label>
                         <Input
@@ -257,7 +331,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                     <div className="shrink-0 w-full md:w-[160px] relative">
                         <Button
                             type="submit"
-                            className="w-full h-10 font-black tracking-widest text-sm transition-all disabled:opacity-50"
+                            className="w-full"
                             disabled={isSaving || !newName.trim() || effectivelyLocked}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}

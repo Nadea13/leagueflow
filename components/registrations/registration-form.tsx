@@ -63,6 +63,7 @@ interface RegistrationFormProps {
         is_registration_open: boolean;
         status: string;
     };
+    tournamentCategoryId?: string;
     initialTeams?: Team[];
     isRegistrationDisabled?: boolean;
     isFull?: boolean;
@@ -71,6 +72,7 @@ interface RegistrationFormProps {
 
 export function RegistrationForm({
     tournament,
+    tournamentCategoryId,
     initialTeams,
     isRegistrationDisabled,
     isFull,
@@ -124,6 +126,9 @@ export function RegistrationForm({
         try {
             const formData = new FormData();
             formData.append("tournamentId", tournament.id);
+            if (tournamentCategoryId) {
+                formData.append("tournamentCategoryId", tournamentCategoryId);
+            }
             formData.append("teamName", values.teamName);
             formData.append("contactName", values.contactName);
             formData.append("contactPhone", values.contactPhone);

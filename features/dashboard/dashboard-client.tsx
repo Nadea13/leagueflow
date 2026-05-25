@@ -4,15 +4,14 @@ import { useState, useTransition } from "react";
 import { createMasterPlayer } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
-    Trophy, User, Calendar, Phone, Shield, Search, Award, Sparkles,
-    Plus, ChevronRight, AlertCircle, Loader2, UserCheck, Heart, UserPlus,
-    Activity, MapPin, DollarSign
+    Trophy, User, Calendar, Phone, Shield, Search,
+    AlertCircle, Loader2, UserCheck, UserPlus, Activity
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -101,83 +100,49 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             icon={Trophy}
                         />
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                        <div className="flex flex-col gap-4 md:gap-6 group">
                             {filteredTournaments.map((tournament) => (
-                                <div
-                                    key={tournament.id}
-                                    className="group relative flex flex-col justify-between bg-card border border-border hover:border-primary/40 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                <Link key={tournament.id} href={`/dashboard/registration/${tournament.id}`} className="block">
+                                <Card
+                                    className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer"
                                 >
-                                    {/* Cover / Header color */}
-                                    <div className="h-24 bg-gradient-to-r from-primary/10 to-primary/5 relative overflow-hidden flex items-end p-4 border-b border-border">
-                                        {/* Sponsor / Sport Badge */}
-                                        <Badge variant="outline" className="absolute top-3 right-3 text-[10px] font-black tracking-wider z-10">
-                                            ACTIVE
-                                        </Badge>
-
-                                        <div className="flex items-center gap-3 relative z-10">
-                                            <div className="h-12 w-12 bg-background border border-border flex items-center justify-center rounded-lg overflow-hidden group-hover:scale-105 transition-all">
-                                                {tournament.logo_img ? (
-                                                    <img src={tournament.logo_img} alt={tournament.name} className="h-full w-full object-cover" />
-                                                ) : (
-                                                    <Trophy className="h-6 w-6 text-primary" />
-                                                )}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h3 className="font-black text-foreground text-base truncate leading-snug group-hover:text-primary transition-colors">
+                                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
+                                    <CardContent className="flex py-2 md:py-4 relative z-10 gap-2 md:gap-4">
+                                        <div className="flex gap-2 md:gap-4 overflow-hidden">
+                                            <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
+                                                <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name} className="object-contain" />
+                                                <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex flex-col gap-1">
+                                                <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
                                                     {tournament.name}
-                                                </h3>
-                                                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                                    <User className="h-3 w-3" />
-                                                    {tournament.organizer?.full_name || "ผู้จัดการระบบ"}
-                                                </p>
+                                                </CardTitle>
+                                                <CardDescription className="capitalize">
+                                                    Status: {tournament.status}
+                                                </CardDescription>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    {/* Body details */}
-                                    <div className="p-4 flex-1 space-y-4">
-                                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed h-8">
-                                            {tournament.description || "ไม่มีคำอธิบายสำหรับทัวร์นาเมนต์นี้"}
-                                        </p>
-
-                                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+                                        <div className="flex gap-2 md:gap-4">
                                             <div className="flex items-center gap-2">
-                                                <div className="h-7 w-7 bg-muted border border-border flex items-center justify-center rounded-lg text-primary">
-                                                    <Calendar className="h-3.5 w-3.5" />
+                                                <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary">
+                                                    <Calendar className="h-4 w-4" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-[9px] font-bold text-muted-foreground/60 tracking-wider">วันเริ่มแข่ง</p>
-                                                    <p className="text-xs font-bold text-foreground truncate">{new Date(tournament.start_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-7 w-7 bg-muted border border-border flex items-center justify-center rounded-lg text-primary">
-                                                    <DollarSign className="h-3.5 w-3.5" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-[9px] font-bold text-muted-foreground/60 tracking-wider">ค่าสมัคร</p>
+                                                    <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">วันเริ่มแข่ง</p>
                                                     <p className="text-xs font-bold text-foreground truncate">
-                                                        {parseFloat(tournament.registration_fee) === 0 ? "ฟรี (Free)" : `${parseFloat(tournament.registration_fee).toLocaleString()} ฿`}
+                                                        {new Date(tournament.start_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })} - {new Date(tournament.end_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    {/* Action button footer */}
-                                    <div className="p-4 pt-0">
-                                        <Button
-                                            asChild
-                                            variant="outline"
-                                            className="w-full flex items-center justify-center gap-2 px-4 h-10 hover:bg-accent hover:text-accent-foreground text-xs font-black rounded-xl transition-all"
-                                        >
-                                            <Link href={`/dashboard/tournaments/${tournament.id}`}>
-                                                ดูรายละเอียดเพิ่มเติม
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                </div>
+                                        <div className="ml-auto flex justify-end">
+                                            <p className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
+                                                {parseFloat(tournament.registration_fee) === 0 ? "Free" : `${parseFloat(tournament.registration_fee).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿`}
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                </Link>
                             ))}
                         </div>
                     )}
@@ -376,4 +341,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         </div>
     );
 }
+
+
+
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Chakra_Petch } from "next/font/google";
+import { Noto_Sans_Thai } from "next/font/google";
 import "../globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,20 +10,10 @@ import { routing } from '@/i18n/routing';
 import { CookieBanner } from "@/components/cookies/cookie-banner";
 import { PageViewTracker } from "@/hooks/use-analytics";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const chakraPetch = Chakra_Petch({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin', 'thai'],
-  variable: '--font-chakra-petch',
+const notoSansThai = Noto_Sans_Thai({
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  subsets: ['thai'],
+  variable: '--font-noto-sans-thai',
 });
 
 export const metadata: Metadata = {
@@ -33,15 +23,15 @@ export const metadata: Metadata = {
   },
   description: "LeagueFlow - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร ช่วยให้คุณสร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ จัดการทีม และระบบชำระเงิน PromptPay รองรับทั้งภาษาไทยและอังกฤษ",
   keywords: [
-    "จัดการแข่งขันฟุตบอล", 
-    "จัดการทัวร์นาเมนต์", 
-    "สร้างตารางแข่ง", 
-    "โปรแกรมการแข่งขัน", 
-    "ระบบจัดการลีก", 
-    "สมัครแข่งบอล", 
-    "LeagueFlow", 
-    "Tournament Management", 
-    "Football League", 
+    "จัดการแข่งขันฟุตบอล",
+    "จัดการทัวร์นาเมนต์",
+    "สร้างตารางแข่ง",
+    "โปรแกรมการแข่งขัน",
+    "ระบบจัดการลีก",
+    "สมัครแข่งบอล",
+    "LeagueFlow",
+    "Tournament Management",
+    "Football League",
     "Match Scoring"
   ],
   authors: [{ name: "LeagueFlow" }],
@@ -89,7 +79,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${chakraPetch.variable} font-sans antialiased`}
+        className={`${notoSansThai.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider

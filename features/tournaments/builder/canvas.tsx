@@ -15,12 +15,11 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-    Loader2, Plus, RefreshCw, RotateCcw, Save, Users, X, Zap,
-    List, ListOrdered, Settings, Info, MapPin, Hammer, ShieldAlert,
-    Calendar, Settings2, CalendarCheck, ArrowRight, ArrowLeft, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
+    Loader2, Plus, RefreshCw, RotateCcw, Users, X,
+    Settings, Info, MapPin, Hammer, ShieldAlert,
+    Calendar, Settings2, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
     Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
 } from "lucide-react";
-import { Link } from "@/i18n/routing";
 import {
     Popover,
     PopoverContent,
@@ -57,11 +56,9 @@ import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
-import { MatchGenerator } from "@/features/tournaments/matches/match-generator";
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { advanceStage } from "@/actions/organizer/tournaments/general";
 import { ByeNode } from "./bye-node";
 import { GroupNode } from "./group-node";
 import { MatchNode } from "./match-node";
@@ -101,17 +98,9 @@ interface CanvasProps {
     matches?: Match[];
 }
 
-interface BracketCanvasTeam {
-    id: string;
-    name: string;
-    logo_url?: string | null;
-}
-
 function CanvasInternal({
     tournamentId,
     tournamentName,
-    initialCanvasData,
-    isCompact = false,
     readonly = false,
     onClose,
     tournament,
@@ -119,9 +108,7 @@ function CanvasInternal({
     teams: initialTeamsData = [],
     matches: initialMatchesData = [],
 }: CanvasProps) {
-    const t = useTranslations("Bracket");
     const tMatch = useTranslations("Match");
-    const tFixtures = useTranslations("Fixtures");
     const locale = useLocale();
     const { toast } = useToast();
 
@@ -162,7 +149,6 @@ function CanvasInternal({
         addTeamListNode,
         addAnnouncementNode,
         hydrate,
-        updateNodeData,
         selectNode,
         setActiveNodeId,
         markClean,
@@ -177,7 +163,7 @@ function CanvasInternal({
     // Sync server-provided teams as initial state (before category-specific fetch runs)
     useEffect(() => {
         if (initialTeamsData && initialTeamsData.length > 0) {
-            setStoreTeams(initialTeamsData as any);
+            setStoreTeams(initialTeamsData);
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
@@ -190,14 +176,6 @@ function CanvasInternal({
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
     const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
-    const [initialFitDone, setInitialFitDone] = useState(false);
-
-    // Only set initialFitDone to true once nodes are loaded
-    useEffect(() => {
-        if (nodes.length > 0 && !initialFitDone) {
-            setInitialFitDone(true);
-        }
-    }, [nodes.length, initialFitDone]);
 
     // Sync isLocked with readonly prop or finished status if it changes
     useEffect(() => {
@@ -220,6 +198,7 @@ function CanvasInternal({
     );
     const [ageCategories, setAgeCategories] = useState<{ id: number; category_name: string }[]>([]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const toCategoryId = useCallback((id: unknown) => String(id), []);
 
     // Fetch categories and age categories.
     // Pass targetCategoryId to switch to a specific category after loading (e.g. after creating one).
@@ -238,36 +217,41 @@ function CanvasInternal({
         if (catData && catData.length > 0) {
             setCategories(catData);
 
-            if (targetCategoryId) {
-                // Explicit switch — hydrate and activate without using the callback form
-                const targetCat = catData.find((c: any) => c.id === targetCategoryId);
-                hydrate(targetCat?.canvas_data ?? null);
-                setActiveCategoryId(targetCategoryId);
-            } else {
-                setActiveCategoryId(prev => {
-                    if (!prev) {
-                        hydrate(catData[0].canvas_data ?? null);
-                        return catData[0].id;
-                    }
-                    const current = catData.find((c: any) => c.id === prev);
-                    if (current) {
-                        hydrate(current.canvas_data ?? null);
-                        return prev;
-                    }
-                    // URL category no longer exists — fall back to first
-                    hydrate(catData[0].canvas_data ?? null);
-                    return catData[0].id;
-                });
-            }
+            const fallbackCategoryId = toCategoryId(catData[0].id);
+            const requestedCategoryId = targetCategoryId ?? searchParams.get("category") ?? activeCategoryId;
+            const matchedCategory = requestedCategoryId
+                ? catData.find((c: any) => toCategoryId(c.id) === requestedCategoryId)
+                : null;
+            const resolvedCategoryId = matchedCategory ? toCategoryId(matchedCategory.id) : fallbackCategoryId;
+            const resolvedCategory = matchedCategory ?? catData[0];
+
+            hydrate(resolvedCategory?.canvas_data ?? null);
+            setActiveCategoryId(resolvedCategoryId);
         }
 
         return catData ?? [];
-    }, [tournamentId, hydrate]);
+    }, [tournamentId, hydrate, toCategoryId, searchParams, activeCategoryId]);
 
     useEffect(() => {
         loadCategories();
     }, [loadCategories]);
 
+    useEffect(() => {
+        const urlCategoryId = searchParams.get("category");
+        if (!urlCategoryId || categories.length === 0 || urlCategoryId === activeCategoryId) {
+            return;
+        }
+
+        const matchedCategory = categories.find((category) => toCategoryId(category.id) === urlCategoryId);
+        if (!matchedCategory) {
+            return;
+        }
+
+        hydrate(matchedCategory.canvas_data ?? null);
+        setActiveCategoryId(urlCategoryId);
+        setStoreCategoryId(urlCategoryId);
+        fetchTeams(urlCategoryId);
+    }, [searchParams, categories, activeCategoryId, hydrate, setStoreCategoryId, fetchTeams, toCategoryId]);
     useEffect(() => {
         async function loadAgeCategories() {
             const supabase = createClient();
@@ -289,8 +273,8 @@ function CanvasInternal({
         const ageName = cat.age_categories?.category_name || "General";
         const gender = cat.gender_type === 'open' ? (locale === 'th' ? 'รุ่นทั่วไป' : 'Open')
             : cat.gender_type === 'male' ? (locale === 'th' ? 'ชาย' : 'Male')
-            : cat.gender_type === 'female' ? (locale === 'th' ? 'หญิง' : 'Female')
-            : (locale === 'th' ? 'ผสม' : 'Mixed');
+                : cat.gender_type === 'female' ? (locale === 'th' ? 'หญิง' : 'Female')
+                    : (locale === 'th' ? 'ผสม' : 'Mixed');
         return `${ageName} (${gender})`;
     }, [locale]);
 
@@ -383,9 +367,9 @@ function CanvasInternal({
                 if (result.data) {
                     hydrate(result.data);
                     // Update local categories list
-                    setCategories(prev => prev.map(c => 
-                        c.id === activeCategoryId 
-                            ? { ...c, canvas_data: result.data } 
+                    setCategories(prev => prev.map(c =>
+                        c.id === activeCategoryId
+                            ? { ...c, canvas_data: result.data }
                             : c
                     ));
                 }
@@ -416,21 +400,22 @@ function CanvasInternal({
     }, [getCanvasData, hydrate, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId]);
 
     const handleCategorySwitch = useCallback(async (newCategoryId: string) => {
-        if (newCategoryId === activeCategoryId) return;
+        const normalizedCategoryId = toCategoryId(newCategoryId);
+        if (normalizedCategoryId === activeCategoryId) return;
         if (isDirty) {
             await handleSave(false);
         }
         // Hydrate canvas from local cache and fetch teams for the new category
-        const cached = categories.find(c => c.id === newCategoryId);
+        const cached = categories.find(c => toCategoryId(c.id) === normalizedCategoryId);
         hydrate(cached?.canvas_data ?? null);
-        setActiveCategoryId(newCategoryId);
-        setStoreCategoryId(newCategoryId);
-        fetchTeams(newCategoryId);
+        setActiveCategoryId(normalizedCategoryId);
+        setStoreCategoryId(normalizedCategoryId);
+        fetchTeams(normalizedCategoryId);
         // Persist to URL without adding a history entry
         const params = new URLSearchParams(searchParams.toString());
-        params.set("category", newCategoryId);
+        params.set("category", normalizedCategoryId);
         window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-    }, [activeCategoryId, isDirty, handleSave, categories, hydrate, fetchTeams, setStoreCategoryId, searchParams, pathname]);
+    }, [activeCategoryId, isDirty, handleSave, categories, hydrate, fetchTeams, setStoreCategoryId, searchParams, pathname, toCategoryId]);
 
     const [isDragging, setIsDragging] = useState(false);
 
@@ -465,18 +450,20 @@ function CanvasInternal({
     }, [reset]);
 
     const handleCopyLinkRegister = useCallback(() => {
-        const url = `${window.location.origin}/${locale}/register/${tournamentId}`;
+        const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
+        const url = `${window.location.origin}/${locale}/register/${tournamentId}${categoryQuery}`;
         navigator.clipboard.writeText(url);
         toast({
             title: locale === 'th' ? "คัดลอกลิงก์แล้ว" : "Link Copied",
             description: locale === 'th' ? "คัดลอกลิงก์ทัวร์นาเมนต์ไปยังคลิปบอร์ดแล้ว" : "Tournament link copied to clipboard.",
         });
-    }, [tournamentId, locale, toast]);
+    }, [tournamentId, locale, toast, activeCategoryId]);
 
     const handleOpenLinkRegister = useCallback(() => {
-        const url = `${window.location.origin}/${locale}/register/${tournamentId}`;
+        const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
+        const url = `${window.location.origin}/${locale}/register/${tournamentId}${categoryQuery}`;
         window.open(url, '_blank');
-    }, [tournamentId, locale]);
+    }, [tournamentId, locale, activeCategoryId]);
 
     const handleCopyLink = useCallback(() => {
         const url = `${window.location.origin}/${locale}/${tournamentId}`;
@@ -525,7 +512,7 @@ function CanvasInternal({
             setIsEditingName(false);
         }
     };
-    const activeCategory = categories.find(c => c.id === activeCategoryId);
+    const activeCategory = categories.find(c => toCategoryId(c.id) === activeCategoryId);
     const activeCategoryName = activeCategory ? getCategoryDisplayName(activeCategory) : null;
 
     return (
@@ -586,11 +573,11 @@ function CanvasInternal({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-64 bg-card shadow-2xl rounded-sm">
-                                <DropdownMenuLabel className="text-xs font-black tracking-widest uppercase opacity-60">
+                                <DropdownMenuLabel className="text-xs font-black tracking-widest opacity-60">
                                     {locale === 'th' ? "ประเภทการแข่งขัน" : "Tournament Categories"}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator className="border-border/10" />
-                                
+
                                 {categories.length === 0 ? (
                                     <div className="px-2 py-3 text-xs text-muted-foreground font-semibold text-center">
                                         {locale === 'th' ? "ยังไม่ได้ตั้งค่าประเภทการแข่งขัน" : "No categories configured yet"}
@@ -598,11 +585,11 @@ function CanvasInternal({
                                 ) : (
                                     categories.map((cat) => {
                                         const catName = getCategoryDisplayName(cat);
-                                        const isActive = cat.id === activeCategoryId;
+                                        const isActive = toCategoryId(cat.id) === activeCategoryId;
                                         return (
                                             <DropdownMenuItem
                                                 key={cat.id}
-                                                onClick={() => handleCategorySwitch(cat.id)}
+                                                onClick={() => handleCategorySwitch(toCategoryId(cat.id))}
                                                 className={cn(
                                                     "cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary flex items-center justify-between font-bold",
                                                     isActive && "text-primary bg-primary/5"
@@ -733,7 +720,7 @@ function CanvasInternal({
                                             {locale === 'th' ? "แชร์ทัวร์นาเมนต์" : "Share Tournament"}
                                         </DropdownMenuLabel>
                                         <DropdownMenuSeparator className="border-border/10" />
-                                        
+
                                         <div className="p-1">
                                             <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
                                                 {locale === 'th' ? "หน้าทัวร์นาเมนต์ (สาธารณะ)" : "Tournament View (Public)"}
@@ -1154,7 +1141,8 @@ function CanvasInternal({
                                     selectNode(null);
                                 }}
                                 nodeTypes={nodeTypes}
-                                fitView={!initialFitDone}
+                                fitView={false}
+                                defaultViewport={{ x: 0, y: 0, zoom: 1 }}
                                 minZoom={0.1}
                                 maxZoom={1.5}
                                 nodesDraggable={!readonly && !isLocked}
@@ -1195,7 +1183,7 @@ function CanvasInternal({
                     </>
                 )}
             </div>
-            
+
             {/* Create Category Dialog */}
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogContent className="sm:max-w-[450px] p-6 border-border/50 bg-background/95 backdrop-blur-md">
@@ -1205,7 +1193,7 @@ function CanvasInternal({
                             {locale === 'th' ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
                         </DialogTitle>
                     </DialogHeader>
-                    
+
                     <CreateCategoryMiniForm
                         tournamentId={tournamentId}
                         ageCategories={ageCategories}
@@ -1282,7 +1270,7 @@ function CreateCategoryMiniForm({
                     title: locale === 'th' ? "สร้างสำเร็จ" : "Created Successfully",
                     description: locale === 'th' ? "สร้างประเภทการแข่งขันเรียบร้อยแล้ว" : "New category has been created."
                 });
-                
+
                 const supabase = createClient();
                 const { data } = await supabase
                     .from("tournament_categories")
@@ -1319,7 +1307,7 @@ function CreateCategoryMiniForm({
     return (
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <Label className="text-xs font-bold tracking-widest text-muted-foreground">
                     {locale === 'th' ? "รุ่นอายุ" : "Age Category"}
                 </Label>
                 <Select value={ageCategoryId} onValueChange={setAgeCategoryId}>
@@ -1337,7 +1325,7 @@ function CreateCategoryMiniForm({
             </div>
 
             <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <Label className="text-xs font-bold tracking-widest text-muted-foreground">
                     {locale === 'th' ? "ประเภทเพศ" : "Gender Group"}
                 </Label>
                 <Select value={genderType} onValueChange={setGenderType}>
@@ -1354,7 +1342,7 @@ function CreateCategoryMiniForm({
             </div>
 
             <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <Label className="text-xs font-bold tracking-widest text-muted-foreground">
                     {locale === 'th' ? "จำนวนทีมสูงสุด" : "Team Limit"}
                 </Label>
                 <Select value={maxTeams} onValueChange={setMaxTeams}>

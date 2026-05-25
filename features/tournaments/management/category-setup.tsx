@@ -67,7 +67,7 @@ export function CategorySetup({ tournamentId, ageCategories, tournamentName }: C
                     <CardContent className="p-6 md:p-8 space-y-6">
                         {/* Age Category Selector */}
                         <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
+                            <Label className="text-xs font-black tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
                                 <Settings className="h-3.5 w-3.5" /> Age Category
                             </Label>
                             <Select name="age_category_id" value={ageCategoryId} onValueChange={setAgeCategoryId}>
@@ -90,7 +90,7 @@ export function CategorySetup({ tournamentId, ageCategories, tournamentName }: C
 
                         {/* Gender Type Selector */}
                         <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
+                            <Label className="text-xs font-black tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
                                 <Users className="h-3.5 w-3.5" /> Gender Group
                             </Label>
                             <Select name="gender_type" value={genderType} onValueChange={setGenderType}>
@@ -116,7 +116,7 @@ export function CategorySetup({ tournamentId, ageCategories, tournamentName }: C
 
                         {/* Max Teams Selector */}
                         <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
+                            <Label className="text-xs font-black tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
                                 <Trophy className="h-3.5 w-3.5" /> Team Limit
                             </Label>
                             <Select name="max_teams" value={maxTeams} onValueChange={setMaxTeams}>

@@ -42,10 +42,11 @@ export interface Tournament {
 export interface Match {
     id: string;
     tournament_id: string;
+    tournament_category_id?: string | null;
     home_team_id: string | null;
     away_team_id: string | null;
-    home_score: number | null;
-    away_score: number | null;
+    home_score: any;
+    away_score: any;
     round: number;
     stage: 'league' | 'group' | 'round_of_64' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final';
     winner_id?: string | null;
@@ -53,6 +54,7 @@ export interface Match {
     status: MatchStatus;
     match_date?: string | null;
     match_time?: string | null;
+    scheduled_at?: string | null;
     venue?: string | null;
     venue_id?: string | null;
     pitch_number?: number | null;
@@ -119,6 +121,11 @@ export interface Player {
     global_player?: GlobalPlayer | null;
     deleted_at?: string | null;
     tel?: string | null;
+    profile_img?: string | null;
+    master_player?: {
+        id: string;
+        profile_img?: string | null;
+    } | null;
 }
 
 export interface GlobalPlayer {
@@ -130,6 +137,7 @@ export interface GlobalPlayer {
     athlete_types: SportType[];
     created_by?: string | null;
     created_at: string;
+    profile_img?: string | null;
 }
 
 export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover';
@@ -367,4 +375,10 @@ export interface Registration {
     description?: string | null;
     tournament_team_id?: string | null;
     created_at: string;
+}
+
+export interface Sport {
+    id: string;
+    sport_name: string;
+    created_at?: string;
 }

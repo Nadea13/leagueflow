@@ -71,63 +71,80 @@ async function isAuthorizedForPlayer(playerId: string, userId: string) {
 }
 
 async function isAuthorizedForGlobalPlayer(globalPlayerId: string, userId: string) {
-    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
     
-    // Check if user created this global player
-    const { data: gp } = await supabase
+    // 1. Check if user is the direct owner of the master player profile
+    const { data: gp } = await adminSupabase
         .from("master_players")
         .select("user_id")
         .eq("id", globalPlayerId)
         .single();
     
     if (gp && gp.user_id === userId) return true;
-
-    // Check if user is an organizer of ANY tournament where this player is participating
-    const { data: players } = await supabase
+    
+    // 2. Find local player profiles associated with this master player
+    const { data: localPlayers } = await adminSupabase
         .from("players")
         .select("id")
         .eq("master_id", globalPlayerId);
-    
-    if (players && players.length > 0) {
-        const playerIds = players.map(p => p.id);
-        const { data: participations } = await supabase
-            .from("player_sports")
-            .select(`
-                team_id,
-                tournament_teams:team_id (
-                    tournament_category_id,
-                    tournament_categories ( tournament_id )
-                )
-            `)
-            .in("player_id", playerIds);
-        
-        if (participations) {
-            for (const p of participations as any) {
-                const tts = Array.isArray(p.tournament_teams) ? p.tournament_teams : (p.tournament_teams ? [p.tournament_teams] : []);
-                for (const tt of tts) {
-                    const tournamentId = tt.tournament_categories?.tournament_id;
-                    if (tournamentId) {
-                        const { data: tournament } = await supabase
-                            .from("tournaments")
-                            .select("organizer_id")
-                            .eq("id", tournamentId)
-                            .single();
-                        
-                        if (tournament && tournament.organizer_id === userId) return true;
 
-                        const { data: membership } = await supabase
-                            .from("tournament_members")
-                            .select("role")
-                            .eq("tournament_id", tournamentId)
-                            .eq("user_id", userId)
-                            .eq("status", "accepted")
-                            .in("role", ["admin", "editor"])
-                            .single();
-                        
-                        if (membership) return true;
-                    }
-                }
-            }
+    if (!localPlayers || localPlayers.length === 0) return false;
+    const localPlayerIds = localPlayers.map(lp => lp.id);
+
+    // 3. Find the teams these local players are registered in
+    const { data: sports } = await adminSupabase
+        .from("player_sports")
+        .select("team_id")
+        .in("player_id", localPlayerIds);
+
+    if (!sports || sports.length === 0) return false;
+    const teamIds = sports.map(s => s.team_id).filter(Boolean) as string[];
+
+    // 4. Check if current user is the team manager of any of these teams
+    const { data: ownedTeams } = await adminSupabase
+        .from("teams")
+        .select("id")
+        .eq("user_id", userId)
+        .in("id", teamIds);
+    
+    if (ownedTeams && ownedTeams.length > 0) return true;
+
+    // 5. Check if current user is an organizer or authorized staff member of a tournament hosting any of these teams
+    const { data: tournamentTeams } = await adminSupabase
+        .from("tournament_teams")
+        .select("tournament_category_id")
+        .in("team_id", teamIds);
+
+    if (tournamentTeams && tournamentTeams.length > 0) {
+        const categoryIds = tournamentTeams.map(tt => tt.tournament_category_id).filter(Boolean) as string[];
+        
+        const { data: categories } = await adminSupabase
+            .from("tournament_categories")
+            .select("tournament_id")
+            .in("id", categoryIds);
+
+        if (categories && categories.length > 0) {
+            const tournamentIds = categories.map(c => c.tournament_id).filter(Boolean) as string[];
+
+            // Check if user is the tournament owner/organizer
+            const { data: tournaments } = await adminSupabase
+                .from("tournaments")
+                .select("id")
+                .eq("organizer_id", userId)
+                .in("id", tournamentIds);
+
+            if (tournaments && tournaments.length > 0) return true;
+
+            // Check if user is an accepted co-organizer or staff member of the tournament
+            const { data: memberships } = await adminSupabase
+                .from("tournament_members")
+                .select("tournament_id")
+                .eq("user_id", userId)
+                .eq("status", "accepted")
+                .in("role", ["admin", "editor"])
+                .in("tournament_id", tournamentIds);
+
+            if (memberships && memberships.length > 0) return true;
         }
     }
 

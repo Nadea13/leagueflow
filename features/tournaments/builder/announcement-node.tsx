@@ -11,16 +11,18 @@ export const AnnouncementNode = memo(({ id, data, selected }: NodeProps) => {
 
     return (
         <div className={cn(
-            "relative w-[300px] border bg-card text-card-foreground transition-all",
+            "relative w-[300px] border bg-card text-card-foreground transition-all rounded-sm",
             selected
                 ? "border-amber-500 ring-2 ring-amber-500/30"
                 : "border-border hover:border-amber-500/50"
         )}>
             {/* Header */}
-            <div className="flex justify-between items-center px-4 py-2 border-b bg-amber-500/5">
+            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <Megaphone className="h-4 w-4 text-amber-500" />
-                    <span className="text-[11px] font-black tracking-[0.2em] text-amber-500">
+                    <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center">
+                        <Megaphone className="h-4 w-4 text-background" />
+                    </div>
+                    <span className="text-xs font-black tracking-wide text-amber-500">
                         Announcements
                     </span>
                 </div>

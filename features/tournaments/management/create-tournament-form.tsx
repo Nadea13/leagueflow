@@ -25,7 +25,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { ActionResponse, SportType } from "@/types/index";
+import { ActionResponse, SportType, Sport } from "@/types/index";
 
 import { getSports } from "@/actions/manager/team";
 
@@ -40,7 +40,7 @@ export function TournamentCreate() {
     const tSports = useTranslations("Sports");
     const [open, setOpen] = useState(false);
     const [state, formAction, isPending] = useActionState(createTournament, initialState);
-    const [sportsList, setSportsList] = useState<any[]>([]);
+    const [sportsList, setSportsList] = useState<Sport[]>([]);
     const [selectedSport, setSelectedSport] = useState<string>("");
 
     // Load sports dynamically from database

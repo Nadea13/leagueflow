@@ -15,10 +15,17 @@ export async function approveRegistration(
 
     const adminSupabase = createAdminClient();
 
-    // 1. Fetch registration data
+    // 1. Fetch registration data from tournament_teams
     const { data: reg, error: fetchError } = await adminSupabase
-        .from("registrations")
-        .select("*")
+        .from("tournament_teams")
+        .select(`
+            id,
+            payment_status,
+            registration_status,
+            tournament_categories!inner (
+                tournament_id
+            )
+        `)
         .eq("id", registrationId)
         .single();
 
@@ -26,72 +33,26 @@ export async function approveRegistration(
         return { success: false, error: "Registration not found" };
     }
 
-    if (reg.payment_status === 'PAID') {
+    if ((reg.tournament_categories as any)?.tournament_id !== tournamentId) {
+        return { success: false, error: "Registration does not belong to this tournament" };
+    }
+
+    if (reg.payment_status === 'paid' && reg.registration_status === 'approved') {
         return { success: false, error: "Registration already approved" };
     }
 
     // 2. Update Registration Status
     const { error: updateError } = await adminSupabase
-        .from("registrations")
-        .update({ payment_status: 'PAID' })
+        .from("tournament_teams")
+        .update({ 
+            payment_status: 'paid',
+            registration_status: 'approved'
+        })
         .eq("id", registrationId);
 
     if (updateError) {
         return { success: false, error: "Failed to update registration: " + updateError.message };
     }
-
-    // 3. Create or Update Tournament Team Participation
-    let teamId = reg.tournament_team_id;
-
-    if (!teamId) {
-        // Fallback for older registrations
-        const { data: teamData, error: teamInsertError } = await adminSupabase
-            .from("tournament_teams")
-            .insert({
-                tournament_id: tournamentId,
-                team_id: reg.existing_team_id || null,
-                user_id: reg.user_id,
-                name: reg.team_name,
-                created_at: new Date().toISOString(),
-                logo_url: reg.logo_url || null,
-            })
-            .select()
-            .single();
-
-        if (teamInsertError) {
-            console.error("Team insert error:", teamInsertError);
-            return { success: false, error: "Failed to create team: " + teamInsertError.message };
-        }
-        teamId = teamData.id;
-
-        // Link Registration to the created Participation
-        await adminSupabase
-            .from("registrations")
-            .update({ tournament_team_id: teamId })
-            .eq("id", registrationId);
-            
-        // Copy Players is not required as the roster is shared globally via player_sports.
-    }
-
-    // 4. Create Team Payment for Financial Summary
-    const { data: tournament } = await adminSupabase
-        .from("tournaments")
-        .select("registration_fee")
-        .eq("id", tournamentId)
-        .single();
-
-    await adminSupabase
-        .from("team_payments")
-        .upsert({
-            tournament_id: tournamentId,
-            team_id: teamId,
-            amount: Number(tournament?.registration_fee || 0),
-            status: 'paid',
-            paid_at: new Date().toISOString(),
-            notes: `Registration Ref: ${reg.trans_ref}`,
-        }, {
-            onConflict: 'tournament_id,team_id'
-        });
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
     return { success: true, message: "Registration approved and synced!" };
@@ -107,9 +68,28 @@ export async function rejectRegistration(
 
     const adminSupabase = createAdminClient();
 
+    // 1. Fetch registration data to verify tournament ownership
+    const { data: reg, error: fetchError } = await adminSupabase
+        .from("tournament_teams")
+        .select(`
+            id,
+            tournament_categories!inner (
+                tournament_id
+            )
+        `)
+        .eq("id", registrationId)
+        .single();
+
+    if (fetchError || !reg || (reg.tournament_categories as any)?.tournament_id !== tournamentId) {
+        return { success: false, error: "Registration not found" };
+    }
+
     const { error } = await adminSupabase
-        .from("registrations")
-        .update({ payment_status: 'REJECTED' })
+        .from("tournament_teams")
+        .update({ 
+            payment_status: 'rejected',
+            registration_status: 'rejected'
+        })
         .eq("id", registrationId);
 
     if (error) {

@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState, useState, useRef, useEffect } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
-import { Plus, Upload, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createTeam, getSports } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { ActionResponse, SportType } from "@/types/index";
+import { ActionResponse, Sport } from "@/types/index";
+import { LogoUploader } from "@/components/shared/logo-uploader";
 
 const initialState: ActionResponse = {
     success: false,
@@ -30,13 +30,11 @@ const initialState: ActionResponse = {
 export function CreateTeamForm() {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
-    const tSports = useTranslations("Sports");
     const [open, setOpen] = useState(false);
     const [state, formAction] = useActionState(createTeam, initialState);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [sportsList, setSportsList] = useState<any[]>([]);
+    const [sportsList, setSportsList] = useState<Sport[]>([]);
     const [selectedSport, setSelectedSport] = useState<string>("");
 
     // Load sports dynamically from database
@@ -60,21 +58,6 @@ export function CreateTeamForm() {
         setOpen(false);
         setPreviewUrl(null);
     }
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
-    };
-
-    const handleRemoveLogo = () => {
-        setPreviewUrl(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -102,55 +85,23 @@ export function CreateTeamForm() {
                             <Label htmlFor="logo" className="text-xs font-black tracking-widest text-primary">
                                 {t("upload_logo")}
                             </Label>
-                            <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 rounded-lg border">
-                                <div className="relative group">
-                                    <div className="h-20 w-20 flex items-center justify-center rounded-sm border-2 border-dashed border-border overflow-hidden">
-                                        {previewUrl ? (
-                                            <img
-                                                src={previewUrl}
-                                                alt={tCommon("preview")}
-                                                width={80}
-                                                height={80}
-                                                className="h-full w-full object-cover p-1 rounded-sm"
-                                            />
-                                        ) : (
-                                            <Upload className="h-8 w-8 text-primary" />
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="flex-1">
-                                    <div className="flex gap-2">
-                                        <Label
-                                            htmlFor="logo"
-                                            className="cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 rounded-sm hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all"
-                                        >
-                                            {previewUrl ? t("click_to_upload") : t("upload_logo")}
-                                        </Label>
-                                        {previewUrl && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                                                onClick={handleRemoveLogo}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                    <Input
-                                        id="logo"
-                                        name="logo"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleFileChange}
-                                        ref={fileInputRef}
-                                    />
-                                    <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 2MB</p>
-                                </div>
-                            </div>
+                            <LogoUploader
+                                id="logo"
+                                name="logo"
+                                initialUrl={previewUrl}
+                                onFileChange={(file) => {
+                                    if (file) {
+                                        setPreviewUrl(URL.createObjectURL(file));
+                                    } else {
+                                        setPreviewUrl(null);
+                                    }
+                                }}
+                                onRemove={() => setPreviewUrl(null)}
+                                uploadLabel={t("upload_logo")}
+                                clickToUploadLabel={t("click_to_upload")}
+                                previewLabel={tCommon("preview")}
+                                imageFit="cover"
+                            />
                         </div>
 
                         <div className="space-y-1">

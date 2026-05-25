@@ -133,7 +133,12 @@ CREATE POLICY master_players_select ON master_players FOR SELECT TO authenticate
     (SELECT is_team_manager FROM users WHERE id = auth.uid()) = true
 );
 CREATE POLICY master_players_write ON master_players FOR ALL TO authenticated USING (
-    auth.uid() = user_id OR (SELECT is_admin FROM users WHERE id = auth.uid()) = true
+    auth.uid() = user_id OR 
+    (user_id IS NULL AND (
+        (SELECT is_organizer FROM users WHERE id = auth.uid()) = true OR 
+        (SELECT is_team_manager FROM users WHERE id = auth.uid()) = true
+    )) OR 
+    (SELECT is_admin FROM users WHERE id = auth.uid()) = true
 );
 
 
@@ -155,7 +160,13 @@ CREATE POLICY teams_delete ON teams FOR DELETE TO authenticated USING (auth.uid(
 CREATE POLICY players_select ON players FOR SELECT USING (true);
 CREATE POLICY players_write ON players FOR ALL TO authenticated USING (
     EXISTS (SELECT 1 FROM player_sports ps JOIN teams t ON ps.team_id = t.id WHERE ps.player_id = players.id AND t.user_id = auth.uid()) OR
-    EXISTS (SELECT 1 FROM tournaments WHERE id = tournament_id AND organizer_id = auth.uid())
+    EXISTS (
+        SELECT 1 FROM player_sports ps 
+        JOIN tournament_teams tt ON ps.team_id = tt.team_id
+        JOIN tournament_categories tc ON tt.tournament_category_id = tc.id
+        JOIN tournaments tr ON tc.tournament_id = tr.id
+        WHERE ps.player_id = players.id AND tr.organizer_id = auth.uid()
+    )
 );
 
 CREATE POLICY player_sports_select ON player_sports FOR SELECT USING (true);

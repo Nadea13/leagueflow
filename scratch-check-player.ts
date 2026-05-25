@@ -15,16 +15,25 @@ for (const line of envContent.split('\n')) {
     env[key] = value;
 }
 
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+const adminSupabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 async function run() {
-    const { data: ttData, error: ttError } = await supabase.from("tournament_teams").select("*").limit(1);
-    console.log("tournament_teams sample:", ttData?.[0]);
-    if (ttError) console.error("tournament_teams error:", ttError);
+    const { data, error } = await adminSupabase.from("players").select(`
+        id,
+        display_name,
+        master_player:master_id (
+            id,
+            first_name,
+            last_name,
+            profile_img
+        )
+    `).limit(2);
 
-    const { data: regData, error: regError } = await supabase.from("registrations").select("*").limit(1);
-    console.log("registrations sample:", regData?.[0]);
-    if (regError) console.error("registrations error:", regError);
+    if (error) {
+        console.error("Error with admin client:", error);
+    } else {
+        console.log("Admin client player data:", JSON.stringify(data, null, 2));
+    }
 }
 
 run();

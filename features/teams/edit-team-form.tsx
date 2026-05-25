@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import { Team, SportType, TournamentTeam } from "@/types/index";
-import { updateTeamGlobal, deleteTeamGlobal, resetRoster, restoreRoster, hasSoftDeletedPlayers } from "@/actions/manager/team";
+import { Team, TournamentTeam, Sport } from "@/types/index";
+import { updateTeamGlobal, deleteTeamGlobal, resetRoster, restoreRoster, hasSoftDeletedPlayers, getSports } from "@/actions/manager/team";
 import { updateTeam, deleteTeam } from "@/actions/organizer/tournaments/general";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -14,23 +13,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, Users, Upload, Save, Trash2, Lock, RotateCcw } from "lucide-react";
+import { Loader2, Save, Trash2, Lock, RotateCcw } from "lucide-react";
+import { LogoUploader } from "@/components/shared/logo-uploader";
 
 interface EditTeamFormProps {
     team: (Team | TournamentTeam) & {
         isParticipation?: boolean;
     };
     onNameChange: (name: string) => void;
-    onSportChange?: (sport: SportType) => void;
+    onSportChange?: (sport: string) => void;
     isLocked: boolean;
     context?: 'manager' | 'organizer';
     tournamentId?: string;
 }
 
-export function EditTeamForm({ 
-    team, 
-    onNameChange, 
-    onSportChange, 
+export function EditTeamForm({
+    team,
+    onNameChange,
+    onSportChange,
     isLocked,
     context = 'manager',
     tournamentId = ""
@@ -38,7 +38,6 @@ export function EditTeamForm({
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
     const tTeam = useTranslations("Team");
-    const tSports = useTranslations("Sports");
     const { toast } = useToast();
     const router = useRouter();
 
@@ -46,7 +45,7 @@ export function EditTeamForm({
     const [teamDescription, setTeamDescription] = useState(team.description || "");
     const [contactName, setContactName] = useState(team.contact_name || "");
     const [contactPhone, setContactPhone] = useState(team.contact_phone || "");
-    const [teamSport, setTeamSport] = useState<SportType>((team as Team).sport || 'football');
+    const [teamSport, setTeamSport] = useState<string>((team as { sport_id?: string }).sport_id || team.sport || "");
     const [previewUrl, setPreviewUrl] = useState<string | null>(team.logo_url || null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUpdatingTeam, setIsUpdatingTeam] = useState(false);
@@ -55,10 +54,30 @@ export function EditTeamForm({
     const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false);
     const [resetRosterDialogOpen, setResetRosterDialogOpen] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const [hasResetRoster, setHasResetRoster] = useState(false);
     const [isRestoringRoster, setIsRestoringRoster] = useState(false);
+    const [sportsList, setSportsList] = useState<Sport[]>([]);
+
+    useEffect(() => {
+        async function loadSports() {
+            const res = await getSports();
+            if (res.success && res.data) {
+                setSportsList(res.data);
+                const currentSport = (team as { sport_id?: string }).sport_id || team.sport;
+                if (currentSport) {
+                    const match = res.data.find(s =>
+                        s.id === currentSport ||
+                        s.sport_name.toLowerCase() === currentSport.toLowerCase()
+                    );
+                    if (match) {
+                        setTeamSport(match.id);
+                    }
+                }
+            }
+        }
+        loadSports();
+    }, [team]);
 
     useEffect(() => {
         const checkRestore = async () => {
@@ -92,22 +111,7 @@ export function EditTeamForm({
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setSelectedFile(file);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
-    };
 
-    const handleRemoveLogo = () => {
-        setPreviewUrl(null);
-        setSelectedFile(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
 
     const handleUpdateTeam = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,10 +129,10 @@ export function EditTeamForm({
             formData.append("logo", selectedFile);
         }
 
-        const result = context === 'organizer' 
+        const result = context === 'organizer'
             ? await updateTeam(team.id, formData, tournamentId)
             : await updateTeamGlobal(team.id, formData, tournamentId);
-            
+
         setIsUpdatingTeam(false);
 
         if (result.success) {
@@ -161,7 +165,7 @@ export function EditTeamForm({
     const handleResetRoster = async () => {
         setIsResettingRoster(true);
         const result = await resetRoster(team.id);
-        
+
         setIsResettingRoster(false);
         if (result.success) {
             toast({ title: tCommon("success"), description: t("roster_reset_success") || "Roster reset successfully" });
@@ -176,63 +180,30 @@ export function EditTeamForm({
     return (
         <div className="bg-background border rounded-xl relative overflow-hidden">
             <div className="p-2 md:p-4">
-                <div className="flex flex-col items-center text-center mb-2 md:mb-4">
-                    <h2 className="text-2xl font-black tracking-tighter text-foreground">
-                        {teamName}
-                    </h2>
-                </div>
-
                 <form onSubmit={handleUpdateTeam} className="space-y-2 md:space-y-4">
                     <div className="space-y-1">
                         <Label>{tTeam("upload_logo")}</Label>
-                        <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-lg">
-                            <div className="relative group">
-                                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm">
-                                    {previewUrl ? (
-                                        <img
-                                            src={previewUrl}
-                                            alt={tCommon("preview")}
-                                            width={80}
-                                            height={80}
-                                            className="h-full w-full object-contain p-1"
-                                        />
-                                    ) : (
-                                        <Upload className="h-8 w-8 text-primary" />
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex-1">
-                                <div className="flex gap-2">
-                                    <Label
-                                        htmlFor="edit-logo-right"
-                                        className="cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 rounded-sm hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all"
-                                    >
-                                        {previewUrl ? tTeam("click_to_upload") : tTeam("upload_logo")}
-                                    </Label>
-                                    {previewUrl && (
-                                        <Button 
-                                            type="button" 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
-                                            onClick={handleRemoveLogo}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                                <Input
-                                    id="edit-logo-right"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                    ref={fileInputRef}
-                                />
-                                <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 2MB</p>
-                            </div>
-                        </div>
+                        <LogoUploader
+                            id="edit-logo-right"
+                            initialUrl={previewUrl}
+                            onFileChange={(file) => {
+                                setSelectedFile(file);
+                                if (file) {
+                                    setPreviewUrl(URL.createObjectURL(file));
+                                } else {
+                                    setPreviewUrl(null);
+                                }
+                            }}
+                            onRemove={() => {
+                                setSelectedFile(null);
+                                setPreviewUrl(null);
+                            }}
+                            disabled={isLocked}
+                            uploadLabel={tTeam("upload_logo")}
+                            clickToUploadLabel={tTeam("click_to_upload")}
+                            previewLabel={tCommon("preview")}
+                            imageFit="contain"
+                        />
                     </div>
 
                     <div className="space-y-1">
@@ -253,14 +224,14 @@ export function EditTeamForm({
                         <Label>
                             {tCommon("sport") || "Sport"}
                         </Label>
-                        <Select value={teamSport} onValueChange={(v) => setTeamSport(v as SportType)} disabled={isLocked}>
+                        <Select value={teamSport} onValueChange={(v) => setTeamSport(v)} disabled={isLocked}>
                             <SelectTrigger className="bg-transparent text-foreground focus-visible:ring-0 w-full">
                                 <SelectValue placeholder={tCommon("sport") || "Sport"} />
                             </SelectTrigger>
                             <SelectContent className="border-border">
-                                {(['football'] as SportType[]).map((sportKey) => (
-                                    <SelectItem key={sportKey} value={sportKey} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
-                                        {tSports(sportKey)}
+                                {sportsList.map((sport) => (
+                                    <SelectItem key={sport.id} value={sport.id} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
+                                        {sport.sport_name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -349,99 +320,99 @@ export function EditTeamForm({
                                 <div className="h-px flex-1 bg-destructive" />
                             </div>
 
-                        <Dialog open={resetRosterDialogOpen} onOpenChange={setResetRosterDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
-                                    disabled={isResettingRoster || isLocked}
-                                >
-                                    <RotateCcw className="h-4 w-4 mr-2" />
-                                    {t("reset_roster") || "Reset Roster"}
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md border-border bg-card">
-                                <DialogHeader>
-                                    <DialogTitle className="font-black tracking-tight text-destructive">{t("reset_roster") || "Reset Roster"}</DialogTitle>
-                                    <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
-                                        {t("reset_roster_desc") || "This will delete all players from this team's roster. This action cannot be undone."}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                            <Dialog open={resetRosterDialogOpen} onOpenChange={setResetRosterDialogOpen}>
+                                <DialogTrigger asChild>
                                     <Button
-                                        variant="ghost"
-                                        className="font-black text-[10px] tracking-widest"
-                                        onClick={() => setResetRosterDialogOpen(false)}
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
+                                        disabled={isResettingRoster || isLocked}
                                     >
-                                        {tCommon("cancel")}
+                                        <RotateCcw className="h-4 w-4 mr-2" />
+                                        {t("reset_roster") || "Reset Roster"}
                                     </Button>
-                                    <Button
-                                        variant="default"
-                                        className="font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/60 hover:text-destructive"
-                                        onClick={handleResetRoster}
-                                        disabled={isResettingRoster}
-                                    >
-                                        {isResettingRoster ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
-                                        {t("confirm_reset") || "Confirm Reset"}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md border-border bg-card">
+                                    <DialogHeader>
+                                        <DialogTitle className="font-black tracking-tight text-destructive">{t("reset_roster") || "Reset Roster"}</DialogTitle>
+                                        <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
+                                            {t("reset_roster_desc") || "This will delete all players from this team's roster. This action cannot be undone."}
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                                        <Button
+                                            variant="ghost"
+                                            className="font-black text-[10px] tracking-widest"
+                                            onClick={() => setResetRosterDialogOpen(false)}
+                                        >
+                                            {tCommon("cancel")}
+                                        </Button>
+                                        <Button
+                                            variant="default"
+                                            className="font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/60 hover:text-destructive"
+                                            onClick={handleResetRoster}
+                                            disabled={isResettingRoster}
+                                        >
+                                            {isResettingRoster ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+                                            {t("confirm_reset") || "Confirm Reset"}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
 
-                        <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
-                                    disabled={isDeletingTeam || isLocked}
-                                >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    {tTeam("delete_team") || "Delete Team"}
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md border-border bg-card">
-                                <DialogHeader>
-                                    <DialogTitle className="font-black tracking-tight text-red-500">{tTeam("delete_team") || "Delete Team"}</DialogTitle>
-                                    <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
-                                        {tTeam("delete_desc") || "This action cannot be undone. This will permanently delete your team and all associated data."}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="py-6 space-y-3 font-semibold">
-                                    <Label htmlFor="confirm-team-delete" className="text-[10px] font-black tracking-widest text-muted-foreground/60">
-                                        {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
-                                    </Label>
-                                    <Input
-                                        id="confirm-team-delete"
-                                        value={deleteConfirmText}
-                                        onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                        autoComplete="off"
-                                        className="border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
-                                    />
-                                </div>
-                                <DialogFooter className="gap-2 sm:gap-0">
+                            <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
+                                <DialogTrigger asChild>
                                     <Button
-                                        variant="ghost"
-                                        className="font-black text-[10px] tracking-widest"
-                                        onClick={() => { setDeleteTeamDialogOpen(false); setDeleteConfirmText(""); }}
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
+                                        disabled={isDeletingTeam || isLocked}
                                     >
-                                        {tCommon("cancel")}
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        {tTeam("delete_team") || "Delete Team"}
                                     </Button>
-                                    <Button
-                                        variant="destructive"
-                                        className="font-black text-[10px] tracking-widest bg-red-500 hover:bg-red-600"
-                                        onClick={handleDeleteTeam}
-                                        disabled={isDeletingTeam || deleteConfirmText !== team.name}
-                                    >
-                                        {isDeletingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                                        {tCommon("delete")}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                )}
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md border-border bg-card">
+                                    <DialogHeader>
+                                        <DialogTitle className="font-black tracking-tight text-red-500">{tTeam("delete_team") || "Delete Team"}</DialogTitle>
+                                        <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
+                                            {tTeam("delete_desc") || "This action cannot be undone. This will permanently delete your team and all associated data."}
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-6 space-y-3 font-semibold">
+                                        <Label htmlFor="confirm-team-delete" className="text-[10px] font-black tracking-widest text-muted-foreground/60">
+                                            {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
+                                        </Label>
+                                        <Input
+                                            id="confirm-team-delete"
+                                            value={deleteConfirmText}
+                                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                            autoComplete="off"
+                                            className="border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
+                                        />
+                                    </div>
+                                    <DialogFooter className="gap-2 sm:gap-0">
+                                        <Button
+                                            variant="ghost"
+                                            className="font-black text-[10px] tracking-widest"
+                                            onClick={() => { setDeleteTeamDialogOpen(false); setDeleteConfirmText(""); }}
+                                        >
+                                            {tCommon("cancel")}
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            className="font-black text-[10px] tracking-widest bg-red-500 hover:bg-red-600"
+                                            onClick={handleDeleteTeam}
+                                            disabled={isDeletingTeam || deleteConfirmText !== team.name}
+                                        >
+                                            {isDeletingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                            {tCommon("delete")}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    )}
                 </form>
             </div>
         </div>

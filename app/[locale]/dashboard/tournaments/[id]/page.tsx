@@ -86,7 +86,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const teamsResult = categoryId 
         ? await supabase
             .from("tournament_teams")
-            .select("*, team:teams(*), registrations(payment_status)")
+            .select("*, team:teams(*)")
             .eq("tournament_category_id", categoryId)
             .is("deleted_at", null)
             .order("created_at", { ascending: true })
@@ -122,11 +122,11 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     });
 
     const teams = mappedTeams.filter((t) => {
-        const registration = Array.isArray(t.registrations) ? t.registrations[0] : t.registrations;
-        if (registration) {
-            return (registration as { payment_status: string }).payment_status === 'PAID';
-        }
-        return true; // Manual additions by organizer don't have registrations
+        const ps = t.payment_status;
+        const rs = t.registration_status;
+        if (!ps && !rs) return true;
+        return String(ps || '').toLowerCase() === 'paid' ||
+               String(rs || '').toLowerCase() === 'approved';
     });
 
     const matches = (matchesResult.data || []).map((m: any) => ({

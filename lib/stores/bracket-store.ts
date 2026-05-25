@@ -9,7 +9,7 @@ import {
     NodeChange,
     EdgeChange,
 } from "@xyflow/react";
-import { BracketCanvasData, Match, TournamentTeam } from "@/types";
+import { BracketCanvasData, Match } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 
 export interface MatchNodeData {
@@ -60,6 +60,8 @@ interface BracketState {
     setActiveCategoryId: (id: string | null) => void;
 }
 
+let teamFetchRequestId = 0;
+
 export const useBracketStore = create<BracketState>((set, get) => ({
     nodes: [],
     edges: [],
@@ -74,13 +76,24 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     setTeams: (teams) => set({ teams }),
     fetchTeams: async (categoryId) => {
         if (!categoryId) return;
+        const requestId = ++teamFetchRequestId;
         const supabase = createClient();
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from("tournament_teams")
-            .select("*, team:teams(id, name, logo_img), registrations(payment_status)")
+            .select("*, team:teams(id, name, logo_img)")
             .eq("tournament_category_id", categoryId)
             .is("deleted_at", null)
             .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Failed to fetch tournament category teams:", error);
+            return;
+        }
+
+        const activeCategoryId = get().activeCategoryId;
+        if (requestId !== teamFetchRequestId || (activeCategoryId && activeCategoryId !== categoryId)) {
+            return;
+        }
 
         if (data) {
             const mappedTeams = (data as any[]).map((t) => ({
@@ -151,7 +164,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 const teamIdMatch = sourceHandle.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const teams = (sourceNode.data.teams as any[]) || [];
+                    const teams = (sourceNode.data.teams as any[])?.length ? (sourceNode.data.teams as any[]) : get().teams;
                     const team = teams.find(t => t.id === teamId);
                     teamName = team?.name || "TBD";
                 }
@@ -263,7 +276,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 const teamIdMatch = sourceHandle.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const teams = (sourceNode.data.teams as any[]) || [];
+                    const teams = (sourceNode.data.teams as any[])?.length ? (sourceNode.data.teams as any[]) : get().teams;
                     const team = teams.find(t => t.id === teamId);
                     teamName = team?.name || "TBD";
                 }
@@ -297,7 +310,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 const teamIdMatch = sourceHandle.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const teams = (sourceNode.data.teams as any[]) || [];
+                    const teams = (sourceNode.data.teams as any[])?.length ? (sourceNode.data.teams as any[]) : get().teams;
                     const team = teams.find(t => t.id === teamId);
                     teamName = team?.name || "TBD";
                 }

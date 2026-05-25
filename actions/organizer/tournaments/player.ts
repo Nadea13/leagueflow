@@ -158,6 +158,7 @@ export async function addPlayer(
 
 export async function getPlayers(teamId: string): Promise<{ success: boolean; data?: Player[]; error?: string }> {
     const supabase = await createClient();
+    const adminSupabase = createAdminClient();
 
     // First, check if teamId matches a tournament_teams (participation)
     const { data: participation } = await supabase
@@ -171,7 +172,7 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
         .eq("id", teamId)
         .single();
 
-    let query = supabase.from("player_sports").select(`
+    let query = adminSupabase.from("player_sports").select(`
         id,
         position,
         shirt_number,

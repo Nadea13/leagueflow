@@ -4,11 +4,10 @@ import React from "react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Users, Trophy, Zap, Trash2, ListOrdered, Calendar, Clock, ExternalLink } from "lucide-react";
+import { Users, Trophy, Zap, Trash2, ListOrdered, Calendar, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
-import { TournamentTeam } from "@/types";
 import { useParams } from "next/navigation";
 import {
     Select,
@@ -31,12 +30,18 @@ import {
 import { useTranslations } from "next-intl";
 
 export function NodeSettings() {
-    const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, setActiveNodeId, activeCategoryId } = useBracketStore();
+    const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, activeCategoryId } = useBracketStore();
     const params = useParams();
     const tournamentId = params.id as string;
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const t = useTranslations("Team");
+
+    React.useEffect(() => {
+        if (activeCategoryId && selectedNode?.type === "teamListNode") {
+            fetchTeams(activeCategoryId);
+        }
+    }, [activeCategoryId, fetchTeams, selectedNode?.type]);
 
     if (!selectedNode || !activeNodeId) {
         return null;
@@ -212,7 +217,7 @@ export function NodeSettings() {
                                         if (dateA !== dateB) return dateA.localeCompare(dateB);
                                         return timeA.localeCompare(timeB);
                                     })
-                                    .map((match, idx, sortedArr) => {
+                                    .map((match, idx) => {
                                         const updateMatch = (updates: any) => {
                                             const originalMatches = [...((data.matches as any[]) || [])];
                                             const matchIdx = originalMatches.findIndex(m => m.id === match.id);
@@ -388,22 +393,21 @@ export function NodeSettings() {
                                                 {t("add_team_button") || "Add Team"}
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[500px] border-border/50">
-                                            <DialogHeader>
+                                        <DialogContent className="sm:max-w-[500px] rounded-lg p-0">
+                                            <DialogHeader className="p-2 md:p-4 border-b ">
                                                 <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
                                             </DialogHeader>
-                                            <div className="py-4">
-                                                <TeamForm
-                                                    tournamentId={tournamentId}
-                                                    isLimitReached={false}
-                                                    onSuccess={() => {
-                                                        setIsAddDialogOpen(false);
-                                                        if (activeCategoryId) {
-                                                            fetchTeams(activeCategoryId);
-                                                        }
-                                                    }}
-                                                />
-                                            </div>
+                                            <TeamForm
+                                                tournamentId={tournamentId}
+                                                tournamentCategoryId={activeCategoryId || undefined}
+                                                isLimitReached={false}
+                                                onSuccess={() => {
+                                                    setIsAddDialogOpen(false);
+                                                    if (activeCategoryId) {
+                                                        fetchTeams(activeCategoryId);
+                                                    }
+                                                }}
+                                            />
                                         </DialogContent>
                                     </Dialog>
                                 </div>

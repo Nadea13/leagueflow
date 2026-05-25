@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from "react";
-import { Player, Team, SportType, Registration, Tournament } from "@/types/index";
+import { Player, Team, Registration, Tournament } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Users, AlertCircle, Lock, Unlock, ExternalLink, LayoutGrid, ArrowLeft, FileText } from "lucide-react";
+import { Loader2, Trash2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft } from "lucide-react";
 import { Tab } from "@/components/ui/tab";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -43,7 +42,6 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");
-    const tReg = useTranslations("Registration");
     const { toast } = useToast();
 
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
@@ -128,11 +126,6 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         }
     };
 
-    const slipUrl = team.registrations?.find(r =>
-        r.tournament_team_id === team.id ||
-        (team.tournament_id && r.tournament_id === team.tournament_id)
-    )?.slip_url;
-
     return (
         <div className="space-y-2 md:space-y-4">
             {/* Top Navigation & Action Bar */}
@@ -166,35 +159,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     </div>
                 </div>
                 <div className="flex items-start gap-2">
-                    {team.participations && team.participations.length > 0 && (
-                        <Button
-                            variant="outline"
-                            asChild
-                        >
-                            <Link href={`/${team.participations[0].tournament_id}`}>
-                                <ExternalLink className="h-4 w-4" />
-                                <span className="hidden md:inline">{tCommon("view_tournament")}</span>
-                            </Link>
-                        </Button>
-                    )}
-                    {slipUrl && (
-                        <Button
-                            variant="outline"
-                            asChild
-                        >
-                            <a href={slipUrl} target="_blank" rel="noopener noreferrer">
-                                <FileText className="h-4 w-4" />
-                                <span className="hidden md:inline">{tReg("view_slip")}</span>
-                            </a>
-                        </Button>
-                    )}
                     <Button
-                        variant={effectivelyLocked ? "outline" : "default"}
-                        className={cn(
-                            "font-bold tracking-wider text-sm h-10 transition-all",
-                            !effectivelyLocked ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-2",
-                            "w-10 md:w-auto p-0 md:px-4"
-                        )}
+                        variant={effectivelyLocked ? "outline" : "warning"}
                         onClick={handleToggleLock}
                         disabled={isLocking || isDeadlinePassed}
                         title={effectivelyLocked ? t("unlock_roster") : t("submit_lock")}

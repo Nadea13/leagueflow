@@ -8,9 +8,8 @@ import {
     DialogDescription
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
-import { User, Phone, Calendar, Hash, Award, Dribbble, Fingerprint } from "lucide-react";
+import { User, Phone, Hash, Award } from "lucide-react";
 
 interface PlayerDetailsViewProps {
     player: Player;
@@ -19,20 +18,7 @@ interface PlayerDetailsViewProps {
 
 export function PlayerDetailsView({ player, team }: PlayerDetailsViewProps) {
     const t = useTranslations("Roster");
-    const tSports = useTranslations("Sports");
-
     const photoUrl = player.global_player?.photo_url || player.photo_url;
-    
-    // Format birth date nicely
-    const formatDate = (dateStr?: string | null) => {
-        if (!dateStr) return "-";
-        try {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch {
-            return dateStr;
-        }
-    };
 
     return (
         <>
@@ -52,6 +38,7 @@ export function PlayerDetailsView({ player, team }: PlayerDetailsViewProps) {
                 <div className="flex flex-col items-center gap-2 md:gap-4 text-center border-b pb-2 md:pb-4">
                     <div className="h-20 w-20 md:h-24 md:w-24 rounded-full border-2 bg-muted/10 overflow-hidden flex items-center justify-center relative shadow-inner">
                         {photoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                                 src={photoUrl}
                                 alt={player.name}

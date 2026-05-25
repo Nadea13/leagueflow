@@ -207,17 +207,29 @@ CREATE TABLE tournament_categories (
 -- ตารางสโมสร / ทีมกีฬา
 CREATE TABLE teams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    user_id UUID DEFAULT NULL REFERENCES users(id) ON DELETE RESTRICT,
     sport_id UUID NOT NULL REFERENCES sports(id) ON DELETE RESTRICT,
     name VARCHAR(255) NOT NULL,
     description TEXT DEFAULT NULL,
     logo_img TEXT DEFAULT NULL,
     contact_name VARCHAR(255) NOT NULL,
     contact_phone VARCHAR(20) NOT NULL,
+    contact_email VARCHAR(255) NOT NULL,
     is_roster_locked BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
+);
+
+-- ตารางขอรับการยืนยันตัวตนของทีมและคำเชิญเข้าร่วมระบบสำหรับผู้จัดการทีม (Team Claims & Invitations)
+CREATE TABLE team_claims (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    is_used BOOLEAN NOT NULL DEFAULT false,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ตารางนักกีฬารายทัวร์นาเมนต์ (Local Profile เพื่อความยืดหยุ่นแยกใช้ฉายา/เบอร์เสื้อเฉพาะทัวร์)

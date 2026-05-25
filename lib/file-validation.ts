@@ -8,6 +8,7 @@ const ALLOWED_IMAGE_TYPES = [
     'image/webp',
     'image/gif',
     'image/svg+xml',
+    'image/avif',
 ];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -35,10 +36,7 @@ export function validateUploadedFile(
         return { valid: false, error: "No file provided" };
     }
 
-    if (file.size > maxSize) {
-        const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
-        return { valid: false, error: `File size must be less than ${maxMB}MB` };
-    }
+
 
     if (!allowedTypes.includes(file.type)) {
         return {
@@ -55,6 +53,7 @@ export function validateUploadedFile(
         'image/webp': ['webp'],
         'image/gif': ['gif'],
         'image/svg+xml': ['svg'],
+        'image/avif': ['avif'],
     };
 
     const expectedExts = validExtensions[file.type];
