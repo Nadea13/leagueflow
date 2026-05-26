@@ -37,6 +37,8 @@ export interface Tournament {
     canvas_data?: BracketCanvasData | null;
     logo_img?: string | null;
     cover_img?: string | null;
+    location_name?: string | null;
+    google_map_url?: string | null;
 }
 
 export interface Match {
@@ -184,8 +186,8 @@ export interface TournamentMember {
     tournament_id: string;
     user_id: string | null;
     email: string | null;
-    role: 'admin' | 'editor' | 'viewer';
-    status: 'pending' | 'accepted';
+    role: 'co_organizer' | 'staff' | 'referee';
+    status: 'pending' | 'accepted' | 'rejected';
     created_at: string;
 }
 
@@ -382,3 +384,18 @@ export interface Sport {
     sport_name: string;
     created_at?: string;
 }
+
+export interface TournamentCategory {
+    id: string | number;
+    tournament_id: string;
+    age_category_id: number;
+    gender_type: string;
+    max_teams: number;
+    canvas_data: BracketCanvasData | null;
+    deleted_at?: string | null;
+    created_at?: string;
+    age_categories?: {
+        category_name: string;
+    } | null;
+}
+

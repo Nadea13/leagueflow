@@ -496,6 +496,11 @@ export async function updateTournament(
         if (formData.has("bank_account_number")) updateData.bank_account_number = formData.get("bank_account_number") as string;
     }
 
+    if (formType === 'venue' || !formType) {
+        if (formData.has("location_name")) updateData.location_name = formData.get("location_name") as string || null;
+        if (formData.has("google_map_url")) updateData.google_map_url = formData.get("google_map_url") as string || null;
+    }
+
     // Resolve category and update max_teams
     const { data: category } = await supabase
         .from('tournament_categories')
@@ -572,7 +577,7 @@ export async function deleteTournament(tournamentId: string) {
 
     const { error } = await supabase
         .from("tournaments")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", tournamentId);
 
     if (error) {
@@ -581,7 +586,7 @@ export async function deleteTournament(tournamentId: string) {
 
     await logActivity('DELETE_TOURNAMENT', 'tournament', tournamentId, {});
 
-    redirect("/organizer/tournaments");
+    redirect("/dashboard/tournaments");
 }
 
 export async function createMatch(

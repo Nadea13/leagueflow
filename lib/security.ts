@@ -34,28 +34,36 @@ export async function validateTournamentAccess(
 
     // 2. Check if the user is an accepted collaborator
     const { data: member } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select("role")
         .eq("tournament_id", tournamentId)
         .eq("user_id", user.id)
         .eq("status", "accepted")
-        .single();
+        .is("deleted_at", null)
+        .maybeSingle();
 
     if (!member) {
         return { success: false, error: "Access denied: You are not a collaborator for this tournament" };
     }
 
+    // Map database role to security role
+    const roleMap: Record<'co_organizer' | 'staff' | 'referee', 'admin' | 'editor' | 'viewer'> = {
+        co_organizer: 'admin',
+        staff: 'editor',
+        referee: 'viewer'
+    };
+    const mappedRole = roleMap[member.role as 'co_organizer' | 'staff' | 'referee'] || 'viewer';
+
     // Role Hierarchy Check
     // admin (0) > editor (1) > viewer (2)
     const roleWeights = { admin: 0, editor: 1, viewer: 2 };
-    const userRole = member.role as 'editor' | 'viewer';
     
-    if (roleWeights[userRole] > roleWeights[requiredRole]) {
+    if (roleWeights[mappedRole] > roleWeights[requiredRole]) {
         return { 
             success: false, 
-            error: `Access denied: Required role '${requiredRole}', but you are a '${userRole}'` 
+            error: `Access denied: Required role '${requiredRole}', but you are a '${mappedRole}'` 
         };
     }
 
-    return { success: true, user, role: userRole };
+    return { success: true, user, role: mappedRole };
 }

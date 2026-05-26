@@ -4,7 +4,7 @@ import { Match, Goal, TournamentTeam } from "@/types/index";
 import { CategorySetup } from "@/features/tournaments/management/category-setup";
 import { Trophy } from "lucide-react";
 import { TournamentContent } from "./tournament-content";
-import { getUserRole } from "@/actions/organizer/tournaments/collaborator";
+import { getUserRole } from "@/actions/organizer/tournaments/staff";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 
 export default async function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -83,7 +83,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     };
 
     // Fetch related data (Teams, Matches, Goals) parallelized
-    const teamsResult = categoryId 
+    const teamsResult = categoryId
         ? await supabase
             .from("tournament_teams")
             .select("*, team:teams(*)")
@@ -126,7 +126,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         const rs = t.registration_status;
         if (!ps && !rs) return true;
         return String(ps || '').toLowerCase() === 'paid' ||
-               String(rs || '').toLowerCase() === 'approved';
+            String(rs || '').toLowerCase() === 'approved';
     });
 
     const matches = (matchesResult.data || []).map((m: any) => ({

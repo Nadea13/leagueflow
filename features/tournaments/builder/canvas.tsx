@@ -12,11 +12,12 @@ import {
     ReactFlow,
     ReactFlowProvider,
     useReactFlow,
+    Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
     Loader2, Plus, RefreshCw, RotateCcw, Users, X,
-    Settings, Info, MapPin, Hammer, ShieldAlert,
+    Settings, MapPin, ShieldAlert,
     Calendar, Settings2, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
     Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
 } from "lucide-react";
@@ -52,7 +53,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
-import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus } from "@/types";
+import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
@@ -167,7 +168,7 @@ function CanvasInternal({
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
-    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'registration' | 'rules' | 'venue' | 'collaborators' | 'danger'>('general');
+    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'registration' | 'location' | 'staff' | 'danger'>('general');
     const [isEditMode, setIsEditMode] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(tournamentName);
@@ -189,7 +190,7 @@ function CanvasInternal({
     const [isStatusUpdating, setIsStatusUpdating] = useState(false);
     const router = useRouter();
 
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<TournamentCategory[]>([]);
     const searchParams = useSearchParams();
     const pathname = usePathname();
     // Read persisted category from URL (?category=id), fallback to null (first category)
@@ -220,7 +221,7 @@ function CanvasInternal({
             const fallbackCategoryId = toCategoryId(catData[0].id);
             const requestedCategoryId = targetCategoryId ?? searchParams.get("category") ?? activeCategoryId;
             const matchedCategory = requestedCategoryId
-                ? catData.find((c: any) => toCategoryId(c.id) === requestedCategoryId)
+                ? catData.find((c: TournamentCategory) => toCategoryId(c.id) === requestedCategoryId)
                 : null;
             const resolvedCategoryId = matchedCategory ? toCategoryId(matchedCategory.id) : fallbackCategoryId;
             const resolvedCategory = matchedCategory ?? catData[0];
@@ -269,8 +270,8 @@ function CanvasInternal({
 
     // (Hydration is now handled directly in loadCategories and handleCategorySwitch)
 
-    const getCategoryDisplayName = useCallback((cat: any) => {
-        const ageName = cat.age_categories?.category_name || "General";
+    const getCategoryDisplayName = useCallback((cat: TournamentCategory) => {
+        const ageName = cat.age_categories?.category_name;
         const gender = cat.gender_type === 'open' ? (locale === 'th' ? 'รุ่นทั่วไป' : 'Open')
             : cat.gender_type === 'male' ? (locale === 'th' ? 'ชาย' : 'Male')
                 : cat.gender_type === 'female' ? (locale === 'th' ? 'หญิง' : 'Female')
@@ -324,8 +325,6 @@ function CanvasInternal({
         });
     };
 
-    const [isAdvancing, setIsAdvancing] = useState(false);
-
     const goToPrevDay = () => {
         const current = selectedDate ? new Date(selectedDate) : new Date();
         const prev = subDays(current, 1);
@@ -346,11 +345,6 @@ function CanvasInternal({
         }
     }, [activeCategoryId, fetchTeams, setStoreCategoryId]);
 
-    const onDragStart = (event: React.DragEvent, teamName: string) => {
-        event.dataTransfer.setData("application/reactflow-team", teamName);
-        event.dataTransfer.effectAllowed = "move";
-    };
-
     const [isSaving, setIsSaving] = useState(false);
 
     // initialCanvasData is intentionally NOT used to hydrate here.
@@ -369,7 +363,7 @@ function CanvasInternal({
                     // Update local categories list
                     setCategories(prev => prev.map(c =>
                         c.id === activeCategoryId
-                            ? { ...c, canvas_data: result.data }
+                            ? { ...c, canvas_data: result.data ?? null }
                             : c
                     ));
                 }
@@ -428,7 +422,7 @@ function CanvasInternal({
         setIsDragging(false);
     }, []);
 
-    const onConnectWithSave = useCallback((params: any) => {
+    const onConnectWithSave = useCallback((params: Connection) => {
         onConnect(params);
     }, [onConnect]);
 
@@ -961,7 +955,7 @@ function CanvasInternal({
                                 <div className="p-2 md:p-4">
                                     <MatchManager
                                         matches={initialMatchesData}
-                                        teams={teams as any}
+                                        teams={teams as unknown as Team[]}
                                         tournamentId={tournament.id}
                                         format={tournament.format}
                                         startDate={tournament.start_date}
@@ -981,89 +975,80 @@ function CanvasInternal({
                     <div className="absolute inset-0 z-20 flex flex-col">
                         <div className="flex flex-1 overflow-hidden">
                             {/* Settings Sidebar */}
-                            <aside className="w-64 border-r bg-background flex flex-col shrink-0 p-4 gap-2">
-                                <Button
-                                    variant="ghost"
+                            <aside className="w-64 border-r bg-background flex flex-col shrink-0 py-4 px-2 lg:px-4 space-y-1">
+                                <button
                                     onClick={() => setActiveSettingsTab('general')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
-                                        activeSettingsTab === 'general' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                        activeSettingsTab === 'general'
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:text-primary"
                                     )}
                                 >
-                                    <Info className="h-4 w-4" />
-                                    General Info
-                                </Button>
-                                <Button
-                                    variant="ghost"
+                                    <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
+                                    <span className="text-sm font-medium whitespace-nowrap">General</span>
+                                </button>
+                                <button
                                     onClick={() => setActiveSettingsTab('registration')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
-                                        activeSettingsTab === 'registration' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                        activeSettingsTab === 'registration'
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:text-primary"
                                     )}
                                 >
-                                    <ClipboardEdit className="h-4 w-4" />
-                                    Registration
-                                </Button>
+                                    <ClipboardEdit className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'registration' ? "text-primary" : "text-muted-foreground")} />
+                                    <span className="text-sm font-medium whitespace-nowrap">Registration</span>
+                                </button>
 
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setActiveSettingsTab('rules')}
+                                <button
+                                    onClick={() => setActiveSettingsTab('location')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
-                                        activeSettingsTab === 'rules' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                        activeSettingsTab === 'location'
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:text-primary"
                                     )}
                                 >
-                                    <Hammer className="h-4 w-4" />
-                                    Rules Config
-                                </Button>
+                                    <MapPin className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'location' ? "text-primary" : "text-muted-foreground")} />
+                                    <span className="text-sm font-medium whitespace-nowrap">Location</span>
+                                </button>
 
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setActiveSettingsTab('venue')}
+                                <button
+                                    onClick={() => setActiveSettingsTab('staff')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
-                                        activeSettingsTab === 'venue' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                        activeSettingsTab === 'staff'
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:text-primary"
                                     )}
                                 >
-                                    <MapPin className="h-4 w-4" />
-                                    Venue Manager
-                                </Button>
+                                    <Users className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
+                                    <span className="text-sm font-medium whitespace-nowrap">Staff</span>
+                                </button>
 
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setActiveSettingsTab('collaborators')}
+                                <button
+                                    onClick={() => setActiveSettingsTab('danger')}
                                     className={cn(
-                                        "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
-                                        activeSettingsTab === 'collaborators' ? "bg-primary text-black hover:bg-primary/90" : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                        activeSettingsTab === 'danger'
+                                            ? "bg-destructive/10 text-destructive"
+                                            : "text-destructive/60 hover:text-destructive"
                                     )}
                                 >
-                                    <Users className="h-4 w-4" />
-                                    Collaborators
-                                </Button>
-
-                                <div className="">
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setActiveSettingsTab('danger')}
-                                        className={cn(
-                                            "w-full justify-start gap-3 h-10 px-3 transition-all font-bold text-[11px] tracking-wider",
-                                            activeSettingsTab === 'danger' ? "bg-rose-500 text-white hover:bg-rose-600" : "hover:bg-rose-500/10 text-rose-500"
-                                        )}
-                                    >
-                                        <ShieldAlert className="h-4 w-4" />
-                                        Danger Zone
-                                    </Button>
-                                </div>
+                                    <ShieldAlert className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeSettingsTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
+                                    <span className="text-sm font-medium whitespace-nowrap">Danger</span>
+                                </button>
                             </aside>
 
                             {/* Settings Content Area */}
-                            <main className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-muted/5">
-                                <div className="max-w-3xl">
+                            <main className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 bg-muted/5">
+                                <div className="max-w-3xl mx-auto">
                                     <TournamentSettings
                                         tournament={tournament}
 
                                         hasFixtures={hasFixtures}
-                                        teams={initialTeamsData as any}
+                                        teams={initialTeamsData}
                                         activeTab={activeSettingsTab} // Note: We need to update TournamentSettings to support this
                                     />
                                 </div>
@@ -1293,10 +1278,11 @@ function CreateCategoryMiniForm({
                     variant: "destructive"
                 });
             }
-        } catch (err: any) {
+        } catch (err) {
+            const error = err as Error;
             toast({
                 title: "Error",
-                description: err.message || "An unexpected error occurred",
+                description: error.message || "An unexpected error occurred",
                 variant: "destructive"
             });
         } finally {

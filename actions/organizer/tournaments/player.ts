@@ -19,13 +19,14 @@ async function isAuthorizedOrganizer(tournamentId: string, userId: string) {
 
     // Check if user is a member with admin/editor role
     const { data: membership } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select("role")
         .eq("tournament_id", tournamentId)
         .eq("user_id", userId)
         .eq("status", "accepted")
-        .in("role", ["admin", "editor"])
-        .single();
+        .in("role", ["co_organizer", "staff"])
+        .is("deleted_at", null)
+        .maybeSingle();
     
     if (membership) return true;
 

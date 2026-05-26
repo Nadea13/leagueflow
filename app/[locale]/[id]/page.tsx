@@ -13,7 +13,7 @@ import { Trophy } from "lucide-react";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
     const supabase = await createClient();
-    const { data: tournament } = await supabase.from("tournaments").select("name, status").eq("id", id).single();
+    const { data: tournament } = await supabase.from("tournaments").select("name, status").eq("id", id).is("deleted_at", null).single();
     if (!tournament) return { title: "Tournament Not Found" };
     return {
         title: `${tournament.name} | Live Standings & Results`,
@@ -49,6 +49,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             sports:sport_id(sport_name)
         `)
         .eq("id", id)
+        .is("deleted_at", null)
         .single();
 
     if (!tournamentData) {

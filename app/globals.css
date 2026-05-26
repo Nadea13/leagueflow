@@ -219,7 +219,7 @@
 }
 
 .pro-editor .ql-container.ql-snow {
-  @apply bg-transparent border-none text-foreground text-[13px] transition-all;
+  @apply bg-transparent border-none text-foreground text-xs transition-all;
   font-family: inherit;
 }
 
@@ -229,7 +229,7 @@
 }
 
 .pro-editor .ql-editor.ql-blank::before {
-  @apply text-muted-foreground/40 text-[13px];
+  @apply text-muted-foreground/40 text-xs;
   left: 16px;
 }
 
@@ -261,7 +261,7 @@
 }
 
 .pro-editor-wrapper {
-  @apply border border-foreground/10 transition-all duration-500;
+  @apply border border-foreground/10 rounded-sm overflow-hidden transition-all duration-500;
   background-image: linear-gradient(var(--color-primary), var(--color-primary));
   background-size: 0% 2px;
   background-repeat: no-repeat;

@@ -33,6 +33,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
         .from("tournaments")
         .select("*")
         .eq("id", id)
+        .is("deleted_at", null)
         .single();
 
     // Fetch Registered Teams

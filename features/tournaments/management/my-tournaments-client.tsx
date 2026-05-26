@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Search, Trophy } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { TournamentCreate } from "@/features/tournaments/management/create-tournament-form";

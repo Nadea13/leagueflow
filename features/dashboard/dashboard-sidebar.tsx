@@ -1,10 +1,12 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Link, usePathname } from "@/i18n/routing"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
 import { useAnalytics } from "@/hooks/use-analytics"
+import { getPendingInvites } from "@/actions/organizer/tournaments/staff"
 
 import { BugReportDialog } from "@/features/dashboard/bug-report-dialog"
 import { UserDropdown } from "@/features/dashboard/user-dropdown"
@@ -13,6 +15,17 @@ export function DashboardSidebar({ className, role, userEmail, userName }: { cla
     const pathname = usePathname()
     const t = useTranslations("Nav")
     const { trackClick } = useAnalytics()
+    const [pendingCount, setPendingCount] = useState<number>(0)
+
+    useEffect(() => {
+        const fetchPending = async () => {
+            const res = await getPendingInvites();
+            if (res.success && res.data) {
+                setPendingCount(res.data.length);
+            }
+        };
+        fetchPending();
+    }, []);
 
     const mode = 'organizer'
     const navItems = getNavItems(mode, role)
@@ -32,7 +45,7 @@ export function DashboardSidebar({ className, role, userEmail, userName }: { cla
                         </svg>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xl font-black tracking-tighter text-foreground">LeagueFlow</span>
+                        <span className="text-xl font-black tracking-tighter text-foreground">GELA Flow</span>
                     </div>
                 </Link>
             </div>
@@ -55,6 +68,11 @@ export function DashboardSidebar({ className, role, userEmail, userName }: { cla
                         >
                             <item.icon className={cn("h-4 w-4 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
                             <span className="text-sm font-medium whitespace-nowrap">{t(item.titleKey)}</span>
+                            {item.titleKey === "notifications" && pendingCount > 0 && (
+                                <span className="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive text-[10px] text-foreground">
+                                    {pendingCount}
+                                </span>
+                            )}
                         </Link>
                     );
                 })}

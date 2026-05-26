@@ -55,13 +55,14 @@ async function isAuthorizedForPlayer(playerId: string, userId: string) {
             if (tournament && tournament.organizer_id === userId) return true;
 
             const { data: membership } = await supabase
-                .from("tournament_members")
+                .from("tournament_invitations")
                 .select("role")
                 .eq("tournament_id", tournamentId)
                 .eq("user_id", userId)
                 .eq("status", "accepted")
-                .in("role", ["admin", "editor"])
-                .single();
+                .in("role", ["co_organizer", "staff"])
+                .is("deleted_at", null)
+                .maybeSingle();
             
             if (membership) return true;
         }
@@ -137,11 +138,12 @@ async function isAuthorizedForGlobalPlayer(globalPlayerId: string, userId: strin
 
             // Check if user is an accepted co-organizer or staff member of the tournament
             const { data: memberships } = await adminSupabase
-                .from("tournament_members")
+                .from("tournament_invitations")
                 .select("tournament_id")
                 .eq("user_id", userId)
                 .eq("status", "accepted")
-                .in("role", ["admin", "editor"])
+                .in("role", ["co_organizer", "staff"])
+                .is("deleted_at", null)
                 .in("tournament_id", tournamentIds);
 
             if (memberships && memberships.length > 0) return true;

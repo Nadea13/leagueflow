@@ -57,11 +57,11 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         }
 
         if (user) {
-            await supabase.from("tournament_members").insert({
+            await supabase.from("tournament_invitations").insert({
                 tournament_id: tournament.id,
                 user_id: user.id,
                 email: user.email,
-                role: 'admin',
+                role: 'co_organizer',
                 status: 'accepted'
             });
         }
@@ -89,6 +89,7 @@ export async function getDashboardTournaments(query?: string) {
             sports:sport_id(sport_name)
         `)
         .eq("organizer_id", user.id)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
     if (query) {
@@ -99,7 +100,7 @@ export async function getDashboardTournaments(query?: string) {
 
     // Fetch Shared Tournaments (where user is an accepted collaborator)
     const { data: sharedMemberships } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select(`
             tournament_id,
             role,
@@ -115,11 +116,14 @@ export async function getDashboardTournaments(query?: string) {
                 end_date,
                 sport_id,
                 logo_img,
-                sports:sport_id(sport_name)
+                sports:sport_id(sport_name),
+                deleted_at
             )
         `)
         .eq("user_id", user.id)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
+        .is("deleted_at", null)
+        .is("tournaments.deleted_at", null);
 
     interface TournamentWithCount extends Record<string, unknown> {
         id: string;
@@ -235,13 +239,14 @@ export async function createTournamentCategory(
 
         if (!isOwner) {
             const { data: membership } = await supabase
-                .from("tournament_members")
+                .from("tournament_invitations")
                 .select("role")
                 .eq("tournament_id", tournamentId)
                 .eq("user_id", user.id)
                 .eq("status", "accepted")
-                .in("role", ["admin", "editor"])
-                .single();
+                .in("role", ["co_organizer", "staff"])
+                .is("deleted_at", null)
+                .maybeSingle();
             
             if (membership) {
                 isMember = true;

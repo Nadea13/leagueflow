@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Trash2, RefreshCw, Loader2 } from "lucide-react";
+import { Trash2, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -85,21 +85,14 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
     };
 
     return (
-        <div className="space-y-2 md:space-y-3">
-            <div className="flex items-center gap-2 md:gap-3">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-                <h3 className="text-xl font-black tracking-tighter text-destructive">
-                    {t("danger_zone")}
-                </h3>
-            </div>
-
+        <div className="space-y-2 md:space-y-4">
             <div className="grid gap-2 md:gap-3">
                 {/* Delete Tournament */}
-                <div className="border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-3">
+                <div className="border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                         <div className="space-y-1">
-                            <h4 className="text-lg font-black tracking-tight text-destructive">{t("delete_tournament")}</h4>
-                            <p className="text-xs font-medium text-muted-foreground max-w-md">{t("delete_desc")}</p>
+                            <h4 className="text-xs font-black tracking-widest text-destructive">{t("delete_tournament")}</h4>
+                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">{t("delete_desc")}</p>
                         </div>
                         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                             <DialogTrigger asChild>
@@ -112,7 +105,7 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                             </DialogTrigger>
                             <DialogContent className="bg-card border-destructive/50 shadow-2xl max-w-md">
                                 <DialogHeader>
-                                    <DialogTitle className="text-xl font-black tracking-tighter text-destructive">
+                                    <DialogTitle className="text-sm font-black tracking-tighter text-destructive">
                                         {t("delete_tournament")}
                                     </DialogTitle>
                                     <DialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
@@ -124,7 +117,7 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                                         </div>
                                     </DialogDescription>
                                 </DialogHeader>
-                                <div className="py-4 md:py-6">
+                                <div className="py-2 md:py-4">
                                     <Input
                                         value={deleteConfirmText}
                                         onChange={(e) => setDeleteConfirmText(e.target.value)}
@@ -159,11 +152,11 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                 </div>
 
                 {/* Reset Fixtures */}
-                <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-3">
+                <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                         <div className="space-y-1">
-                            <h4 className="text-lg font-black tracking-tight text-destructive">{t("reset_fixtures")}</h4>
-                            <p className="text-xs font-medium text-muted-foreground max-w-md">{t("reset_desc")}</p>
+                            <h4 className="text-xs font-black tracking-widest text-destructive">{t("reset_fixtures")}</h4>
+                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">{t("reset_desc")}</p>
                         </div>
                         <Button
                             variant="destructive"

@@ -8,12 +8,12 @@ import { validateTournamentAccess } from "@/lib/security";
 
 /**
  * Invite a collaborator to a tournament by email.
- * Creates a pending TournamentMember record.
+ * Creates a pending tournament_invitations record.
  */
-export async function inviteCollaborator(
+export async function inviteStaff(
     tournamentId: string,
     email: string,
-    role: 'editor' | 'viewer' = 'editor'
+    role: 'co_organizer' | 'staff' | 'referee' = 'staff'
 ): Promise<ActionResponse<TournamentMember>> {
     const supabase = await createClient();
 
@@ -24,10 +24,11 @@ export async function inviteCollaborator(
 
     // Check if the email is already invited
     const { data: existing } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select("id, status")
         .eq("tournament_id", tournamentId)
         .eq("email", email.toLowerCase())
+        .is("deleted_at", null)
         .maybeSingle();
 
     if (existing) {
@@ -41,7 +42,7 @@ export async function inviteCollaborator(
 
     // Create the invitation
     const { data, error } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .insert({
             tournament_id: tournamentId,
             email: email.toLowerCase(),
@@ -65,7 +66,7 @@ export async function inviteCollaborator(
 /**
  * Get all collaborators for a tournament.
  */
-export async function getCollaborators(
+export async function getStaffs(
     tournamentId: string
 ): Promise<ActionResponse<TournamentMember[]>> {
     // Security Check: Only collaborators or owner can see the member list
@@ -75,9 +76,10 @@ export async function getCollaborators(
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select("*")
         .eq("tournament_id", tournamentId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: true });
 
     if (error) {
@@ -89,9 +91,9 @@ export async function getCollaborators(
 }
 
 /**
- * Remove a collaborator from a tournament.
+ * Remove a collaborator from a tournament (soft delete).
  */
-export async function removeCollaborator(
+export async function removeStaff(
     memberId: string,
     tournamentId: string
 ): Promise<ActionResponse> {
@@ -102,8 +104,8 @@ export async function removeCollaborator(
     if (!access.success) return { success: false, error: access.error };
 
     const { error } = await supabase
-        .from("tournament_members")
-        .delete()
+        .from("tournament_invitations")
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", memberId)
         .eq("tournament_id", tournamentId);
 
@@ -144,15 +146,22 @@ export async function getUserRole(
 
     // Check if user is a collaborator (by user_id or email)
     const { data: member } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select("role, status")
         .eq("tournament_id", tournamentId)
         .or(`user_id.eq.${user.id},email.eq.${user.email?.toLowerCase()}`)
         .eq("status", "accepted")
+        .is("deleted_at", null)
         .maybeSingle();
 
     if (member) {
-        return { success: true, data: { role: member.role as 'admin' | 'editor' | 'viewer', isOwner: false } };
+        const roleMap: Record<'co_organizer' | 'staff' | 'referee', 'admin' | 'editor' | 'viewer'> = {
+            co_organizer: 'admin',
+            staff: 'editor',
+            referee: 'viewer'
+        };
+        const mappedRole = roleMap[member.role as 'co_organizer' | 'staff' | 'referee'] || 'viewer';
+        return { success: true, data: { role: mappedRole, isOwner: false } };
     }
 
     return { success: true, data: { role: null, isOwner: false } };
@@ -174,11 +183,12 @@ export async function acceptInvite(
 
     // Find pending invite for this email
     const { data: member, error: fetchError } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select("*")
         .eq("tournament_id", tournamentId)
         .eq("email", user.email.toLowerCase())
         .eq("status", "pending")
+        .is("deleted_at", null)
         .maybeSingle();
 
     if (fetchError || !member) {
@@ -187,7 +197,7 @@ export async function acceptInvite(
 
     // Update the member record
     const { data: updated, error } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .update({
             user_id: user.id,
             status: 'accepted'
@@ -227,7 +237,7 @@ export async function getPendingInvites(): Promise<ActionResponse<Array<{
     }
 
     const { data, error } = await supabase
-        .from("tournament_members")
+        .from("tournament_invitations")
         .select(`
             id,
             tournament_id,
@@ -237,7 +247,8 @@ export async function getPendingInvites(): Promise<ActionResponse<Array<{
             )
         `)
         .eq("email", user.email.toLowerCase())
-        .eq("status", "pending");
+        .eq("status", "pending")
+        .is("deleted_at", null);
 
     if (error) {
         console.error("Error fetching pending invites:", error);
@@ -249,6 +260,102 @@ export async function getPendingInvites(): Promise<ActionResponse<Array<{
         tournament_id: item.tournament_id,
         tournament_name: (item.tournaments as unknown as { name: string } | null)?.name,
         role: item.role
+    }));
+
+    return { success: true, data: invites };
+}
+
+/**
+ * Reject a collaboration invite.
+ * Updates the status to 'rejected'.
+ */
+export async function rejectInvite(
+    tournamentId: string
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !user.email) {
+        return { success: false, error: "Please log in to reject the invite" };
+    }
+
+    // Find pending invite for this email
+    const { data: member, error: fetchError } = await supabase
+        .from("tournament_invitations")
+        .select("*")
+        .eq("tournament_id", tournamentId)
+        .eq("email", user.email.toLowerCase())
+        .eq("status", "pending")
+        .is("deleted_at", null)
+        .maybeSingle();
+
+    if (fetchError || !member) {
+        return { success: false, error: "No pending invite found for your email" };
+    }
+
+    // Update the member record to rejected
+    const { error } = await supabase
+        .from("tournament_invitations")
+        .update({
+            status: 'rejected'
+        })
+        .eq("id", member.id);
+
+    if (error) {
+        console.error("Error rejecting invite:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/dashboard/invites`);
+    revalidatePath(`/dashboard/notifications`);
+    revalidatePath(`/dashboard`);
+
+    return { success: true };
+}
+
+/**
+ * Get all invitations (pending, accepted, rejected) for the current user.
+ */
+export async function getAllUserInvites(): Promise<ActionResponse<Array<{
+    id: string;
+    tournament_id: string;
+    tournament_name?: string;
+    role: string;
+    status: 'pending' | 'accepted' | 'rejected';
+}>>> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || !user.email) {
+        return { success: true, data: [] };
+    }
+
+    const { data, error } = await supabase
+        .from("tournament_invitations")
+        .select(`
+            id,
+            tournament_id,
+            role,
+            status,
+            tournaments (
+                name
+            )
+        `)
+        .eq("email", user.email.toLowerCase())
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching all user invites:", error);
+        return { success: false, error: error.message };
+    }
+
+    const invites = (data || []).map((item) => ({
+        id: item.id,
+        tournament_id: item.tournament_id,
+        tournament_name: (item.tournaments as unknown as { name: string } | null)?.name,
+        role: item.role,
+        status: item.status as 'pending' | 'accepted' | 'rejected'
     }));
 
     return { success: true, data: invites };

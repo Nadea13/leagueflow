@@ -29,6 +29,11 @@ export const organizerNavItems: NavItem[] = [
         icon: Users,
     },
     {
+        titleKey: "notifications",
+        href: "/dashboard/notifications",
+        icon: Mail,
+    },
+    {
         titleKey: "settings",
         href: "/dashboard/settings",
         icon: Settings,
