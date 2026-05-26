@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, Trash2 } from "lucide-react";
+import { Upload, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { compressAndConvertToAvif } from "@/lib/image-compression";
 
 interface LogoUploaderProps {
     id: string;
@@ -17,6 +18,8 @@ interface LogoUploaderProps {
     clickToUploadLabel?: string;
     previewLabel?: string;
     imageFit?: "contain" | "cover";
+    maxWidth?: number;
+    quality?: number;
 }
 
 export function LogoUploader({
@@ -30,20 +33,34 @@ export function LogoUploader({
     clickToUploadLabel = "Click to Upload",
     previewLabel = "Preview",
     imageFit = "contain",
+    maxWidth = 512,
+    quality = 0.8,
 }: LogoUploaderProps) {
     const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
+    const [isCompressing, setIsCompressing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setPreviewUrl(initialUrl);
     }, [initialUrl]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-            onFileChange?.(file);
+            setIsCompressing(true);
+            try {
+                const compressed = await compressAndConvertToAvif(file, maxWidth, quality);
+                const url = URL.createObjectURL(compressed);
+                setPreviewUrl(url);
+                onFileChange?.(compressed);
+            } catch (error) {
+                console.error("Image compression failed, using original file:", error);
+                const url = URL.createObjectURL(file);
+                setPreviewUrl(url);
+                onFileChange?.(file);
+            } finally {
+                setIsCompressing(false);
+            }
         }
     };
 
@@ -60,7 +77,9 @@ export function LogoUploader({
         <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-lg">
             <div className="relative group">
                 <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm border-border">
-                    {previewUrl ? (
+                    {isCompressing ? (
+                        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                    ) : previewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                             src={previewUrl}
@@ -82,7 +101,7 @@ export function LogoUploader({
                     <Label
                         htmlFor={id}
                         className={`cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 rounded-sm hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all ${
-                            disabled ? "pointer-events-none opacity-50" : ""
+                            disabled || isCompressing ? "pointer-events-none opacity-50" : ""
                         }`}
                     >
                         {previewUrl ? clickToUploadLabel : uploadLabel}
@@ -94,7 +113,7 @@ export function LogoUploader({
                             size="icon"
                             className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
                             onClick={handleRemoveLogo}
-                            disabled={disabled}
+                            disabled={disabled || isCompressing}
                         >
                             <Trash2 className="h-4 w-4" />
                         </Button>
@@ -108,7 +127,7 @@ export function LogoUploader({
                     className="hidden"
                     onChange={handleFileChange}
                     ref={fileInputRef}
-                    disabled={disabled}
+                    disabled={disabled || isCompressing}
                 />
                 <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 2MB</p>
             </div>

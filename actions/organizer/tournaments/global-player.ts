@@ -281,7 +281,15 @@ export async function createGlobalPlayer(
 
 export async function updateGlobalPlayerInfo(
     globalPlayerId: string,
-    data: { name?: string; date_of_birth?: string | null }
+    data: { 
+        name?: string; 
+        date_of_birth?: string | null;
+        first_name?: string;
+        last_name?: string;
+        gender?: string;
+        tel?: string | null;
+        profile_img?: string | null;
+    }
 ): Promise<ActionResponse> {
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
@@ -297,8 +305,36 @@ export async function updateGlobalPlayerInfo(
         updateData.first_name = nameParts[0];
         updateData.last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
     }
+    if (data.first_name !== undefined) {
+        updateData.first_name = data.first_name;
+    }
+    if (data.last_name !== undefined) {
+        updateData.last_name = data.last_name;
+    }
     if (data.date_of_birth !== undefined) {
         updateData.birthday = data.date_of_birth || '1970-01-01';
+    }
+    if (data.gender !== undefined) {
+        updateData.gender = data.gender;
+    }
+    if (data.tel !== undefined) {
+        updateData.tel = data.tel;
+    }
+    if (data.profile_img !== undefined) {
+        updateData.profile_img = data.profile_img;
+        
+        // If updating profile_img to null (removed), delete old file
+        if (data.profile_img === null) {
+            const { data: existingPlayer } = await adminSupabase
+                .from("master_players")
+                .select("profile_img")
+                .eq("id", globalPlayerId)
+                .single();
+            
+            if (existingPlayer?.profile_img) {
+                await deleteFileFromUrl(existingPlayer.profile_img, 'player-photos');
+            }
+        }
     }
 
     const { error } = await adminSupabase
