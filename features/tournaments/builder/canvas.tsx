@@ -16,7 +16,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-    Loader2, Plus, RefreshCw, RotateCcw, Users, X,
+    Loader2, Plus, RefreshCw, Users, X,
     Settings, MapPin, ShieldAlert,
     Calendar, Settings2, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
     Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
@@ -158,7 +158,6 @@ function CanvasInternal({
         teams,
         setTeams: setStoreTeams,
         setActiveCategoryId: setStoreCategoryId,
-        reset,
     } = useBracketStore();
 
     // Sync server-provided teams as initial state (before category-specific fetch runs)
@@ -437,11 +436,7 @@ function CanvasInternal({
         return () => clearTimeout(timer);
     }, [isDirty, isSaving, readonly, isDragging, handleSave]);
 
-    const handleReset = useCallback(() => {
-        if (window.confirm("Are you sure you want to clear the entire canvas?")) {
-            reset();
-        }
-    }, [reset]);
+
 
     const handleCopyLinkRegister = useCallback(() => {
         const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
@@ -662,14 +657,6 @@ function CanvasInternal({
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-
-                                <Button
-                                    variant="outline"
-                                    onClick={handleReset}
-                                    className="border-rose-500/20 text-rose-500 transition-all w-10"
-                                >
-                                    <RotateCcw className="h-4 w-4" />
-                                </Button>
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
                                     <DialogTrigger asChild>
@@ -1046,10 +1033,10 @@ function CanvasInternal({
                                 <div className="max-w-3xl mx-auto">
                                     <TournamentSettings
                                         tournament={tournament}
-
                                         hasFixtures={hasFixtures}
                                         teams={initialTeamsData}
-                                        activeTab={activeSettingsTab} // Note: We need to update TournamentSettings to support this
+                                        activeTab={activeSettingsTab}
+                                        activeCategoryId={activeCategoryId}
                                     />
                                 </div>
                             </main>

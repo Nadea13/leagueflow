@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Team } from "@/types/index";
 import { useTranslations } from "next-intl";
-import { Users, AlertCircle, CheckCircle2, X, Upload, Smartphone, Loader2, Trash2 } from "lucide-react";
+import { Users, AlertCircle, CheckCircle2, X, Upload, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -17,10 +17,9 @@ import { Input } from "@/components/ui/input";
 import { PromptPayQR } from "./promptpay-qr";
 import { registerTeam } from "@/actions/manager/register-team";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/shared/empty-state";
-import { cn } from "@/lib/utils";
+import { LogoUploader } from "@/components/shared/logo-uploader";
 
 // Schema generator based on fee
 const createFormSchema = (isFree: boolean, t: (key: string) => string) => z.object({
@@ -28,16 +27,7 @@ const createFormSchema = (isFree: boolean, t: (key: string) => string) => z.obje
     contactName: z.string().min(2, t("contact_name_error")),
     contactPhone: z.string().min(10, t("contact_phone_error")),
     description: z.string().optional(),
-    logoFile: z.instanceof(FileList).optional()
-        .optional()
-        .refine(
-            (files) => !files || files.length === 0 || files[0].size <= 5 * 1024 * 1024,
-            t("logo_size_error")
-        )
-        .refine(
-            (files) => !files || files.length === 0 || ["image/jpeg", "image/png", "image/webp"].includes(files[0].type),
-            t("logo_type_error")
-        ),
+    logoFile: z.unknown().optional(),
     slipFile: isFree
         ? z.instanceof(FileList).optional()
         : z.instanceof(FileList)
@@ -65,6 +55,12 @@ interface RegistrationFormProps {
     };
     tournamentCategoryId?: string;
     initialTeams?: Team[];
+    categories?: {
+        id: string | number;
+        gender_type: string;
+        max_teams: number;
+        age_categories?: unknown;
+    }[];
     isRegistrationDisabled?: boolean;
     isFull?: boolean;
     isPastDeadline?: boolean;
@@ -74,14 +70,19 @@ export function RegistrationForm({
     tournament,
     tournamentCategoryId,
     initialTeams,
+    categories,
     isRegistrationDisabled,
     isFull,
     isPastDeadline
 }: RegistrationFormProps) {
     const tCommon = useTranslations("Common");
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
     const [slipPreviewUrl, setSlipPreviewUrl] = useState<string | null>(null);
     const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
@@ -108,6 +109,7 @@ export function RegistrationForm({
             form.setValue("contactPhone", "");
             form.setValue("logoFile", undefined);
             setLogoPreviewUrl(null);
+            setLogoFile(null);
             return;
         }
 
@@ -118,6 +120,7 @@ export function RegistrationForm({
             form.setValue("contactName", selectedTeam.contact_name || "");
             form.setValue("contactPhone", selectedTeam.contact_phone || "");
             setLogoPreviewUrl(selectedTeam.logo_url || null);
+            setLogoFile(null);
         }
     };
 
@@ -138,8 +141,8 @@ export function RegistrationForm({
             if (selectedTeamId && selectedTeamId !== "new") {
                 formData.append("existingTeamId", selectedTeamId);
             }
-            if (values.logoFile?.[0]) {
-                formData.append("logoFile", values.logoFile[0]);
+            if (logoFile) {
+                formData.append("logoFile", logoFile);
             } else if (logoPreviewUrl && !logoPreviewUrl.startsWith('data:')) {
                 formData.append("logoUrl", logoPreviewUrl);
             }
@@ -199,13 +202,7 @@ export function RegistrationForm({
     const isExistingTeam = selectedTeamId !== "" && selectedTeamId !== "new";
 
     return (
-        <div className="bg-card space-y-2 md:space-y-3 p-4 md:p-6 border">
-            <div className="flex items-center gap-3">
-                <Users className="h-6 w-6 text-primary" />
-                <h3 className="text-2xl font-black tracking-tighter text-foreground">
-                    {t("title")}
-                </h3>
-            </div>
+        <div className="bg-background space-y-2 md:space-y-4 p-2 md:p-4 border rounded-xl">
 
             <div className="relative overflow-hidden">
                 {isRegistrationDisabled ? (
@@ -239,8 +236,8 @@ export function RegistrationForm({
                         )}
 
                         {initialTeams && initialTeams.length > 0 && (
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-3 p-2 md:p-3 border">
-                                <h4 className="text-sm font-bold tracking-wider">{t("use_existing_team")}</h4>
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-4 p-2 md:p-4 border rounded-sm">
+                                <h4 className="text-xs font-bold tracking-wider">{t("use_existing_team")}</h4>
                                 <Select value={selectedTeamId} onValueChange={handleSelectTeam}>
                                     <SelectTrigger className="w-full md:w-auto">
                                         <SelectValue placeholder={t("select_team_placeholder")} />
@@ -257,92 +254,70 @@ export function RegistrationForm({
                             </div>
                         )}
 
+                        {categories && categories.length > 0 && (
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-4 p-2 md:p-4 border rounded-sm">
+                                <h4 className="text-xs font-bold tracking-wider">Tournament Category</h4>
+                                <Select 
+                                    value={tournamentCategoryId || ""} 
+                                    onValueChange={(val) => {
+                                        const params = new URLSearchParams(searchParams.toString());
+                                        params.set("category", val);
+                                        router.push(`${pathname}?${params.toString()}`);
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full md:w-auto">
+                                        <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((cat) => {
+                                            const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
+                                            const ageName = ageCategoriesData?.category_name || "General";
+                                            const gender = cat.gender_type === 'open' ? 'Open'
+                                                : cat.gender_type === 'male' ? 'Male'
+                                                : cat.gender_type === 'female' ? 'Female'
+                                                : 'Mixed';
+                                            const label = `${ageName} (${gender})`;
+                                            return (
+                                                <SelectItem key={String(cat.id)} value={String(cat.id)} className="text-sm tracking-tighter">
+                                                    {label}
+                                                </SelectItem>
+                                            );
+                                        })}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
                         <div className="grid gap-2 md:gap-3 md:grid-cols-2">
                             <div className="w-full col-span-2 space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
-                                    {t("team_logo_label")}
-                                </Label>
-                                <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 border">
-                                    <div className="relative group">
-                                        <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
-                                            {logoPreviewUrl ? (
-                                                <img
-                                                    src={logoPreviewUrl}
-                                                    alt="Logo preview"
-                                                    width={80}
-                                                    height={80}
-                                                    className="h-full w-full object-contain p-1"
-                                                />
-                                            ) : (
-                                                <Upload className="h-8 w-8 text-muted-foreground/30" />
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1">
-                                        <div className="flex gap-2">
-                                            <Label
-                                                htmlFor={isExistingTeam ? undefined : "logo-upload"}
-                                                className={cn(
-                                                    "cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all",
-                                                    isExistingTeam && "opacity-50 cursor-not-allowed bg-muted/10"
-                                                )}
-                                            >
-                                                {logoPreviewUrl ? t("click_to_upload_logo") : t("team_logo_label")}
-                                            </Label>
-                                            {logoPreviewUrl && !isExistingTeam && (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
-                                                    onClick={() => {
-                                                        form.setValue("logoFile", undefined);
-                                                        setLogoPreviewUrl(null);
-                                                        setSelectedTeamId("new");
-                                                    }}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                        <input
-                                            id="logo-upload"
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            disabled={isExistingTeam}
-                                            {...form.register("logoFile", {
-                                                onChange: (event) => {
-                                                    const file = event.target.files && event.target.files[0];
-                                                    if (file) {
-                                                        const reader = new FileReader();
-                                                        reader.onloadend = () => {
-                                                            setLogoPreviewUrl(reader.result as string);
-                                                        };
-                                                        reader.readAsDataURL(file);
-                                                    }
-                                                }
-                                            })}
-                                        />
-                                        <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 5MB</p>
-                                    </div>
-                                </div>
-                                {form.formState.errors.logoFile && (
-                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
-                                        {form.formState.errors.logoFile.message as string}
-                                    </p>
-                                )}
+                                <Label>{t("team_logo_label")}</Label>
+                                <LogoUploader
+                                    id="logo-upload"
+                                    initialUrl={logoPreviewUrl}
+                                    disabled={isExistingTeam || isSubmitting}
+                                    onFileChange={(file) => {
+                                        setLogoFile(file);
+                                        if (file) {
+                                            setLogoPreviewUrl(URL.createObjectURL(file));
+                                        } else {
+                                            setLogoPreviewUrl(null);
+                                        }
+                                    }}
+                                    onRemove={() => {
+                                        setLogoFile(null);
+                                        setLogoPreviewUrl(null);
+                                    }}
+                                    uploadLabel={t("team_logo_label")}
+                                    clickToUploadLabel={t("click_to_upload_logo")}
+                                    previewLabel="Logo preview"
+                                />
                             </div>
 
                             <div className="space-y-1 col-span-2">
-                                <Label className="text-xs font-black tracking-widest text-primary">
-                                    {t("team_name_label")}
-                                </Label>
+                                <Label>{t("team_name_label")}</Label>
                                 <Input
                                     placeholder={t("team_name_placeholder")}
                                     {...form.register("teamName")}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
                                     disabled={isExistingTeam}
                                 />
                                 {form.formState.errors.teamName && (
@@ -353,9 +328,7 @@ export function RegistrationForm({
                             </div>
 
                             <div className="w-full col-span-2 space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
-                                    {t("team_description_label")}
-                                </Label>
+                                <Label>{t("team_description_label")}</Label>
                                 <Textarea
                                     placeholder={t("team_description_placeholder")}
                                     {...form.register("description")}
@@ -370,13 +343,10 @@ export function RegistrationForm({
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
-                                    {t("contact_name_label")}
-                                </Label>
+                                <Label>{t("contact_name_label")}</Label>
                                 <Input
                                     placeholder={t("contact_name_placeholder")}
                                     {...form.register("contactName")}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
                                     disabled={isExistingTeam}
                                 />
                                 {form.formState.errors.contactName && (
@@ -387,9 +357,7 @@ export function RegistrationForm({
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
-                                    {t("contact_phone_label")}
-                                </Label>
+                                <Label>{t("contact_phone_label")}</Label>
                                 <Input
                                     placeholder={t("contact_phone_placeholder")}
                                     {...form.register("contactPhone")}
@@ -408,22 +376,22 @@ export function RegistrationForm({
                             <>
                                 <div className="grid md:grid-cols-2 gap-2 md:gap-3">
                                     {tournament.bank_account_number && (
-                                        <div className="bg-card border p-4 md:p-6 space-y-2 md:space-y-3">
+                                        <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
                                             <PromptPayQR
                                                 phoneNumber={tournament.bank_account_number}
                                                 amount={Number(tournament.registration_fee)}
                                             />
-                                            <div className="space-y-4 text-sm relative overflow-hidden">
+                                            <div className="space-y-2 md:space-y-4 text-sm relative overflow-hidden">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("bank_label")}</span>
+                                                    <span className="text-[10px] font-black tracking-widest text-muted-foreground">{t("bank_label")}</span>
                                                     <span className="font-black text-foreground">{tournament.bank_name}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("account_name_label")}</span>
+                                                    <span className="text-[10px] font-black tracking-widest text-muted-foreground">{t("account_name_label")}</span>
                                                     <span className="font-black text-foreground">{tournament.bank_account_name}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-[10px] font-black tracking-widest text-muted-foreground/40">{t("account_no_label")}</span>
+                                                    <span className="text-[10px] font-black tracking-widest text-muted-foreground">{t("account_no_label")}</span>
                                                     <span className="font-mono font-bold text-primary text-lg leading-none tracking-tighter">{tournament.bank_account_number}</span>
                                                 </div>
                                             </div>
@@ -434,7 +402,7 @@ export function RegistrationForm({
                                         <div className="flex-1 flex flex-col space-y-1">
                                             <div className="group relative h-full flex flex-col">
                                                 {!slipPreviewUrl ? (
-                                                    <div className="py-24 border-2 border-dashed hover:border-primary/40 transition-colors text-center cursor-pointer bg-card relative flex-1 flex items-center justify-center">
+                                                    <div className="py-24 border-2 border-dashed rounded-lg hover:border-primary/40 transition-colors text-center cursor-pointer relative flex-1 flex items-center justify-center">
                                                         <input
                                                             type="file"
                                                             accept="image/jpeg,image/png,image/webp"
@@ -449,23 +417,21 @@ export function RegistrationForm({
                                                             })}
                                                         />
                                                         <div className="flex flex-col items-center gap-4">
-                                                            <div className="p-4 bg-primary/10 text-primary transition-transform shadow-[0_0_15px_rgba(var(--primary),0.1)]">
+                                                            <div className="p-4 bg-primary/5 text-primary rounded-sm transition-transform shadow-[0_0_15px_rgba(var(--primary),0.1)]">
                                                                 <Upload className="w-8 h-8" />
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <div className="text-sm font-black tracking-widest text-foreground">
+                                                                <div className="text-sm tracking-wide text-foreground">
                                                                     {t("click_to_upload")}
                                                                 </div>
-                                                                <p className="text-[10px] font-bold tracking-widest text-muted-foreground/40">
-                                                                    {t("file_types_hint")}
-                                                                </p>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="relative overflow-hidden border bg-muted/30 p-4">
-                                                        <div className="flex flex-col gap-2 md:gap-3">
-                                                            <div className="relative aspect-[3/4] w-full max-h-[400px] overflow-hidden border bg-foreground flex items-center justify-center">
+                                                    <div className="relative overflow-hidden border p-2 md:p-4 rounded-lg">
+                                                        <div className="flex flex-col gap-2 md:gap-4">
+                                                            <div className="relative aspect-[3/4] w-full max-h-[360px] overflow-hidden flex items-center justify-center">
+                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                 <img
                                                                     src={slipPreviewUrl}
                                                                     alt="Slip preview"
@@ -477,7 +443,7 @@ export function RegistrationForm({
                                                                     type="button"
                                                                     variant="destructive"
                                                                     size="icon"
-                                                                    className="absolute top-2 right-2 h-8 w-8 shadow-md"
+                                                                    className="absolute top-0 right-0 h-8 w-8"
                                                                     onClick={() => {
                                                                         form.setValue("slipFile", undefined);
                                                                         setSlipPreviewUrl(null);
@@ -488,8 +454,8 @@ export function RegistrationForm({
                                                             </div>
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex-1 space-y-1">
-                                                                    <p className="text-[10px] font-black tracking-widest truncate text-foreground">{t("slip_preview")}</p>
-                                                                    <p className="text-[9px] font-bold text-muted-foreground/60">{t("ready_to_submit")}</p>
+                                                                    <p className="text-xs font-black tracking-wide truncate text-foreground">{t("slip_preview")}</p>
+                                                                    <p className="text-[10px] font-bold text-muted-foreground">{t("ready_to_submit")}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -497,7 +463,7 @@ export function RegistrationForm({
                                                 )}
                                             </div>
                                             {form.formState.errors.slipFile && (
-                                                <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
+                                                <p className="text-[10px] font-black tracking-wide text-destructive">
                                                     {form.formState.errors.slipFile.message as string}
                                                 </p>
                                             )}

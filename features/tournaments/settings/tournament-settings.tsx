@@ -18,13 +18,15 @@ import { RegistrationSettings } from "./registration-settings";
 export function TournamentSettings({
     tournament,
     hasFixtures,
-    activeTab = 'general'
+    activeTab = 'general',
+    activeCategoryId
 }: {
     tournament: Tournament;
     hasFixtures: boolean;
     userPlan?: string;
     teams: TournamentTeam[];
     activeTab?: string;
+    activeCategoryId?: string | null;
 }) {
     const tournamentId = tournament.id;
     const router = useRouter();
@@ -77,6 +79,7 @@ export function TournamentSettings({
                     tournamentId={tournamentId}
                     tournamentName={tournament.name}
                     hasFixtures={hasFixtures}
+                    activeCategoryId={activeCategoryId}
                 />
             )}
         </div>

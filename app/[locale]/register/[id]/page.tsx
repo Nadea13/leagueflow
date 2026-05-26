@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { RegistrationForm } from "@/components/registrations/registration-form";
+import { RegistrationForm } from "@/features/registrations/registration-form";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -224,8 +224,8 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                         <h3 className="text-lg font-semibold text-foreground">{t("title")}</h3>
                                         <p className="text-sm text-muted-foreground">{t("fill_details")}</p>
                                     </div>
-                                    <RegistrationForm 
-                                        tournament={tournament} 
+                                    <RegistrationForm
+                                        tournament={tournament}
                                         tournamentCategoryId={tournamentCategoryId}
                                         initialTeams={((await getMyTeams()).data as Team[]) || []}
                                     />

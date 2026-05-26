@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
 import { Trophy, Clock, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import Image from "next/image";
 
 interface Registration {
     id: string;
@@ -78,6 +77,7 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                     <div className="w-12 h-12 border flex items-center justify-center p-1 transition-all shrink-0 group-hover:border-primary/30">
                                         {reg.logo_url ? (
                                             <div className="relative w-full h-full">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img
                                                     src={reg.logo_url}
                                                     alt={reg.team_name}

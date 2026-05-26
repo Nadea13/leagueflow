@@ -46,7 +46,7 @@ export default async function TeamDetailPage({
     const initialPlayers = playersResult.success ? (playersResult.data || []) : [];
 
     return (
-        <div className="w-full max-w-[1600px] mx-auto">
+        <div className="w-full">
             <SquadManagement
                 team={team}
                 initialPlayers={initialPlayers}

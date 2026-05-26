@@ -26,15 +26,16 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { resetFixtures, deleteTournament } from "@/actions/organizer/tournaments/general";
+import { resetFixtures, resetBracketFlow, deleteTournament } from "@/actions/organizer/tournaments/general";
 
 interface DangerZoneProps {
     tournamentId: string;
     tournamentName: string;
     hasFixtures: boolean;
+    activeCategoryId?: string | null;
 }
 
-export function DangerZone({ tournamentId, tournamentName, hasFixtures }: DangerZoneProps) {
+export function DangerZone({ tournamentId, tournamentName, hasFixtures, activeCategoryId }: DangerZoneProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
@@ -44,6 +45,7 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [resetDialogOpen, setResetDialogOpen] = useState(false);
+    const [resetFlowDialogOpen, setResetFlowDialogOpen] = useState(false);
 
     const handleReset = () => {
         setResetDialogOpen(false);
@@ -53,6 +55,26 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                 toast({
                     title: tCommon("success"),
                     description: t("reset_success_desc") || "Fixtures reset successfully",
+                });
+                router.refresh();
+            } else {
+                toast({
+                    title: tCommon("error"),
+                    description: res.error,
+                    variant: "destructive",
+                });
+            }
+        });
+    };
+
+    const handleResetFlow = () => {
+        setResetFlowDialogOpen(false);
+        startTransition(async () => {
+            const res = await resetBracketFlow(tournamentId, activeCategoryId);
+            if (res.success) {
+                toast({
+                    title: tCommon("success"),
+                    description: "Bracket flow reset successfully",
                 });
                 router.refresh();
             } else {
@@ -151,6 +173,24 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                     </div>
                 </div>
 
+                {/* Reset Bracket Flow */}
+                <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+                        <div className="space-y-1">
+                            <h4 className="text-xs font-black tracking-widest text-destructive">Reset Bracket Flow</h4>
+                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">This will clear the entire bracket canvas layout and delete all scheduled matches.</p>
+                        </div>
+                        <Button
+                            variant="destructive"
+                            disabled={isPending}
+                            onClick={() => setResetFlowDialogOpen(true)}
+                        >
+                            <RefreshCw className={isPending ? "h-5 w-5 animate-spin" : "h-5 w-5"} />
+                            Reset Flow
+                        </Button>
+                    </div>
+                </div>
+
                 {/* Reset Fixtures */}
                 <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
@@ -169,6 +209,31 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures }: Danger
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={resetFlowDialogOpen} onOpenChange={setResetFlowDialogOpen}>
+                <AlertDialogContent className="bg-card border-primary/20 shadow-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
+                            <RefreshCw className="h-5 w-5 text-primary" />
+                            Reset Bracket Flow
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                            Are you sure you want to reset the bracket flow? This will clear the entire canvas layout and delete all scheduled matches. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                            {tCommon("cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleResetFlow}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
+                        >
+                            Confirm Reset
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
                 <AlertDialogContent className="bg-card border-primary/20 shadow-2xl max-w-md">

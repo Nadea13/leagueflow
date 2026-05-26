@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import generatePayload from "promptpay-qr";
 import { Skeleton } from "@/components/ui/skeleton";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 interface PromptPayQRProps {
@@ -54,10 +53,11 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
     }
 
     return (
-        <div className="overflow-hidden space-y-2 md:space-y-3">
-            <div className="flex flex-col items-center gap-2 md:gap-3">
+        <div className="overflow-hidden space-y-2 md:space-y-4">
+            <div className="flex flex-col items-center gap-2 md:gap-4">
                 {/* QR Code */}
-                <div className="p-2 bg-white border relative group">
+                <div className="p-1 md:p-2 bg-white border rounded-sm relative group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src={qrCodeUrl}
                         alt="PromptPay QR Code"
@@ -77,8 +77,8 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
                 </div>
 
                 {/* Amount Section */}
-                <div className="text-center space-y-2 md:space-y-3">
-                    <p className="text-xs font-black text-muted-foreground/60">{t("amount")}</p>
+                <div className="text-center space-y-2 md:space-y-4">
+                    <p className="text-xs font-black text-muted-foreground">{t("amount")}</p>
                     <p className="text-3xl md:text-5xl font-black tracking-tighter text-foreground leading-none">
                         {amount.toLocaleString("th-TH", {
                             style: "currency",
