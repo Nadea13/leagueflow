@@ -180,7 +180,7 @@ export function Announcements({
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-2 transition-all relative overflow-hidden group/item rounded-md",
+                                "p-2 transition-all relative overflow-hidden group/item rounded",
                                 ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >

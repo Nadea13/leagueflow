@@ -168,16 +168,35 @@ export const MatchNode = memo(function MatchNode({
                             const liveTeamA = getResolvedTeam('a');
                             const liveTeamB = getResolvedTeam('b');
 
+                            const dbMatch = dbMatches.find(m => 
+                                m.id === match.dbId || 
+                                (m.placeholder_a === (liveTeamA || match.placeholderA) && m.placeholder_b === (liveTeamB || match.placeholderB))
+                            );
+
+                            const matchDate = dbMatch?.match_date || match.match_date;
+                            const matchTime = dbMatch?.match_time || match.match_time;
+
                             const isGroupConnected = edges.some(e => e.target === id && e.targetHandle === 'group-in');
 
                             return (
-                                <div key={match.id || index} className="relative py-3 space-y-1">
-                                    {/* Match Number Indicator (only if > 1 matches) */}
-                                    {matches.length > 1 && (
-                                        <div className="px-3">
-                                            <span className="text-[9px] font-black text-primary/60 tracking-tighter">
-                                                Match #{index + 1}
-                                            </span>
+                                <div key={match.id || index} className="relative">
+                                    {/* Match Number Indicator / Date-Time */}
+                                    {(matches.length > 1 || matchDate || matchTime) && (
+                                        <div className="px-2 flex items-center justify-between gap-2 mt-1">
+                                            {matches.length > 1 ? (
+                                                <span className="text-[10px] font-black text-primary/60 tracking-tighter">
+                                                    Match #{index + 1}
+                                                </span>
+                                            ) : (
+                                                <span />
+                                            )}
+                                            {(matchDate || matchTime) && (
+                                                <span className="text-[10px] font-medium text-muted-foreground">
+                                                    {matchDate && <span>{matchDate}</span>}
+                                                    {matchDate && matchTime && <span className="mx-1">| </span>}
+                                                    {matchTime && <span>{matchTime}</span>}
+                                                </span>
+                                            )}
                                         </div>
                                     )}
  
@@ -225,13 +244,8 @@ export const MatchNode = memo(function MatchNode({
                                         />
                                     )}
 
-                                    <div className="pl-0">
+                                    <div>
                                         {(() => {
-                                            const dbMatch = dbMatches.find(m => 
-                                                m.id === match.dbId || 
-                                                (m.placeholder_a === (liveTeamA || match.placeholderA) && m.placeholder_b === (liveTeamB || match.placeholderB))
-                                            );
-                                            
                                             return (
                                                 <>
                                                     <SlotRow
@@ -303,9 +317,22 @@ function SlotRow({
     onDropTeam?: (teamName: string) => void;
     onClear?: () => void;
 }) {
+    const teams = useBracketStore((s) => s.teams);
+    const team = teams.find(
+        (t) => t.name.trim().toLowerCase() === label.trim().toLowerCase()
+    );
+
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length > 1) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
     return (
         <div 
-            className="flex items-center gap-2 px-4 py-3 transition-colors hover:bg-primary/5 group/slot cursor-default"
+            className="flex items-center gap-2 p-2 transition-colors hover:bg-primary/5 group/slot cursor-default"
             onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
@@ -318,10 +345,19 @@ function SlotRow({
                 }
             }}
         >
-            <div className="w-4 h-4 border flex items-center justify-center bg-muted/50 group-hover/slot:border-primary/50 group-hover/slot:bg-primary/10 transition-colors">
-                <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-primary">
-                    {position === "top" ? "H" : "A"}
-                </span>
+            <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-primary/50 group-hover/slot:bg-primary/10 transition-colors overflow-hidden">
+                {team?.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={team.logo_url}
+                        alt={label}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-primary">
+                        {team ? getInitials(team.name) : (position === "top" ? "H" : "A")}
+                    </span>
+                )}
             </div>
             <span className={cn(
                 "text-[10px] font-bold tracking-tight truncate flex-1",

@@ -41,7 +41,7 @@ export const AnnouncementNode = memo(({ id, data, selected }: NodeProps) => {
             </div>
 
             {/* Content */}
-            <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-background/30">
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-background/30 p-2">
                 <Announcements
                     tournamentId={tournamentId}
                     isEditable={!readonly}

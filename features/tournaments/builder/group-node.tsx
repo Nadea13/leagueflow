@@ -112,7 +112,7 @@ export const GroupNode = memo(({
                         return (
                             <div
                                 key={index}
-                                className="flex items-center gap-2 px-4 py-3 hover:bg-violet-500/5 transition-colors group/slot cursor-default relative"
+                                className="flex items-center gap-2 p-2 hover:bg-violet-500/5 transition-colors group/slot cursor-default relative"
                                 onDragOver={(event) => {
                                     event.preventDefault();
                                     event.dataTransfer.dropEffect = "move";
@@ -137,7 +137,7 @@ export const GroupNode = memo(({
                                     className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-violet-500 transition-all z-50"
                                     style={{ left: "-1px" }}
                                 />
-                                <div className="w-5 h-5 border flex items-center justify-center bg-muted/50 group-hover/slot:border-violet-500/50 group-hover/slot:bg-violet-500/10 transition-colors text-muted-foreground group-hover/slot:text-violet-500">
+                                <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-violet-500/50 group-hover/slot:bg-violet-500/10 transition-colors text-muted-foreground group-hover/slot:text-violet-500">
                                     <span className="text-[10px] font-black">{index + 1}</span>
                                 </div>
                                 <span

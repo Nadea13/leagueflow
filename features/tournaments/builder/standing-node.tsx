@@ -315,7 +315,7 @@ export const StandingNode = memo(({
                     <thead>
                         <tr className="bg-muted/50 border-b border-border/50">
                             <th className="px-2 py-1.5 text-left font-black text-muted-foreground w-8">#</th>
-                            <th className="px-2 py-1.5 text-left font-black text-muted-foreground min-w-[100px]">TEAM</th>
+                            <th className="-1.5 text-left font-black text-muted-foreground min-w-[100px]">TEAM</th>
                             {showPlayed && <th className="px-1 py-1.5 text-center font-black text-muted-foreground w-6">MP</th>}
                             {showWin && <th className="px-1 py-1.5 text-center font-black text-muted-foreground w-6">W</th>}
                             {showDraw && <th className="px-1 py-1.5 text-center font-black text-muted-foreground w-6">D</th>}
@@ -344,15 +344,15 @@ export const StandingNode = memo(({
 
                                 return (
                                     <tr key={teamName} className="hover:bg-emerald-500/5 transition-colors group/row h-10">
-                                        <td className="px-2 py-1.5 relative">
+                                        <td className="p-2 relative">
                                             <div className={cn(
-                                                "w-5 h-5 flex items-center justify-center font-black rounded-full border",
+                                                "w-6 h-6 flex items-center justify-center font-black rounded-full border",
                                                 isPromoted ? "border-border text-muted-foreground" : "bg-muted/30 border-border text-muted-foreground"
                                             )}>
                                                 {index + 1}
                                             </div>
                                         </td>
-                                        <td className="px-2 py-1.5">
+                                        <td className="py-1.5">
                                             <div className="flex items-center gap-1.5">
                                                 <span className={cn(
                                                     "font-bold truncate max-w-[120px]",

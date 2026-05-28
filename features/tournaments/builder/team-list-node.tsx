@@ -68,7 +68,7 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
                     </div>
                 ) : (
                     paidTeams.map((team) => (
-                        <div key={team.id} className="group relative flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+                        <div key={team.id} className="group relative flex items-center gap-3 p-2 hover:bg-muted/30 transition-colors">
                             {team.logo_url ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img

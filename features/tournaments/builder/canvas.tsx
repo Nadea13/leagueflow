@@ -18,7 +18,7 @@ import "@xyflow/react/dist/style.css";
 import {
     Loader2, Plus, Users, X, Save,
     Settings, MapPin, ShieldAlert,
-    Calendar, Settings2, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
+    Calendar, Settings2, ChevronLeft, ChevronRight, ChevronDown, Link2, ExternalLink, Megaphone,
     Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
 } from "lucide-react";
 import {
@@ -173,6 +173,7 @@ function CanvasInternal({
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
     const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
+    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
     // Sync isLocked with readonly prop or finished status if it changes
     useEffect(() => {
@@ -495,7 +496,7 @@ function CanvasInternal({
         <div className={cn("flex flex-col h-full w-full border bg-background rounded-xl")}>
             <div className="flex items-center justify-between p-2 md:p-4 border-b">
                 <div className="flex items-center gap-2 md:gap-4">
-                    <div className="flex items-center gap-2 md:gap-4">
+                    <div className="flex items-center gap-1 md:gap-2">
                         {isEditingName && !readonly ? (
                             <Input
                                 value={tempName}
@@ -536,16 +537,16 @@ function CanvasInternal({
                         </Button>
 
                         {/* Category Dropdown Selector */}
-                        <DropdownMenu>
+                        <DropdownMenu onOpenChange={setIsCategoryOpen}>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
                                     className="flex items-center gap-1.5 font-bold text-xs tracking-tight border-slate-200 dark:border-foreground/10 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 h-10 px-3"
                                 >
-                                    <Trophy className="h-4 w-4 text-primary animate-pulse" />
                                     <span>
                                         {activeCategoryName ? activeCategoryName : (locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category")}
                                     </span>
+                                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground ml-1 transition-transform duration-200", isCategoryOpen && "rotate-180")} />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-64 bg-card shadow-2xl rounded-sm">
@@ -597,13 +598,13 @@ function CanvasInternal({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-1 md:gap-2">
                     {onClose && (
                         <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
                             <X className="h-4 w-4" />
                         </Button>
                     )}
-                    <div className="flex items-center gap-2 md:gap-4">
+                    <div className="flex items-center gap-1 md:gap-2">
                         {!readonly && (
                             <Button
                                 onClick={() => handleSave(true)}
@@ -623,7 +624,7 @@ function CanvasInternal({
                             </Button>
                         )}
                         {!readonly && (
-                            <div className="flex items-center gap-2 md:gap-4">
+                            <div className="flex items-center gap-1 md:gap-2">
                                 <Select
                                     value={currentStatus}
                                     onValueChange={handleStatusChange}
