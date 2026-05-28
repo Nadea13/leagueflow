@@ -148,12 +148,17 @@ export const MatchNode = memo(function MatchNode({
                                 }
 
 
-                                // Handle MatchNode propagation (Winner)
+                                // Handle MatchNode propagation (Winner / Loser)
                                 if (sourceNode.type === 'matchNode') {
                                     const winnerMatch = edge.sourceHandle?.match(/winner-(\d+)/);
                                     if (winnerMatch) {
                                         const winnerIndex = parseInt(winnerMatch[1], 10);
                                         return `Winner (Match ${winnerIndex + 1})`;
+                                    }
+                                    const loserMatch = edge.sourceHandle?.match(/loser-(\d+)/);
+                                    if (loserMatch) {
+                                        const loserIndex = parseInt(loserMatch[1], 10);
+                                        return `Loser (Match ${loserIndex + 1})`;
                                     }
                                 }
 
@@ -162,6 +167,8 @@ export const MatchNode = memo(function MatchNode({
 
                             const liveTeamA = getResolvedTeam('a');
                             const liveTeamB = getResolvedTeam('b');
+
+                            const isGroupConnected = edges.some(e => e.target === id && e.targetHandle === 'group-in');
 
                             return (
                                 <div key={match.id || index} className="relative py-3 space-y-1">
@@ -173,33 +180,50 @@ export const MatchNode = memo(function MatchNode({
                                             </span>
                                         </div>
                                     )}
-
+ 
                                     {/* Handles for Slot A */}
-                                    <Handle
-                                        type="target"
-                                        position={Position.Left}
-                                        id={`slot-a-${index}`}
-                                        className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
-                                        style={{ top: matches.length > 1 ? "45%" : "25%", left: "-1px" }}
-                                    />
-
+                                    {!isGroupConnected && (
+                                        <Handle
+                                            type="target"
+                                            position={Position.Left}
+                                            id={`slot-a-${index}`}
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            style={{ top: matches.length > 1 ? "45%" : "25%", left: "-1px" }}
+                                        />
+                                    )}
+ 
                                     {/* Handles for Slot B */}
-                                    <Handle
-                                        type="target"
-                                        position={Position.Left}
-                                        id={`slot-b-${index}`}
-                                        className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
-                                        style={{ top: matches.length > 1 ? "85%" : "75%", left: "-1px" }}
-                                    />
-
+                                    {!isGroupConnected && (
+                                        <Handle
+                                            type="target"
+                                            position={Position.Left}
+                                            id={`slot-b-${index}`}
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            style={{ top: matches.length > 1 ? "85%" : "75%", left: "-1px" }}
+                                        />
+                                    )}
+ 
                                     {/* Source Handle (Winner) */}
-                                    <Handle
-                                        type="source"
-                                        position={Position.Right}
-                                        id={`winner-${index}`}
-                                        className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
-                                        style={{ top: matches.length > 1 ? "65%" : "50%", right: "-1px" }}
-                                    />
+                                    {!isGroupConnected && (
+                                        <Handle
+                                            type="source"
+                                            position={Position.Right}
+                                            id={`winner-${index}`}
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            style={{ top: matches.length > 1 ? "45%" : "35%", right: "-1px" }}
+                                        />
+                                    )}
+
+                                    {/* Source Handle (Loser) */}
+                                    {!isGroupConnected && (
+                                        <Handle
+                                            type="source"
+                                            position={Position.Right}
+                                            id={`loser-${index}`}
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            style={{ top: matches.length > 1 ? "75%" : "65%", right: "-1px" }}
+                                        />
+                                    )}
 
                                     <div className="pl-0">
                                         {(() => {

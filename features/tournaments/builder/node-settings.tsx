@@ -4,7 +4,7 @@ import React from "react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Trophy, Zap, Trash2, ListOrdered, Calendar, Clock, ExternalLink } from "lucide-react";
+import { Users, Trophy, Zap, Trash2, ListOrdered, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
@@ -229,7 +229,7 @@ export function NodeSettings() {
                                                 updateNodeData(id, { matches: originalMatches });
                                             }
                                         };
- 
+
                                         return (
                                             <div key={match.id || idx} className="p-2 bg-muted/30 border rounded-sm space-y-2 relative group">
                                                 <div className="flex justify-between items-center">
@@ -249,12 +249,12 @@ export function NodeSettings() {
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div className="space-y-1">
-                                                        <Label className="text-[9px] font-bold text-muted-foreground">Team A</Label>
+                                                        <Label className="text-[10px]">Home Team</Label>
                                                         <Select
                                                             value={match.placeholderA}
                                                             onValueChange={(val) => updateMatch({ placeholderA: val })}
                                                         >
-                                                            <SelectTrigger className={`h-7 text-[10px] bg-background ${getResolvedTeam(id, `slot-a-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                            <SelectTrigger className={`text-[10px] bg-background w-full ${getResolvedTeam(id, `slot-a-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
                                                                 <SelectValue placeholder="Select Team" />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -271,12 +271,12 @@ export function NodeSettings() {
                                                         </Select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <Label className="text-[9px] font-bold text-muted-foreground">Team B</Label>
+                                                        <Label className="text-[10px]">Away Team</Label>
                                                         <Select
                                                             value={match.placeholderB}
                                                             onValueChange={(val) => updateMatch({ placeholderB: val })}
                                                         >
-                                                            <SelectTrigger className={`h-7 text-[10px] bg-background ${getResolvedTeam(id, `slot-b-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                            <SelectTrigger className={`text-[10px] bg-background w-full ${getResolvedTeam(id, `slot-b-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
                                                                 <SelectValue placeholder="Select Team" />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -295,25 +295,19 @@ export function NodeSettings() {
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <div className="space-y-1">
-                                                        <Label className="text-[9px] font-bold text-muted-foreground flex items-center gap-1">
-                                                            <Calendar className="h-2 w-2" /> Date
-                                                        </Label>
+                                                        <Label className="text-[10px]">Date</Label>
                                                         <Input
                                                             type="date"
                                                             value={match.match_date || ""}
                                                             onChange={(e) => updateMatch({ match_date: e.target.value })}
-                                                            className="h-7 text-[10px] bg-background px-2"
                                                         />
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <Label className="text-[9px] font-bold text-muted-foreground flex items-center gap-1">
-                                                            <Clock className="h-2 w-2" /> Time
-                                                        </Label>
+                                                        <Label className="text-[10px]">Time</Label>
                                                         <Input
                                                             type="time"
                                                             value={match.match_time || ""}
                                                             onChange={(e) => updateMatch({ match_time: e.target.value })}
-                                                            className="h-7 text-[10px] bg-background px-2"
                                                         />
                                                     </div>
                                                 </div>
@@ -323,10 +317,9 @@ export function NodeSettings() {
                                                         asChild
                                                         variant="outline"
                                                         size="sm"
-                                                        className="w-full h-7 text-[9px] font-black tracking-widest gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none"
+                                                        className="w-full"
                                                     >
                                                         <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
-                                                            <ExternalLink className="h-2.5 w-2.5" />
                                                             MATCH CONSOLE
                                                         </Link>
                                                     </Button>
@@ -337,14 +330,14 @@ export function NodeSettings() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full h-8 text-[10px] font-black tracking-wider gap-2 border-dashed"
+                                    className="w-full"
                                     onClick={() => {
                                         const next = [...((data.matches as MatchItem[]) || [])];
                                         next.push({ id: `m-${Date.now()}-${next.length + 1}`, placeholderA: "TBD", placeholderB: "TBD" });
                                         updateNodeData(id, { matches: next });
                                     }}
                                 >
-                                    + Add Match to Node
+                                    Add Match to Node
                                 </Button>
                             </div>
                         </div>

@@ -31,11 +31,10 @@ import { resetFixtures, resetBracketFlow, deleteTournament } from "@/actions/org
 interface DangerZoneProps {
     tournamentId: string;
     tournamentName: string;
-    hasFixtures: boolean;
     activeCategoryId?: string | null;
 }
 
-export function DangerZone({ tournamentId, tournamentName, hasFixtures, activeCategoryId }: DangerZoneProps) {
+export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: DangerZoneProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
@@ -187,24 +186,6 @@ export function DangerZone({ tournamentId, tournamentName, hasFixtures, activeCa
                         >
                             <RefreshCw className={isPending ? "h-5 w-5 animate-spin" : "h-5 w-5"} />
                             Reset Flow
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Reset Fixtures */}
-                <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
-                        <div className="space-y-1">
-                            <h4 className="text-xs font-black tracking-widest text-destructive">{t("reset_fixtures")}</h4>
-                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">{t("reset_desc")}</p>
-                        </div>
-                        <Button
-                            variant="destructive"
-                            disabled={!hasFixtures || isPending}
-                            onClick={() => setResetDialogOpen(true)}
-                        >
-                            <RefreshCw className={isPending ? "h-5 w-5 animate-spin" : "h-5 w-5"} />
-                            {t("reset_fixtures")}
                         </Button>
                     </div>
                 </div>

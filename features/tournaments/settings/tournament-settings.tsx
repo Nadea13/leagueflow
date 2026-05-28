@@ -78,7 +78,6 @@ export function TournamentSettings({
                 <DangerZone
                     tournamentId={tournamentId}
                     tournamentName={tournament.name}
-                    hasFixtures={hasFixtures}
                     activeCategoryId={activeCategoryId}
                 />
             )}

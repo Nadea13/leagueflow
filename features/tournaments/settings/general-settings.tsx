@@ -5,7 +5,6 @@ import { updateTournament } from "@/actions/organizer/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Loader2 } from "lucide-react";
@@ -64,34 +63,6 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                     name="name"
                                     defaultValue={tournament.name}
                                     placeholder={tDialog("name")}
-                                    className="bg-transparent text-foreground focus-visible:ring-0"
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>{t("status")}</Label>
-                                <Select name="status" defaultValue={tournament.status || "draft"}>
-                                    <SelectTrigger className="w-full bg-transparent text-foreground focus-visible:ring-0">
-                                        <SelectValue placeholder={t("select_status")} />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-card">
-                                        <SelectItem value="draft" className="focus:bg-foreground/10 focus:text-primary">{t("draft")}</SelectItem>
-                                        <SelectItem value="upcoming" className="focus:bg-foreground/10 focus:text-primary">{t("upcoming")}</SelectItem>
-                                        <SelectItem value="ongoing" className="focus:bg-foreground/10 focus:text-primary">{t("ongoing")}</SelectItem>
-                                        <SelectItem value="finished" className="focus:bg-foreground/10 focus:text-primary">{t("finished")}</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>{tDialog("max_teams")}</Label>
-                                <Input
-                                    type="number"
-                                    id="max_teams"
-                                    name="max_teams"
-                                    defaultValue={tournament.max_teams || 8}
-                                    min="2"
-                                    max={128}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                 />
                             </div>

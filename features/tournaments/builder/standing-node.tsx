@@ -64,13 +64,13 @@ export const StandingNode = memo(({
 
     const effectiveTeams = React.useMemo(() => {
         if (!sourceGroupNode || sourceGroupNode.type !== 'groupNode') {
-            return Array.isArray(data.teams) ? data.teams : [];
+            return (Array.isArray(data.teams) ? data.teams : []).filter(name => name && name !== "TBD");
         }
 
         const teamCount = (sourceGroupNode.data as { teamCount?: number }).teamCount || 0;
         const staticTeams = (sourceGroupNode.data as { teams?: string[] }).teams || [];
 
-        return Array.from({ length: teamCount }).map((_, index) => {
+        const resolved = Array.from({ length: teamCount }).map((_, index) => {
             const handleId = `team-in-${index}`;
             const edge = edges.find(e => e.target === sourceGroupNode.id && e.targetHandle === handleId);
             
@@ -105,6 +105,8 @@ export const StandingNode = memo(({
 
             return staticTeams[index] || `Team ${index + 1}`;
         });
+
+        return resolved.filter(name => name && name !== "TBD");
     }, [sourceGroupNode, edges, nodes, data.teams, storeTeams]);
 
     const advancingCount = Number(data.advancingCount) || 0;
@@ -119,22 +121,55 @@ export const StandingNode = memo(({
             }
 
             try {
-                // 1. Fetch all matches and tournament teams
+                // 1. Fetch category id first
+                const { data: categories, error: catError } = await supabase
+                    .from('tournament_categories')
+                    .select('id')
+                    .eq('tournament_id', tournamentId);
+
+                if (catError) throw catError;
+                
+                const categoryId = categories?.[0]?.id;
+                if (!categoryId) {
+                    setLoading(false);
+                    return;
+                }
+
+                interface DBTeam {
+                    name?: string | null;
+                    team_id?: string | null;
+                    team?: {
+                        id: string;
+                        name: string;
+                    } | null;
+                }
+
+                interface DatabaseMatch extends Match {
+                    placeholder_home?: string | null;
+                    placeholder_away?: string | null;
+                }
+
+                // 2. Fetch all matches and tournament teams using category ID
                 const [matchesRes, teamsRes] = await Promise.all([
-                    supabase.from('matches').select('*').eq('tournament_id', tournamentId),
-                    supabase.from('tournament_teams').select('*').eq('tournament_id', tournamentId)
+                    supabase.from('matches').select('*').eq('tournament_category_id', categoryId),
+                    supabase.from('tournament_teams').select('*, team:teams(id, name)').eq('tournament_category_id', categoryId)
                 ]);
 
                 if (matchesRes.error || teamsRes.error) throw matchesRes.error || teamsRes.error;
 
-                const dbMatches: Match[] = matchesRes.data || [];
-                const dbTeams: TournamentTeam[] = teamsRes.data || [];
+                const dbMatches = (matchesRes.data || []) as DatabaseMatch[];
+                const dbTeams = (teamsRes.data || []) as unknown as DBTeam[];
 
-                // 2. Map IDs to names for easier lookup
+                // 3. Map IDs to names for easier lookup
                 const teamIdToName = new Map<string, string>();
-                dbTeams.forEach(t => teamIdToName.set(t.id, t.name));
+                dbTeams.forEach((t) => {
+                    const name = t.team?.name || t.name;
+                    if (name && t.team_id) {
+                        teamIdToName.set(t.team_id, name);
+                    }
+                });
 
-                // 3. Initialize stats for all teams in this node
+                // 4. Initialize stats for all teams in this node
                 const statsMap: Record<string, CalculatedStanding> = {};
                 effectiveTeams.forEach(name => {
                     statsMap[name] = { 
@@ -143,10 +178,10 @@ export const StandingNode = memo(({
                     };
                 });
 
-                // 4. Calculate stats from matches
+                // 5. Calculate stats from matches
                 dbMatches.forEach(m => {
-                    const homeName = m.home_team_id ? teamIdToName.get(m.home_team_id) : m.placeholder_a;
-                    const awayName = m.away_team_id ? teamIdToName.get(m.away_team_id) : m.placeholder_b;
+                    const homeName = m.home_team_id ? teamIdToName.get(m.home_team_id) : m.placeholder_home || m.placeholder_a;
+                    const awayName = m.away_team_id ? teamIdToName.get(m.away_team_id) : m.placeholder_away || m.placeholder_b;
 
                     if (!homeName || !awayName) return;
 
@@ -155,8 +190,8 @@ export const StandingNode = memo(({
 
                     if (m.status === 'finished') {
                         if (h && a) {
-                            const hScore = m.home_score || 0;
-                            const aScore = m.away_score || 0;
+                            const hScore = typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as { total?: number }).total) || 0 : Number(m.home_score) || 0;
+                            const aScore = typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as { total?: number }).total) || 0 : Number(m.away_score) || 0;
 
                             h.mp++; a.mp++;
                             h.gf += hScore; h.ga += aScore;
@@ -180,7 +215,7 @@ export const StandingNode = memo(({
                     }
                 });
 
-                // 5. Finalize GD and Sort
+                // 6. Finalize GD and Sort
                 const result = Object.values(statsMap).map((s: CalculatedStanding) => ({
                     ...s,
                     gd: s.gf - s.ga,
@@ -371,7 +406,7 @@ export const StandingNode = memo(({
 
             {/* Advancement Handles (Outside the table) */}
             <div className="absolute top-[68px] right-0 bottom-0 pointer-events-none">
-                {Array.from({ length: advancingCount }).map((_, index) => (
+                {displayStandings.map((_, index) => (
                     <div 
                         key={index} 
                         className="relative h-10 w-0 pointer-events-auto"
