@@ -16,7 +16,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-    Loader2, Plus, RefreshCw, Users, X,
+    Loader2, Plus, Users, X, Save,
     Settings, MapPin, ShieldAlert,
     Calendar, Settings2, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
     Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
@@ -60,7 +60,6 @@ import { TournamentSettings } from "@/features/tournaments/settings/tournament-s
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ByeNode } from "./bye-node";
 import { GroupNode } from "./group-node";
 import { MatchNode } from "./match-node";
 import { StandingNode } from "./standing-node";
@@ -79,7 +78,6 @@ import {
 
 const nodeTypes = {
     matchNode: MatchNode,
-    byeNode: ByeNode,
     groupNode: GroupNode,
     standingNode: StandingNode,
     teamListNode: TeamListNode,
@@ -144,7 +142,6 @@ function CanvasInternal({
         onEdgesChange,
         onConnect,
         addMatchNode,
-        addByeNode,
         addGroupNode,
         addStandingNode,
         addTeamListNode,
@@ -410,7 +407,7 @@ function CanvasInternal({
         window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
     }, [activeCategoryId, isDirty, handleSave, categories, hydrate, fetchTeams, setStoreCategoryId, searchParams, pathname, toCategoryId]);
 
-    const [isDragging, setIsDragging] = useState(false);
+    const [_isDragging, setIsDragging] = useState(false);
 
     // Event-based state triggers
     const onNodeDragStart = useCallback(() => {
@@ -425,16 +422,6 @@ function CanvasInternal({
         onConnect(params);
     }, [onConnect]);
 
-    // For data changes and movement, we wait 2 seconds after activity stops
-    useEffect(() => {
-        if (!isDirty || isSaving || readonly || isDragging) return;
-
-        const timer = setTimeout(() => {
-            handleSave();
-        }, 0);
-
-        return () => clearTimeout(timer);
-    }, [isDirty, isSaving, readonly, isDragging, handleSave]);
 
 
 
@@ -617,12 +604,23 @@ function CanvasInternal({
                         </Button>
                     )}
                     <div className="flex items-center gap-2 md:gap-4">
-                        {isSaving ? (
-                            <RefreshCw className="h-4 w-4 text-primary animate-spin" />
-                        ) : isDirty ? (
-                            <RefreshCw className="h-4 w-4 text-chart-5 transition-all duration-300" />
-                        ) : (
-                            <RefreshCw className="h-4 w-4 text-primary transition-all duration-300" />
+                        {!readonly && (
+                            <Button
+                                onClick={() => handleSave(true)}
+                                disabled={!isDirty || isSaving}
+                                variant={isDirty ? "default" : "outline"}
+                                className={cn(
+                                    "h-10 px-4 font-black text-xs tracking-wider transition-all gap-2",
+                                    isDirty && "bg-chart-5 hover:bg-chart-5/90 text-white"
+                                )}
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Save className="h-4 w-4" />
+                                )}
+                                <span>{locale === 'th' ? "บันทึก" : "SAVE"}</span>
+                            </Button>
                         )}
                         {!readonly && (
                             <div className="flex items-center gap-2 md:gap-4">
@@ -1067,7 +1065,6 @@ function CanvasInternal({
                                             </div>
                                             <NodeTools
                                                 onAddMatch={() => addMatchNode(getCenterPos())}
-                                                onAddBye={() => addByeNode(getCenterPos())}
                                                 onAddGroup={() => addGroupNode(getCenterPos())}
                                                 onAddStanding={() => addStandingNode(getCenterPos())}
                                                 onAddTeamList={() => addTeamListNode(teams, getCenterPos())}

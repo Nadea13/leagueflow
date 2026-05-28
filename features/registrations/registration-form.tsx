@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Team } from "@/types/index";
 import { useTranslations } from "next-intl";
-import { Users, AlertCircle, CheckCircle2, X, Upload, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, X, Upload, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -169,13 +169,7 @@ export function RegistrationForm({
 
     if (success) {
         return (
-            <div className="bg-card space-y-2 md:space-y-3 p-4 md:p-6 border">
-                <div className="flex items-center gap-3">
-                    <Users className="h-6 w-6 text-primary" />
-                    <h3 className="text-2xl font-black tracking-tighter text-foreground">
-                        {t("title")}
-                    </h3>
-                </div>
+            <div className="space-y-2 md:space-y-4">
                 <div className="relative overflow-hidden">
                     <EmptyState
                         title={t("success_title")}
@@ -184,10 +178,10 @@ export function RegistrationForm({
                         className="py-12"
                         action={
                             <div className="flex gap-4">
-                                <Button variant="outline" className="font-black tracking-widest text-xs" onClick={() => window.location.reload()}>
+                                <Button variant="outline" onClick={() => window.location.reload()}>
                                     {t("register_another")}
                                 </Button>
-                                <Button className="font-black tracking-widest text-xs" onClick={() => window.location.href = `/manager/tournaments`}>
+                                <Button onClick={() => window.location.href = `/dashboard`}>
                                     {t("go_to_dashboard")}
                                 </Button>
                             </div>
@@ -257,8 +251,8 @@ export function RegistrationForm({
                         {categories && categories.length > 0 && (
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-4 p-2 md:p-4 border rounded-sm">
                                 <h4 className="text-xs font-bold tracking-wider">Tournament Category</h4>
-                                <Select 
-                                    value={tournamentCategoryId || ""} 
+                                <Select
+                                    value={tournamentCategoryId || ""}
                                     onValueChange={(val) => {
                                         const params = new URLSearchParams(searchParams.toString());
                                         params.set("category", val);
@@ -274,8 +268,8 @@ export function RegistrationForm({
                                             const ageName = ageCategoriesData?.category_name || "General";
                                             const gender = cat.gender_type === 'open' ? 'Open'
                                                 : cat.gender_type === 'male' ? 'Male'
-                                                : cat.gender_type === 'female' ? 'Female'
-                                                : 'Mixed';
+                                                    : cat.gender_type === 'female' ? 'Female'
+                                                        : 'Mixed';
                                             const label = `${ageName} (${gender})`;
                                             return (
                                                 <SelectItem key={String(cat.id)} value={String(cat.id)} className="text-sm tracking-tighter">

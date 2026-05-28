@@ -18,13 +18,13 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
     const { teams: storeTeams, deleteNode } = useBracketStore();
 
     // Filter to only show approved/paid teams (null status = legacy team, treat as approved)
-    const paidTeams = storeTeams.filter((team: any) => {
+    const paidTeams = (storeTeams as TournamentTeam[]).filter((team: TournamentTeam) => {
         const ps = team.payment_status;
         const rs = team.registration_status;
         // Legacy teams with no status set — treat as approved
         if (!ps && !rs) return true;
         return String(ps || '').toLowerCase() === 'paid' ||
-               String(rs || '').toLowerCase() === 'approved';
+            String(rs || '').toLowerCase() === 'approved';
     });
 
     return (
@@ -32,7 +32,7 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
             className={cn(
                 "relative w-[280px] border bg-card text-card-foreground transition-all rounded-sm",
                 selected
-                    ? "border-primary ring-2 ring-primary/30"
+                    ? "border-primary ring-primary/30"
                     : "border-border hover:border-primary/50"
             )}
         >
@@ -61,15 +61,16 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
             {/* Teams List */}
             <div className="flex flex-col divide-y divide-border">
                 {paidTeams.length === 0 ? (
-                    <div className="p-3 text-center">
-                        <span className="text-[10px] text-center text-muted-foreground">
-                            No paid teams found
-                        </span>
+                    <div className="p-4 text-center">
+                        <p className="text-[10px] text-center text-muted-foreground">
+                            No teams found
+                        </p>
                     </div>
                 ) : (
                     paidTeams.map((team) => (
                         <div key={team.id} className="group relative flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
                             {team.logo_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={team.logo_url}
                                     alt={team.name}
@@ -96,8 +97,8 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
                                 type="source"
                                 position={Position.Right}
                                 id={`team-${team.id}`}
-                                className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!bg-primary hover:!scale-125 transition-all z-50"
-                                style={{ right: "-16px", top: "50%", transform: "translateY(-50%)" }}
+                                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
                             />
                         </div>
                     ))

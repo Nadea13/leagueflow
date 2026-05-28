@@ -9,6 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
 import { useParams } from "next/navigation";
+
+type MatchItem = {
+    id: string;
+    placeholderA: string;
+    placeholderB: string;
+    match_date?: string;
+    match_time?: string;
+    dbId?: string;
+    matchId?: string;
+};
 import {
     Select,
     SelectContent,
@@ -62,22 +72,16 @@ export function NodeSettings() {
             const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
             if (rankMatch) {
                 const rankIndex = parseInt(rankMatch[1], 10);
-                const rankings = (sourceNode.data as any).rankings as string[] || [];
+                const rankings = (sourceNode.data as { rankings?: string[] }).rankings || [];
                 return rankings[rankIndex] || `${rankIndex + 1}st Place (${sourceNode.data.label})`;
             }
         }
-
-        // Handle ByeNode propagation
-        if (sourceNode.type === 'byeNode') {
-            return (sourceNode.data as any).placeholder as string;
-        }
-
         return null;
     };
 
     return (
-        <aside className="w-[512px] border-l bg-card flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
-            <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
+        <aside className="w-[512px] border-l bg-background flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
+            <div className="p-2 md:p-4 border-b flex items-center justify-between">
                 <Button
                     variant="ghost"
                     size="icon"
@@ -88,9 +92,9 @@ export function NodeSettings() {
                 </Button>
             </div>
 
-            <div className="p-4 space-y-6">
+            <div className="p-2 md:p-4 space-y-2 md:space-y-4">
                 {/* ── Header based on type ── */}
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-sm border">
+                <div className="flex items-center gap-2 md:gap-4">
                     <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-violet-500' :
                         type === 'matchNode' ? 'bg-primary' :
                             type === 'standingNode' ? 'bg-emerald-500' :
@@ -113,15 +117,14 @@ export function NodeSettings() {
                 </div>
 
                 {/* ── Common Settings ── */}
-                <div className="space-y-4">
-                    <div className="space-y-1.5">
-                        <Label className="text-[10px] font-black text-muted-foreground tracking-wider">
+                <div className="space-y-2 md:space-y-4">
+                    <div className="space-y-1">
+                        <Label>
                             Label
                         </Label>
                         <Input
                             value={data.label as string}
                             onChange={(e) => updateNodeData(id, { label: e.target.value })}
-                            className="h-8 text-xs font-bold bg-muted/30 focus-visible:ring-primary"
                         />
                     </div>
 
@@ -207,7 +210,7 @@ export function NodeSettings() {
                         <div className="space-y-4 pt-2 border-t">
                             <h4 className="text-[10px] font-black tracking-widest text-muted-foreground">Matches in Node</h4>
                             <div className="space-y-3">
-                                {((data.matches as any[]) || [])
+                                {((data.matches as MatchItem[]) || [])
                                     .slice()
                                     .sort((a, b) => {
                                         const dateA = a.match_date || "9999-12-31";
@@ -218,23 +221,23 @@ export function NodeSettings() {
                                         return timeA.localeCompare(timeB);
                                     })
                                     .map((match, idx) => {
-                                        const updateMatch = (updates: any) => {
-                                            const originalMatches = [...((data.matches as any[]) || [])];
+                                        const updateMatch = (updates: Partial<MatchItem>) => {
+                                            const originalMatches = [...((data.matches as MatchItem[]) || [])];
                                             const matchIdx = originalMatches.findIndex(m => m.id === match.id);
                                             if (matchIdx !== -1) {
                                                 originalMatches[matchIdx] = { ...originalMatches[matchIdx], ...updates };
                                                 updateNodeData(id, { matches: originalMatches });
                                             }
                                         };
-
+ 
                                         return (
                                             <div key={match.id || idx} className="p-2 bg-muted/30 border rounded-sm space-y-2 relative group">
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-[10px] font-black text-muted-foreground">Match #{idx + 1}</span>
-                                                    {((data.matches as any[]).length > 1) && (
+                                                    {((data.matches as MatchItem[]).length > 1) && (
                                                         <button
                                                             onClick={() => {
-                                                                const originalMatches = [...((data.matches as any[]) || [])];
+                                                                const originalMatches = [...((data.matches as MatchItem[]) || [])];
                                                                 const filtered = originalMatches.filter(m => m.id !== match.id);
                                                                 updateNodeData(id, { matches: filtered });
                                                             }}
@@ -315,14 +318,14 @@ export function NodeSettings() {
                                                     </div>
                                                 </div>
 
-                                                {(match.dbId || match.matchId || (type === "matchNode" && data.matchId && idx === 0)) && (
+                                                {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (
                                                     <Button
                                                         asChild
                                                         variant="outline"
                                                         size="sm"
                                                         className="w-full h-7 text-[9px] font-black tracking-widest gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none"
                                                     >
-                                                        <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || data.matchId}`}>
+                                                        <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
                                                             <ExternalLink className="h-2.5 w-2.5" />
                                                             MATCH CONSOLE
                                                         </Link>
@@ -336,7 +339,7 @@ export function NodeSettings() {
                                     size="sm"
                                     className="w-full h-8 text-[10px] font-black tracking-wider gap-2 border-dashed"
                                     onClick={() => {
-                                        const next = [...((data.matches as any[]) || [])];
+                                        const next = [...((data.matches as MatchItem[]) || [])];
                                         next.push({ id: `m-${Date.now()}-${next.length + 1}`, placeholderA: "TBD", placeholderB: "TBD" });
                                         updateNodeData(id, { matches: next });
                                     }}
@@ -347,19 +350,6 @@ export function NodeSettings() {
                         </div>
                     )}
 
-                    {type === "byeNode" && (
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] font-black text-muted-foreground tracking-wider">
-                                Team Placeholder
-                            </Label>
-                            <Input
-                                value={getResolvedTeam(id, "team-in") || data.placeholder as string}
-                                onChange={(e) => updateNodeData(id, { placeholder: e.target.value })}
-                                disabled={!!getResolvedTeam(id, "team-in")}
-                                className={`h-8 text-xs font-bold bg-muted/30 focus-visible:ring-amber-500 ${getResolvedTeam(id, "team-in") ? "text-violet-600 border-violet-200 opacity-100" : ""}`}
-                            />
-                        </div>
-                    )}
 
                     {type === "teamListNode" && (
                         <div className="space-y-2 md:space-y-3">
@@ -379,7 +369,7 @@ export function NodeSettings() {
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-[10px] font-black tracking-widest text-primary flex items-center gap-2">
                                         <Users className="h-3 w-3" />
-                                        {t("participating_teams") || "Participating Teams"}
+                                        {t("participating_teams")}
                                     </h4>
 
                                     <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -413,7 +403,7 @@ export function NodeSettings() {
                                 </div>
                                 <div className="custom-scrollbar max-h-[400px]">
                                     <Teams
-                                        teams={teams as any}
+                                        teams={teams}
                                         tournamentId={tournamentId}
                                         isPro={true}
                                     />

@@ -313,6 +313,14 @@ export async function getTeam(teamId: string) {
             .from("tournament_teams")
             .select(`
                 *,
+                team:teams (
+                    id,
+                    name,
+                    logo_img,
+                    description,
+                    sport_id,
+                    sports:sport_id(sport_name)
+                ),
                 tournament_categories (
                     tournaments ( * )
                 )
@@ -323,8 +331,13 @@ export async function getTeam(teamId: string) {
 
         if (participation) {
             const flatTournament = (participation.tournament_categories as any)?.tournaments;
+            const teamObj = (Array.isArray(participation.team) ? participation.team[0] : participation.team) as any;
             data = {
                 ...participation,
+                name: participation.name || teamObj?.name || "Unknown Team",
+                logo_url: participation.logo_url || teamObj?.logo_img || null,
+                description: participation.description || teamObj?.description || "",
+                sport: teamObj?.sports?.sport_name?.toLowerCase() || 'football',
                 tournament: flatTournament
             };
             isParticipation = true;
@@ -703,12 +716,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
     .is("deleted_at", null)
     .is("player.deleted_at", null);
 
-    if (participation) {
-        const globalTeamId = participation.team_id;
-        query = query.eq("team_id", globalTeamId);
-    } else {
-        query = query.eq("team_id", teamId);
-    }
+    query = query.eq("team_id", teamId);
 
     const { data, error } = await query;
 
@@ -718,7 +726,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
     }
 
     // Map and filter in memory to ensure accuracy
-    const mappedPlayers: Player[] = (data || [])
+    let mappedPlayers: Player[] = (data || [])
         .map((ps: any) => {
             const p = ps.player;
             const mp = p?.master_player;
@@ -737,6 +745,62 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                 deleted_at: ps.deleted_at || p?.deleted_at || null
             } as any;
         });
+
+    // Auto-clone roster if participation roster is empty
+    if (participation && mappedPlayers.length === 0 && participation.team_id) {
+        const globalTeamId = participation.team_id;
+        const cloneResult = await importRoster(teamId, globalTeamId);
+        
+        if (cloneResult.success) {
+            // Re-fetch players after successful import
+            const freshQuery = await adminSupabase.from("player_sports").select(`
+                id,
+                position,
+                shirt_number,
+                team_id,
+                sport_id,
+                deleted_at,
+                player:player_id!inner (
+                    id,
+                    display_name,
+                    tel,
+                    deleted_at,
+                    master_player:master_id (
+                        id,
+                        first_name,
+                        last_name,
+                        birthday,
+                        tel,
+                        profile_img
+                    )
+                )
+            `)
+            .is("deleted_at", null)
+            .is("player.deleted_at", null)
+            .eq("team_id", teamId);
+
+            if (freshQuery.data) {
+                mappedPlayers = freshQuery.data.map((ps: any) => {
+                    const p = ps.player;
+                    const mp = p?.master_player;
+                    return {
+                        id: p?.id || ps.id,
+                        name: p?.display_name || (mp ? `${mp.first_name} ${mp.last_name}` : ''),
+                        number: ps.shirt_number ? parseInt(ps.shirt_number) : null,
+                        position: ps.position || null,
+                        birth_date: mp?.birthday || null,
+                        photo_url: mp?.profile_img || null,
+                        team_id: teamId,
+                        global_team_id: null,
+                        global_player_id: mp?.id || null,
+                        tel: p?.tel || mp?.tel || null,
+                        created_at: p?.created_at || new Date().toISOString(),
+                        deleted_at: ps.deleted_at || p?.deleted_at || null
+                    } as any;
+                });
+            }
+        }
+    }
 
     return { success: true, data: mappedPlayers };
 }
@@ -962,7 +1026,7 @@ export async function addPlayer(
             .insert({
                 player_id: newPlayer.id,
                 sport_id: sportId,
-                team_id: globalTeamId,
+                team_id: teamId,
                 position: position || null,
                 shirt_number: number || null
             });
@@ -974,6 +1038,7 @@ export async function addPlayer(
     }
 
     revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
     return { success: true };
 }
 
@@ -1029,6 +1094,7 @@ export async function updatePlayer(
     }
 
     revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
     await logActivity('UPDATE_PLAYER', 'player', playerId, { team_id: teamId, ...data });
     return { success: true };
 }
@@ -1054,6 +1120,7 @@ export async function deletePlayer(playerId: string, teamId: string): Promise<Ac
     if (error) return { success: false, error: error.message };
 
     revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
     return { success: true };
 }
 
@@ -1153,7 +1220,7 @@ export async function importRoster(
             return {
                 player_id: np.id,
                 sport_id: targetSportId,
-                team_id: targetGlobalTeamId,
+                team_id: targetTeamId,
                 position: sourceP.position || null,
                 shirt_number: sourceP.number ? String(sourceP.number) : null
             };
@@ -1169,6 +1236,7 @@ export async function importRoster(
     }
 
     revalidatePath(`/manager/my-teams/${targetTeamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${targetTeamId}`);
     return { success: true, message: `Successfully imported ${newPlayers.length} players.` };
 }
 
@@ -1185,19 +1253,11 @@ export async function resetRoster(teamId: string): Promise<ActionResponse> {
     const authorized = await isAuthorizedForTeam(teamId, user.id);
     if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
 
-    // Fetch globalTeamId from teamId (could be participation ID or global team ID)
-    const { data: participationCheck } = await adminSupabase.from("tournament_teams").select("id").eq("id", teamId).single();
-    let globalTeamId = teamId;
-    if (participationCheck) {
-        const { data: part } = await adminSupabase.from("tournament_teams").select("team_id").eq("id", teamId).single();
-        if (part) globalTeamId = part.team_id;
-    }
-
     // Fetch player_ids from player_sports
     const { data: psRecords } = await adminSupabase
         .from("player_sports")
         .select("player_id")
-        .eq("team_id", globalTeamId);
+        .eq("team_id", teamId);
 
     const now = new Date().toISOString();
 
@@ -1205,7 +1265,7 @@ export async function resetRoster(teamId: string): Promise<ActionResponse> {
     const { error: psError } = await adminSupabase
         .from("player_sports")
         .update({ deleted_at: now })
-        .eq("team_id", globalTeamId);
+        .eq("team_id", teamId);
 
     if (psError) return { success: false, error: psError.message };
 
@@ -1220,6 +1280,7 @@ export async function resetRoster(teamId: string): Promise<ActionResponse> {
     }
 
     revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
     await logActivity('RESET_ROSTER', 'team', teamId, { reset_by: user.id });
     return { success: true };
 }
@@ -1237,25 +1298,17 @@ export async function restoreRoster(teamId: string): Promise<ActionResponse> {
     const authorized = await isAuthorizedForTeam(teamId, user.id);
     if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
 
-    // Fetch globalTeamId from teamId (could be participation ID or global team ID)
-    const { data: participationCheck } = await adminSupabase.from("tournament_teams").select("id").eq("id", teamId).single();
-    let globalTeamId = teamId;
-    if (participationCheck) {
-        const { data: part } = await adminSupabase.from("tournament_teams").select("team_id").eq("id", teamId).single();
-        if (part) globalTeamId = part.team_id;
-    }
-
     // Fetch player_ids from player_sports
     const { data: psRecords } = await adminSupabase
         .from("player_sports")
         .select("player_id")
-        .eq("team_id", globalTeamId);
+        .eq("team_id", teamId);
 
     // 1. Update player_sports.deleted_at to null
     const { error: psError } = await adminSupabase
         .from("player_sports")
         .update({ deleted_at: null })
-        .eq("team_id", globalTeamId);
+        .eq("team_id", teamId);
 
     if (psError) return { success: false, error: psError.message };
 
@@ -1270,6 +1323,7 @@ export async function restoreRoster(teamId: string): Promise<ActionResponse> {
     }
 
     revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
     await logActivity('RESTORE_ROSTER', 'team', teamId, { restored_by: user.id });
     return { success: true };
 }
@@ -1281,19 +1335,11 @@ export async function hasSoftDeletedPlayers(teamId: string): Promise<ActionRespo
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
 
-    // Fetch globalTeamId from teamId (could be participation ID or global team ID)
-    const { data: participationCheck } = await adminSupabase.from("tournament_teams").select("id").eq("id", teamId).single();
-    let globalTeamId = teamId;
-    if (participationCheck) {
-        const { data: part } = await adminSupabase.from("tournament_teams").select("team_id").eq("id", teamId).single();
-        if (part) globalTeamId = part.team_id;
-    }
-
     // Check if there are any records in player_sports where deleted_at IS NOT NULL
     const { count, error } = await supabase
         .from("player_sports")
         .select("*", { count: "exact", head: true })
-        .eq("team_id", globalTeamId)
+        .eq("team_id", teamId)
         .not("deleted_at", "is", null);
 
     if (error) {

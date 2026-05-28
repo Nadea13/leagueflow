@@ -105,6 +105,8 @@ export interface TournamentTeam {
     is_roster_locked: boolean;
     managed_by_manager?: boolean;
     sport: SportType;
+    payment_status?: string | null;
+    registration_status?: string | null;
     created_at: string;
 }
 

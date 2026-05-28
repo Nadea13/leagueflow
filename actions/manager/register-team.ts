@@ -271,11 +271,12 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         }
 
         // Insert registration record directly in tournament_teams
-        const { data: registeredTeam, error: regError } = await adminSupabase
+        const { data: _registeredTeam, error: regError } = await adminSupabase
             .from("tournament_teams")
             .insert({
                 tournament_category_id: tournamentCategory.id,
                 team_id: finalTeamId,
+                user_id: user?.id || null,
                 payment_status: 'pending',
                 slip_img: publicUrl,
                 registration_status: 'pending',

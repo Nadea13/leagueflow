@@ -8,7 +8,7 @@ import { MatchNodeData, useBracketStore } from "@/lib/stores/bracket-store";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { Match } from "@/types";
+import { Match, TournamentTeam } from "@/types";
 
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
 
@@ -53,7 +53,7 @@ export const MatchNode = memo(function MatchNode({
     return (
         <div
             className={cn(
-                "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer",
+                "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
                 selected
                     ? "border-primary ring-2 ring-primary/30"
                     : "border-border hover:border-primary/50"
@@ -64,17 +64,20 @@ export const MatchNode = memo(function MatchNode({
                 type="target"
                 position={Position.Top}
                 id="group-in"
-                className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                style={{ top: "-8px" }}
+                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                style={{ top: "-1px" }}
             />
 
             {/* ── Header ── */}
-            <div className="flex justify-between items-center px-3 py-1.5 border-b bg-muted/30">
+            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black tracking-widest text-primary">
+                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                        <span className="text-background text-xs font-bold">VS</span>
+                    </div>
+                    <span className="text-xs font-black tracking-wide text-primary">
                         {matches.length > 1 ? "Round" : "Match"}
                     </span>
-                    <span className="text-[10px] font-bold text-muted-foreground truncate max-w-[120px]">
+                    <span className="text-xs font-black tracking-wide text-muted-foreground">
                         {data.label}
                     </span>
                 </div>
@@ -93,8 +96,10 @@ export const MatchNode = memo(function MatchNode({
             {/* ── Match List ── */}
             <div className="flex flex-col divide-y divide-border">
                 {matches.length === 0 ? (
-                    <div className="px-3 py-4 text-center text-[10px] text-muted-foreground italic">
-                        No matches in this round
+                    <div className="p-4 text-center">
+                        <p className="text-[10px] text-center text-muted-foreground">
+                            No matches in this round
+                        </p>
                     </div>
                 ) : (
                     <div className="space-y-0.5">
@@ -123,7 +128,7 @@ export const MatchNode = memo(function MatchNode({
                                     const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
                                     if (teamIdMatch) {
                                         const teamId = teamIdMatch[1];
-                                        const sourceTeams = (sourceNode.data.teams as any[]) || storeTeams;
+                                        const sourceTeams = (sourceNode.data.teams as TournamentTeam[]) || storeTeams;
                                         const team = sourceTeams.find(t => String(t.id) === String(teamId));
                                         return team?.name || null;
                                     }
@@ -134,18 +139,14 @@ export const MatchNode = memo(function MatchNode({
                                     const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
                                     if (rankMatch) {
                                         const rankIndex = parseInt(rankMatch[1], 10);
-                                        const rankings = (sourceNode.data as any).rankings as string[] || [];
+                                        const rankings = (sourceNode.data as { rankings?: string[] }).rankings || [];
                                         if (rankings[rankIndex]) return rankings[rankIndex];
                                         
                                         const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
                                         return `${rankSuffix} Place (${sourceNode.data.label})`;
                                     }
                                 }
-                                
-                                // Handle ByeNode propagation
-                                if (sourceNode.type === 'byeNode') {
-                                    return (sourceNode.data as any).placeholder as string;
-                                }
+
 
                                 // Handle MatchNode propagation (Winner)
                                 if (sourceNode.type === 'matchNode') {
@@ -178,8 +179,8 @@ export const MatchNode = memo(function MatchNode({
                                         type="target"
                                         position={Position.Left}
                                         id={`slot-a-${index}`}
-                                        className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                                        style={{ top: matches.length > 1 ? "45%" : "25%", left: "-8px" }}
+                                        className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                        style={{ top: matches.length > 1 ? "45%" : "25%", left: "-1px" }}
                                     />
 
                                     {/* Handles for Slot B */}
@@ -187,8 +188,8 @@ export const MatchNode = memo(function MatchNode({
                                         type="target"
                                         position={Position.Left}
                                         id={`slot-b-${index}`}
-                                        className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                                        style={{ top: matches.length > 1 ? "85%" : "75%", left: "-8px" }}
+                                        className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                        style={{ top: matches.length > 1 ? "85%" : "75%", left: "-1px" }}
                                     />
 
                                     {/* Source Handle (Winner) */}
@@ -196,8 +197,8 @@ export const MatchNode = memo(function MatchNode({
                                         type="source"
                                         position={Position.Right}
                                         id={`winner-${index}`}
-                                        className="!w-4 !h-4 !bg-primary !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                                        style={{ top: matches.length > 1 ? "65%" : "50%", right: "-8px" }}
+                                        className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                        style={{ top: matches.length > 1 ? "65%" : "50%", right: "-1px" }}
                                     />
 
                                     <div className="pl-0">

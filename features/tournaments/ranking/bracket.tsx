@@ -10,7 +10,6 @@ import {
     ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { ByeNode } from "@/features/tournaments/builder/bye-node";
 import { GroupNode } from "@/features/tournaments/builder/group-node";
 import { MatchNode } from "@/features/tournaments/builder/match-node";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -22,7 +21,6 @@ import { useTranslations } from "next-intl";
 
 const nodeTypes = {
     matchNode: MatchNode,
-    byeNode: ByeNode,
     groupNode: GroupNode,
 };
 

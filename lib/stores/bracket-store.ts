@@ -9,7 +9,7 @@ import {
     NodeChange,
     EdgeChange,
 } from "@xyflow/react";
-import { BracketCanvasData, Match } from "@/types";
+import { BracketCanvasData, Match, TournamentTeam } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 
 export interface MatchNodeData {
@@ -37,10 +37,10 @@ interface BracketState {
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
     addMatchNode: (position?: { x: number; y: number }) => void;
-    addByeNode: (position?: { x: number; y: number }) => void;
+
     addGroupNode: (position?: { x: number; y: number }) => void;
     addStandingNode: (position?: { x: number; y: number }) => void;
-    addTeamListNode: (teams: any[], position?: { x: number; y: number }) => void;
+    addTeamListNode: (teams: TournamentTeam[], position?: { x: number; y: number }) => void;
     addAnnouncementNode: (tournamentId: string, readonly: boolean, position?: { x: number; y: number }) => void;
     generateRoundRobinMatches: (groupId: string) => void;
     deleteNode: (id: string) => void;
@@ -51,8 +51,8 @@ interface BracketState {
     syncMatches: (matches: Match[]) => void;
     updateNodeData: (id: string, newData: Record<string, unknown>) => void;
     selectNode: (id: string | null) => void;
-    teams: any[];
-    setTeams: (teams: any[]) => void;
+    teams: TournamentTeam[];
+    setTeams: (teams: TournamentTeam[]) => void;
     fetchTeams: (categoryId: string) => Promise<void>;
     activeNodeId: string | null;
     setActiveNodeId: (id: string | null) => void;
@@ -96,11 +96,20 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         }
 
         if (data) {
-            const mappedTeams = (data as any[]).map((t) => ({
+            const mappedTeams = (data as {
+                id: string;
+                team: {
+                    id: string;
+                    name: string;
+                    logo_img: string | null;
+                } | null;
+                name?: string | null;
+                [key: string]: unknown;
+            }[]).map((t) => ({
                 ...t,
                 name: t.team?.name || t.name || "Unknown Team",
                 logo_url: t.team?.logo_img || null,
-            }));
+            })) as unknown as TournamentTeam[];
             set({ teams: mappedTeams });
         }
     },
@@ -149,22 +158,16 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const targetNode = nodes.find(n => n.id === connection.target);
 
         if (!sourceNode || !targetNode) return;
-
-        const isFromGroup = sourceNode.type === 'groupNode';
-        const isFromBye = sourceNode.type === 'byeNode';
-        const isStandingConn = sourceNode.type === 'standingNode' || targetNode.type === 'standingNode';
-        
+                
         // Propagate team from Bye/Group/TeamList to Match slot on connect
         if (targetNode.type === 'matchNode') {
             let teamName = null;
-            if (sourceNode.type === 'byeNode') {
-                teamName = (sourceNode.data.placeholder as string) || "TBD";
-            } else if (sourceNode.type === 'teamListNode') {
+            if (sourceNode.type === 'teamListNode') {
                 const sourceHandle = connection.sourceHandle || '';
                 const teamIdMatch = sourceHandle.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const teams = (sourceNode.data.teams as any[])?.length ? (sourceNode.data.teams as any[]) : get().teams;
+                    const teams = (sourceNode.data.teams as TournamentTeam[])?.length ? (sourceNode.data.teams as TournamentTeam[]) : get().teams;
                     const team = teams.find(t => t.id === teamId);
                     teamName = team?.name || "TBD";
                 }
@@ -269,14 +272,12 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         if (targetNode.type === 'groupNode' && teamInMatch) {
             const index = parseInt(teamInMatch[1], 10);
             let teamName = null;
-            if (sourceNode.type === 'byeNode') {
-                teamName = (sourceNode.data.placeholder as string) || "TBD";
-            } else if (sourceNode.type === 'teamListNode') {
+            if (sourceNode.type === 'teamListNode') {
                 const sourceHandle = connection.sourceHandle || '';
                 const teamIdMatch = sourceHandle.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const teams = (sourceNode.data.teams as any[])?.length ? (sourceNode.data.teams as any[]) : get().teams;
+                    const teams = (sourceNode.data.teams as TournamentTeam[])?.length ? (sourceNode.data.teams as TournamentTeam[]) : get().teams;
                     const team = teams.find(t => t.id === teamId);
                     teamName = team?.name || "TBD";
                 }
@@ -300,37 +301,6 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             }
         }
 
-        // Special handling for Team Source -> ByeNode (left handle)
-        if (targetNode.type === 'byeNode' && connection.targetHandle === 'team-in') {
-            let teamName = null;
-            if (sourceNode.type === 'byeNode') {
-                teamName = (sourceNode.data.placeholder as string) || "TBD";
-            } else if (sourceNode.type === 'teamListNode') {
-                const sourceHandle = connection.sourceHandle || '';
-                const teamIdMatch = sourceHandle.match(/team-(.+)/);
-                if (teamIdMatch) {
-                    const teamId = teamIdMatch[1];
-                    const teams = (sourceNode.data.teams as any[])?.length ? (sourceNode.data.teams as any[]) : get().teams;
-                    const team = teams.find(t => t.id === teamId);
-                    teamName = team?.name || "TBD";
-                }
-            } else if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
-                const sourceHandle = connection.sourceHandle || '';
-                const rankMatch = sourceHandle.match(/rank-(\d+)/);
-                if (rankMatch) {
-                    const rankIndex = parseInt(rankMatch[1], 10);
-                    const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
-                    teamName = `${rankSuffix} Place (${sourceNode.data.label})`;
-                } else {
-                    teamName = "Group Winner";
-                }
-            }
-
-            if (typeof teamName === "string" && teamName !== "TBD") {
-                updateNodeData(targetNode.id, { placeholder: teamName });
-            }
-        }
-
         set((state) => ({
             edges: addEdge(
                 {
@@ -338,13 +308,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     type: "bezier",
                     animated: false,
                     style: { 
-                        stroke: isStandingConn
-                            ? "#10b981" // Emerald for standings
-                            : isFromGroup 
-                                ? "#8b5cf6" 
-                                : isFromBye 
-                                    ? "#fd9a00" 
-                                    : "#00c692", 
+                        stroke: "var(--border)", 
                         strokeWidth: 2,
                     },
                 },
@@ -380,29 +344,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         });
     },
 
-    addByeNode: (position) => {
-        const { nodes } = get();
-        
-        // Auto-position in a grid if no position provided
-        const col = Math.floor(nodes.length / 4);
-        const row = nodes.length % 4;
-        const pos = position ?? { x: col * 320, y: row * 160 + 50 };
 
-        const newNode: Node = {
-            id: `bye-${Date.now()}`,
-            type: "byeNode",
-            position: pos,
-            data: {
-                label: "BYE",
-                placeholder: "TBD",
-            },
-        };
-
-        set({
-            nodes: [...nodes, newNode],
-            isDirty: true,
-        });
-    },
 
     addGroupNode: (position) => {
         const { nodes } = get();
@@ -463,7 +405,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             type: "teamListNode",
             position: pos,
             data: {
-                label: "Participating Teams",
+                label: "Team List",
             },
         };
 
@@ -552,7 +494,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             target: matchNodeId,
             sourceHandle: 'group-matches',
             type: 'bezier',
-            style: { stroke: '#8b5cf6', strokeWidth: 2 }
+            style: { stroke: 'var(--border)', strokeWidth: 2 }
         };
 
         set({
@@ -578,14 +520,20 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         if (!data) return;
         set({
             nodes: data.nodes || [],
-            edges: (data.edges || []).map(edge => ({
-                ...edge,
-                animated: false,
-                style: {
-                    ...edge.style,
-                    strokeDasharray: "none",
-                }
-            })),
+            edges: (data.edges || []).map(edge => {
+                const sourceNode = (data.nodes || []).find(n => n.id === edge.source);
+                const targetNode = (data.nodes || []).find(n => n.id === edge.target);
+                const isGroupToMatch = sourceNode?.type === 'groupNode' && targetNode?.type === 'matchNode';
+                return {
+                    ...edge,
+                    animated: false,
+                    style: {
+                        ...edge.style,
+                        stroke: "var(--border)",
+                        strokeDasharray: isGroupToMatch ? "5,5" : (edge.style?.strokeDasharray || "none"),
+                    }
+                };
+            }),
             nodeCounter: data.nodes?.length || 0,
             isDirty: false,
         });
@@ -666,26 +614,9 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 n.id === id ? { ...n, data: { ...n.data, ...newData } } : n
             );
 
-            // Handle propagation if a 'source' node changed (e.g. ByeNode team changed)
-            const updatedNode = updatedNodes.find(n => n.id === id);
-            if (updatedNode && (updatedNode.type === 'byeNode' || updatedNode.type === 'groupNode')) {
-                const teamName = updatedNode.type === 'byeNode' ? updatedNode.data.placeholder : null;
-                
-                if (teamName) {
-                    state.edges.forEach(edge => {
-                        if (edge.source === id) {
-                            const target = updatedNodes.find(n => n.id === edge.target);
-                            if (target && target.type === 'matchNode') {
-                                if (edge.targetHandle === 'slot-a') {
-                                    target.data = { ...target.data, placeholderA: teamName };
-                                } else if (edge.targetHandle === 'slot-b') {
-                                    target.data = { ...target.data, placeholderB: teamName };
-                                }
-                            }
-                        }
-                    });
-                }
-
+            // Handle propagation if a 'source' node changed
+            const updatedNode = updatedNodes.find((n) => n.id === id);
+            if (updatedNode) {
                 if (updatedNode.type === 'groupNode') {
                     state.edges.forEach(edge => {
                         if (edge.source === id) {

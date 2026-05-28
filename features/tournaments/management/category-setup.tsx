@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 import { Trophy, Settings, Users, ArrowRight } from "lucide-react";
 import { createTournamentCategory } from "@/actions/organizer/dashboard";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,7 +33,7 @@ export function CategorySetup({ tournamentId, ageCategories, tournamentName }: C
     const [genderType, setGenderType] = useState<string>("open");
     const [maxTeams, setMaxTeams] = useState<string>("8");
     const [state, formAction, isPending] = useActionState(
-        async (prevState: ActionResponse, formData: FormData) => {
+        async (_prevState: ActionResponse, _formData: FormData) => {
             if (!ageCategoryId) {
                 return { success: false, error: "Please select an age category" };
             }

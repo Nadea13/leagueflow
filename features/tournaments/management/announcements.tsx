@@ -38,16 +38,16 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export function Announcements({ 
-    tournamentId, 
-    isEditable = true, 
+export function Announcements({
+    tournamentId,
+    isEditable = true,
     isCompact = false,
     defaultAddOpen = false,
     mode = 'both',
     onSuccess
-}: { 
-    tournamentId: string, 
-    isEditable: boolean, 
+}: {
+    tournamentId: string,
+    isEditable: boolean,
     isCompact?: boolean,
     defaultAddOpen?: boolean,
     mode?: 'both' | 'list' | 'form',
@@ -170,16 +170,17 @@ export function Announcements({
         return (
             <div className="space-y-2">
                 {announcements.length === 0 ? (
-                    <div className="py-8 text-center border border-dashed border-border/20">
-                        <Megaphone className="h-4 w-4 text-muted-foreground/30 mx-auto mb-2" />
-                        <p className="text-[10px] text-muted-foreground/50 font-medium">{t("no_announcements")}</p>
+                    <div className="p-4 text-center">
+                        <p className="text-[10px] text-center text-muted-foreground">
+                            {t("no_announcements")}
+                        </p>
                     </div>
                 ) : (
                     announcements.map(ann => (
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-2 border transition-all relative overflow-hidden group/item",
+                                "p-2 transition-all relative overflow-hidden group/item rounded-md",
                                 ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >
@@ -201,13 +202,13 @@ export function Announcements({
                                     </span>
                                     {isEditable && (
                                         <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                            <button 
+                                            <button
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                 className="hover:text-primary transition-colors"
                                             >
                                                 {ann.is_pinned ? <PinOff className="h-2.5 w-2.5" /> : <Pin className="h-2.5 w-2.5" />}
                                             </button>
-                                            <button 
+                                            <button
                                                 onClick={() => setDeleteId(ann.id)}
                                                 className="hover:text-destructive transition-colors"
                                             >
@@ -226,8 +227,8 @@ export function Announcements({
 
     return (
         <div className={cn(
-            "bg-card space-y-2 md:space-y-3",
-            !isCompact && mode === 'both' && "border p-4 md:p-6"
+            "bg-card space-y-2 md:space-y-4",
+            !isCompact && mode === 'both' && "border p-2 md:p-4"
         )}>
             {!isCompact && mode === 'both' && (
                 <div className="flex items-center justify-between relative z-10">
@@ -312,7 +313,7 @@ export function Announcements({
                     className="py-12"
                 />
             ) : (
-                <div className="grid grid-cols-1 gap-2 md:gap-3">
+                <div className="grid grid-cols-1 gap-2 md:gap-4">
                     {announcements.map(ann => (
                         <div
                             key={ann.id}

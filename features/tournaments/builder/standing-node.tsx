@@ -3,11 +3,25 @@
 import React, { memo } from "react";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
-import { Trash2, Trophy, ListOrdered, Loader2 } from "lucide-react";
+import { Trash2, ListOrdered, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Match, TournamentTeam } from "@/types";
+
+interface CalculatedStanding {
+    name: string;
+    mp: number;
+    w: number;
+    d: number;
+    l: number;
+    gf: number;
+    ga: number;
+    gd: number;
+    pts: number;
+    form: string[];
+    nextMatch?: string;
+}
 
 export interface StandingNodeData {
     label: string;
@@ -42,7 +56,7 @@ export const StandingNode = memo(({
     const supabase = createClient();
 
     const [loading, setLoading] = React.useState(true);
-    const [standings, setStandings] = React.useState<any[]>([]);
+    const [standings, setStandings] = React.useState<CalculatedStanding[]>([]);
 
     // Find the source group node if connected
     const sourceEdge = edges.find(e => e.target === id && e.targetHandle === 'in');
@@ -53,8 +67,8 @@ export const StandingNode = memo(({
             return Array.isArray(data.teams) ? data.teams : [];
         }
 
-        const teamCount = (sourceGroupNode.data as any).teamCount || 0;
-        const staticTeams = (sourceGroupNode.data as any).teams || [];
+        const teamCount = (sourceGroupNode.data as { teamCount?: number }).teamCount || 0;
+        const staticTeams = (sourceGroupNode.data as { teams?: string[] }).teams || [];
 
         return Array.from({ length: teamCount }).map((_, index) => {
             const handleId = `team-in-${index}`;
@@ -70,7 +84,7 @@ export const StandingNode = memo(({
                 const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
                 if (teamIdMatch) {
                     const teamId = teamIdMatch[1];
-                    const sTeams = (sNode.data.teams as any[]) || storeTeams;
+                    const sTeams = (sNode.data.teams as TournamentTeam[]) || storeTeams;
                     const team = sTeams.find(t => String(t.id) === String(teamId));
                     return team?.name || "TBD";
                 }
@@ -81,23 +95,18 @@ export const StandingNode = memo(({
                 const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
                 if (rankMatch) {
                     const rankIndex = parseInt(rankMatch[1], 10);
-                    const rankings = (sNode.data as any).rankings as string[] || [];
+                    const rankings = (sNode.data as { rankings?: string[] }).rankings || [];
                     if (rankings[rankIndex]) return rankings[rankIndex];
                     const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
                     return `${rankSuffix} Place (${sNode.data.label})`;
                 }
             }
 
-            // Resolve from ByeNode
-            if (sNode.type === 'byeNode') {
-                return (sNode.data as any).placeholder || "BYE";
-            }
 
             return staticTeams[index] || `Team ${index + 1}`;
         });
-    }, [sourceGroupNode, edges, nodes, data.teams]);
+    }, [sourceGroupNode, edges, nodes, data.teams, storeTeams]);
 
-    const teamCount = data.teamCount || 0;
     const advancingCount = Number(data.advancingCount) || 0;
 
     const teamsJson = JSON.stringify(effectiveTeams);
@@ -126,7 +135,7 @@ export const StandingNode = memo(({
                 dbTeams.forEach(t => teamIdToName.set(t.id, t.name));
 
                 // 3. Initialize stats for all teams in this node
-                const statsMap: Record<string, any> = {};
+                const statsMap: Record<string, CalculatedStanding> = {};
                 effectiveTeams.forEach(name => {
                     statsMap[name] = { 
                         name, 
@@ -172,7 +181,7 @@ export const StandingNode = memo(({
                 });
 
                 // 5. Finalize GD and Sort
-                const result = Object.values(statsMap).map((s: any) => ({
+                const result = Object.values(statsMap).map((s: CalculatedStanding) => ({
                     ...s,
                     gd: s.gf - s.ga,
                     form: s.form.slice(-5) // Last 5 matches
@@ -194,7 +203,7 @@ export const StandingNode = memo(({
         }
 
         fetchAndCalculate();
-    }, [tournamentId, teamsJson, id]); 
+    }, [tournamentId, teamsJson, id, effectiveTeams, supabase, updateNodeData]); 
 
     // Visibility defaults
     const showPlayed = data.showPlayed !== false;
@@ -207,6 +216,22 @@ export const StandingNode = memo(({
     const showPts = data.showPts !== false;
     const showForm = !!data.showForm;
     const showNextMatch = !!data.showNextMatch;
+
+    const displayStandings = React.useMemo(() => {
+        if (standings.length > 0) return standings;
+        return effectiveTeams.map(name => ({
+            name,
+            mp: 0,
+            w: 0,
+            d: 0,
+            l: 0,
+            gf: 0,
+            ga: 0,
+            gd: 0,
+            pts: 0,
+            form: [],
+        })) as CalculatedStanding[];
+    }, [standings, effectiveTeams]);
 
     return (
         <div
@@ -222,8 +247,8 @@ export const StandingNode = memo(({
                 type="target"
                 position={Position.Left}
                 id="in"
-                className="!w-4 !h-4 !bg-emerald-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                style={{ left: "-8px" }}
+                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                style={{ left: "-1px" }}
             />
 
             <div className="flex justify-between items-center p-2 border-b bg-muted/30">
@@ -232,8 +257,11 @@ export const StandingNode = memo(({
                         <ListOrdered className="h-4 w-4 text-background" />
                     </div>
                     <span className="text-xs font-black tracking-wide text-primary">
-                        {data.label || "STANDINGS"}
+                        {data.label}
                     </span>
+                    {loading && effectiveTeams.length > 0 && (
+                        <Loader2 className="h-3 w-3 animate-spin text-emerald-500" />
+                    )}
                 </div>
                 <button
                     type="button"
@@ -269,20 +297,13 @@ export const StandingNode = memo(({
                         {effectiveTeams.length === 0 ? (
                             <tr>
                                 <td colSpan={10} className="py-4 text-center text-muted-foreground">
-                                    Connect to a group node to show standings
-                                </td>
-                            </tr>
-                        ) : loading ? (
-                            <tr>
-                                <td colSpan={10} className="px-3 py-10 text-center">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
-                                        <span className="text-[9px] font-black tracking-widest text-muted-foreground">Calculating Live Data...</span>
-                                    </div>
+                                    <p className="text-[10px] text-center text-muted-foreground">
+                                        Connect to a group node to show standings
+                                    </p>
                                 </td>
                             </tr>
                         ) : (
-                            standings.map((team, index) => {
+                            displayStandings.map((team, index) => {
                                 const teamName = team.name;
                                 const isPromoted = index < advancingCount;
 
@@ -290,8 +311,8 @@ export const StandingNode = memo(({
                                     <tr key={teamName} className="hover:bg-emerald-500/5 transition-colors group/row h-10">
                                         <td className="px-2 py-1.5 relative">
                                             <div className={cn(
-                                                "w-5 h-5 flex items-center justify-center font-black rounded-sm border",
-                                                isPromoted ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600" : "bg-muted/30 border-border text-muted-foreground"
+                                                "w-5 h-5 flex items-center justify-center font-black rounded-full border",
+                                                isPromoted ? "border-border text-muted-foreground" : "bg-muted/30 border-border text-muted-foreground"
                                             )}>
                                                 {index + 1}
                                             </div>
@@ -359,8 +380,8 @@ export const StandingNode = memo(({
                             type="source"
                             position={Position.Right}
                             id={`rank-${index}`}
-                            className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                            style={{ right: "-8px", top: "20px" }}
+                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                            style={{ right: "-1px", top: "20px" }}
                         />
                     </div>
                 ))}

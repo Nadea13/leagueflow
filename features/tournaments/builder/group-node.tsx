@@ -3,10 +3,9 @@
 import React, { memo } from "react";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
-import { Trash2, Users, ChevronRight, X } from "lucide-react";
+import { Trash2, X, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { TournamentTeam } from "@/types";
 
 export interface GroupNodeData {
     label: string;
@@ -26,9 +25,8 @@ export const GroupNode = memo(({
     const edges = useBracketStore((state) => state.edges);
     const nodes = useBracketStore((state) => state.nodes);
     const storeTeams = useBracketStore((state) => state.teams);
-    
+
     const teams = Array.isArray(data.teams) ? data.teams : [];
-    const advancingCount = Math.max(1, Math.min(8, data.advancingCount || 1));
 
     // Resolve live team for a specific slot index
     const getResolvedTeam = (index: number) => {
@@ -44,7 +42,7 @@ export const GroupNode = memo(({
             const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
             if (teamIdMatch) {
                 const teamId = teamIdMatch[1];
-                const sourceTeams = (sourceNode.data.teams as any[]) || storeTeams;
+                const sourceTeams = (sourceNode.data.teams as TournamentTeam[]) || storeTeams;
                 const team = sourceTeams.find(t => String(t.id) === String(teamId));
                 return team?.name || null;
             }
@@ -55,17 +53,12 @@ export const GroupNode = memo(({
             const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
             if (rankMatch) {
                 const rankIndex = parseInt(rankMatch[1], 10);
-                const rankings = (sourceNode.data as any).rankings as string[] || [];
+                const rankings = (sourceNode.data as { rankings?: string[] }).rankings || [];
                 if (rankings[rankIndex]) return rankings[rankIndex];
-                
+
                 const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
                 return `${rankSuffix} Place (${sourceNode.data.label})`;
             }
-        }
-        
-        // Handle ByeNode propagation
-        if (sourceNode.type === 'byeNode') {
-            return (sourceNode.data as any).placeholder as string;
         }
 
         return null;
@@ -74,19 +67,19 @@ export const GroupNode = memo(({
     return (
         <div
             className={cn(
-                "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer",
+                "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
                 selected
-                    ? "border-violet-500 ring-2 ring-violet-500/30"
+                    ? "border-violet-500"
                     : "border-border hover:border-violet-500/50"
             )}
         >
-            <div className="flex justify-between items-center px-3 py-1.5 border-b bg-muted/30">
+            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 bg-violet-500 rounded flex items-center justify-center">
-                        <Users className="h-3 w-3 text-white" />
+                    <div className="w-6 h-6 bg-violet-500 rounded flex items-center justify-center">
+                        <LayoutGrid className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-[11px] font-black tracking-widest text-violet-500">
-                        {data.label || "GROUP STAGE"}
+                    <span className="text-xs font-black tracking-wide text-violet-500">
+                        {data.label}
                     </span>
                 </div>
                 <button
@@ -103,82 +96,90 @@ export const GroupNode = memo(({
 
             {/* Config inputs moved to sidebar */}
 
-            <div className="flex flex-col border-t divide-y divide-border bg-muted/5">
-                {Array.from({ length: Math.max(0, data.teamCount || 0) }).map((_, index) => {
-                    const liveTeam = getResolvedTeam(index);
-                    const teamName = liveTeam || (typeof teams[index] === "string" ? teams[index] : "TBD");
-                    const isResolved = !!liveTeam;
+            <div className="flex flex-col divide-y divide-border bg-muted/5">
+                {Math.max(0, data.teamCount || 0) === 0 ? (
+                    <div className="p-4 text-center">
+                        <p className="text-[10px] text-center text-muted-foreground">
+                            Configure team count in sidebar
+                        </p>
+                    </div>
+                ) : (
+                    Array.from({ length: Math.max(0, data.teamCount || 0) }).map((_, index) => {
+                        const liveTeam = getResolvedTeam(index);
+                        const teamName = liveTeam || (typeof teams[index] === "string" ? teams[index] : "TBD");
+                        const isResolved = !!liveTeam;
 
-                    return (
-                        <div
-                            key={index}
-                            className="flex items-center gap-2 px-4 py-3 hover:bg-violet-500/5 transition-colors group/slot cursor-default relative"
-                            onDragOver={(event) => {
-                                event.preventDefault();
-                                event.dataTransfer.dropEffect = "move";
-                            }}
-                            onDrop={(event) => {
-                                event.preventDefault();
-                                const team = event.dataTransfer.getData("application/reactflow-team");
-                                if (!team) {
-                                    return;
-                                }
+                        return (
+                            <div
+                                key={index}
+                                className="flex items-center gap-2 px-4 py-3 hover:bg-violet-500/5 transition-colors group/slot cursor-default relative"
+                                onDragOver={(event) => {
+                                    event.preventDefault();
+                                    event.dataTransfer.dropEffect = "move";
+                                }}
+                                onDrop={(event) => {
+                                    event.preventDefault();
+                                    const team = event.dataTransfer.getData("application/reactflow-team");
+                                    if (!team) {
+                                        return;
+                                    }
 
-                                const nextTeams = [...teams];
-                                while (nextTeams.length <= index) nextTeams.push("TBD");
-                                nextTeams[index] = team;
-                                updateNodeData(id, { teams: nextTeams });
-                            }}
-                        >
-                            <Handle
-                                type="target"
-                                position={Position.Left}
-                                id={`team-in-${index}`}
-                                className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50"
-                                style={{ left: "-8px" }}
-                            />
-                            <div className="w-5 h-5 border flex items-center justify-center bg-muted/50 group-hover/slot:border-violet-500/50 group-hover/slot:bg-violet-500/10 transition-colors text-muted-foreground group-hover/slot:text-violet-500">
-                                <span className="text-[10px] font-black">{index + 1}</span>
-                            </div>
-                            <span
-                                className={cn(
-                                    "text-[11px] font-black tracking-tight truncate flex-1",
-                                    teamName === "TBD" ? "text-muted-foreground/50 italic" : "text-foreground"
-                                )}
+                                    const nextTeams = [...teams];
+                                    while (nextTeams.length <= index) nextTeams.push("TBD");
+                                    nextTeams[index] = team;
+                                    updateNodeData(id, { teams: nextTeams });
+                                }}
                             >
-                                {teamName}
-                            </span>
-                            {teamName !== "TBD" && !isResolved && (
-                                <button
-                                    onClick={(event) => {
-                                        event.stopPropagation();
-                                        const nextTeams = [...teams];
-                                        nextTeams[index] = "TBD";
-                                        updateNodeData(id, { teams: nextTeams });
-                                    }}
-                                    className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/slot:opacity-100"
+                                <Handle
+                                    type="target"
+                                    position={Position.Left}
+                                    id={`team-in-${index}`}
+                                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-violet-500 transition-all z-50"
+                                    style={{ left: "-1px" }}
+                                />
+                                <div className="w-5 h-5 border flex items-center justify-center bg-muted/50 group-hover/slot:border-violet-500/50 group-hover/slot:bg-violet-500/10 transition-colors text-muted-foreground group-hover/slot:text-violet-500">
+                                    <span className="text-[10px] font-black">{index + 1}</span>
+                                </div>
+                                <span
+                                    className={cn(
+                                        "text-[11px] font-black tracking-tight truncate flex-1",
+                                        teamName === "TBD" ? "text-muted-foreground/50 italic" : "text-foreground"
+                                    )}
                                 >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            )}
-                        </div>
-                    );
-                })}
+                                    {teamName}
+                                </span>
+                                {teamName !== "TBD" && !isResolved && (
+                                    <button
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            const nextTeams = [...teams];
+                                            nextTeams[index] = "TBD";
+                                            updateNodeData(id, { teams: nextTeams });
+                                        }}
+                                        className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/slot:opacity-100"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })
+                )}
             </div>
 
             {/* Bottom handles for Standing and Matches */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-8 translate-y-[8px]">
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-8 translate-y-[1px]">
                 <Handle
                     type="source"
                     position={Position.Bottom}
                     id="standing"
-                    className="!w-4 !h-4 !bg-emerald-500 !border-none !rounded-full hover:!scale-125 transition-all z-50 !static"
+                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-emerald transition-all z-50 !static"
                 />
                 <Handle
                     type="source"
                     position={Position.Bottom}
                     id="group-matches"
-                    className="!w-4 !h-4 !bg-violet-500 !border-none !rounded-full hover:!scale-125 transition-all z-50 !static"
+                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-violet-500 transition-all z-50 !static"
                 />
             </div>
         </div>

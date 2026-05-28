@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Handle, Position, NodeProps } from "@xyflow/react";
+import { NodeProps } from "@xyflow/react";
 import { Megaphone, Trash2 } from "lucide-react";
 import { Announcements } from "@/features/tournaments/management/announcements";
 import { useBracketStore } from "@/lib/stores/bracket-store";
@@ -41,7 +41,7 @@ export const AnnouncementNode = memo(({ id, data, selected }: NodeProps) => {
             </div>
 
             {/* Content */}
-            <div className="p-4 max-h-[400px] overflow-y-auto custom-scrollbar bg-background/30">
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar bg-background/30">
                 <Announcements
                     tournamentId={tournamentId}
                     isEditable={!readonly}

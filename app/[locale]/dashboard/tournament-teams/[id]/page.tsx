@@ -3,7 +3,7 @@ import { getTeam, getPlayers } from "@/actions/manager/team";
 import { SquadManagement } from "@/features/teams/squad-management";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function TeamDetailPage({
+export default async function TournamentTeamDetailPage({
     params,
 }: {
     params: Promise<{ id: string; locale: string }>;

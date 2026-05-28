@@ -322,6 +322,7 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
     tournament_name?: string;
     role: string;
     status: 'pending' | 'accepted' | 'rejected';
+    created_at: string;
 }>>> {
     const supabase = await createClient();
 
@@ -337,6 +338,7 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
             tournament_id,
             role,
             status,
+            created_at,
             tournaments (
                 name
             )
@@ -355,8 +357,121 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
         tournament_id: item.tournament_id,
         tournament_name: (item.tournaments as unknown as { name: string } | null)?.name,
         role: item.role,
-        status: item.status as 'pending' | 'accepted' | 'rejected'
+        status: item.status as 'pending' | 'accepted' | 'rejected',
+        created_at: item.created_at,
     }));
 
     return { success: true, data: invites };
+}
+
+/**
+ * Get all team registrations for user-owned teams.
+ */
+export async function getUserRegistrations(): Promise<ActionResponse<Array<{
+    id: string;
+    team_id: string;
+    team_name: string;
+    tournament_name: string;
+    registration_status: 'pending' | 'approved' | 'rejected';
+    payment_status: 'pending' | 'paid' | 'waived' | 'failed';
+    created_at: string;
+}>>> {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: true, data: [] };
+    }
+
+    // 1. Get user's teams
+    const { data: userTeams, error: teamsError } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("user_id", user.id)
+        .is("deleted_at", null);
+
+    if (teamsError || !userTeams || userTeams.length === 0) {
+        return { success: true, data: [] };
+    }
+
+    const teamIds = userTeams.map(t => t.id);
+
+    // 2. Get registrations for these teams
+    const { data: regData, error: regError } = await supabase
+        .from("tournament_teams")
+        .select(`
+            id,
+            team_id,
+            registration_status,
+            payment_status,
+            created_at,
+            team:teams (
+                name
+            ),
+            tournament_categories (
+                gender_type,
+                age_categories (
+                    category_name
+                ),
+                tournaments (
+                    name
+                )
+            )
+        `)
+        .in("team_id", teamIds)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+    if (regError) {
+        console.error("Error fetching user registrations:", regError);
+        return { success: false, error: regError.message };
+    }
+
+    interface RegistrationRow {
+        id: string;
+        team_id: string;
+        registration_status: string;
+        payment_status: string;
+        created_at: string;
+        team: { name: string } | null | Array<{ name: string }>;
+        tournament_categories: {
+            gender_type?: string;
+            age_categories?: { category_name: string } | null | Array<{ category_name: string }>;
+            tournaments: { name: string } | null | Array<{ name: string }>;
+        } | null | Array<{
+            gender_type?: string;
+            age_categories?: { category_name: string } | null | Array<{ category_name: string }>;
+            tournaments: { name: string } | null | Array<{ name: string }>;
+        }>;
+    }
+
+    const registrations = (regData as unknown as RegistrationRow[] || []).map((item) => {
+        const team = Array.isArray(item.team) ? item.team[0] : item.team;
+        const teamName = team?.name || "Unknown Team";
+        const category = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
+        const tournament = category?.tournaments;
+        const rawTournamentName = (Array.isArray(tournament) ? tournament[0] : tournament)?.name || "Unknown Tournament";
+
+        const ageCategoryObj = Array.isArray(category?.age_categories) ? category.age_categories[0] : category?.age_categories;
+        const ageName = ageCategoryObj?.category_name;
+        const gender = category?.gender_type;
+
+        let tournamentName = rawTournamentName;
+        if (ageName) {
+            const formattedGender = gender ? ` - ${gender.charAt(0).toUpperCase() + gender.slice(1)}` : "";
+            tournamentName = `${rawTournamentName} ${ageName}${formattedGender}`;
+        }
+
+        return {
+            id: item.id,
+            team_id: item.team_id,
+            team_name: teamName,
+            tournament_name: tournamentName,
+            registration_status: item.registration_status as 'pending' | 'approved' | 'rejected',
+            payment_status: item.payment_status as 'pending' | 'paid' | 'waived' | 'failed',
+            created_at: item.created_at,
+        };
+    });
+
+    return { success: true, data: registrations };
 }
