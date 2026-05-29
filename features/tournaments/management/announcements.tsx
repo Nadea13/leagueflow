@@ -136,7 +136,7 @@ export function Announcements({
                             value={title}
                             onChange={e => setTitle(e.target.value)}
                             placeholder={t("title_placeholder")}
-                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 h-11 font-bold"
+                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 h-11 font-bold"
                             required
                         />
                     </div>
@@ -147,14 +147,14 @@ export function Announcements({
                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                             placeholder={t("content_placeholder")}
                             rows={5}
-                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
+                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 font-medium text-sm min-h-[120px]"
                         />
                     </div>
                     <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
                         <Button
                             type="submit"
                             size="sm"
-                            className="text-[10px] font-black tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
+                            className="text-[10px] font-black tracking-widest bg-node-4 text-background hover:bg-node-4/90 shadow-[0_0_15px_rgba(222,185,34,0.2)] h-10 px-8"
                             disabled={isSaving || !title.trim()}
                         >
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
@@ -181,12 +181,12 @@ export function Announcements({
                             key={ann.id}
                             className={cn(
                                 "p-2 transition-all relative overflow-hidden group/item rounded",
-                                ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-node-4/[0.03] border-node-4/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >
                             <div className="space-y-1.5">
                                 <div className="flex items-center gap-2">
-                                    {ann.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
+                                    {ann.is_pinned && <Pin className="h-3 w-3 text-node-4 shrink-0" />}
                                     <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
                                         {ann.title}
                                     </h4>
@@ -204,7 +204,7 @@ export function Announcements({
                                         <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                                className="hover:text-primary transition-colors"
+                                                className="hover:text-node-4 transition-colors"
                                             >
                                                 {ann.is_pinned ? <PinOff className="h-2.5 w-2.5" /> : <Pin className="h-2.5 w-2.5" />}
                                             </button>
@@ -234,7 +234,7 @@ export function Announcements({
                 <div className="flex items-center justify-between relative z-10">
                     <div className="space-y-1">
                         <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                            <Megaphone className="h-5 w-5 text-primary" />
+                            <Megaphone className="h-5 w-5 text-node-4" />
                             {t("title")}
                         </h3>
                     </div>
@@ -243,7 +243,7 @@ export function Announcements({
                             <DialogTrigger asChild>
                                 <Button
                                     variant="default"
-                                    className="h-8"
+                                    className="h-8 bg-node-4 text-background hover:bg-node-4/90"
                                 >
                                     <Plus className="h-4 w-4" />
                                     {t("news")}
@@ -252,7 +252,7 @@ export function Announcements({
                             <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
                                 <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
                                     <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
-                                        <Megaphone className="h-6 w-6 text-primary" />
+                                        <Megaphone className="h-6 w-6 text-node-4" />
                                         {t("news")}
                                     </DialogTitle>
                                 </DialogHeader>
@@ -263,7 +263,7 @@ export function Announcements({
                                             value={title}
                                             onChange={e => setTitle(e.target.value)}
                                             placeholder={t("title_placeholder")}
-                                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 h-11 font-bold"
+                                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 h-11 font-bold"
                                             required
                                         />
                                     </div>
@@ -274,7 +274,7 @@ export function Announcements({
                                             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                                             placeholder={t("content_placeholder")}
                                             rows={5}
-                                            className="bg-background/50 border-border/20 focus-visible:ring-primary/30 font-medium text-sm min-h-[120px]"
+                                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 font-medium text-sm min-h-[120px]"
                                         />
                                     </div>
                                     <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
@@ -282,7 +282,6 @@ export function Announcements({
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="text-[10px] font-black tracking-widest hover:bg-foreground/5 h-10 px-6"
                                             onClick={() => setIsDialogOpen(false)}
                                         >
                                             {tCommon("cancel")}
@@ -290,7 +289,6 @@ export function Announcements({
                                         <Button
                                             type="submit"
                                             size="sm"
-                                            className="text-[10px] font-black tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(0,196,154,0.2)] h-10 px-8"
                                             disabled={isSaving || !title.trim()}
                                         >
                                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
@@ -319,7 +317,7 @@ export function Announcements({
                             key={ann.id}
                             className={cn(
                                 "p-2 md:p-3 border transition-all relative overflow-hidden group/item",
-                                ann.is_pinned ? "bg-primary/[0.03] border-primary/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-node-4/[0.03] border-node-4/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
                             )}
                         >
                             <div className="flex items-start justify-between gap-2 md:gap-3 relative z-10">
@@ -327,10 +325,10 @@ export function Announcements({
                                     <div className="flex items-center gap-3">
                                         {ann.is_pinned && (
                                             <span className="rotate-315">
-                                                <Pin className="h-4 w-4 text-primary" />
+                                                <Pin className="h-4 w-4 text-node-4" />
                                             </span>
                                         )}
-                                        <h4 className="font-black tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-primary transition-colors line-clamp-1">
+                                        <h4 className="font-black tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-node-4 transition-colors line-clamp-1">
                                             {ann.title}
                                         </h4>
                                     </div>
@@ -355,7 +353,7 @@ export function Announcements({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 border border-border/20 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
+                                                className="h-8 w-8 border border-border/20 hover:bg-node-4/10 hover:text-node-4 hover:border-node-4/30 transition-all"
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                 title={ann.is_pinned ? t("unpin") : t("pin")}
                                             >
@@ -387,12 +385,12 @@ export function Announcements({
                                                     >
                                                         {ann.is_pinned ? (
                                                             <>
-                                                                <PinOff className="h-3.5 w-3.5 mr-2" />
+                                                                <PinOff className="h-4 w-4 mr-2" />
                                                                 {t("unpin")}
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <Pin className="h-3.5 w-3.5 mr-2" />
+                                                                <Pin className="h-4 w-4 mr-2" />
                                                                 {t("pin")}
                                                             </>
                                                         )}

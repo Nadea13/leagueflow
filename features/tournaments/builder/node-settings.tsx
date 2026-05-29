@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Trophy, Zap, Trash2, ListOrdered, ExternalLink } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
@@ -47,7 +47,7 @@ export function NodeSettings() {
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const t = useTranslations("Team");
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (activeCategoryId && selectedNode?.type === "teamListNode") {
             fetchTeams(activeCategoryId);
         }
@@ -95,16 +95,16 @@ export function NodeSettings() {
             <div className="p-2 md:p-4 space-y-2 md:space-y-4">
                 {/* ── Header based on type ── */}
                 <div className="flex items-center gap-2 md:gap-4">
-                    <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-violet-500' :
-                        type === 'matchNode' ? 'bg-primary' :
-                            type === 'standingNode' ? 'bg-emerald-500' :
-                                type === 'teamListNode' ? 'bg-blue-500' : 'bg-amber-500'
+                    <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5' :
+                        type === 'matchNode' ? 'bg-node-2' :
+                            type === 'standingNode' ? 'bg-node-1' :
+                                type === 'teamListNode' ? 'bg-node-3' : 'bg-node-4'
                         }`}>
-                        {type === 'groupNode' ? <Users className="h-4 w-4 text-white" /> :
-                            type === 'matchNode' ? <Trophy className="h-4 w-4 text-white" /> :
-                                type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-white" /> :
-                                    type === 'teamListNode' ? <Users className="h-4 w-4 text-white" /> :
-                                        <Zap className="h-4 w-4 text-white" />}
+                        {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
+                            type === 'matchNode' ? <span className="text-sm font-bold text-foreground select-none">VS</span> :
+                                type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-foreground" /> :
+                                    type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
+                                        <Megaphone className="h-4 w-4 text-foreground" />}
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -231,7 +231,7 @@ export function NodeSettings() {
                                         };
 
                                         return (
-                                            <div key={match.id || idx} className="p-2 bg-muted/30 border rounded-sm space-y-2 relative group">
+                                            <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-[10px] font-black text-muted-foreground">Match #{idx + 1}</span>
                                                     {((data.matches as MatchItem[]).length > 1) && (
@@ -241,9 +241,9 @@ export function NodeSettings() {
                                                                 const filtered = originalMatches.filter(m => m.id !== match.id);
                                                                 updateNodeData(id, { matches: filtered });
                                                             }}
-                                                            className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                                                            className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
                                                         >
-                                                            <Trash2 className="h-3 w-3" />
+                                                            <X className="h-4 w-4" />
                                                         </button>
                                                     )}
                                                 </div>
@@ -254,7 +254,7 @@ export function NodeSettings() {
                                                             value={match.placeholderA}
                                                             onValueChange={(val) => updateMatch({ placeholderA: val })}
                                                         >
-                                                            <SelectTrigger className={`text-[10px] bg-background w-full ${getResolvedTeam(id, `slot-a-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                            <SelectTrigger className={`bg-card w-full ${getResolvedTeam(id, `slot-a-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
                                                                 <SelectValue placeholder="Select Team" />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -276,7 +276,7 @@ export function NodeSettings() {
                                                             value={match.placeholderB}
                                                             onValueChange={(val) => updateMatch({ placeholderB: val })}
                                                         >
-                                                            <SelectTrigger className={`text-[10px] bg-background w-full ${getResolvedTeam(id, `slot-b-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                            <SelectTrigger className={`bg-card w-full ${getResolvedTeam(id, `slot-b-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
                                                                 <SelectValue placeholder="Select Team" />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -300,6 +300,7 @@ export function NodeSettings() {
                                                             type="date"
                                                             value={match.match_date || ""}
                                                             onChange={(e) => updateMatch({ match_date: e.target.value })}
+                                                            className="bg-card"
                                                         />
                                                     </div>
                                                     <div className="space-y-1">
@@ -308,6 +309,7 @@ export function NodeSettings() {
                                                             type="time"
                                                             value={match.match_time || ""}
                                                             onChange={(e) => updateMatch({ match_time: e.target.value })}
+                                                            className="bg-card"
                                                         />
                                                     </div>
                                                 </div>
@@ -315,7 +317,7 @@ export function NodeSettings() {
                                                 {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (
                                                     <Button
                                                         asChild
-                                                        variant="outline"
+                                                        variant="default"
                                                         size="sm"
                                                         className="w-full"
                                                     >

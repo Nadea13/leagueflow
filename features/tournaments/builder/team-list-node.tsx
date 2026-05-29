@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from "@/lib/utils";
-import { Users, Trash2 } from "lucide-react";
+import { Users } from "lucide-react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { TournamentTeam } from "@/types";
 
@@ -14,9 +14,10 @@ interface TeamListNodeProps {
     selected?: boolean;
 }
 
-export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => {
-    const { teams: storeTeams, deleteNode } = useBracketStore();
+export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
+    const { teams: storeTeams } = useBracketStore();
 
+    // Filter to only show approved/paid teams (null status = legacy team, treat as approved)
     // Filter to only show approved/paid teams (null status = legacy team, treat as approved)
     const paidTeams = (storeTeams as TournamentTeam[]).filter((team: TournamentTeam) => {
         const ps = team.payment_status;
@@ -27,35 +28,33 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
             String(rs || '').toLowerCase() === 'approved';
     });
 
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length > 1) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
     return (
         <div
             className={cn(
                 "relative w-[280px] border bg-card text-card-foreground transition-all rounded-sm",
                 selected
-                    ? "border-primary ring-primary/30"
-                    : "border-border hover:border-primary/50"
+                    ? "border-node-3 ring-node-3/30"
+                    : "border-border hover:border-node-3/50"
             )}
         >
             {/* Header */}
-            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                    <div className="w-6 h-6 bg-node-3 rounded flex items-center justify-center">
                         <Users className="h-4 w-4 text-background" />
                     </div>
-                    <span className="text-xs font-black tracking-wide text-primary">
+                    <span className="text-xs font-black tracking-wide text-node-3">
                         {data.label}
                     </span>
                 </div>
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNode(id);
-                    }}
-                    className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                    <Trash2 className="h-3 w-3" />
-                </button>
             </div>
 
             {/* Teams List */}
@@ -68,21 +67,23 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
                     </div>
                 ) : (
                     paidTeams.map((team) => (
-                        <div key={team.id} className="group relative flex items-center gap-3 p-2 hover:bg-muted/30 transition-colors">
+                        <div key={team.id} className="group relative flex items-center gap-3 p-2 hover:bg-node-3/5 transition-colors">
                             {team.logo_url ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                     src={team.logo_url}
                                     alt={team.name}
-                                    className="h-6 w-6 rounded-full object-cover border border-border"
+                                    className="h-6 w-6 rounded-full object-cover border border-border transition-colors group-hover:border-node-3/50"
                                 />
                             ) : (
-                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
-                                    <Users className="h-3 w-3 text-muted-foreground" />
+                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border transition-colors group-hover:border-node-3/50 group-hover:bg-node-3/10 overflow-hidden">
+                                    <span className="text-[9px] font-black text-muted-foreground group-hover:text-node-3 transition-colors">
+                                        {getInitials(team.name)}
+                                    </span>
                                 </div>
                             )}
-                            <div className="flex flex-col overflow-hidden">
-                                <span className="text-xs font-black tracking-tight truncate">
+                            <div className="flex flex-col overflow-hidden flex-1">
+                                <span className="text-[10px] font-bold tracking-tight truncate text-foreground">
                                     {team.name}
                                 </span>
                                 {team.group_name && (
@@ -97,7 +98,7 @@ export const TeamListNode = memo(({ id, data, selected }: TeamListNodeProps) => 
                                 type="source"
                                 position={Position.Right}
                                 id={`team-${team.id}`}
-                                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-3 transition-all z-50"
                                 style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
                             />
                         </div>

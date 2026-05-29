@@ -3,7 +3,7 @@
 import React, { memo } from "react";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
-import { Trash2, ListOrdered, Loader2 } from "lucide-react";
+import { ListOrdered, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -48,7 +48,6 @@ export const StandingNode = memo(({
 }: NodeProps<Node<StandingNodeData>>) => {
     const edges = useBracketStore((state) => state.edges);
     const nodes = useBracketStore((state) => state.nodes);
-    const deleteNode = useBracketStore((state) => state.deleteNode);
     const updateNodeData = useBracketStore((state) => state.updateNodeData);
     const storeTeams = useBracketStore((state) => state.teams);
     const params = useParams();
@@ -106,7 +105,7 @@ export const StandingNode = memo(({
             return staticTeams[index] || `Team ${index + 1}`;
         });
 
-        return resolved.filter(name => name && name !== "TBD");
+        return resolved.filter(name => name);
     }, [sourceGroupNode, edges, nodes, data.teams, storeTeams]);
 
     const advancingCount = Number(data.advancingCount) || 0;
@@ -171,8 +170,9 @@ export const StandingNode = memo(({
 
                 // 4. Initialize stats for all teams in this node
                 const statsMap: Record<string, CalculatedStanding> = {};
-                effectiveTeams.forEach(name => {
-                    statsMap[name] = { 
+                effectiveTeams.forEach((name, index) => {
+                    const key = name === "TBD" ? `TBD-${index}` : name;
+                    statsMap[key] = { 
                         name, 
                         mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, form: [] 
                     };
@@ -273,8 +273,8 @@ export const StandingNode = memo(({
             className={cn(
                 "relative border bg-card text-card-foreground transition-all cursor-pointer min-w-[320px] rounded-sm",
                 selected
-                    ? "border-emerald-500 ring-2 ring-emerald-500/30"
-                    : "border-border hover:border-emerald-500/50"
+                    ? "border-node-1 ring-2 ring-node-1/30"
+                    : "border-border hover:border-node-1/50"
             )}
         >
             {/* Input Handle for connection to Group */}
@@ -282,32 +282,22 @@ export const StandingNode = memo(({
                 type="target"
                 position={Position.Left}
                 id="in"
-                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-1 transition-all z-50"
                 style={{ left: "-1px" }}
             />
 
-            <div className="flex justify-between items-center p-2 border-b bg-muted/30">
+            <div className="flex items-center p-2 border-b bg-muted/30">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                    <div className="w-6 h-6 bg-node-1 rounded flex items-center justify-center">
                         <ListOrdered className="h-4 w-4 text-background" />
                     </div>
-                    <span className="text-xs font-black tracking-wide text-primary">
+                    <span className="text-xs font-black tracking-wide text-node-1">
                         {data.label}
                     </span>
                     {loading && effectiveTeams.length > 0 && (
-                        <Loader2 className="h-3 w-3 animate-spin text-emerald-500" />
+                        <Loader2 className="h-3 w-3 animate-spin text-node-1" />
                     )}
                 </div>
-                <button
-                    type="button"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        deleteNode(id);
-                    }}
-                    className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                    <Trash2 className="h-3 w-3" />
-                </button>
             </div>
 
             <div className="overflow-x-auto custom-scrollbar">
@@ -343,10 +333,10 @@ export const StandingNode = memo(({
                                 const isPromoted = index < advancingCount;
 
                                 return (
-                                    <tr key={teamName} className="hover:bg-emerald-500/5 transition-colors group/row h-10">
+                                    <tr key={`${teamName}-${index}`} className="hover:bg-node-1/5 transition-colors group/row h-10">
                                         <td className="p-2 relative">
                                             <div className={cn(
-                                                "w-6 h-6 flex items-center justify-center font-black rounded-full border",
+                                                "w-6 h-6 flex items-center justify-center font-black rounded-full border transition-colors group-hover/row:border-node-1/50 group-hover/row:bg-node-1/10 group-hover/row:text-node-1",
                                                 isPromoted ? "border-border text-muted-foreground" : "bg-muted/30 border-border text-muted-foreground"
                                             )}>
                                                 {index + 1}
@@ -356,7 +346,7 @@ export const StandingNode = memo(({
                                             <div className="flex items-center gap-1.5">
                                                 <span className={cn(
                                                     "font-bold truncate max-w-[120px]",
-                                                    teamName === "TBD" ? "text-muted-foreground/30 font-normal" : "text-foreground"
+                                                    teamName === "TBD" ? "text-muted-foreground font-bold" : "text-foreground"
                                                 )}>
                                                     {teamName}
                                                 </span>
@@ -380,7 +370,7 @@ export const StandingNode = memo(({
                                                                 key={i} 
                                                                 className={cn(
                                                                     "w-2.5 h-2.5 rounded-full flex items-center justify-center text-[6px] font-black text-white transition-all",
-                                                                    res === 'W' ? "bg-emerald-500" : 
+                                                                    res === 'W' ? "bg-node-1" : 
                                                                     res === 'D' ? "bg-amber-500" : 
                                                                     res === 'L' ? "bg-destructive" : 
                                                                     "bg-muted-foreground/20 border border-muted-foreground/10"
@@ -392,7 +382,7 @@ export const StandingNode = memo(({
                                             </td>
                                         )}
                                         {showNextMatch && (
-                                            <td className="px-2 py-1.5 text-[9px] font-bold text-primary truncate max-w-[80px]">
+                                            <td className="px-2 py-1.5 text-[10px] font-bold text-node-1 truncate max-w-[80px]">
                                                 {team.nextMatch ? `${team.nextMatch}` : <span className="text-muted-foreground/40 font-normal">None</span>}
                                             </td>
                                         )}
@@ -415,7 +405,7 @@ export const StandingNode = memo(({
                             type="source"
                             position={Position.Right}
                             id={`rank-${index}`}
-                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-1 transition-all z-50"
                             style={{ right: "-1px", top: "20px" }}
                         />
                     </div>

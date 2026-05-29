@@ -529,8 +529,8 @@ function CanvasInternal({
                             className={cn(
                                 "transition-all w-10",
                                 isLocked
-                                    ? "bg-amber-500 text-white"
-                                    : "text-amber-500"
+                                    ? "bg-warning text-white"
+                                    : "text-warning"
                             )}
                         >
                             {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
@@ -595,6 +595,37 @@ function CanvasInternal({
                                 )}
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        <Select
+                            value={currentStatus}
+                            onValueChange={handleStatusChange}
+                            disabled={isStatusUpdating}
+                        >
+                            <SelectTrigger
+                                className={cn(
+                                    "",
+                                    currentStatus === 'ongoing' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" :
+                                        currentStatus === 'finished' ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
+                                            currentStatus === 'upcoming' ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
+                                                "bg-muted/50 text-muted-foreground border-muted-foreground/20 hover:bg-muted"
+                                )}
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border/50 text-[10px] font-black tracking-widest">
+                                <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
+                                    {locale === 'th' ? "แบบร่าง" : "DRAFT"}
+                                </SelectItem>
+                                <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
+                                    {locale === 'th' ? "เร็วๆ นี้" : "UPCOMING"}
+                                </SelectItem>
+                                <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
+                                    {locale === 'th' ? "กำลังดำเนินการ" : "ONGOING"}
+                                </SelectItem>
+                                <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
+                                    {locale === 'th' ? "เสร็จสิ้น" : "FINISHED"}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
@@ -625,44 +656,13 @@ function CanvasInternal({
                         )}
                         {!readonly && (
                             <div className="flex items-center gap-1 md:gap-2">
-                                <Select
-                                    value={currentStatus}
-                                    onValueChange={handleStatusChange}
-                                    disabled={isStatusUpdating}
-                                >
-                                    <SelectTrigger
-                                        className={cn(
-                                            "",
-                                            currentStatus === 'ongoing' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" :
-                                                currentStatus === 'finished' ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
-                                                    currentStatus === 'upcoming' ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
-                                                        "bg-muted/50 text-muted-foreground border-muted-foreground/20 hover:bg-muted"
-                                        )}
-                                    >
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-card border-border/50 text-[10px] font-black tracking-widest">
-                                        <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
-                                            {locale === 'th' ? "แบบร่าง" : "DRAFT"}
-                                        </SelectItem>
-                                        <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                            {locale === 'th' ? "เร็วๆ นี้" : "UPCOMING"}
-                                        </SelectItem>
-                                        <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                            {locale === 'th' ? "กำลังดำเนินการ" : "ONGOING"}
-                                        </SelectItem>
-                                        <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
-                                            {locale === 'th' ? "เสร็จสิ้น" : "FINISHED"}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
                                     <DialogTrigger asChild>
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="text-amber-500 transition-all"
+                                            className="text-node-4 transition-all"
                                         >
                                             <Megaphone className="h-4 w-4" />
                                         </Button>
@@ -690,7 +690,7 @@ function CanvasInternal({
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="text-primary transition-all"
+                                            className="text-foreground transition-all"
                                         >
                                             <Share2 className="h-4 w-4" />
                                         </Button>
@@ -751,7 +751,7 @@ function CanvasInternal({
                                         "transition-all w-10",
                                         activeSidebar === 'schedule'
                                             ? "bg-primary"
-                                            : "text-primary"
+                                            : "text-foreground"
                                     )}
                                 >
                                     <Calendar className="h-4 w-4" />
@@ -764,7 +764,7 @@ function CanvasInternal({
                                         "transition-all w-10",
                                         activeSidebar === 'settings'
                                             ? "bg-primary"
-                                            : "text-primary"
+                                            : "text-foreground"
                                     )}
                                 >
                                     <Settings className="h-4 w-4" />

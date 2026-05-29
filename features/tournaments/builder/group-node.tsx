@@ -3,7 +3,7 @@
 import React, { memo } from "react";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
-import { Trash2, X, LayoutGrid } from "lucide-react";
+import { X, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TournamentTeam } from "@/types";
 
@@ -20,7 +20,6 @@ export const GroupNode = memo(({
     data,
     selected,
 }: NodeProps<Node<GroupNodeData>>) => {
-    const deleteNode = useBracketStore((state) => state.deleteNode);
     const updateNodeData = useBracketStore((state) => state.updateNodeData);
     const edges = useBracketStore((state) => state.edges);
     const nodes = useBracketStore((state) => state.nodes);
@@ -69,29 +68,19 @@ export const GroupNode = memo(({
             className={cn(
                 "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
                 selected
-                    ? "border-violet-500"
-                    : "border-border hover:border-violet-500/50"
+                    ? "border-node-5"
+                    : "border-border hover:border-node-5/50"
             )}
         >
-            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-violet-500 rounded flex items-center justify-center">
+                    <div className="w-6 h-6 bg-node-5 rounded flex items-center justify-center">
                         <LayoutGrid className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-xs font-black tracking-wide text-violet-500">
+                    <span className="text-xs font-black tracking-wide text-node-5">
                         {data.label}
                     </span>
                 </div>
-                <button
-                    type="button"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        deleteNode(id);
-                    }}
-                    className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                    <Trash2 className="h-3 w-3" />
-                </button>
             </div>
 
             {/* Config inputs moved to sidebar */}
@@ -112,7 +101,7 @@ export const GroupNode = memo(({
                         return (
                             <div
                                 key={index}
-                                className="flex items-center gap-2 p-2 hover:bg-violet-500/5 transition-colors group/slot cursor-default relative"
+                                className="flex items-center gap-2 p-2 hover:bg-node-5/5 transition-colors group/slot cursor-default relative"
                                 onDragOver={(event) => {
                                     event.preventDefault();
                                     event.dataTransfer.dropEffect = "move";
@@ -134,16 +123,16 @@ export const GroupNode = memo(({
                                     type="target"
                                     position={Position.Left}
                                     id={`team-in-${index}`}
-                                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-violet-500 transition-all z-50"
+                                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50"
                                     style={{ left: "-1px" }}
                                 />
-                                <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-violet-500/50 group-hover/slot:bg-violet-500/10 transition-colors text-muted-foreground group-hover/slot:text-violet-500">
+                                <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-5/50 group-hover/slot:bg-node-5/10 transition-colors text-muted-foreground group-hover/slot:text-node-5">
                                     <span className="text-[10px] font-black">{index + 1}</span>
                                 </div>
                                 <span
                                     className={cn(
-                                        "text-[11px] font-black tracking-tight truncate flex-1",
-                                        teamName === "TBD" ? "text-muted-foreground/50 italic" : "text-foreground"
+                                        "text-[10px] font-bold tracking-tight truncate flex-1",
+                                        teamName === "TBD" ? "text-muted-foreground" : "text-foreground"
                                     )}
                                 >
                                     {teamName}
@@ -179,7 +168,7 @@ export const GroupNode = memo(({
                     type="source"
                     position={Position.Bottom}
                     id="group-matches"
-                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-violet-500 transition-all z-50 !static"
+                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50 !static"
                 />
             </div>
         </div>

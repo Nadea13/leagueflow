@@ -94,12 +94,12 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
 
-  /* Data Visualization */
+  /* Node */
   --node-1: oklch(0.646 0.222 41.116);
-  --node-2: oklch(0.6 0.118 184.704);
-  --node-3: oklch(0.398 0.07 227.392);
+  --node-2: oklch(0.695 0.118 184.704);
+  --node-3: oklch(0.495 0.183 231.081);
   --node-4: oklch(0.828 0.189 84.429);
-  --node-5: oklch(0.769 0.188 70.08);
+  --node-5: oklch(0.426 0.316 324.596);
 
   /* Navigation Sidebar */
   --sidebar: oklch(0.985 0 0);
@@ -141,12 +141,12 @@
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
 
-  /* Data Visualization */
-  --node-1: oklch(0.488 0.243 264.376);
-  --node-2: oklch(0.696 0.17 162.48);
-  --node-3: oklch(0.769 0.188 70.08);
-  --node-4: oklch(0.627 0.265 303.9);
-  --node-5: oklch(0.645 0.246 16.439);
+  /* Node */
+  --node-1: oklch(0.62 0.18 41.116);
+  --node-2: oklch(0.68 0.11 184.704);
+  --node-3: oklch(0.6 0.15 231.081);
+  --node-4: oklch(0.78 0.14 84.429);
+  --node-5: oklch(0.55 0.22 324.596);
 
   /* Navigation Sidebar */
   --sidebar: oklch(0.205 0 0);
@@ -189,12 +189,12 @@
     --input: oklch(0.922 0 0);
     --ring: oklch(0.708 0 0);
 
-    /* Data Visualization */
+    /* Node */
     --node-1: oklch(0.646 0.222 41.116);
-    --node-2: oklch(0.6 0.118 184.704);
-    --node-3: oklch(0.398 0.07 227.392);
+    --node-2: oklch(0.695 0.118 184.704);
+    --node-3: oklch(0.495 0.183 231.081);
     --node-4: oklch(0.828 0.189 84.429);
-    --node-5: oklch(0.769 0.188 70.08);
+    --node-5: oklch(0.426 0.316 324.596);
 
     /* Navigation Sidebar */
     --sidebar: oklch(0.985 0 0);
@@ -290,27 +290,57 @@
   @apply mb-2 md:mb-3;
 }
 
-.prose strong, .prose b {
+.prose strong,
+.prose b {
   @apply font-bold text-foreground;
 }
 
-.prose em, .prose i {
+.prose em,
+.prose i {
   @apply italic;
 }
 
-.prose h1, .prose h2, .prose h3 {
+.prose h1,
+.prose h2,
+.prose h3 {
   @apply font-black tracking-tighter text-foreground mt-2 md:mt-3 mb-2 md:mb-3;
 }
 
-.prose h1 { @apply text-2xl; }
-.prose h2 { @apply text-xl; }
-.prose h3 { @apply text-lg; }
-.prose .ql-align-center { text-align: center; }
-.prose .ql-align-right { text-align: right; }
-.prose .ql-align-justify { text-align: justify; }
-.prose .ql-indent-1 { padding-left: 2rem; }
-.prose .ql-indent-2 { padding-left: 4rem; }
-.prose .ql-indent-3 { padding-left: 6rem; }
+.prose h1 {
+  @apply text-2xl;
+}
+
+.prose h2 {
+  @apply text-xl;
+}
+
+.prose h3 {
+  @apply text-lg;
+}
+
+.prose .ql-align-center {
+  text-align: center;
+}
+
+.prose .ql-align-right {
+  text-align: right;
+}
+
+.prose .ql-align-justify {
+  text-align: justify;
+}
+
+.prose .ql-indent-1 {
+  padding-left: 2rem;
+}
+
+.prose .ql-indent-2 {
+  padding-left: 4rem;
+}
+
+.prose .ql-indent-3 {
+  padding-left: 6rem;
+}
 
 @layer base {
   * {

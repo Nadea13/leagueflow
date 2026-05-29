@@ -117,10 +117,10 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     onNodesChange: (changes) => {
         set((state) => {
             const nextNodes = applyNodeChanges(changes, state.nodes);
-            
-            const hasRealChange = changes.some(c => 
-                c.type === 'position' || 
-                c.type === 'remove' || 
+
+            const hasRealChange = changes.some(c =>
+                c.type === 'position' ||
+                c.type === 'remove' ||
                 c.type === 'add' ||
                 (c.type === 'dimensions' && c.dimensions)
             );
@@ -140,7 +140,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         set((state) => {
             const nextEdges = applyEdgeChanges(changes, state.edges);
             const hasRealChange = changes.some(c => c.type === 'remove' || c.type === 'add');
-            
+
             if (hasRealChange) {
                 console.log("Real Edge Change Detected:", changes.map(c => c.type));
             }
@@ -158,7 +158,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const targetNode = nodes.find(n => n.id === connection.target);
 
         if (!sourceNode || !targetNode) return;
-                
+
         // Propagate team from Bye/Group/TeamList to Match slot on connect
         if (targetNode.type === 'matchNode') {
             let teamName = null;
@@ -186,12 +186,12 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             if (teamName && teamName !== "TBD") {
                 const targetHandle = connection.targetHandle || '';
                 const matchIndexMatch = targetHandle.match(/slot-(a|b)-(\d+)/);
-                
+
                 if (matchIndexMatch) {
                     const [_, slot, indexStr] = matchIndexMatch;
                     const index = parseInt(indexStr, 10);
                     const matches = Array.isArray(targetNode.data.matches) ? [...targetNode.data.matches] : [];
-                    
+
                     if (matches[index]) {
                         matches[index] = {
                             ...matches[index],
@@ -212,7 +212,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const standingNode = sourceNode.type === 'standingNode' ? sourceNode : targetNode.type === 'standingNode' ? targetNode : null;
 
         if (groupNode && standingNode) {
-            updateNodeData(standingNode.id, { 
+            updateNodeData(standingNode.id, {
                 sourceGroupId: groupNode.id,
                 teamCount: groupNode.data.teamCount,
                 teams: groupNode.data.teams,
@@ -224,11 +224,11 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         if (targetNode.type === 'matchNode' && connection.targetHandle === 'group-in') {
             if (sourceNode.type === 'groupNode') {
                 // Sync teams to the CURRENT node instead of creating a new one
-                
+
                 // Balanced Round Robin Algorithm (Circle Method)
                 const teamCount = (sourceNode.data.teamCount as number) || 0;
                 const teams = (sourceNode.data.teams as string[]) || [];
-                
+
                 const pairings = [];
                 if (teamCount >= 2) {
                     let n = teamCount;
@@ -236,7 +236,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     if (isOdd) n++;
 
                     const indices = Array.from({ length: n }).map((_, i) => i);
-                    
+
                     for (let r = 0; r < n - 1; r++) {
                         for (let i = 0; i < n / 2; i++) {
                             const a = indices[i];
@@ -258,9 +258,9 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     }
                 }
 
-                updateNodeData(targetNode.id, { 
+                updateNodeData(targetNode.id, {
                     label: `Matches: ${sourceNode.data.label}`,
-                    matches: pairings 
+                    matches: pairings
                 });
             } else {
                 return; // Only allow GroupNode to connect to group-in
@@ -307,9 +307,10 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     ...connection,
                     type: "bezier",
                     animated: false,
-                    style: { 
-                        stroke: "var(--border)", 
+                    style: {
+                        stroke: "var(--muted-foreground)",
                         strokeWidth: 2,
+                        opacity: 1,
                     },
                 },
                 state.edges
@@ -348,7 +349,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
     addGroupNode: (position) => {
         const { nodes } = get();
-        
+
         const col = Math.floor(nodes.length / 4);
         const row = nodes.length % 4;
         const pos = position ?? { x: col * 320, y: row * 160 + 100 };
@@ -372,7 +373,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
     addStandingNode: (position) => {
         const { nodes } = get();
-        
+
         const col = Math.floor(nodes.length / 4);
         const row = nodes.length % 4;
         const pos = position ?? { x: col * 320, y: row * 160 + 150 };
@@ -395,7 +396,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
     addTeamListNode: (teams, position) => {
         const { nodes } = get();
-        
+
         const col = Math.floor(nodes.length / 4);
         const row = nodes.length % 4;
         const pos = position ?? { x: col * 320, y: row * 160 + 200 };
@@ -414,7 +415,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             isDirty: true,
         });
     },
-    
+
     addAnnouncementNode: (tournamentId, readonly, position) => {
         const { nodes } = get();
         const col = Math.floor(nodes.length / 4);
@@ -445,7 +446,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const teamCount = (groupNode.data.teamCount as number) || 0;
         const teams = (groupNode.data.teams as string[]) || [];
         const label = groupNode.data.label as string;
-        
+
         // Balanced Round Robin Algorithm (Circle Method)
         const pairings = [];
         if (teamCount >= 2) {
@@ -454,7 +455,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             if (isOdd) n++;
 
             const indices = Array.from({ length: n }).map((_, i) => i);
-            
+
             for (let r = 0; r < n - 1; r++) {
                 for (let i = 0; i < n / 2; i++) {
                     const a = indices[i];
@@ -494,7 +495,11 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             target: matchNodeId,
             sourceHandle: 'group-matches',
             type: 'bezier',
-            style: { stroke: 'var(--border)', strokeWidth: 2 }
+            style: {
+                stroke: 'var(--muted-foreground)',
+                strokeWidth: 2,
+                opacity: 1,
+            }
         };
 
         set({
@@ -529,8 +534,9 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     animated: false,
                     style: {
                         ...edge.style,
-                        stroke: "var(--border)",
+                        stroke: "var(--muted-foreground)",
                         strokeDasharray: isGroupToMatch ? "5,5" : (edge.style?.strokeDasharray || "none"),
+                        opacity: 1,
                     }
                 };
             }),
@@ -568,7 +574,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 currentCounter++;
                 const col = Math.floor((nodes.length + newNodes.length) / 4);
                 const row = (nodes.length + newNodes.length) % 4;
-                
+
                 newNodes.push({
                     id: `match-${m.id}-${Date.now()}`,
                     type: "matchNode",
@@ -622,8 +628,8 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                         if (edge.source === id) {
                             const target = updatedNodes.find(n => n.id === edge.target);
                             if (target && target.type === 'standingNode') {
-                                target.data = { 
-                                    ...target.data, 
+                                target.data = {
+                                    ...target.data,
                                     teamCount: updatedNode.data.teamCount,
                                     teams: updatedNode.data.teams,
                                     label: `Standings: ${updatedNode.data.label}`

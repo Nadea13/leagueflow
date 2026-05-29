@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { cn } from "@/lib/utils";
-import { Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { MatchNodeData, useBracketStore } from "@/lib/stores/bracket-store";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -17,7 +17,6 @@ export const MatchNode = memo(function MatchNode({
     data,
     selected,
 }: NodeProps<MatchNodeType>) {
-    const deleteNode = useBracketStore((s) => s.deleteNode);
     const updateNodeData = useBracketStore((s) => s.updateNodeData);
     const edges = useBracketStore((s) => s.edges);
     const nodes = useBracketStore((s) => s.nodes);
@@ -55,8 +54,8 @@ export const MatchNode = memo(function MatchNode({
             className={cn(
                 "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
                 selected
-                    ? "border-primary ring-2 ring-primary/30"
-                    : "border-border hover:border-primary/50"
+                    ? "border-node-2 ring-2 ring-node-2/30"
+                    : "border-border hover:border-node-2/50"
             )}
         >
             {/* Top Target Handle for Group Connection */}
@@ -64,33 +63,23 @@ export const MatchNode = memo(function MatchNode({
                 type="target"
                 position={Position.Top}
                 id="group-in"
-                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
                 style={{ top: "-1px" }}
             />
 
             {/* ── Header ── */}
-            <div className="flex justify-between items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                    <div className="w-6 h-6 bg-node-2 rounded flex items-center justify-center">
                         <span className="text-background text-xs font-bold">VS</span>
                     </div>
-                    <span className="text-xs font-black tracking-wide text-primary">
+                    <span className="text-xs font-black tracking-wide text-node-2">
                         {matches.length > 1 ? "Round" : "Match"}
                     </span>
                     <span className="text-xs font-black tracking-wide text-muted-foreground">
                         {data.label}
                     </span>
                 </div>
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNode(id);
-                    }}
-                    className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                    <Trash2 className="h-3 w-3" />
-                </button>
             </div>
 
             {/* ── Match List ── */}
@@ -184,7 +173,7 @@ export const MatchNode = memo(function MatchNode({
                                     {(matches.length > 1 || matchDate || matchTime) && (
                                         <div className="px-2 flex items-center justify-between gap-2 mt-1">
                                             {matches.length > 1 ? (
-                                                <span className="text-[10px] font-black text-primary/60 tracking-tighter">
+                                                <span className="text-[10px] font-black text-node-2/60 tracking-tighter">
                                                     Match #{index + 1}
                                                 </span>
                                             ) : (
@@ -206,7 +195,7 @@ export const MatchNode = memo(function MatchNode({
                                             type="target"
                                             position={Position.Left}
                                             id={`slot-a-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
                                             style={{ top: matches.length > 1 ? "45%" : "25%", left: "-1px" }}
                                         />
                                     )}
@@ -217,7 +206,7 @@ export const MatchNode = memo(function MatchNode({
                                             type="target"
                                             position={Position.Left}
                                             id={`slot-b-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
                                             style={{ top: matches.length > 1 ? "85%" : "75%", left: "-1px" }}
                                         />
                                     )}
@@ -228,7 +217,7 @@ export const MatchNode = memo(function MatchNode({
                                             type="source"
                                             position={Position.Right}
                                             id={`winner-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
                                             style={{ top: matches.length > 1 ? "45%" : "35%", right: "-1px" }}
                                         />
                                     )}
@@ -239,7 +228,7 @@ export const MatchNode = memo(function MatchNode({
                                             type="source"
                                             position={Position.Right}
                                             id={`loser-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50"
+                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
                                             style={{ top: matches.length > 1 ? "75%" : "65%", right: "-1px" }}
                                         />
                                     )}
@@ -332,7 +321,7 @@ function SlotRow({
 
     return (
         <div 
-            className="flex items-center gap-2 p-2 transition-colors hover:bg-primary/5 group/slot cursor-default"
+            className="flex items-center gap-2 p-2 transition-colors hover:bg-node-2/5 group/slot cursor-default"
             onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
@@ -345,7 +334,7 @@ function SlotRow({
                 }
             }}
         >
-            <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-primary/50 group-hover/slot:bg-primary/10 transition-colors overflow-hidden">
+            <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-2/50 group-hover/slot:bg-node-2/10 transition-colors overflow-hidden">
                 {team?.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -354,7 +343,7 @@ function SlotRow({
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-primary">
+                    <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-node-2">
                         {team ? getInitials(team.name) : (position === "top" ? "H" : "A")}
                     </span>
                 )}
