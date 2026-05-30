@@ -396,7 +396,7 @@ export const StandingNode = memo(({
 
             {/* Advancement Handles (Outside the table) */}
             <div className="absolute top-[68px] right-0 bottom-0 pointer-events-none">
-                {displayStandings.map((_, index) => (
+                {displayStandings.slice(0, advancingCount).map((_, index) => (
                     <div 
                         key={index} 
                         className="relative h-10 w-0 pointer-events-auto"

@@ -18,8 +18,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
 
 
     const formatTeamName = (name: string | undefined) => {
-        if (!name) return "";
-        return name.length > 8 ? `${name.substring(0, 8).trim()}...` : name;
+        return name || "";
     };
 
     return (

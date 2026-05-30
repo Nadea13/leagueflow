@@ -247,10 +247,12 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
                             // Balance Home/Away: alternate based on round and position
                             const isHome = (i + r) % 2 === 0;
+                            const teamA = teams[isHome ? a : b];
+                            const teamB = teams[isHome ? b : a];
                             pairings.push({
                                 id: `m-${Date.now()}-${r}-${i}`,
-                                placeholderA: teams[isHome ? a : b] || `Team ${(isHome ? a : b) + 1}`,
-                                placeholderB: teams[isHome ? b : a] || `Team ${(isHome ? b : a) + 1}`
+                                placeholderA: (!teamA || teamA === "TBD") ? `Team ${(isHome ? a : b) + 1}` : teamA,
+                                placeholderB: (!teamB || teamB === "TBD") ? `Team ${(isHome ? b : a) + 1}` : teamB
                             });
                         }
                         // Rotate indices (keep first fixed)
@@ -355,7 +357,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const pos = position ?? { x: col * 320, y: row * 160 + 100 };
 
         const newNode: Node = {
-            id: `group-${Date.now()}`,
+            id: `group-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: "groupNode",
             position: pos,
             data: {
@@ -379,7 +381,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const pos = position ?? { x: col * 320, y: row * 160 + 150 };
 
         const newNode: Node = {
-            id: `standing-${Date.now()}`,
+            id: `standing-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: "standingNode",
             position: pos,
             data: {
@@ -402,7 +404,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const pos = position ?? { x: col * 320, y: row * 160 + 200 };
 
         const newNode: Node = {
-            id: `team-list-${Date.now()}`,
+            id: `team-list-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: "teamListNode",
             position: pos,
             data: {
@@ -423,7 +425,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         const pos = position ?? { x: col * 320, y: row * 160 + 250 };
 
         const newNode: Node = {
-            id: `announcement-${Date.now()}`,
+            id: `announcement-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             type: "announcementNode",
             position: pos,
             data: {
@@ -464,10 +466,12 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     if (isOdd && (a === n - 1 || b === n - 1)) continue;
 
                     const isHome = (i + r) % 2 === 0;
+                    const teamA = teams[isHome ? a : b];
+                    const teamB = teams[isHome ? b : a];
                     pairings.push({
                         id: `m-${Date.now()}-${r}-${i}`,
-                        placeholderA: teams[isHome ? a : b] || `Team ${(isHome ? a : b) + 1}`,
-                        placeholderB: teams[isHome ? b : a] || `Team ${(isHome ? b : a) + 1}`
+                        placeholderA: (!teamA || teamA === "TBD") ? `Team ${(isHome ? a : b) + 1}` : teamA,
+                        placeholderB: (!teamB || teamB === "TBD") ? `Team ${(isHome ? b : a) + 1}` : teamB
                     });
                 }
                 indices.splice(1, 0, indices.pop()!);

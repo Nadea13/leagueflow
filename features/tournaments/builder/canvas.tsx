@@ -550,7 +550,7 @@ function CanvasInternal({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-64 bg-card shadow-2xl rounded-sm">
-                                <DropdownMenuLabel className="text-xs font-black tracking-widest opacity-60">
+                                <DropdownMenuLabel className="text-xs font-bold tracking-wider">
                                     {locale === 'th' ? "ประเภทการแข่งขัน" : "Tournament Categories"}
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator className="border-border/10" />
@@ -613,13 +613,13 @@ function CanvasInternal({
                             </SelectTrigger>
                             <SelectContent className="bg-card border-border/50 text-[10px] font-black tracking-widest">
                                 <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "แบบร่าง" : "DRAFT"}
+                                    {locale === 'th' ? "แบบร่าง" : "Draft"}
                                 </SelectItem>
                                 <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "เร็วๆ นี้" : "UPCOMING"}
+                                    {locale === 'th' ? "เร็วๆ นี้" : "Upcoming"}
                                 </SelectItem>
                                 <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "กำลังดำเนินการ" : "ONGOING"}
+                                    {locale === 'th' ? "กำลังดำเนินการ" : "Ongoing"}
                                 </SelectItem>
                                 <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
                                     {locale === 'th' ? "เสร็จสิ้น" : "FINISHED"}

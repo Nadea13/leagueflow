@@ -75,7 +75,7 @@ export const GroupNode = memo(({
             <div className="flex items-center p-2 border-b bg-muted/50">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-node-5 rounded flex items-center justify-center">
-                        <LayoutGrid className="h-4 w-4 text-white" />
+                        <LayoutGrid className="h-4 w-4 text-background" />
                     </div>
                     <span className="text-xs font-black tracking-wide text-node-5">
                         {data.label}

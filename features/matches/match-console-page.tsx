@@ -33,7 +33,7 @@ import { Link } from "@/i18n/routing";
 import { Match, Player, EventType, MatchEvent, PenaltyShot } from "@/types";
 
 // Components & Hooks
-import { MatchControls } from "./console/match-controls";
+import { MatchTimeControl } from "./console/match-time-control";
 import { Scoreboard } from "./console/scoreboard";
 import { EventTimeline } from "./console/event-timeline";
 import { MatchEventDialog } from "./console/match-event-dialog";
@@ -128,8 +128,19 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const isHomeTeam = (id: string) => id === match.home_team_id || id === match.home_team?.id;
     const isAwayTeam = (id: string) => id === match.away_team_id || id === match.away_team?.id;
 
-    const homeScore = match.status === 'finished' ? (match.home_score ?? 0) : events.filter((e: MatchEvent) => e.team_id && isHomeTeam(e.team_id) && e.event_type === 'goal').length;
-    const awayScore = match.status === 'finished' ? (match.away_score ?? 0) : events.filter((e: MatchEvent) => e.team_id && isAwayTeam(e.team_id) && e.event_type === 'goal').length;
+    const getScoreValue = (score: unknown): number => {
+        if (!score) return 0;
+        if (typeof score === 'object' && score !== null && 'total' in score) {
+            return Number((score as Record<string, unknown>).total) || 0;
+        }
+        return Number(score) || 0;
+    };
+
+    const dbHomeScore = getScoreValue(match.home_score);
+    const dbAwayScore = getScoreValue(match.away_score);
+
+    const homeScore = match.status === 'finished' ? dbHomeScore : events.filter((e: MatchEvent) => e.team_id && isHomeTeam(e.team_id) && e.event_type === 'goal').length;
+    const awayScore = match.status === 'finished' ? dbAwayScore : events.filter((e: MatchEvent) => e.team_id && isAwayTeam(e.team_id) && e.event_type === 'goal').length;
     const allPlayers = [...homePlayers, ...awayPlayers];
 
     // --- Score Sync to DB (for MatchCard) ---
@@ -137,13 +148,13 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         if (readOnly || match.status === 'finished') return;
         
         // Only sync if scores differ from DB values
-        if (homeScore !== (match.home_score ?? 0) || awayScore !== (match.away_score ?? 0)) {
+        if (homeScore !== dbHomeScore || awayScore !== dbAwayScore) {
             const syncScore = setTimeout(() => {
                 updateMatch(match.id, { home_score: homeScore, away_score: awayScore }, tournamentId);
             }, 500); 
             return () => clearTimeout(syncScore);
         }
-    }, [homeScore, awayScore, match.home_score, match.away_score, match.id, tournamentId, readOnly, match.status]);
+    }, [homeScore, awayScore, dbHomeScore, dbAwayScore, match.id, tournamentId, readOnly, match.status]);
 
     // --- Timer Sync to DB (for MatchCard) ---
     useEffect(() => {
@@ -152,7 +163,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const currentMinute = Math.floor(time / 60) + 1;
         
         // Only sync if minute changed and it's different from DB
-        if (currentMinute !== match.current_minute) {
+        if (currentMinute !== Number(match.current_minute)) {
             const syncTimer = setTimeout(() => {
                 updateMatch(match.id, { current_minute: currentMinute }, tournamentId);
             }, 1000); // Small delay to avoid hammering DB if time jumps
@@ -413,7 +424,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             {/* Top Navigation Bar */}
             {readOnly && (
                 <nav className="border-b fixed top-0 border-slate-200 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
-                    <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+                    <div className="px-4 h-16 flex items-center justify-between">
                         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
                             <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M85.4616 21.9501C86.0436 21.9471 86.6256 21.9441 87.2253 21.941C94.6778 21.9214 101.867 22.4122 109.212 23.8001C108.078 25.1269 106.944 26.4529 105.805 27.7751C104.953 28.7693 104.105 29.7682 103.268 30.7751C95.053 40.4796 85.8612 49.0996 75.6116 56.6001C75.0985 56.9801 74.5855 57.3601 74.0569 57.7517C62.719 66.1146 50.7349 73.3682 38.3116 80.0001C37.7382 80.3066 37.1648 80.6131 36.5741 80.9288C32.6149 83.0001 32.6149 83.0001 30.8116 83.0001C30.5549 81.8516 30.3068 80.7011 30.0616 79.5501C29.9223 78.9097 29.7831 78.2693 29.6397 77.6095C28.1595 68.5881 28.3166 59.5618 28.3616 50.4501C28.3656 49.0256 28.3692 47.6012 28.3725 46.1767C28.3812 42.7178 28.395 39.259 28.4116 35.8001C43.3259 28.6069 43.3259 28.6069 49.5616 26.7501C50.1967 26.5597 50.8319 26.3693 51.4864 26.1732C53.3888 25.6225 55.296 25.1029 57.2116 24.6001C58.021 24.3849 58.021 24.3849 58.8467 24.1654C67.5959 21.9748 76.496 21.9759 85.4616 21.9501Z" fill="#0D2C54" />
@@ -433,28 +444,27 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 </nav>
             )}
 
-            <header className="flex items-center justify-between gap-4 md:gap-6 mx-auto w-full max-w-[1600px]">
+            <header className="flex items-center justify-between gap-4 md:gap-6">
                 <div className="flex items-start gap-2 md:gap-3 w-full">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
-                        className="h-8 w-8 md:h-10 md:w-10 shrink-0 border border-border/50 hover:bg-primary hover:text-black transition-all"
+                        className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                         asChild
                     >
                         <Link href={backUrl}>
-                            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                            <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="text-2xl md:text-4xl flex items-center gap-2 md:gap-3">
-                        <span className="font-black tracking-tighter text-foreground">{match.home_team?.name || 'Home'}</span>
+                    <div className="text-2xl md:text-3xl font-black tracking-tighter gap-2 md:gap-4">
+                        <span>{match.home_team?.name || 'Home'}</span>
                         <span className="text-primary text-xs md:text-sm font-black tracking-widest opacity-50 px-2 leading-none">VS</span>
-                        <span className="font-black tracking-tighter text-foreground">{match.away_team?.name || 'Away'}</span>
+                        <span>{match.away_team?.name || 'Away'}</span>
                     </div>
                 </div>
 
                 {!readOnly && (
-                    <div className="flex items-center gap-3 px-4 py-2 bg-primary/10 border border-primary/20 relative group overflow-hidden">
-                        <div className="absolute top-0 right-0 w-8 h-8 bg-primary/5 -rotate-12 translate-x-4 -translate-y-4" />
+                    <div className="flex items-center gap-1 md:gap-2 px-2 relative group overflow-hidden">
                         <span className="relative flex h-2 w-2">
                             <span className={cn(
                                 "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
@@ -472,15 +482,14 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 )}
             </header>
 
-            <main className="flex-1 mx-auto w-full grid grid-cols-12 gap-2 md:gap-3 max-w-[1600px]">
+            <main className="flex-1 w-full grid grid-cols-12 gap-2 md:gap-4">
                 {/* Sidebar: Admin Controls or Match Info */}
-                <aside className="col-span-12 lg:col-span-3 lg:row-span-2 gap-2 md:gap-3 order-2 lg:order-1 flex flex-col">
+                <aside className="col-span-12 lg:col-span-3 lg:row-span-2 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
                     {/* Match Controls */}
-                    <div className="bg-card border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
-                        <div className="relative z-10 space-y-2 md:space-y-3">
-                            <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
-                                <h4 className="text-[10px] font-black tracking-widest text-primary">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
-                                <p className="text-[9px] text-muted-foreground">{readOnly ? "Real-time match updates" : "Real-time session management"}</p>
+                    <div className="bg-card border border-foreground/5 p-2 md:p-4 relative overflow-hidden group rounded-xl">
+                        <div className="relative z-10 space-y-2 md:space-y-4">
+                            <div className="space-y-1">
+                                <h4 className="text-2xl font-black tracking-tighter text-foreground">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
                             </div>
                             {readOnly ? (
                                 <div className="space-y-4">
@@ -500,7 +509,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                     </div>
                                 </div>
                             ) : (
-                                <MatchControls
+                                <MatchTimeControl
                                     status={match.status}
                                     isRunning={isRunning}
                                     readOnly={false}
@@ -516,20 +525,19 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                     </div>
 
                     {!readOnly && (
-                        <div className="bg-foreground/5 border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
-                            <div className="relative z-10 space-y-2 md:space-y-3">
-                                <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
-                                    <h4 className="text-[10px] font-black tracking-widest text-primary">{t("quick_actions")}</h4>
-                                    <p className="text-[9px] text-muted-foreground">Admin session tools</p>
+                        <div className="bg-foreground/5 border border-foreground/5 p-2 md:p-4 relative overflow-hidden group rounded-xl">
+                            <div className="relative z-10 space-y-2 md:space-y-4">
+                                <div className="space-y-1">
+                                    <h4 className="text-2xl font-black tracking-tighter text-foreground">{t("quick_actions")}</h4>
                                 </div>
-                                <div className="grid grid-cols-3 md:grid-cols-1 gap-2">
+                                <div className="grid grid-cols-3 md:grid-cols-1 gap-1 md:gap-2">
                                     <Button
                                         variant="outline"
                                         onClick={handleUndo}
-                                        className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
                                     >
-                                        <Undo className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                                        <span className="hidden md:inline text-[10px] font-black tracking-widest">{t("undo")}</span>
+                                        <Undo className="h-4 w-4 text-muted-foreground" />
+                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
                                     </Button>
                                     <PenaltyShootoutDialog
                                         matchId={match.id}
@@ -541,20 +549,20 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         trigger={
                                             <Button
                                                 variant="outline"
-                                                className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                                                className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
                                             >
-                                                <Target className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                                                <span className="hidden md:inline text-[10px] font-black tracking-widest">{t("penalty_shootout")}</span>
+                                                <Target className="h-4 w-4 text-primary" />
+                                                <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
                                             </Button>
                                         }
                                     />
                                     <Button
                                         variant="outline"
                                         onClick={() => setWoDialogOpen(true)}
-                                        className="w-full flex justify-center md:justify-start items-center gap-3 h-12 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
                                     >
-                                        <Ban className="h-4 w-4 text-red-500/50 group-hover:text-red-500" />
-                                        <span className="hidden md:inline text-[10px] font-black tracking-widest text-red-500/70 group-hover:text-red-500">{t("walkover")}</span>
+                                        <Ban className="h-4 w-4 text-destructive" />
+                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("walkover")}</span>
                                     </Button>
                                 </div>
                             </div>
@@ -563,7 +571,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 </aside>
 
                 {/* Scoreboard Section */}
-                <section className="flex flex-col gap-2 md:gap-3 col-span-12 lg:col-span-9 order-1 lg:order-2">
+                <section className="flex flex-col gap-2 md:gap-4 col-span-12 lg:col-span-9 order-1 lg:order-2">
                     <Scoreboard
                         match={match}
                         homeScore={homeScore}

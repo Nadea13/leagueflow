@@ -45,7 +45,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Data Visualization */
+  /* Node */
   --color-node-1: var(--node-1);
   --color-node-2: var(--node-2);
   --color-node-3: var(--node-3);
@@ -214,12 +214,12 @@
 }
 
 .pro-editor .ql-toolbar.ql-snow {
-  @apply border-foreground/10 border-t-0 border-x-0 transition-all;
+  @apply border-foreground/10 border-t-0 border-x-0;
   padding: 8px;
 }
 
 .pro-editor .ql-container.ql-snow {
-  @apply bg-transparent border-none text-foreground text-xs transition-all;
+  @apply bg-transparent border-none text-foreground text-xs;
   font-family: inherit;
 }
 

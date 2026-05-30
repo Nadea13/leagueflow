@@ -95,9 +95,9 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                             <span className="text-sm font-black text-foreground/40">
                                                                 {event.minute}&apos;
                                                             </span>
-                                                            {!!(event.extra_info as any)?.added_minutes && (
+                                                            {!!(event.extra_info as Record<string, unknown> | null)?.added_minutes && (
                                                                 <span className="text-sm font-black text-foreground/40">
-                                                                    (+{(event.extra_info as any).added_minutes} MIN)
+                                                                    (+{String((event.extra_info as Record<string, unknown>).added_minutes)} MIN)
                                                                 </span>
                                                             )}
                                                         </div>
@@ -133,8 +133,8 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
                                                     )}>
                                                         {event.player_name || "Match Event"}
                                                     </p>
-                                                    {!!(event.extra_info as any)?.reason && (
-                                                        <p className="text-[9px] text-foreground/40 mt-1 font-medium">{(event.extra_info as any).reason}</p>
+                                                    {!!(event.extra_info as Record<string, unknown> | null)?.reason && (
+                                                        <p className="text-[9px] text-foreground/40 mt-1 font-medium">{String((event.extra_info as Record<string, unknown>).reason)}</p>
                                                     )}
                                                 </div>
                                             )}

@@ -206,145 +206,192 @@ export function NodeSettings() {
                         </div>
                     )}
 
-                    {type === "matchNode" && (
-                        <div className="space-y-4 pt-2 border-t">
-                            <h4 className="text-[10px] font-black tracking-widest text-muted-foreground">Matches in Node</h4>
-                            <div className="space-y-3">
-                                {((data.matches as MatchItem[]) || [])
-                                    .slice()
-                                    .sort((a, b) => {
-                                        const dateA = a.match_date || "9999-12-31";
-                                        const timeA = a.match_time || "23:59";
-                                        const dateB = b.match_date || "9999-12-31";
-                                        const timeB = b.match_time || "23:59";
-                                        if (dateA !== dateB) return dateA.localeCompare(dateB);
-                                        return timeA.localeCompare(timeB);
-                                    })
-                                    .map((match, idx) => {
-                                        const updateMatch = (updates: Partial<MatchItem>) => {
-                                            const originalMatches = [...((data.matches as MatchItem[]) || [])];
-                                            const matchIdx = originalMatches.findIndex(m => m.id === match.id);
-                                            if (matchIdx !== -1) {
-                                                originalMatches[matchIdx] = { ...originalMatches[matchIdx], ...updates };
-                                                updateNodeData(id, { matches: originalMatches });
-                                            }
-                                        };
+                    {type === "matchNode" && (() => {
+                        const groupEdge = edges.find(e => e.target === id && e.targetHandle === 'group-in');
+                        const connectedGroupNode = groupEdge ? nodes.find(n => n.id === groupEdge.source) : null;
+                        
+                        const getSelectOptions = (currentVal: string) => {
+                            const options = new Set<string>();
+                            if (connectedGroupNode) {
+                                const groupTeamCount = (connectedGroupNode.data as { teamCount?: number }).teamCount || 0;
+                                const groupTeams = (connectedGroupNode.data as { teams?: string[] }).teams || [];
+                                for (let i = 0; i < groupTeamCount; i++) {
+                                    const name = groupTeams[i];
+                                    options.add((!name || name === "TBD") ? `Team ${i + 1}` : name);
+                                }
+                            }
+                            if (currentVal && currentVal !== "TBD" && !teams.some(t => t.name === currentVal)) {
+                                options.add(currentVal);
+                            }
+                            return Array.from(options);
+                        };
 
-                                        return (
-                                            <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-[10px] font-black text-muted-foreground">Match #{idx + 1}</span>
-                                                    {((data.matches as MatchItem[]).length > 1) && (
-                                                        <button
-                                                            onClick={() => {
-                                                                const originalMatches = [...((data.matches as MatchItem[]) || [])];
-                                                                const filtered = originalMatches.filter(m => m.id !== match.id);
-                                                                updateNodeData(id, { matches: filtered });
-                                                            }}
-                                                            className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                        const getSelectItems = (optionsList: string[], liveTeam: string | null) => {
+                            const rendered = new Set<string>();
+                            rendered.add("TBD");
+                            if (liveTeam) {
+                                rendered.add(liveTeam);
+                            }
+                            const items: React.ReactNode[] = [];
+                            optionsList.forEach(opt => {
+                                if (!rendered.has(opt)) {
+                                    rendered.add(opt);
+                                    items.push(<SelectItem key={opt} value={opt}>{opt}</SelectItem>);
+                                }
+                            });
+                            teams.forEach(t => {
+                                if (!rendered.has(t.name)) {
+                                    rendered.add(t.name);
+                                    items.push(<SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>);
+                                }
+                            });
+                            return items;
+                        };
+
+                        return (
+                            <div className="space-y-4 pt-2 border-t">
+                                <h4 className="text-[10px] font-black tracking-widest text-muted-foreground">Matches in Node</h4>
+                                <div className="space-y-3">
+                                    {((data.matches as MatchItem[]) || [])
+                                        .slice()
+                                        .sort((a, b) => {
+                                            const dateA = a.match_date || "9999-12-31";
+                                            const timeA = a.match_time || "23:59";
+                                            const dateB = b.match_date || "9999-12-31";
+                                            const timeB = b.match_time || "23:59";
+                                            if (dateA !== dateB) return dateA.localeCompare(dateB);
+                                            return timeA.localeCompare(timeB);
+                                        })
+                                        .map((match, idx) => {
+                                            const updateMatch = (updates: Partial<MatchItem>) => {
+                                                const originalMatches = [...((data.matches as MatchItem[]) || [])];
+                                                const matchIdx = originalMatches.findIndex(m => m.id === match.id);
+                                                if (matchIdx !== -1) {
+                                                    originalMatches[matchIdx] = { ...originalMatches[matchIdx], ...updates };
+                                                    updateNodeData(id, { matches: originalMatches });
+                                                }
+                                            };
+
+                                            const liveTeamA = getResolvedTeam(id, `slot-a-${idx}`);
+                                            const liveTeamB = getResolvedTeam(id, `slot-b-${idx}`);
+
+                                            const homeOptions = getSelectOptions(match.placeholderA);
+                                            const awayOptions = getSelectOptions(match.placeholderB);
+
+                                            const homeSelectItems = getSelectItems(homeOptions, liveTeamA);
+                                            const awaySelectItems = getSelectItems(awayOptions, liveTeamB);
+
+                                            return (
+                                                <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-[10px] font-black text-muted-foreground">Match #{idx + 1}</span>
+                                                        {((data.matches as MatchItem[]).length > 1) && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    const originalMatches = [...((data.matches as MatchItem[]) || [])];
+                                                                    const filtered = originalMatches.filter(m => m.id !== match.id);
+                                                                    updateNodeData(id, { matches: filtered });
+                                                                }}
+                                                                className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px]">Home Team</Label>
+                                                            <Select
+                                                                value={match.placeholderA}
+                                                                onValueChange={(val) => updateMatch({ placeholderA: val })}
+                                                            >
+                                                                <SelectTrigger className={`bg-card w-full ${liveTeamA ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                                    <SelectValue placeholder="Select Team" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="TBD">TBD</SelectItem>
+                                                                    {liveTeamA && (
+                                                                        <SelectItem value={liveTeamA} disabled>
+                                                                            {liveTeamA} (Live)
+                                                                        </SelectItem>
+                                                                    )}
+                                                                    {homeSelectItems}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px]">Away Team</Label>
+                                                            <Select
+                                                                value={match.placeholderB}
+                                                                onValueChange={(val) => updateMatch({ placeholderB: val })}
+                                                            >
+                                                                <SelectTrigger className={`bg-card w-full ${liveTeamB ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                                    <SelectValue placeholder="Select Team" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="TBD">TBD</SelectItem>
+                                                                    {liveTeamB && (
+                                                                        <SelectItem value={liveTeamB} disabled>
+                                                                            {liveTeamB} (Live)
+                                                                        </SelectItem>
+                                                                    )}
+                                                                    {awaySelectItems}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px]">Date</Label>
+                                                            <Input
+                                                                type="date"
+                                                                value={match.match_date || ""}
+                                                                onChange={(e) => updateMatch({ match_date: e.target.value })}
+                                                                className="bg-card"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label className="text-[10px]">Time</Label>
+                                                            <Input
+                                                                type="time"
+                                                                value={match.match_time || ""}
+                                                                onChange={(e) => updateMatch({ match_time: e.target.value })}
+                                                                className="bg-card"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (
+                                                        <Button
+                                                            asChild
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="w-full"
                                                         >
-                                                            <X className="h-4 w-4" />
-                                                        </button>
+                                                            <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
+                                                                MATCH CONSOLE
+                                                            </Link>
+                                                        </Button>
                                                     )}
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">Home Team</Label>
-                                                        <Select
-                                                            value={match.placeholderA}
-                                                            onValueChange={(val) => updateMatch({ placeholderA: val })}
-                                                        >
-                                                            <SelectTrigger className={`bg-card w-full ${getResolvedTeam(id, `slot-a-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
-                                                                <SelectValue placeholder="Select Team" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="TBD">TBD</SelectItem>
-                                                                {getResolvedTeam(id, `slot-a-${idx}`) && (
-                                                                    <SelectItem value={getResolvedTeam(id, `slot-a-${idx}`) || ""} disabled>
-                                                                        {getResolvedTeam(id, `slot-a-${idx}`)} (Live)
-                                                                    </SelectItem>
-                                                                )}
-                                                                {teams.map(t => (
-                                                                    <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">Away Team</Label>
-                                                        <Select
-                                                            value={match.placeholderB}
-                                                            onValueChange={(val) => updateMatch({ placeholderB: val })}
-                                                        >
-                                                            <SelectTrigger className={`bg-card w-full ${getResolvedTeam(id, `slot-b-${idx}`) ? "text-violet-600 font-black border-violet-200" : ""}`}>
-                                                                <SelectValue placeholder="Select Team" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="TBD">TBD</SelectItem>
-                                                                {getResolvedTeam(id, `slot-b-${idx}`) && (
-                                                                    <SelectItem value={getResolvedTeam(id, `slot-b-${idx}`) || ""} disabled>
-                                                                        {getResolvedTeam(id, `slot-b-${idx}`)} (Live)
-                                                                    </SelectItem>
-                                                                )}
-                                                                {teams.map(t => (
-                                                                    <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">Date</Label>
-                                                        <Input
-                                                            type="date"
-                                                            value={match.match_date || ""}
-                                                            onChange={(e) => updateMatch({ match_date: e.target.value })}
-                                                            className="bg-card"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">Time</Label>
-                                                        <Input
-                                                            type="time"
-                                                            value={match.match_time || ""}
-                                                            onChange={(e) => updateMatch({ match_time: e.target.value })}
-                                                            className="bg-card"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (
-                                                    <Button
-                                                        asChild
-                                                        variant="default"
-                                                        size="sm"
-                                                        className="w-full"
-                                                    >
-                                                        <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
-                                                            MATCH CONSOLE
-                                                        </Link>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="w-full"
-                                    onClick={() => {
-                                        const next = [...((data.matches as MatchItem[]) || [])];
-                                        next.push({ id: `m-${Date.now()}-${next.length + 1}`, placeholderA: "TBD", placeholderB: "TBD" });
-                                        updateNodeData(id, { matches: next });
-                                    }}
-                                >
-                                    Add Match to Node
-                                </Button>
+                                            );
+                                        })}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={() => {
+                                            const next = [...((data.matches as MatchItem[]) || [])];
+                                            next.push({ id: `m-${Date.now()}-${next.length + 1}`, placeholderA: "TBD", placeholderB: "TBD" });
+                                            updateNodeData(id, { matches: next });
+                                        }}
+                                    >
+                                        Add Match to Node
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-
+                        );
+                    })()}
 
                     {type === "teamListNode" && (
                         <div className="space-y-2 md:space-y-3">

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Plus, Users, ListOrdered, Megaphone } from "lucide-react"
+import { Users, ListOrdered, Megaphone, LayoutGrid } from "lucide-react"
 
 interface NodeToolsProps {
     onAddMatch: () => void
@@ -23,10 +23,10 @@ export function NodeTools({
             <Button
                 variant="ghost"
                 onClick={onAddMatch}
-                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-all group"
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-node-2/10 border border-transparent hover:border-node-2/30 transition-all group"
             >
-                <div className="w-8 h-8 bg-primary/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <Plus className="h-4 w-4 text-primary" />
+                <div className="w-8 h-8 bg-node-2/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-node-2/20 transition-colors">
+                    <span className="text-xs font-bold text-node-2 select-none">VS</span>
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                     <span className="text-[11px] font-black tracking-tight">Add Match</span>
@@ -39,10 +39,10 @@ export function NodeTools({
             <Button
                 variant="ghost"
                 onClick={onAddGroup}
-                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-violet-500/10 border border-transparent hover:border-violet-500/30 transition-all group"
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-node-5/10 border border-transparent hover:border-node-5/30 transition-all group"
             >
-                <div className="w-8 h-8 bg-violet-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-violet-500/20 transition-colors">
-                    <Users className="h-4 w-4 text-violet-500" />
+                <div className="w-8 h-8 bg-node-5/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-node-5/20 transition-colors">
+                    <LayoutGrid className="h-4 w-4 text-node-5" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                     <span className="text-[11px] font-black tracking-tight">Add Group</span>
@@ -55,10 +55,10 @@ export function NodeTools({
             <Button
                 variant="ghost"
                 onClick={onAddStanding}
-                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 transition-all group"
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-node-1/10 border border-transparent hover:border-node-1/30 transition-all group"
             >
-                <div className="w-8 h-8 bg-emerald-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-emerald-500/20 transition-colors">
-                    <ListOrdered className="h-4 w-4 text-emerald-500" />
+                <div className="w-8 h-8 bg-node-1/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-node-1/20 transition-colors">
+                    <ListOrdered className="h-4 w-4 text-node-1" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                     <span className="text-[11px] font-black tracking-tight">Add Standing</span>
@@ -71,10 +71,10 @@ export function NodeTools({
             <Button
                 variant="ghost"
                 onClick={onAddTeamList}
-                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/30 transition-all group"
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-node-3/10 border border-transparent hover:border-node-3/30 transition-all group"
             >
-                <div className="w-8 h-8 bg-blue-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                    <Users className="h-4 w-4 text-blue-500" />
+                <div className="w-8 h-8 bg-node-3/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-node-3/20 transition-colors">
+                    <Users className="h-4 w-4 text-node-3" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                     <span className="text-[11px] font-black tracking-tight">Teams List</span>
@@ -87,10 +87,10 @@ export function NodeTools({
             <Button
                 variant="ghost"
                 onClick={onAddAnnouncement}
-                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/30 transition-all group"
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-node-4/10 border border-transparent hover:border-node-4/30 transition-all group"
             >
-                <div className="w-8 h-8 bg-amber-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
-                    <Megaphone className="h-4 w-4 text-amber-500" />
+                <div className="w-8 h-8 bg-node-4/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-node-4/20 transition-colors">
+                    <Megaphone className="h-4 w-4 text-node-4" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
                     <span className="text-[11px] font-black tracking-tight">Announcement Node</span>

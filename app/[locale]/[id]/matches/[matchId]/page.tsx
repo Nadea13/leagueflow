@@ -28,20 +28,34 @@ export default async function PublicMatchConsole(props: {
     const supabase = createAdminClient();
 
     // Fetch the match
-    const { data: match, error: matchError } = await supabase
+    const { data: rawMatch, error: matchError } = await supabase
         .from('matches')
         .select(`
             *,
-            home_team:tournament_teams!matches_home_team_id_fkey(id, name, logo_url),
-            away_team:tournament_teams!matches_away_team_id_fkey(id, name, logo_url)
+            home_team:tournament_teams!matches_home_team_id_fkey(id, team:teams(name, logo_img)),
+            away_team:tournament_teams!matches_away_team_id_fkey(id, team:teams(name, logo_img))
         `)
         .eq('id', matchId)
         .eq('tournament_id', id)
         .single();
 
-    if (matchError || !match) {
+    if (matchError || !rawMatch) {
         return <div className="p-8 text-red-500">Error fetching match: {JSON.stringify(matchError, null, 2)}</div>;
     }
+
+    const match = {
+        ...rawMatch,
+        home_team: rawMatch.home_team ? {
+            id: rawMatch.home_team.id,
+            name: (rawMatch.home_team.team as any)?.name || 'Unknown Team',
+            logo_url: (rawMatch.home_team.team as any)?.logo_img || null
+        } : null,
+        away_team: rawMatch.away_team ? {
+            id: rawMatch.away_team.id,
+            name: (rawMatch.away_team.team as any)?.name || 'Unknown Team',
+            logo_url: (rawMatch.away_team.team as any)?.logo_img || null
+        } : null,
+    };
 
     // Fetch tournament and checking payments for Pro plan
     const { data: tournament } = await supabase

@@ -14,21 +14,56 @@ export default async function AdminMatchConsole(props: {
     const supabase = createAdminClient();
 
     // Fetch the match details
-    const { data: match, error: matchError } = await supabase
+    const { data: rawMatch, error: matchError } = await supabase
         .from('matches')
-        .select(`
-            *,
-            home_team:tournament_teams!matches_home_team_id_fkey(id, name, logo_url),
-            away_team:tournament_teams!matches_away_team_id_fkey(id, name, logo_url)
-        `)
+        .select('*')
         .eq('id', matchId)
-        .eq('tournament_id', id)
         .single();
 
-    if (matchError || !match) {
+    if (matchError || !rawMatch) {
         console.error("Match fetch error:", matchError, "Match ID:", matchId);
         return <div className="p-8 text-red-500">Error fetching match: {JSON.stringify(matchError, null, 2)}</div>;
     }
+
+    // Fetch home and away teams manually to bypass missing/stale foreign key schema cache issues
+    let home_team = null;
+    let away_team = null;
+
+    if (rawMatch.home_team_id) {
+        const { data: ht } = await supabase
+            .from('tournament_teams')
+            .select('id, team:teams(name, logo_img)')
+            .eq('id', rawMatch.home_team_id)
+            .maybeSingle();
+        if (ht) {
+            home_team = {
+                id: ht.id,
+                name: (ht.team as any)?.name || 'Unknown Team',
+                logo_url: (ht.team as any)?.logo_img || null
+            };
+        }
+    }
+
+    if (rawMatch.away_team_id) {
+        const { data: at } = await supabase
+            .from('tournament_teams')
+            .select('id, team:teams(name, logo_img)')
+            .eq('id', rawMatch.away_team_id)
+            .maybeSingle();
+        if (at) {
+            away_team = {
+                id: at.id,
+                name: (at.team as any)?.name || 'Unknown Team',
+                logo_url: (at.team as any)?.logo_img || null
+            };
+        }
+    }
+
+    const match = {
+        ...rawMatch,
+        home_team,
+        away_team
+    };
 
     // Fetch the tournament
     const { data: tournament } = await supabase
@@ -54,13 +89,18 @@ export default async function AdminMatchConsole(props: {
         player: undefined
     }));
 
+    const categoryId = typeof resolvedParams.category === 'string' ? resolvedParams.category : rawMatch.tournament_category_id;
+    const backUrl = categoryId 
+        ? `/dashboard/tournaments/${id}?category=${categoryId}`
+        : `/dashboard/tournaments/${id}?tab=${fromTab}`;
+
     return (
         <MatchConsolePage
             match={match}
             tournamentId={id}
             readOnly={false}
             initialEvents={formattedEvents as MatchEvent[]}
-            backUrl={`/dashboard/tournaments/${id}?tab=${fromTab}`}
+            backUrl={backUrl}
         />
     );
 }
