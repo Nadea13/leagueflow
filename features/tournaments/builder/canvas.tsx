@@ -43,9 +43,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatDate } from "@/lib/date";
-import { saveBracketCanvas } from "@/actions/organizer/tournaments/bracket";
-import { updateTournament } from "@/actions/organizer/tournaments/general";
-import { createTournamentCategory } from "@/actions/organizer/dashboard";
+import { saveBracketCanvas } from "@/actions/tournaments/bracket";
+import { updateTournament } from "@/actions/tournaments/general";
+import { createTournamentCategory } from "@/actions/dashboard";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
@@ -479,8 +479,8 @@ function CanvasInternal({
             if (
                 activeEl &&
                 (activeEl.tagName === 'INPUT' ||
-                 activeEl.tagName === 'TEXTAREA' ||
-                 activeEl.getAttribute('contenteditable') === 'true')
+                    activeEl.tagName === 'TEXTAREA' ||
+                    activeEl.getAttribute('contenteditable') === 'true')
             ) {
                 return;
             }
@@ -490,7 +490,7 @@ function CanvasInternal({
 
             if (modifierKey) {
                 const key = e.key.toLowerCase();
-                
+
                 if (key === 'z') {
                     e.preventDefault();
                     if (e.shiftKey) {

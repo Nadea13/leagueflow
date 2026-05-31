@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EmptyState } from "@/components/shared/empty-state";
 
-import { assignTeamGroup } from "@/actions/organizer/tournaments/general";
+import { assignTeamGroup } from "@/actions/tournaments/general";
 import { TournamentTeam } from "@/types/index";
 import {
     Select,

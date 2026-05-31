@@ -41,10 +41,10 @@ async function isAuthorizedForPlayer(playerId: string, userId: string) {
         .single();
     
     if (participation) {
-        const teamOwnerId = (participation.teams as any)?.user_id;
+        const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
         if (teamOwnerId === userId) return true;
 
-        const tournamentId = (participation.tournament_categories as any)?.tournament_id;
+        const tournamentId = (participation.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
         if (tournamentId) {
             const { data: tournament } = await supabase
                 .from("tournaments")
@@ -179,7 +179,7 @@ export async function getGlobalPlayers(
         return { success: false, error: error.message };
     }
 
-    const mapped: GlobalPlayer[] = (data || []).map((mp: any) => ({
+    const mapped: GlobalPlayer[] = (data || []).map((mp) => ({
         id: mp.id,
         name: `${mp.first_name} ${mp.last_name}`.trim(),
         photo_url: mp.profile_img,
@@ -219,7 +219,7 @@ export async function searchGlobalPlayers(query: string): Promise<ActionResponse
         return { success: false, error: error.message };
     }
 
-    const mapped: GlobalPlayer[] = (data || []).map((mp: any) => ({
+    const mapped: GlobalPlayer[] = (data || []).map((mp) => ({
         id: mp.id,
         name: `${mp.first_name} ${mp.last_name}`.trim(),
         photo_url: mp.profile_img,
@@ -237,7 +237,6 @@ export async function createGlobalPlayer(
     name: string,
     photoUrl?: string | null,
     dateOfBirth?: string | null,
-    athleteTypes?: string[]
 ): Promise<ActionResponse<GlobalPlayer>> {
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
@@ -266,7 +265,7 @@ export async function createGlobalPlayer(
         return { success: false, error: error.message };
     }
 
-    const mp = data as any;
+    const mp = data;
     const mapped: GlobalPlayer = {
         id: mp.id,
         name: `${mp.first_name} ${mp.last_name}`.trim(),
@@ -301,7 +300,7 @@ export async function updateGlobalPlayerInfo(
     const authorized = await isAuthorizedForGlobalPlayer(globalPlayerId, user.id);
     if (!authorized) return { success: false, error: "Unauthorized to update this global player" };
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) {
         const nameParts = data.name.trim().split(" ");
         updateData.first_name = nameParts[0];
@@ -351,10 +350,7 @@ export async function updateGlobalPlayerInfo(
     return { success: true };
 }
 
-export async function updateGlobalPlayerAthleteTypes(
-    globalPlayerId: string,
-    athleteTypes: string[]
-): Promise<ActionResponse> {
+export async function updateGlobalPlayerAthleteTypes(): Promise<ActionResponse> {
     // Stubbed out for the new schema since master_players does not have athlete_types.
     return { success: true };
 }
@@ -419,7 +415,7 @@ export async function getGlobalPlayer(globalPlayerId: string): Promise<ActionRes
         return { success: false, error: error.message };
     }
 
-    const mp = data as any;
+    const mp = data;
     const mapped: GlobalPlayer = {
         id: mp.id,
         name: `${mp.first_name} ${mp.last_name}`.trim(),
@@ -469,7 +465,7 @@ export async function getPlayerTournamentHistory(globalPlayerId: string): Promis
         return { success: false, error: error.message };
     }
 
-    const mappedData = (data || []).map((p: any) => {
+    const mappedData = (data || []).map((p) => {
         const ps = p.player_sports?.[0];
         const tt = ps?.tournament_teams?.[0];
         const tournament = tt?.tournament_categories?.tournaments;

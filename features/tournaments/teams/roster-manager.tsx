@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Player, TournamentTeam } from "@/types/index";
-import { getPlayers, deletePlayer } from "@/actions/organizer/tournaments/player";
+import { getPlayers, deletePlayer } from "@/actions/tournaments/player";
 import { EditTeamForm } from "@/features/teams/edit-team-form";
 
 import { AddPlayerForm } from "@/features/teams/add-player-form";
@@ -151,21 +151,21 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
 
                     <div className={cn("space-y-6", mobileTab !== 'roster' && "hidden")}>
                         {!(readOnly || team.managed_by_manager) && (
-                            <AddPlayerForm 
-                                teamId={team.id} 
-                                onSuccess={fetchPlayers} 
-                                effectivelyLocked={readOnly} 
+                            <AddPlayerForm
+                                teamId={team.id}
+                                onSuccess={fetchPlayers}
+                                effectivelyLocked={readOnly}
                             />
                         )}
-                        
-                        <SquadList 
-                            players={players} 
-                            team={team as TournamentTeam} 
-                            effectivelyLocked={readOnly} 
-                            refreshPlayers={fetchPlayers} 
-                            onDeletePlayer={setPlayerToDelete} 
-                            t={t} 
-                            tCommon={tCommon} 
+
+                        <SquadList
+                            players={players}
+                            team={team as TournamentTeam}
+                            effectivelyLocked={readOnly}
+                            refreshPlayers={fetchPlayers}
+                            onDeletePlayer={setPlayerToDelete}
+                            t={t}
+                            tCommon={tCommon}
                         />
                     </div>
 

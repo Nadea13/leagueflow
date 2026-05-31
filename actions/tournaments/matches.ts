@@ -1,283 +1,20 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { ActionResponse, Match, BracketCanvasData } from "@/types/index";
 import { logActivity } from "@/lib/audit";
-import { initTournamentStructure } from "@/lib/fixture-utils";
 import { validateTournamentAccess } from "@/lib/security";
-import { validateUploadedFile } from "@/lib/file-validation";
 
-const getScoreTotal = (scoreObj: any): number => {
+const getScoreTotal = (scoreObj: unknown): number => {
     if (!scoreObj) return 0;
-    if (typeof scoreObj === 'object') {
-        return scoreObj.total || 0;
+    if (typeof scoreObj === 'object' && scoreObj !== null) {
+        return (scoreObj as { total?: number }).total || 0;
     }
     const val = Number(scoreObj);
     return isNaN(val) ? 0 : val;
 };
-
-export async function addTeam(
-    tournamentId: string,
-    prevState: unknown,
-    formData: FormData
-): Promise<ActionResponse> {
-    const supabase = await createClient();
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const contact_name = formData.get("contact_name") as string;
-    const contact_phone = formData.get("contact_phone") as string;
-    const contact_email = formData.get("contact_email") as string;
-    const logoFile = formData.get("logo") as File;
-    const logoUrlInput = formData.get("logo_url") as string;
-    const requestedCategoryId = formData.get("tournament_category_id") as string | null;
-
-    if (!name) {
-        return { success: false, error: "Team name is required" };
-    }
-
-    // Security Check: Ensure user is authorized
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-    const user = access.user;
-
-    // Fetch tournament data: sport_id, registration_fee
-    const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("sport_id, registration_fee")
-        .eq("id", tournamentId)
-        .single();
-
-    // Keep team additions scoped to the builder category that initiated them.
-    let categoryQuery = supabase
-        .from("tournament_categories")
-        .select("id")
-        .eq("tournament_id", tournamentId)
-        .is("deleted_at", null);
-
-    categoryQuery = requestedCategoryId
-        ? categoryQuery.eq("id", requestedCategoryId)
-        : categoryQuery.order("created_at", { ascending: true }).limit(1);
-
-    const { data: tournamentCategory } = await categoryQuery.maybeSingle();
-
-    if (!tournamentCategory) {
-        return { success: false, error: "Tournament category setup not found" };
-    }
-
-    let logo_url = logoUrlInput || null;
-
-    // Handle File Upload if URL is not provided
-    if (!logo_url && logoFile && logoFile.size > 0) {
-        const fileCheck = validateUploadedFile(logoFile);
-        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
-
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${tournamentId}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('team-logos')
-            .upload(filePath, logoFile);
-
-        if (uploadError) {
-            console.error("Logo upload failed", uploadError);
-            return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-        } else {
-            const { data: { publicUrl } } = supabase.storage
-                .from('team-logos')
-                .getPublicUrl(filePath);
-            logo_url = publicUrl;
-        }
-    }
-
-    // Insert into global teams table
-    const { data: globalTeam, error: globalTeamError } = await supabase
-        .from("teams")
-        .insert({
-            name,
-            sport_id: tournament?.sport_id,
-            user_id: user.id,
-            description: description || '',
-            contact_name: contact_name || '',
-            contact_phone: contact_phone || '',
-            contact_email: contact_email || '',
-            logo_img: logo_url || null,
-            is_roster_locked: false,
-        })
-        .select("id")
-        .single();
-
-    if (globalTeamError) {
-        console.error("Global team insert failed", globalTeamError);
-        return { success: false, error: `Failed to create team: ${globalTeamError.message}` };
-    }
-
-    const { data: teamData, error } = await supabase.from("tournament_teams").insert({
-        tournament_category_id: tournamentCategory?.id,
-        team_id: globalTeam.id,
-        payment_status: 'paid',
-        slip_img: null,
-        registration_status: 'approved',
-        remark: null,
-        created_at: new Date().toISOString(),
-    }).select().single();
-
-    if (error) {
-        // Rollback global team if tournament_teams insert fails
-        await supabase.from("teams").delete().eq("id", globalTeam.id);
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('ADD_TEAM', 'tournament', tournamentId, { team_name: name });
-    return { success: true };
-}
-
-export async function assignTeamGroup(
-    teamId: string,
-    groupName: string | null,
-    tournamentId: string
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    // Group name is removed in tournament_teams, stub to return success: true
-    return { success: true };
-}
-
-export async function updateTeam(
-    teamId: string,
-    formData: FormData,
-    tournamentId: string
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-    
-    const supabase = await createClient();
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const contact_name = formData.get("contact_name") as string;
-    const contact_phone = formData.get("contact_phone") as string;
-    const logoFile = formData.get("logo") as File;
-    const existingLogoUrl = formData.get("existing_logo_url") as string;
-
-    let logo_url = existingLogoUrl;
-
-    // Handle File Upload
-    if (logoFile && logoFile.size > 0) {
-        const fileCheck = validateUploadedFile(logoFile);
-        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
-
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${tournamentId}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('team-logos')
-            .upload(filePath, logoFile);
-
-        if (uploadError) {
-            console.error("Logo upload failed", uploadError);
-            return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-        } else {
-            const { data: { publicUrl } } = supabase.storage
-                .from('team-logos')
-                .getPublicUrl(filePath);
-            logo_url = publicUrl;
-        }
-    }
-
-    // Get team_id from tournament_teams
-    const { data: registration } = await supabase
-        .from("tournament_teams")
-        .select("team_id")
-        .eq("id", teamId)
-        .single();
-
-    if (!registration || !registration.team_id) {
-        return { success: false, error: "Team registration not found" };
-    }
-
-    const updateData: Record<string, any> = {
-        name,
-        description: description || null,
-        logo_img: logo_url || null
-    };
-    if (contact_name) updateData.contact_name = contact_name;
-    if (contact_phone) updateData.contact_phone = contact_phone;
-
-    const { error } = await supabase
-        .from("teams")
-        .update(updateData)
-        .eq("id", registration.team_id);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('UPDATE_TEAM', 'team', registration.team_id, { name, tournament_id: tournamentId });
-    return { success: true };
-}
-
-export async function deleteTeam(teamId: string, tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-    
-    const supabase = await createClient();
-    const adminSupabase = createAdminClient();
-
-    // Fetch the tournament_team to get its global team_id (if any)
-    const { data: team } = await supabase
-        .from("tournament_teams")
-        .select("team_id")
-        .eq("id", teamId)
-        .single();
-
-    const now = new Date().toISOString();
-
-    // 1. Soft-delete the tournament_team
-    const { error: ttError } = await adminSupabase
-        .from("tournament_teams")
-        .update({ deleted_at: now })
-        .eq("id", teamId);
-
-    if (ttError) {
-        return { success: false, error: ttError.message };
-    }
-
-    const globalTeamId = team?.team_id || teamId;
-
-    // Fetch player_ids from player_sports
-    const { data: psRecords } = await adminSupabase
-        .from("player_sports")
-        .select("player_id")
-        .or(`team_id.eq.${globalTeamId},team_id.eq.${teamId}`);
-
-    // 2. Soft-delete player_sports
-    await adminSupabase
-        .from("player_sports")
-        .update({ deleted_at: now })
-        .or(`team_id.eq.${globalTeamId},team_id.eq.${teamId}`);
-
-    // 3. Soft-delete players
-    if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r: any) => r.player_id);
-        await adminSupabase
-            .from("players")
-            .update({ deleted_at: now })
-            .in("id", playerIds);
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
-}
 
 async function getLastRound(tournamentCategoryId: string, supabase: SupabaseClient): Promise<number> {
     const { data } = await supabase
@@ -288,118 +25,6 @@ async function getLastRound(tournamentCategoryId: string, supabase: SupabaseClie
         .limit(1)
         .single();
     return data?.round || 0;
-}
-
-export async function generateFixtures(tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-    
-    const supabase = await createClient();
-
-    // Fetch category
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
-    const tournamentCategoryId = category.id;
-
-    // Check if fixtures already exist and if we can regenerate
-    const { data: existingMatches } = await supabase
-        .from('matches')
-        .select('id, home_score, away_score, status')
-        .eq('tournament_category_id', tournamentCategoryId);
-
-    const hasFixtures = existingMatches && existingMatches.length > 0;
-    if (hasFixtures) {
-        // Allow regeneration for all formats if no results are recorded
-        const hasScores = existingMatches.some(m => {
-            if (m.status === 'finished') return true;
-            const homeTotal = getScoreTotal(m.home_score);
-            const awayTotal = getScoreTotal(m.away_score);
-            return homeTotal > 0 || awayTotal > 0;
-        });
-
-        if (hasScores) {
-            return { success: false, error: "Cannot regenerate: Some matches already have results recorded." };
-        }
-
-        // Delete existing matches for regeneration
-        const { error: deleteError } = await supabase
-            .from('matches')
-            .delete()
-            .eq('tournament_category_id', tournamentCategoryId);
-
-        if (deleteError) {
-            console.error("Delete error during regeneration:", deleteError);
-            return { success: false, error: "Failed to clear existing fixtures." };
-        }
-    }
-
-    // Generate fixtures using utility
-    const result = await initTournamentStructure(tournamentId, supabase);
-    
-    if (result.success) {
-        revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    }
-    
-    return result;
-}
-
-export async function generateKnockoutRound(
-    tournamentId: string,
-    stage: string,
-    matchCount: number
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    // Fetch category
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
-    const tournamentCategoryId = category.id;
-
-    const lastRound = await getLastRound(tournamentCategoryId, supabase);
-    const startRound = lastRound + 1;
-
-    const matches = Array(matchCount).fill(0).map((_, i) => ({
-        tournament_category_id: tournamentCategoryId,
-        home_team_id: null,
-        away_team_id: null,
-        round: startRound,
-        stage: stage,
-        status: 'scheduled',
-        is_manual: true,
-        match_index: i + 1,
-        home_score: { total: 0 },
-        away_score: { total: 0 }
-    }));
-
-    const { error } = await supabase.from('matches').insert(matches);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
 }
 
 export async function updateMatchScore(
@@ -461,179 +86,6 @@ export async function updateMatchScore(
     return { success: true };
 }
 
-export async function updateTournament(
-    tournamentId: string,
-    prevState: unknown,
-    formData: FormData
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-    const formType = formData.get("form_type") as string;
-    const updateData: Record<string, unknown> = {};
-
-    if (formType === 'general' || !formType) {
-        if (formData.has("name")) updateData.name = formData.get("name") as string;
-        if (formData.has("status")) updateData.status = formData.get("status") as string;
-        if (formData.has("description")) updateData.description = formData.get("description") as string;
-        if (formData.has("start_date")) updateData.start_date = formData.get("start_date") as string || null;
-        if (formData.has("end_date")) updateData.end_date = formData.get("end_date") as string || null;
-        if (formData.has("document_deadline")) updateData.document_deadline = formData.get("document_deadline") as string || null;
-    }
-
-    if (formType === 'registration' || !formType) {
-        if (formType === 'registration') {
-            updateData.is_registration_open = formData.get("is_registration_open") === 'true';
-        } else if (formData.has("is_registration_open")) {
-            updateData.is_registration_open = formData.get("is_registration_open") === 'true';
-        }
-
-        if (formData.has("registration_fee")) updateData.registration_fee = Number(formData.get("registration_fee") || 0);
-        if (formData.has("bank_name")) updateData.bank_name = formData.get("bank_name") as string;
-        if (formData.has("bank_account_name")) updateData.bank_account_name = formData.get("bank_account_name") as string;
-        if (formData.has("bank_account_number")) updateData.bank_account_number = formData.get("bank_account_number") as string;
-    }
-
-    if (formType === 'venue' || !formType) {
-        if (formData.has("location_name")) updateData.location_name = formData.get("location_name") as string || null;
-        if (formData.has("google_map_url")) updateData.google_map_url = formData.get("google_map_url") as string || null;
-    }
-
-    // Resolve category and update max_teams
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (category && formData.has("max_teams")) {
-        const max_teams = Number(formData.get("max_teams") || 8);
-        await supabase
-            .from("tournament_categories")
-            .update({ max_teams })
-            .eq("id", category.id);
-    }
-
-    if (Object.keys(updateData).length === 0) {
-        return { success: true };
-    }
-
-    if (updateData.name === "") {
-        return { success: false, error: "Tournament name is required" };
-    }
-
-    const { error } = await supabase
-        .from("tournaments")
-        .update(updateData)
-        .eq("id", tournamentId);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    await logActivity('UPDATE_TOURNAMENT', 'tournament', tournamentId, updateData);
-    return { success: true };
-}
-
-export async function resetFixtures(tournamentId: string): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) return { success: false, error: "No category found." };
-
-    // Delete all matches
-    const { error: matchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("tournament_category_id", category.id);
-
-    if (matchError) {
-        return { success: false, error: "Failed to delete matches: " + matchError.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
-}
-
-export async function resetBracketFlow(tournamentId: string, categoryId?: string | null): Promise<ActionResponse> {
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    let targetCategoryId = categoryId;
-
-    if (!targetCategoryId) {
-        const { data: category } = await supabase
-            .from('tournament_categories')
-            .select('id')
-            .eq('tournament_id', tournamentId)
-            .limit(1)
-            .single();
-
-        if (!category) return { success: false, error: "No category found." };
-        targetCategoryId = category.id;
-    }
-
-    // 1. Reset canvas_data
-    const { error: canvasError } = await supabase
-        .from("tournament_categories")
-        .update({ canvas_data: null })
-        .eq("id", targetCategoryId);
-
-    if (canvasError) {
-        return { success: false, error: "Failed to reset canvas: " + canvasError.message };
-    }
-
-    // 2. Delete matches
-    const { error: matchError } = await supabase
-        .from("matches")
-        .delete()
-        .eq("tournament_category_id", targetCategoryId);
-
-    if (matchError) {
-        return { success: false, error: "Failed to delete matches: " + matchError.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
-}
-
-
-export async function deleteTournament(tournamentId: string) {
-    const access = await validateTournamentAccess(tournamentId, 'admin');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    const { error } = await supabase
-        .from("tournaments")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", tournamentId);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    await logActivity('DELETE_TOURNAMENT', 'tournament', tournamentId, {});
-
-    redirect("/dashboard/tournaments");
-}
-
 export async function createMatch(
     tournamentId: string,
     homeTeamId: string,
@@ -641,8 +93,7 @@ export async function createMatch(
     round: number,
     stage: string = 'league',
     match_date?: string,
-    match_time?: string,
-    venue?: string
+    match_time?: string
 ): Promise<ActionResponse> {
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
@@ -725,7 +176,7 @@ export async function updateMatch(
         .eq('id', matchId)
         .single();
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.home_team_id !== undefined) updateData.home_team_id = data.home_team_id;
     if (data.away_team_id !== undefined) updateData.away_team_id = data.away_team_id;
     if (data.status !== undefined) updateData.status = data.status;
@@ -797,56 +248,6 @@ export async function updateMatch(
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
     await logActivity('UPDATE_MATCH', 'match', matchId, { tournament_id: tournamentId, ...data });
-    return { success: true };
-}
-
-export async function confirmPayment(
-    tournamentId: string,
-    paymentId: string,
-    paymentMethod: string
-): Promise<ActionResponse> {
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    let charge: { status: string; metadata?: { tournament_id?: string } };
-
-    if (paymentMethod === 'promptpay') {
-        charge = {
-            status: 'successful',
-            metadata: { tournament_id: tournamentId }
-        };
-    } else {
-        return { success: false, error: `Unsupported payment method: ${paymentMethod}` };
-    }
-
-    if (charge.status !== 'successful') {
-        return { success: false, error: `Payment is not successful (status: ${charge.status})` };
-    }
-
-    if (charge.metadata && charge.metadata.tournament_id !== tournamentId) {
-        console.error(`Fraud Attempt? Charge ${paymentId} has tournament_id ${charge.metadata.tournament_id} but tried to upgrade ${tournamentId}`);
-        return { success: false, error: "Payment metadata mismatch. Please contact support." };
-    }
-
-    const { error } = await supabase
-        .from("tournaments")
-        .update({
-            status: 'ongoing',
-            plan: 'tournament',
-            is_registration_open: true
-        })
-        .eq("id", tournamentId);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    revalidatePath(`/dashboard/billing`);
-    revalidatePath(`/dashboard`);
-    revalidatePath(`/`);
     return { success: true };
 }
 
@@ -1140,7 +541,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
 
     if (!currentRoundMatches || currentRoundMatches.length === 0) return;
 
-    const indexInRound = currentRoundMatches.findIndex((m: any) => m.id === match.id);
+    const indexInRound = currentRoundMatches.findIndex((m) => m.id === match.id);
     if (indexInRound === -1) return;
 
     const nextRound = match.round + 1;
@@ -1160,66 +561,6 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
 
         await supabase.from('matches').update(updateData).eq('id', nextMatch.id);
     }
-}
-
-function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Match[]): Array<Record<string, unknown> & { id: string; points: number; gd: number; gf: number }> {
-    return groupTeams.map(t => {
-        const teamMatches = allMatches.filter(m =>
-            (m.home_team_id === t.id || m.away_team_id === t.id)
-        );
-
-        let points = 0;
-        let gd = 0;
-        let gf = 0;
-
-        teamMatches.forEach(m => {
-            if (!['finished', 'live'].includes(m.status)) return;
-
-            const isHome = m.home_team_id === t.id;
-            const myScore = getScoreTotal(isHome ? m.home_score : m.away_score);
-            const otherScore = getScoreTotal(isHome ? m.away_score : m.home_score);
-
-            if (myScore !== null && otherScore !== null) {
-                if (myScore > otherScore) points += 3;
-                else if (myScore === otherScore) points += 1;
-
-                gd += (myScore - otherScore);
-                gf += myScore;
-            }
-        });
-
-        return { ...t, id: t.id as string, points, gd, gf };
-    }).sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-
-        const h2hMatches = allMatches.filter(m =>
-            (m.home_team_id === a.id && m.away_team_id === b.id) ||
-            (m.home_team_id === b.id && m.away_team_id === a.id)
-        );
-
-        let aH2HPoints = 0;
-        let bH2HPoints = 0;
-
-        h2hMatches.forEach(m => {
-            const aIsHome = m.home_team_id === a.id;
-            const aScore = getScoreTotal(aIsHome ? m.home_score : m.away_score);
-            const bScore = getScoreTotal(aIsHome ? m.away_score : m.home_score);
-
-            if (aScore !== null && bScore !== null) {
-                if (aScore > bScore) aH2HPoints += 3;
-                else if (bScore > aScore) bH2HPoints += 3;
-                else {
-                    aH2HPoints += 1;
-                    bH2HPoints += 1;
-                }
-            }
-        });
-
-        if (bH2HPoints !== aH2HPoints) return bH2HPoints - aH2HPoints;
-
-        if (b.gd !== a.gd) return b.gd - a.gd;
-        return b.gf - a.gf;
-    });
 }
 
 export async function propagateGroupStandings(categoryId: string, supabase: SupabaseClient) {
@@ -1245,14 +586,14 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
         const dbMatches = matchesRes.data || [];
         const dbTeams = teamsRes.data || [];
 
-        const teams = dbTeams.map((tt: any) => ({
+        const teams = dbTeams.map((tt) => ({
             id: tt.team_id,
-            name: tt.team?.name || ""
+            name: (tt.team as unknown as { name: string } | null)?.name || ""
         }));
 
         const teamIdToName = new Map<string, string>();
-        dbTeams.forEach((t: any) => {
-            const name = t.team?.name || t.name;
+        dbTeams.forEach((t) => {
+            const name = (t.team as unknown as { name: string } | null)?.name || (t as unknown as { name: string }).name;
             if (name && t.team_id) {
                 teamIdToName.set(t.team_id, name);
             }
@@ -1286,8 +627,8 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                 const h = statsMap[homeName];
                 const a = statsMap[awayName];
                 if (h && a) {
-                    const homeTotal = typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as any).total) || 0 : Number(m.home_score) || 0;
-                    const awayTotal = typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as any).total) || 0 : Number(m.away_score) || 0;
+                    const homeTotal = typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as { total?: unknown }).total) || 0 : Number(m.home_score) || 0;
+                    const awayTotal = typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as { total?: unknown }).total) || 0 : Number(m.away_score) || 0;
 
                     h.gf += homeTotal; h.ga += awayTotal;
                     a.gf += awayTotal; a.ga += homeTotal;
@@ -1366,14 +707,14 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                 const winnerMatch = edge.sourceHandle?.match(/winner-(\d+)/);
                 if (winnerMatch) {
                     const winnerIndex = parseInt(winnerMatch[1], 10);
-                    const sourceMatches = (sourceNode.data as any).matches || [];
+                    const sourceMatches = (sourceNode.data as { matches?: { dbId?: string; matchId?: string }[] }).matches || [];
                     const sourceMatch = sourceMatches[winnerIndex];
                     if (sourceMatch && (sourceMatch.dbId || sourceMatch.matchId)) {
                         const matchId = sourceMatch.dbId || sourceMatch.matchId;
                         const dbM = dbMatches.find(m => m.id === matchId);
                         if (dbM && dbM.status === 'finished') {
-                            const homeTotal = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as any).total) || 0 : Number(dbM.home_score) || 0;
-                            const awayTotal = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as any).total) || 0 : Number(dbM.away_score) || 0;
+                            const homeTotal = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: unknown }).total) || 0 : Number(dbM.home_score) || 0;
+                            const awayTotal = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: unknown }).total) || 0 : Number(dbM.away_score) || 0;
                             if (homeTotal > awayTotal) return dbM.home_team_id;
                             if (awayTotal > homeTotal) return dbM.away_team_id;
                         }
@@ -1382,14 +723,14 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
                 const loserMatch = edge.sourceHandle?.match(/loser-(\d+)/);
                 if (loserMatch) {
                     const loserIndex = parseInt(loserMatch[1], 10);
-                    const sourceMatches = (sourceNode.data as any).matches || [];
+                    const sourceMatches = (sourceNode.data as { matches?: { dbId?: string; matchId?: string }[] }).matches || [];
                     const sourceMatch = sourceMatches[loserIndex];
                     if (sourceMatch && (sourceMatch.dbId || sourceMatch.matchId)) {
                         const matchId = sourceMatch.dbId || sourceMatch.matchId;
                         const dbM = dbMatches.find(m => m.id === matchId);
                         if (dbM && dbM.status === 'finished') {
-                            const homeTotal = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as any).total) || 0 : Number(dbM.home_score) || 0;
-                            const awayTotal = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as any).total) || 0 : Number(dbM.away_score) || 0;
+                            const homeTotal = typeof dbM.home_score === 'object' && dbM.home_score !== null && 'total' in dbM.home_score ? Number((dbM.home_score as { total?: unknown }).total) || 0 : Number(dbM.home_score) || 0;
+                            const awayTotal = typeof dbM.away_score === 'object' && dbM.away_score !== null && 'total' in dbM.away_score ? Number((dbM.away_score as { total?: unknown }).total) || 0 : Number(dbM.away_score) || 0;
                             if (homeTotal < awayTotal) return dbM.home_team_id;
                             if (awayTotal < homeTotal) return dbM.away_team_id;
                         }
@@ -1403,7 +744,7 @@ export async function propagateGroupStandings(categoryId: string, supabase: Supa
         // Update database matches based on resolved IDs
         for (const node of canvasData.nodes) {
             if (node.type === 'matchNode') {
-                const matches = (node.data as any).matches || [];
+                const matches = (node.data as { matches?: { dbId?: string; matchId?: string }[] }).matches || [];
                 for (let i = 0; i < matches.length; i++) {
                     const matchItem = matches[i];
                     if (matchItem.dbId || matchItem.matchId) {
@@ -1469,8 +810,8 @@ export async function propagateKnockoutResults(match: Match, supabase: SupabaseC
 
         for (const n of canvasData.nodes) {
             if (n.type === 'matchNode') {
-                const nodeMatches = (n.data as any).matches || [];
-                const idx = nodeMatches.findIndex((m: any) => m.dbId === match.id || m.matchId === match.id);
+                const nodeMatches = (n.data as { matches?: { dbId?: string; matchId?: string }[] }).matches || [];
+                const idx = nodeMatches.findIndex((m) => m.dbId === match.id || m.matchId === match.id);
                 if (idx !== -1) {
                     sourceNodeId = n.id;
                     matchIndexInNode = idx;
@@ -1513,7 +854,7 @@ export async function propagateKnockoutResults(match: Match, supabase: SupabaseC
             if (targetNode && targetMatchIndexMatch) {
                 const slot = targetMatchIndexMatch[1];
                 const targetMatchIndex = parseInt(targetMatchIndexMatch[2], 10);
-                const targetMatches = (targetNode.data as any).matches || [];
+                const targetMatches = (targetNode.data as { matches?: { dbId?: string; matchId?: string }[] }).matches || [];
                 const targetMatchItem = targetMatches[targetMatchIndex];
                 
                 if (targetMatchItem && (targetMatchItem.dbId || targetMatchItem.matchId)) {
@@ -1536,7 +877,7 @@ export async function propagateKnockoutResults(match: Match, supabase: SupabaseC
             if (targetNode && targetMatchIndexMatch) {
                 const slot = targetMatchIndexMatch[1];
                 const targetMatchIndex = parseInt(targetMatchIndexMatch[2], 10);
-                const targetMatches = (targetNode.data as any).matches || [];
+                const targetMatches = (targetNode.data as { matches?: { dbId?: string; matchId?: string }[] }).matches || [];
                 const targetMatchItem = targetMatches[targetMatchIndex];
                 
                 if (targetMatchItem && (targetMatchItem.dbId || targetMatchItem.matchId)) {

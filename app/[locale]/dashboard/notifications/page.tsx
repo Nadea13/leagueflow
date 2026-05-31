@@ -5,32 +5,32 @@ import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle, Bell, Check, X, Clock } from "lucide-react";
-import { getAllUserInvites, acceptInvite, rejectInvite, getUserRegistrations } from "@/actions/organizer/tournaments/staff";
+import { getAllUserInvites, acceptInvite, rejectInvite, getUserRegistrations } from "@/actions/tournaments/staff";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 import { useRouter } from "next/navigation";
 
-type NotificationItem = 
-  | {
-      type: 'invite';
-      id: string;
-      tournament_id: string;
-      tournament_name?: string;
-      role: string;
-      status: 'pending' | 'accepted' | 'rejected';
-      created_at: string;
+type NotificationItem =
+    | {
+        type: 'invite';
+        id: string;
+        tournament_id: string;
+        tournament_name?: string;
+        role: string;
+        status: 'pending' | 'accepted' | 'rejected';
+        created_at: string;
     }
-  | {
-      type: 'registration';
-      id: string;
-      team_id: string;
-      team_name: string;
-      tournament_name: string;
-      registration_status: 'pending' | 'approved' | 'rejected';
-      payment_status: 'pending' | 'paid' | 'waived' | 'failed';
-      created_at: string;
+    | {
+        type: 'registration';
+        id: string;
+        team_id: string;
+        team_name: string;
+        tournament_name: string;
+        registration_status: 'pending' | 'approved' | 'rejected';
+        payment_status: 'pending' | 'paid' | 'waived' | 'failed';
+        created_at: string;
     };
 
 export default function NotificationsPage() {
@@ -161,10 +161,9 @@ export default function NotificationsPage() {
                                     <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
                                         <div className="flex items-start gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${
-                                                    currentStatus === 'accepted' ? 'bg-green-500/10 text-green-500' :
-                                                    currentStatus === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'
-                                                }`}>
+                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'accepted' ? 'bg-green-500/10 text-green-500' :
+                                                        currentStatus === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'
+                                                    }`}>
                                                     <Bell className="h-4 w-4" />
                                                 </div>
                                             </div>
@@ -231,10 +230,9 @@ export default function NotificationsPage() {
                                     <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
                                         <div className="flex items-start gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${
-                                                    regStatus === 'approved' ? 'bg-primary/10 text-primary' :
-                                                    regStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
-                                                }`}>
+                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${regStatus === 'approved' ? 'bg-primary/10 text-primary' :
+                                                        regStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
+                                                    }`}>
                                                     {regStatus === 'approved' ? (
                                                         <CheckCircle2 className="h-4 w-4" />
                                                     ) : regStatus === 'rejected' ? (

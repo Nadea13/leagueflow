@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ExternalLink, Phone, User, Users, Check, X, ClipboardEdit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
-import { approveRegistration, rejectRegistration } from "@/actions/organizer/tournaments/registration";
+import { approveRegistration, rejectRegistration } from "@/actions/tournaments/registration";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { toast } from "sonner";
 import {
@@ -159,10 +159,10 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                     <TableCell className="px-2 md:px-3 py-3">
                                         <div className="flex items-center gap-2 md:gap-3">
                                             {reg.logo_url ? (
-                                                <img 
-                                                    src={reg.logo_url} 
-                                                    alt="" 
-                                                    className="h-6 w-6 rounded-full object-cover border border-border" 
+                                                <img
+                                                    src={reg.logo_url}
+                                                    alt=""
+                                                    className="h-6 w-6 rounded-full object-cover border border-border"
                                                 />
                                             ) : (
                                                 <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">

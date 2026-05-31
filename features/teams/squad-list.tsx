@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Player, Team } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { updatePlayer } from "@/actions/manager/team";
-import { updateGlobalPlayerPhoto } from "@/actions/organizer/tournaments/global-player";
+import { updateGlobalPlayerPhoto } from "@/actions/tournaments/master-player";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { compressAndConvertToAvif } from "@/lib/image-compression";
 import { Button } from "@/components/ui/button";

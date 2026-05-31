@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { getNavItems } from "@/config/nav"
 import { useAnalytics } from "@/hooks/use-analytics"
-import { getPendingInvites } from "@/actions/organizer/tournaments/staff"
+import { getPendingInvites } from "@/actions/tournaments/staff"
 
 import { BugReportDialog } from "@/features/dashboard/bug-report-dialog"
 import { UserDropdown } from "@/features/dashboard/user-dropdown"

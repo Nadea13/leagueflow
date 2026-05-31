@@ -1,22 +1,22 @@
 'use client'
 
 import { useState } from "react"
-import { generateFixtures } from "@/actions/organizer/tournaments/general"
+import { generateFixtures } from "@/actions/tournaments/fixtures"
 import { Button } from "@/components/ui/button"
 import { Settings2, Plus } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
-export function MatchGenerator({ 
-  tournamentId, 
-  hasFixtures, 
+export function MatchGenerator({
+  tournamentId,
+  hasFixtures,
   format,
-  className 
-}: { 
-  tournamentId: string, 
-  hasFixtures: boolean, 
+  className
+}: {
+  tournamentId: string,
+  hasFixtures: boolean,
   format?: string,
-  className?: string 
+  className?: string
 }) {
   const t = useTranslations("Fixtures")
   const tCommon = useTranslations("Common")
@@ -33,8 +33,8 @@ export function MatchGenerator({
   }
 
   return (
-    <Button 
-      onClick={handleGenerate} 
+    <Button
+      onClick={handleGenerate}
       variant="ghost"
       className={cn(
         "w-full h-12 border border-foreground/5 font-black tracking-tighter transition-all duration-300 group overflow-hidden relative",

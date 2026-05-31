@@ -4,7 +4,7 @@ import { Match, Goal, TournamentTeam } from "@/types/index";
 import { CategorySetup } from "@/features/tournaments/management/category-setup";
 import { Trophy } from "lucide-react";
 import { TournamentContent } from "./tournament-content";
-import { getUserRole } from "@/actions/organizer/tournaments/staff";
+import { getUserRole } from "@/actions/tournaments/staff";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 
 export default async function TournamentPage({ params }: { params: Promise<{ id: string }> }) {

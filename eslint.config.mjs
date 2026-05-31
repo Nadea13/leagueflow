@@ -19,6 +19,7 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".vercel/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
@@ -26,6 +27,8 @@ const eslintConfig = defineConfig([
     "find-top-files.js",
     "fix-unused-vars.js",
     "fix-all-lint.js",
+    "scratch/**",
+    "scratch-*",
   ]),
 ]);
 

@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { ActionResponse, TournamentStatus, SportType } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { ensureProfileExists } from "@/lib/profile";
-import { initTournamentStructure } from "@/lib/fixture-utils";
 
 export async function createTournament(_prevState: ActionResponse, formData: FormData): Promise<ActionResponse> {
     try {
@@ -284,7 +283,7 @@ export async function createTournamentCategory(
         revalidatePath(`/dashboard/tournaments/${tournamentId}`);
         revalidatePath(`/${tournamentId}`);
         return { success: true };
-    } catch (error: any) {
+    } catch (error) {
         console.error("Unexpected error in createTournamentCategory:", error);
         return { success: false, error: "An unexpected error occurred" };
     }

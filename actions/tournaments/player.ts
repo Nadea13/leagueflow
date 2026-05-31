@@ -59,7 +59,7 @@ export async function addPlayer(
     
     if (!participation) return { success: false, error: "Team not found" };
 
-    const tournamentId = (participation.tournament_categories as any)?.tournament_id;
+    const tournamentId = (participation.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
     if (!tournamentId) return { success: false, error: "Tournament context not found" };
 
     const authorized = await isAuthorizedOrganizer(tournamentId, user.id);
@@ -77,7 +77,7 @@ export async function addPlayer(
     }
 
     const globalTeamId = participation.team_id;
-    const sportId = (participation.teams as any)?.sport_id;
+    const sportId = (participation.teams as unknown as { sport_id: string } | null)?.sport_id;
 
     // 1. Ensure master player
     let finalMasterId = globalPlayerId;
@@ -213,8 +213,21 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
 
     // Map and filter in memory to ensure accuracy
     const mappedPlayers: Player[] = (data || [])
-        .map((ps: any) => {
-            const p = ps.player;
+        .map((ps) => {
+            const p = ps.player as unknown as {
+                id: string;
+                display_name: string;
+                tel: string | null;
+                deleted_at: string | null;
+                master_player: {
+                    id: string;
+                    first_name: string;
+                    last_name: string;
+                    birthday: string | null;
+                    tel: string | null;
+                    profile_img: string | null;
+                } | null;
+            } | null;
             const mp = p?.master_player;
             return {
                 id: p?.id || ps.id,
@@ -227,9 +240,9 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
                 global_team_id: participation ? null : teamId,
                 global_player_id: mp?.id || null,
                 tel: p?.tel || mp?.tel || null,
-                created_at: p?.created_at || new Date().toISOString(),
+                created_at: new Date().toISOString(),
                 deleted_at: ps.deleted_at || p?.deleted_at || null
-            } as any;
+            };
         });
 
     return { success: true, data: mappedPlayers };
@@ -265,7 +278,7 @@ export async function deletePlayer(playerId: string): Promise<ActionResponse> {
     let tournamentId = null;
     if (tournamentTeams && tournamentTeams.length > 0) {
         for (const tt of tournamentTeams) {
-            const tId = (tt.tournament_categories as any)?.tournament_id;
+            const tId = (tt.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
             if (tId) {
                 const isAuth = await isAuthorizedOrganizer(tId, user.id);
                 if (isAuth) {
@@ -325,7 +338,7 @@ export async function updatePlayer(
     let tournamentId = null;
     if (tournamentTeams && tournamentTeams.length > 0) {
         for (const tt of tournamentTeams) {
-            const tId = (tt.tournament_categories as any)?.tournament_id;
+            const tId = (tt.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
             if (tId) {
                 const isAuth = await isAuthorizedOrganizer(tId, user.id);
                 if (isAuth) {
@@ -340,7 +353,7 @@ export async function updatePlayer(
     if (!authorized || !tournamentId) return { success: false, error: "Unauthorized to manage this roster" };
 
     // 1. Update players
-    const playerUpdate: any = {};
+    const playerUpdate: Record<string, unknown> = {};
     if (data.name !== undefined) {
         playerUpdate.display_name = data.name;
     }
@@ -358,7 +371,7 @@ export async function updatePlayer(
     }
 
     // 3. Update player_sports
-    const psUpdate: any = {};
+    const psUpdate: Record<string, unknown> = {};
     if (data.position !== undefined) {
         psUpdate.position = data.position;
     }

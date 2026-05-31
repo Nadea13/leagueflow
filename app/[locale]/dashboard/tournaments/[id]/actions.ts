@@ -9,7 +9,7 @@ import { logActivity } from "@/lib/audit";
 import { initTournamentStructure } from "@/lib/fixture-utils";
 import { validateTournamentAccess } from "@/lib/security";
 import { validateUploadedFile } from "@/lib/file-validation";
-import { propagateGroupStandings, propagateKnockoutResults } from "@/actions/organizer/tournaments/general";
+import { propagateGroupStandings, propagateKnockoutResults } from "@/actions/tournaments/matches";
 
 const getScoreTotal = (scoreObj: unknown): number => {
     if (!scoreObj) return 0;
@@ -166,7 +166,7 @@ export async function updateTeam(
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
-    
+
     const supabase = await createClient();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
@@ -239,7 +239,7 @@ export async function deleteTeam(teamId: string, tournamentId: string): Promise<
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
-    
+
     const supabase = await createClient();
     const adminSupabase = createAdminClient();
 
@@ -304,7 +304,7 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
-    
+
     const supabase = await createClient();
 
     // Fetch category
@@ -354,11 +354,11 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
 
     // Generate fixtures using utility
     const result = await initTournamentStructure(tournamentId, supabase);
-    
+
     if (result.success) {
         revalidatePath(`/dashboard/tournaments/${tournamentId}`);
     }
-    
+
     return result;
 }
 
@@ -749,7 +749,7 @@ export async function updateMatch(
                 .from('tournaments')
                 .update({ status: 'ongoing' })
                 .eq('id', tournamentId);
-                
+
             if (activateError) {
                 console.error("Error activating tournament:", activateError);
             }
@@ -1046,7 +1046,7 @@ export async function deleteGoal(goalId: string, tournamentId: string): Promise<
         .select('match_id')
         .eq('id', goalId)
         .single();
-    
+
     if (!event) return { success: false, error: "Goal event not found" };
     const matchId = event.match_id;
 

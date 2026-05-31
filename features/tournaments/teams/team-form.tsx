@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect, useRef } from "react";
 import { Upload, Check, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { addTeam } from "@/actions/organizer/tournaments/general";
+import { addTeam } from "@/actions/tournaments/general";
 import { Link } from "@/i18n/routing";
 
 import { Input } from "@/components/ui/input";

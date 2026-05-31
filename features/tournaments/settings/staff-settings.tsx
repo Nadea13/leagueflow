@@ -14,7 +14,7 @@ import {
     inviteStaff,
     getStaffs,
     removeStaff
-} from "@/actions/organizer/tournaments/staff";
+} from "@/actions/tournaments/staff";
 import {
     Select,
     SelectContent,

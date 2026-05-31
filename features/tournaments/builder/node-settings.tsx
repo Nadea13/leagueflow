@@ -20,6 +20,7 @@ type MatchItem = {
     dbId?: string;
     matchId?: string;
 };
+import { Match } from "@/types";
 import {
     Select,
     SelectContent,
@@ -55,7 +56,7 @@ export function NodeSettings() {
     }, [activeCategoryId, fetchTeams, selectedNode?.type]);
 
     const supabase = React.useMemo(() => createClient(), []);
-    const [dbMatches, setDbMatches] = React.useState<any[]>([]);
+    const [dbMatches, setDbMatches] = React.useState<Match[]>([]);
 
     useEffect(() => {
         async function fetchScores() {
@@ -71,7 +72,7 @@ export function NodeSettings() {
                 .is('deleted_at', null);
             
             if (results) {
-                setDbMatches(results);
+                setDbMatches(results as Match[]);
             }
         }
 
@@ -87,7 +88,7 @@ export function NodeSettings() {
     const { id, type, data } = selectedNode;
 
     // Resolve live teams from edges or database assignments
-    const getResolvedTeam = (targetId: string, handleId: string, dbMatch: any, slot: 'a' | 'b') => {
+    const getResolvedTeam = (targetId: string, handleId: string, dbMatch: Match | undefined, slot: 'a' | 'b') => {
         // 1. If we have a database match with a team ID assigned, use it
         if (dbMatch) {
             const teamId = slot === 'a' ? dbMatch.home_team_id : dbMatch.away_team_id;

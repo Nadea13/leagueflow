@@ -33,7 +33,7 @@ export async function approveRegistration(
         return { success: false, error: "Registration not found" };
     }
 
-    if ((reg.tournament_categories as any)?.tournament_id !== tournamentId) {
+    if ((reg.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id !== tournamentId) {
         return { success: false, error: "Registration does not belong to this tournament" };
     }
 
@@ -80,7 +80,7 @@ export async function rejectRegistration(
         .eq("id", registrationId)
         .single();
 
-    if (fetchError || !reg || (reg.tournament_categories as any)?.tournament_id !== tournamentId) {
+    if (fetchError || !reg || (reg.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id !== tournamentId) {
         return { success: false, error: "Registration not found" };
     }
 

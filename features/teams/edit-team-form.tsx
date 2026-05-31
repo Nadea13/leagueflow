@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Team, TournamentTeam, Sport } from "@/types/index";
 import { updateTeamGlobal, deleteTeamGlobal, resetRoster, restoreRoster, hasSoftDeletedPlayers, getSports } from "@/actions/manager/team";
-import { updateTeam, deleteTeam } from "@/actions/organizer/tournaments/general";
+import { updateTeam, deleteTeam } from "@/actions/tournaments/general";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";

@@ -11,7 +11,7 @@ import {
     linkPlayerToGlobal as linkGP, 
     unlinkPlayerFromGlobal as unlinkGP,
     updateGlobalPlayerInfo as updateGPInfo
-} from "../organizer/tournaments/global-player";
+} from "../tournaments/master-player";
 
 export async function updateGlobalPlayerInfo(globalPlayerId: string, data: { name?: string; date_of_birth?: string | null }) {
     return updateGPInfo(globalPlayerId, data);
@@ -21,8 +21,8 @@ export async function getGlobalPlayers(page?: number, pageSize?: number, search?
     return getGP(page, pageSize, search);
 }
 
-export async function createGlobalPlayer(name: string, photoUrl?: string | null, dateOfBirth?: string | null, athleteTypes?: string[]) {
-    return createGP(name, photoUrl, dateOfBirth, athleteTypes);
+export async function createGlobalPlayer(name: string, photoUrl?: string | null, dateOfBirth?: string | null, _athleteTypes?: string[]) {
+    return createGP(name, photoUrl, dateOfBirth);
 }
 
 export async function linkPlayerToGlobal(playerId: string, globalPlayerId: string) {
@@ -65,10 +65,10 @@ async function isAuthorizedForTeam(teamId: string, userId: string) {
         .single();
     
     if (participation) {
-        const teamOwnerId = (participation.teams as any)?.user_id;
+        const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
         if (teamOwnerId === userId) return true;
 
-        const tournamentId = (participation.tournament_categories as any)?.tournament_id;
+        const tournamentId = (participation.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
         if (tournamentId) {
             // Check if user is organizer of the tournament
             const { data: tournament } = await supabase
@@ -266,7 +266,7 @@ export async function getMyTeams(): Promise<ActionResponse<unknown[]>> {
         }
 
         // Map database columns to match expected types in frontend (logo_img -> logo_url, sport_id -> sport)
-        const mappedData = (data || []).map((team: any) => {
+        const mappedData = (data || []).map((team) => {
             const firstParticipation = team.participations?.[0];
             const tournamentName = firstParticipation?.tournament_categories?.tournament?.name || null;
 
@@ -330,8 +330,8 @@ export async function getTeam(teamId: string) {
             .single();
 
         if (participation) {
-            const flatTournament = (participation.tournament_categories as any)?.tournaments;
-            const teamObj = (Array.isArray(participation.team) ? participation.team[0] : participation.team) as any;
+            const flatTournament = (participation.tournament_categories as unknown as { tournaments: unknown } | null)?.tournaments;
+            const teamObj = (Array.isArray(participation.team) ? participation.team[0] : participation.team) as unknown as { name?: string; logo_img?: string | null; description?: string; sports?: { sport_name?: string } } | null;
             data = {
                 ...participation,
                 name: participation.name || teamObj?.name || "Unknown Team",
@@ -362,9 +362,9 @@ export async function getTeam(teamId: string) {
             .eq("team_id", teamId)
             .order("created_at", { ascending: false });
         
-        participations = (pData || []).map((p: any) => ({
+        participations = (pData || []).map((p) => ({
             ...p,
-            tournament: p.tournament_categories?.tournaments
+            tournament: (p.tournament_categories as unknown as { tournaments: unknown } | null)?.tournaments
         }));
     } else {
         participations = [data];
@@ -376,9 +376,9 @@ export async function getTeam(teamId: string) {
         .select("id")
         .eq("user_id", user.id);
     
-    const ownedTeamIds = userTeams?.map((t: any) => t.id) || [];
+    const ownedTeamIds = userTeams?.map((t) => t.id) || [];
     
-    let registrations: any[] = [];
+    let registrations: unknown[] = [];
     if (ownedTeamIds.length > 0) {
         const { data: regData } = await supabase
             .from("tournament_teams")
@@ -394,11 +394,11 @@ export async function getTeam(teamId: string) {
             .is("deleted_at", null);
         
         if (regData) {
-            registrations = regData.map((r: any) => ({
+            registrations = regData.map((r) => ({
                 tournament_team_id: r.id,
                 payment_status: (r.payment_status || 'pending').toUpperCase(),
                 slip_url: r.slip_img,
-                tournament_id: r.tournament_categories?.tournament_id
+                tournament_id: (r.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id
             }));
         }
     }
@@ -478,7 +478,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
 
         const tableName = globalTeam ? "teams" : "tournament_teams";
 
-        let updateData: any = {};
+        let updateData: Record<string, unknown> = {};
         if (tableName === "teams") {
             updateData = {
                 name,
@@ -594,7 +594,7 @@ export async function deleteTeamGlobal(teamId: string, _tournamentId: string): P
 
             // Soft-delete players
             if (psRecords && psRecords.length > 0) {
-                const playerIds = psRecords.map((r: any) => r.player_id);
+                const playerIds = psRecords.map((r) => r.player_id);
                 await adminSupabase
                     .from("players")
                     .update({ deleted_at: now })
@@ -615,7 +615,7 @@ export async function deleteTeamGlobal(teamId: string, _tournamentId: string): P
 
             // Soft-delete players
             if (psRecords && psRecords.length > 0) {
-                const playerIds = psRecords.map((r: any) => r.player_id);
+                const playerIds = psRecords.map((r) => r.player_id);
                 await adminSupabase
                     .from("players")
                     .update({ deleted_at: now })
@@ -727,8 +727,22 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
 
     // Map and filter in memory to ensure accuracy
     let mappedPlayers: Player[] = (data || [])
-        .map((ps: any) => {
-            const p = ps.player;
+        .map((ps) => {
+            const p = ps.player as unknown as {
+                id: string;
+                display_name: string;
+                tel: string | null;
+                deleted_at: string | null;
+                created_at?: string;
+                master_player: {
+                    id: string;
+                    first_name: string;
+                    last_name: string;
+                    birthday: string | null;
+                    tel: string | null;
+                    profile_img: string | null;
+                } | null;
+            } | null;
             const mp = p?.master_player;
             return {
                 id: p?.id || ps.id,
@@ -743,7 +757,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                 tel: p?.tel || mp?.tel || null,
                 created_at: p?.created_at || new Date().toISOString(),
                 deleted_at: ps.deleted_at || p?.deleted_at || null
-            } as any;
+            };
         });
 
     // Auto-clone roster if participation roster is empty
@@ -780,8 +794,22 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
             .eq("team_id", teamId);
 
             if (freshQuery.data) {
-                mappedPlayers = freshQuery.data.map((ps: any) => {
-                    const p = ps.player;
+                mappedPlayers = freshQuery.data.map((ps) => {
+                    const p = ps.player as unknown as {
+                        id: string;
+                        display_name: string;
+                        tel: string | null;
+                        deleted_at: string | null;
+                        created_at?: string;
+                        master_player: {
+                            id: string;
+                            first_name: string;
+                            last_name: string;
+                            birthday: string | null;
+                            tel: string | null;
+                            profile_img: string | null;
+                        } | null;
+                    } | null;
                     const mp = p?.master_player;
                     return {
                         id: p?.id || ps.id,
@@ -796,7 +824,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                         tel: p?.tel || mp?.tel || null,
                         created_at: p?.created_at || new Date().toISOString(),
                         deleted_at: ps.deleted_at || p?.deleted_at || null
-                    } as any;
+                    };
                 });
             }
         }
@@ -1060,7 +1088,7 @@ export async function updatePlayer(
     if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
 
     // 1. Update players
-    const playerUpdate: any = {};
+    const playerUpdate: Record<string, unknown> = {};
     if (data.name !== undefined) {
         playerUpdate.display_name = data.name;
     }
@@ -1078,7 +1106,7 @@ export async function updatePlayer(
     }
 
     // 3. Update player_sports
-    const psUpdate: any = {};
+    const psUpdate: Record<string, unknown> = {};
     if (data.position !== undefined) {
         psUpdate.position = data.position;
     }
@@ -1177,7 +1205,7 @@ export async function importRoster(
             .single();
         if (part) {
             targetGlobalTeamId = part.team_id;
-            targetTournamentId = (part.tournament_categories as any)?.tournament_id;
+            targetTournamentId = (part.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
             const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", targetGlobalTeamId).single();
             if (teamData) targetSportId = teamData.sport_id;
         }
@@ -1271,7 +1299,7 @@ export async function resetRoster(teamId: string): Promise<ActionResponse> {
 
     // 2. Update players.deleted_at
     if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r: any) => r.player_id);
+        const playerIds = psRecords.map((r) => r.player_id);
         const { error: pError } = await adminSupabase
             .from("players")
             .update({ deleted_at: now })
@@ -1314,7 +1342,7 @@ export async function restoreRoster(teamId: string): Promise<ActionResponse> {
 
     // 2. Update players.deleted_at to null
     if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r: any) => r.player_id);
+        const playerIds = psRecords.map((r) => r.player_id);
         const { error: pError } = await adminSupabase
             .from("players")
             .update({ deleted_at: null })
@@ -1333,7 +1361,6 @@ export async function restoreRoster(teamId: string): Promise<ActionResponse> {
  */
 export async function hasSoftDeletedPlayers(teamId: string): Promise<ActionResponse<boolean>> {
     const supabase = await createClient();
-    const adminSupabase = createAdminClient();
 
     // Check if there are any records in player_sports where deleted_at IS NOT NULL
     const { count, error } = await supabase

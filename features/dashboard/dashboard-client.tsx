@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createMasterPlayer } from "@/actions/common/user";
-import { updateGlobalPlayerInfo, updateGlobalPlayerPhoto } from "@/actions/organizer/tournaments/global-player";
+import { updateGlobalPlayerInfo, updateGlobalPlayerPhoto } from "@/actions/tournaments/master-player";
 import { Link } from "@/i18n/routing";
 import {
     Trophy, User, Calendar, Phone, Shield, Search,

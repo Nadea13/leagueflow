@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useTransition, useEffect, useState } from "react";
-import { updateTournament } from "@/actions/organizer/tournaments/general";
+import { updateTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

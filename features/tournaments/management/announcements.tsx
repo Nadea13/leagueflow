@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Announcement } from "@/types/index";
-import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnouncementPin } from "@/actions/organizer/tournaments/announcement";
+import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnouncementPin } from "@/actions/tournaments/announcement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

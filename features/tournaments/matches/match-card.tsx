@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Eraser } from "lucide-react";
 import { Match, Team } from "@/types/index";
-import { updateMatch } from "@/actions/organizer/tournaments/general";
+import { updateMatch } from "@/actions/tournaments/matches";
 import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
@@ -210,7 +210,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     {match.home_team?.name || tMatch("tbd")}
                                 </span>
                                 {match.home_team?.logo_url ? (
-                                    <img src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt=""/>
+                                    <img src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
                                 ) : (
                                     <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">

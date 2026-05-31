@@ -26,7 +26,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { resetFixtures, resetBracketFlow, deleteTournament } from "@/actions/organizer/tournaments/general";
+import { deleteTournament } from "@/actions/tournaments/general";
+import { resetFixtures, resetBracketFlow } from "@/actions/tournaments/fixtures";
 
 interface DangerZoneProps {
     tournamentId: string;
