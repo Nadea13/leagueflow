@@ -108,6 +108,7 @@ export const StandingNode = memo(({
         return resolved.filter(name => name);
     }, [sourceGroupNode, edges, nodes, data.teams, storeTeams]);
 
+    const activeCategoryId = useBracketStore((state) => state.activeCategoryId);
     const advancingCount = Number(data.advancingCount) || 0;
 
     const teamsJson = JSON.stringify(effectiveTeams);
@@ -120,15 +121,7 @@ export const StandingNode = memo(({
             }
 
             try {
-                // 1. Fetch category id first
-                const { data: categories, error: catError } = await supabase
-                    .from('tournament_categories')
-                    .select('id')
-                    .eq('tournament_id', tournamentId);
-
-                if (catError) throw catError;
-                
-                const categoryId = categories?.[0]?.id;
+                const categoryId = activeCategoryId;
                 if (!categoryId) {
                     setLoading(false);
                     return;
@@ -150,8 +143,8 @@ export const StandingNode = memo(({
 
                 // 2. Fetch all matches and tournament teams using category ID
                 const [matchesRes, teamsRes] = await Promise.all([
-                    supabase.from('matches').select('*').eq('tournament_category_id', categoryId),
-                    supabase.from('tournament_teams').select('*, team:teams(id, name)').eq('tournament_category_id', categoryId)
+                    supabase.from('matches').select('*').eq('tournament_category_id', categoryId).is('deleted_at', null),
+                    supabase.from('tournament_teams').select('*, team:teams(id, name)').eq('tournament_category_id', categoryId).is('deleted_at', null)
                 ]);
 
                 if (matchesRes.error || teamsRes.error) throw matchesRes.error || teamsRes.error;
@@ -188,7 +181,7 @@ export const StandingNode = memo(({
                     const h = statsMap[homeName];
                     const a = statsMap[awayName];
 
-                    if (m.status === 'finished') {
+                    if (m.status === 'finished' || m.status === 'live') {
                         if (h && a) {
                             const hScore = typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as { total?: number }).total) || 0 : Number(m.home_score) || 0;
                             const aScore = typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as { total?: number }).total) || 0 : Number(m.away_score) || 0;
@@ -201,8 +194,8 @@ export const StandingNode = memo(({
                                 h.w++; h.pts += 3; h.form.push('W');
                                 a.l++; a.form.push('L');
                             } else if (hScore < aScore) {
-                                a.w++; a.pts += 3; a.form.push('W');
-                                h.l++; h.form.push('L');
+                                a.w++; a.pts += 3; h.form.push('L');
+                                h.l++; a.form.push('W');
                             } else {
                                 h.d++; h.pts += 1; h.form.push('D');
                                 a.d++; a.pts += 1; a.form.push('D');
@@ -238,7 +231,7 @@ export const StandingNode = memo(({
         }
 
         fetchAndCalculate();
-    }, [tournamentId, teamsJson, id, effectiveTeams, supabase, updateNodeData]); 
+    }, [tournamentId, teamsJson, id, effectiveTeams, supabase, updateNodeData, activeCategoryId]); 
 
     // Visibility defaults
     const showPlayed = data.showPlayed !== false;
@@ -370,8 +363,8 @@ export const StandingNode = memo(({
                                                                 key={i} 
                                                                 className={cn(
                                                                     "w-2.5 h-2.5 rounded-full flex items-center justify-center text-[6px] font-black text-white transition-all",
-                                                                    res === 'W' ? "bg-node-1" : 
-                                                                    res === 'D' ? "bg-amber-500" : 
+                                                                    res === 'W' ? "bg-primary" : 
+                                                                    res === 'D' ? "bg-muted-foreground" : 
                                                                     res === 'L' ? "bg-destructive" : 
                                                                     "bg-muted-foreground/20 border border-muted-foreground/10"
                                                                 )}

@@ -1,6 +1,6 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
-import { MatchConsolePage } from "@/features/matches/match-console-page";
+import { MatchConsolePage } from "@/features/sports/football/match-console-page";
 import { MatchEvent } from "@/types";
 
 export default async function AdminMatchConsole(props: {
@@ -31,30 +31,30 @@ export default async function AdminMatchConsole(props: {
 
     if (rawMatch.home_team_id) {
         const { data: ht } = await supabase
-            .from('tournament_teams')
-            .select('id, team:teams(name, logo_img)')
+            .from('teams')
+            .select('id, name, logo_img')
             .eq('id', rawMatch.home_team_id)
             .maybeSingle();
         if (ht) {
             home_team = {
                 id: ht.id,
-                name: (ht.team as any)?.name || 'Unknown Team',
-                logo_url: (ht.team as any)?.logo_img || null
+                name: String(ht.name || 'Unknown Team'),
+                logo_url: ht.logo_img ? String(ht.logo_img) : null
             };
         }
     }
 
     if (rawMatch.away_team_id) {
         const { data: at } = await supabase
-            .from('tournament_teams')
-            .select('id, team:teams(name, logo_img)')
+            .from('teams')
+            .select('id, name, logo_img')
             .eq('id', rawMatch.away_team_id)
             .maybeSingle();
         if (at) {
             away_team = {
                 id: at.id,
-                name: (at.team as any)?.name || 'Unknown Team',
-                logo_url: (at.team as any)?.logo_img || null
+                name: String(at.name || 'Unknown Team'),
+                logo_url: at.logo_img ? String(at.logo_img) : null
             };
         }
     }
@@ -90,7 +90,7 @@ export default async function AdminMatchConsole(props: {
     }));
 
     const categoryId = typeof resolvedParams.category === 'string' ? resolvedParams.category : rawMatch.tournament_category_id;
-    const backUrl = categoryId 
+    const backUrl = categoryId
         ? `/dashboard/tournaments/${id}?category=${categoryId}`
         : `/dashboard/tournaments/${id}?tab=${fromTab}`;
 
@@ -98,6 +98,7 @@ export default async function AdminMatchConsole(props: {
         <MatchConsolePage
             match={match}
             tournamentId={id}
+            tournamentName={tournament?.name || undefined}
             readOnly={false}
             initialEvents={formattedEvents as MatchEvent[]}
             backUrl={backUrl}

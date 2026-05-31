@@ -39,7 +39,6 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
 
         // Load on mount
         const loadEvents = async () => {
-            if (!initialData) setIsLoading(true);
             if (isReadOnly) {
                 // Public view: use client-side query (no auth issues)
                 await fetchEventsClient();
@@ -69,14 +68,6 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                 if (!isMounted) return;
 
                 if (payload.eventType === 'INSERT') {
-                    const newEvent = payload.new as MatchEvent;
-                    setEvents((prev: MatchEvent[]) => {
-                        if (prev.some((e: MatchEvent) => e.id === newEvent.id)) return prev;
-                        return [newEvent, ...prev].sort((a: MatchEvent, b: MatchEvent) => {
-                            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                        });
-                    });
-                    
                     if (isReadOnly) {
                         await fetchEventsClient();
                     } else {

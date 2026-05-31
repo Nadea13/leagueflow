@@ -184,6 +184,66 @@ function CanvasInternal({
         }
     }, [readonly, currentStatus]);
 
+    // Warning popup when reloading/closing tab with unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty && !readonly) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [isDirty, readonly]);
+
+    // Intercept client-side Next.js route navigation clicks
+    useEffect(() => {
+        if (readonly || isLocked || !isDirty) return;
+
+        const handleAnchorClick = (e: MouseEvent) => {
+            let target = e.target as HTMLElement | null;
+            while (target && target.tagName !== 'A') {
+                target = target.parentElement;
+            }
+
+            if (target instanceof HTMLAnchorElement) {
+                const href = target.getAttribute('href');
+                if (href) {
+                    const currentPath = window.location.pathname;
+                    let targetPath = '';
+                    try {
+                        const url = new URL(href, window.location.origin);
+                        if (url.origin === window.location.origin) {
+                            targetPath = url.pathname;
+                        }
+                    } catch {
+                        // ignore
+                    }
+
+                    if (targetPath && targetPath !== currentPath) {
+                        const confirmClose = window.confirm(
+                            locale === 'th'
+                                ? "คุณยังไม่ได้บันทึกการเปลี่ยนแปลงบนบอร์ด! ข้อมูลที่แก้ไขจะหายไป คุณแน่ใจหรือไม่ว่าต้องการออกจากหน้านี้โดยไม่บันทึก?"
+                                : "You have unsaved changes on the canvas! Your modifications will be lost. Are you sure you want to leave without saving?"
+                        );
+                        if (!confirmClose) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('click', handleAnchorClick, true);
+        return () => {
+            document.removeEventListener('click', handleAnchorClick, true);
+        };
+    }, [isDirty, readonly, isLocked, locale]);
+
     const [isStatusUpdating, setIsStatusUpdating] = useState(false);
     const router = useRouter();
 
@@ -410,10 +470,73 @@ function CanvasInternal({
 
     const [_isDragging, setIsDragging] = useState(false);
 
+    // Keyboard shortcuts for undo, redo, copy, paste, cut
+    useEffect(() => {
+        if (readonly || isLocked) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const activeEl = document.activeElement;
+            if (
+                activeEl &&
+                (activeEl.tagName === 'INPUT' ||
+                 activeEl.tagName === 'TEXTAREA' ||
+                 activeEl.getAttribute('contenteditable') === 'true')
+            ) {
+                return;
+            }
+
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+
+            if (modifierKey) {
+                const key = e.key.toLowerCase();
+                
+                if (key === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        useBracketStore.getState().redo();
+                    } else {
+                        useBracketStore.getState().undo();
+                    }
+                } else if (key === 'y') {
+                    e.preventDefault();
+                    useBracketStore.getState().redo();
+                } else if (key === 'c') {
+                    e.preventDefault();
+                    useBracketStore.getState().copyNodes();
+                } else if (key === 'v') {
+                    e.preventDefault();
+                    useBracketStore.getState().pasteNodes();
+                } else if (key === 'x') {
+                    e.preventDefault();
+                    useBracketStore.getState().cutNodes();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [readonly, isLocked]);
+
     // Event-based state triggers
     const onNodeDragStart = useCallback(() => {
         setIsDragging(true);
+        useBracketStore.getState().takeSnapshot();
     }, []);
+
+    const handleClose = useCallback(() => {
+        if (isDirty && !readonly) {
+            const confirmClose = window.confirm(
+                locale === 'th'
+                    ? "คุณยังไม่ได้บันทึกการเปลี่ยนแปลงบนบอร์ด! ข้อมูลที่แก้ไขจะหายไป คุณแน่ใจหรือไม่ว่าต้องการออกจากหน้านี้โดยไม่บันทึก?"
+                    : "You have unsaved changes on the canvas! Your modifications will be lost. Are you sure you want to leave without saving?"
+            );
+            if (!confirmClose) return;
+        }
+        if (onClose) onClose();
+    }, [isDirty, readonly, onClose, locale]);
 
     const onDragStop = useCallback(() => {
         setIsDragging(false);
@@ -631,7 +754,7 @@ function CanvasInternal({
 
                 <div className="flex items-center gap-1 md:gap-2">
                     {onClose && (
-                        <Button variant="ghost" size="icon" onClick={onClose} className="h-10 w-10">
+                        <Button variant="ghost" size="icon" onClick={handleClose} className="h-10 w-10">
                             <X className="h-4 w-4" />
                         </Button>
                     )}

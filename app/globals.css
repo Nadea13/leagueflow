@@ -351,3 +351,15 @@
     @apply bg-background text-foreground overflow-x-hidden;
   }
 }
+
+/* React Flow Selection Box Styles */
+.react-flow__selection {
+  background: color-mix(in srgb, var(--primary) 12%, transparent) !important;
+  border: 1px solid var(--primary) !important;
+  border-style: solid !important;
+}
+
+.react-flow__nodesselection-rect {
+  border: 1px solid var(--primary) !important;
+  border-style: solid !important;
+}

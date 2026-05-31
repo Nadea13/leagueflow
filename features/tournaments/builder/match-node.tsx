@@ -3,12 +3,11 @@
 import { memo } from "react";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
 import { MatchNodeData, useBracketStore } from "@/lib/stores/bracket-store";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
-import { Match, TournamentTeam } from "@/types";
+import { useEffect, useState, useMemo } from "react";
+import { Match, TournamentTeam, MatchEvent } from "@/types";
 
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
 
@@ -26,20 +25,41 @@ export const MatchNode = memo(function MatchNode({
     const supabase = createClient();
 
     const [dbMatches, setDbMatches] = useState<Match[]>([]);
-    const matches = Array.isArray(data.matches) ? data.matches : [];
+    const [dbEvents, setDbEvents] = useState<MatchEvent[]>([]);
+    const [_tick, setTick] = useState(0);
+    const matches = useMemo(() => Array.isArray(data.matches) ? data.matches : [], [data.matches]);
+
+    // Local ticker to update the live timer every second
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTick(t => t + 1);
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
-        if (!tournamentId) return;
-
         async function fetchScores() {
+            const matchDbIds = matches.map(m => m.dbId).filter(Boolean) as string[];
+            if (matchDbIds.length === 0) return;
+
             const { data: results } = await supabase
                 .from('matches')
                 .select('*')
-                .eq('tournament_id', tournamentId)
-                .eq('node_id', id);
+                .in('id', matchDbIds)
+                .is('deleted_at', null);
             
             if (results) {
                 setDbMatches(results);
+            }
+
+            const { data: evs } = await supabase
+                .from('match_events')
+                .select('*')
+                .in('match_id', matchDbIds)
+                .in('event_type', ['kick_off', 'match_resumed']);
+            
+            if (evs) {
+                setDbEvents(evs as MatchEvent[]);
             }
         }
 
@@ -47,7 +67,7 @@ export const MatchNode = memo(function MatchNode({
         // Set up a small interval or subscription for "realtime" feel
         const interval = setInterval(fetchScores, 10000); // 10s refresh
         return () => clearInterval(interval);
-    }, [id, tournamentId, supabase]);
+    }, [id, tournamentId, supabase, matches]);
 
     return (
         <div
@@ -103,8 +123,23 @@ export const MatchNode = memo(function MatchNode({
                             return timeA.localeCompare(timeB);
                         })
                         .map((match, index) => {
+                            const dbMatch = dbMatches.find(m => 
+                                m.id === match.dbId || 
+                                (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
+                            );
+
                             // Resolve live teams from edges
                             const getResolvedTeam = (slot: 'a' | 'b') => {
+                                // 1. If we have a database match with a team ID assigned, use it
+                                if (dbMatch) {
+                                    const teamId = slot === 'a' ? dbMatch.home_team_id : dbMatch.away_team_id;
+                                    if (teamId) {
+                                        const team = storeTeams.find(t => String(t.team_id || t.id) === String(teamId));
+                                        if (team) return team.name;
+                                    }
+                                }
+
+                                // 2. Fall back to resolved placeholder/ranking/label from edge connections
                                 const handleId = `slot-${slot}-${index}`;
                                 const edge = edges.find(e => e.target === id && e.targetHandle === handleId);
                                 if (!edge) return null;
@@ -118,7 +153,7 @@ export const MatchNode = memo(function MatchNode({
                                     if (teamIdMatch) {
                                         const teamId = teamIdMatch[1];
                                         const sourceTeams = (sourceNode.data.teams as TournamentTeam[]) || storeTeams;
-                                        const team = sourceTeams.find(t => String(t.id) === String(teamId));
+                                        const team = sourceTeams.find(t => String(t.id) === String(teamId) || String(t.team_id) === String(teamId));
                                         return team?.name || null;
                                     }
                                 }
@@ -135,7 +170,6 @@ export const MatchNode = memo(function MatchNode({
                                         return `${rankSuffix} Place (${sourceNode.data.label})`;
                                     }
                                 }
-
 
                                 // Handle MatchNode propagation (Winner / Loser)
                                 if (sourceNode.type === 'matchNode') {
@@ -156,12 +190,7 @@ export const MatchNode = memo(function MatchNode({
 
                             const liveTeamA = getResolvedTeam('a');
                             const liveTeamB = getResolvedTeam('b');
-
-                            const dbMatch = dbMatches.find(m => 
-                                m.id === match.dbId || 
-                                (m.placeholder_a === (liveTeamA || match.placeholderA) && m.placeholder_b === (liveTeamB || match.placeholderB))
-                            );
-
+                            
                             const matchDate = dbMatch?.match_date || match.match_date;
                             const matchTime = dbMatch?.match_time || match.match_time;
 
@@ -179,13 +208,40 @@ export const MatchNode = memo(function MatchNode({
                                             ) : (
                                                 <span />
                                             )}
-                                            {(matchDate || matchTime) && (
+                                            {dbMatch?.status === 'live' ? (() => {
+                                                const elapsed = dbMatch.elapsed_before_pause || 0;
+                                                let liveSeconds = elapsed;
+                                                
+                                                if (dbMatch.timer_status === 'playing') {
+                                                    const markers = dbEvents.filter(e => e.match_id === dbMatch.id && (e.event_type === 'kick_off' || e.event_type === 'match_resumed'));
+                                                    const latestMarker = markers.length > 0
+                                                        ? [...markers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+                                                        : null;
+                                                        
+                                                    if (latestMarker) {
+                                                        const markerTimestamp = (latestMarker.extra_info as Record<string, unknown> | undefined)?.start_timestamp as number || new Date(latestMarker.created_at).getTime();
+                                                        const diffSeconds = Math.max(0, Math.floor((Date.now() - markerTimestamp) / 1000));
+                                                        liveSeconds = elapsed + diffSeconds;
+                                                    }
+                                                }
+                                                
+                                                const mins = Math.floor(liveSeconds / 60);
+                                                const secs = liveSeconds % 60;
+                                                const formattedTime = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                                                
+                                                return (
+                                                    <span className="text-[10px] font-black text-primary flex items-center gap-1">
+                                                        <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
+                                                        {formattedTime}
+                                                    </span>
+                                                );
+                                            })() : (matchDate || matchTime) ? (
                                                 <span className="text-[10px] font-medium text-muted-foreground">
                                                     {matchDate && <span>{matchDate}</span>}
                                                     {matchDate && matchTime && <span className="mx-1">| </span>}
                                                     {matchTime && <span>{matchTime}</span>}
                                                 </span>
-                                            )}
+                                            ) : null}
                                         </div>
                                     )}
  
@@ -295,10 +351,9 @@ function SlotRow({
     isResolved,
     position,
     onDropTeam,
-    onClear,
 }: {
     label: string;
-    score?: number | null;
+    score?: unknown;
     isWinner?: boolean;
     status?: string;
     isResolved?: boolean;
@@ -318,6 +373,13 @@ function SlotRow({
         }
         return name.slice(0, 2).toUpperCase();
     };
+
+    const hasScore = score !== undefined && score !== null && status !== 'scheduled';
+    const displayScore = hasScore
+        ? (typeof score === 'object' && score !== null && 'total' in score
+            ? String((score as Record<string, unknown>).total)
+            : String(score))
+        : "";
 
     return (
         <div 
@@ -356,24 +418,10 @@ function SlotRow({
             )}>
                 {label}
             </span>
-            {(score !== undefined && score !== null && status !== 'scheduled') && (
-                <div className={cn(
-                    "w-6 h-6 flex items-center justify-center font-black text-[11px] rounded border",
-                    isWinner ? "bg-emerald-500 text-white border-emerald-600" : "bg-muted border-border text-muted-foreground"
-                )}>
-                    {score}
+            {hasScore && (
+                <div className="w-6 h-6 flex items-center justify-center font-black text-xs">
+                    {displayScore}
                 </div>
-            )}
-            {label !== "TBD" && (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onClear?.();
-                    }}
-                    className="p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover/slot:opacity-100"
-                >
-                    <X className="h-3 w-3" />
-                </button>
             )}
         </div>
     );

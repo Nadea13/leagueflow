@@ -4,16 +4,19 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ActionResponse, Match } from "@/types/index";
+import { ActionResponse, Match, BracketCanvasData } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { initTournamentStructure } from "@/lib/fixture-utils";
 import { validateTournamentAccess } from "@/lib/security";
 import { validateUploadedFile } from "@/lib/file-validation";
+import { propagateGroupStandings, propagateKnockoutResults } from "@/actions/organizer/tournaments/general";
 
-const getScoreTotal = (scoreObj: any): number => {
+const getScoreTotal = (scoreObj: unknown): number => {
     if (!scoreObj) return 0;
-    if (typeof scoreObj === 'object') {
-        return scoreObj.total || 0;
+    if (typeof scoreObj === 'object' && scoreObj !== null) {
+        const total = (scoreObj as Record<string, unknown>).total;
+        const val = Number(total);
+        return isNaN(val) ? 0 : val;
     }
     const val = Number(scoreObj);
     return isNaN(val) ? 0 : val;
@@ -121,7 +124,7 @@ export async function addTeam(
         return { success: false, error: `Failed to create team: ${globalTeamError.message}` };
     }
 
-    const { data: teamData, error } = await supabase.from("tournament_teams").insert({
+    const { error } = await supabase.from("tournament_teams").insert({
         tournament_category_id: tournamentCategory.id,
         team_id: globalTeam.id,
         payment_status: 'paid',
@@ -129,7 +132,7 @@ export async function addTeam(
         registration_status: 'approved',
         remark: null,
         created_at: new Date().toISOString(),
-    }).select().single();
+    });
 
     if (error) {
         // Rollback global team if tournament_teams insert fails
@@ -209,7 +212,7 @@ export async function updateTeam(
         return { success: false, error: "Team registration not found" };
     }
 
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
         name,
         description: description || null,
         logo_img: logo_url || null
@@ -275,7 +278,7 @@ export async function deleteTeam(teamId: string, tournamentId: string): Promise<
 
     // 3. Soft-delete players
     if (psRecords && psRecords.length > 0) {
-        const playerIds = psRecords.map((r: any) => r.player_id);
+        const playerIds = psRecords.map((r: { player_id: string }) => r.player_id);
         await adminSupabase
             .from("players")
             .update({ deleted_at: now })
@@ -599,7 +602,6 @@ export async function createMatch(
     stage: string = 'league',
     match_date?: string,
     match_time?: string,
-    venue?: string
 ): Promise<ActionResponse> {
     const access = await validateTournamentAccess(tournamentId, 'editor');
     if (!access.success) return { success: false, error: access.error };
@@ -668,6 +670,7 @@ export async function updateMatch(
         timer_status?: 'playing' | 'paused' | 'stopped';
         elapsed_before_pause?: number;
         current_minute?: number | string;
+        winner_to_node_id?: string | null;
     },
     tournamentId: string
 ): Promise<ActionResponse> {
@@ -682,12 +685,13 @@ export async function updateMatch(
         .eq('id', matchId)
         .single();
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, unknown> = {};
     if (data.home_team_id !== undefined) updateData.home_team_id = data.home_team_id;
     if (data.away_team_id !== undefined) updateData.away_team_id = data.away_team_id;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.timer_status !== undefined) updateData.timer_status = data.timer_status;
     if (data.elapsed_before_pause !== undefined) updateData.elapsed_before_pause = data.elapsed_before_pause;
+    if (data.winner_to_node_id !== undefined) updateData.winner_to_node_id = data.winner_to_node_id;
     if (data.current_minute !== undefined) {
         const minVal = Number(data.current_minute);
         updateData.current_minute = isNaN(minVal) ? null : minVal;
@@ -723,19 +727,12 @@ export async function updateMatch(
         return { success: false, error: error.message };
     }
 
-    // Auto-Advance Winner (Knockout Only)
-    if (updatedMatch && updatedMatch.status === 'finished' && updatedMatch.stage !== 'group') {
-        let winnerId = null;
-
-        const homeTotal = getScoreTotal(updatedMatch.home_score);
-        const awayTotal = getScoreTotal(updatedMatch.away_score);
-
-        if (homeTotal !== awayTotal) {
-            winnerId = homeTotal > awayTotal ? updatedMatch.home_team_id : updatedMatch.away_team_id;
-        }
-
-        if (winnerId) {
-            await advanceWinner(updatedMatch, winnerId, supabase);
+    // Auto-Advance Winner & Propagate Standings
+    if (updatedMatch && updatedMatch.status === 'finished') {
+        if (updatedMatch.stage === 'group') {
+            await propagateGroupStandings(updatedMatch.tournament_category_id, supabase);
+        } else {
+            await propagateKnockoutResults(updatedMatch, supabase);
         }
     }
 
@@ -1104,7 +1101,7 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
 
     if (!currentRoundMatches || currentRoundMatches.length === 0) return;
 
-    const indexInRound = currentRoundMatches.findIndex((m: any) => m.id === match.id);
+    const indexInRound = currentRoundMatches.findIndex((m: { id: string }) => m.id === match.id);
     if (indexInRound === -1) return;
 
     const nextRound = match.round + 1;
@@ -1126,62 +1123,4 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
     }
 }
 
-function getGroupStandings(groupTeams: Record<string, unknown>[], allMatches: Match[]): Array<Record<string, unknown> & { id: string; points: number; gd: number; gf: number }> {
-    return groupTeams.map(t => {
-        const teamMatches = allMatches.filter(m =>
-            (m.home_team_id === t.id || m.away_team_id === t.id)
-        );
-
-        let points = 0;
-        let gd = 0;
-        let gf = 0;
-
-        teamMatches.forEach(m => {
-            if (!['finished', 'live'].includes(m.status)) return;
-
-            const isHome = m.home_team_id === t.id;
-            const myScore = getScoreTotal(isHome ? m.home_score : m.away_score);
-            const otherScore = getScoreTotal(isHome ? m.away_score : m.home_score);
-
-            if (myScore !== null && otherScore !== null) {
-                if (myScore > otherScore) points += 3;
-                else if (myScore === otherScore) points += 1;
-
-                gd += (myScore - otherScore);
-                gf += myScore;
-            }
-        });
-
-        return { ...t, id: t.id as string, points, gd, gf };
-    }).sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-
-        const h2hMatches = allMatches.filter(m =>
-            (m.home_team_id === a.id && m.away_team_id === b.id) ||
-            (m.home_team_id === b.id && m.away_team_id === a.id)
-        );
-
-        let aH2HPoints = 0;
-        let bH2HPoints = 0;
-
-        h2hMatches.forEach(m => {
-            const aIsHome = m.home_team_id === a.id;
-            const aScore = getScoreTotal(aIsHome ? m.home_score : m.away_score);
-            const bScore = getScoreTotal(aIsHome ? m.away_score : m.home_score);
-
-            if (aScore !== null && bScore !== null) {
-                if (aScore > bScore) aH2HPoints += 3;
-                else if (bScore > aScore) bH2HPoints += 3;
-                else {
-                    aH2HPoints += 1;
-                    bH2HPoints += 1;
-                }
-            }
-        });
-
-        if (bH2HPoints !== aH2HPoints) return bH2HPoints - aH2HPoints;
-
-        if (b.gd !== a.gd) return b.gd - a.gd;
-        return b.gf - a.gf;
-    });
-}
+// propagateGroupStandings and propagateKnockoutResults are now imported from @/actions/organizer/tournaments/general

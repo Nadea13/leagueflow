@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useBracketStore } from "@/lib/stores/bracket-store";
+import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X } from "lucide-react";
@@ -53,29 +54,93 @@ export function NodeSettings() {
         }
     }, [activeCategoryId, fetchTeams, selectedNode?.type]);
 
+    const supabase = React.useMemo(() => createClient(), []);
+    const [dbMatches, setDbMatches] = React.useState<any[]>([]);
+
+    useEffect(() => {
+        async function fetchScores() {
+            if (selectedNode?.type !== "matchNode") return;
+            const nodeMatches = (selectedNode.data.matches as MatchItem[]) || [];
+            const matchDbIds = nodeMatches.map(m => m.dbId || m.matchId).filter(Boolean) as string[];
+            if (matchDbIds.length === 0) return;
+
+            const { data: results } = await supabase
+                .from('matches')
+                .select('*')
+                .in('id', matchDbIds)
+                .is('deleted_at', null);
+            
+            if (results) {
+                setDbMatches(results);
+            }
+        }
+
+        fetchScores();
+        const interval = setInterval(fetchScores, 10000);
+        return () => clearInterval(interval);
+    }, [selectedNode, supabase]);
+
     if (!selectedNode || !activeNodeId) {
         return null;
     }
 
     const { id, type, data } = selectedNode;
 
-    // Resolve live teams from edges
-    const getResolvedTeam = (targetId: string, handleId: string) => {
+    // Resolve live teams from edges or database assignments
+    const getResolvedTeam = (targetId: string, handleId: string, dbMatch: any, slot: 'a' | 'b') => {
+        // 1. If we have a database match with a team ID assigned, use it
+        if (dbMatch) {
+            const teamId = slot === 'a' ? dbMatch.home_team_id : dbMatch.away_team_id;
+            if (teamId) {
+                const team = teams.find(t => String(t.team_id || t.id) === String(teamId));
+                if (team) return team.name;
+            }
+        }
+
+        // 2. Fall back to resolved placeholder/ranking/label from edge connections
         const edge = edges.find(e => e.target === targetId && e.targetHandle === handleId);
         if (!edge) return null;
 
         const sourceNode = nodes.find(n => n.id === edge.source);
         if (!sourceNode) return null;
 
-        // Handle StandingNode propagation
-        if (sourceNode.type === 'standingNode') {
+        // Handle TeamListNode propagation
+        if (sourceNode.type === 'teamListNode') {
+            const teamIdMatch = edge.sourceHandle?.match(/team-(.+)/);
+            if (teamIdMatch) {
+                const teamId = teamIdMatch[1];
+                const team = teams.find(t => String(t.id) === String(teamId) || String(t.team_id) === String(teamId));
+                return team?.name || null;
+            }
+        }
+
+        // Handle StandingNode/GroupNode propagation
+        if (sourceNode.type === 'standingNode' || sourceNode.type === 'groupNode') {
             const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
             if (rankMatch) {
                 const rankIndex = parseInt(rankMatch[1], 10);
                 const rankings = (sourceNode.data as { rankings?: string[] }).rankings || [];
-                return rankings[rankIndex] || `${rankIndex + 1}st Place (${sourceNode.data.label})`;
+                if (rankings[rankIndex]) return rankings[rankIndex];
+                
+                const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
+                return `${rankSuffix} Place (${sourceNode.data.label})`;
             }
         }
+
+        // Handle MatchNode propagation (Winner / Loser)
+        if (sourceNode.type === 'matchNode') {
+            const winnerMatch = edge.sourceHandle?.match(/winner-(\d+)/);
+            if (winnerMatch) {
+                const winnerIndex = parseInt(winnerMatch[1], 10);
+                return `Winner (Match ${winnerIndex + 1})`;
+            }
+            const loserMatch = edge.sourceHandle?.match(/loser-(\d+)/);
+            if (loserMatch) {
+                const loserIndex = parseInt(loserMatch[1], 10);
+                return `Loser (Match ${loserIndex + 1})`;
+            }
+        }
+
         return null;
     };
 
@@ -272,15 +337,19 @@ export function NodeSettings() {
                                                 }
                                             };
 
-                                            const liveTeamA = getResolvedTeam(id, `slot-a-${idx}`);
-                                            const liveTeamB = getResolvedTeam(id, `slot-b-${idx}`);
-
+                                            const dbMatch = dbMatches.find(m => 
+                                                m.id === match.dbId || 
+                                                (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
+                                            );
+                                            const liveTeamA = getResolvedTeam(id, `slot-a-${idx}`, dbMatch, 'a');
+                                            const liveTeamB = getResolvedTeam(id, `slot-b-${idx}`, dbMatch, 'b');
+ 
                                             const homeOptions = getSelectOptions(match.placeholderA);
                                             const awayOptions = getSelectOptions(match.placeholderB);
-
+ 
                                             const homeSelectItems = getSelectItems(homeOptions, liveTeamA);
                                             const awaySelectItems = getSelectItems(awayOptions, liveTeamB);
-
+ 
                                             return (
                                                 <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
                                                     <div className="flex justify-between items-center">
@@ -302,7 +371,7 @@ export function NodeSettings() {
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px]">Home Team</Label>
                                                             <Select
-                                                                value={match.placeholderA}
+                                                                value={liveTeamA || match.placeholderA}
                                                                 onValueChange={(val) => updateMatch({ placeholderA: val })}
                                                             >
                                                                 <SelectTrigger className={`bg-card w-full ${liveTeamA ? "text-violet-600 font-black border-violet-200" : ""}`}>
@@ -322,7 +391,7 @@ export function NodeSettings() {
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px]">Away Team</Label>
                                                             <Select
-                                                                value={match.placeholderB}
+                                                                value={liveTeamB || match.placeholderB}
                                                                 onValueChange={(val) => updateMatch({ placeholderB: val })}
                                                             >
                                                                 <SelectTrigger className={`bg-card w-full ${liveTeamB ? "text-violet-600 font-black border-violet-200" : ""}`}>

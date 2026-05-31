@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { MatchConsolePage } from "@/features/matches/match-console-page";
+import { MatchConsolePage } from "@/features/sports/football/match-console-page";
 import { MatchEvent } from "@/types";
 import { PublicFooter } from "@/components/layout/public-footer";
 import { getPlans } from "@/actions/admin/plans";
@@ -32,8 +32,8 @@ export default async function PublicMatchConsole(props: {
         .from('matches')
         .select(`
             *,
-            home_team:tournament_teams!matches_home_team_id_fkey(id, team:teams(name, logo_img)),
-            away_team:tournament_teams!matches_away_team_id_fkey(id, team:teams(name, logo_img))
+            home_team:teams!matches_home_team_id_fkey(id, name, logo_img),
+            away_team:teams!matches_away_team_id_fkey(id, name, logo_img)
         `)
         .eq('id', matchId)
         .eq('tournament_id', id)
@@ -47,13 +47,13 @@ export default async function PublicMatchConsole(props: {
         ...rawMatch,
         home_team: rawMatch.home_team ? {
             id: rawMatch.home_team.id,
-            name: (rawMatch.home_team.team as any)?.name || 'Unknown Team',
-            logo_url: (rawMatch.home_team.team as any)?.logo_img || null
+            name: String(rawMatch.home_team.name || 'Unknown Team'),
+            logo_url: rawMatch.home_team.logo_img ? String(rawMatch.home_team.logo_img) : null
         } : null,
         away_team: rawMatch.away_team ? {
             id: rawMatch.away_team.id,
-            name: (rawMatch.away_team.team as any)?.name || 'Unknown Team',
-            logo_url: (rawMatch.away_team.team as any)?.logo_img || null
+            name: String(rawMatch.away_team.name || 'Unknown Team'),
+            logo_url: rawMatch.away_team.logo_img ? String(rawMatch.away_team.logo_img) : null
         } : null,
     };
 

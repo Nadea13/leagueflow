@@ -186,12 +186,8 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         setMatch(prev => ({ ...prev, status: 'live', timer_status: 'playing' }));
 
         try {
-            if (resolvedTeamId) {
-                const res = await addEvent(resolvedTeamId, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
-                if (!res.success) throw new Error(`${res.error || "Failed to add kick-off"} (Team: ${resolvedTeamId})`);
-            } else {
-                throw new Error("Missing team IDs for kick-off");
-            }
+            const res = await addEvent(resolvedTeamId || null, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
+            if (!res.success) throw new Error(`${res.error || "Failed to add kick-off"}`);
 
             const updateRes = await updateMatch(match.id, { status: 'live', timer_status: 'playing', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match"} (Match: ${match.id})`);
@@ -223,10 +219,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         setMatch(prev => ({ ...prev, timer_status: 'paused', elapsed_before_pause: time }));
 
         try {
-            if (resolvedTeamId) {
-                const res = await addEvent(resolvedTeamId, 'match_paused', currentMinute, null, {}, "Match Paused");
-                if (!res.success) throw new Error(`${res.error || "Failed to add match pause"} (Team: ${resolvedTeamId})`);
-            }
+            const res = await addEvent(resolvedTeamId || null, 'match_paused', currentMinute, null, {}, "Match Paused");
+            if (!res.success) throw new Error(`${res.error || "Failed to add match pause"}`);
+
             // Clear any 'add_time' events when pausing, so it's reset for the next resumption
             const addTimeEvents = events.filter(e => e.event_type === 'add_time');
             for (const e of addTimeEvents) {
@@ -263,10 +258,9 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         setMatch(prev => ({ ...prev, timer_status: 'playing' }));
 
         try {
-            if (resolvedTeamId) {
-                const res = await addEvent(resolvedTeamId, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
-                if (!res.success) throw new Error(`${res.error || "Failed to add match resume"} (Team: ${resolvedTeamId})`);
-            }
+            const res = await addEvent(resolvedTeamId || null, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
+            if (!res.success) throw new Error(`${res.error || "Failed to add match resume"}`);
+
             const updateRes = await updateMatch(match.id, { timer_status: 'playing', current_minute: Math.floor(time / 60) + 1 }, tournamentId);
             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match resume"} (Match: ${match.id})`);
 
@@ -309,7 +303,8 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 home_score: isHomeWinner ? 3 : 0, 
                 away_score: isHomeWinner ? 0 : 3, 
                 winner_id: winnerId,
-                current_minute: 0
+                current_minute: 0,
+                winner_to_node_id: winnerId
             }, tournamentId);
 
             // Auto-advance if possible
@@ -374,11 +369,11 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const addedTime = (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null;
 
     // --- Team Action Grid Component ---
-    const TeamActionGrid = ({ teamId, name, type }: { teamId: string, name: string, type: 'home' | 'away' }) => {
+    const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
         const actions = [
             { type: 'goal', label: t("goal"), icon: Trophy, color: 'hover:bg-primary hover:text-black hover:border-primary' },
-            { type: 'yellow_card', label: t("yellow_card"), icon: Square, color: 'hover:bg-yellow-400 hover:text-black hover:border-yellow-400', iconColor: 'text-yellow-500' },
-            { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-foreground hover:border-red-500', iconColor: 'text-red-500' },
+            { type: 'yellow_card', label: t("yellow_card"), icon: Square, color: 'hover:bg-yellow-400 hover:text-black hover:border-yellow-400', iconColor: 'text-yellow-500 fill-yellow-500' },
+            { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-foreground hover:border-red-500', iconColor: 'text-red-500 fill-red-500' },
             { type: 'substitution', label: t("substitution"), icon: Repeat, color: 'hover:bg-blue-500 hover:text-foreground hover:border-blue-500' },
             { type: 'foul', label: t("foul") || "Foul", icon: Activity, color: 'hover:bg-orange-500 hover:text-foreground hover:border-orange-500' },
             { type: 'penalty', label: t("penalty") || "Penalty", icon: Target, color: 'hover:bg-indigo-600 hover:text-foreground hover:border-indigo-600' },
@@ -388,26 +383,25 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         ];
 
         return (
-            <div className="bg-card border border-foreground/5 p-4 md:p-6 relative overflow-hidden group">
-                <div className="relative z-10 space-y-2 md:space-y-3">
-                    <div className="space-y-1 pb-2 md:pb-3 border-b border-foreground/5">
-                        <h3 className="text-xl font-black tracking-tighter text-foreground">{name}</h3>
-                        <p className="text-[9px] text-muted-foreground tracking-widest">{type === 'home' ? 'Home' : 'Away'} Team Actions</p>
+            <div className="bg-background border rounded-xl p-2 md:p-4 relative overflow-hidden group">
+                <div className="relative z-10 space-y-2 md:space-y-4">
+                    <div className="space-y-1">
+                        <h3 className="text-xl md:text-2xl font-black tracking-tighter">{name}</h3>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 md:gap-3">
+                    <div className="grid grid-cols-3 gap-1 md:gap-2">
                         {actions.map((action) => (
                             <Button
                                 variant="outline"
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
                                 className={cn(
-                                    "group flex flex-col items-center justify-center h-20 border-foreground/5 bg-foreground/5 transition-all duration-300",
+                                    "group flex items-center justify-center border-foreground/5 bg-foreground/5 transition-all duration-300",
                                     action.color
                                 )}
                             >
-                                <action.icon className={cn("h-5 w-5 mb-1 transition-transform group-hover:scale-110", action.iconColor)} />
-                                <span className="hidden md:inline text-[9px] font-black tracking-widest">{action.label}</span>
+                                <action.icon className={cn("h-5 w-5 transition-transform", action.iconColor)} />
+                                <span className="hidden md:inline text-[10px] font-black tracking-wider">{action.label}</span>
                             </Button>
                         ))}
                     </div>
@@ -484,12 +478,12 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
 
             <main className="flex-1 w-full grid grid-cols-12 gap-2 md:gap-4">
                 {/* Sidebar: Admin Controls or Match Info */}
-                <aside className="col-span-12 lg:col-span-3 lg:row-span-2 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
+                <aside className="col-span-12 lg:col-span-3 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
                     {/* Match Controls */}
-                    <div className="bg-card border border-foreground/5 p-2 md:p-4 relative overflow-hidden group rounded-xl">
+                    <div className="bg-background border p-2 md:p-4 relative overflow-hidden group rounded-xl">
                         <div className="relative z-10 space-y-2 md:space-y-4">
                             <div className="space-y-1">
-                                <h4 className="text-2xl font-black tracking-tighter text-foreground">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
+                                <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
                             </div>
                             {readOnly ? (
                                 <div className="space-y-4">
@@ -501,7 +495,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
                                         <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
                                     </div>
-                                    <div className="pt-4 border-t border-foreground/5">
+                                    <div className="pt-4 border-t">
                                         <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
                                             <Timer className="w-6 h-6 text-primary animate-pulse" />
                                             <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">LIVE UPDATES ACTIVE</span>
@@ -525,10 +519,10 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                     </div>
 
                     {!readOnly && (
-                        <div className="bg-foreground/5 border border-foreground/5 p-2 md:p-4 relative overflow-hidden group rounded-xl">
+                        <div className="bg-background border p-2 md:p-4 relative overflow-hidden group rounded-xl">
                             <div className="relative z-10 space-y-2 md:space-y-4">
                                 <div className="space-y-1">
-                                    <h4 className="text-2xl font-black tracking-tighter text-foreground">{t("quick_actions")}</h4>
+                                    <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{t("quick_actions")}</h4>
                                 </div>
                                 <div className="grid grid-cols-3 md:grid-cols-1 gap-1 md:gap-2">
                                     <Button
@@ -570,44 +564,47 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                     )}
                 </aside>
 
-                {/* Scoreboard Section */}
-                <section className="flex flex-col gap-2 md:gap-4 col-span-12 lg:col-span-9 order-1 lg:order-2">
-                    <Scoreboard
-                        match={match}
-                        homeScore={homeScore}
-                        awayScore={awayScore}
-                        onTeamClick={(teamId) => {
-                            setSelectedTeamId(teamId);
-                            setEventDialogOpen(true);
-                        }}
-                        timerTime={time}
-                        timerReadOnly={readOnly || match.status === 'finished'}
-                        timerCustomText={match.status === 'finished' ? "FT" : null}
-                        addedTime={isRunning ? addedTime : null}
-                    />
+                {/* Main Content Area */}
+                <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 md:gap-4">
+                    {/* Scoreboard Section */}
+                    <section className="flex flex-col gap-2 md:gap-4">
+                        <Scoreboard
+                            match={match}
+                            homeScore={homeScore}
+                            awayScore={awayScore}
+                            onTeamClick={(teamId) => {
+                                setSelectedTeamId(teamId);
+                                setEventDialogOpen(true);
+                            }}
+                            timerTime={time}
+                            timerReadOnly={readOnly || match.status === 'finished'}
+                            timerCustomText={match.status === 'finished' ? "FT" : null}
+                            addedTime={isRunning ? addedTime : null}
+                        />
 
-                    {!readOnly && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                            <TeamActionGrid teamId={match.home_team_id!} name={match.home_team?.name || 'Home'} type="home" />
-                            <TeamActionGrid teamId={match.away_team_id!} name={match.away_team?.name || 'Away'} type="away" />
-                        </div>
-                    )}
-                </section>
+                        {!readOnly && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                                <TeamActionGrid teamId={match.home_team_id!} name={match.home_team?.name || 'Home'} type="home" />
+                                <TeamActionGrid teamId={match.away_team_id!} name={match.away_team?.name || 'Away'} type="away" />
+                            </div>
+                        )}
+                    </section>
 
-                {/* Timeline Section */}
-                <section className="flex flex-col gap-6 col-span-12 lg:col-span-9 order-3 lg:order-3">
-                    <EventTimeline
-                        events={[
-                            ...events,
-                            ...penaltyShots.map((ps: PenaltyShot) => ({
-                                id: ps.id, match_id: ps.match_id, team_id: ps.team_id, player_id: ps.player_id, event_type: 'penalty_shot' as const, minute: 120, extra_info: { scored: ps.scored, round: ps.round }, created_at: ps.created_at, player_name: ps.player?.name
-                            }))
-                        ].sort((a: MatchEvent, b: MatchEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
-                        match={match}
-                        readOnly={readOnly}
-                        onDelete={deleteEvent}
-                    />
-                </section>
+                    {/* Timeline Section */}
+                    <section className="flex flex-col gap-2 md:gap-4">
+                        <EventTimeline
+                            events={[
+                                ...events,
+                                ...penaltyShots.map((ps: PenaltyShot) => ({
+                                    id: ps.id, match_id: ps.match_id, team_id: ps.team_id, player_id: ps.player_id, event_type: 'penalty_shot' as const, minute: 120, extra_info: { scored: ps.scored, round: ps.round }, created_at: ps.created_at, player_name: ps.player?.name
+                                }))
+                            ].sort((a: MatchEvent, b: MatchEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
+                            match={match}
+                            readOnly={readOnly}
+                            onDelete={deleteEvent}
+                        />
+                    </section>
+                </div>
             </main>
 
             {/* Dialogs */}

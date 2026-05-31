@@ -3,7 +3,6 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, MatchEvent } from "@/types";
-import { addGoal, deleteGoal } from "./actions";
 import { validateTournamentAccess } from "@/lib/security";
 
 export async function getMatchEvents(matchId: string): Promise<ActionResponse<MatchEvent[]>> {
@@ -29,7 +28,7 @@ export async function getMatchEvents(matchId: string): Promise<ActionResponse<Ma
     }
 
     // Map player details to flat structure if needed, or keep as is
-    const events = data.map((event: any) => ({
+    const events = data.map((event: MatchEvent & { players?: { display_name?: string } | null }) => ({
         ...event,
         player_name: event.players?.display_name || "Unknown"
     }));
@@ -124,35 +123,8 @@ export async function addMatchEvent(
         };
     }
 
-    // 2. Sync with Goals table if it's a goal
+    // 2. Sync score if it's a goal
     if (eventType === 'goal') {
-        // We need the player name for the old goals table
-        let playerName = "Unknown";
-        if (playerId) {
-            const { data: playerData } = await supabase
-                .from("players")
-                .select("display_name")
-                .eq("id", playerId)
-                .single();
-            if (playerData) playerName = playerData.display_name;
-        }
-
-        // Call the legacy addGoal to keep Top Scorers working
-        // We pass the new event ID in a way we can track it? 
-        // Or we just let them be loosely coupled. 
-        // For simplicity, we just add it. The delete logic will be tricky.
-        // IMPROVEMENT: We store the 'goal_id' in the match_event's extra_info
-
-        const goalRes = await addGoal(matchId, teamId as string, playerName, tournamentId, minute);
-
-        if (goalRes.success && goalRes.data) {
-            // Update the event with the linked goal_id
-            await supabase
-                .from("match_events")
-                .update({ extra_info: { ...extraInfo, linked_goal_id: goalRes.data.id } })
-                .eq("id", eventData.id);
-        }
-
         // --- Live Score Sync ---
         // Fetch all goals for this match to get the definitive score
         const { data: goalEvents } = await supabase
@@ -192,11 +164,6 @@ export async function deleteMatchEvent(eventId: string, tournamentId: string): P
 
     if (fetchError || !event) {
         return { success: false, error: "Event not found" };
-    }
-
-    // 2. If it's a goal and has a linked_goal_id, delete that too
-    if (event.event_type === 'goal' && event.extra_info?.linked_goal_id) {
-        await deleteGoal(event.extra_info.linked_goal_id, tournamentId);
     }
 
     const isGoal = event.event_type === 'goal';

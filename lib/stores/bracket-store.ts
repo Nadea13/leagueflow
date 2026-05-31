@@ -58,6 +58,17 @@ interface BracketState {
     setActiveNodeId: (id: string | null) => void;
     activeCategoryId: string | null;
     setActiveCategoryId: (id: string | null) => void;
+
+    // History and Clipboard
+    past: { nodes: Node[]; edges: Edge[] }[];
+    future: { nodes: Node[]; edges: Edge[] }[];
+    clipboard: { nodes: Node[]; edges: Edge[] } | null;
+    takeSnapshot: () => void;
+    undo: () => void;
+    redo: () => void;
+    copyNodes: () => void;
+    cutNodes: () => void;
+    pasteNodes: () => void;
 }
 
 let teamFetchRequestId = 0;
@@ -72,6 +83,128 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     setActiveNodeId: (id) => set({ activeNodeId: id }),
     activeCategoryId: null,
     setActiveCategoryId: (id) => set({ activeCategoryId: id }),
+
+    past: [],
+    future: [],
+    clipboard: null,
+
+    takeSnapshot: () => {
+        const { nodes, edges, past } = get();
+        set({
+            past: [...past, {
+                nodes: JSON.parse(JSON.stringify(nodes)) as Node[],
+                edges: JSON.parse(JSON.stringify(edges)) as Edge[]
+            }].slice(-30),
+            future: []
+        });
+    },
+
+    undo: () => {
+        const { past, future, nodes, edges } = get();
+        if (past.length === 0) return;
+        const previous = past[past.length - 1];
+        const newPast = past.slice(0, past.length - 1);
+        set({
+            nodes: previous.nodes,
+            edges: previous.edges,
+            past: newPast,
+            future: [{
+                nodes: JSON.parse(JSON.stringify(nodes)) as Node[],
+                edges: JSON.parse(JSON.stringify(edges)) as Edge[]
+            }, ...future],
+            isDirty: true,
+        });
+    },
+
+    redo: () => {
+        const { past, future, nodes, edges } = get();
+        if (future.length === 0) return;
+        const next = future[0];
+        const newFuture = future.slice(1);
+        set({
+            nodes: next.nodes,
+            edges: next.edges,
+            past: [...past, {
+                nodes: JSON.parse(JSON.stringify(nodes)) as Node[],
+                edges: JSON.parse(JSON.stringify(edges)) as Edge[]
+            }],
+            future: newFuture,
+            isDirty: true,
+        });
+    },
+
+    copyNodes: () => {
+        const { nodes, edges } = get();
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length === 0) return;
+
+        const selectedNodeIds = new Set(selectedNodes.map(n => n.id));
+        const selectedEdges = edges.filter(e => selectedNodeIds.has(e.source) && selectedNodeIds.has(e.target));
+
+        set({
+            clipboard: {
+                nodes: JSON.parse(JSON.stringify(selectedNodes)) as Node[],
+                edges: JSON.parse(JSON.stringify(selectedEdges)) as Edge[]
+            }
+        });
+    },
+
+    cutNodes: () => {
+        const { nodes, edges, copyNodes, takeSnapshot } = get();
+        const selectedNodes = nodes.filter(n => n.selected);
+        if (selectedNodes.length === 0) return;
+
+        takeSnapshot();
+        copyNodes();
+
+        const selectedNodeIds = new Set(selectedNodes.map(n => n.id));
+        set({
+            nodes: nodes.filter(n => !selectedNodeIds.has(n.id)),
+            edges: edges.filter(e => !selectedNodeIds.has(e.source) && !selectedNodeIds.has(e.target)),
+            isDirty: true,
+        });
+    },
+
+    pasteNodes: () => {
+        const { clipboard, nodes, edges, takeSnapshot } = get();
+        if (!clipboard || clipboard.nodes.length === 0) return;
+
+        takeSnapshot();
+
+        const idMap = new Map<string, string>();
+        const pastedNodes: Node[] = clipboard.nodes.map(node => {
+            const newId = `${node.type}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+            idMap.set(node.id, newId);
+            return {
+                ...node,
+                id: newId,
+                selected: true,
+                position: {
+                    x: node.position.x + 40,
+                    y: node.position.y + 40,
+                }
+            };
+        });
+
+        const pastedEdges: Edge[] = clipboard.edges.map(edge => {
+            const newSource = idMap.get(edge.source);
+            const newTarget = idMap.get(edge.target);
+            return {
+                ...edge,
+                id: `edge-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                source: newSource!,
+                target: newTarget!,
+            };
+        });
+
+        const deselectedNodes = nodes.map(n => ({ ...n, selected: false }));
+
+        set({
+            nodes: [...deselectedNodes, ...pastedNodes],
+            edges: [...edges, ...pastedEdges],
+            isDirty: true,
+        });
+    },
 
     setTeams: (teams) => set({ teams }),
     fetchTeams: async (categoryId) => {
@@ -115,6 +248,10 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     onNodesChange: (changes) => {
+        const hasRemove = changes.some(c => c.type === 'remove');
+        if (hasRemove) {
+            get().takeSnapshot();
+        }
         set((state) => {
             const nextNodes = applyNodeChanges(changes, state.nodes);
 
@@ -137,6 +274,10 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     onEdgesChange: (changes) => {
+        const hasRemove = changes.some(c => c.type === 'remove');
+        if (hasRemove) {
+            get().takeSnapshot();
+        }
         set((state) => {
             const nextEdges = applyEdgeChanges(changes, state.edges);
             const hasRealChange = changes.some(c => c.type === 'remove' || c.type === 'add');
@@ -153,6 +294,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     onConnect: (connection: Connection) => {
+        get().takeSnapshot();
         const { nodes, updateNodeData } = get();
         const sourceNode = nodes.find(n => n.id === connection.source);
         const targetNode = nodes.find(n => n.id === connection.target);
@@ -322,6 +464,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     addMatchNode: (position) => {
+        get().takeSnapshot();
         const { nodeCounter, nodes } = get();
         const nextIndex = nodeCounter + 1;
 
@@ -350,6 +493,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
 
     addGroupNode: (position) => {
+        get().takeSnapshot();
         const { nodes } = get();
 
         const col = Math.floor(nodes.length / 4);
@@ -374,6 +518,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     addStandingNode: (position) => {
+        get().takeSnapshot();
         const { nodes } = get();
 
         const col = Math.floor(nodes.length / 4);
@@ -397,6 +542,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     addTeamListNode: (teams, position) => {
+        get().takeSnapshot();
         const { nodes } = get();
 
         const col = Math.floor(nodes.length / 4);
@@ -419,6 +565,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     addAnnouncementNode: (tournamentId, readonly, position) => {
+        get().takeSnapshot();
         const { nodes } = get();
         const col = Math.floor(nodes.length / 4);
         const row = nodes.length % 4;
@@ -441,6 +588,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     generateRoundRobinMatches: (groupId: string) => {
+        get().takeSnapshot();
         const { nodes, edges } = get();
         const groupNode = nodes.find(n => n.id === groupId);
         if (!groupNode || groupNode.type !== 'groupNode') return;
@@ -514,6 +662,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     },
 
     deleteNode: (id) => {
+        get().takeSnapshot();
         set((state) => ({
             nodes: state.nodes.filter((n) => n.id !== id),
             edges: state.edges.filter((e) => e.source !== id && e.target !== id),

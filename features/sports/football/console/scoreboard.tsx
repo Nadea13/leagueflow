@@ -22,16 +22,16 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
     };
 
     return (
-        <div className="bg-card border border-foreground/5 relative overflow-hidden w-full group">
-            <div className="p-4 lg:p-6 flex flex-col items-center justify-center relative z-10 w-full">
+        <div className="bg-background border rounded-xl relative overflow-hidden w-full group">
+            <div className="p-2 lg:p-4 flex flex-col items-center justify-center relative z-10 w-full">
                 <div className="flex items-center justify-between w-full max-w-5xl gap-4 md:gap-12">
                     <div
-                        className="flex-1 text-center md:text-right space-y-2 md:space-y-3 cursor-pointer group/home"
+                        className="flex-1 text-center md:text-right space-y-2 md:space-y-4 cursor-pointer group/home"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
-                            <div className="absolute inset-0 bg-primary/5 scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-2 md:p-4 relative group/logo">
                             {match.home_team?.logo_url ? (
+                                // eslint-disable-next-line
                                 <img src={match.home_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{match.home_team?.name?.substring(0, 2).toUpperCase() || 'H'}</span>
@@ -41,22 +41,16 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                             <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/home:text-primary transition-colors">
                                 {formatTeamName(match.home_team?.name)}
                             </h2>
-                            <p className="text-[10px] font-black tracking-[0.3em] text-primary/60">HOME</p>
+                            <p className="text-xs font-bold tracking-wider">HOME</p>
                         </div>
                     </div>
 
                     {/* Central Score Area */}
                     <div className="flex flex-col items-center gap-4 md:gap-6 px-0 md:px-6 md:border-x border-foreground/5">
-                        <div className="px-4 py-1.5 bg-primary/10 border border-primary/20">
-                            <span className="text-[10px] font-black tracking-[0.2em] text-primary inline-block">
-                                {match.stage || "Tournament Match"}
-                            </span>
-                        </div>
-
                         <div className="flex items-center gap-4 md:gap-6 tabular-nums">
                             <span className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{homeScore}</span>
                             <div className="flex flex-col items-center gap-2">
-                                <span className="text-primary text-2xl lg:text-4xl font-black opacity-30 animate-pulse">-</span>
+                                <span className="text-primary text-2xl lg:text-4xl font-black">-</span>
                             </div>
                             <span className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{awayScore}</span>
                         </div>
@@ -81,9 +75,9 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         className="flex-1 text-center md:text-left space-y-4 cursor-pointer group/away"
                         onClick={() => onTeamClick?.(match.away_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 border border-foreground/10 p-2 md:p-3 relative group/logo">
-                            <div className="absolute inset-0 bg-foreground/5 scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-2 md:p-4 relative group/logo">
                             {match.away_team?.logo_url ? (
+                                // eslint-disable-next-line
                                 <img src={match.away_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{match.away_team?.name?.substring(0, 2).toUpperCase() || 'A'}</span>
@@ -93,7 +87,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                             <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/away:text-primary transition-colors">
                                 {formatTeamName(match.away_team?.name)}
                             </h2>
-                            <p className="text-[10px] font-black tracking-[0.3em] text-foreground/40">AWAY</p>
+                            <p className="text-xs font-bold tracking-wider">AWAY</p>
                         </div>
                     </div>
                 </div>
