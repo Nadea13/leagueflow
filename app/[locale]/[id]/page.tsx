@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Match, MatchEvent, Goal, Player } from "@/types/index";
+import { Match, MatchEvent, Goal, Player, SportType } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { PublicTournamentShell } from "@/features/tournaments/public/public-tournament-shell";
@@ -71,7 +71,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             advancing_teams: 2,
             canvas_data: null,
             user_id: tournamentData.organizer_id,
-            sport: (tournamentData.sports?.sport_name?.toLowerCase() || 'football') as any,
+            sport: (tournamentData.sports?.sport_name?.toLowerCase() || 'football') as SportType,
             plan: 'free'
         };
 
@@ -128,7 +128,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         advancing_teams: 2,
         canvas_data: canvasData,
         user_id: tournamentData.organizer_id,
-        sport: (tournamentData.sports?.sport_name?.toLowerCase() || 'football') as any,
+        sport: (tournamentData.sports?.sport_name?.toLowerCase() || 'football') as SportType,
         plan: 'free'
     };
 
@@ -142,7 +142,19 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             .order("created_at", { ascending: true })
         : { data: [] };
 
-    const teams = (teamsResult.data || []).map((t: any) => {
+    const teams = ((teamsResult.data || []) as unknown as ({
+        id: string;
+        team_id: string;
+        created_at: string;
+        team: {
+            name?: string;
+            logo_img?: string | null;
+            description?: string | null;
+            contact_name?: string | null;
+            contact_phone?: string | null;
+            user_id?: string | null;
+        } | null;
+    } & Record<string, unknown>)[]).map((t) => {
         const teamObj = t.team || {};
         return {
             ...t,
@@ -151,8 +163,9 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             description: teamObj.description || null,
             contact_name: teamObj.contact_name || null,
             contact_phone: teamObj.contact_phone || null,
-            sport: 'football',
-            user_id: teamObj.user_id || null
+            sport: 'football' as SportType,
+            user_id: teamObj.user_id || null,
+            created_at: t.created_at
         };
     });
 
@@ -170,7 +183,15 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             .order("created_at", { ascending: true })
         : { data: [] };
 
-    const matches = (matchesResult.data || []).map((m: any) => ({
+    const matches = ((matchesResult.data || []) as unknown as ({
+        id: string;
+        home_team_id: string | null;
+        away_team_id: string | null;
+        home_team: { name: string; logo_img: string | null } | null;
+        away_team: { name: string; logo_img: string | null } | null;
+        home_score: { total: number } | null;
+        away_score: { total: number } | null;
+    } & Record<string, unknown>)[]).map((m) => ({
         ...m,
         home_team: m.home_team ? { id: m.home_team_id, name: m.home_team.name, logo_url: m.home_team.logo_img } : null,
         away_team: m.away_team ? { id: m.away_team_id, name: m.away_team.name, logo_url: m.away_team.logo_img } : null,
@@ -193,7 +214,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         .in("match_id", matchIds)
         .order("minute", { ascending: true });
 
-    const allEvents = allEventsResult?.map((event: any) => ({
+    const allEvents = (allEventsResult as unknown as (MatchEvent & { players?: { display_name: string } | null })[])?.map((event) => ({
         ...event,
         player_name: event.players?.display_name || "Unknown"
     })) || [];
@@ -207,7 +228,14 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             .in("match_id", matchIds)
             .eq("event_type", "goal");
 
-        initialGoals = (eventsData || []).map((e: any) => ({
+        initialGoals = ((eventsData || []) as unknown as {
+            id: string;
+            match_id: string;
+            team_id: string;
+            player?: { display_name: string } | null;
+            minute?: number | null;
+            created_at: string;
+        }[]).map((e) => ({
             id: e.id,
             match_id: e.match_id,
             team_id: e.team_id,
@@ -238,7 +266,11 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
             .is("player.deleted_at", null);
 
         if (psData) {
-            initialPlayers = psData.map((ps: any) => {
+            initialPlayers = (psData as unknown as {
+                team_id: string;
+                player_id: string;
+                player?: { id: string; display_name: string } | null;
+            }[]).map((ps) => {
                 const tournamentTeam = teams.find(t => t.team_id === ps.team_id);
                 return {
                     id: ps.player?.id || ps.player_id,

@@ -1,38 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Link } from "@/i18n/routing";
-import { Copy, ExternalLink, Calendar, Trophy, GitBranch, Award, ArrowLeft, Settings, Users, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
-import { Tab } from "@/components/ui/tab";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TeamForm } from "@/features/tournaments/teams/team-form";
-import { Standings } from "@/features/tournaments/ranking/standings";
-import { Teams } from "@/features/tournaments/teams/team-list";
-import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups";
 import { Bracket } from "@/features/tournaments/ranking/bracket";
 import { Canvas } from "@/features/tournaments/builder/canvas";
-import { Match, Goal, MatchEvent, Tournament, Player, TournamentTeam } from "@/types/index";
-import { ShareButton } from "@/features/tournaments/shared/share-button";
-import { TopScorers } from "@/features/tournaments/ranking/top-scorers";
-import { calculateStandings } from "@/lib/standings";
-import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
-import { MatchManager } from "@/features/tournaments/matches/match-manager";
-
-import { ProgressionLogic } from "@/features/tournaments/matches/progression-logic";
-import { useTranslations } from "next-intl";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { TournamentStats } from "@/features/tournaments/shared/overview-stats";
-import { PlayerStats } from "@/features/tournaments/ranking/player-stats";
-import { BannedPlayers } from "@/features/tournaments/ranking/banned-players";
-import { Announcements } from "@/features/tournaments/management/announcements";
-import { Registrations } from "@/features/tournaments/management/registrations";
-import { calculatePlayerStats, getBannedPlayers } from "@/lib/player-stats";
-import { RegistrationSettings } from "@/features/tournaments/settings/registration-settings";
+import { Match, Goal, MatchEvent, Tournament, TournamentTeam } from "@/types/index";
+import { useRouter } from "next/navigation";
 
 interface TournamentContentProps {
     tournament: Tournament;
@@ -50,46 +23,24 @@ export function TournamentContent({
     initialMatches,
     initialTeams,
     initialGoals,
-    userPlan,
     initialIsPro: _initialIsPro,
     id,
     userRole
 }: TournamentContentProps) {
-    const t = useTranslations("Tournament");
-    const tCommon = useTranslations("Common");
-    const tSettings = useTranslations("Settings");
-    const tSports = useTranslations("Sports");
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const pathname = usePathname();
-    const { toast } = useToast();
     const supabase = createClient();
 
     // State
     const [tournament, setTournament] = useState(initialTournament);
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [teams, setTeams] = useState<(TournamentTeam & { team?: { user_id: string | null } })[]>(initialTeams);
-    const [goals, setGoals] = useState<Goal[]>(initialGoals);
-    const [teamSubTab, setTeamSubTab] = useState<'list' | 'add'>('list');
-    const [fixtureSubTab, setFixtureSubTab] = useState<'schedule' | 'standings'>('schedule');
-    const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
-    const [mounted, setMounted] = useState(false);
+    const [_goals, setGoals] = useState<Goal[]>(initialGoals);
+    const [_matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
+    const [_mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setTimeout(() => setMounted(true), 0);
     }, []);
-
-    const currentTab = searchParams.get('tab') || 'overview';
-
-    const handleTabChange = (value: string) => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (value === 'overview') {
-            params.delete('tab');
-        } else {
-            params.set('tab', value);
-        }
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    };
 
     // Update state when props change (server revalidation)
     useEffect(() => {
@@ -116,7 +67,7 @@ export function TournamentContent({
                 .in("match_id", matchIds);
 
             if (data) {
-                const events = (data as any[]).map((e) => ({
+                const events = (data as (MatchEvent & { players?: { display_name: string } | null })[]).map((e) => ({
                     ...e,
                     player_name: e.players?.display_name || "Unknown",
                 }));
@@ -130,7 +81,7 @@ export function TournamentContent({
     }, [matches, supabase]);
 
     // Fetch all players from all teams for stats
-    const [allPlayersForStats, setAllPlayersForStats] = useState<{ id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[]>([]);
+    const [_allPlayersForStats, setAllPlayersForStats] = useState<{ id: string; name: string; team_id: string; teamName?: string; teamLogoUrl?: string | null }[]>([]);
     useEffect(() => {
         const fetchAllPlayers = async () => {
             const globalTeamIds = teams.map(t => t.team_id).filter(Boolean);
@@ -153,11 +104,16 @@ export function TournamentContent({
                 .is("player.deleted_at", null);
 
             if (data) {
-                const playersWithTeam = (data || []).map((ps: any) => {
+                const playersWithTeam = (data as unknown as {
+                    team_id: string;
+                    player_id: string;
+                    player: { id: string; display_name: string } | { id: string; display_name: string }[] | null;
+                }[]).map((ps) => {
+                    const playerData = Array.isArray(ps.player) ? ps.player[0] : ps.player;
                     const tournamentTeam = teams.find(t => t.team_id === ps.team_id);
                     return {
-                        id: ps.player?.id || ps.player_id,
-                        name: ps.player?.display_name || "Unknown",
+                        id: playerData?.id || ps.player_id,
+                        name: playerData?.display_name || "Unknown",
                         team_id: tournamentTeam?.id || ps.team_id,
                         teamName: tournamentTeam?.name,
                         teamLogoUrl: tournamentTeam?.logo_url,
@@ -218,29 +174,6 @@ export function TournamentContent({
 
     // Derived State
     const hasFixtures = matches.length > 0;
-    const isPro = true; // Always true as per user request to remove locks
-
-    // Calculate Standings
-    const calculatedStandings = calculateStandings(teams, matches);
-    const isLeague = tournament?.format === 'league' || tournament?.format === 'league_ha';
-    const hasStandings = isLeague ? teams.length > 0 : teams.some(t => t.group_name);
-
-    // Player stats
-    const playerStats = calculatePlayerStats(matchEvents, allPlayersForStats, null);
-    const bannedPlayers = getBannedPlayers(matchEvents, allPlayersForStats, null);
-
-    const registrationUrl = typeof window !== 'undefined'
-        ? `${window.location.origin}/register/${id}`
-        : `/register/${id}`;
-
-    const copyRegistrationLink = () => {
-        navigator.clipboard.writeText(registrationUrl);
-        toast({
-            title: tCommon("copied"),
-            description: tCommon("copied_desc"),
-            className: "border-primary font-bold"
-        });
-    };
 
     return (
         <div className="h-full w-full overflow-hidden">
