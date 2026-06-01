@@ -72,7 +72,7 @@ export const StandingNode = memo(({
         const resolved = Array.from({ length: teamCount }).map((_, index) => {
             const handleId = `team-in-${index}`;
             const edge = edges.find(e => e.target === sourceGroupNode.id && e.targetHandle === handleId);
-            
+
             if (!edge) return staticTeams[index] || "TBD";
 
             const sNode = nodes.find(n => n.id === edge.source);
@@ -112,7 +112,7 @@ export const StandingNode = memo(({
     const advancingCount = Number(data.advancingCount) || 0;
 
     const teamsJson = JSON.stringify(effectiveTeams);
-    
+
     React.useEffect(() => {
         async function fetchAndCalculate() {
             if (!tournamentId || effectiveTeams.length === 0) {
@@ -165,9 +165,9 @@ export const StandingNode = memo(({
                 const statsMap: Record<string, CalculatedStanding> = {};
                 effectiveTeams.forEach((name, index) => {
                     const key = name === "TBD" ? `TBD-${index}` : name;
-                    statsMap[key] = { 
-                        name, 
-                        mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, form: [] 
+                    statsMap[key] = {
+                        name,
+                        mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0, form: []
                     };
                 });
 
@@ -220,7 +220,7 @@ export const StandingNode = memo(({
                 });
 
                 setStandings(result);
-                
+
                 // Sync to store for auto-propagation
                 updateNodeData(id, { rankings: result.map(s => s.name) });
             } catch (err) {
@@ -231,7 +231,7 @@ export const StandingNode = memo(({
         }
 
         fetchAndCalculate();
-    }, [tournamentId, teamsJson, id, effectiveTeams, supabase, updateNodeData, activeCategoryId]); 
+    }, [tournamentId, teamsJson, id, effectiveTeams, supabase, updateNodeData, activeCategoryId]);
 
     // Visibility defaults
     const showPlayed = data.showPlayed !== false;
@@ -293,7 +293,7 @@ export const StandingNode = memo(({
                 </div>
             </div>
 
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="custom-scrollbar">
                 <table className="w-full text-[10px] border-collapse">
                     <thead>
                         <tr className="bg-muted/50 border-b border-border/50">
@@ -309,12 +309,13 @@ export const StandingNode = memo(({
                             {showPts && <th className="px-2 py-1.5 text-center font-black text-foreground w-8">PTS</th>}
                             {showForm && <th className="px-2 py-1.5 text-center font-black text-muted-foreground w-16">FORM</th>}
                             {showNextMatch && <th className="px-2 py-1.5 text-left font-black text-muted-foreground w-20">NEXT</th>}
+                            <th className="p-0 w-0"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border/30">
                         {effectiveTeams.length === 0 ? (
                             <tr>
-                                <td colSpan={10} className="py-4 text-center text-muted-foreground">
+                                <td colSpan={12} className="py-4 text-center text-muted-foreground">
                                     <p className="text-[10px] text-center text-muted-foreground">
                                         Connect to a group node to show standings
                                     </p>
@@ -326,7 +327,7 @@ export const StandingNode = memo(({
                                 const isPromoted = index < advancingCount;
 
                                 return (
-                                    <tr key={`${teamName}-${index}`} className="hover:bg-node-1/5 transition-colors group/row h-10">
+                                    <tr key={`${teamName}-${index}`} className="hover:bg-node-1/5 transition-colors group/row h-10 relative">
                                         <td className="p-2 relative">
                                             <div className={cn(
                                                 "w-6 h-6 flex items-center justify-center font-black rounded-full border transition-colors group-hover/row:border-node-1/50 group-hover/row:bg-node-1/10 group-hover/row:text-node-1",
@@ -338,7 +339,7 @@ export const StandingNode = memo(({
                                         <td className="py-1.5">
                                             <div className="flex items-center gap-1.5">
                                                 <span className={cn(
-                                                    "font-bold truncate max-w-[120px]",
+                                                    "font-bold truncate",
                                                     teamName === "TBD" ? "text-muted-foreground font-bold" : "text-foreground"
                                                 )}>
                                                     {teamName}
@@ -379,30 +380,23 @@ export const StandingNode = memo(({
                                                 {team.nextMatch ? `${team.nextMatch}` : <span className="text-muted-foreground/40 font-normal">None</span>}
                                             </td>
                                         )}
+                                        <td className="p-0 w-0 relative">
+                                            {isPromoted && (
+                                                <Handle
+                                                    type="source"
+                                                    position={Position.Right}
+                                                    id={`rank-${index}`}
+                                                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-1 transition-all z-50"
+                                                    style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
+                                                />
+                                            )}
+                                        </td>
                                     </tr>
                                 );
                             })
                         )}
                     </tbody>
                 </table>
-            </div>
-
-            {/* Advancement Handles (Outside the table) */}
-            <div className="absolute top-[68px] right-0 bottom-0 pointer-events-none">
-                {displayStandings.slice(0, advancingCount).map((_, index) => (
-                    <div 
-                        key={index} 
-                        className="relative h-10 w-0 pointer-events-auto"
-                    >
-                        <Handle
-                            type="source"
-                            position={Position.Right}
-                            id={`rank-${index}`}
-                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-1 transition-all z-50"
-                            style={{ right: "-1px", top: "20px" }}
-                        />
-                    </div>
-                ))}
             </div>
         </div>
     );

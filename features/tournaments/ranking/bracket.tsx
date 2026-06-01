@@ -12,6 +12,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { GroupNode } from "@/features/tournaments/builder/group-node";
 import { MatchNode } from "@/features/tournaments/builder/match-node";
+import { StandingNode } from "@/features/tournaments/builder/standing-node";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ import { useTranslations } from "next-intl";
 const nodeTypes = {
     matchNode: MatchNode,
     groupNode: GroupNode,
+    standingNode: StandingNode,
 };
 
 const CONNECTOR_W = 48;

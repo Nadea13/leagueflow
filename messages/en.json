@@ -1315,6 +1315,7 @@
         "manager_pro": { "title": "Manager Pro" }
     },
     "PublicView": {
+        "brand": "LeagueFlow",
         "overview": "Overview",
         "matches": "Matches",
         "league_table": "League Table",
@@ -1327,6 +1328,8 @@
         "fixtures_results_desc": "Match schedule and scores.",
         "public_view": "Public View",
         "beta": "BETA",
+        "not_active": "Tournament Not Active",
+        "not_active_desc": "The organizer has not yet initialized the category or setup the bracket for {name}. Please check back later!",
         "no_matches": "No matches scheduled yet.",
         "match_schedules": "Match Schedules",
         "round_prefix": "Round ",

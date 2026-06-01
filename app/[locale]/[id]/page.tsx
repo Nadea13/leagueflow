@@ -25,9 +25,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
 }
 
-export default async function PublicViewPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PublicViewPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ category_id?: string }>;
+}) {
     const { id } = await params;
+    const { category_id } = await searchParams;
     const supabase = await createClient();
+    const t = await getTranslations("PublicView");
 
     // 0. Fetch Plans for Footer
     const [
@@ -56,13 +64,27 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         notFound();
     }
 
-    // Get tournament category
+    // Get tournament categories
     const { data: categories } = await supabase
         .from("tournament_categories")
-        .select("*")
-        .eq("tournament_id", id);
+        .select(`
+            *,
+            age_categories:age_category_id(category_name)
+        `)
+        .eq("tournament_id", id)
+        .is("deleted_at", null);
 
-    const category = categories && categories.length > 0 ? categories[0] : null;
+    // Fetch announcements
+    const { data: announcementsData } = await supabase
+        .from("announcements")
+        .select("*")
+        .eq("tournament_id", id)
+        .order("is_pinned", { ascending: false })
+        .order("created_at", { ascending: false });
+
+    const announcements = announcementsData || [];
+
+    const category = categories?.find(c => String(c.id) === category_id) || (categories && categories.length > 0 ? categories[0] : null);
     if (!category) {
         const tournament = {
             ...tournamentData,
@@ -89,11 +111,10 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                                 <path d="M137.211 24.5986C138.191 27.5371 137.739 28.1896 136.565 30.983C136.234 31.7759 135.904 32.5688 135.563 33.3857C135.2 34.2315 134.836 35.0773 134.461 35.9486C133.908 37.2513 133.908 37.2513 133.343 38.5803C119.694 70.3639 98.4172 99.4369 70.8115 120.599C69.8872 121.334 68.9644 122.072 68.0427 122.811C53.7988 134.199 53.7988 134.199 50.8115 134.199C50.2508 132.803 49.7033 131.402 49.1615 129.999C48.8552 129.219 48.5489 128.439 48.2334 127.636C47.3033 124.29 47.3033 124.29 48.4115 122.199C50.0305 120.986 51.5772 119.968 53.3115 118.949C72.4474 107.16 90.9969 91.6468 105.002 74.0486C106.187 72.5746 107.402 71.1232 108.646 69.6986C120.381 56.2213 129.292 40.5486 137.211 24.5986Z" fill="#00C49A" />
                                 <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
                             </svg>
-                            <span className="font-black text-foreground text-xl tracking-tighter">LeagueFlow</span>
+                            <span className="font-black text-foreground text-xl tracking-tighter">{t("brand")}</span>
                         </Link>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Public View</span>
-                            <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5">Beta</Badge>
+                            <span className="text-sm text-muted-foreground">{t("public_view")}</span>
                         </div>
                     </div>
                 </nav>
@@ -104,10 +125,13 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                             <Trophy className="h-8 w-8" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tighter text-foreground leading-none">
-                            Tournament Not Active
+                            {t("not_active")}
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 font-semibold tracking-tight text-sm">
-                            The organizer has not yet initialized the category or setup the bracket for <span className="text-primary font-bold">{tournament.name}</span>. Please check back later!
+                            {t.rich("not_active_desc", {
+                                name: tournament.name,
+                                span: (chunks) => <span className="text-primary font-bold">{chunks}</span>
+                            })}
                         </p>
                     </div>
                 </main>
@@ -195,8 +219,8 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         ...m,
         home_team: m.home_team ? { id: m.home_team_id, name: m.home_team.name, logo_url: m.home_team.logo_img } : null,
         away_team: m.away_team ? { id: m.away_team_id, name: m.away_team.name, logo_url: m.away_team.logo_img } : null,
-        home_score: m.home_score?.total || 0,
-        away_score: m.away_score?.total || 0
+        home_score: typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as { total?: number }).total) || 0 : Number(m.home_score) || 0,
+        away_score: typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as { total?: number }).total) || 0 : Number(m.away_score) || 0
     }));
 
     // 4. Fetch Match Events (Admin Client to bypass RLS for public view)
@@ -281,7 +305,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
         }
     }
 
-    const t = await getTranslations("PublicView");
+
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden pt-16 print:pt-0 flex flex-col">
@@ -297,7 +321,7 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                             <path d="M137.211 24.5986C138.191 27.5371 137.739 28.1896 136.565 30.983C136.234 31.7759 135.904 32.5688 135.563 33.3857C135.2 34.2315 134.836 35.0773 134.461 35.9486C133.908 37.2513 133.908 37.2513 133.343 38.5803C119.694 70.3639 98.4172 99.4369 70.8115 120.599C69.8872 121.334 68.9644 122.072 68.0427 122.811C53.7988 134.199 53.7988 134.199 50.8115 134.199C50.2508 132.803 49.7033 131.402 49.1615 129.999C48.8552 129.219 48.5489 128.439 48.2334 127.636C47.3033 124.29 47.3033 124.29 48.4115 122.199C50.0305 120.986 51.5772 119.968 53.3115 118.949C72.4474 107.16 90.9969 91.6468 105.002 74.0486C106.187 72.5746 107.402 71.1232 108.646 69.6986C120.381 56.2213 129.292 40.5486 137.211 24.5986Z" fill="#00C49A" />
                             <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
                         </svg>
-                        <span className="font-black text-foreground text-xl tracking-tighter">LeagueFlow</span>
+                        <span className="font-black text-foreground text-xl tracking-tighter">{t("brand")}</span>
                     </Link>
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{t("public_view")}</span>
@@ -314,6 +338,12 @@ export default async function PublicViewPage({ params }: { params: Promise<{ id:
                     initialEvents={allEvents as MatchEvent[]}
                     initialGoals={initialGoals}
                     initialPlayers={initialPlayers as Player[]}
+                    categories={categories?.map(c => ({
+                        id: String(c.id),
+                        name: `${(c as any).age_categories?.category_name || "General"} (${c.gender_type})`
+                    })) || []}
+                    selectedCategoryId={category.id ? String(category.id) : undefined}
+                    announcements={announcements}
                 />
             </main>
 

@@ -37,7 +37,7 @@ export function Tab<T extends string>({
   return (
     <div
       className={cn(
-        "flex p-1 bg-card gap-1 border border-border h-auto",
+        "flex p-1 bg-background rounded-sm gap-1 border border-border h-auto",
         orientation === "vertical" ? "flex-col" : "flex-row",
         className
       )}
@@ -56,7 +56,7 @@ export function Tab<T extends string>({
               fullWidth ? "flex-1" : "flex-none",
               "text-muted-foreground hover:text-primary",
               isActive ? cn(
-                "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(0,196,154,0.3)] hover:text-primary-foreground hover:bg-primary",
+                "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary",
                 activeClassName
               ) : "",
               itemClassName

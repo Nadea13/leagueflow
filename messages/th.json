@@ -1307,6 +1307,7 @@
         "manager_pro": { "title": "ตัวจัดการ (Manager Pro)" }
     },
     "PublicView": {
+        "brand": "LeagueFlow",
         "overview": "ภาพรวม",
         "matches": "การแข่งขัน",
         "league_table": "ตารางคะแนน",
@@ -1319,6 +1320,8 @@
         "fixtures_results_desc": "ตารางแข่งและผลสกอร์",
         "public_view": "มุมมองสาธารณะ",
         "beta": "เบต้า",
+        "not_active": "การแข่งขันยังไม่พร้อมใช้งาน",
+        "not_active_desc": "ผู้จัดการแข่งขันยังไม่ได้กำหนดรายละเอียดกลุ่มหรือจัดสายการแข่งขันสำหรับ {name} โปรดกลับมาตรวจสอบอีกครั้งในภายหลัง!",
         "no_matches": "ยังไม่มีการแข่งขัน",
         "match_schedules": "ตารางการแข่งขัน",
         "round_prefix": "รอบที่ ",
