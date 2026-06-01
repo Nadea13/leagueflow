@@ -6,6 +6,7 @@ import { Users, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { CreateTeamForm } from "@/features/teams/create-team-form";
+import { VerifyTeamForm } from "@/features/teams/verify-team-form";
 import { EmptyState } from "@/components/shared/empty-state";
 
 import { Team } from "@/types/index";
@@ -43,6 +44,7 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             className="pr-10"
                         />
                     </div>
+                    <VerifyTeamForm />
                     <CreateTeamForm />
                 </div>
             </div>

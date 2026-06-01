@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Users, ListOrdered, Megaphone, LayoutGrid } from "lucide-react"
+import { Users, ListOrdered, Megaphone, LayoutGrid, Heart } from "lucide-react"
 
 interface NodeToolsProps {
     onAddMatch: () => void
@@ -9,6 +9,7 @@ interface NodeToolsProps {
     onAddStanding: () => void
     onAddTeamList: () => void
     onAddAnnouncement: () => void
+    onAddSponsor: () => void
 }
 
 export function NodeTools({
@@ -16,7 +17,8 @@ export function NodeTools({
     onAddGroup,
     onAddStanding,
     onAddTeamList,
-    onAddAnnouncement
+    onAddAnnouncement,
+    onAddSponsor
 }: NodeToolsProps) {
     return (
         <div className="flex flex-col gap-1 p-1">
@@ -99,6 +101,23 @@ export function NodeTools({
                     </span>
                 </div>
             </Button>
+
+            <Button
+                variant="ghost"
+                onClick={onAddSponsor}
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all group"
+            >
+                <div className="w-8 h-8 bg-red-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-red-500/20 transition-colors">
+                    <Heart className="h-4 w-4 text-red-500" />
+                </div>
+                <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-[11px] font-black tracking-tight">Sponsor Node</span>
+                    <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
+                        Display Sponsors (Drag to Order)
+                    </span>
+                </div>
+            </Button>
         </div>
     )
 }
+

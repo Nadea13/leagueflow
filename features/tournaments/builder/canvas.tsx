@@ -60,14 +60,15 @@ import { TournamentSettings } from "@/features/tournaments/settings/tournament-s
 import { ExportToImageButton } from "@/components/ui/export-to-image-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { GroupNode } from "./group-node";
 import { MatchNode } from "./match-node";
 import { StandingNode } from "./standing-node";
 import { TeamListNode } from "./team-list-node";
 import { AnnouncementNode } from "./announcement-node";
+import { SponsorNode } from "./sponsor-node";
 import { NodeSettings } from "./node-settings";
 import { Announcements } from "@/features/tournaments/management/announcements";
-import { Input } from "@/components/ui/input";
 import {
     Dialog,
     DialogContent,
@@ -82,6 +83,7 @@ const nodeTypes = {
     standingNode: StandingNode,
     teamListNode: TeamListNode,
     announcementNode: AnnouncementNode,
+    sponsorNode: SponsorNode,
 };
 
 interface CanvasProps {
@@ -146,6 +148,7 @@ function CanvasInternal({
         addStandingNode,
         addTeamListNode,
         addAnnouncementNode,
+        addSponsorNode,
         hydrate,
         selectNode,
         setActiveNodeId,
@@ -1193,6 +1196,7 @@ function CanvasInternal({
                                                 onAddStanding={() => addStandingNode(getCenterPos())}
                                                 onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
                                                 onAddAnnouncement={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
+                                                onAddSponsor={() => addSponsorNode(tournamentId, readonly, getCenterPos())}
                                             />
                                             <div className="p-2 border-t border-border/10 mt-1 flex items-center justify-between">
                                                 <div className="flex flex-col">

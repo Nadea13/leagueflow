@@ -5,11 +5,15 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X, Heart, Loader2, GripVertical, Globe, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
 import { useParams } from "next/navigation";
+import { getSponsors, addSponsor, updateSponsorsOrder, deleteSponsor, Sponsor } from "@/actions/tournaments/sponsor";
+import { LogoUploader } from "@/components/shared/logo-uploader";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 type MatchItem = {
     id: string;
@@ -48,6 +52,143 @@ export function NodeSettings() {
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const t = useTranslations("Team");
+    const { toast } = useToast();
+
+    // Sponsors state
+    const [sponsorsList, setSponsorsList] = React.useState<Sponsor[]>([]);
+    const [isSponsorLoading, setIsSponsorLoading] = React.useState(true);
+    const [isAddSponsorOpen, setIsAddSponsorOpen] = React.useState(false);
+    const [newSponsorName, setNewSponsorName] = React.useState("");
+    const [newSponsorLink, setNewSponsorLink] = React.useState("");
+    const [newSponsorLogoFile, setNewSponsorLogoFile] = React.useState<File | null>(null);
+    const [isSubmittingSponsor, setIsSubmittingSponsor] = React.useState(false);
+    const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+
+    const loadSponsors = React.useCallback(async () => {
+        setIsSponsorLoading(true);
+        const res = await getSponsors(tournamentId);
+        if (res.success && res.data) {
+            setSponsorsList(res.data);
+        }
+        setIsSponsorLoading(false);
+    }, [tournamentId]);
+
+    useEffect(() => {
+        if (selectedNode?.type === "sponsorNode") {
+            loadSponsors();
+        }
+    }, [selectedNode?.type, loadSponsors]);
+
+    // DnD handlers
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e: React.DragEvent, hoverIndex: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === hoverIndex) return;
+
+        const list = [...sponsorsList];
+        const draggedItem = list[draggedIndex];
+        list.splice(draggedIndex, 1);
+        list.splice(hoverIndex, 0, draggedItem);
+
+        setDraggedIndex(hoverIndex);
+        setSponsorsList(list);
+    };
+
+    const handleDragEnd = async () => {
+        setDraggedIndex(null);
+        const updates = sponsorsList.map((s, idx) => ({ id: s.id, order_index: idx }));
+        const res = await updateSponsorsOrder(tournamentId, updates);
+        if (res.success) {
+            window.dispatchEvent(new Event("reload-sponsors"));
+        } else {
+            toast({
+                title: "Error",
+                description: res.error || "Failed to update sponsor order",
+                variant: "destructive"
+            });
+            loadSponsors();
+        }
+    };
+
+    const handleAddSponsorSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newSponsorName) return;
+
+        setIsSubmittingSponsor(true);
+        try {
+            let logoUrl = "";
+            if (newSponsorLogoFile) {
+                const fileExt = newSponsorLogoFile.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const filePath = `sponsors/${fileName}`;
+
+                const { data, error } = await supabase.storage
+                    .from('team-logos')
+                    .upload(filePath, newSponsorLogoFile, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (error) throw error;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('team-logos')
+                    .getPublicUrl(filePath);
+
+                logoUrl = publicUrl;
+            }
+
+            const res = await addSponsor(tournamentId, newSponsorName, logoUrl, newSponsorLink);
+            if (res.success) {
+                toast({
+                    title: "Sponsor added",
+                    description: "The sponsor has been added successfully."
+                });
+                setIsAddSponsorOpen(false);
+                setNewSponsorName("");
+                setNewSponsorLink("");
+                setNewSponsorLogoFile(null);
+                loadSponsors();
+                window.dispatchEvent(new Event("reload-sponsors"));
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to add sponsor",
+                    variant: "destructive"
+                });
+            }
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message || "Failed to upload image",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSubmittingSponsor(false);
+        }
+    };
+
+    const handleDeleteSponsorClick = async (sponsorId: string) => {
+        const res = await deleteSponsor(sponsorId, tournamentId);
+        if (res.success) {
+            toast({
+                title: "Sponsor deleted",
+                description: "The sponsor has been deleted successfully."
+            });
+            loadSponsors();
+            window.dispatchEvent(new Event("reload-sponsors"));
+        } else {
+            toast({
+                title: "Error",
+                description: res.error || "Failed to delete sponsor",
+                variant: "destructive"
+            });
+        }
+    };
 
     useEffect(() => {
         if (activeCategoryId && selectedNode?.type === "teamListNode") {
@@ -164,13 +305,15 @@ export function NodeSettings() {
                     <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5' :
                         type === 'matchNode' ? 'bg-node-2' :
                             type === 'standingNode' ? 'bg-node-1' :
-                                type === 'teamListNode' ? 'bg-node-3' : 'bg-node-4'
+                                type === 'teamListNode' ? 'bg-node-3' :
+                                    type === 'sponsorNode' ? 'bg-red-500/10' : 'bg-node-4'
                         }`}>
                         {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
                             type === 'matchNode' ? <span className="text-sm font-bold text-foreground select-none">VS</span> :
                                 type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-foreground" /> :
                                     type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
-                                        <Megaphone className="h-4 w-4 text-foreground" />}
+                                        type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500 fill-red-500" /> :
+                                            <Megaphone className="h-4 w-4 text-foreground" />}
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -521,6 +664,149 @@ export function NodeSettings() {
                                     />
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {type === "sponsorNode" && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b pb-2">
+                                <h4 className="text-[11px] font-black tracking-widest text-red-500 flex items-center gap-2">
+                                    <Heart className="h-4 w-4 fill-red-500" />
+                                    Manage Sponsors
+                                </h4>
+
+                                <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 px-2 text-[9px] font-black tracking-widest border-red-200 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                                        >
+                                            <Plus className="h-3.5 w-3.5 mr-1" />
+                                            New Sponsor
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[450px] rounded-lg p-0">
+                                        <DialogHeader className="p-4 border-b">
+                                            <DialogTitle className="text-lg font-black tracking-tighter">Add New Sponsor</DialogTitle>
+                                        </DialogHeader>
+                                        <form onSubmit={handleAddSponsorSubmit} className="p-4 space-y-4">
+                                            <div className="space-y-1">
+                                                <Label htmlFor="sponsor-name">Sponsor Name</Label>
+                                                <Input 
+                                                    id="sponsor-name"
+                                                    value={newSponsorName}
+                                                    onChange={e => setNewSponsorName(e.target.value)}
+                                                    placeholder="Sponsor / Company Name"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>Sponsor Logo</Label>
+                                                <LogoUploader
+                                                    id="sponsor-logo-upload"
+                                                    uploadLabel="Upload Logo"
+                                                    clickToUploadLabel="Click to Upload"
+                                                    onFileChange={file => setNewSponsorLogoFile(file)}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label htmlFor="sponsor-link">Link URL (Optional)</Label>
+                                                <Input 
+                                                    id="sponsor-link"
+                                                    value={newSponsorLink}
+                                                    onChange={e => setNewSponsorLink(e.target.value)}
+                                                    placeholder="https://example.com"
+                                                    type="url"
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-end gap-2 pt-2 border-t mt-4">
+                                                <Button 
+                                                    type="button" 
+                                                    variant="outline" 
+                                                    onClick={() => setIsAddSponsorOpen(false)}
+                                                    disabled={isSubmittingSponsor}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                                <Button 
+                                                    type="submit" 
+                                                    disabled={isSubmittingSponsor || !newSponsorName}
+                                                >
+                                                    {isSubmittingSponsor && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                                    Add Sponsor
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+
+                            <p className="text-[10px] text-muted-foreground/60 italic">
+                                Drag handles to reorder sponsors. Reordering updates order_index automatically.
+                            </p>
+
+                            {isSponsorLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin text-red-500" />
+                                </div>
+                            ) : sponsorsList.length === 0 ? (
+                                <div className="text-center py-10 border-2 border-dashed rounded-md">
+                                    <p className="text-xs text-muted-foreground italic">No sponsors added yet</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {sponsorsList.map((sponsor, idx) => (
+                                        <div
+                                            key={sponsor.id}
+                                            draggable
+                                            onDragStart={(e) => handleDragStart(e, idx)}
+                                            onDragOver={(e) => handleDragOver(e, idx)}
+                                            onDragEnd={handleDragEnd}
+                                            className={cn(
+                                                "flex items-center justify-between p-2 border bg-card/30 hover:bg-card/70 transition-all rounded-sm",
+                                                draggedIndex === idx && "opacity-50 border-red-500 bg-red-500/5"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground p-1">
+                                                    <GripVertical className="h-4 w-4" />
+                                                </div>
+                                                <div className="h-8 w-8 rounded-sm bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
+                                                    {sponsor.logo_img ? (
+                                                        <img src={sponsor.logo_img} alt="" className="max-h-full max-w-full object-contain" />
+                                                    ) : (
+                                                        <Heart className="h-3.5 w-3.5 text-muted-foreground/20" />
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-xs font-bold truncate leading-none mb-1 text-foreground">
+                                                        {sponsor.sponsor_name}
+                                                    </span>
+                                                    {sponsor.link_url && (
+                                                        <a href={sponsor.link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:underline truncate flex items-center gap-1">
+                                                            <Globe className="h-2.5 w-2.5" />
+                                                            {sponsor.link_url}
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                                                onClick={() => handleDeleteSponsorClick(sponsor.id)}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

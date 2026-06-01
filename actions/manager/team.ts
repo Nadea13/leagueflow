@@ -1376,3 +1376,80 @@ export async function hasSoftDeletedPlayers(teamId: string): Promise<ActionRespo
     return { success: true, data: (count || 0) > 0 };
 }
 
+/**
+ * Search global teams by contact email.
+ */
+export async function getTeamsByEmail(email: string): Promise<ActionResponse<Array<{ id: string; name: string }>>> {
+    try {
+        const adminSupabase = createAdminClient();
+        const { data, error } = await adminSupabase
+            .from("teams")
+            .select("id, name")
+            .eq("contact_email", email.trim().toLowerCase())
+            .is("deleted_at", null);
+
+        if (error) {
+            console.error("Error fetching teams by email:", error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true, data: data || [] };
+    } catch (error) {
+        console.error("Unexpected error in getTeamsByEmail:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+/**
+ * Submit a team management request.
+ * Inserts a row into team_management_requests with status='pending'.
+ * When approved by the organizer, the team's user_id will be changed to the requester.
+ */
+export async function submitTeamManagementRequest(
+    teamId: string,
+    contactPhone: string,
+    message?: string
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const adminSupabase = createAdminClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // Check if a pending request already exists for this user + team
+        const { data: existing } = await adminSupabase
+            .from("team_management_requests")
+            .select("id")
+            .eq("team_id", teamId)
+            .eq("requester_id", user.id)
+            .eq("status", "pending")
+            .maybeSingle();
+
+        if (existing) {
+            return { success: false, error: "คุณมีคำขอที่รอดำเนินการอยู่แล้วสำหรับทีมนี้" };
+        }
+
+        const { error } = await adminSupabase
+            .from("team_management_requests")
+            .insert({
+                team_id: teamId,
+                requester_id: user.id,
+                contact_phone: contactPhone,
+                message: message || null,
+            });
+
+        if (error) {
+            console.error("Error submitting team management request:", error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in submitTeamManagementRequest:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+

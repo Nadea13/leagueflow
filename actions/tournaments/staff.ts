@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, TournamentMember } from "@/types";
 import { logActivity } from "@/lib/audit";
@@ -475,3 +475,273 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
 
     return { success: true, data: registrations };
 }
+
+/**
+ * Get team management requests submitted by the current user.
+ */
+export async function getUserTeamManagementRequests(): Promise<ActionResponse<Array<{
+    id: string;
+    team_name: string;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+}>>> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: true, data: [] };
+    }
+
+    const { data, error } = await adminSupabase
+        .from("team_management_requests")
+        .select(`
+            id,
+            status,
+            created_at,
+            team:teams (
+                name
+            )
+        `)
+        .eq("requester_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching team management requests:", error);
+        return { success: false, error: error.message };
+    }
+
+    interface MgmtRequestRow {
+        id: string;
+        status: string;
+        created_at: string;
+        team: { name: string } | null | Array<{ name: string }>;
+    }
+
+    const requests = (data as unknown as MgmtRequestRow[] || []).map((item) => {
+        const team = Array.isArray(item.team) ? item.team[0] : item.team;
+        return {
+            id: item.id,
+            team_name: team?.name || "Unknown Team",
+            status: item.status as 'pending' | 'approved' | 'rejected',
+            created_at: item.created_at,
+        };
+    });
+
+    return { success: true, data: requests };
+}
+
+/**
+ * Get team management requests submitted by other users for teams in tournaments where the current user is organizer or collaborator.
+ */
+export async function getIncomingTeamManagementRequests(): Promise<ActionResponse<Array<{
+    id: string;
+    team_id: string;
+    team_name: string;
+    requester_name: string;
+    requester_email: string;
+    contact_phone: string;
+    message: string | null;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+}>>> {
+    try {
+        const supabase = await createClient();
+        const adminSupabase = createAdminClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: true, data: [] };
+        }
+
+        // 1. Get tournaments where user is organizer
+        const { data: ownedTournaments } = await adminSupabase
+            .from("tournaments")
+            .select("id")
+            .eq("organizer_id", user.id);
+
+        // 2. Get tournaments where user is an accepted collaborator
+        const { data: collabTournaments } = await adminSupabase
+            .from("tournament_invitations")
+            .select("tournament_id")
+            .eq("user_id", user.id)
+            .eq("status", "accepted");
+
+        const tournamentIds = [
+            ...(ownedTournaments || []).map(t => t.id),
+            ...(collabTournaments || []).map(t => t.tournament_id)
+        ];
+
+        if (tournamentIds.length === 0) {
+            return { success: true, data: [] };
+        }
+
+        // 3. Get teams registered in these tournaments
+        const { data: registeredTeams } = await adminSupabase
+            .from("tournament_teams")
+            .select(`
+                team_id,
+                tournament_categories!inner (
+                    tournament_id
+                )
+            `)
+            .in("tournament_categories.tournament_id", tournamentIds);
+
+        const teamIds = Array.from(new Set((registeredTeams || []).map(t => t.team_id)));
+
+        if (teamIds.length === 0) {
+            return { success: true, data: [] };
+        }
+
+        // 4. Get team management requests for these teams
+        const { data: requests, error } = await adminSupabase
+            .from("team_management_requests")
+            .select(`
+                id,
+                team_id,
+                requester_id,
+                contact_phone,
+                message,
+                status,
+                created_at
+            `)
+            .in("team_id", teamIds)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Error fetching incoming team management requests:", error);
+            return { success: false, error: error.message };
+        }
+
+        if (!requests || requests.length === 0) {
+            return { success: true, data: [] };
+        }
+
+        // 5. Gather team names
+        const uniqueTeamIds = Array.from(new Set(requests.map(r => r.team_id)));
+        const { data: teamsData } = await adminSupabase
+            .from("teams")
+            .select("id, name")
+            .in("id", uniqueTeamIds);
+        const teamMap = new Map((teamsData || []).map(t => [t.id, t.name]));
+
+        // 6. Gather requester profile info from public.users
+        const uniqueRequesterIds = Array.from(new Set(requests.map(r => r.requester_id)));
+        const { data: usersData } = await adminSupabase
+            .from("users")
+            .select("id, full_name, email")
+            .in("id", uniqueRequesterIds);
+        const userMap = new Map((usersData || []).map(u => [u.id, { name: u.full_name, email: u.email }]));
+
+        const formatted = requests.map((item) => {
+            const teamName = teamMap.get(item.team_id) || "Unknown Team";
+            const requester = userMap.get(item.requester_id);
+            return {
+                id: item.id,
+                team_id: item.team_id,
+                team_name: teamName,
+                requester_name: requester?.name || "Unknown User",
+                requester_email: requester?.email || "",
+                contact_phone: item.contact_phone,
+                message: item.message,
+                status: item.status as 'pending' | 'approved' | 'rejected',
+                created_at: item.created_at,
+            };
+        });
+
+        return { success: true, data: formatted };
+    } catch (error) {
+        console.error("Unexpected error in getIncomingTeamManagementRequests:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+/**
+ * Approve a team management request, transferring team ownership (user_id) to the requester.
+ */
+export async function approveTeamManagementRequest(
+    requestId: string
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const adminSupabase = createAdminClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // 1. Fetch the request details
+        const { data: request, error: fetchError } = await adminSupabase
+            .from("team_management_requests")
+            .select("team_id, requester_id, status")
+            .eq("id", requestId)
+            .single();
+
+        if (fetchError || !request) {
+            return { success: false, error: "Request not found" };
+        }
+
+        if (request.status !== "pending") {
+            return { success: false, error: "Request is already processed" };
+        }
+
+        // 2. Update request status to approved
+        const { error: updateReqError } = await adminSupabase
+            .from("team_management_requests")
+            .update({ status: "approved" })
+            .eq("id", requestId);
+
+        if (updateReqError) {
+            return { success: false, error: updateReqError.message };
+        }
+
+        // 3. Update the team owner (user_id) to the requester_id
+        const { error: updateTeamError } = await adminSupabase
+            .from("teams")
+            .update({ user_id: request.requester_id })
+            .eq("id", request.team_id);
+
+        if (updateTeamError) {
+            return { success: false, error: updateTeamError.message };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in approveTeamManagementRequest:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+/**
+ * Reject a team management request.
+ */
+export async function rejectTeamManagementRequest(
+    requestId: string
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const adminSupabase = createAdminClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // 1. Update request status to rejected
+        const { error } = await adminSupabase
+            .from("team_management_requests")
+            .update({ status: "rejected" })
+            .eq("id", requestId);
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in rejectTeamManagementRequest:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+

@@ -166,6 +166,16 @@ export default async function PublicViewPage({
             .order("created_at", { ascending: true })
         : { data: [] };
 
+    // Fetch Tournament Sponsors
+    const sponsorsResult = await supabase
+        .from("tournament_sponsors")
+        .select("*")
+        .eq("tournament_id", id)
+        .is("deleted_at", null)
+        .order("order_index", { ascending: true });
+
+    const sponsors = sponsorsResult.data || [];
+
     const teams = ((teamsResult.data || []) as unknown as ({
         id: string;
         team_id: string;
@@ -344,6 +354,7 @@ export default async function PublicViewPage({
                     })) || []}
                     selectedCategoryId={category.id ? String(category.id) : undefined}
                     announcements={announcements}
+                    sponsors={sponsors}
                 />
             </main>
 

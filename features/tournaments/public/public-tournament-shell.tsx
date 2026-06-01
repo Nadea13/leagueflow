@@ -16,6 +16,7 @@ import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sponsor } from "@/actions/tournaments/sponsor";
 
 interface PublicTournamentShellProps {
     tournament: Tournament;
@@ -27,6 +28,7 @@ interface PublicTournamentShellProps {
     categories?: { id: string; name: string }[];
     selectedCategoryId?: string;
     announcements?: Announcement[];
+    sponsors?: Sponsor[];
 }
 
 export function PublicTournamentShell({
@@ -36,7 +38,8 @@ export function PublicTournamentShell({
     initialEvents,
     categories = [],
     selectedCategoryId,
-    announcements = []
+    announcements = [],
+    sponsors = []
 }: PublicTournamentShellProps) {
     const t = useTranslations("PublicView");
     const tTournament = useTranslations("Tournament");
@@ -521,6 +524,53 @@ export function PublicTournamentShell({
                             )}
                         </div>
                     </div>
+
+                    {/* Sponsors Block */}
+                    {sponsors && sponsors.length > 0 && (
+                        <div className="space-y-2 md:space-y-4 text-center mt-6">
+                            <h2 className="tracking-tighter text-foreground flex items-center justify-center gap-1 md:gap-2 font-black text-xl">
+                                Sponsored By
+                            </h2>
+                            <div className="flex flex-wrap gap-4 items-center justify-center">
+                                {sponsors.map((sponsor) => {
+                                    const content = (
+                                        <div
+                                            className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer"
+                                            title={sponsor.sponsor_name}
+                                        >
+                                            {sponsor.logo_img ? (
+                                                <img src={sponsor.logo_img} className="w-full h-full object-contain" alt={sponsor.sponsor_name} />
+                                            ) : (
+                                                <span className="font-black text-2xl text-muted-foreground">
+                                                    {getInitials(sponsor.sponsor_name)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+
+                                    if (sponsor.link_url) {
+                                        return (
+                                            <a
+                                                key={sponsor.id}
+                                                href={sponsor.link_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="transition-transform hover:scale-105"
+                                            >
+                                                {content}
+                                            </a>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={sponsor.id}>
+                                            {content}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
