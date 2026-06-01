@@ -120,6 +120,7 @@ export default function NotificationsPage() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadData();
     }, []);
 
@@ -467,7 +468,7 @@ export default function NotificationsPage() {
                                                     </div>
                                                     {item.message && (
                                                         <div className="bg-muted/50 p-2 rounded-sm italic border-l-2 border-primary/20 text-xs mt-1">
-                                                            "{item.message}"
+                                                            &ldquo;{item.message}&rdquo;
                                                         </div>
                                                     )}
                                                 </div>
