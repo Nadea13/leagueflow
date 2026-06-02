@@ -5,7 +5,7 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X, Heart, Loader2, GripVertical, Globe, Upload } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X, Heart, Loader2, GripVertical, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
@@ -577,12 +577,12 @@ export function NodeSettings() {
                                                     {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (
                                                         <Button
                                                             asChild
-                                                            variant="default"
+                                                            variant={dbMatch?.status === 'finished' ? "outline" : "default"}
                                                             size="sm"
                                                             className="w-full"
                                                         >
                                                             <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
-                                                                MATCH CONSOLE
+                                                                {dbMatch?.status === 'finished' ? "VIEW MATCH" : "MATCH CONSOLE"}
                                                             </Link>
                                                         </Button>
                                                     )}

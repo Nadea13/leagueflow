@@ -655,7 +655,7 @@ function CanvasInternal({
                             className={cn(
                                 "transition-all w-10",
                                 isLocked
-                                    ? "bg-warning text-white"
+                                    ? "bg-warning"
                                     : "text-warning"
                             )}
                         >
@@ -767,17 +767,13 @@ function CanvasInternal({
                                 onClick={() => handleSave(true)}
                                 disabled={!isDirty || isSaving}
                                 variant={isDirty ? "default" : "outline"}
-                                className={cn(
-                                    "h-10 px-4 font-black text-xs tracking-wider transition-all gap-2",
-                                    isDirty && "bg-chart-5 hover:bg-chart-5/90 text-white"
-                                )}
                             >
                                 {isSaving ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                     <Save className="h-4 w-4" />
                                 )}
-                                <span>{locale === 'th' ? "บันทึก" : "SAVE"}</span>
+                                <span>{locale === 'th' ? "บันทึก" : "Save"}</span>
                             </Button>
                         )}
                         {!readonly && (
