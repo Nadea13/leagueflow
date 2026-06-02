@@ -96,7 +96,7 @@ export function TopScorers({ goals, teams }: TopScorersProps) {
                                         <div className="flex items-center gap-3">
                                             <div className="w-7 h-7 bg-muted/10 border border-border/10 p-1 flex items-center justify-center overflow-hidden shrink-0">
                                                 {team?.logo_url ? (
-                                                    <img src={team.logo_url} alt="" width={28} height={28} className="w-full h-full object-contain p-1" />
+                                                    <Image src={team.logo_url} alt="" width={28} height={28} className="w-full h-full object-contain p-1" />
                                                 ) : (
                                                     <span className="text-[8px] font-black text-muted-foreground/30 capitalize">
                                                         {team?.name.charAt(0)}

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import { Player, Team } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { updatePlayer } from "@/actions/manager/team";
@@ -189,11 +190,9 @@ export function SquadList({
                                                             {(() => {
                                                                 const photoUrl = player.photo_url || player.profile_img || player.master_player?.profile_img || player.global_player?.photo_url || player.global_player?.profile_img;
                                                                 return editPhotoPreview ? (
-                                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                                    <img src={editPhotoPreview} alt="Preview" className="h-full w-full object-cover" />
+                                                                    <Image src={editPhotoPreview} alt="Preview" width={40} height={40} className="h-full w-full object-cover" />
                                                                 ) : photoUrl ? (
-                                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                                    <img src={photoUrl} alt="Current" className="h-full w-full object-cover" />
+                                                                    <Image src={photoUrl} alt="Current" width={40} height={40} className="h-full w-full object-cover" />
                                                                 ) : (
                                                                     <Camera className="h-4 w-4 text-primary" />
                                                                 );
@@ -262,10 +261,11 @@ export function SquadList({
                                                             return photoUrl ? (
                                                                 <>
                                                                     <div className="h-full w-full rounded-full bg-muted/20 flex items-center justify-center overflow-hidden border border-border">
-                                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                        <img
+                                                                        <Image
                                                                             src={photoUrl}
                                                                             alt={player.name}
+                                                                            width={40}
+                                                                            height={40}
                                                                             className="h-full w-full object-cover"
                                                                         />
                                                                     </div>

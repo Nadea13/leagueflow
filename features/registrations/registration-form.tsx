@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/routing";
@@ -426,7 +427,7 @@ export function RegistrationForm({
                                                         <div className="flex flex-col gap-2 md:gap-4">
                                                             <div className="relative aspect-[3/4] w-full max-h-[360px] overflow-hidden flex items-center justify-center">
                                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                                <img
+                                                                <Image
                                                                     src={slipPreviewUrl}
                                                                     alt="Slip preview"
                                                                     width={300}

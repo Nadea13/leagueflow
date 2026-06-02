@@ -120,8 +120,10 @@ export default function NotificationsPage() {
     };
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadData();
+        const timer = setTimeout(() => {
+            loadData();
+        }, 0);
+        return () => clearTimeout(timer);
     }, []);
 
     const handleAccept = async (tournamentId: string, inviteId: string) => {

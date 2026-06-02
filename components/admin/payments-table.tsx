@@ -353,7 +353,7 @@ export function AdminPaymentsTable({ initialPayments }: AdminPaymentsTableProps)
                                 {(() => {
                                     try {
                                         const parsed = JSON.parse(selectedPayment.provider_id);
-                                        return parsed.url ? <img src={parsed.url} alt="Slip" width={400} height={600} className="max-h-[400px] object-contain" /> : <p>No image available</p>;
+                                        return parsed.url ? <Image src={parsed.url} alt="Slip" width={400} height={600} className="max-h-[400px] object-contain" /> : <p>No image available</p>;
                                     } catch (_e) {
                                         return <p className="text-muted-foreground break-all font-mono text-xs">{selectedPayment.provider_id}</p>;
                                     }

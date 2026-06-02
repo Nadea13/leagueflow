@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import Image from "next/image";
 import { NodeProps } from "@xyflow/react";
 import { Heart, Globe, Loader2 } from "lucide-react";
 import { getSponsors, Sponsor } from "@/actions/tournaments/sponsor";
@@ -75,10 +76,11 @@ export const SponsorNode = memo(({ data, selected }: NodeProps) => {
                             >
                                 <div className="h-12 w-full flex items-center justify-center overflow-hidden mb-1">
                                     {sponsor.logo_img ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img 
+                                        <Image 
                                             src={sponsor.logo_img} 
                                             alt={sponsor.sponsor_name} 
+                                            width={120}
+                                            height={48}
                                             className="max-h-full max-w-full object-contain"
                                         />
                                     ) : (

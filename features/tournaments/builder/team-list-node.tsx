@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import Image from 'next/image';
 import { Handle, Position } from '@xyflow/react';
 import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
@@ -69,10 +70,11 @@ export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
                     paidTeams.map((team) => (
                         <div key={team.id} className="group relative flex items-center gap-3 p-2 hover:bg-node-3/5 transition-colors">
                             {team.logo_url ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
+                                <Image
                                     src={team.logo_url}
                                     alt={team.name}
+                                    width={24}
+                                    height={24}
                                     className="h-6 w-6 rounded-full object-cover border border-border transition-colors group-hover:border-node-3/50"
                                 />
                             ) : (

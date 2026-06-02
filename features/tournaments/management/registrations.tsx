@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
@@ -159,9 +160,11 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                     <TableCell className="px-2 md:px-3 py-3">
                                         <div className="flex items-center gap-2 md:gap-3">
                                             {reg.logo_url ? (
-                                                <img
+                                                <Image
                                                     src={reg.logo_url}
-                                                    alt=""
+                                                    alt={reg.team_name || "Team logo"}
+                                                    width={24}
+                                                    height={24}
                                                     className="h-6 w-6 rounded-full object-cover border border-border"
                                                 />
                                             ) : (

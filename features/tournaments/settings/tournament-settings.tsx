@@ -34,7 +34,6 @@ export function TournamentSettings({
     // Payment State
     const [showPayment, setShowPayment] = useState(false);
     const [_plans, setPlans] = useState<Plan[]>([]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isFetchingPlans, setIsFetchingPlans] = useState(false);
 
     // Fetch plans on mount if not provided

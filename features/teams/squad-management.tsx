@@ -92,7 +92,6 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         if (team.isParticipation && players.length === 0 && team.team_id && !isImporting) {
             handleImportRoster(team.team_id);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [team.isParticipation, team.team_id]);
 
     const handleToggleLock = async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
 import { Trophy, Clock, Users } from "lucide-react";
@@ -78,9 +79,11 @@ export function MyRegistrationsList({ registrations }: MyRegistrationsListProps)
                                         {reg.logo_url ? (
                                             <div className="relative w-full h-full">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
+                                                <Image
                                                     src={reg.logo_url}
                                                     alt={reg.team_name}
+                                                    width={48}
+                                                    height={48}
                                                     className="object-contain"
                                                 />
                                             </div>

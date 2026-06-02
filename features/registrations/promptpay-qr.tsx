@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import QRCode from "qrcode";
 import generatePayload from "promptpay-qr";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,7 +59,7 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
                 {/* QR Code */}
                 <div className="p-1 md:p-2 bg-white border rounded-sm relative group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                         src={qrCodeUrl}
                         alt="PromptPay QR Code"
                         width={200}

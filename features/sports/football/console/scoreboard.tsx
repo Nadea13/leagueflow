@@ -1,4 +1,5 @@
 import { Match } from "@/types";
+import Image from "next/image";
 
 import { MatchTimer } from "./match-timer";
 
@@ -31,8 +32,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                     >
                         <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-2 md:p-4 relative group/logo">
                             {match.home_team?.logo_url ? (
-                                // eslint-disable-next-line
-                                <img src={match.home_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
+                                <Image src={match.home_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{match.home_team?.name?.substring(0, 2).toUpperCase() || 'H'}</span>
                             )}
@@ -77,8 +77,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                     >
                         <div className="inline-flex items-center justify-center w-16 h-16 md:w-24 md:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-2 md:p-4 relative group/logo">
                             {match.away_team?.logo_url ? (
-                                // eslint-disable-next-line
-                                <img src={match.away_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
+                                <Image src={match.away_team.logo_url} width={64} height={64} className="w-16 h-16 object-contain relative z-10" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{match.away_team?.name?.substring(0, 2).toUpperCase() || 'A'}</span>
                             )}

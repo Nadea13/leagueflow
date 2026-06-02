@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import Image from "next/image";
 import { Handle, Position, NodeProps, Node } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 import { MatchNodeData, useBracketStore } from "@/lib/stores/bracket-store";
@@ -398,12 +399,13 @@ function SlotRow({
         >
             <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-2/50 group-hover/slot:bg-node-2/10 transition-colors overflow-hidden">
                 {team?.logo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        src={team.logo_url}
-                        alt={label}
-                        className="w-full h-full object-cover"
-                    />
+                    <Image
+                                src={team.logo_url}
+                                alt={label}
+                                width={24}
+                                height={24}
+                                className="w-full h-full object-cover"
+                            />
                 ) : (
                     <span className="text-[9px] font-black text-muted-foreground group-hover/slot:text-node-2">
                         {team ? getInitials(team.name) : (position === "top" ? "H" : "A")}

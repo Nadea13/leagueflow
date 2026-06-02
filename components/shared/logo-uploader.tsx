@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Upload, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,8 +81,7 @@ export function LogoUploader({
                     {isCompressing ? (
                         <Loader2 className="h-8 w-8 text-primary animate-spin" />
                     ) : previewUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <Image
                             src={previewUrl}
                             alt={previewLabel}
                             width={80}

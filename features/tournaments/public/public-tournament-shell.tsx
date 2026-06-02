@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { Trophy, Calendar, ArrowLeft, Award, Megaphone, MapPin, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -379,8 +380,7 @@ export function PublicTournamentShell({
                                     title={team.name}
                                 >
                                     {team.logo_url ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={team.logo_url} className="w-full h-full object-contain p-2" alt={team.name} />
+                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2" alt={team.name} width={96} height={96} />
                                     ) : (
                                         <span className="font-black text-3xl text-muted-foreground">
                                             {getInitials(team.name)}
@@ -396,8 +396,7 @@ export function PublicTournamentShell({
                                     title={team.name}
                                 >
                                     {team.logo_url ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={team.logo_url} className="w-full h-full object-contain p-2" alt={team.name} />
+                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2" alt={team.name} width={96} height={96} />
                                     ) : (
                                         <span className="font-black text-3xl text-muted-foreground">
                                             {getInitials(team.name)}
@@ -539,7 +538,7 @@ export function PublicTournamentShell({
                                             title={sponsor.sponsor_name}
                                         >
                                             {sponsor.logo_img ? (
-                                                <img src={sponsor.logo_img} className="w-full h-full object-contain" alt={sponsor.sponsor_name} />
+                                                <Image src={sponsor.logo_img} className="w-full h-full object-contain" alt={sponsor.sponsor_name} width={96} height={96} />
                                             ) : (
                                                 <span className="font-black text-2xl text-muted-foreground">
                                                     {getInitials(sponsor.sponsor_name)}

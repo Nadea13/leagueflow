@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import { Users, Trophy, Calendar } from "lucide-react";
 import { formatDate } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -82,10 +83,11 @@ export function TournamentOverview({ tournament, allApprovedRegistrations }: Tou
                                     <div key={i} className="flex items-center gap-2 group border-b border-foreground/[0.03] pb-2 last:border-0 last:pb-0">
                                         <div className="w-10 h-10 border flex items-center justify-center p-1 transition-all shrink-0">
                                             {reg.logo_url ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
+                                                <Image
                                                     src={reg.logo_url}
                                                     alt={reg.team_name}
+                                                    width={40}
+                                                    height={40}
                                                     className="w-full h-full object-contain"
                                                 />
                                             ) : (

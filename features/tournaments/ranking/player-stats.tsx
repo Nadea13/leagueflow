@@ -55,7 +55,7 @@ export function PlayerStats({ stats }: PlayerStatsProps) {
                             <TableCell className="px-0">
                                 <div className="flex items-center gap-1">
                                     {stat.teamLogoUrl ? (
-                                        <img src={stat.teamLogoUrl} alt="" width={16} height={16} className="w-4 h-4 p-1 object-contain" />
+                                        <Image src={stat.teamLogoUrl} alt="" width={16} height={16} className="w-4 h-4 p-1 object-contain" />
                                     ) : (
                                         <div className="w-4 h-4 bg-muted flex items-center justify-center text-[8px] font-bold">
                                             {stat.teamName?.charAt(0)}

@@ -194,7 +194,7 @@ export function AdminPlayersTable({ initialPlayers }: AdminPlayersTableProps) {
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-muted/50 flex items-center justify-center border border-border overflow-hidden shrink-0">
                                                 {player.photo_url ? (
-                                                    <img src={player.photo_url} alt={player.name} width={40} height={40} className="w-full h-full object-cover" />
+                                                    <Image src={player.photo_url} alt={player.name} width={40} height={40} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <User className="h-5 w-5 text-muted-foreground" />
                                                 )}

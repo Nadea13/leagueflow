@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import Image from "next/image";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -777,7 +778,13 @@ export function NodeSettings() {
                                                 </div>
                                                 <div className="h-8 w-8 rounded-sm bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
                                                     {sponsor.logo_img ? (
-                                                        <img src={sponsor.logo_img} alt="" className="max-h-full max-w-full object-contain" />
+                                                        <Image 
+                                                            src={sponsor.logo_img} 
+                                                            alt={sponsor.sponsor_name || "Sponsor logo"} 
+                                                            className="max-h-full max-w-full object-contain" 
+                                                            width={32}
+                                                            height={32}
+                                                        />
                                                     ) : (
                                                         <Heart className="h-3.5 w-3.5 text-muted-foreground/20" />
                                                     )}

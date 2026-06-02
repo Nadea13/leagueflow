@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import Image from "next/image";
 import { Player, Team } from "@/types/index";
 import {
     DialogHeader,
@@ -38,10 +39,11 @@ export function PlayerDetailsView({ player, team }: PlayerDetailsViewProps) {
                 <div className="flex flex-col items-center gap-2 md:gap-4 text-center border-b pb-2 md:pb-4">
                     <div className="h-20 w-20 md:h-24 md:w-24 rounded-full border-2 bg-muted/10 overflow-hidden flex items-center justify-center relative shadow-inner">
                         {photoUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <Image
                                 src={photoUrl}
                                 alt={player.name}
+                                width={96}
+                                height={96}
                                 className="h-full w-full object-cover"
                             />
                         ) : (

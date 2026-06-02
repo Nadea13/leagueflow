@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Upload, Check, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addTeam } from "@/actions/tournaments/general";
@@ -84,7 +85,7 @@ export function TeamForm({
                             <div className="relative group">
                                 <div className="h-20 w-20 flex items-center justify-center rounded-sm border-2 border-dashed border-border overflow-hidden">
                                     {preview ? (
-                                        <img
+                                        <Image
                                             src={preview}
                                             alt="Preview"
                                             width={80}

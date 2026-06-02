@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { EmptyState } from "@/components/shared/empty-state";
 
 import { assignTeamGroup } from "@/actions/tournaments/general";
@@ -91,9 +92,11 @@ function TeamItem({
                 trigger={
                     <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer">
                         {team.logo_url ? (
-                            <img
+                            <Image
                                 src={team.logo_url}
                                 alt={team.name}
+                                width={24}
+                                height={24}
                                 className="h-6 w-6 rounded-full object-cover border border-border"
                             />
                         ) : (

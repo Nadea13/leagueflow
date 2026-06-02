@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import { Plus, Loader2, UserPlus, Search, ArrowRight, FileText, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -263,8 +264,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             className="h-10 w-10 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group"
                         >
                             {photoPreview ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" />
+                                <Image src={photoPreview} alt="Preview" width={40} height={40} className="h-full w-full object-cover" />
                             ) : (
                                 <Camera className="h-4 w-4 text-primary" />
                             )}

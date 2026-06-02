@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { RegistrationForm } from "@/features/registrations/registration-form";
 import { getMyTeams } from "@/actions/manager/team";
@@ -241,10 +242,11 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                                     <div className="flex items-center gap-3">
                                                         <div className="h-9 w-9 rounded-full bg-muted/20 flex items-center justify-center overflow-hidden border">
                                                             {teamObj?.logo_img ? (
-                                                                // eslint-disable-next-line @next/next/no-img-element
-                                                                <img
+                                                                <Image
                                                                     src={teamObj.logo_img}
                                                                     alt={teamObj.name}
+                                                                    width={36}
+                                                                    height={36}
                                                                     className="h-full w-full object-cover"
                                                                 />
                                                             ) : (
@@ -286,9 +288,11 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                             {tournament.cover_img && (
                                 <div className="aspect-[16/9] w-full rounded-lg overflow-hidden border bg-muted">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
+                                    <Image
                                         src={tournament.cover_img}
                                         alt={tournament.name}
+                                        width={640}
+                                        height={360}
                                         className="h-full w-full object-cover"
                                     />
                                 </div>

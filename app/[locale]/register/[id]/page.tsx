@@ -188,7 +188,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                     <div key={team.id} className="flex items-center gap-3">
                                                         <div className="w-10 h-10 bg-muted flex items-center justify-center overflow-hidden border">
                                                             {team.logo_url ? (
-                                                                <img src={team.logo_url} alt={team.name} width={40} height={40} className="w-full h-full object-cover" />
+                                                                <Image src={team.logo_url} alt={team.name} width={40} height={40} className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <Users className="w-5 h-5 text-muted-foreground" />
                                                             )}
