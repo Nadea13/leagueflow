@@ -398,6 +398,16 @@ export const StandingNode = memo(({
                     </tbody>
                 </table>
             </div>
+            
+            {/* Bottom handle to MatchNode */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center translate-y-[1px]">
+                <Handle
+                    type="source"
+                    position={Position.Bottom}
+                    id="group-matches"
+                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50"
+                />
+            </div>
         </div>
     );
 });

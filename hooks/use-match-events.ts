@@ -22,15 +22,15 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         const fetchEventsClient = async () => {
             const { data, error } = await supabase
                 .from('match_events')
-                .select(`*, players(name, number)`)
+                .select(`*, player:players(display_name)`)
                 .eq('match_id', matchId)
                 .order('created_at', { ascending: false });
 
             if (isMounted && !error && data) {
                 const mapped = data.map((e) => ({
                     ...e,
-                    player_name: (e.players as { name: string } | null)?.name || (e as { player_name?: string }).player_name || "Unknown",
-                    players: undefined
+                    player_name: (e.player as { display_name: string } | null)?.display_name || (e as { player_name?: string }).player_name || "Unknown",
+                    player: undefined
                 }));
                 setEvents(mapped);
             }

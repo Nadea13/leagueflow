@@ -56,7 +56,14 @@ export async function addMatchEvent(
     // Some matches might have been generated with 'team_id' (global) instead of 'tournament_team_id' (participation).
     // match_events.team_id REFERENCES tournament_teams(id).
     
-    const effectiveTeamId = teamId;
+    const isValidUuid = (id: string | null): boolean => {
+        if (!id) return false;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(id);
+    };
+
+    const resolvedPlayerId = isValidUuid(playerId) ? playerId : null;
+    const effectiveTeamId = isValidUuid(teamId) ? teamId : null;
     let eventData = null;
     const { data: initialData, error: initialError } = await supabase
         .from("match_events")
@@ -65,7 +72,7 @@ export async function addMatchEvent(
             team_id: effectiveTeamId,
             event_type: eventType,
             minute: minute,
-            player_id: playerId || null,
+            player_id: resolvedPlayerId,
             extra_info: extraInfo || {},
             created_at: new Date().toISOString(),
         })
@@ -95,10 +102,10 @@ export async function addMatchEvent(
                 .from("match_events")
                 .insert({
                     match_id: matchId,
-                    team_id: candidate,
+                    team_id: isValidUuid(candidate) ? candidate : null,
                     event_type: eventType,
                     minute: minute,
-                    player_id: playerId || null,
+                    player_id: resolvedPlayerId,
                     extra_info: extraInfo || {},
                     created_at: new Date().toISOString(),
                 })

@@ -101,6 +101,20 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
 
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
+    const handleNameChange = (val: string) => {
+        setNewName(val);
+        if (selectedMasterPlayerId) {
+            setSelectedMasterPlayerId(null);
+        }
+        if (val.trim().length > 0) {
+            setIsPopoverOpen(true);
+            handleSearch(val);
+        } else {
+            setIsPopoverOpen(false);
+            setSearchResults([]);
+        }
+    };
+
     const handleSelectGlobalPlayer = async (gp: MasterPlayerSearchResult) => {
         setIsPopoverOpen(false);
         setIsSaving(true);
@@ -132,6 +146,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
             toast({ title: tCommon("error"), description: errorMessage, variant: "destructive" });
         } finally {
             setIsSaving(false);
+            setSearchResults([]);
         }
     };
 
@@ -181,72 +196,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             {t("add_player")}
                         </h3>
                     </div>
-
-                    <Popover
-                        open={isPopoverOpen}
-                        onOpenChange={(isOpen) => {
-                            setIsPopoverOpen(isOpen);
-                            if (isOpen) {
-                                handleSearch("");
-                            }
-                        }}
-                    >
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 border-primary transition-all text-[10px] text-primary hover:text-primary hover:bg-primary/10 gap-2 md:gap-3">
-                                <Search className="h-4 w-4" />
-                                Search Players
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80 p-0 border-border bg-card shadow-2xl" align="end">
-                            <div className="p-0 border-b border-border/40">
-                                <div className="relative">
-                                    <Input
-                                        placeholder="Search database..."
-                                        value={searchQuery}
-                                        onChange={(e) => handleSearch(e.target.value)}
-                                        className="pl-11 h-12 border-none bg-transparent font-black tracking-widest text-[11px] focus-visible:ring-0"
-                                        autoFocus
-                                    />
-                                </div>
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto">
-                                {isSearching ? (
-                                    <div className="flex flex-col items-center justify-center py-8 gap-2">
-                                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                                        <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Searching...</span>
-                                    </div>
-                                ) : searchResults.length > 0 ? (
-                                    <div className="py-1">
-                                        {searchResults.map((gp) => (
-                                            <button
-                                                key={gp.id}
-                                                disabled={isSaving}
-                                                className="w-full text-left px-4 py-3 hover:bg-primary/10 group flex items-center justify-between transition-colors border-b border-foreground/5 last:border-0 disabled:opacity-50"
-                                                onClick={() => handleSelectGlobalPlayer(gp)}
-                                            >
-                                                <div className="flex flex-col">
-                                                    <span className="font-black text-xs tracking-tight group-hover:text-primary">{gp.name}</span>
-                                                    {gp.date_of_birth && (
-                                                        <span className="text-[9px] font-mono font-bold text-muted-foreground/40 mt-0.5">
-                                                            {gp.date_of_birth}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="p-12 text-center">
-                                        <div className="h-10 w-10 border flex items-center justify-center mx-auto mb-2 md:mb-3">
-                                            <FileText className="h-5 w-5 text-muted-foreground/20" />
-                                        </div>
-                                        <p className="text-[10px] font-black tracking-widest text-muted-foreground/40">No records found</p>
-                                    </div>
-                                )}
-                            </div>
-                        </PopoverContent>
-                    </Popover>
                 </div>
 
                 <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-2 md:gap-3">
@@ -286,19 +235,59 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                     </div>
 
                     <div className="space-y-1 flex-1 min-w-[200px] relative transition-all">
-                        <div className="flex items-center justify-between">
-                            <Label>{t("player_name")} <span className="text-destructive">*</span></Label>
+                        <Label>{t("player_name")} <span className="text-destructive">*</span></Label>
+                        <div className="relative">
+                            <Input
+                                value={newName}
+                                onChange={e => handleNameChange(e.target.value)}
+                                onFocus={() => {
+                                    if (newName.trim().length > 0) {
+                                        setIsPopoverOpen(true);
+                                        handleSearch(newName);
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Delay hiding suggestion list to allow onMouseDown to fire first
+                                    setTimeout(() => {
+                                        setIsPopoverOpen(false);
+                                    }, 200);
+                                }}
+                                placeholder={t("player_name")}
+                                required
+                                className="bg-transparent text-foreground focus-visible:ring-0 w-full"
+                            />
+                            {isPopoverOpen && (isSearching || searchResults.length > 0) && (
+                                <div className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-md border border-border bg-card text-foreground shadow-2xl max-h-[250px] overflow-y-auto custom-scrollbar">
+                                    {isSearching ? (
+                                        <div className="flex flex-col items-center justify-center py-6 gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                            <span className="text-[9px] font-black tracking-widest text-muted-foreground/40">Searching...</span>
+                                        </div>
+                                    ) : (
+                                        <div className="py-1">
+                                            {searchResults.map((gp) => (
+                                                <button
+                                                    key={gp.id}
+                                                    type="button"
+                                                    className="w-full text-left px-4 py-2.5 hover:bg-primary/10 group flex items-center justify-between transition-colors border-b border-foreground/5 last:border-0"
+                                                    onMouseDown={() => handleSelectGlobalPlayer(gp)}
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <span className="font-black text-xs tracking-tight group-hover:text-primary">{gp.name}</span>
+                                                        {gp.date_of_birth && (
+                                                            <span className="text-[9px] font-mono font-bold text-muted-foreground/40 mt-0.5">
+                                                                {gp.date_of_birth}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <ArrowRight className="h-3 w-3 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                        <Input
-                            value={newName}
-                            onChange={e => {
-                                setNewName(e.target.value);
-                                if (selectedMasterPlayerId) setSelectedMasterPlayerId(null);
-                            }}
-                            placeholder={t("player_name")}
-                            required
-                            className="bg-transparent text-foreground focus-visible:ring-0"
-                        />
                     </div>
 
                     <div className="flex gap-2 md:gap-3 flex-1 md:flex-none md:w-auto w-full items-end">

@@ -8,12 +8,18 @@ import { CookieConsent, COOKIE_CONSENT_KEY } from "./cookie-types";
 import { CookieSettings } from "./cookie-settings";
 
 
+import { usePathname } from "next/navigation";
+
 export function CookieBanner() {
     const t = useTranslations("CookieConsent");
     const [showBanner, setShowBanner] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
+        if (pathname?.includes("/overlay")) {
+            return;
+        }
         // Check if cookie exists
         const consent = document.cookie.split('; ').find(row => row.startsWith(COOKIE_CONSENT_KEY + '='));
         if (!consent) {

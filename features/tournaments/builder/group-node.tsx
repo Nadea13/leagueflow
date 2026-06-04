@@ -156,21 +156,14 @@ export const GroupNode = memo(({
                 )}
             </div>
 
-            {/* Bottom handles for Standing and Matches */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-8 translate-y-[1px]">
-                <Handle
-                    type="source"
-                    position={Position.Bottom}
-                    id="standing"
-                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-emerald transition-all z-50 !static"
-                />
-                <Handle
-                    type="source"
-                    position={Position.Bottom}
-                    id="group-matches"
-                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50 !static"
-                />
-            </div>
+            {/* Right handle to Standing */}
+            <Handle
+                type="source"
+                position={Position.Right}
+                id="standing"
+                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-emerald transition-all z-50"
+                style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
+            />
         </div>
     );
 });

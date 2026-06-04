@@ -20,7 +20,7 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
     // Timer calculation logic
     useEffect(() => {
         // When status changes to playing, record local start time for optimistic counting
-        if (isRunning && lastStatusRef.current !== 'playing') {
+        if (isRunning && (!localStartRef.current || lastStatusRef.current !== 'playing')) {
             localStartRef.current = Date.now();
         } else if (!isRunning) {
             localStartRef.current = null;

@@ -363,14 +363,14 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             });
         }
 
-        // Special handling for Group -> MatchNode (top handle)
+        // Special handling for Group/Standing -> MatchNode (top handle)
         if (targetNode.type === 'matchNode' && connection.targetHandle === 'group-in') {
-            if (sourceNode.type === 'groupNode') {
+            if (sourceNode.type === 'groupNode' || sourceNode.type === 'standingNode') {
                 // Sync teams to the CURRENT node instead of creating a new one
 
                 // Balanced Round Robin Algorithm (Circle Method)
-                const teamCount = (sourceNode.data.teamCount as number) || 0;
-                const teams = (sourceNode.data.teams as string[]) || [];
+                const teamCount = (sourceNode.data.teamCount as number) || (sourceNode.data.teams as string[])?.length || 0;
+                const teams = (sourceNode.data.teams as string[]) || (sourceNode.data.rankings as string[]) || [];
 
                 const pairings = [];
                 if (teamCount >= 2) {
@@ -408,7 +408,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     matches: pairings
                 });
             } else {
-                return; // Only allow GroupNode to connect to group-in
+                return; // Only allow GroupNode or StandingNode to connect to group-in
             }
         }
 
@@ -446,6 +446,8 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             }
         }
 
+        const isStandingToMatchBottom = sourceNode.type === 'standingNode' && targetNode.type === 'matchNode' && connection.targetHandle === 'group-in';
+
         set((state) => ({
             edges: addEdge(
                 {
@@ -455,6 +457,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                     style: {
                         stroke: "var(--muted-foreground)",
                         strokeWidth: 2,
+                        strokeDasharray: isStandingToMatchBottom ? "5,5" : "none",
                         opacity: 1,
                     },
                 },
@@ -615,10 +618,10 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         get().takeSnapshot();
         const { nodes, edges } = get();
         const groupNode = nodes.find(n => n.id === groupId);
-        if (!groupNode || groupNode.type !== 'groupNode') return;
+        if (!groupNode || (groupNode.type !== 'groupNode' && groupNode.type !== 'standingNode')) return;
 
-        const teamCount = (groupNode.data.teamCount as number) || 0;
-        const teams = (groupNode.data.teams as string[]) || [];
+        const teamCount = (groupNode.data.teamCount as number) || (groupNode.data.teams as string[])?.length || 0;
+        const teams = (groupNode.data.teams as string[]) || (groupNode.data.rankings as string[]) || [];
         const label = groupNode.data.label as string;
 
         // Balanced Round Robin Algorithm (Circle Method)
@@ -670,10 +673,12 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             source: groupId,
             target: matchNodeId,
             sourceHandle: 'group-matches',
+            targetHandle: 'group-in',
             type: 'bezier',
             style: {
                 stroke: 'var(--muted-foreground)',
                 strokeWidth: 2,
+                strokeDasharray: groupNode.type === 'standingNode' ? '5,5' : 'none',
                 opacity: 1,
             }
         };
@@ -705,14 +710,14 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             edges: (data.edges || []).map(edge => {
                 const sourceNode = (data.nodes || []).find(n => n.id === edge.source);
                 const targetNode = (data.nodes || []).find(n => n.id === edge.target);
-                const isGroupToMatch = sourceNode?.type === 'groupNode' && targetNode?.type === 'matchNode';
+                const isStandingToMatchBottom = sourceNode?.type === 'standingNode' && targetNode?.type === 'matchNode' && edge.targetHandle === 'group-in';
                 return {
                     ...edge,
                     animated: false,
                     style: {
                         ...edge.style,
                         stroke: "var(--muted-foreground)",
-                        strokeDasharray: isGroupToMatch ? "5,5" : (edge.style?.strokeDasharray || "none"),
+                        strokeDasharray: isStandingToMatchBottom ? "5,5" : "none",
                         opacity: 1,
                     }
                 };

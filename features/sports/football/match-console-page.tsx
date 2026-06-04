@@ -24,7 +24,8 @@ import {
     Flag,
     Trophy,
     Stethoscope,
-    Shield
+    Shield,
+    Tv
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -40,6 +41,7 @@ import { MatchEventDialog } from "./console/match-event-dialog";
 import { WalkoverDialog } from "./console/walkover-dialog";
 import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
 import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
+import { BroadcastOverlayDialog } from "./console/broadcast-overlay-dialog";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
@@ -75,6 +77,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const [woDialogOpen, setWoDialogOpen] = useState(false);
     const [addTimeDialogOpen, setAddTimeDialogOpen] = useState(false);
     const [setTimeDialogOpen, setSetTimeDialogOpen] = useState(false);
+    const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
     const [penaltyShots, setPenaltyShots] = useState<PenaltyShot[]>([]);
 
     // Event Selection State
@@ -282,7 +285,15 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const currentMinute = Math.floor(time / 60) + 1;
         const teamId = match.home_team_id || match.away_team_id;
         const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
-        await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
+        const res = await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
+        if (res && !res.success) {
+            toast({
+                title: "Error ending match",
+                description: res.error || "Unknown error occurred",
+                variant: "destructive"
+            });
+            return;
+        }
         setIsRunning(false);
         await updateMatch(match.id, { status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute }, tournamentId);
         
@@ -331,14 +342,28 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const label = evtConfig ? t(evtConfig.label) : lastEvent.event_type;
 
         if (!confirm(`${tCommon("delete")} '${label}'?`)) return;
-        await deleteEvent(lastEvent.id);
+        const res = await deleteEvent(lastEvent.id);
+        if (res && !res.success) {
+            toast({
+                title: "Error deleting event",
+                description: res.error || "Unknown error occurred",
+                variant: "destructive"
+            });
+        }
     };
 
-    const handleQuickAction = (teamId: string, type: EventType) => {
+    const handleQuickAction = async (teamId: string, type: EventType) => {
         if (readOnly) return;
         if (type === 'corner') {
             const minute = Math.floor(time / 60) + 1;
-            addEvent(teamId, 'corner', minute, null, {}, "Corner");
+            const res = await addEvent(teamId, 'corner', minute, null, {}, "Corner");
+            if (res && !res.success) {
+                toast({
+                    title: "Error saving corner event",
+                    description: res.error || "Unknown error occurred",
+                    variant: "destructive"
+                });
+            }
             return;
         }
         setSelectedTeamId(teamId);
@@ -350,7 +375,14 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         if (!selectedTeamId || !selectedEventType) return;
         const player = allPlayers.find(p => p.id === data.playerId);
         const playerName = player ? player.name : "Unknown";
-        await addEvent(selectedTeamId, data.autoRed ? 'red_card' : selectedEventType, data.minute, data.playerId, data.extraInfo, playerName);
+        const res = await addEvent(selectedTeamId, data.autoRed ? 'red_card' : selectedEventType, data.minute, data.playerId, data.extraInfo, playerName);
+        if (res && !res.success) {
+            toast({
+                title: "Error saving event",
+                description: res.error || "Unknown error occurred",
+                variant: "destructive"
+            });
+        }
     };
 
     const handleSetTime = async (minutes: number, seconds: number) => {
@@ -533,23 +565,34 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                         <Undo className="h-4 w-4 text-muted-foreground" />
                                         <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
                                     </Button>
-                                    <PenaltyShootoutDialog
-                                        matchId={match.id}
-                                        homeTeamId={match.home_team_id}
-                                        awayTeamId={match.away_team_id}
-                                        homeTeamName={match.home_team?.name || 'Home'}
-                                        awayTeamName={match.away_team?.name || 'Away'}
-                                        onUpdate={fetchShots}
-                                        trigger={
-                                            <Button
-                                                variant="outline"
-                                                className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                                            >
-                                                <Target className="h-4 w-4 text-primary" />
-                                                <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
-                                            </Button>
-                                        }
-                                    />
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setOverlayDialogOpen(true)}
+                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                                    >
+                                        <Tv className="h-4 w-4 text-primary" />
+                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
+                                    </Button>
+                                    {match.status === 'finished' && (
+                                        <PenaltyShootoutDialog
+                                            matchId={match.id}
+                                            homeTeamId={match.home_team_id}
+                                            awayTeamId={match.away_team_id}
+                                            homeTeamName={match.home_team?.name || 'Home'}
+                                            awayTeamName={match.away_team?.name || 'Away'}
+                                            onUpdate={fetchShots}
+                                            trigger={
+                                                <Button
+                                                    variant="outline"
+                                                    disabled={homeScore !== awayScore}
+                                                    className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group disabled:opacity-50"
+                                                >
+                                                    <Target className="h-4 w-4 text-primary" />
+                                                    <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
+                                                </Button>
+                                            }
+                                        />
+                                    )}
                                     <Button
                                         variant="outline"
                                         onClick={() => setWoDialogOpen(true)}
@@ -610,6 +653,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             {/* Dialogs */}
             <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} existingEvents={events} onSave={handleSaveEvent} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
+            <BroadcastOverlayDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
             <SetTimeDialog open={setTimeDialogOpen} onOpenChange={setSetTimeDialogOpen} currentTime={time} onSave={handleSetTime} />
             <AddTimeDialog open={addTimeDialogOpen} onOpenChange={setAddTimeDialogOpen} onSave={(mins) => {
                 const minute = Math.floor(time / 60) + 1;

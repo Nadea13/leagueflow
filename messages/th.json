@@ -397,6 +397,8 @@
         "events": "เหตุการณ์",
         "penalty_shootout": "ยิงจุดโทษ",
         "undo": "ย้อนกลับ",
+        "broadcast_overlay": "ลิงก์สตรีมมิ่ง (Overlay)",
+        "board_editor": "เครื่องมือแก้ไขบอร์ด",
         "match_finished": "จบการแข่งขัน",
         "penalty_scored": "เข้า",
         "penalty_missed": "ไม่เข้า",

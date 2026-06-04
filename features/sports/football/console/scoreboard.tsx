@@ -2,6 +2,7 @@ import { Match } from "@/types";
 import Image from "next/image";
 
 import { MatchTimer } from "./match-timer";
+import { Badge } from "@/components/ui/badge";
 
 interface ScoreboardProps {
     match: Match;
@@ -41,7 +42,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                             <h2 className="text-2xl lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/home:text-primary transition-colors">
                                 {formatTeamName(match.home_team?.name)}
                             </h2>
-                            <p className="text-xs font-bold tracking-wider">HOME</p>
+                            <p className="text-xs font-bold tracking-wider">Home</p>
                         </div>
                     </div>
 
@@ -65,9 +66,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
                         )}
 
                         {match.status === 'finished' && (
-                            <div className="bg-primary/20 text-primary border border-primary/30 px-4 py-1 text-[10px] font-black tracking-[0.2em]">
-                                Final Result
-                            </div>
+                            <Badge variant="outline">Final Result</Badge>
                         )}
                     </div>
 
