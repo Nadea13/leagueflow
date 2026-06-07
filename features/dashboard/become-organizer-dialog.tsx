@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Trophy, CheckCircle2, Loader2, Rocket, Shield, Zap, AlertCircle } from "lucide-react";
-import { registerAsOrganizer } from "@/actions/dashboard";
+import { registerAsOrganizer } from "@/actions/common/user";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 

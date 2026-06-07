@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, Search, Trophy } from "lucide-react";
 import { Tournament } from "@/types";
 import { PublicTournamentCard } from "./public-tournament-card";
-import { getPublicTournaments } from "@/actions/public/public-tournaments";
+import { getPublicTournaments } from "@/actions/public";
 import { EmptyState } from "@/components/shared/empty-state";
 
 import { useSearchParams } from "next/navigation";

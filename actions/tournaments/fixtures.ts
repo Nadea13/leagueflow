@@ -89,56 +89,6 @@ export async function generateFixtures(tournamentId: string): Promise<ActionResp
     return result;
 }
 
-export async function generateKnockoutRound(
-    tournamentId: string,
-    stage: string,
-    matchCount: number
-): Promise<ActionResponse> {
-    // Security Check
-    const access = await validateTournamentAccess(tournamentId, 'editor');
-    if (!access.success) return { success: false, error: access.error };
-
-    const supabase = await createClient();
-
-    // Fetch category
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
-
-    if (!category) {
-        return { success: false, error: "No tournament category setup found" };
-    }
-    const tournamentCategoryId = category.id;
-
-    const lastRound = await getLastRound(tournamentCategoryId, supabase);
-    const startRound = lastRound + 1;
-
-    const matches = Array(matchCount).fill(0).map((_, i) => ({
-        tournament_category_id: tournamentCategoryId,
-        home_team_id: null,
-        away_team_id: null,
-        round: startRound,
-        stage: stage,
-        status: 'scheduled',
-        is_manual: true,
-        match_index: i + 1,
-        home_score: { total: 0 },
-        away_score: { total: 0 }
-    }));
-
-    const { error } = await supabase.from('matches').insert(matches);
-
-    if (error) {
-        return { success: false, error: error.message };
-    }
-
-    revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true };
-}
-
 export async function resetFixtures(tournamentId: string): Promise<ActionResponse> {
     // Security Check
     const access = await validateTournamentAccess(tournamentId, 'editor');

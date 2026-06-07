@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Trophy } from "lucide-react";
-import { createTournament } from "@/actions/dashboard";
+import { createTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,

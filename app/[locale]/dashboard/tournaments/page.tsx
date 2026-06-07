@@ -1,4 +1,4 @@
-import { getDashboardTournaments } from "@/actions/dashboard";
+import { getDashboardTournaments } from "@/actions/tournaments/general";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 import { MyTournamentsClient } from "@/features/tournaments/management/my-tournaments-client";
 import type { Metadata } from "next";

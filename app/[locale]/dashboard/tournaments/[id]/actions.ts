@@ -805,7 +805,6 @@ export async function confirmPayment(
     }
 
     revalidatePath(`/dashboard/tournaments/${tournamentId}`);
-    revalidatePath(`/dashboard/billing`);
     revalidatePath(`/dashboard`);
     revalidatePath(`/`);
     return { success: true };

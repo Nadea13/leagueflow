@@ -45,7 +45,7 @@ import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMont
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { updateTournament } from "@/actions/tournaments/general";
-import { createTournamentCategory } from "@/actions/dashboard";
+import { createTournamentCategory } from "@/actions/tournaments/general";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
@@ -554,7 +554,7 @@ function CanvasInternal({
 
     const handleCopyLinkRegister = useCallback(() => {
         const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
-        const url = `${window.location.origin}/${locale}/register/${tournamentId}${categoryQuery}`;
+        const url = `${window.location.origin}/${locale}/registration/${tournamentId}${categoryQuery}`;
         navigator.clipboard.writeText(url);
         toast({
             title: locale === 'th' ? "คัดลอกลิงก์แล้ว" : "Link Copied",
@@ -564,7 +564,7 @@ function CanvasInternal({
 
     const handleOpenLinkRegister = useCallback(() => {
         const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
-        const url = `${window.location.origin}/${locale}/register/${tournamentId}${categoryQuery}`;
+        const url = `${window.location.origin}/${locale}/registration/${tournamentId}${categoryQuery}`;
         window.open(url, '_blank');
     }, [tournamentId, locale, activeCategoryId]);
 

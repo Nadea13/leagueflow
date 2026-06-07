@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MatchCard } from "../matches/match-card";
-import { getPublicMatches } from "@/actions/public/public-matches";
+import { getPublicMatches } from "@/actions/public";
 import { formatDate } from "@/lib/date";
 import { Link } from "@/i18n/routing";
 import { Match, Tournament } from "@/types";

@@ -49,102 +49,6 @@ export async function getUserSubscriptionPlan() {
     return 'free';
 }
 
-export async function getUserTeamLimit() {
-    const plan = await getUserSubscriptionPlan();
-    if (plan === 'free') return 1;
-    return Infinity; // Pro plans have no limit
-}
-
-export async function getUserDashboardMetrics() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return { totalTeams: 0, assignedTeams: 0, pendingRegistrations: 0 };
-
-    // 1. Get user owned teams
-    const { data: userOwnedTeams } = await supabase
-        .from("teams")
-        .select("id")
-        .eq("user_id", user.id)
-        .is("deleted_at", null);
-    
-    const ownedTeamIds = userOwnedTeams?.map(t => t.id) || [];
-
-    // 2. Get tournaments owned by the user
-    const { data: ownedTournaments } = await supabase
-        .from("tournaments")
-        .select("id")
-        .eq("user_id", user.id)
-        .is("deleted_at", null);
-    
-    const ownedTournamentIds = ownedTournaments?.map(t => t.id) || [];
-
-    // 3. Find teams registered in user's tournaments
-    let organizerTeamIds: string[] = [];
-    if (ownedTournamentIds.length > 0) {
-        const { data: orgTeamsData } = await supabase
-            .from("tournament_teams")
-            .select(`
-                team_id,
-                tournament_categories!inner (
-                    tournament_id
-                )
-            `)
-            .in("tournament_categories.tournament_id", ownedTournamentIds)
-            .is("deleted_at", null);
-        
-        if (orgTeamsData) {
-            organizerTeamIds = orgTeamsData.map((t: any) => t.team_id);
-        }
-    }
-
-    // Combine to get unique set of total teams
-    const totalTeamIds = new Set([...ownedTeamIds, ...organizerTeamIds]);
-
-    // 4. Find how many of total teams are assigned to a tournament category
-    let assignedCount = 0;
-    if (totalTeamIds.size > 0) {
-        const { count } = await supabase
-            .from("tournament_teams")
-            .select("team_id", { count: 'exact', head: true })
-            .in("team_id", Array.from(totalTeamIds))
-            .is("deleted_at", null);
-        assignedCount = count || 0;
-    }
-
-    // 5. Find pending registrations for the user's owned teams
-    let pendingCount = 0;
-    if (ownedTeamIds.length > 0) {
-        const { count } = await supabase
-            .from("tournament_teams")
-            .select("id", { count: 'exact', head: true })
-            .in("team_id", ownedTeamIds)
-            .eq("payment_status", "pending")
-            .is("deleted_at", null);
-        pendingCount = count || 0;
-    }
-
-    return {
-        totalTeams: totalTeamIds.size,
-        assignedTeams: assignedCount,
-        pendingRegistrations: pendingCount
-    };
-}
-
-export async function getUserProfile() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return null;
-
-    const { data: profile } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-    return profile;
-}
 
 export async function updateProfile(formData: FormData): Promise<ActionResponse> {
     const supabase = await createClient();
@@ -297,3 +201,33 @@ export async function searchMasterPlayers(query: string) {
 
     return { success: true, data };
 }
+
+export async function registerAsOrganizer(): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const adminClient = createAdminClient();
+        const { error } = await adminClient
+            .from("users")
+            .update({ 
+                is_organizer: true,
+                role: 'organizer' 
+            })
+            .eq("id", user.id);
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        revalidatePath("/", "layout");
+        return { success: true };
+    } catch (error: unknown) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+

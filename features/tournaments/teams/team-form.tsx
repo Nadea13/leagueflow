@@ -199,9 +199,7 @@ export function TeamForm({
             {isLimitReached && (
                 <div className="mt-6 p-3 bg-destructive/10 border-l-2 border-destructive">
                     <p className="text-[10px] font-bold text-destructive leading-tight tracking-widest">
-                        {t.rich("limit_reached_desc", {
-                            link: (chunks) => <Link href="/dashboard/billing" className="underline font-black">{chunks}</Link>
-                        })}
+                        {t("limit_reached_desc")}
                     </p>
                 </div>
             )}

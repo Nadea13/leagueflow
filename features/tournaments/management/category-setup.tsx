@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Trophy, Settings, Users, ArrowRight } from "lucide-react";
-import { createTournamentCategory } from "@/actions/dashboard";
+import { createTournamentCategory } from "@/actions/tournaments/general";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
