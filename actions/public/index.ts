@@ -62,7 +62,21 @@ export async function getPublicTournaments(query?: string) {
 
     console.log("Fetched public tournaments:", tournaments?.length);
 
-    const mappedTournaments = (tournaments || []).map((t: any) => {
+    interface DBTournament {
+        id: string;
+        name: string;
+        status: string;
+        start_date: string | null;
+        end_date: string | null;
+        organizer_id: string;
+        document_deadline: string | null;
+        logo_img: string | null;
+        cover_img: string | null;
+        tournament_teams: { count: number }[];
+        tournament_categories: { max_teams: number }[];
+    }
+
+    const mappedTournaments = ((tournaments || []) as unknown as DBTournament[]).map((t) => {
         const maxTeams = t.tournament_categories && t.tournament_categories.length > 0
             ? t.tournament_categories[0].max_teams
             : 8;

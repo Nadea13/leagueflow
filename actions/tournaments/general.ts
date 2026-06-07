@@ -3,7 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ActionResponse, SportType } from "@/types/index";
+import { ActionResponse, SportType, TournamentStatus } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { validateTournamentAccess } from "@/lib/security";
 import { validateUploadedFile } from "@/lib/file-validation";
@@ -489,9 +489,9 @@ export async function getDashboardTournaments(query?: string) {
     interface TournamentWithCount extends Record<string, unknown> {
         id: string;
         name: string;
-        status: any;
+        status: TournamentStatus;
         format?: string;
-        sport?: any;
+        sport?: SportType;
         description: string | null;
         is_registration_open: boolean;
         plan?: 'free' | 'tournament' | 'monthly' | 'yearly';

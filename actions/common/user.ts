@@ -156,8 +156,9 @@ export async function createMasterPlayer(formData: FormData): Promise<ActionResp
 
         revalidatePath("/", "layout");
         return { success: true, data };
-    } catch (e: any) {
-        return { success: false, error: e.message || "Failed to create master player profile" };
+    } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : "Failed to create master player profile";
+        return { success: false, error: errorMessage };
     }
 }
 

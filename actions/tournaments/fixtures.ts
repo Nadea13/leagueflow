@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/index";
 import { initTournamentStructure } from "@/lib/fixture-utils";
@@ -15,17 +14,6 @@ const getScoreTotal = (scoreObj: unknown): number => {
     const val = Number(scoreObj);
     return isNaN(val) ? 0 : val;
 };
-
-async function getLastRound(tournamentCategoryId: string, supabase: SupabaseClient): Promise<number> {
-    const { data } = await supabase
-        .from('matches')
-        .select('round')
-        .eq('tournament_category_id', tournamentCategoryId)
-        .order('round', { ascending: false })
-        .limit(1)
-        .single();
-    return data?.round || 0;
-}
 
 export async function generateFixtures(tournamentId: string): Promise<ActionResponse> {
     // Security Check
