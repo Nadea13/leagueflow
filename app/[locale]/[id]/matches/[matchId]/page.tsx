@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { MatchConsolePage } from "@/features/sports/football/match-console-page";
 import { MatchEvent } from "@/types";
 import { PublicFooter } from "@/components/layout/public-footer";
-import { getPlans } from "@/actions/admin/plans";
+import { getPlans } from "@/actions/common/plans";
 
 export default async function PublicMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,

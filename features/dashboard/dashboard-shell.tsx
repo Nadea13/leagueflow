@@ -68,7 +68,6 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
         };
     }, [isOrganizer, forcedMode]);
 
-    const isPro = userPlan !== 'free';
     const recentTournaments = tournaments.slice(0, 3);
     const hasTournaments = tournaments.length > 0;
 

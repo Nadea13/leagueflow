@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 import { PublicTournamentShell } from "@/features/tournaments/public/public-tournament-shell";
 import { PublicFooter } from "@/components/layout/public-footer";
-import { getPlans } from "@/actions/admin/plans";
+import { getPlans } from "@/actions/common/plans";
 import { Trophy } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

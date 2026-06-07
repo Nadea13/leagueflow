@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { deleteAccount } from "@/actions/common/user";
-import { LucideIcon } from "lucide-react";
 
 export function DeleteAccountButton({ email }: { email: string }) {
     const t = useTranslations("DashboardSettings");

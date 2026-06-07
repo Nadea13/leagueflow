@@ -16,17 +16,6 @@ const getScoreTotal = (scoreObj: unknown): number => {
     return isNaN(val) ? 0 : val;
 };
 
-async function getLastRound(tournamentCategoryId: string, supabase: SupabaseClient): Promise<number> {
-    const { data } = await supabase
-        .from('matches')
-        .select('round')
-        .eq('tournament_category_id', tournamentCategoryId)
-        .order('round', { ascending: false })
-        .limit(1)
-        .single();
-    return data?.round || 0;
-}
-
 export async function updateMatch(
     matchId: string,
     data: {

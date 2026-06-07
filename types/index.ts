@@ -47,8 +47,8 @@ export interface Match {
     tournament_category_id?: string | null;
     home_team_id: string | null;
     away_team_id: string | null;
-    home_score: any;
-    away_score: any;
+    home_score: number | { total?: number } | null;
+    away_score: number | { total?: number } | null;
     round: number;
     stage: 'league' | 'group' | 'round_of_64' | 'round_of_32' | 'round_of_16' | 'quarter_final' | 'semi_final' | 'final';
     winner_id?: string | null;

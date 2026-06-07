@@ -1,26 +1,21 @@
 'use client'
 
 import { useState } from "react"
-import { generateFixtures } from "@/actions/tournaments/fixtures"
 import { Button } from "@/components/ui/button"
-import { Settings2, Plus } from "lucide-react"
+import { Settings2 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 export function MatchGenerator({
-  tournamentId,
   hasFixtures,
-  format,
   className
 }: {
-  tournamentId: string,
   hasFixtures: boolean,
-  format?: string,
   className?: string
 }) {
   const t = useTranslations("Fixtures")
   const tCommon = useTranslations("Common")
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading] = useState(false)
 
   const getButtonText = () => {
     if (isLoading) return tCommon("loading");

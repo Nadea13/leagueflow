@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, Users, Settings, Mail, Shield, LucideIcon, Home } from "lucide-react"
+import { LayoutDashboard, Trophy, Users, Settings, Mail, LucideIcon, Home } from "lucide-react"
 
 export interface NavItem {
     titleKey: string
@@ -68,45 +68,9 @@ export const teamNavItems: NavItem[] = [
     },
 ]
 
-export const adminNavItem: NavItem = {
-    titleKey: "admin",
-    href: "/admin",
-    icon: Shield,
-    adminOnly: true,
-    openInNewTab: true,
-}
-
-/**
- * Bottom navigation items (subset for mobile)
- */
-export const bottomNavItems: NavItem[] = [
-    {
-        titleKey: "home",
-        href: "/dashboard",
-        icon: Home,
-    },
-    {
-        titleKey: "leagues",
-        href: "/dashboard/tournaments",
-        icon: Trophy,
-    },
-    {
-        titleKey: "settings",
-        href: "/dashboard/settings",
-        icon: Settings,
-    },
-]
-
 /**
  * Get nav items based on mode
  */
-export function getNavItems(mode: 'organizer' | 'team' = 'organizer', role?: string): NavItem[] {
-    const items = mode === 'team' ? [...teamNavItems] : [...organizerNavItems];
-    
-    // Add admin link if user is administrator
-    if (role === 'admin') {
-        items.push(adminNavItem);
-    }
-    
-    return items;
+export function getNavItems(mode: 'organizer' | 'team' = 'organizer', _role?: string): NavItem[] {
+    return mode === 'team' ? [...teamNavItems] : [...organizerNavItems];
 }

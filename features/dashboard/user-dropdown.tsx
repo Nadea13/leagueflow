@@ -4,10 +4,6 @@ import { Link } from "@/i18n/routing"
 import { useTheme } from "next-themes"
 import { Laptop, Moon, Sun, LogOut, User } from "lucide-react"
 import {
-    Avatar,
-    AvatarFallback,
-} from "@/components/ui/avatar"
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,

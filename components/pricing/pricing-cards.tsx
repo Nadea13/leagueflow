@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ManagerPlan, OrganizerPlan, Product } from "@/types";
 
-type PricingPlan = Plan & Partial<ManagerPlan> & Partial<OrganizerPlan> & Partial<Product>;
+export type PricingPlan = Plan & Partial<ManagerPlan> & Partial<OrganizerPlan> & Partial<Product>;
 
 interface PricingCardsProps {
     plans: PricingPlan[];

@@ -71,7 +71,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     // Delete confirmation state
     const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
 
-    const handleImportRoster = async (sourceId: string) => {
+    const handleImportRoster = useCallback(async (sourceId: string) => {
         setIsImporting(true);
         const result = await importRoster(team.id, sourceId);
         setIsImporting(false);
@@ -85,14 +85,14 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             const res = await getPlayers(team.id);
             if (res.success && res.data) setPlayers(res.data);
         }
-    };
+    }, [team.id, toast, tCommon]);
 
     // Auto-import roster if participation is empty and has linked team
     useEffect(() => {
         if (team.isParticipation && players.length === 0 && team.team_id && !isImporting) {
             handleImportRoster(team.team_id);
         }
-    }, [team.isParticipation, team.team_id]);
+    }, [team.isParticipation, team.team_id, players.length, isImporting, handleImportRoster]);
 
     const handleToggleLock = async () => {
         setIsLocking(true);

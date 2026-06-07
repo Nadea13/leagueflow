@@ -2,7 +2,7 @@ import { Link } from "@/i18n/routing";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 
-import { getPlans } from "@/actions/admin/plans";
+import { getPlans } from "@/actions/common/plans";
 
 import { PublicMatchesHome } from "@/features/tournaments/public/public-matches-home";
 import { createClient } from "@/lib/supabase/server";

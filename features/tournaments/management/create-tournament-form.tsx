@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Trophy } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { ActionResponse, SportType, Sport } from "@/types/index";
+import { ActionResponse, Sport } from "@/types/index";
 
 import { getSports } from "@/actions/manager/team";
 
@@ -37,7 +37,6 @@ const initialState: ActionResponse = {
 export function TournamentCreate() {
     const t = useTranslations("Dialog");
     const tCommon = useTranslations("Common");
-    const tSports = useTranslations("Sports");
     const [open, setOpen] = useState(false);
     const [state, formAction, isPending] = useActionState(createTournament, initialState);
     const [sportsList, setSportsList] = useState<Sport[]>([]);

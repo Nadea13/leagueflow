@@ -26,7 +26,7 @@ export function CookieBanner() {
             const timer = setTimeout(() => setShowBanner(true), 0);
             return () => clearTimeout(timer);
         }
-    }, []);
+    }, [pathname]);
 
     const handleAcceptAll = () => {
         const consent: CookieConsent = {

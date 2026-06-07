@@ -51,12 +51,6 @@ export async function GET(request: Request) {
 
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-            const { data: profile } = await supabase
-                .from("users")
-                .select("is_organizer")
-                .eq("id", user.id)
-                .single();
-
             const finalDestination = redirectTo
                 ? (redirectTo.startsWith('http') ? redirectTo : `${origin}${redirectTo}`)
                 : `${origin}/dashboard`;

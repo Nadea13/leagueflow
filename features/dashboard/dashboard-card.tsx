@@ -12,13 +12,12 @@ import { Trophy, Shield } from "lucide-react";
 
 interface DashboardCardProps {
     type: 'tournament' | 'team';
-    data: any; // Using any temporarily to simplify merging types, will refine
+    data: Tournament | Team;
     userPlan?: string;
     mode?: 'organizer' | 'team';
 }
 
-export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps) {
-    const t = useTranslations("Common");
+export function DashboardCard({ type, data, mode }: DashboardCardProps) {
     const tDashboard = useTranslations("Dashboard");
     const tSettings = useTranslations("Settings");
     const tTeam = useTranslations("Team");
@@ -35,7 +34,6 @@ export function DashboardCard({ type, data, userPlan, mode }: DashboardCardProps
         };
 
         const statusColor = statusColors[tournament.status as keyof typeof statusColors] || statusColors.draft;
-        const isPro = (userPlan === 'monthly' || userPlan === 'yearly') || (tournament.plan && tournament.plan !== 'free');
 
         return (
             <Link href={`/dashboard/tournaments/${tournament.id}`} className="block h-full group">

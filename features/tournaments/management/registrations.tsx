@@ -7,7 +7,7 @@ import { Registration } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Phone, User, Users, Check, X, ClipboardEdit } from "lucide-react";
+import { Loader2, ExternalLink, Phone, User, Users, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";
 import { approveRegistration, rejectRegistration } from "@/actions/tournaments/registration";
@@ -23,6 +23,30 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+interface TeamQueryResult {
+    id: string;
+    name: string;
+    contact_name: string | null;
+    contact_phone: string | null;
+    logo_img: string | null;
+    description: string | null;
+}
+
+interface CategoryQueryResult {
+    tournament_id: string;
+}
+
+interface RegistrationQueryResult {
+    id: string;
+    payment_status: string | null;
+    registration_status: string | null;
+    slip_img: string | null;
+    remark: string | null;
+    created_at: string;
+    teams: TeamQueryResult | null;
+    tournament_categories: CategoryQueryResult | null;
+}
 
 export function Registrations({ tournamentId }: { tournamentId: string }) {
     const t = useTranslations("Registrations");
@@ -60,7 +84,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
             .order("created_at", { ascending: false });
 
         if (!error && data) {
-            const mapped: Registration[] = (data as any[]).map((item) => ({
+            const mapped: Registration[] = (data as unknown as RegistrationQueryResult[]).map((item) => ({
                 id: item.id,
                 tournament_id: item.tournament_categories?.tournament_id || tournamentId,
                 team_name: item.teams?.name || '',

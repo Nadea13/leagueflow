@@ -11,8 +11,6 @@ const ALLOWED_IMAGE_TYPES = [
     'image/avif',
 ];
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
 export interface FileValidationResult {
     valid: boolean;
     error?: string;
@@ -30,7 +28,6 @@ export function validateUploadedFile(
     }
 ): FileValidationResult {
     const allowedTypes = options?.allowedTypes || ALLOWED_IMAGE_TYPES;
-    const maxSize = options?.maxSize || MAX_FILE_SIZE;
 
     if (!file || file.size === 0) {
         return { valid: false, error: "No file provided" };

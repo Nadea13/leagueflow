@@ -1,5 +1,11 @@
 import { Match, Standing, Team } from "@/types/index";
 
+function getScore(score: number | { total?: number } | null | undefined): number {
+    if (score === null || score === undefined) return 0;
+    if (typeof score === 'object') return score.total ?? 0;
+    return score;
+}
+
 export function calculateStandings(teams: Team[], matches: Match[]): Standing[] {
     const standingsMap = new Map<string, Standing>();
 
@@ -38,19 +44,22 @@ export function calculateStandings(teams: Team[], matches: Match[]): Standing[] 
             homeStats.played += 1;
             awayStats.played += 1;
 
-            homeStats.gf += match.home_score;
-            homeStats.ga += match.away_score;
+            const homeScore = getScore(match.home_score);
+            const awayScore = getScore(match.away_score);
+
+            homeStats.gf += homeScore;
+            homeStats.ga += awayScore;
             homeStats.gd = homeStats.gf - homeStats.ga;
 
-            awayStats.gf += match.away_score;
-            awayStats.ga += match.home_score;
+            awayStats.gf += awayScore;
+            awayStats.ga += homeScore;
             awayStats.gd = awayStats.gf - awayStats.ga;
 
-            if (match.home_score > match.away_score) {
+            if (homeScore > awayScore) {
                 homeStats.won += 1;
                 homeStats.pts += 3;
                 awayStats.lost += 1;
-            } else if (match.home_score < match.away_score) {
+            } else if (homeScore < awayScore) {
                 awayStats.won += 1;
                 homeStats.lost += 1;
                 awayStats.pts += 3;

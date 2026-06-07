@@ -58,7 +58,6 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
             <div className="flex flex-col items-center gap-2 md:gap-4">
                 {/* QR Code */}
                 <div className="p-1 md:p-2 bg-white border rounded-sm relative group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <Image
                         src={qrCodeUrl}
                         alt="PromptPay QR Code"

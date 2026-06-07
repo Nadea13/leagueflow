@@ -27,7 +27,11 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// ...
+const getScore = (score: number | { total?: number } | null | undefined): number => {
+    if (score === null || score === undefined) return 0;
+    if (typeof score === 'object') return score.total ?? 0;
+    return score;
+};
 
 export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [] }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[] }) {
     const t = useTranslations("Fixtures");
@@ -234,11 +238,11 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                             <div className="flex flex-col w-[5rem] items-center leading-none">
                                 <div className="flex items-center gap-1 md:gap-3">
                                     <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
-                                        {match.home_score ?? 0}
+                                        {getScore(match.home_score)}
                                     </span>
                                     <span className="text-muted-foreground font-black">-</span>
                                     <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
-                                        {match.away_score ?? 0}
+                                        {getScore(match.away_score)}
                                     </span>
                                 </div>
                                 {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (

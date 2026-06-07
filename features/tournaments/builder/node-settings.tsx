@@ -127,7 +127,7 @@ export function NodeSettings() {
                 const fileName = `${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
                 const filePath = `sponsors/${fileName}`;
 
-                const { data, error } = await supabase.storage
+                const { error } = await supabase.storage
                     .from('team-logos')
                     .upload(filePath, newSponsorLogoFile, {
                         cacheControl: '3600',
@@ -162,10 +162,10 @@ export function NodeSettings() {
                     variant: "destructive"
                 });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: "Error",
-                description: error.message || "Failed to upload image",
+                description: error instanceof Error ? error.message : "Failed to upload image",
                 variant: "destructive"
             });
         } finally {

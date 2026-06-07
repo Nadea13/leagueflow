@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Eye, Check, Paintbrush, Type, Sliders, Move, Crosshair, Save } from "lucide-react";
+import { Copy, Eye, Check, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -205,7 +205,40 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                     .single();
 
                 if (!error && data?.broadcast_settings) {
-                    const settings = data.broadcast_settings as any;
+                    interface SettingsData {
+                        layout?: "top-bar" | "minimal-left" | "minimal-right";
+                        bg?: "transparent" | "chromakey";
+                        size?: "small" | "medium" | "large";
+                        showTimeline?: boolean;
+                        font?: string;
+                        scoreBg?: string;
+                        teamNameMode?: "abbr" | "full";
+                        showLogos?: boolean;
+                        headerText?: string;
+                        posX?: "left" | "center" | "right";
+                        posY?: "top" | "bottom";
+                        alertDuration?: number;
+                        blocks?: {
+                            id: string;
+                            name: string;
+                            active: boolean;
+                            x: number;
+                            y: number;
+                            w: number;
+                            h: number;
+                            fontSize: number;
+                            rTL: number;
+                            rTR: number;
+                            rBL: number;
+                            rBR: number;
+                        }[];
+                        selectedBlockId?: string;
+                        orientation?: "horizontal" | "vertical";
+                        blockGap?: number;
+                        blockBg?: "spaced" | "docked";
+                        rounded?: "none" | "md" | "full";
+                    }
+                    const settings = data.broadcast_settings as SettingsData;
                     if (settings.layout) setLayout(settings.layout);
                     if (settings.bg) setBg(settings.bg);
                     if (settings.size) setSize(settings.size);
@@ -230,7 +263,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
             }
         };
         loadTemplate();
-    }, [open, tournamentId]);
+    }, [open, tournamentId, supabase]);
 
     const saveTemplate = async () => {
         setSaving(true);
@@ -267,11 +300,12 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                 title: "Template Saved Successfully!",
                 description: "Overlay configuration has been stored as the template for this tournament.",
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to save template";
             toast({
                 variant: "destructive",
                 title: "Failed to save template",
-                description: err.message,
+                description: errorMessage,
             });
         } finally {
             setSaving(false);
@@ -1149,7 +1183,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                                         <div className="grid grid-cols-2 gap-1 md:gap-2">
                                             <div className="space-y-1">
                                                 <Label className="text-[10px]">Direction</Label>
-                                                <Select value={homeBarDir} onValueChange={(val: any) => setHomeBarDir(val)}>
+                                                <Select value={homeBarDir} onValueChange={(val: string) => setHomeBarDir(val as "none" | "top" | "right" | "bottom" | "left")}>
                                                     <SelectTrigger className="w-full">
                                                         <SelectValue />
                                                     </SelectTrigger>
@@ -1187,7 +1221,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                                         <div className="grid grid-cols-2 gap-1 md:gap-2">
                                             <div className="space-y-1">
                                                 <Label className="text-[10px]">Direction</Label>
-                                                <Select value={awayBarDir} onValueChange={(val: any) => setAwayBarDir(val)}>
+                                                <Select value={awayBarDir} onValueChange={(val: string) => setAwayBarDir(val as "none" | "top" | "right" | "bottom" | "left")}>
                                                     <SelectTrigger className="w-full">
                                                         <SelectValue />
                                                     </SelectTrigger>
@@ -1231,7 +1265,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                             {/* Horizontal alignment */}
                             <div className="space-y-1">
                                 <Label className="text-[10px]">Align Horizontal</Label>
-                                <Select value={posX} onValueChange={(val: any) => setPosX(val)}>
+                                <Select value={posX} onValueChange={(val: string) => setPosX(val as "left" | "center" | "right")}>
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Align X" />
                                     </SelectTrigger>
@@ -1246,7 +1280,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                             {/* Vertical alignment */}
                             <div className="space-y-1">
                                 <Label className="text-[10px]">Align Vertical</Label>
-                                <Select value={posY} onValueChange={(val: any) => setPosY(val)}>
+                                <Select value={posY} onValueChange={(val: string) => setPosY(val as "top" | "bottom")}>
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Align Y" />
                                     </SelectTrigger>

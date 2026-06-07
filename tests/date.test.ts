@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDate } from './date';
+import { formatDate } from '@/lib/date';
 
 describe('formatDate', () => {
   const testDate = new Date('2024-04-17T12:00:00Z');

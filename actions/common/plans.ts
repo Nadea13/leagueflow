@@ -121,11 +121,3 @@ export async function getPlans(options?: { role?: 'organizer' | 'manager' }): Pr
         return { success: false, error: 'An unexpected error occurred' };
     }
 }
-
-export async function upsertPlan(_plan: Partial<Plan>, _role: 'organizer' | 'manager'): Promise<ActionResponse<Plan>> {
-    return { success: false, error: 'Pricing is now managed directly in the codebase.' };
-}
-
-export async function deletePlan(_id: string, _role: 'organizer' | 'manager'): Promise<ActionResponse> {
-    return { success: false, error: 'Pricing is now managed directly in the codebase.' };
-}

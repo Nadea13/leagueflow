@@ -1,4 +1,4 @@
-import { Trophy, Users, LucideIcon } from "lucide-react";
+import { Trophy, LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,6 @@ export function EmptyState({
     className,
 }: EmptyStateProps) {
     const t = useTranslations("Common");
-    const tTeam = useTranslations("Team");
 
     // We can still use the icon logic if we want a default icon
     const DefaultIcon = Trophy;

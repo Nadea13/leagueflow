@@ -60,7 +60,6 @@ export function MatchManager({
     matches,
     teams,
     tournamentId,
-    format: tournamentFormat,
     hideControls = false,
     startDate,
     endDate,
@@ -367,9 +366,7 @@ export function MatchManager({
 
                                 <div className="flex items-center gap-2">
                                     <MatchGenerator
-                                        tournamentId={tournamentId}
                                         hasFixtures={matches.length > 0}
-                                        format={tournamentFormat}
                                         className="h-10 w-auto px-4 text-[10px] font-black tracking-tighter"
                                     />
                                     <Button

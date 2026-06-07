@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import { Plus, Loader2, UserPlus, Search, ArrowRight, FileText, Camera } from "lucide-react";
+import { Plus, Loader2, UserPlus, ArrowRight, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { addPlayer } from "@/actions/manager/team";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { searchMasterPlayers } from "@/actions/common/user";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { compressAndConvertToAvif } from "@/lib/image-compression";
@@ -51,7 +50,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<MasterPlayerSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedMasterPlayerId, setSelectedMasterPlayerId] = useState<string | null>(null);
@@ -76,7 +74,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     };
 
     const handleSearch = async (val: string) => {
-        setSearchQuery(val);
         setIsSearching(true);
         try {
             const res = await searchMasterPlayers(val);

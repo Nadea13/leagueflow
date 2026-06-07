@@ -17,12 +17,25 @@ import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/c
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { LogoUploader } from "@/components/shared/logo-uploader";
+import { Tournament } from "@/types";
+
+export interface MasterPlayer {
+    id: string;
+    first_name: string;
+    last_name: string;
+    gender?: 'male' | 'female' | string | null;
+    birthday?: string | null;
+    tel?: string | null;
+    profile_img?: string | null;
+    verified?: boolean;
+    status?: string;
+}
 
 interface DashboardClientProps {
-    initialTournaments: any[];
-    initialMasterPlayer: any;
+    initialTournaments: Partial<Tournament>[];
+    initialMasterPlayer: MasterPlayer | null;
 }
 
 export function DashboardClient({ initialTournaments, initialMasterPlayer }: DashboardClientProps) {
@@ -70,6 +83,9 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         e.preventDefault();
         setEditError(null);
 
+        if (!masterPlayer) return;
+        const currentPlayer = masterPlayer;
+
         if (!editFirstName || !editLastName || !editGender || !editBirthday) {
             setEditError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
             return;
@@ -77,7 +93,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
         startTransition(async () => {
             // 1. Update text info and possible photo deletion
-            const res = await updateGlobalPlayerInfo(masterPlayer.id, {
+            const res = await updateGlobalPlayerInfo(currentPlayer.id, {
                 first_name: editFirstName,
                 last_name: editLastName,
                 gender: editGender,
@@ -91,17 +107,17 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 return;
             }
 
-            let updatedPhotoUrl = editPreviewUrl === null ? null : masterPlayer.profile_img;
+            let updatedPhotoUrl = editPreviewUrl === null ? null : currentPlayer.profile_img;
 
             // 2. Upload photo if selected
             if (editPhotoFile) {
                 const photoData = new FormData();
                 photoData.append("photo", editPhotoFile);
-                const photoRes = await updateGlobalPlayerPhoto(masterPlayer.id, photoData);
+                const photoRes = await updateGlobalPlayerPhoto(currentPlayer.id, photoData);
                 if (!photoRes.success) {
                     setEditError(photoRes.error || "แก้ไขข้อมูลสำเร็จ แต่ไม่สามารถอัปโหลดรูปภาพได้");
                     setMasterPlayer({
-                        ...masterPlayer,
+                        ...currentPlayer,
                         first_name: editFirstName,
                         last_name: editLastName,
                         gender: editGender,
@@ -115,7 +131,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
             }
 
             setMasterPlayer({
-                ...masterPlayer,
+                ...currentPlayer,
                 first_name: editFirstName,
                 last_name: editLastName,
                 gender: editGender,
@@ -131,7 +147,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
     // Filter tournaments based on search query
     const filteredTournaments = initialTournaments.filter(t =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -156,7 +172,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
             const res = await createMasterPlayer(formData);
             if (res.success) {
                 setSuccess(true);
-                setMasterPlayer(res.data);
+                setMasterPlayer(res.data as MasterPlayer);
             } else {
                 setError(res.error || "เกิดข้อผิดพลาดในการลงทะเบียน");
             }
@@ -204,8 +220,8 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                         <CardContent className="flex py-2 md:py-4 relative z-10 gap-2 md:gap-4">
                                             <div className="flex gap-2 md:gap-4 overflow-hidden">
                                                 <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                    <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name} className="object-contain" />
-                                                    <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                    <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain" />
+                                                    <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col gap-1">
                                                     <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
@@ -224,14 +240,18 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                     <div className="min-w-0">
                                                         <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">วันเริ่มแข่ง</p>
                                                         <p className="text-xs font-bold text-foreground truncate">
-                                                            {new Date(tournament.start_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })} - {new Date(tournament.end_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })}
+                                                            {tournament.start_date && tournament.end_date ? (
+                                                                `${new Date(tournament.start_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString('th-TH', { month: 'short', day: 'numeric', year: '2-digit' })}`
+                                                            ) : (
+                                                                "ไม่ระบุ"
+                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="ml-auto flex justify-end">
                                                 <p className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
-                                                    {parseFloat(tournament.registration_fee) === 0 ? "Free" : `${parseFloat(tournament.registration_fee).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿`}
+                                                    {Number(tournament.registration_fee || 0) === 0 ? "Free" : `${Number(tournament.registration_fee || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿`}
                                                 </p>
                                             </div>
                                         </CardContent>
@@ -320,7 +340,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                         วันเกิด (Birthday)
                                     </span>
                                     <span className="font-bold text-foreground">
-                                        {new Date(masterPlayer.birthday).toLocaleDateString('th-TH', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                        {masterPlayer.birthday ? new Date(masterPlayer.birthday).toLocaleDateString('th-TH', { month: 'long', day: 'numeric', year: 'numeric' }) : "-"}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs p-2 md:p-4">

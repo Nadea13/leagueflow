@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trophy, CheckCircle2, Loader2, Rocket, Shield, Zap, AlertCircle } from "lucide-react";
+import { Trophy, Loader2, Rocket, Shield, Zap, AlertCircle } from "lucide-react";
 import { registerAsOrganizer } from "@/actions/common/user";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,6 @@ interface BecomeOrganizerDialogProps {
 }
 
 export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDialogProps) {
-    const t = useTranslations("Nav");
     const tDash = useTranslations("Dashboard");
     const locale = useLocale();
     const isThai = locale === 'th';
@@ -57,7 +56,7 @@ export function BecomeOrganizerDialog({ open, onOpenChange }: BecomeOrganizerDia
                     variant: "destructive"
                 });
             }
-        } catch (error) {
+        } catch {
             toast({
                 title: "Error",
                 description: "Something went wrong. Please try again.",

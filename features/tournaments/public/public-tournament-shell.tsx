@@ -70,17 +70,20 @@ export function PublicTournamentShell({
         const nodes = tournament.canvas_data.nodes;
 
         return standingNodes.map(node => {
-            const label = (node.data as any)?.label || "Standings";
+            const nodeData = node.data as Record<string, unknown>;
+            const label = (nodeData?.label as string) || "Standings";
 
             const sourceEdge = edges.find(e => e.target === node.id && e.targetHandle === 'in');
             const sourceGroupNode = sourceEdge ? nodes.find(n => n.id === sourceEdge.source) : null;
 
             let nodeTeams: string[] = [];
             if (!sourceGroupNode || sourceGroupNode.type !== 'groupNode') {
-                nodeTeams = (Array.isArray((node.data as any)?.teams) ? (node.data as any).teams : []).filter((name: string) => name && name !== "TBD");
+                const teams = Array.isArray(nodeData?.teams) ? (nodeData.teams as string[]) : [];
+                nodeTeams = teams.filter((name: string) => name && name !== "TBD");
             } else {
-                const teamCount = (sourceGroupNode.data as any)?.teamCount || 0;
-                const staticTeams = (sourceGroupNode.data as any)?.teams || [];
+                const sourceData = sourceGroupNode.data as Record<string, unknown>;
+                const teamCount = (sourceData?.teamCount as number) || 0;
+                const staticTeams = (sourceData?.teams as string[]) || [];
 
                 nodeTeams = Array.from({ length: teamCount }).map((_, index) => {
                     const handleId = `team-in-${index}`;
@@ -104,10 +107,11 @@ export function PublicTournamentShell({
                         const rankMatch = edge.sourceHandle?.match(/rank-(\d+)/);
                         if (rankMatch) {
                             const rankIndex = parseInt(rankMatch[1], 10);
-                            const rankings = (sNode.data as any)?.rankings || [];
+                            const sData = sNode.data as Record<string, unknown>;
+                            const rankings = (sData?.rankings as string[]) || [];
                             if (rankings[rankIndex]) return rankings[rankIndex];
                             const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
-                            return `${rankSuffix} Place (${(sNode.data as any).label})`;
+                            return `${rankSuffix} Place (${(sData?.label as string) || ""})`;
                         }
                     }
 
@@ -119,7 +123,8 @@ export function PublicTournamentShell({
             const teamIdToName = new Map<string, string>();
             initialTeams.forEach((t) => {
                 if (t.name) {
-                    if ((t as any).team_id) teamIdToName.set((t as any).team_id, t.name);
+                    const tObj = t as unknown as Record<string, unknown>;
+                    if (typeof tObj.team_id === 'string') teamIdToName.set(tObj.team_id, t.name);
                     if (t.id) teamIdToName.set(t.id, t.name);
                 }
             });
@@ -145,8 +150,9 @@ export function PublicTournamentShell({
 
             // Calculate stats from matches
             matches.forEach(m => {
-                const homeName = m.home_team_id ? teamIdToName.get(m.home_team_id) : (m as any).placeholder_home || (m as any).placeholder_a;
-                const awayName = m.away_team_id ? teamIdToName.get(m.away_team_id) : (m as any).placeholder_away || (m as any).placeholder_b;
+                const matchObj = m as unknown as Record<string, unknown>;
+                const homeName = m.home_team_id ? teamIdToName.get(m.home_team_id) : (matchObj.placeholder_home as string) || m.placeholder_a;
+                const awayName = m.away_team_id ? teamIdToName.get(m.away_team_id) : (matchObj.placeholder_away as string) || m.placeholder_b;
 
                 if (!homeName || !awayName) return;
 

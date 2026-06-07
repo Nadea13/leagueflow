@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { BackButton } from "@/components/legal/back-button";
 import { PublicFooter } from "@/components/layout/public-footer";
-import { getPlans } from "@/actions/admin/plans";
+import { getPlans } from "@/actions/common/plans";
 
 export default async function TermsOfServicePage() {
     const t = await getTranslations("TermsOfService");

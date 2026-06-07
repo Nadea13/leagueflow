@@ -165,7 +165,7 @@ function CanvasInternal({
         if (initialTeamsData && initialTeamsData.length > 0) {
             setStoreTeams(initialTeamsData);
         }
-    }, []);
+    }, [initialTeamsData, setStoreTeams]);
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
     const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'registration' | 'location' | 'staff' | 'danger'>('general');
     const [isEditMode, setIsEditMode] = useState(false);

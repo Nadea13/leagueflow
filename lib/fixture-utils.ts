@@ -1,7 +1,7 @@
 import { ActionResponse, Match } from "@/types/index";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-const getScoreTotal = (scoreObj: any): number => {
+const getScoreTotal = (scoreObj: number | { total?: number } | null | undefined): number => {
     if (!scoreObj) return 0;
     if (typeof scoreObj === 'object') {
         return scoreObj.total || 0;

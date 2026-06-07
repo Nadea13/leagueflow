@@ -426,7 +426,6 @@ export function RegistrationForm({
                                                     <div className="relative overflow-hidden border p-2 md:p-4 rounded-lg">
                                                         <div className="flex flex-col gap-2 md:gap-4">
                                                             <div className="relative aspect-[3/4] w-full max-h-[360px] overflow-hidden flex items-center justify-center">
-                                                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                                                 <Image
                                                                     src={slipPreviewUrl}
                                                                     alt="Slip preview"

@@ -1,6 +1,6 @@
 "use client";
 
-import { getPlans } from "@/actions/admin/plans";
+import { getPlans } from "@/actions/common/plans";
 import { Plan } from "@/types";
 import { useRouter } from "next/navigation";
 import { DangerZone } from "./danger-zone";
@@ -17,7 +17,6 @@ import { RegistrationSettings } from "./registration-settings";
 
 export function TournamentSettings({
     tournament,
-    hasFixtures,
     activeTab = 'general',
     activeCategoryId
 }: {
@@ -34,7 +33,7 @@ export function TournamentSettings({
     // Payment State
     const [showPayment, setShowPayment] = useState(false);
     const [_plans, setPlans] = useState<Plan[]>([]);
-    const [isFetchingPlans, setIsFetchingPlans] = useState(false);
+    const [_isFetchingPlans, setIsFetchingPlans] = useState(false);
 
     // Fetch plans on mount if not provided
     useEffect(() => {

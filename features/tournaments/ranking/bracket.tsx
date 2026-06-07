@@ -19,7 +19,11 @@ import { cn } from "@/lib/utils";
 import { BracketCanvasData, Match } from "@/types/index";
 import { Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
-
+const getScore = (score: number | { total?: number } | null | undefined): number | null => {
+    if (score === null || score === undefined) return null;
+    if (typeof score === 'object') return score.total ?? 0;
+    return score;
+};
 const nodeTypes = {
     matchNode: MatchNode,
     groupNode: GroupNode,
@@ -340,7 +344,7 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
             <TeamRow
                 name={match.home_team?.name}
                 logoUrl={match.home_team?.logo_url}
-                score={isScheduled ? null : match.home_score}
+                score={isScheduled ? null : getScore(match.home_score)}
                 penaltyScore={hasPenalties ? match.penalty_home_score : undefined}
                 isWinner={Boolean(homeWinner)}
                 tbd={t("tbd")}
@@ -348,7 +352,7 @@ function BracketMatchCard({ match, isFinal, isPublic }: { match: Match; isFinal?
             <TeamRow
                 name={match.away_team?.name}
                 logoUrl={match.away_team?.logo_url}
-                score={isScheduled ? null : match.away_score}
+                score={isScheduled ? null : getScore(match.away_score)}
                 penaltyScore={hasPenalties ? match.penalty_away_score : undefined}
                 isWinner={Boolean(awayWinner)}
                 tbd={t("tbd")}

@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Activity, CheckCircle, LucideIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatItem {

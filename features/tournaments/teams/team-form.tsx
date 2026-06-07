@@ -2,10 +2,9 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Upload, Check, Trash2 } from "lucide-react";
+import { Upload, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addTeam } from "@/actions/tournaments/general";
-import { Link } from "@/i18n/routing";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,9 +30,6 @@ export function TeamForm({
     onSuccess?: () => void;
 }) {
     const t = useTranslations("Team");
-    const tCommon = useTranslations("Common");
-    const tSports = useTranslations("Sports");
-    const tDialog = useTranslations("Dialog");
     const addTeamWithId = addTeam.bind(null, tournamentId);
     const [state, formAction] = useActionState(addTeamWithId, initialState);
     const formRef = useRef<HTMLFormElement>(null);
