@@ -6,7 +6,7 @@ test.describe('Smoke Test', () => {
     await page.goto('/');
 
     // Check if the page title or a key element exists
-    // We expect "LeagueFlow" to be somewhere on the page
+    // We expect "League Flow" to be somewhere on the page
     await expect(page).toHaveTitle(/LeagueFlow/i);
     
     // Check if the main heading or a specific text is visible

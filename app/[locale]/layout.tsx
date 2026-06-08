@@ -18,10 +18,10 @@ const notoSansThai = Noto_Sans_Thai({
 
 export const metadata: Metadata = {
   title: {
-    default: "LeagueFlow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
-    template: "%s | LeagueFlow",
+    default: "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
+    template: "%s | League Flow",
   },
-  description: "LeagueFlow - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร ช่วยให้คุณสร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ จัดการทีม และระบบชำระเงิน PromptPay รองรับทั้งภาษาไทยและอังกฤษ",
+  description: "League Flow - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร ช่วยให้คุณสร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ จัดการทีม และระบบชำระเงิน PromptPay รองรับทั้งภาษาไทยและอังกฤษ",
   keywords: [
     "จัดการแข่งขันฟุตบอล",
     "จัดการทัวร์นาเมนต์",
@@ -29,24 +29,24 @@ export const metadata: Metadata = {
     "โปรแกรมการแข่งขัน",
     "ระบบจัดการลีก",
     "สมัครแข่งบอล",
-    "LeagueFlow",
+    "League Flow",
     "Tournament Management",
     "Football League",
     "Match Scoring"
   ],
-  authors: [{ name: "LeagueFlow" }],
+  authors: [{ name: "League Flow" }],
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://leagueflow.app"),
   openGraph: {
     type: "website",
     locale: "th_TH",
     alternateLocale: "en_US",
-    title: "LeagueFlow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
+    title: "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
     description: "สร้างและจัดการการแข่งขันฟุตบอลของคุณแบบมืออาชีพ ด้วยระบบตารางแข่งอัตโนมัติและผลคะแนนเรียลไทม์",
-    siteName: "LeagueFlow",
+    siteName: "League Flow",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LeagueFlow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
+    title: "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
     description: "จัดการแข่งขันฟุตบอลและกีฬาครบวงจร บันทึกผลเรียลไทม์ และระบบสมัครทีมออนไลน์",
   },
   robots: {

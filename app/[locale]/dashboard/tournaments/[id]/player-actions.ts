@@ -69,7 +69,9 @@ export async function addPlayer(
     }
 
     const globalTeamId = participation.team_id;
-    const sportId = (participation.teams as any)?.sport_id;
+    const teamsObj = participation.teams as unknown as { sport_id: string } | { sport_id: string }[] | null;
+    const teamsList = Array.isArray(teamsObj) ? teamsObj : (teamsObj ? [teamsObj] : []);
+    const sportId = teamsList[0]?.sport_id;
     const tournamentId = participation.tournament_id;
 
     // 1. Ensure master player
@@ -184,14 +186,35 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
     }
 
     // Map and filter in memory to ensure accuracy
-    const mappedPlayers: Player[] = (data || []).map((ps: any) => {
-        const p = ps.player;
+    const mappedPlayers: Player[] = (data || []).map((ps) => {
+        const psObj = ps as unknown as {
+            id: string;
+            shirt_number: string | null;
+            position: string | null;
+            deleted_at?: string | null;
+            player?: {
+                id: string;
+                display_name: string;
+                tel?: string | null;
+                created_at: string;
+                deleted_at?: string | null;
+                master_player?: {
+                    id: string;
+                    first_name: string;
+                    last_name: string;
+                    birthday?: string | null;
+                    profile_img?: string | null;
+                    tel?: string | null;
+                } | null;
+            } | null;
+        };
+        const p = psObj.player;
         const mp = p?.master_player;
         return {
-            id: p?.id || ps.id,
+            id: p?.id || psObj.id,
             name: p?.display_name || (mp ? `${mp.first_name} ${mp.last_name}` : ''),
-            number: ps.shirt_number ? parseInt(ps.shirt_number) : null,
-            position: ps.position || null,
+            number: psObj.shirt_number ? parseInt(psObj.shirt_number) : null,
+            position: psObj.position || null,
             birth_date: mp?.birthday || null,
             photo_url: mp?.profile_img || null,
             team_id: participation ? teamId : null,
@@ -199,8 +222,8 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
             global_player_id: mp?.id || null,
             tel: p?.tel || mp?.tel || null,
             created_at: p?.created_at || new Date().toISOString(),
-            deleted_at: ps.deleted_at || p?.deleted_at || null
-        } as any;
+            deleted_at: psObj.deleted_at || p?.deleted_at || null
+        };
     });
 
     return { success: true, data: mappedPlayers };
@@ -297,7 +320,7 @@ export async function updatePlayer(
     if (!authorized || !tournamentId) return { success: false, error: "Unauthorized to manage this roster" };
 
     // 1. Update players table
-    const playerUpdate: any = {};
+    const playerUpdate: Record<string, string> = {};
     if (data.name !== undefined) {
         playerUpdate.display_name = data.name;
     }
@@ -314,7 +337,7 @@ export async function updatePlayer(
     }
 
     // 2. Update player_sports table
-    const psUpdate: any = {};
+    const psUpdate: Record<string, string | null> = {};
     if (data.position !== undefined) {
         psUpdate.position = data.position;
     }

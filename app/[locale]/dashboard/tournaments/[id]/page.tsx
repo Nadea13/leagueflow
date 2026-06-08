@@ -71,6 +71,10 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const canvasData = category ? category.canvas_data : null;
     const maxTeams = category ? category.max_teams : 8;
 
+    const sportsObj = tournamentData.sports as unknown as { sport_name: string } | { sport_name: string }[] | null;
+    const sportsList = Array.isArray(sportsObj) ? sportsObj : (sportsObj ? [sportsObj] : []);
+    const sportName = (sportsList[0]?.sport_name?.toLowerCase() || 'football') as 'football';
+
     const tournament = {
         ...tournamentData,
         format: 'knockout', // Fallback format since it's removed from tournaments table
@@ -78,7 +82,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         advancing_teams: 2, // Default fallback
         canvas_data: canvasData,
         user_id: tournamentData.organizer_id,
-        sport: ((Array.isArray(tournamentData.sports) ? tournamentData.sports[0]?.sport_name : (tournamentData.sports as any)?.sport_name)?.toLowerCase() || 'football') as any,
+        sport: sportName,
         plan: 'free' as 'free' | 'tournament' | 'monthly' | 'yearly'
     };
 
@@ -107,8 +111,20 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         : { data: [] };
 
     const allTeams = teamsResult.data || [];
-    const mappedTeams = allTeams.map((t: any) => {
-        const teamObj = t.team || {};
+    const mappedTeams = allTeams.map((t) => {
+        const tObj = t as unknown as {
+            team: {
+                name?: string | null;
+                logo_img?: string | null;
+                description?: string | null;
+                contact_name?: string | null;
+                contact_phone?: string | null;
+                user_id?: string | null;
+            } | null;
+            payment_status?: string | null;
+            registration_status?: string | null;
+        };
+        const teamObj = tObj.team || {};
         return {
             ...t,
             name: teamObj.name || "Unknown Team",
@@ -116,7 +132,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
             description: teamObj.description || null,
             contact_name: teamObj.contact_name || null,
             contact_phone: teamObj.contact_phone || null,
-            sport: 'football',
+            sport: 'football' as const,
             user_id: teamObj.user_id || null
         };
     });
@@ -129,13 +145,29 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
             String(rs || '').toLowerCase() === 'approved';
     });
 
-    const matches = (matchesResult.data || []).map((m: any) => ({
-        ...m,
-        home_team: m.home_team ? { id: m.home_team_id, name: m.home_team.name, logo_url: m.home_team.logo_img } : null,
-        away_team: m.away_team ? { id: m.away_team_id, name: m.away_team.name, logo_url: m.away_team.logo_img } : null,
-        home_score: m.home_score?.total || 0,
-        away_score: m.away_score?.total || 0
-    }));
+    const matches = (matchesResult.data || []).map((m) => {
+        const mObj = m as unknown as {
+            id: string;
+            home_team_id: string | null;
+            away_team_id: string | null;
+            home_team?: { name: string; logo_img?: string | null } | null;
+            away_team?: { name: string; logo_img?: string | null } | null;
+            home_score?: { total?: number } | number | null;
+            away_score?: { total?: number } | number | null;
+        };
+        const getScoreTotal = (score: { total?: number } | number | null | undefined) => {
+            if (!score) return 0;
+            if (typeof score === 'object') return score.total || 0;
+            return Number(score) || 0;
+        };
+        return {
+            ...mObj,
+            home_team: mObj.home_team ? { id: mObj.home_team_id, name: mObj.home_team.name, logo_url: mObj.home_team.logo_img } : null,
+            away_team: mObj.away_team ? { id: mObj.away_team_id, name: mObj.away_team.name, logo_url: mObj.away_team.logo_img } : null,
+            home_score: getScoreTotal(mObj.home_score),
+            away_score: getScoreTotal(mObj.away_score)
+        };
+    });
 
     // Fetch goals for Top Scorers (only if matches exist)
     let tournamentGoals: Goal[] = [];
@@ -147,14 +179,24 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
             .in("match_id", matchIds)
             .eq("event_type", "goal");
 
-        tournamentGoals = (eventsData || []).map((e: any) => ({
-            id: e.id,
-            match_id: e.match_id,
-            team_id: e.team_id,
-            player_name: e.player?.display_name || "Unknown Player",
-            goal_time: e.minute ? `${e.minute}'` : undefined,
-            created_at: e.created_at
-        }));
+        tournamentGoals = (eventsData || []).map((e) => {
+            const eObj = e as unknown as {
+                id: string;
+                match_id: string;
+                team_id: string;
+                player?: { display_name: string } | null;
+                minute?: number | string | null;
+                created_at: string;
+            };
+            return {
+                id: eObj.id,
+                match_id: eObj.match_id,
+                team_id: eObj.team_id,
+                player_name: eObj.player?.display_name || "Unknown Player",
+                goal_time: eObj.minute ? `${eObj.minute}'` : undefined,
+                created_at: eObj.created_at
+            };
+        });
     }
 
     const isPro = true; // Pro locks removed for all users

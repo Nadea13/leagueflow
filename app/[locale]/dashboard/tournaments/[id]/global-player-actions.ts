@@ -320,7 +320,12 @@ export async function getPlayerTournamentHistory(globalPlayerId: string): Promis
 
     if (ttErr) return { success: false, error: ttErr.message };
 
-    const mapped = psData.map((ps: any) => {
+    const mapped = psData.map((ps: {
+        position: string | null;
+        shirt_number: string | null;
+        team_id: string | null;
+        player_id: string;
+    }) => {
         const profile = profiles.find(p => p.id === ps.player_id);
         const tt = ttData?.find(t => t.team_id === ps.team_id);
         if (!tt) return null;

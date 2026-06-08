@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
+import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useMatchEvents } from "@/hooks/use-match-events";
@@ -129,15 +130,18 @@ function BroadcastOverlayContent() {
                 .single();
 
             if (!error && data) {
+                const homeTeam = data.home_team as unknown as Record<string, unknown>;
+                const awayTeam = data.away_team as unknown as Record<string, unknown>;
+
                 const mappedMatch = {
                     ...data,
                     home_team: data.home_team ? {
                         ...data.home_team,
-                        logo_url: (data.home_team as any).logo_img || null
+                        logo_url: (homeTeam?.logo_img as string) || null
                     } : null,
                     away_team: data.away_team ? {
                         ...data.away_team,
-                        logo_url: (data.away_team as any).logo_img || null
+                        logo_url: (awayTeam?.logo_img as string) || null
                     } : null
                 };
                 setMatch(mappedMatch as unknown as Match);
@@ -169,7 +173,7 @@ function BroadcastOverlayContent() {
             supabase.removeChannel(channel);
             clearInterval(pollInterval);
         };
-    }, [matchId, supabase]);
+    }, [matchId, supabase, id]);
 
     // Match Hooks (using existing application hooks for real-time consistency)
     const { events } = useMatchEvents(matchId, id, undefined, true);
@@ -355,7 +359,9 @@ function BroadcastOverlayContent() {
                                                 className="p-1 shrink-0 flex items-center justify-center select-none bg-black/85 font-black text-[10px] tracking-tighter"
                                             >
                                                 {match.home_team?.logo_url ? (
-                                                    <img src={match.home_team.logo_url} alt="" className="max-w-full max-h-full object-contain rounded-sm" />
+                                                    <div className="relative w-full h-full">
+                                                        <Image src={match.home_team.logo_url} alt="" fill className="object-contain rounded-sm" unoptimized />
+                                                    </div>
                                                 ) : (
                                                     <span>{match.home_team?.name?.substring(0, 3)}</span>
                                                 )}
@@ -433,7 +439,9 @@ function BroadcastOverlayContent() {
                                                 className="p-1 shrink-0 flex items-center justify-center select-none bg-black/85 font-black text-[10px] tracking-tighter"
                                             >
                                                 {match.away_team?.logo_url ? (
-                                                    <img src={match.away_team.logo_url} alt="" className="max-w-full max-h-full object-contain rounded-sm" />
+                                                    <div className="relative w-full h-full">
+                                                        <Image src={match.away_team.logo_url} alt="" fill className="object-contain rounded-sm" unoptimized />
+                                                    </div>
                                                 ) : (
                                                     <span>{match.away_team?.name?.substring(0, 3)}</span>
                                                 )}
@@ -526,7 +534,9 @@ function BroadcastOverlayContent() {
                                                 )}
                                             >
                                                 {match.home_team?.logo_url ? (
-                                                    <img src={match.home_team.logo_url} alt="" className="w-8 h-8 object-contain rounded-sm" />
+                                                    <div className="relative w-8 h-8">
+                                                        <Image src={match.home_team.logo_url} alt="" fill className="object-contain rounded-sm" unoptimized />
+                                                    </div>
                                                 ) : (
                                                     <span>{match.home_team?.name?.substring(0, 3)}</span>
                                                 )}
@@ -617,7 +627,9 @@ function BroadcastOverlayContent() {
                                                 )}
                                             >
                                                 {match.away_team?.logo_url ? (
-                                                    <img src={match.away_team.logo_url} alt="" className="w-8 h-8 object-contain rounded-sm" />
+                                                    <div className="relative w-8 h-8">
+                                                        <Image src={match.away_team.logo_url} alt="" fill className="object-contain rounded-sm" unoptimized />
+                                                    </div>
                                                 ) : (
                                                     <span>{match.away_team?.name?.substring(0, 3)}</span>
                                                 )}
@@ -683,11 +695,15 @@ function BroadcastOverlayContent() {
                                         <div className="flex items-center gap-3 px-5 py-2">
                                             {showLogos && (
                                                 match.home_team?.logo_url ? (
-                                                    <img
-                                                        src={match.home_team.logo_url}
-                                                        alt={match.home_team.name}
-                                                        className="w-7 h-7 object-contain rounded-sm"
-                                                    />
+                                                    <div className="relative w-7 h-7">
+                                                        <Image
+                                                            src={match.home_team.logo_url}
+                                                            alt={match.home_team.name || ""}
+                                                            fill
+                                                            className="object-contain rounded-sm"
+                                                            unoptimized
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <div className="w-7 h-7 bg-white/5 rounded flex items-center justify-center text-[10px] font-black tracking-tighter select-none">
                                                         {match.home_team?.name?.substring(0, 3)}
@@ -713,11 +729,15 @@ function BroadcastOverlayContent() {
                                         <div className="flex items-center gap-3 px-5 py-2 flex-row-reverse">
                                             {showLogos && (
                                                 match.away_team?.logo_url ? (
-                                                    <img
-                                                        src={match.away_team.logo_url}
-                                                        alt={match.away_team.name}
-                                                        className="w-7 h-7 object-contain rounded-sm"
-                                                    />
+                                                    <div className="relative w-7 h-7">
+                                                        <Image
+                                                            src={match.away_team.logo_url}
+                                                            alt={match.away_team.name || ""}
+                                                            fill
+                                                            className="object-contain rounded-sm"
+                                                            unoptimized
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <div className="w-7 h-7 bg-white/5 rounded flex items-center justify-center text-[10px] font-black tracking-tighter select-none">
                                                         {match.away_team?.name?.substring(0, 3)}
@@ -760,9 +780,9 @@ function BroadcastOverlayContent() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             {showLogos && (
-                                                <div className="w-5 h-5 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter">
+                                                <div className="w-5 h-5 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter relative">
                                                     {match.home_team?.logo_url ? (
-                                                        <img src={match.home_team.logo_url} alt="" className="w-4 h-4 object-contain" />
+                                                        <Image src={match.home_team.logo_url} alt="" fill className="object-contain" unoptimized />
                                                     ) : (
                                                         <span>{match.home_team?.name?.substring(0, 3)}</span>
                                                     )}
@@ -779,9 +799,9 @@ function BroadcastOverlayContent() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             {showLogos && (
-                                                <div className="w-5 h-5 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter">
+                                                <div className="w-5 h-5 bg-white/5 rounded flex items-center justify-center overflow-hidden text-[8px] font-black tracking-tighter relative">
                                                     {match.away_team?.logo_url ? (
-                                                        <img src={match.away_team.logo_url} alt="" className="w-4 h-4 object-contain" />
+                                                        <Image src={match.away_team.logo_url} alt="" fill className="object-contain" unoptimized />
                                                     ) : (
                                                         <span>{match.away_team?.name?.substring(0, 3)}</span>
                                                     )}

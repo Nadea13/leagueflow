@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         title: `${tournament.name} | Live Standings & Results`,
         description: `Follow ${tournament.name} live. View standings, fixtures, results, and bracket in real-time.`,
         openGraph: {
-            title: `${tournament.name} | LeagueFlow`,
+            title: `${tournament.name} | League Flow`,
             description: `Live standings and results for ${tournament.name}.`,
         },
     };
@@ -350,7 +350,7 @@ export default async function PublicViewPage({
                     initialPlayers={initialPlayers as Player[]}
                     categories={categories?.map(c => ({
                         id: String(c.id),
-                        name: `${(c as any).age_categories?.category_name || "General"} (${c.gender_type})`
+                        name: `${c.age_categories?.category_name || "General"} (${c.gender_type})`
                     })) || []}
                     selectedCategoryId={category.id ? String(category.id) : undefined}
                     announcements={announcements}

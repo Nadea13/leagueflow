@@ -287,7 +287,6 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                         <CardContent className="space-y-2 md:space-y-4">
                             {tournament.cover_img && (
                                 <div className="aspect-[16/9] w-full rounded-lg overflow-hidden border bg-muted">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <Image
                                         src={tournament.cover_img}
                                         alt={tournament.name}

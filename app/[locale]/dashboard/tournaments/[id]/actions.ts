@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ActionResponse, Match, BracketCanvasData } from "@/types/index";
+import { ActionResponse, Match } from "@/types/index";
 import { logActivity } from "@/lib/audit";
 import { initTournamentStructure } from "@/lib/fixture-utils";
 import { validateTournamentAccess } from "@/lib/security";

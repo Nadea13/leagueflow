@@ -45,7 +45,7 @@ export function DashboardSidebar({ className, role, userEmail, userName }: { cla
                         </svg>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-xl font-black tracking-tighter text-foreground">KILA Flow</span>
+                        <span className="text-xl font-black tracking-tighter text-foreground">League Flow</span>
                     </div>
                 </Link>
             </div>
