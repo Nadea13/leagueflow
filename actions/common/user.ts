@@ -232,3 +232,31 @@ export async function registerAsOrganizer(): Promise<ActionResponse> {
     }
 }
 
+export async function registerAsTeamManager(): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const adminClient = createAdminClient();
+        const { error } = await adminClient
+            .from("users")
+            .update({ 
+                is_team_manager: true
+            })
+            .eq("id", user.id);
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        revalidatePath("/", "layout");
+        return { success: true };
+    } catch (error: unknown) {
+        return { success: false, error: (error as Error).message };
+    }
+}
+

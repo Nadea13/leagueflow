@@ -129,7 +129,7 @@ export function LogoUploader({
                     ref={fileInputRef}
                     disabled={disabled || isCompressing}
                 />
-                <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 2MB</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG</p>
             </div>
         </div>
     );

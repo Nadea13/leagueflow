@@ -289,6 +289,60 @@ export async function updateTournament(
         if (formData.has("start_date")) updateData.start_date = formData.get("start_date") as string || null;
         if (formData.has("end_date")) updateData.end_date = formData.get("end_date") as string || null;
         if (formData.has("document_deadline")) updateData.document_deadline = formData.get("document_deadline") as string || null;
+
+        // Handle logo and cover file uploads
+        const logoFile = formData.get("logo_img") as File | null;
+        const coverFile = formData.get("cover_img") as File | null;
+
+        if (logoFile && logoFile.size > 0) {
+            const fileCheck = validateUploadedFile(logoFile);
+            if (!fileCheck.valid) return { success: false, error: `Logo: ${fileCheck.error}` };
+
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const filePath = `${tournamentId}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('team-logos')
+                .upload(filePath, logoFile);
+
+            if (uploadError) {
+                console.error("Logo upload failed", uploadError);
+                return { success: false, error: `Logo upload failed: ${uploadError.message}` };
+            } else {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('team-logos')
+                    .getPublicUrl(filePath);
+                updateData.logo_img = publicUrl;
+            }
+        } else if (formData.get("logo_img_remove") === 'true') {
+            updateData.logo_img = null;
+        }
+
+        if (coverFile && coverFile.size > 0) {
+            const fileCheck = validateUploadedFile(coverFile);
+            if (!fileCheck.valid) return { success: false, error: `Cover: ${fileCheck.error}` };
+
+            const fileExt = coverFile.name.split('.').pop();
+            const fileName = `cover-${Date.now()}.${fileExt}`;
+            const filePath = `${tournamentId}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('team-logos')
+                .upload(filePath, coverFile);
+
+            if (uploadError) {
+                console.error("Cover upload failed", uploadError);
+                return { success: false, error: `Cover upload failed: ${uploadError.message}` };
+            } else {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('team-logos')
+                    .getPublicUrl(filePath);
+                updateData.cover_img = publicUrl;
+            }
+        } else if (formData.get("cover_img_remove") === 'true') {
+            updateData.cover_img = null;
+        }
     }
 
     if (formType === 'registration' || !formType) {
@@ -415,6 +469,72 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         if (error) {
             console.error("Create tournament error:", error);
             return { success: false, error: error.message };
+        }
+
+        const logoFile = formData.get("logo_img") as File | null;
+        const coverFile = formData.get("cover_img") as File | null;
+
+        let logo_img: string | null = null;
+        let cover_img: string | null = null;
+
+        // Upload Logo
+        if (logoFile && logoFile.size > 0) {
+            const fileCheck = validateUploadedFile(logoFile);
+            if (!fileCheck.valid) return { success: false, error: `Logo: ${fileCheck.error}` };
+
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const filePath = `${tournament.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('team-logos')
+                .upload(filePath, logoFile);
+
+            if (uploadError) {
+                console.error("Logo upload failed", uploadError);
+                return { success: false, error: `Logo upload failed: ${uploadError.message}` };
+            } else {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('team-logos')
+                    .getPublicUrl(filePath);
+                logo_img = publicUrl;
+            }
+        }
+
+        // Upload Cover
+        if (coverFile && coverFile.size > 0) {
+            const fileCheck = validateUploadedFile(coverFile);
+            if (!fileCheck.valid) return { success: false, error: `Cover: ${fileCheck.error}` };
+
+            const fileExt = coverFile.name.split('.').pop();
+            const fileName = `cover-${Date.now()}.${fileExt}`;
+            const filePath = `${tournament.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('team-logos')
+                .upload(filePath, coverFile);
+
+            if (uploadError) {
+                console.error("Cover upload failed", uploadError);
+                return { success: false, error: `Cover upload failed: ${uploadError.message}` };
+            } else {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('team-logos')
+                    .getPublicUrl(filePath);
+                cover_img = publicUrl;
+            }
+        }
+
+        // If either was uploaded, update the tournament record
+        if (logo_img || cover_img) {
+            const updateObj: Record<string, string> = {};
+            if (logo_img) updateObj.logo_img = logo_img;
+            if (cover_img) updateObj.cover_img = cover_img;
+
+            await supabase
+                .from("tournaments")
+                .update(updateObj)
+                .eq("id", tournament.id);
         }
 
         if (user) {

@@ -16,6 +16,9 @@ export default async function middleware(request: NextRequest) {
     const isAuthConfirm = request.nextUrl.pathname.includes('/auth/confirm');
     if (!isAuthConfirm) {
         response = await updateSession(request);
+        if (response.status === 307 || response.status === 308 || response.headers.has('location')) {
+            return response;
+        }
     }
 
     // 2. Run next-intl middleware

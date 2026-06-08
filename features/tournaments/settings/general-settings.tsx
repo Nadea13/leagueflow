@@ -1,15 +1,17 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState, useEffect, useRef } from "react";
 import { updateTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Upload } from "lucide-react";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
+import Image from "next/image";
+import { LogoUploader } from "@/components/shared/logo-uploader";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -27,11 +29,19 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const tDialog = useTranslations("Dialog");
+    const locale = useLocale();
+    const isThai = locale === 'th';
     const { toast } = useToast();
 
     const updateTournamentWithId = updateTournament.bind(null, tournament.id);
     const [state, formAction, isPending] = useActionState(updateTournamentWithId, initialState);
     const [description, setDescription] = useState(tournament.description || "");
+
+    const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(tournament.logo_img || null);
+    const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(tournament.cover_img || null);
+    const [logoRemoved, setLogoRemoved] = useState(false);
+    const [coverRemoved, setCoverRemoved] = useState(false);
+    const coverInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (state.success) {
@@ -54,6 +64,115 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                 <div className="relative z-10">
                     <form action={formAction} className="space-y-2 md:space-y-3">
                         <input type="hidden" name="form_type" value="general" />
+                        <input type="hidden" name="logo_img_remove" value={String(logoRemoved)} />
+                        <input type="hidden" name="cover_img_remove" value={String(coverRemoved)} />
+
+                        <div className="space-y-3 col-span-2 border-b pb-4 mb-4">
+                            <div className="space-y-1">
+                                <Label className="text-xs font-black tracking-widest text-primary">
+                                    {isThai ? "โลโก้การแข่งขัน" : "Tournament Logo"}
+                                </Label>
+                                <LogoUploader
+                                    id="logo_img"
+                                    name="logo_img"
+                                    initialUrl={logoPreviewUrl}
+                                    onFileChange={(file) => {
+                                        if (file) {
+                                            setLogoPreviewUrl(URL.createObjectURL(file));
+                                            setLogoRemoved(false);
+                                        } else {
+                                            setLogoPreviewUrl(null);
+                                            setLogoRemoved(true);
+                                        }
+                                    }}
+                                    onRemove={() => {
+                                        setLogoPreviewUrl(null);
+                                        setLogoRemoved(true);
+                                    }}
+                                    uploadLabel={isThai ? "อัปโหลดโลโก้" : "Upload Logo"}
+                                    clickToUploadLabel={isThai ? "คลิกเพื่อเปลี่ยน" : "Click to Change"}
+                                    previewLabel={isThai ? "ตัวอย่าง" : "Preview"}
+                                    imageFit="contain"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-xs font-black tracking-widest text-primary">
+                                    {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 3:1)" : "Cover Image (Recommended 3:1)"}
+                                </Label>
+                                <div 
+                                    onClick={() => coverInputRef.current?.click()}
+                                    className="relative h-28 w-full border border-dashed border-border hover:border-primary/50 transition-all rounded-lg overflow-hidden flex flex-col items-center justify-center cursor-pointer group bg-muted/5"
+                                >
+                                    {coverPreviewUrl ? (
+                                        <>
+                                            <Image 
+                                                src={coverPreviewUrl} 
+                                                alt="Cover Preview" 
+                                                fill 
+                                                className="object-cover transition-transform group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="font-bold text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        coverInputRef.current?.click();
+                                                    }}
+                                                >
+                                                    {isThai ? "เปลี่ยนรูป" : "Change Image"}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="font-bold text-xs"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setCoverPreviewUrl(null);
+                                                        setCoverRemoved(true);
+                                                        if (coverInputRef.current) coverInputRef.current.value = "";
+                                                    }}
+                                                >
+                                                    {isThai ? "ลบรูป" : "Remove"}
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center p-4 text-center">
+                                            <div className="p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform mb-2">
+                                                <Upload className="h-5 w-5" />
+                                            </div>
+                                            <p className="text-xs font-bold text-foreground">
+                                                {isThai ? "คลิกเพื่ออัปโหลดภาพหน้าปก" : "Click to upload cover banner"}
+                                            </p>
+                                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                                (1200x400)
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                <input 
+                                    id="cover_img"
+                                    name="cover_img"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    ref={coverInputRef}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setCoverPreviewUrl(URL.createObjectURL(file));
+                                            setCoverRemoved(false);
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+
                         <div className="grid gap-2 md:gap-4 md:grid-cols-2">
                             <div className="space-y-1">
                                 <Label>{tDialog("name")}</Label>
