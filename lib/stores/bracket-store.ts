@@ -43,6 +43,7 @@ interface BracketState {
     addTeamListNode: (teams: TournamentTeam[], position?: { x: number; y: number }) => void;
     addAnnouncementNode: (tournamentId: string, readonly: boolean, position?: { x: number; y: number }) => void;
     addSponsorNode: (tournamentId: string, readonly: boolean, position?: { x: number; y: number }) => void;
+    addRegistrationNode: (tournamentId: string, position?: { x: number; y: number }) => void;
     generateRoundRobinMatches: (groupId: string) => void;
     deleteNode: (id: string) => void;
     hydrate: (data: BracketCanvasData | null) => void;
@@ -605,6 +606,29 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             data: {
                 tournamentId,
                 readonly
+            },
+        };
+
+        set({
+            nodes: [...nodes, newNode],
+            isDirty: true,
+        });
+    },
+
+    addRegistrationNode: (tournamentId, position) => {
+        get().takeSnapshot();
+        const { nodes } = get();
+        const col = Math.floor(nodes.length / 4);
+        const row = nodes.length % 4;
+        const pos = position ?? { x: col * 320, y: row * 160 + 290 };
+
+        const newNode: Node = {
+            id: `registration-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            type: "registrationNode",
+            position: pos,
+            data: {
+                label: "Registration",
+                tournamentId,
             },
         };
 

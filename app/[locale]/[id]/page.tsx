@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { Badge } from "@/components/ui/badge";
 import { Match, MatchEvent, Goal, Player, SportType } from "@/types/index";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";

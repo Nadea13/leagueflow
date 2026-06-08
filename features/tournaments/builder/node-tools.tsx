@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Users, ListOrdered, Megaphone, LayoutGrid, Heart } from "lucide-react"
+import { Users, ListOrdered, Megaphone, LayoutGrid, Heart, ClipboardEdit } from "lucide-react"
 
 interface NodeToolsProps {
     onAddMatch: () => void
@@ -10,6 +10,7 @@ interface NodeToolsProps {
     onAddTeamList: () => void
     onAddAnnouncement: () => void
     onAddSponsor: () => void
+    onAddRegistration: () => void
 }
 
 export function NodeTools({
@@ -18,7 +19,8 @@ export function NodeTools({
     onAddStanding,
     onAddTeamList,
     onAddAnnouncement,
-    onAddSponsor
+    onAddSponsor,
+    onAddRegistration
 }: NodeToolsProps) {
     return (
         <div className="flex flex-col gap-1 p-1">
@@ -95,7 +97,7 @@ export function NodeTools({
                     <Megaphone className="h-4 w-4 text-node-4" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black tracking-tight">Announcement Node</span>
+                    <span className="text-[11px] font-black tracking-tight">Announcement</span>
                     <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
                         Display Live Updates
                     </span>
@@ -111,9 +113,25 @@ export function NodeTools({
                     <Heart className="h-4 w-4 text-red-500" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black tracking-tight">Sponsor Node</span>
+                    <span className="text-[11px] font-black tracking-tight">Sponsor</span>
                     <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
                         Display Sponsors (Drag to Order)
+                    </span>
+                </div>
+            </Button>
+
+            <Button
+                variant="ghost"
+                onClick={onAddRegistration}
+                className="w-full justify-start gap-3 h-auto py-2 px-3 hover:bg-violet-500/10 border border-transparent hover:border-violet-500/30 transition-all group"
+            >
+                <div className="w-8 h-8 bg-violet-500/10 rounded-sm flex items-center justify-center shrink-0 group-hover:bg-violet-500/20 transition-colors">
+                    <ClipboardEdit className="h-4 w-4 text-violet-500" />
+                </div>
+                <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-[11px] font-black tracking-tight">Registration</span>
+                    <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
+                        Settings & Payment Details
                     </span>
                 </div>
             </Button>

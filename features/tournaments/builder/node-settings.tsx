@@ -6,12 +6,13 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X, Heart, Loader2, GripVertical, Globe } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
 import { useParams } from "next/navigation";
 import { getSponsors, addSponsor, updateSponsorsOrder, deleteSponsor, Sponsor } from "@/actions/tournaments/sponsor";
+import { updateTournament } from "@/actions/tournaments/general";
 import { LogoUploader } from "@/components/shared/logo-uploader";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ type MatchItem = {
     dbId?: string;
     matchId?: string;
 };
-import { Match } from "@/types";
+import { Match, Tournament } from "@/types";
 import {
     Select,
     SelectContent,
@@ -54,6 +55,7 @@ export function NodeSettings() {
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const t = useTranslations("Team");
     const { toast } = useToast();
+    const supabase = React.useMemo(() => createClient(), []);
 
     // Sponsors state
     const [sponsorsList, setSponsorsList] = React.useState<Sponsor[]>([]);
@@ -64,6 +66,82 @@ export function NodeSettings() {
     const [newSponsorLogoFile, setNewSponsorLogoFile] = React.useState<File | null>(null);
     const [isSubmittingSponsor, setIsSubmittingSponsor] = React.useState(false);
     const [draggedIndex, setDraggedIndex] = React.useState<number | null>(null);
+
+    // Registration settings state
+    const [regOpen, setRegOpen] = React.useState(false);
+    const [regFee, setRegFee] = React.useState<number | "">("");
+    const [bankNumber, setBankNumber] = React.useState("");
+    const [bankName, setBankName] = React.useState("PromptPay");
+    const [accountName, setAccountName] = React.useState("");
+    const [isRegSaving, setIsRegSaving] = React.useState(false);
+    const [isRegLoading, setIsRegLoading] = React.useState(false);
+    const [tournamentRecord, setTournamentRecord] = React.useState<Tournament | null>(null);
+
+    useEffect(() => {
+        if (selectedNode?.type === "registrationNode") {
+            setIsRegLoading(true);
+            const fetchRegDetails = async () => {
+                const { data, error } = await supabase
+                    .from("tournaments")
+                    .select("*")
+                    .eq("id", tournamentId)
+                    .single();
+
+                if (data && !error) {
+                    setTournamentRecord(data);
+                    setRegOpen(data.is_registration_open);
+                    setRegFee(data.registration_fee ?? "");
+                    setBankNumber(data.bank_account_number ?? "");
+                    setBankName(data.bank_name || "PromptPay");
+                    setAccountName(data.bank_account_name ?? "");
+                }
+                setIsRegLoading(false);
+            };
+            fetchRegDetails();
+        }
+    }, [selectedNode?.type, tournamentId, supabase]);
+
+    const handleRegSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!tournamentRecord) return;
+        setIsRegSaving(true);
+
+        const formData = new FormData();
+        formData.append("form_type", "registration");
+        formData.append("name", tournamentRecord.name);
+        formData.append("status", tournamentRecord.status || "draft");
+        formData.append("max_teams", String(tournamentRecord.max_teams || 8));
+        
+        formData.append("is_registration_open", regOpen ? "true" : "false");
+        formData.append("registration_fee", regFee === "" ? "" : String(regFee));
+        formData.append("bank_account_number", bankNumber);
+        formData.append("bank_name", bankName);
+        formData.append("bank_account_name", accountName);
+
+        try {
+            const res = await updateTournament(tournamentId, null, formData);
+            if (res.success) {
+                toast({
+                    title: "Success",
+                    description: "Registration settings updated successfully",
+                });
+            } else {
+                toast({
+                    title: "Error",
+                    description: res.error || "Failed to update registration settings",
+                    variant: "destructive"
+                });
+            }
+        } catch {
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred",
+                variant: "destructive"
+            });
+        } finally {
+            setIsRegSaving(false);
+        }
+    };
 
     const loadSponsors = React.useCallback(async () => {
         setIsSponsorLoading(true);
@@ -197,7 +275,7 @@ export function NodeSettings() {
         }
     }, [activeCategoryId, fetchTeams, selectedNode?.type]);
 
-    const supabase = React.useMemo(() => createClient(), []);
+
     const [dbMatches, setDbMatches] = React.useState<Match[]>([]);
 
     useEffect(() => {
@@ -307,14 +385,16 @@ export function NodeSettings() {
                         type === 'matchNode' ? 'bg-node-2' :
                             type === 'standingNode' ? 'bg-node-1' :
                                 type === 'teamListNode' ? 'bg-node-3' :
-                                    type === 'sponsorNode' ? 'bg-red-500/10' : 'bg-node-4'
+                                    type === 'sponsorNode' ? 'bg-red-500/10' : 
+                                        type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4'
                         }`}>
                         {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
                             type === 'matchNode' ? <span className="text-sm font-bold text-foreground select-none">VS</span> :
                                 type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-foreground" /> :
                                     type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
                                         type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500 fill-red-500" /> :
-                                            <Megaphone className="h-4 w-4 text-foreground" />}
+                                            type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
+                                                <Megaphone className="h-4 w-4 text-foreground" />}
                     </div>
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -813,6 +893,108 @@ export function NodeSettings() {
                                         </div>
                                     ))}
                                 </div>
+                            )}
+                        </div>
+                    )}
+
+                    {type === "registrationNode" && (
+                        <div className="space-y-4">
+                            <div className="border-b pb-2">
+                                <h4 className="text-[11px] font-black tracking-widest text-violet-500 flex items-center gap-2">
+                                    <ClipboardEdit className="h-4 w-4" />
+                                    Configure Registration Settings
+                                </h4>
+                            </div>
+
+                            {isRegLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
+                                </div>
+                            ) : (
+                                <form onSubmit={handleRegSave} className="space-y-4">
+                                    <div className="flex items-center justify-between p-3 border rounded-lg bg-card/30">
+                                        <div className="space-y-0.5">
+                                            <Label htmlFor="is_reg_open" className="text-xs font-bold">Allow Registration</Label>
+                                            <p className="text-[9px] text-muted-foreground font-medium">
+                                                Enable public team registrations
+                                            </p>
+                                        </div>
+                                        <Switch
+                                            id="is_reg_open"
+                                            checked={regOpen}
+                                            onCheckedChange={setRegOpen}
+                                            className="data-[state=checked]:bg-violet-500"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-3 pt-2">
+                                        <div className="space-y-1">
+                                            <Label htmlFor="reg_fee" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Registration Fee (THB)</Label>
+                                            <Input
+                                                type="number"
+                                                id="reg_fee"
+                                                value={regFee}
+                                                onChange={(e) => setRegFee(e.target.value === "" ? "" : Number(e.target.value))}
+                                                placeholder="0.00 (Free)"
+                                                min="0"
+                                                step="0.01"
+                                                className="bg-transparent"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="reg_promptpay" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">PromptPay ID</Label>
+                                            <Input
+                                                type="text"
+                                                id="reg_promptpay"
+                                                value={bankNumber}
+                                                onChange={(e) => setBankNumber(e.target.value)}
+                                                placeholder="Mobile number or Identification Card number"
+                                                className="bg-transparent"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <Label htmlFor="reg_bank" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Bank Name</Label>
+                                                <Select value={bankName} onValueChange={setBankName}>
+                                                    <SelectTrigger id="reg_bank" className="bg-transparent w-full text-xs">
+                                                        <SelectValue placeholder="Select Bank" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-neutral-950 border-foreground/10 text-white">
+                                                        <SelectItem value="PromptPay">PromptPay</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="reg_acc_name" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Account Name</Label>
+                                                <Input
+                                                    type="text"
+                                                    id="reg_acc_name"
+                                                    value={accountName}
+                                                    onChange={(e) => setAccountName(e.target.value)}
+                                                    placeholder="Account Name"
+                                                    className="bg-transparent"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-2 border-t mt-4">
+                                        <Button
+                                            type="submit"
+                                            disabled={isRegSaving}
+                                            className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold"
+                                        >
+                                            {isRegSaving ? (
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <Check className="h-4 w-4 mr-2" />
+                                            )}
+                                            Save Settings
+                                        </Button>
+                                    </div>
+                                </form>
                             )}
                         </div>
                     )}

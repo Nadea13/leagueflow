@@ -19,7 +19,7 @@ import {
     Loader2, Plus, Users, X, Save,
     Settings, MapPin, ShieldAlert,
     Calendar, Settings2, ChevronLeft, ChevronRight, ChevronDown, Link2, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, ClipboardEdit, Lock, Unlock, Share2, Trophy
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy
 } from "lucide-react";
 import {
     Popover,
@@ -67,6 +67,7 @@ import { StandingNode } from "./standing-node";
 import { TeamListNode } from "./team-list-node";
 import { AnnouncementNode } from "./announcement-node";
 import { SponsorNode } from "./sponsor-node";
+import { RegistrationNode } from "./registration-node";
 import { NodeSettings } from "./node-settings";
 import { Announcements } from "@/features/tournaments/management/announcements";
 import {
@@ -84,6 +85,7 @@ const nodeTypes = {
     teamListNode: TeamListNode,
     announcementNode: AnnouncementNode,
     sponsorNode: SponsorNode,
+    registrationNode: RegistrationNode,
 };
 
 interface CanvasProps {
@@ -149,6 +151,7 @@ function CanvasInternal({
         addTeamListNode,
         addAnnouncementNode,
         addSponsorNode,
+        addRegistrationNode,
         hydrate,
         selectNode,
         setActiveNodeId,
@@ -1096,18 +1099,7 @@ function CanvasInternal({
                                     <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
                                     <span className="text-sm font-medium whitespace-nowrap">General</span>
                                 </button>
-                                <button
-                                    onClick={() => setActiveSettingsTab('registration')}
-                                    className={cn(
-                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                        activeSettingsTab === 'registration'
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:text-primary"
-                                    )}
-                                >
-                                    <ClipboardEdit className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'registration' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">Registration</span>
-                                </button>
+
 
                                 <button
                                     onClick={() => setActiveSettingsTab('location')}
@@ -1193,6 +1185,7 @@ function CanvasInternal({
                                                 onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
                                                 onAddAnnouncement={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
                                                 onAddSponsor={() => addSponsorNode(tournamentId, readonly, getCenterPos())}
+                                                onAddRegistration={() => addRegistrationNode(tournamentId, getCenterPos())}
                                             />
                                             <div className="p-2 border-t border-border/10 mt-1 flex items-center justify-between">
                                                 <div className="flex flex-col">

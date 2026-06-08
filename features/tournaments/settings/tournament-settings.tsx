@@ -2,7 +2,6 @@
 
 import { getPlans } from "@/actions/common/plans";
 import { Plan } from "@/types";
-import { useRouter } from "next/navigation";
 import { DangerZone } from "./danger-zone";
 
 import { useState, useEffect } from "react";
@@ -11,7 +10,6 @@ import { Tournament, TournamentTeam } from "@/types/index";
 import { StaffSettings } from "@/features/tournaments/settings/staff-settings";
 import { LocationSettings } from "@/features/tournaments/settings/location-settings";
 import { GeneralSettings } from "./general-settings";
-import { RegistrationSettings } from "./registration-settings";
 
 
 
@@ -28,7 +26,6 @@ export function TournamentSettings({
     activeCategoryId?: string | null;
 }) {
     const tournamentId = tournament.id;
-    const router = useRouter();
 
     // Payment State
     const [showPayment, setShowPayment] = useState(false);
@@ -60,12 +57,7 @@ export function TournamentSettings({
             {activeTab === 'general' &&
                 <GeneralSettings tournament={tournament} />
             }
-            {activeTab === 'registration' && (
-                <RegistrationSettings
-                    tournament={tournament}
-                    onUpgrade={() => router.push(`${window.location.pathname}?tab=settings&action=upgrade`)}
-                />
-            )}
+
             {activeTab === 'location' &&
                 <LocationSettings tournament={tournament} />
             }
