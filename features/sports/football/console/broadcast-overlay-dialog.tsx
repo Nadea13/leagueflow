@@ -19,6 +19,7 @@ interface BroadcastOverlayDialogProps {
 
 const BLOCK_SIZES: Record<string, { w: number, h: number }> = {
     "header-text": { w: 140, h: 32 },
+    "logo-tournament": { w: 40, h: 40 },
     "logo-home": { w: 40, h: 40 },
     "name-home": { w: 76, h: 40 },
     "score-home": { w: 45, h: 40 },
@@ -175,7 +176,8 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
         rBL: number;
         rBR: number;
     }[]>([
-        { id: "header-text", name: "Custom Header/Watermark", active: false, x: 0, y: -45, w: 140, h: 32, fontSize: 10, rTL: 8, rTR: 8, rBL: 8, rBR: 8 },
+        { id: "header-text", name: "Tournament Name", active: false, x: 0, y: -45, w: 140, h: 32, fontSize: 10, rTL: 8, rTR: 8, rBL: 8, rBR: 8 },
+        { id: "logo-tournament", name: "Tournament Logo", active: false, x: -140, y: -45, w: 40, h: 40, fontSize: 12, rTL: 8, rTR: 8, rBL: 8, rBR: 8 },
         { id: "logo-home", name: "Home Team Logo", active: true, x: -140, y: 0, w: 40, h: 40, fontSize: 12, rTL: 8, rTR: 8, rBL: 8, rBR: 8 },
         { id: "name-home", name: "Home Team Name/Abbr", active: true, x: -95, y: 0, w: 76, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8 },
         { id: "score-home", name: "Home Score Box", active: true, x: -35, y: 0, w: 45, h: 40, fontSize: 20, rTL: 8, rTR: 8, rBL: 8, rBR: 8 },
@@ -471,7 +473,8 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
 
     const getShortPreviewLabel = (id: string) => {
         switch (id) {
-            case "header-text": return headerText || "Tournament name";
+            case "header-text": return headerText || "Tournament Name";
+            case "logo-tournament": return "Tour. Logo";
             case "logo-home": return "Home logo";
             case "logo-away": return "Away logo";
             case "name-home": return "Home name";

@@ -100,6 +100,7 @@ function BroadcastOverlayContent() {
     // Match State
     const [match, setMatch] = useState<Match | null>(null);
     const [tournamentName, setTournamentName] = useState<string>("");
+    const [tournamentLogo, setTournamentLogo] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     const supabase = createClient();
@@ -109,11 +110,12 @@ function BroadcastOverlayContent() {
         const fetchTournament = async () => {
             const { data, error } = await supabase
                 .from("tournaments")
-                .select("name")
+                .select("name, logo_img")
                 .eq("id", id)
                 .single();
             if (!error && data) {
                 setTournamentName(data.name);
+                setTournamentLogo(data.logo_img || null);
             }
         };
         fetchTournament();
@@ -468,6 +470,24 @@ function BroadcastOverlayContent() {
                                             </div>
                                         );
                                     }
+                                    // 7a. Tournament Logo
+                                    if (blockId === "logo-tournament") {
+                                        return (
+                                            <div 
+                                                key={blockId} 
+                                                style={absoluteStyle}
+                                                className="p-1 shrink-0 flex items-center justify-center select-none bg-black/85 font-black text-[10px] tracking-tighter"
+                                            >
+                                                {tournamentLogo ? (
+                                                    <div className="relative w-full h-full">
+                                                        <Image src={tournamentLogo} alt="" fill className="object-contain rounded-sm" unoptimized />
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[9px] opacity-40">Logo</span>
+                                                )}
+                                            </div>
+                                        );
+                                    }
                                     // 7. Header/Watermark Text
                                     if (blockId === "header-text" && displayHeaderText) {
                                         return (
@@ -654,6 +674,26 @@ function BroadcastOverlayContent() {
                                                     </span>
                                                 ) : (
                                                     <span className="text-white/60 text-xs font-extrabold tracking-wider">PRE</span>
+                                                )}
+                                            </div>
+                                        );
+                                    }
+                                    // 7a. Tournament Logo
+                                    if (blockId === "logo-tournament") {
+                                        return (
+                                            <div 
+                                                key={blockId} 
+                                                className={cn(
+                                                    "p-1 shrink-0 flex items-center justify-center h-12 w-12 select-none font-black text-[10px] tracking-tighter",
+                                                    isSpaced ? cn("bg-black/85", activeRoundedClass) : "border-0"
+                                                )}
+                                            >
+                                                {tournamentLogo ? (
+                                                    <div className="relative w-8 h-8">
+                                                        <Image src={tournamentLogo} alt="" fill className="object-contain rounded-sm" unoptimized />
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[9px] opacity-40">Logo</span>
                                                 )}
                                             </div>
                                         );

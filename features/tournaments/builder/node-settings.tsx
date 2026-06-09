@@ -121,6 +121,24 @@ export function NodeSettings() {
         try {
             const res = await updateTournament(tournamentId, null, formData);
             if (res.success) {
+                console.log("Dispatching registration-updated event with detail:", {
+                    tournamentId,
+                    is_registration_open: regOpen,
+                    registration_fee: regFee === "" ? null : Number(regFee),
+                    bank_account_number: bankNumber,
+                    bank_name: bankName,
+                    bank_account_name: accountName
+                });
+                window.dispatchEvent(new CustomEvent("registration-updated", {
+                    detail: {
+                        tournamentId,
+                        is_registration_open: regOpen,
+                        registration_fee: regFee === "" ? null : Number(regFee),
+                        bank_account_number: bankNumber,
+                        bank_name: bankName,
+                        bank_account_name: accountName
+                    }
+                }));
                 toast({
                     title: "Success",
                     description: "Registration settings updated successfully",

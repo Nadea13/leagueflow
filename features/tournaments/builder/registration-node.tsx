@@ -63,8 +63,33 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
             )
             .subscribe();
 
+        const handleRegistrationUpdate = (e: Event) => {
+            const customEvent = e as CustomEvent<{
+                tournamentId: string;
+                is_registration_open: boolean;
+                registration_fee: number | null;
+                bank_account_number: string;
+                bank_name: string;
+                bank_account_name: string;
+            }>;
+            console.log("Registration update event received. Event detail:", customEvent.detail, "Node tournamentId:", tournamentId);
+            if (customEvent.detail && customEvent.detail.tournamentId === tournamentId) {
+                console.log("Updating registration node state matching tournamentId:", tournamentId);
+                setTournament({
+                    is_registration_open: customEvent.detail.is_registration_open,
+                    registration_fee: customEvent.detail.registration_fee,
+                    bank_name: customEvent.detail.bank_name,
+                    bank_account_name: customEvent.detail.bank_account_name,
+                    bank_account_number: customEvent.detail.bank_account_number,
+                });
+            }
+        };
+
+        window.addEventListener("registration-updated", handleRegistrationUpdate);
+
         return () => {
             supabase.removeChannel(channel);
+            window.removeEventListener("registration-updated", handleRegistrationUpdate);
         };
     }, [tournamentId]);
 
@@ -87,7 +112,7 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
                         <ClipboardEdit className="h-4 w-4 text-background" />
                     </div>
                     <span className="text-xs font-black tracking-wide text-violet-500">
-                        Registration Settings
+                        Registration
                     </span>
                 </div>
             </div>

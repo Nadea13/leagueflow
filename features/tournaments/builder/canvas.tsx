@@ -13,6 +13,7 @@ import {
     ReactFlowProvider,
     useReactFlow,
     Connection,
+    Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
@@ -547,6 +548,20 @@ function CanvasInternal({
     const onDragStop = useCallback(() => {
         setIsDragging(false);
     }, []);
+
+    const isValidConnection = useCallback((connection: Edge | Connection) => {
+        const sourceConnected = edges.some(
+            (edge) =>
+                edge.source === connection.source &&
+                edge.sourceHandle === (connection.sourceHandle ?? null)
+        );
+        const targetConnected = edges.some(
+            (edge) =>
+                edge.target === connection.target &&
+                edge.targetHandle === (connection.targetHandle ?? null)
+        );
+        return !sourceConnected && !targetConnected;
+    }, [edges]);
 
     const onConnectWithSave = useCallback((params: Connection) => {
         onConnect(params);
@@ -1208,6 +1223,7 @@ function CanvasInternal({
                                 onNodesChange={readonly ? undefined : onNodesChange}
                                 onEdgesChange={readonly ? undefined : onEdgesChange}
                                 onConnect={readonly ? undefined : onConnectWithSave}
+                                isValidConnection={isValidConnection}
                                 onNodeDragStart={readonly ? undefined : onNodeDragStart}
                                 onNodeDragStop={readonly ? undefined : onDragStop}
                                 onSelectionDragStop={readonly ? undefined : onDragStop}

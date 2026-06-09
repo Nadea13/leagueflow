@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-09T22:21:00Z",
+  "title": "Design System: League Flow",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Athletic Teal",
+        "canonical": "oklch(0.73 0.16 167)",
+        "tonalRamp": [
+          "oklch(0.3 0.1 167)",
+          "oklch(0.4 0.12 167)",
+          "oklch(0.5 0.14 167)",
+          "oklch(0.6 0.15 167)",
+          "oklch(0.7 0.16 167)",
+          "oklch(0.8 0.12 167)",
+          "oklch(0.9 0.08 167)",
+          "oklch(0.96 0.04 167)"
+        ]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Background White",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0 0)",
+          "oklch(0.3 0 0)",
+          "oklch(0.5 0 0)",
+          "oklch(0.7 0 0)",
+          "oklch(0.85 0 0)",
+          "oklch(0.9 0 0)",
+          "oklch(0.95 0 0)",
+          "oklch(1 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Heading",
+        "purpose": "Page titles and large heroes."
+      },
+      "body": {
+        "displayName": "Body Text",
+        "purpose": "General copy, form text, labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "interactive-hover",
+        "value": "0 4px 12px rgba(0,0,0,0.05)",
+        "purpose": "Soft hover depth for cards."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default transitions."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard action call to action",
+      "html": "<button class=\"ds-btn-primary\">Save Changes</button>",
+      "css": ".ds-btn-primary { background-color: #00C49A; color: #ffffff; padding: 8px 16px; border: none; border-radius: 8px; font-weight: 500; font-family: sans-serif; cursor: pointer; transition: background-color 0.2s; } .ds-btn-primary:hover { background-color: #00a380; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Modern Athletic Arena",
+    "overview": "League Flow is designed for professional sports tournament managers. The interface is clean, professional, and easy to use, ensuring that organizers can manage complex brackets and schedules without high cognitive load.",
+    "keyCharacteristics": [
+      "High readability and crisp contrast for outdoor/on-field usage.",
+      "Progressive disclosure of complex bracket structures.",
+      "Minimal decoration: depth and hierarchy are driven by functional spacing and borders."
+    ],
+    "rules": [
+      {
+        "name": "The 10% Accent Rule",
+        "body": "The primary Athletic Teal color must not cover more than 10% of any screen. It is an accent to draw attention, not a background fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat Canvas Rule",
+        "body": "Surfaces must remain flat and inline. Shadows are only allowed on active, floating elements like tooltips, popovers, and dropdown menus.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Athletic Teal strictly for interactive highlights and primary call-to-actions.",
+      "Do ensure all text contrast hits at least WCAG AA standards.",
+      "Do use responsive flex/grid layouts to accommodate managers using tablets and mobile phones."
+    ],
+    "donts": [
+      "Don't use neon, glowing gradients or loud cyberpunk visuals.",
+      "Don't use dense, unpadded tables that look like raw spreadsheets.",
+      "Don't use heavy drop shadows on static boxes."
+    ]
+  }
+}
