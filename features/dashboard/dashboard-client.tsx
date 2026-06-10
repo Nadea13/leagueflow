@@ -126,8 +126,8 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                     });
                     return;
                 }
-                
-                updatedPhotoUrl = editPreviewUrl; 
+
+                updatedPhotoUrl = editPreviewUrl;
             }
 
             setMasterPlayer({

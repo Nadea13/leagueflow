@@ -1350,7 +1350,8 @@
         "top_scorers_desc": "Golden boot race.",
         "player_stats": "Player Stats",
         "player_stats_desc": "Comprehensive performance tracking.",
-        "banned_players": "Banned Players"
+        "banned_players": "Banned Players",
+        "back_to_home": "Back to Home"
     },
     "Venue": {
         "title": "Venues",
