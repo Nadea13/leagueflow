@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { MatchEvent, EventType } from "@/types";
-import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/app/[locale]/dashboard/tournaments/[id]/event-actions";
+import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/actions/tournaments/event";
 import { createClient } from "@/lib/supabase/client";
 
 export function useMatchEvents(matchId: string, tournamentId: string, initialData?: MatchEvent[], isReadOnly?: boolean) {

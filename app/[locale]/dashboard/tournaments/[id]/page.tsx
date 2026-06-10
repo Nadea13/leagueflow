@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Match, Goal, TournamentTeam } from "@/types/index";
 import { CategorySetup } from "@/features/tournaments/management/category-setup";
 import { Trophy } from "lucide-react";
-import { TournamentContent } from "./tournament-content";
+import { TournamentContent } from "@/features/tournaments/tournament-content";
 import { getUserRole } from "@/actions/tournaments/staff";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 

@@ -8,7 +8,7 @@ import { MatchGenerator } from "@/features/tournaments/matches/match-generator";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { advanceStage } from "@/app/[locale]/dashboard/tournaments/[id]/actions";
+import { advanceStage } from "@/actions/tournaments/general";
 import {
     Select,
     SelectContent,
