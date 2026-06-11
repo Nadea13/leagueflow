@@ -47,13 +47,14 @@ export async function saveBracketCanvas(
     // 1. Fetch teams for auto-mapping placeholders to IDs
     const { data: tournamentTeams } = await supabase
         .from('tournament_teams')
-        .select('team_id, team:teams(name)')
+        .select('id, team_id, team:teams(name)')
         .eq('tournament_category_id', categoryId);
 
     const teams = (tournamentTeams || []).map((tt) => {
         const teamObj = Array.isArray(tt.team) ? tt.team[0] : tt.team;
         return {
-            id: tt.team_id as string,
+            id: tt.id as string, // tournament_teams row ID
+            team_id: tt.team_id as string, // global team ID
             name: (teamObj?.name as string) || ""
         };
     });
@@ -81,7 +82,7 @@ export async function saveBracketCanvas(
             if (teamIdMatch) {
                 const teamId = teamIdMatch[1];
                 const team = teams?.find(t => String(t.id) === String(teamId));
-                return team?.id || null;
+                return team?.team_id || null;
             }
         }
 
@@ -94,7 +95,7 @@ export async function saveBracketCanvas(
                 if (!teamName || teamName === "TBD") return null;
 
                 // Check if all matches for the teams in this standing/group node are finished
-                const groupTeamIds = rankings.map((name: string) => teams?.find(t => t.name === name)?.id).filter(Boolean);
+                const groupTeamIds = rankings.map((name: string) => teams?.find(t => t.name === name)?.team_id).filter(Boolean);
                 const groupMatches = activeDbMatches.filter(m => 
                     m.stage === 'group' &&
                     m.home_team_id && m.away_team_id && 
@@ -105,7 +106,7 @@ export async function saveBracketCanvas(
                 const isGroupFinished = groupMatches.length > 0 && groupMatches.every(m => m.status === 'finished');
                 if (isGroupFinished) {
                     const team = teams?.find(t => t.name === teamName);
-                    return team?.id || null;
+                    return team?.team_id || null;
                 }
             }
         }
@@ -189,8 +190,8 @@ export async function saveBracketCanvas(
                     node_id: node.id,
                     placeholder_home: match.placeholderA || null,
                     placeholder_away: match.placeholderB || null,
-                    home_team_id: resolvedHomeId || homeTeam?.id || null,
-                    away_team_id: resolvedAwayId || awayTeam?.id || null,
+                    home_team_id: resolvedHomeId || homeTeam?.team_id || null,
+                    away_team_id: resolvedAwayId || awayTeam?.team_id || null,
                     scheduled_at: match.match_date && match.match_time 
                         ? `${match.match_date}T${match.match_time}:00Z` 
                         : null,

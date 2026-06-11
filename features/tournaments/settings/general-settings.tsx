@@ -67,9 +67,9 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                         <input type="hidden" name="logo_img_remove" value={String(logoRemoved)} />
                         <input type="hidden" name="cover_img_remove" value={String(coverRemoved)} />
 
-                        <div className="space-y-3 col-span-2 border-b pb-4 mb-4">
+                        <div className="space-y-3 col-span-2 mb-2 md:mb-4">
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
+                                <Label>
                                     {isThai ? "โลโก้การแข่งขัน" : "Tournament Logo"}
                                 </Label>
                                 <LogoUploader
@@ -97,7 +97,7 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
+                                <Label>
                                     {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 3:1)" : "Cover Image (Recommended 3:1)"}
                                 </Label>
                                 <div 

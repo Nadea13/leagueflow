@@ -35,10 +35,10 @@ export async function addTeam(
     if (!access.success) return { success: false, error: access.error };
     const user = access.user;
 
-    // Fetch tournament data: sport_id, registration_fee
+    // Fetch tournament data: sport_id
     const { data: tournament } = await supabase
         .from("tournaments")
-        .select("sport_id, registration_fee")
+        .select("sport_id")
         .eq("id", tournamentId)
         .single();
 
@@ -355,7 +355,6 @@ export async function updateTournament(
             updateData.is_registration_open = formData.get("is_registration_open") === 'true';
         }
 
-        if (formData.has("registration_fee")) updateData.registration_fee = Number(formData.get("registration_fee") || 0);
         if (formData.has("bank_name")) updateData.bank_name = formData.get("bank_name") as string;
         if (formData.has("bank_account_name")) updateData.bank_account_name = formData.get("bank_account_name") as string;
         if (formData.has("bank_account_number")) updateData.bank_account_number = formData.get("bank_account_number") as string;
@@ -366,20 +365,34 @@ export async function updateTournament(
         if (formData.has("google_map_url")) updateData.google_map_url = formData.get("google_map_url") as string || null;
     }
 
-    // Resolve category and update max_teams
-    const { data: category } = await supabase
-        .from('tournament_categories')
-        .select('id')
-        .eq('tournament_id', tournamentId)
-        .limit(1)
-        .single();
+    // Resolve category and update max_teams or registration_fee
+    const requestedCategoryId = formData.get("tournament_category_id") as string | null;
+    
+    let targetCategoryId = requestedCategoryId;
+    if (!targetCategoryId) {
+        const { data: category } = await supabase
+            .from('tournament_categories')
+            .select('id')
+            .eq('tournament_id', tournamentId)
+            .limit(1)
+            .maybeSingle();
+        targetCategoryId = category?.id || null;
+    }
 
-    if (category && formData.has("max_teams")) {
-        const max_teams = Number(formData.get("max_teams") || 8);
-        await supabase
-            .from("tournament_categories")
-            .update({ max_teams })
-            .eq("id", category.id);
+    if (targetCategoryId) {
+        const catUpdate: Record<string, unknown> = {};
+        if (formData.has("max_teams")) {
+            catUpdate.max_teams = Number(formData.get("max_teams") || 8);
+        }
+        if (formData.has("registration_fee")) {
+            catUpdate.registration_fee = Number(formData.get("registration_fee") || 0);
+        }
+        if (Object.keys(catUpdate).length > 0) {
+            await supabase
+                .from("tournament_categories")
+                .update(catUpdate)
+                .eq("id", targetCategoryId);
+        }
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -668,7 +681,8 @@ export async function createTournamentCategory(
     tournamentId: string,
     ageCategoryId: number,
     genderType: string,
-    maxTeams: number
+    maxTeams: number,
+    registrationFee: number
 ): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
@@ -712,6 +726,7 @@ export async function createTournamentCategory(
             return { success: false, error: "Unauthorized to modify this tournament" };
         }
 
+        const formattedFee = Math.round(registrationFee * 100) / 100;
         // Insert category
         const { data: newCategory, error } = await supabase
             .from("tournament_categories")
@@ -719,7 +734,8 @@ export async function createTournamentCategory(
                 tournament_id: tournamentId,
                 age_category_id: ageCategoryId,
                 gender_type: genderType,
-                max_teams: maxTeams
+                max_teams: maxTeams,
+                registration_fee: formattedFee
             })
             .select()
             .single();
@@ -733,7 +749,8 @@ export async function createTournamentCategory(
             tournament_id: tournamentId,
             age_category_id: ageCategoryId,
             gender_type: genderType,
-            max_teams: maxTeams
+            max_teams: maxTeams,
+            registration_fee: registrationFee
         });
 
         revalidatePath(`/dashboard/tournaments/${tournamentId}`);
@@ -1446,4 +1463,162 @@ async function advanceWinner(match: Match, winnerId: string, supabase: SupabaseC
         await supabase.from('matches').update(updateData).eq('id', nextMatch.id);
     }
 }
+
+export async function updateTournamentCategory(
+    tournamentId: string,
+    categoryId: string,
+    ageCategoryId: number,
+    genderType: string,
+    maxTeams: number,
+    registrationFee: number
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // Validate tournament access
+        const { data: tournament } = await supabase
+            .from("tournaments")
+            .select("organizer_id")
+            .eq("id", tournamentId)
+            .single();
+
+        if (!tournament) {
+            return { success: false, error: "Tournament not found" };
+        }
+
+        const isOwner = tournament.organizer_id === user.id;
+        let isMember = false;
+
+        if (!isOwner) {
+            const { data: membership } = await supabase
+                .from("tournament_invitations")
+                .select("role")
+                .eq("tournament_id", tournamentId)
+                .eq("user_id", user.id)
+                .eq("status", "accepted")
+                .in("role", ["co_organizer", "staff"])
+                .is("deleted_at", null)
+                .maybeSingle();
+            
+            if (membership) {
+                isMember = true;
+            }
+        }
+
+        if (!isOwner && !isMember) {
+            return { success: false, error: "Unauthorized to modify this tournament" };
+        }
+
+        const formattedFee = Math.round(registrationFee * 100) / 100;
+        const { data: _updatedCategory, error } = await supabase
+            .from("tournament_categories")
+            .update({
+                age_category_id: ageCategoryId,
+                gender_type: genderType,
+                max_teams: maxTeams,
+                registration_fee: formattedFee
+            })
+            .eq("id", categoryId)
+            .eq("tournament_id", tournamentId)
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Update tournament category error:", error);
+            return { success: false, error: error.message };
+        }
+
+        await logActivity('UPDATE_TOURNAMENT_CATEGORY', 'tournament_category', categoryId, { 
+            tournament_id: tournamentId,
+            age_category_id: ageCategoryId,
+            gender_type: genderType,
+            max_teams: maxTeams,
+            registration_fee: registrationFee
+        });
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/${tournamentId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in updateTournamentCategory:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+export async function deleteTournamentCategory(
+    tournamentId: string,
+    categoryId: string
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // Validate tournament access
+        const { data: tournament } = await supabase
+            .from("tournaments")
+            .select("organizer_id")
+            .eq("id", tournamentId)
+            .single();
+
+        if (!tournament) {
+            return { success: false, error: "Tournament not found" };
+        }
+
+        const isOwner = tournament.organizer_id === user.id;
+        let isMember = false;
+
+        if (!isOwner) {
+            const { data: membership } = await supabase
+                .from("tournament_invitations")
+                .select("role")
+                .eq("tournament_id", tournamentId)
+                .eq("user_id", user.id)
+                .eq("status", "accepted")
+                .in("role", ["co_organizer", "staff"])
+                .is("deleted_at", null)
+                .maybeSingle();
+            
+            if (membership) {
+                isMember = true;
+            }
+        }
+
+        if (!isOwner && !isMember) {
+            return { success: false, error: "Unauthorized to modify this tournament" };
+        }
+
+        // Soft delete category by setting deleted_at
+        const { error } = await supabase
+            .from("tournament_categories")
+            .update({ deleted_at: new Date().toISOString() })
+            .eq("id", categoryId)
+            .eq("tournament_id", tournamentId);
+
+        if (error) {
+            console.error("Delete tournament category error:", error);
+            return { success: false, error: error.message };
+        }
+
+        await logActivity('DELETE_TOURNAMENT_CATEGORY', 'tournament_category', categoryId, { 
+            tournament_id: tournamentId
+        });
+
+        revalidatePath(`/dashboard/tournaments/${tournamentId}`);
+        revalidatePath(`/${tournamentId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in deleteTournamentCategory:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
 

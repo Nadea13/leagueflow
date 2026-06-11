@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useTransition, useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { updateTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,11 +29,10 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
-    const [isPending] = useTransition();
     const [mounted, setMounted] = useState(false);
 
     const updateTournamentWithId = updateTournament.bind(null, tournament.id);
-    const [state, formAction] = useActionState(updateTournamentWithId, initialState);
+    const [state, formAction, isPending] = useActionState(updateTournamentWithId, initialState);
 
     useEffect(() => {
         const timer = setTimeout(() => setMounted(true), 0);

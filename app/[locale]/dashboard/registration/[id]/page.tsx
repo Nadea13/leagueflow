@@ -36,7 +36,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
         .from("tournaments")
         .select(`
             id, name, description, status, start_date, end_date,
-            is_registration_open, registration_fee, bank_account_number, bank_name, bank_account_name,
+            is_registration_open, bank_account_number, bank_name, bank_account_name,
             location_name, google_map_url, document_deadline, logo_img, cover_img,
             sports:sport_id(sport_name)
         `)
@@ -55,6 +55,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
             id,
             gender_type,
             max_teams,
+            registration_fee,
             age_categories (
                 category_name
             )
@@ -67,6 +68,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
         : categories?.[0];
 
     const resolvedCategoryId = activeCategory?.id;
+    const registrationFee = activeCategory?.registration_fee ?? 0;
 
     type CategoryItem = NonNullable<typeof categories>[number];
 
@@ -142,7 +144,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                         tournament={{
                             id: tournament.id,
                             name: tournament.name,
-                            registration_fee: Number(tournament.registration_fee || 0),
+                            registration_fee: Number(registrationFee || 0),
                             bank_account_number: tournament.bank_account_number || "",
                             bank_name: tournament.bank_name || "",
                             bank_account_name: tournament.bank_account_name || "",
@@ -195,7 +197,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                     <div className="space-y-1">
                                         <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">ค่าสมัครเข้าร่วมการแข่งขัน</p>
                                         <p className="text-foreground font-black text-primary">
-                                            {Number(tournament.registration_fee || 0) === 0 ? "ฟรี (Free)" : `${Number(tournament.registration_fee).toLocaleString()} บาท`}
+                                            {Number(registrationFee || 0) === 0 ? "ฟรี (Free)" : `${Number(registrationFee).toLocaleString()} บาท`}
                                         </p>
                                     </div>
                                 </div>

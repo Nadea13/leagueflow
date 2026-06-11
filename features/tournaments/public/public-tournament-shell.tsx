@@ -488,7 +488,7 @@ export function PublicTournamentShell({
                                 <div className="flex items-start gap-3">
                                     <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                                     <div className="space-y-0.5">
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider block">วันแข่งขัน (Dates)</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">วันแข่งขัน (Dates)</span>
                                         <span className="text-sm font-bold text-foreground">
                                             {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : "-"}
                                             {tournament.end_date && ` - ${new Date(tournament.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`}
@@ -500,7 +500,7 @@ export function PublicTournamentShell({
                                 <div className="flex items-start gap-1 md:gap-2">
                                     <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                                     <div className="space-y-0.5">
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider block">สถานที่แข่งขัน (Venue / Location)</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">สถานที่แข่งขัน (Venue / Location)</span>
                                         {tournament.location_name ? (
                                             <div className="space-y-1">
                                                 <span className="text-sm font-bold text-foreground block">{tournament.location_name}</span>

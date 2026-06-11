@@ -51,7 +51,7 @@ interface BracketState {
     getCanvasData: () => BracketCanvasData;
     markClean: () => void;
     syncMatches: (matches: Match[]) => void;
-    updateNodeData: (id: string, newData: Record<string, unknown>) => void;
+    updateNodeData: (id: string, newData: Record<string, unknown>, skipDirty?: boolean) => void;
     selectNode: (id: string | null) => void;
     teams: TournamentTeam[];
     setTeams: (teams: TournamentTeam[]) => void;
@@ -208,7 +208,11 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         });
     },
 
-    setTeams: (teams) => set({ teams }),
+    setTeams: (teams) => {
+        const currentTeams = get().teams;
+        if (JSON.stringify(currentTeams) === JSON.stringify(teams)) return;
+        set({ teams });
+    },
     fetchTeams: async (categoryId) => {
         if (!categoryId) return;
         const requestId = ++teamFetchRequestId;
@@ -245,7 +249,11 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 name: t.team?.name || t.name || "Unknown Team",
                 logo_url: t.team?.logo_img || null,
             })) as unknown as TournamentTeam[];
-            set({ teams: mappedTeams });
+            
+            const currentTeams = get().teams;
+            if (JSON.stringify(currentTeams) !== JSON.stringify(mappedTeams)) {
+                set({ teams: mappedTeams });
+            }
         }
     },
 
@@ -258,10 +266,9 @@ export const useBracketStore = create<BracketState>((set, get) => ({
             const nextNodes = applyNodeChanges(changes, state.nodes);
 
             const hasRealChange = changes.some(c =>
-                c.type === 'position' ||
+                (c.type === 'position' && c.dragging === true) ||
                 c.type === 'remove' ||
-                c.type === 'add' ||
-                (c.type === 'dimensions' && c.dimensions)
+                c.type === 'add'
             );
 
             if (hasRealChange) {
@@ -805,7 +812,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
         }
     },
 
-    updateNodeData: (id, newData) => {
+    updateNodeData: (id, newData, skipDirty = false) => {
         set((state) => {
             const node = state.nodes.find((n) => n.id === id);
             if (!node) return state;
@@ -848,17 +855,21 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
             return {
                 nodes: updatedNodes,
-                isDirty: true,
+                isDirty: skipDirty ? state.isDirty : true,
             };
         });
     },
 
     selectNode: (id) => {
-        set((state) => ({
-            nodes: state.nodes.map((n) => ({
-                ...n,
-                selected: n.id === id,
-            })),
-        }));
+        set((state) => {
+            const hasChange = state.nodes.some(n => (n.id === id) !== !!n.selected);
+            if (!hasChange) return state;
+            return {
+                nodes: state.nodes.map((n) => ({
+                    ...n,
+                    selected: n.id === id,
+                })),
+            };
+        });
     },
 }));

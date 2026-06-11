@@ -95,9 +95,10 @@ export default async function LocaleLayout({
           </ThemeProvider>
         </NextIntlClientProvider>
       {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js"></script>
-{/* impeccable-live-end */}
-</body>
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      <script src="http://localhost:8400/live.js"></script>
+      {/* impeccable-live-end */}
+      </body>
     </html>
   );
 }

@@ -167,7 +167,8 @@ export async function getAllPublicTournaments() {
     const { data, error } = await supabase
         .from("tournaments")
         .select(`
-            id, name, logo_img, cover_img, description, location_name, google_map_url, status, start_date, end_date, document_deadline, registration_fee, bank_name, bank_account_name, bank_account_number
+            id, name, logo_img, cover_img, description, location_name, google_map_url, status, start_date, end_date, document_deadline, bank_name, bank_account_name, bank_account_number,
+            tournament_categories(registration_fee)
         `)
         .in("status", ["upcoming", "ongoing"])
         .is("deleted_at", null)
@@ -177,7 +178,15 @@ export async function getAllPublicTournaments() {
         console.error("Error fetching all tournaments:", error);
         return [];
     }
-    return data || [];
+    
+    return (data || []).map(t => {
+        const categories = t.tournament_categories as unknown as { registration_fee: number }[] | null;
+        const registrationFee = categories && categories.length > 0 ? categories[0].registration_fee : 0;
+        return {
+            ...t,
+            registration_fee: registrationFee
+        };
+    });
 }
 
 export async function searchMasterPlayers(query: string) {

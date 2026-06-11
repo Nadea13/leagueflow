@@ -114,7 +114,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         // Fetch category
         let categoryQuery = supabase
             .from("tournament_categories")
-            .select("id, max_teams")
+            .select("id, max_teams, registration_fee")
             .eq("tournament_id", tournamentId)
             .is("deleted_at", null);
 
@@ -140,7 +140,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             return { success: false, error: `Team limit reached (Max ${limit}).` };
         }
 
-        const registrationFee = Number(tournament.registration_fee || 0);
+        const registrationFee = Number(tournamentCategory.registration_fee || 0);
         const isFree = registrationFee <= 0;
 
         let transRef = "";

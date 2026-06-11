@@ -173,7 +173,8 @@ export default async function PublicViewPage({
         canvas_data: canvasData,
         user_id: tournamentData.organizer_id,
         sport: (tournamentData.sports?.sport_name?.toLowerCase() || 'football') as SportType,
-        plan: 'free'
+        plan: 'free',
+        registration_fee: category?.registration_fee ?? 0
     };
 
     // 2. Fetch Tournament Participation

@@ -121,7 +121,6 @@ CREATE TABLE IF NOT EXISTS public.tournaments (
     max_teams INTEGER DEFAULT 8,
     advancing_teams INTEGER,
     is_registration_open BOOLEAN DEFAULT FALSE,
-    registration_fee NUMERIC DEFAULT 0,
     bank_name TEXT,
     bank_account_name TEXT,
     bank_account_number TEXT,
@@ -138,7 +137,6 @@ ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS max_teams INTEGER DEFAULT 8;
 ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS advancing_teams INTEGER;
 ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS is_registration_open BOOLEAN DEFAULT FALSE;
-ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS registration_fee NUMERIC DEFAULT 0;
 ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS bank_name TEXT;
 ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS bank_account_name TEXT;
 ALTER TABLE public.tournaments ADD COLUMN IF NOT EXISTS bank_account_number TEXT;

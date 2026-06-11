@@ -19,7 +19,7 @@ import "@xyflow/react/dist/style.css";
 import {
     Loader2, Plus, Users, X, Save,
     Settings, MapPin, ShieldAlert,
-    Calendar, Settings2, ChevronLeft, ChevronRight, ChevronDown, Link2, ExternalLink, Megaphone,
+    Calendar, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
     Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy
 } from "lucide-react";
 import {
@@ -38,28 +38,22 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { updateTournament } from "@/actions/tournaments/general";
-import { createTournamentCategory } from "@/actions/tournaments/general";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations, useLocale } from "next-intl";
 import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
-import { ExportToImageButton } from "@/components/ui/export-to-image-button";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { GroupNode } from "./group-node";
@@ -71,6 +65,7 @@ import { SponsorNode } from "./sponsor-node";
 import { RegistrationNode } from "./registration-node";
 import { NodeSettings } from "./node-settings";
 import { Announcements } from "@/features/tournaments/management/announcements";
+import { CreateCategoryForm } from "@/features/tournaments/management/create-category-form";
 import {
     Dialog,
     DialogContent,
@@ -122,6 +117,78 @@ function CanvasInternal({
     const [viewDate, setViewDate] = useState(new Date());
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+    const [activeMatches, setActiveMatches] = useState<Match[]>([]);
+
+    const fetchMatches = useCallback(async (categoryId: string) => {
+        if (!categoryId) return;
+        console.log("[Canvas Internal] fetchMatches called for category:", categoryId);
+        const supabase = createClient();
+        const { data, error } = await supabase
+            .from("matches")
+            .select(`
+                *,
+                home_team:teams!matches_home_team_id_fkey(name, logo_img),
+                away_team:teams!matches_away_team_id_fkey(name, logo_img)
+            `)
+            .eq("tournament_category_id", categoryId)
+            .is("deleted_at", null)
+            .order("round", { ascending: true });
+
+        if (error) {
+            console.error("[Canvas Internal] Failed to fetch matches:", error);
+            return;
+        }
+
+        if (data) {
+            const mappedMatches = (data as Match[]).map(match => {
+                let match_date = match.match_date;
+                let match_time = match.match_time;
+                if (match.scheduled_at) {
+                    const parts = match.scheduled_at.split('T');
+                    match_date = parts[0];
+                    match_time = parts[1]?.substring(0, 5) || null;
+                }
+
+                const home_team = match.home_team ? {
+                    id: match.home_team.id || "",
+                    name: match.home_team.name || "",
+                    logo_url: (match.home_team as { logo_img?: string | null }).logo_img || match.home_team.logo_url || undefined
+                } : undefined;
+
+                const away_team = match.away_team ? {
+                    id: match.away_team.id || "",
+                    name: match.away_team.name || "",
+                    logo_url: (match.away_team as { logo_img?: string | null }).logo_img || match.away_team.logo_url || undefined
+                } : undefined;
+
+                return {
+                    ...match,
+                    match_date,
+                    match_time,
+                    home_team,
+                    away_team
+                };
+            });
+
+            // Sort mapped matches by date and time in JavaScript
+            mappedMatches.sort((a, b) => {
+                if (a.match_date && b.match_date) {
+                    if (a.match_date !== b.match_date) {
+                        return a.match_date.localeCompare(b.match_date);
+                    }
+                    if (a.match_time && b.match_time) {
+                        return a.match_time.localeCompare(b.match_time);
+                    }
+                }
+                return 0;
+            });
+
+            console.log("[Canvas Internal] fetchMatches mapped matches count:", mappedMatches.length, "data:", mappedMatches);
+            setActiveMatches(mappedMatches);
+        }
+    }, []);
+
+
     // Calendar logic helpers
     const calendarDays = useMemo(() => {
         const days = [];
@@ -136,8 +203,8 @@ function CanvasInternal({
     }, [viewDate]);
 
     const datesWithMatches = useMemo(() => {
-        return new Set(initialMatchesData.map(m => m.match_date).filter(Boolean));
-    }, [initialMatchesData]);
+        return new Set(activeMatches.map(m => m.match_date).filter(Boolean));
+    }, [activeMatches]);
 
     const {
         nodes,
@@ -171,8 +238,7 @@ function CanvasInternal({
         }
     }, [initialTeamsData, setStoreTeams]);
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
-    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'registration' | 'location' | 'staff' | 'danger'>('general');
-    const [isEditMode, setIsEditMode] = useState(false);
+    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'categories' | 'registration' | 'location' | 'staff' | 'danger'>('general');
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(tournamentName);
     const [tempName, setTempName] = useState(tournamentName);
@@ -180,7 +246,7 @@ function CanvasInternal({
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
     const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
-    const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+
 
     // Sync isLocked with readonly prop or finished status if it changes
     useEffect(() => {
@@ -265,6 +331,43 @@ function CanvasInternal({
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const toCategoryId = useCallback((id: unknown) => String(id), []);
 
+    useEffect(() => {
+        if (initialMatchesData && initialMatchesData.length > 0 && activeCategoryId) {
+            const filtered = initialMatchesData.filter(
+                m => String(m.tournament_category_id) === String(activeCategoryId)
+            );
+            const mapped = filtered.map(match => {
+                let match_date = match.match_date;
+                let match_time = match.match_time;
+                if (match.scheduled_at) {
+                    const parts = match.scheduled_at.split('T');
+                    match_date = parts[0];
+                    match_time = parts[1]?.substring(0, 5) || null;
+                }
+                return {
+                    ...match,
+                    match_date,
+                    match_time
+                };
+            });
+
+            // Sort mapped matches by date and time in JavaScript
+            mapped.sort((a, b) => {
+                if (a.match_date && b.match_date) {
+                    if (a.match_date !== b.match_date) {
+                        return a.match_date.localeCompare(b.match_date);
+                    }
+                    if (a.match_time && b.match_time) {
+                        return a.match_time.localeCompare(b.match_time);
+                    }
+                }
+                return 0;
+            });
+
+            setActiveMatches(mapped);
+        }
+    }, [initialMatchesData, activeCategoryId]);
+
     // Fetch categories and age categories.
     // Pass targetCategoryId to switch to a specific category after loading (e.g. after creating one).
     const loadCategories = useCallback(async (targetCategoryId?: string) => {
@@ -292,10 +395,13 @@ function CanvasInternal({
 
             hydrate(resolvedCategory?.canvas_data ?? null);
             setActiveCategoryId(resolvedCategoryId);
+            setStoreCategoryId(resolvedCategoryId);
+            fetchTeams(resolvedCategoryId);
+            fetchMatches(resolvedCategoryId);
         }
 
         return catData ?? [];
-    }, [tournamentId, hydrate, toCategoryId, searchParams, activeCategoryId]);
+    }, [tournamentId, hydrate, toCategoryId, searchParams, activeCategoryId, fetchMatches, fetchTeams, setStoreCategoryId]);
 
     useEffect(() => {
         loadCategories();
@@ -316,7 +422,8 @@ function CanvasInternal({
         setActiveCategoryId(urlCategoryId);
         setStoreCategoryId(urlCategoryId);
         fetchTeams(urlCategoryId);
-    }, [searchParams, categories, activeCategoryId, hydrate, setStoreCategoryId, fetchTeams, toCategoryId]);
+        fetchMatches(urlCategoryId);
+    }, [searchParams, categories, activeCategoryId, hydrate, setStoreCategoryId, fetchTeams, toCategoryId, fetchMatches]);
     useEffect(() => {
         async function loadAgeCategories() {
             const supabase = createClient();
@@ -401,13 +508,7 @@ function CanvasInternal({
         setSelectedDate(format(next, 'yyyy-MM-dd'));
     };
 
-    // Re-fetch teams whenever activeCategoryId changes
-    useEffect(() => {
-        if (activeCategoryId) {
-            fetchTeams(activeCategoryId);
-            setStoreCategoryId(activeCategoryId);
-        }
-    }, [activeCategoryId, fetchTeams, setStoreCategoryId]);
+
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -422,6 +523,7 @@ function CanvasInternal({
             const canvasData = getCanvasData();
             const result = await saveBracketCanvas(tournamentId, canvasData, activeCategoryId || undefined);
             if (result.success) {
+                markClean();
                 if (result.data) {
                     hydrate(result.data);
                     // Update local categories list
@@ -431,7 +533,6 @@ function CanvasInternal({
                             : c
                     ));
                 }
-                markClean();
                 if (showToast) {
                     toast({
                         title: "Saved",
@@ -469,11 +570,12 @@ function CanvasInternal({
         setActiveCategoryId(normalizedCategoryId);
         setStoreCategoryId(normalizedCategoryId);
         fetchTeams(normalizedCategoryId);
+        fetchMatches(normalizedCategoryId);
         // Persist to URL without adding a history entry
         const params = new URLSearchParams(searchParams.toString());
         params.set("category", normalizedCategoryId);
-        window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-    }, [activeCategoryId, isDirty, handleSave, categories, hydrate, fetchTeams, setStoreCategoryId, searchParams, pathname, toCategoryId]);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }, [activeCategoryId, isDirty, handleSave, categories, hydrate, fetchTeams, setStoreCategoryId, searchParams, pathname, toCategoryId, fetchMatches, router]);
 
     const [_isDragging, setIsDragging] = useState(false);
 
@@ -633,8 +735,7 @@ function CanvasInternal({
             setIsEditingName(false);
         }
     };
-    const activeCategory = categories.find(c => toCategoryId(c.id) === activeCategoryId);
-    const activeCategoryName = activeCategory ? getCategoryDisplayName(activeCategory) : null;
+
 
     return (
         <div className={cn("flex flex-col h-full w-full border bg-background rounded-xl")}>
@@ -666,6 +767,7 @@ function CanvasInternal({
                                 {currentName}
                             </span>
                         )}
+
                         <Button
                             variant={isLocked ? "default" : "outline"}
                             onClick={() => setIsLocked(!isLocked)}
@@ -680,65 +782,50 @@ function CanvasInternal({
                             {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
                         </Button>
 
-                        {/* Category Dropdown Selector */}
-                        <DropdownMenu onOpenChange={setIsCategoryOpen}>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="flex items-center gap-1.5 font-bold text-xs tracking-tight border-slate-200 dark:border-foreground/10 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 h-10 px-3"
-                                >
-                                    <span>
-                                        {activeCategoryName ? activeCategoryName : (locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category")}
-                                    </span>
-                                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground ml-1 transition-transform duration-200", isCategoryOpen && "rotate-180")} />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-64 bg-card shadow-2xl rounded-sm">
-                                <DropdownMenuLabel className="text-xs font-bold tracking-wider">
-                                    {locale === 'th' ? "ประเภทการแข่งขัน" : "Tournament Categories"}
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="border-border/10" />
-
+                        {/* Category Select Selector */}
+                        <Select
+                            value={activeCategoryId || ""}
+                            onValueChange={(val) => {
+                                if (val === "create_new") {
+                                    setIsCreateOpen(true);
+                                } else {
+                                    handleCategorySwitch(val);
+                                }
+                            }}
+                        >
+                            <SelectTrigger className="w-[200px] h-10 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 font-bold text-xs tracking-tight">
+                                <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
                                 {categories.length === 0 ? (
-                                    <div className="px-2 py-3 text-xs text-muted-foreground font-semibold text-center">
+                                    <SelectItem value="none" disabled className="text-muted-foreground text-xs font-semibold">
                                         {locale === 'th' ? "ยังไม่ได้ตั้งค่าประเภทการแข่งขัน" : "No categories configured yet"}
-                                    </div>
+                                    </SelectItem>
                                 ) : (
                                     categories.map((cat) => {
                                         const catName = getCategoryDisplayName(cat);
-                                        const isActive = toCategoryId(cat.id) === activeCategoryId;
                                         return (
-                                            <DropdownMenuItem
+                                            <SelectItem
                                                 key={cat.id}
-                                                onClick={() => handleCategorySwitch(toCategoryId(cat.id))}
-                                                className={cn(
-                                                    "cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary flex items-center justify-between font-bold",
-                                                    isActive && "text-primary bg-primary/5"
-                                                )}
+                                                value={toCategoryId(cat.id)}
+                                                className="cursor-pointer text-xs font-bold"
                                             >
-                                                <span>{catName}</span>
-                                                <Badge variant="outline" className="text-[9px] px-1 py-0 scale-90">
-                                                    {cat.max_teams} Teams
-                                                </Badge>
-                                            </DropdownMenuItem>
+                                                {catName} ({cat.max_teams} Teams)
+                                            </SelectItem>
                                         );
                                     })
                                 )}
-
                                 {!readonly && (
-                                    <>
-                                        <DropdownMenuSeparator className="border-border/10" />
-                                        <DropdownMenuItem
-                                            onClick={() => setIsCreateOpen(true)}
-                                            className="cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary font-bold text-primary flex items-center gap-1.5"
-                                        >
-                                            <Plus className="h-3.5 w-3.5" />
-                                            <span>{locale === 'th' ? "สร้างประเภทการแข่งขัน..." : "Create Category..."}</span>
-                                        </DropdownMenuItem>
-                                    </>
+                                    <SelectItem
+                                        value="create_new"
+                                        className="cursor-pointer text-xs font-bold text-primary focus:text-primary focus:bg-primary/10 flex items-center gap-1.5"
+                                    >
+                                        + {locale === 'th' ? "สร้างประเภทการแข่งขัน..." : "Create Category..."}
+                                    </SelectItem>
                                 )}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            </SelectContent>
+                        </Select>
+
                         <Select
                             value={currentStatus}
                             onValueChange={handleStatusChange}
@@ -755,7 +842,7 @@ function CanvasInternal({
                             >
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-card border-border/50 text-[10px] font-black tracking-widest">
+                            <SelectContent className="bg-card text-[10px] font-black tracking-widest">
                                 <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
                                     {locale === 'th' ? "แบบร่าง" : "Draft"}
                                 </SelectItem>
@@ -766,7 +853,7 @@ function CanvasInternal({
                                     {locale === 'th' ? "กำลังดำเนินการ" : "Ongoing"}
                                 </SelectItem>
                                 <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "เสร็จสิ้น" : "FINISHED"}
+                                    {locale === 'th' ? "เสร็จสิ้น" : "Finished"}
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -807,7 +894,7 @@ function CanvasInternal({
                                             <Megaphone className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[500px] p-0 border-border/50 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                                    <DialogContent className="sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
                                         <div className="p-4 md:p-6 pb-0">
                                             <DialogHeader>
                                                 <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
@@ -836,48 +923,42 @@ function CanvasInternal({
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm">
-                                        <DropdownMenuLabel className="text-xs font-black tracking-widest">
-                                            {locale === 'th' ? "แชร์ทัวร์นาเมนต์" : "Share Tournament"}
-                                        </DropdownMenuLabel>
-                                        <DropdownMenuSeparator className="border-border/10" />
-
-                                        <div className="p-1">
+                                        <div>
                                             <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
                                                 {locale === 'th' ? "หน้าทัวร์นาเมนต์ (สาธารณะ)" : "Tournament View (Public)"}
                                             </div>
                                             <DropdownMenuItem
                                                 onClick={handleCopyLink}
-                                                className="cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary"
+                                                className="cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
                                             >
-                                                <Link2 className="mr-2 h-3.5 w-3.5" />
+                                                <Link2 className="h-3.5 w-3.5" />
                                                 <span>{locale === 'th' ? "คัดลอกลิงก์" : "Copy Link"}</span>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={handleOpenLink}
-                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary"
+                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
                                             >
-                                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                                <ExternalLink className="h-3.5 w-3.5" />
                                                 <span>{locale === 'th' ? "เปิดลิงก์" : "Open Link"}</span>
                                             </DropdownMenuItem>
                                         </div>
 
-
-                                        <div className="p-1">
+                                        <div>
                                             <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
                                                 {locale === 'th' ? "หน้าลงทะเบียนทีม" : "Team Registration"}
                                             </div>
                                             <DropdownMenuItem
                                                 onClick={handleCopyLinkRegister}
-                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary"
+                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
                                             >
-                                                <Link2 className="mr-2 h-3.5 w-3.5" />
+                                                <Link2 className="h-3.5 w-3.5" />
                                                 <span>{locale === 'th' ? "คัดลอกลิงก์ลงทะเบียน" : "Copy Reg. Link"}</span>
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={handleOpenLinkRegister}
-                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary"
+                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
                                             >
-                                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                                <ExternalLink className="h-3.5 w-3.5" />
                                                 <span>{locale === 'th' ? "เปิดลิงก์ลงทะเบียน" : "Open Reg. Link"}</span>
                                             </DropdownMenuItem>
                                         </div>
@@ -921,30 +1002,17 @@ function CanvasInternal({
                         <div className="flex flex-1 overflow-hidden bg-background">
                             {/* Left Controls Sidebar (w-64 like settings) */}
                             <div className="w-64 border-r flex flex-col p-2 md:p-3 gap-2 shrink-0 z-10">
-                                <div className="flex items-center justify-between gap-3 p-2 bg-muted/20 border border-border/5">
-                                    <div className="flex items-center gap-3">
-                                        <Settings2 className={cn("h-4 w-4 transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")} />
-                                        <span className={cn("text-[11px] font-black tracking-widest transition-colors", isEditMode ? "text-primary" : "text-muted-foreground")}>
-                                            Edit Mode
-                                        </span>
-                                    </div>
-                                    <Switch
-                                        checked={isEditMode}
-                                        onCheckedChange={setIsEditMode}
-                                        className="data-[state=checked]:bg-primary"
-                                    />
-                                </div>
                                 <div>
                                     <div className="space-y-4">
                                         {/* Date Filter */}
-                                        <div className="space-y-2">
-                                            <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60">Date Selection</Label>
+                                        <div className="space-y-1">
+                                            <Label>Date Selection</Label>
                                             <div className="flex flex-col gap-1">
-                                                <div className="flex items-center border border-border/40 bg-muted/5">
+                                                <div className="flex items-center border bg-muted/5 rounded-sm">
                                                     <button
                                                         onClick={() => setSelectedDate(null)}
                                                         className={cn(
-                                                            "px-2 py-2 text-[10px] font-black tracking-tighter transition-all border-r border-border/40",
+                                                            "px-2 py-3 text-[10px] font-black tracking-tighter transition-all border-r rounded-l-sm",
                                                             selectedDate === null
                                                                 ? "bg-primary text-black"
                                                                 : "text-muted-foreground hover:text-foreground"
@@ -958,7 +1026,7 @@ function CanvasInternal({
                                                         </button>
                                                         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                                             <PopoverTrigger asChild>
-                                                                <Button variant="ghost" className="gap-2 border-none hover:bg-muted transition-all">
+                                                                <Button variant="ghost" className="gap-2 hover:bg-muted transition-all">
                                                                     <CalendarIcon className="h-4 w-4 text-primary" />
                                                                     <div className="flex flex-col items-start overflow-hidden">
                                                                         <span className="text-[10px] font-black tracking-tight truncate">
@@ -967,8 +1035,8 @@ function CanvasInternal({
                                                                     </div>
                                                                 </Button>
                                                             </PopoverTrigger>
-                                                            <PopoverContent className="w-80 p-0 bg-card border-border/10 shadow-2xl" align="start" side="right" sideOffset={10}>
-                                                                <div className="p-3 border-b border-border/10 flex items-center justify-between bg-muted/20">
+                                                            <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="right" sideOffset={10}>
+                                                                <div className="p-3 border-b flex items-center justify-between bg-muted/20">
                                                                     <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                                         <ChevronLeft className="h-4 w-4" />
                                                                     </button>
@@ -1045,12 +1113,12 @@ function CanvasInternal({
 
                                         {/* Stage Filter */}
                                         <div className="space-y-2">
-                                            <Label className="text-[9px] font-black tracking-widest text-muted-foreground/60">Stage Filter</Label>
+                                            <Label>Stage Filter</Label>
                                             <Select value={filterStage} onValueChange={setFilterStage}>
-                                                <SelectTrigger className="w-full h-10 border-border/40 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
+                                                <SelectTrigger className="w-full h-10 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
                                                     <SelectValue placeholder={tMatch("round")} />
                                                 </SelectTrigger>
-                                                <SelectContent className="bg-card border-border/10 shadow-2xl">
+                                                <SelectContent className="bg-card shadow-2xl">
                                                     <SelectItem value="all" className="font-black text-[10px] tracking-widest">{tMatch("round")} ({tMatch("all")})</SelectItem>
                                                     <SelectItem value="group" className="font-black text-[10px] tracking-widest">{tMatch("group")}</SelectItem>
                                                     {['A', 'B', 'C', 'D'].map(l => (
@@ -1065,29 +1133,19 @@ function CanvasInternal({
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="">
-                                    <ExportToImageButton
-                                        targetId="fixtures-canvas"
-                                        filename="fixtures"
-                                        label="EXPORT TO IMAGE"
-                                        className="w-full justify-start gap-3 h-11 px-3 border-none shadow-none bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
-                                    />
-                                </div>
                             </div>
 
                             {/* Main Content */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar">
                                 <div className="p-2 md:p-4">
                                     <MatchManager
-                                        matches={initialMatchesData}
+                                        matches={activeMatches}
                                         teams={teams as unknown as Team[]}
                                         tournamentId={tournament.id}
                                         format={tournament.format}
                                         startDate={tournament.start_date}
                                         endDate={tournament.end_date}
                                         hideControls={true}
-                                        externalEditMode={isEditMode}
                                         externalFilterStage={filterStage}
                                         externalSelectedDate={selectedDate}
                                     />
@@ -1115,6 +1173,18 @@ function CanvasInternal({
                                     <span className="text-sm font-medium whitespace-nowrap">General</span>
                                 </button>
 
+                                <button
+                                    onClick={() => setActiveSettingsTab('categories')}
+                                    className={cn(
+                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                        activeSettingsTab === 'categories'
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:text-primary"
+                                    )}
+                                >
+                                    <Trophy className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'categories' ? "text-primary" : "text-muted-foreground")} />
+                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "รุ่นการแข่งขัน" : "Categories"}</span>
+                                </button>
 
                                 <button
                                     onClick={() => setActiveSettingsTab('location')}
@@ -1173,7 +1243,7 @@ function CanvasInternal({
                 ) : (
                     <>
                         <div className="flex-1 relative">
-                            {!readonly && !isLocked && (
+                            {!readonly && !isLocked && activeSidebar !== 'schedule' && (
                                 <div className="absolute top-4 right-4 z-50">
                                     <Popover>
                                         <PopoverTrigger asChild>
@@ -1202,7 +1272,7 @@ function CanvasInternal({
                                                 onAddSponsor={() => addSponsorNode(tournamentId, readonly, getCenterPos())}
                                                 onAddRegistration={() => addRegistrationNode(tournamentId, getCenterPos())}
                                             />
-                                            <div className="p-2 border-t border-border/10 mt-1 flex items-center justify-between">
+                                            <div className="p-2 border-t mt-1 flex items-center justify-between">
                                                 <div className="flex flex-col">
                                                     <span className="text-[9px] text-muted-foreground font-bold">Elements</span>
                                                     <span className="text-[11px] font-black">{nodes.length}</span>
@@ -1287,33 +1357,24 @@ function CanvasInternal({
             </div>
 
             {/* Create Category Dialog */}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogContent className="sm:max-w-[450px] p-6 border-border/50 bg-background/95 backdrop-blur-md">
-                    <DialogHeader className="space-y-2">
-                        <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <Trophy className="h-6 w-6 text-primary animate-bounce" />
-                            {locale === 'th' ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <CreateCategoryMiniForm
-                        tournamentId={tournamentId}
-                        ageCategories={ageCategories}
-                        onSuccess={async (newCatId) => {
-                            setIsCreateOpen(false);
-                            await loadCategories(newCatId || undefined);
-                            if (newCatId) {
-                                setStoreCategoryId(newCatId);
-                                fetchTeams(newCatId);
-                                // Persist new category to URL
-                                const params = new URLSearchParams(searchParams.toString());
-                                params.set("category", newCatId);
-                                window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-                            }
-                        }}
-                    />
-                </DialogContent>
-            </Dialog>
+            <CreateCategoryForm
+                open={isCreateOpen}
+                onOpenChange={setIsCreateOpen}
+                tournamentId={tournamentId}
+                ageCategories={ageCategories}
+                onSuccess={async (newCatId) => {
+                    setIsCreateOpen(false);
+                    await loadCategories(newCatId || undefined);
+                    if (newCatId) {
+                        setStoreCategoryId(newCatId);
+                        fetchTeams(newCatId);
+                        // Persist new category to URL
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set("category", newCatId);
+                        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+                    }
+                }}
+            />
         </div>
     );
 }
@@ -1323,156 +1384,5 @@ export function Canvas(props: CanvasProps) {
         <ReactFlowProvider>
             <CanvasInternal {...props} />
         </ReactFlowProvider>
-    );
-}
-
-function CreateCategoryMiniForm({
-    tournamentId,
-    ageCategories,
-    onSuccess
-}: {
-    tournamentId: string;
-    ageCategories: { id: number; category_name: string }[];
-    onSuccess: (id: string) => void;
-}) {
-    const locale = useLocale();
-    const { toast } = useToast();
-    const [ageCategoryId, setAgeCategoryId] = useState<string>("");
-    const [genderType, setGenderType] = useState<string>("open");
-    const [maxTeams, setMaxTeams] = useState<string>("8");
-    const [isPending, setIsPending] = useState(false);
-
-    useEffect(() => {
-        if (ageCategories && ageCategories.length > 0 && !ageCategoryId) {
-            setAgeCategoryId(ageCategories[0].id.toString());
-        }
-    }, [ageCategories, ageCategoryId]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!ageCategoryId) {
-            toast({
-                title: "Error",
-                description: "Please select an age category.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        setIsPending(true);
-        try {
-            const res = await createTournamentCategory(
-                tournamentId,
-                parseInt(ageCategoryId),
-                genderType,
-                parseInt(maxTeams)
-            );
-            if (res.success) {
-                toast({
-                    title: locale === 'th' ? "สร้างสำเร็จ" : "Created Successfully",
-                    description: locale === 'th' ? "สร้างประเภทการแข่งขันเรียบร้อยแล้ว" : "New category has been created."
-                });
-
-                const supabase = createClient();
-                const { data } = await supabase
-                    .from("tournament_categories")
-                    .select("id")
-                    .eq("tournament_id", tournamentId)
-                    .eq("age_category_id", parseInt(ageCategoryId))
-                    .eq("gender_type", genderType)
-                    .is("deleted_at", null)
-                    .single();
-
-                if (data) {
-                    onSuccess(data.id);
-                } else {
-                    onSuccess("");
-                }
-            } else {
-                toast({
-                    title: "Error",
-                    description: res.error || "Failed to create category",
-                    variant: "destructive"
-                });
-            }
-        } catch (err) {
-            const error = err as Error;
-            toast({
-                title: "Error",
-                description: error.message || "An unexpected error occurred",
-                variant: "destructive"
-            });
-        } finally {
-            setIsPending(false);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="space-y-2">
-                <Label className="text-xs font-bold tracking-widest text-muted-foreground">
-                    {locale === 'th' ? "รุ่นอายุ" : "Age Category"}
-                </Label>
-                <Select value={ageCategoryId} onValueChange={setAgeCategoryId}>
-                    <SelectTrigger className="w-full h-10 border-border/50">
-                        <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นอายุ" : "Select Age Category"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {ageCategories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id.toString()}>
-                                {cat.category_name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <div className="space-y-2">
-                <Label className="text-xs font-bold tracking-widest text-muted-foreground">
-                    {locale === 'th' ? "ประเภทเพศ" : "Gender Group"}
-                </Label>
-                <Select value={genderType} onValueChange={setGenderType}>
-                    <SelectTrigger className="w-full h-10 border-border/50">
-                        <SelectValue placeholder={locale === 'th' ? "เลือกประเภทเพศ" : "Select Gender Group"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="open">{locale === 'th' ? "รุ่นทั่วไป (ไม่จำกัดเพศ)" : "Open (All Genders)"}</SelectItem>
-                        <SelectItem value="male">{locale === 'th' ? "ชาย" : "Male"}</SelectItem>
-                        <SelectItem value="female">{locale === 'th' ? "หญิง" : "Female"}</SelectItem>
-                        <SelectItem value="mixed">{locale === 'th' ? "คู่ผสม / ผสม" : "Mixed"}</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <div className="space-y-2">
-                <Label className="text-xs font-bold tracking-widest text-muted-foreground">
-                    {locale === 'th' ? "จำนวนทีมสูงสุด" : "Team Limit"}
-                </Label>
-                <Select value={maxTeams} onValueChange={setMaxTeams}>
-                    <SelectTrigger className="w-full h-10 border-border/50">
-                        <SelectValue placeholder={locale === 'th' ? "เลือกจำนวนทีม" : "Select Team Limit"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="4">4 Teams</SelectItem>
-                        <SelectItem value="8">8 Teams</SelectItem>
-                        <SelectItem value="16">16 Teams</SelectItem>
-                        <SelectItem value="32">32 Teams</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-                <Button type="submit" disabled={isPending} className="font-bold">
-                    {isPending ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            {locale === 'th' ? "กำลังสร้าง..." : "Creating..."}
-                        </>
-                    ) : (
-                        locale === 'th' ? "สร้างรุ่นการแข่งขัน" : "Create Category"
-                    )}
-                </Button>
-            </div>
-        </form>
     );
 }

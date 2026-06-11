@@ -10,6 +10,7 @@ import { Tournament, TournamentTeam } from "@/types/index";
 import { StaffSettings } from "@/features/tournaments/settings/staff-settings";
 import { LocationSettings } from "@/features/tournaments/settings/location-settings";
 import { GeneralSettings } from "./general-settings";
+import { CategorySettings } from "./category-settings";
 
 
 
@@ -56,6 +57,10 @@ export function TournamentSettings({
         <div className="space-y-6">
             {activeTab === 'general' &&
                 <GeneralSettings tournament={tournament} />
+            }
+
+            {activeTab === 'categories' &&
+                <CategorySettings tournamentId={tournamentId} />
             }
 
             {activeTab === 'location' &&

@@ -222,7 +222,7 @@ export const StandingNode = memo(({
                 setStandings(result);
 
                 // Sync to store for auto-propagation
-                updateNodeData(id, { rankings: result.map(s => s.name) });
+                updateNodeData(id, { rankings: result.map(s => s.name) }, true);
             } catch (err) {
                 console.error("Error calculating standings:", err);
             } finally {

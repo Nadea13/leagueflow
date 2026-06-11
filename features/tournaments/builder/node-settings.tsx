@@ -87,10 +87,23 @@ export function NodeSettings() {
                     .eq("id", tournamentId)
                     .single();
 
+                let catQuery = supabase
+                    .from("tournament_categories")
+                    .select("registration_fee")
+                    .eq("tournament_id", tournamentId);
+
+                if (activeCategoryId) {
+                    catQuery = catQuery.eq("id", activeCategoryId);
+                } else {
+                    catQuery = catQuery.limit(1);
+                }
+
+                const { data: catData } = await catQuery.maybeSingle();
+
                 if (data && !error) {
                     setTournamentRecord(data);
                     setRegOpen(data.is_registration_open);
-                    setRegFee(data.registration_fee ?? "");
+                    setRegFee(catData?.registration_fee ?? "");
                     setBankNumber(data.bank_account_number ?? "");
                     setBankName(data.bank_name || "PromptPay");
                     setAccountName(data.bank_account_name ?? "");
@@ -99,11 +112,18 @@ export function NodeSettings() {
             };
             fetchRegDetails();
         }
-    }, [selectedNode?.type, tournamentId, supabase]);
+    }, [selectedNode?.type, tournamentId, supabase, activeCategoryId]);
 
     const handleRegSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!tournamentRecord) return;
+        if (!tournamentRecord) {
+            toast({
+                title: "Error",
+                description: "Tournament record is not loaded yet. Please try again.",
+                variant: "destructive"
+            });
+            return;
+        }
         setIsRegSaving(true);
 
         const formData = new FormData();
@@ -117,10 +137,22 @@ export function NodeSettings() {
         formData.append("bank_account_number", bankNumber);
         formData.append("bank_name", bankName);
         formData.append("bank_account_name", accountName);
+        if (activeCategoryId) {
+            formData.append("tournament_category_id", activeCategoryId);
+        }
 
         try {
             const res = await updateTournament(tournamentId, null, formData);
             if (res.success) {
+                // Update local state to keep in sync
+                setTournamentRecord(prev => prev ? {
+                    ...prev,
+                    is_registration_open: regOpen,
+                    bank_account_number: bankNumber,
+                    bank_name: bankName,
+                    bank_account_name: accountName
+                } : null);
+
                 console.log("Dispatching registration-updated event with detail:", {
                     tournamentId,
                     is_registration_open: regOpen,
@@ -947,7 +979,7 @@ export function NodeSettings() {
 
                                     <div className="space-y-3 pt-2">
                                         <div className="space-y-1">
-                                            <Label htmlFor="reg_fee" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Registration Fee (THB)</Label>
+                                            <Label htmlFor="reg_fee" className="text-[10px] font-bold tracking-wider text-muted-foreground">Registration Fee (THB)</Label>
                                             <Input
                                                 type="number"
                                                 id="reg_fee"
@@ -961,7 +993,7 @@ export function NodeSettings() {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <Label htmlFor="reg_promptpay" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">PromptPay ID</Label>
+                                            <Label htmlFor="reg_promptpay" className="text-[10px] font-bold tracking-wider text-muted-foreground">PromptPay ID</Label>
                                             <Input
                                                 type="text"
                                                 id="reg_promptpay"
@@ -974,7 +1006,7 @@ export function NodeSettings() {
 
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
-                                                <Label htmlFor="reg_bank" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Bank Name</Label>
+                                                <Label htmlFor="reg_bank" className="text-[10px] font-bold tracking-wider text-muted-foreground">Bank Name</Label>
                                                 <Select value={bankName} onValueChange={setBankName}>
                                                     <SelectTrigger id="reg_bank" className="bg-transparent w-full text-xs">
                                                         <SelectValue placeholder="Select Bank" />
@@ -985,7 +1017,7 @@ export function NodeSettings() {
                                                 </Select>
                                             </div>
                                             <div className="space-y-1">
-                                                <Label htmlFor="reg_acc_name" className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Account Name</Label>
+                                                <Label htmlFor="reg_acc_name" className="text-[10px] font-bold tracking-wider text-muted-foreground">Account Name</Label>
                                                 <Input
                                                     type="text"
                                                     id="reg_acc_name"

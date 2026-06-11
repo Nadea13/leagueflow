@@ -6,10 +6,12 @@ import { ClipboardEdit, Circle, CheckCircle2, DollarSign, CreditCard } from "luc
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Tournament } from "@/types";
+import { useBracketStore } from "@/lib/stores/bracket-store";
 
 export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
     const { tournamentId } = data as { tournamentId: string };
-    const [tournament, setTournament] = useState<Partial<Tournament> | null>(null);
+    const activeCategoryId = useBracketStore((state) => state.activeCategoryId);
+    const [tournament, setTournament] = useState<(Partial<Tournament> & { registration_fee?: number | null }) | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -19,16 +21,35 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
 
         async function fetchTournament() {
             try {
-                const { data, error } = await supabase
+                const { data: tourneyData, error: tourneyError } = await supabase
                     .from("tournaments")
-                    .select("is_registration_open, registration_fee, bank_name, bank_account_name, bank_account_number")
+                    .select("is_registration_open, bank_name, bank_account_name, bank_account_number")
                     .eq("id", tournamentId)
                     .single();
 
-                if (error) {
-                    console.error("Error fetching tournament for RegistrationNode:", error);
-                } else if (data) {
-                    setTournament(data);
+                let catQuery = supabase
+                    .from("tournament_categories")
+                    .select("registration_fee")
+                    .eq("tournament_id", tournamentId);
+
+                if (activeCategoryId) {
+                    catQuery = catQuery.eq("id", activeCategoryId);
+                } else {
+                    catQuery = catQuery.limit(1);
+                }
+
+                const { data: catData, error: catError } = await catQuery.maybeSingle();
+
+                if (tourneyError || catError) {
+                    console.error("Error fetching tournament for RegistrationNode:", tourneyError || catError);
+                } else if (tourneyData) {
+                    setTournament({
+                        is_registration_open: tourneyData.is_registration_open,
+                        registration_fee: catData?.registration_fee ?? 0,
+                        bank_name: tourneyData.bank_name,
+                        bank_account_name: tourneyData.bank_account_name,
+                        bank_account_number: tourneyData.bank_account_number,
+                    });
                 }
             } catch (err) {
                 console.error("Fetch error:", err);
@@ -52,13 +73,13 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
                 },
                 (payload) => {
                     const newRecord = payload.new as Partial<Tournament>;
-                    setTournament({
+                    setTournament(prev => ({
+                        ...prev,
                         is_registration_open: newRecord.is_registration_open,
-                        registration_fee: newRecord.registration_fee,
                         bank_name: newRecord.bank_name,
                         bank_account_name: newRecord.bank_account_name,
                         bank_account_number: newRecord.bank_account_number,
-                    });
+                    }));
                 }
             )
             .subscribe();
@@ -91,7 +112,7 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
             supabase.removeChannel(channel);
             window.removeEventListener("registration-updated", handleRegistrationUpdate);
         };
-    }, [tournamentId]);
+    }, [tournamentId, activeCategoryId]);
 
     const formatFee = (fee: number | null | undefined) => {
         if (fee === undefined || fee === null || fee === 0) return "Free";
@@ -155,7 +176,7 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
                         {/* Payment Details */}
                         {tournament.is_registration_open && (
                             <div className="space-y-1.5 pt-1">
-                                <span className="text-muted-foreground font-semibold flex items-center gap-1 text-[10px] tracking-wider uppercase">
+                                <span className="text-muted-foreground font-semibold flex items-center gap-1 text-[10px] tracking-wider">
                                     <CreditCard className="h-3.5 w-3.5 text-muted-foreground/60" />
                                     Payment Info
                                 </span>

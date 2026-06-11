@@ -22,7 +22,6 @@ export interface Tournament {
     max_teams?: number | null;
     advancing_teams?: number | null;
     is_registration_open: boolean;
-    registration_fee?: number | null;
     bank_name?: string | null;
     bank_account_name?: string | null;
     bank_account_number?: string | null;
@@ -39,6 +38,7 @@ export interface Tournament {
     cover_img?: string | null;
     location_name?: string | null;
     google_map_url?: string | null;
+    registration_fee?: number | null;
 }
 
 export interface Match {
@@ -393,6 +393,7 @@ export interface TournamentCategory {
     age_category_id: number;
     gender_type: string;
     max_teams: number;
+    registration_fee?: number | null;
     canvas_data: BracketCanvasData | null;
     deleted_at?: string | null;
     created_at?: string;

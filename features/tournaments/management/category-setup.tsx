@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Trophy, Settings, Users, ArrowRight } from "lucide-react";
+import { Trophy, Settings, Users, ArrowRight, DollarSign } from "lucide-react";
 import { createTournamentCategory } from "@/actions/tournaments/general";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
@@ -32,16 +33,21 @@ export function CategorySetup({ tournamentId, ageCategories, tournamentName }: C
     );
     const [genderType, setGenderType] = useState<string>("open");
     const [maxTeams, setMaxTeams] = useState<string>("8");
+    const [registrationFee, setRegistrationFee] = useState<string>("0");
     const [state, formAction, isPending] = useActionState(
         async (_prevState: ActionResponse, _formData: FormData) => {
             if (!ageCategoryId) {
                 return { success: false, error: "Please select an age category" };
             }
+            if (!maxTeams || parseInt(maxTeams) <= 0) {
+                return { success: false, error: "Please enter a valid team limit" };
+            }
             return createTournamentCategory(
                 tournamentId,
                 parseInt(ageCategoryId),
                 genderType,
-                parseInt(maxTeams)
+                parseInt(maxTeams),
+                parseFloat(registrationFee) || 0
             );
         },
         initialState
@@ -113,30 +119,43 @@ export function CategorySetup({ tournamentId, ageCategories, tournamentName }: C
                             </Select>
                         </div>
 
-                        {/* Max Teams Selector */}
+                        {/* Max Teams Input */}
                         <div className="space-y-2">
                             <Label className="text-xs font-black tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
                                 <Trophy className="h-3.5 w-3.5" /> Team Limit
                             </Label>
-                            <Select name="max_teams" value={maxTeams} onValueChange={setMaxTeams}>
-                                <SelectTrigger className="w-full border-slate-200 dark:border-foreground/10 h-11 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 transition-all duration-200 rounded-lg">
-                                    <SelectValue placeholder="Select maximum teams" />
-                                </SelectTrigger>
-                                <SelectContent className="border-border">
-                                    <SelectItem value="4" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tight py-2.5 cursor-pointer">
-                                        4 Teams
-                                    </SelectItem>
-                                    <SelectItem value="8" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tight py-2.5 cursor-pointer">
-                                        8 Teams
-                                    </SelectItem>
-                                    <SelectItem value="16" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tight py-2.5 cursor-pointer">
-                                        16 Teams
-                                    </SelectItem>
-                                    <SelectItem value="32" className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tight py-2.5 cursor-pointer">
-                                        32 Teams
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Input
+                                type="text"
+                                name="max_teams"
+                                value={maxTeams}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, "");
+                                    setMaxTeams(val);
+                                }}
+                                placeholder="e.g. 8"
+                                className="w-full border-slate-200 dark:border-foreground/10 h-11 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 transition-all duration-200 rounded-lg"
+                            />
+                        </div>
+
+                        {/* Registration Fee Input */}
+                        <div className="space-y-2">
+                            <Label className="text-xs font-black tracking-widest text-muted-foreground/80 flex items-center gap-1.5">
+                                <DollarSign className="h-3.5 w-3.5" /> Registration Fee (THB)
+                            </Label>
+                            <Input
+                                type="text"
+                                name="registration_fee"
+                                value={registrationFee}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                                    // Limit to one decimal point
+                                    if ((val.match(/\./g) || []).length <= 1) {
+                                        setRegistrationFee(val);
+                                    }
+                                }}
+                                placeholder="0.00"
+                                className="w-full border-slate-200 dark:border-foreground/10 h-11 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 transition-all duration-200 rounded-lg"
+                            />
                         </div>
 
                         {state.error && (

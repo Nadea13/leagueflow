@@ -14,7 +14,7 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
     const [tournamentResult, userPlan, roleRes] = await Promise.all([
         supabase.from("tournaments").select(`
             id, name, description, status, start_date, end_date, organizer_id, created_at, sport_id,
-            is_registration_open, registration_fee, bank_name, bank_account_name, bank_account_number,
+            is_registration_open, bank_name, bank_account_name, bank_account_number,
             document_deadline, logo_img, cover_img, location_name, google_map_url,
             sports:sport_id(sport_name)
         `).eq("id", id).single(),
@@ -83,7 +83,8 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
         canvas_data: canvasData,
         user_id: tournamentData.organizer_id,
         sport: sportName,
-        plan: 'free' as 'free' | 'tournament' | 'monthly' | 'yearly'
+        plan: 'free' as 'free' | 'tournament' | 'monthly' | 'yearly',
+        registration_fee: category ? category.registration_fee : 0
     };
 
     // Fetch related data (Teams, Matches, Goals) parallelized

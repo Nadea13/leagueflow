@@ -137,7 +137,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-3 transition-all cursor-pointer group relative overflow-hidden",
+                "flex flex-col border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-3 transition-all cursor-pointer group relative overflow-hidden rounded-lg",
             )}
         >
             {/* 1. Status/Time/Badge Section */}
@@ -214,9 +214,9 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                     {match.home_team?.name || tMatch("tbd")}
                                 </span>
                                 {match.home_team?.logo_url ? (
-                                    <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
+                                    <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">
                                             {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
@@ -301,9 +301,9 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         ) : (
                             <>
                                 {match.away_team?.logo_url ? (
-                                    <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all" alt="" />
+                                    <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                 ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border">
+                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
                                         <span className="text-sm md:text-base font-black text-muted-foreground">
                                             {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                         </span>
