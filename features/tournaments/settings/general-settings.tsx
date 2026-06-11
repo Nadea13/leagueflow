@@ -59,15 +59,15 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
     }, [state, tCommon, t, toast]);
 
     return (
-        <div className="space-y-2 md:space-y-4">
+        <div className="space-y-1 md:space-y-2">
             <div className="relative overflow-hidden">
                 <div className="relative z-10">
-                    <form action={formAction} className="space-y-2 md:space-y-3">
+                    <form action={formAction} className="space-y-1 md:space-y-2">
                         <input type="hidden" name="form_type" value="general" />
                         <input type="hidden" name="logo_img_remove" value={String(logoRemoved)} />
                         <input type="hidden" name="cover_img_remove" value={String(coverRemoved)} />
 
-                        <div className="space-y-3 col-span-2 mb-2 md:mb-4">
+                        <div className="space-y-1 md:space-y-2 col-span-2 mb-1 md:mb-2">
                             <div className="space-y-1">
                                 <Label>
                                     {isThai ? "โลโก้การแข่งขัน" : "Tournament Logo"}
@@ -173,7 +173,7 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                             </div>
                         </div>
 
-                        <div className="grid gap-2 md:gap-4 md:grid-cols-2">
+                        <div className="grid gap-1 md:gap-2 md:grid-cols-2">
                             <div className="space-y-1">
                                 <Label>{tDialog("name")}</Label>
                                 <Input

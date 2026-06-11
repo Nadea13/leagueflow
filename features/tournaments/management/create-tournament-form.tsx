@@ -85,7 +85,7 @@ export function TournamentCreate() {
                     <span>{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-background p-0 rounded-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-xl shadow-2xl">
                 <form action={formAction}>
                     {/* Premium Header */}
                     <div className="p-2 md:p-4 border-b">

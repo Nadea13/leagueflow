@@ -112,8 +112,8 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
     };
 
     return (
-        <div className="space-y-2 md:space-y-4">
-            <div className="flex justify-end gap-2 md:gap-4">
+        <div className="space-y-1 md:space-y-2">
+            <div className="flex justify-end gap-1 md:gap-2">
                 <Dialog open={isPro && dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button

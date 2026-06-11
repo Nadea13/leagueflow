@@ -67,9 +67,9 @@ export function CreateTeamForm() {
                     <span>{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] bg-background border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+            <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
                 <form action={formAction}>
-                    <div className="relative bg-background p-2 md:p-4 border-b">
+                    <div className="relative p-2 md:p-4 border-b">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
                                 {t("add_team")}

@@ -184,7 +184,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     };
 
     return (
-        <div className="bg-background border relative rounded-xl">
+        <div className="bg-card border relative rounded-xl">
             <div className="p-2 md:p-4">
                 <div className="flex items-center justify-between mb-2 md:mb-4">
                     <div className="flex items-center gap-3">
@@ -320,7 +320,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             className="w-full"
                             disabled={isSaving || !newName.trim() || effectivelyLocked}
                         >
-                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                             {t("add_player")}
                         </Button>
                     </div>

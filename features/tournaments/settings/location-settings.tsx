@@ -56,8 +56,8 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
     }, [state, tCommon, t, toast]);
 
     return (
-        <div className="space-y-2 md:space-y-4">
-            <form action={formAction} className="space-y-2 md:space-y-4">
+        <div className="space-y-1 md:space-y-2">
+            <form action={formAction} className="space-y-1 md:space-y-2">
                 <input type="hidden" name="form_type" value="venue" />
 
                 <div className="space-y-1">

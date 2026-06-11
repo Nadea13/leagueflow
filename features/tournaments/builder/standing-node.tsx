@@ -279,7 +279,7 @@ export const StandingNode = memo(({
                 style={{ left: "-1px" }}
             />
 
-            <div className="flex items-center p-2 border-b bg-muted/30">
+            <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-node-1 rounded flex items-center justify-center">
                         <ListOrdered className="h-4 w-4 text-background" />
@@ -296,7 +296,7 @@ export const StandingNode = memo(({
             <div className="custom-scrollbar">
                 <table className="w-full text-[10px] border-collapse">
                     <thead>
-                        <tr className="bg-muted/50 border-b border-border/50">
+                        <tr className="border-b">
                             <th className="px-2 py-1.5 text-left font-black text-muted-foreground w-8">#</th>
                             <th className="-1.5 text-left font-black text-muted-foreground min-w-[100px]">TEAM</th>
                             {showPlayed && <th className="px-1 py-1.5 text-center font-black text-muted-foreground w-6">MP</th>}
@@ -312,7 +312,7 @@ export const StandingNode = memo(({
                             <th className="p-0 w-0"></th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/30">
+                    <tbody className="divide-y">
                         {effectiveTeams.length === 0 ? (
                             <tr>
                                 <td colSpan={12} className="py-4 text-center text-muted-foreground">

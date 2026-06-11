@@ -178,9 +178,9 @@ export function EditTeamForm({
     };
 
     return (
-        <div className="bg-background border rounded-xl relative overflow-hidden">
+        <div className="bg-card border rounded-xl relative overflow-hidden">
             <div className="p-2 md:p-4">
-                <form onSubmit={handleUpdateTeam} className="space-y-2 md:space-y-4">
+                <form onSubmit={handleUpdateTeam} className="space-y-1 md:space-y-2">
                     <div className="space-y-1">
                         <Label>{tTeam("upload_logo")}</Label>
                         <LogoUploader
@@ -278,8 +278,8 @@ export function EditTeamForm({
                         </div>
                     </div>
 
-                    <div className="space-y-2 md:space-y-3">
-                        <div className="flex gap-2">
+                    <div className="space-y-1 md:space-y-2">
+                        <div className="flex gap-1 md:gap-2">
                             <Button
                                 type="submit"
                                 className="flex-1"
@@ -305,7 +305,7 @@ export function EditTeamForm({
                         </div>
 
                         {isLocked && (
-                            <div className="bg-destructive/10 border border-destructive p-2 flex items-center justify-center gap-2 md:gap-3">
+                            <div className="bg-destructive/10 rounded-sm border border-destructive p-2 flex items-center justify-center gap-2 md:gap-3">
                                 <Lock className="h-4 w-4 text-destructive" />
                                 <span className="text-[10px] font-black tracking-widest text-destructive">{t("team_details_locked")}</span>
                             </div>
@@ -313,7 +313,7 @@ export function EditTeamForm({
                     </div>
 
                     {!isLocked && (
-                        <div className="space-y-2 md:space-y-3">
+                        <div className="space-y-1 md:space-y-2">
                             <div className="flex items-center gap-2 md:gap-3">
                                 <div className="h-px flex-1 bg-destructive" />
                                 <span className="text-xs font-black tracking-widest text-destructive">{t("danger_zone")}</span>
@@ -328,18 +328,18 @@ export function EditTeamForm({
                                         className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                                         disabled={isResettingRoster || isLocked}
                                     >
-                                        <RotateCcw className="h-4 w-4 mr-2" />
+                                        <RotateCcw className="h-4 w-4" />
                                         {t("reset_roster") || "Reset Roster"}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-md border-border bg-card">
                                     <DialogHeader>
                                         <DialogTitle className="font-black tracking-tight text-destructive">{t("reset_roster") || "Reset Roster"}</DialogTitle>
-                                        <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
+                                        <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed">
                                             {t("reset_roster_desc") || "This will delete all players from this team's roster. This action cannot be undone."}
                                         </DialogDescription>
                                     </DialogHeader>
-                                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                                    <DialogFooter className="gap-2 sm:gap-0">
                                         <Button
                                             variant="ghost"
                                             className="font-black text-[10px] tracking-widest"
@@ -353,7 +353,7 @@ export function EditTeamForm({
                                             onClick={handleResetRoster}
                                             disabled={isResettingRoster}
                                         >
-                                            {isResettingRoster ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+                                            {isResettingRoster ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                                             {t("confirm_reset") || "Confirm Reset"}
                                         </Button>
                                     </DialogFooter>
@@ -368,7 +368,7 @@ export function EditTeamForm({
                                         className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                                         disabled={isDeletingTeam || isLocked}
                                     >
-                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <Trash2 className="h-4 w-4" />
                                         {tTeam("delete_team") || "Delete Team"}
                                     </Button>
                                 </DialogTrigger>
@@ -401,7 +401,7 @@ export function EditTeamForm({
                                         </Button>
                                         <Button
                                             variant="destructive"
-                                            className="font-black text-[10px] tracking-widest bg-red-500 hover:bg-red-600"
+                                            className="font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/80"
                                             onClick={handleDeleteTeam}
                                             disabled={isDeletingTeam || deleteConfirmText !== team.name}
                                         >

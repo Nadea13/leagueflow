@@ -40,14 +40,14 @@ export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
     return (
         <div
             className={cn(
-                "relative w-[280px] border bg-card text-card-foreground transition-all rounded-sm",
+                "relative w-[320px] border bg-card text-card-foreground transition-all rounded-sm",
                 selected
                     ? "border-node-3 ring-node-3/30"
                     : "border-border hover:border-node-3/50"
             )}
         >
             {/* Header */}
-            <div className="flex items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-node-3 rounded flex items-center justify-center">
                         <Users className="h-4 w-4 text-background" />

@@ -6,7 +6,7 @@ import { createMasterPlayer } from "@/actions/common/user";
 import { updateGlobalPlayerInfo, updateGlobalPlayerPhoto } from "@/actions/tournaments/master-player";
 import { Link } from "@/i18n/routing";
 import {
-    Trophy, User, Calendar, Phone, Shield, Search,
+    Trophy, User, Calendar, Phone, Search,
     AlertCircle, Loader2, UserCheck, UserPlus, Activity, Edit
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,11 +216,10 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                     <Card
                                         className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer"
                                     >
-                                        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
                                         <CardContent className="flex py-2 md:py-4 relative z-10 gap-2 md:gap-4">
                                             <div className="flex gap-2 md:gap-4 overflow-hidden">
                                                 <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                    <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain" />
+                                                    <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
                                                     <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col gap-1">
@@ -233,7 +232,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                 </div>
                                             </div>
                                             <div className="flex gap-2 md:gap-4">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex gap-2">
                                                     <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary">
                                                         <Calendar className="h-4 w-4" />
                                                     </div>
@@ -249,11 +248,6 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="ml-auto flex justify-end">
-                                                <p className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
-                                                    {Number(tournament.registration_fee || 0) === 0 ? "Free" : `${Number(tournament.registration_fee || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ฿`}
-                                                </p>
-                                            </div>
                                         </CardContent>
                                     </Card>
                                 </Link>
@@ -263,15 +257,14 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 </div>
 
                 {/* Right Column: Master Player Card (4 cols) */}
-                <div className="lg:col-span-4 bg-background">
+                <div className="lg:col-span-4 bg-card border rounded-xl">
                     {masterPlayer ? (
                         /* Player ID Card */
-                        <div className="relative overflow-hidden border rounded-xl">
+                        <div className="relative overflow-hidden">
                             {/* License Header */}
                             <div className="flex items-center justify-between border-b p-2 md:p-4">
                                 <div className="flex items-center gap-2 md:gap-4">
-                                    <Shield className="h-5 w-5 text-primary" />
-                                    <span className="font-black text-foreground leading-tight">PLAYER LICENSE</span>
+                                    <span className="font-black text-foreground leading-tight">Player Verify</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Button
@@ -305,7 +298,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             {/* Main Body */}
                             <div className="flex flex-col items-center text-center space-y-2 md:space-y-4 p-2 md:p-4 relative z-10">
                                 <div className="relative">
-                                    <Avatar className="h-20 w-20 border-2 border-border bg-background relative z-10 rounded-full">
+                                    <Avatar className="h-20 w-20 border-2 bg-background relative z-10 rounded-full">
                                         {masterPlayer.profile_img && <AvatarImage src={masterPlayer.profile_img} alt="Avatar" className="object-cover" />}
                                         <AvatarFallback className="font-black text-foreground text-xl">
                                             {`${masterPlayer.first_name[0]}${masterPlayer.last_name[0]}`}

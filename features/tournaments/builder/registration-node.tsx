@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useState } from "react";
 import { NodeProps } from "@xyflow/react";
-import { ClipboardEdit, Circle, CheckCircle2, DollarSign, CreditCard } from "lucide-react";
+import { ClipboardEdit, Circle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Tournament } from "@/types";
@@ -121,13 +121,13 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
 
     return (
         <div className={cn(
-            "relative w-[280px] border bg-card text-card-foreground transition-all rounded-sm",
+            "relative w-[320px] border bg-card text-card-foreground transition-all rounded-sm",
             selected
                 ? "border-violet-500 ring-2 ring-violet-500/30"
                 : "border-border hover:border-violet-500/50"
         )}>
             {/* Header */}
-            <div className="flex items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-violet-500 rounded flex items-center justify-center">
                         <ClipboardEdit className="h-4 w-4 text-background" />
@@ -139,13 +139,13 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
             </div>
 
             {/* Content */}
-            <div className="p-3 space-y-3 text-xs bg-background/30">
+            <div className="p-2 space-y-2 text-xs">
                 {loading ? (
                     <div className="flex items-center justify-center py-4">
                         <span className="text-[10px] text-muted-foreground animate-pulse">Loading registration details...</span>
                     </div>
                 ) : tournament ? (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                         {/* Status Row */}
                         <div className="flex items-center justify-between border-b border-border/10 pb-2">
                             <span className="text-muted-foreground font-semibold">Status:</span>
@@ -165,7 +165,6 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
                         {/* Fee Row */}
                         <div className="flex items-center justify-between border-b border-border/10 pb-2">
                             <span className="text-muted-foreground font-semibold flex items-center gap-1">
-                                <DollarSign className="h-3.5 w-3.5 text-muted-foreground/60" />
                                 Fee:
                             </span>
                             <span className="font-bold text-foreground">
@@ -175,12 +174,11 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
 
                         {/* Payment Details */}
                         {tournament.is_registration_open && (
-                            <div className="space-y-1.5 pt-1">
+                            <div className="space-y-2">
                                 <span className="text-muted-foreground font-semibold flex items-center gap-1 text-[10px] tracking-wider">
-                                    <CreditCard className="h-3.5 w-3.5 text-muted-foreground/60" />
                                     Payment Info
                                 </span>
-                                <div className="bg-muted/30 p-2 rounded-sm space-y-1 border border-border/5">
+                                <div className="bg-muted p-2 rounded space-y-1">
                                     <div className="flex justify-between text-[10px]">
                                         <span className="text-muted-foreground">PromptPay:</span>
                                         <span className="font-bold text-foreground">{tournament.bank_account_number || "-"}</span>

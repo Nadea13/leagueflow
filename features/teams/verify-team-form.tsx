@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { ShieldCheck, Send, HelpCircle, Loader2, Search } from "lucide-react";
+import { ShieldCheck, HelpCircle, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -21,16 +20,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getTeamsByEmail, submitTeamManagementRequest } from "@/actions/manager/team";
 
 export function VerifyTeamForm() {
-    const tCommon = useTranslations("Common");
     const { toast } = useToast();
-    
+
     const [open, setOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     const [contactEmail, setContactEmail] = useState("");
     const [matchingTeams, setMatchingTeams] = useState<Array<{ id: string; name: string }>>([]);
     const [isSearchingTeams, setIsSearchingTeams] = useState(false);
-    
+
     const [selectedTeamId, setSelectedTeamId] = useState<string>("");
     const [contactPhone, setContactPhone] = useState("");
     const [requestMessage, setRequestMessage] = useState("");
@@ -38,7 +36,7 @@ export function VerifyTeamForm() {
     const handleEmailChange = async (emailVal: string) => {
         setContactEmail(emailVal);
         setSelectedTeamId("");
-        
+
         // Simple email format check
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(emailVal.trim())) {
@@ -63,7 +61,7 @@ export function VerifyTeamForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!contactEmail || !selectedTeamId || !contactPhone) {
             toast({
                 title: "กรอกข้อมูลไม่ครบถ้วน",
@@ -84,7 +82,7 @@ export function VerifyTeamForm() {
 
             if (res.success) {
                 setOpen(false);
-                
+
                 // Reset form
                 setContactEmail("");
                 setMatchingTeams([]);
@@ -122,9 +120,9 @@ export function VerifyTeamForm() {
                     <span>ขอสิทธิ์การจัดการทีม</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] bg-background border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+            <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
                 <form onSubmit={handleSubmit}>
-                    <div className="relative bg-background p-4 border-b">
+                    <div className="relative p-2 md:p-4 border-b">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 leading-none">
                                 ขอสิทธิ์การจัดการทีม
@@ -135,10 +133,10 @@ export function VerifyTeamForm() {
                         </DialogHeader>
                     </div>
 
-                    <div className="p-4 space-y-4">
+                    <div className="p-2 md:p-4 space-y-1 md:space-y-2">
                         {/* Input Email to search */}
                         <div className="space-y-1">
-                            <Label htmlFor="contact_email" className="text-xs font-black tracking-widest text-primary flex items-center justify-between">
+                            <Label>
                                 <span>อีเมลผู้ติดต่อของทีม (Email) <span className="text-red-500">*</span></span>
                                 {isSearchingTeams && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
                             </Label>
@@ -158,25 +156,25 @@ export function VerifyTeamForm() {
 
                         {/* Select Team Dropdown */}
                         <div className="space-y-1">
-                            <Label htmlFor="team_select" className="text-xs font-black tracking-widest text-primary">
+                            <Label>
                                 เลือกทีมที่ตรงกัน (Matching Teams) <span className="text-red-500">*</span>
                             </Label>
-                            <Select 
-                                value={selectedTeamId} 
+                            <Select
+                                value={selectedTeamId}
                                 onValueChange={setSelectedTeamId}
                                 disabled={matchingTeams.length === 0}
                             >
                                 <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
-                                    <SelectValue 
+                                    <SelectValue
                                         placeholder={
-                                            contactEmail === "" 
-                                                ? "กรุณากรอกอีเมลของทีมก่อน..." 
-                                                : isSearchingTeams 
-                                                    ? "กำลังค้นหาทีม..." 
-                                                    : matchingTeams.length === 0 
-                                                        ? "ไม่พบทีมที่ตรงกับอีเมลนี้" 
+                                            contactEmail === ""
+                                                ? "กรุณากรอกอีเมลของทีมก่อน..."
+                                                : isSearchingTeams
+                                                    ? "กำลังค้นหาทีม..."
+                                                    : matchingTeams.length === 0
+                                                        ? "ไม่พบทีมที่ตรงกับอีเมลนี้"
                                                         : "เลือกทีมที่ต้องการขอสิทธิ์..."
-                                        } 
+                                        }
                                     />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -191,7 +189,7 @@ export function VerifyTeamForm() {
 
                         {/* Contact Phone */}
                         <div className="space-y-1">
-                            <Label htmlFor="contact_phone" className="text-xs font-black tracking-widest text-primary">
+                            <Label>
                                 เบอร์โทรศัพท์สำหรับติดต่อกลับ <span className="text-red-500">*</span>
                             </Label>
                             <Input
@@ -206,7 +204,7 @@ export function VerifyTeamForm() {
 
                         {/* Message to Organizer */}
                         <div className="space-y-1">
-                            <Label htmlFor="message" className="text-xs font-black tracking-widest text-primary">
+                            <Label>
                                 ข้อความแจ้งรายละเอียดเพิ่มเติม (Optional)
                             </Label>
                             <Textarea
@@ -219,22 +217,14 @@ export function VerifyTeamForm() {
                         </div>
 
                         {/* Helper Tip */}
-                        <div className="text-[10px] flex items-start gap-1.5 p-2.5 rounded bg-muted/20 border border-dashed text-muted-foreground">
-                            <HelpCircle className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                        <div className="text-[10px] flex items-start gap-1 md:gap-2 p-1 md:p-2 rounded-sm border border-dashed text-muted-foreground">
+                            <HelpCircle className="h-4 w-4 text-primary shrink-0" />
                             <span>หากได้รับการอนุมัติแล้ว ทีมนี้จะปรากฏในเมนูการจัดการทีมของคุณโดยอัตโนมัติ</span>
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t p-4 flex gap-2 sm:justify-end">
-                        <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isSubmitting} className="text-xs">
-                            {tCommon("cancel")}
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting || !selectedTeamId} className="gap-1.5 text-xs bg-primary hover:bg-primary/90 text-white">
-                            {isSubmitting ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                                <Send className="h-3.5 w-3.5" />
-                            )}
+                    <DialogFooter className="border-t p-4 flex gap-2">
+                        <Button type="submit" disabled={isSubmitting || !selectedTeamId} className="w-full">
                             ส่งคำขอสิทธิ์
                         </Button>
                     </DialogFooter>

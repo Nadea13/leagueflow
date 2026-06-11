@@ -317,7 +317,7 @@ export function Announcements({
                             key={ann.id}
                             className={cn(
                                 "p-2 md:p-3 border transition-all relative overflow-hidden group/item",
-                                ann.is_pinned ? "bg-node-4/[0.03] border-node-4/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-node-4 border-node-4/20" : "bg-card hover:bg-foreground hover:border-border/40"
                             )}
                         >
                             <div className="flex items-start justify-between gap-2 md:gap-3 relative z-10">

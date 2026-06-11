@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Tournament, Team } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Shield } from "lucide-react";
+import { Trophy } from "lucide-react";
 
 interface DashboardCardProps {
     type: 'tournament' | 'team';
@@ -38,12 +38,10 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
         return (
             <Link href={`/dashboard/tournaments/${tournament.id}`} className="block h-full group">
                 <Card className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                    <Trophy className="absolute right-2 md:right-4 top-2 md:top-4 z-20 h-4 w-4 text-primary" />
                     <CardHeader className="pt-2 md:pt-4 relative z-10">
                         <div className="flex gap-2 md:gap-4 overflow-hidden">
                             <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name} className="object-contain" />
+                                <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name} className="object-contain rounded-full" />
                                 <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col gap-1">
@@ -68,12 +66,6 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
                                             : tDashboard("card_not_scheduled")}
                                     </span>
                                 </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-muted-foreground/50 tracking-widest">Capacity</span>
-                                    <span className="text-xs font-bold tabular-nums">
-                                        {tournament.current_teams || 0}/{tournament.max_teams || 8}
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -87,13 +79,11 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
     return (
         <Link href={`/${mode === 'organizer' ? 'dashboard/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
             <Card className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                <Shield className="absolute right-2 md:right-4 top-2 md:top-4 z-20 h-4 w-4 text-primary" />
                 <CardHeader className="pt-2 md:pt-4 relative z-10">
                     <div className="flex items-start justify-between">
                         <div className="flex gap-2 md:gap-4 overflow-hidden">
                             <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain" />
+                                <AvatarImage src={team.logo_url ?? undefined} alt={team.name} className="object-contain rounded-full" />
                                 <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{team.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col gap-1">

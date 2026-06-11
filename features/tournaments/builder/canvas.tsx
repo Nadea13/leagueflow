@@ -738,7 +738,7 @@ function CanvasInternal({
 
 
     return (
-        <div className={cn("flex flex-col h-full w-full border bg-background rounded-xl")}>
+        <div className={cn("flex flex-col h-full w-full border bg-card rounded-xl")}>
             <div className="flex items-center justify-between p-2 md:p-4 border-b">
                 <div className="flex items-center gap-2 md:gap-4">
                     <div className="flex items-center gap-1 md:gap-2">
@@ -793,7 +793,7 @@ function CanvasInternal({
                                 }
                             }}
                         >
-                            <SelectTrigger className="w-[200px] h-10 bg-background hover:bg-slate-50 dark:hover:bg-foreground/5 font-bold text-xs tracking-tight">
+                            <SelectTrigger className="w-[200px] h-10 hover:bg-slate-50 dark:hover:bg-foreground/5 font-bold text-xs tracking-tight">
                                 <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
                             </SelectTrigger>
                             <SelectContent className="bg-card">
@@ -999,7 +999,7 @@ function CanvasInternal({
             <div className="flex flex-1 overflow-hidden relative">
                 {activeSidebar === 'schedule' && tournament ? (
                     <div className="absolute inset-0 z-20 flex flex-col">
-                        <div className="flex flex-1 overflow-hidden bg-background">
+                        <div className="flex flex-1 overflow-hidden bg-card">
                             {/* Left Controls Sidebar (w-64 like settings) */}
                             <div className="w-64 border-r flex flex-col p-2 md:p-3 gap-2 shrink-0 z-10">
                                 <div>
@@ -1159,7 +1159,7 @@ function CanvasInternal({
                     <div className="absolute inset-0 z-20 flex flex-col">
                         <div className="flex flex-1 overflow-hidden">
                             {/* Settings Sidebar */}
-                            <aside className="w-64 border-r bg-background flex flex-col shrink-0 py-4 px-2 lg:px-4 space-y-1">
+                            <aside className="w-64 border-r flex flex-col shrink-0 py-4 px-2 lg:px-4 space-y-1">
                                 <button
                                     onClick={() => setActiveSettingsTab('general')}
                                     className={cn(

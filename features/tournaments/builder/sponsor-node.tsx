@@ -40,16 +40,16 @@ export const SponsorNode = memo(({ data, selected }: NodeProps) => {
 
     return (
         <div className={cn(
-            "relative w-[300px] border bg-card text-card-foreground transition-all rounded-sm shadow-md",
+            "relative w-[320px] border bg-card text-card-foreground transition-all rounded-sm shadow-md",
             selected
                 ? "border-red-500 ring-2 ring-red-500/30"
                 : "border-border hover:border-red-500/50"
         )}>
             {/* Header */}
-            <div className="flex items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center">
-                        <Heart className="h-4 w-4 text-background fill-background" />
+                        <Heart className="h-4 w-4 text-background" />
                     </div>
                     <span className="text-xs font-black tracking-wide text-red-500">
                         Sponsors
@@ -58,7 +58,7 @@ export const SponsorNode = memo(({ data, selected }: NodeProps) => {
             </div>
 
             {/* Content */}
-            <div className="max-h-[350px] overflow-y-auto custom-scrollbar p-3 bg-background/30">
+            <div className="max-h-[350px] overflow-y-auto custom-scrollbar p-2">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-6">
                         <Loader2 className="h-6 w-6 animate-spin text-red-500" />
@@ -68,7 +68,7 @@ export const SponsorNode = memo(({ data, selected }: NodeProps) => {
                         <p className="text-xs text-muted-foreground/50 italic">No sponsors added yet</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-2">
                         {sponsors.map((sponsor) => (
                             <div 
                                 key={sponsor.id}

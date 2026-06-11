@@ -107,7 +107,7 @@ export function SquadList({
     const activePlayers = players.filter((player) => !player.deleted_at);
 
     return (
-        <div className="bg-background space-y-2 md:space-y-4 border rounded-xl p-2 md:p-4">
+        <div className="bg-card space-y-2 md:space-y-4 border rounded-xl p-2 md:p-4">
             <div className="flex md:items-center justify-between gap-4 mb-2 md:mb-4">
                 <div className="flex items-center gap-3">
                     <Users className="h-6 w-6 text-primary" />
@@ -133,7 +133,7 @@ export function SquadList({
                             <>
                                 <div
                                 className={cn(
-                                    "group bg-background rounded-sm border relative overflow-hidden transition-all",
+                                    "group rounded-sm border relative overflow-hidden transition-all",
                                     !effectivelyLocked && "hover:border-primary hover:shadow-md cursor-pointer"
                                 )}
                                 onClick={() => {

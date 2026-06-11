@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trophy, DollarSign, Trash2, Save } from "lucide-react";
+import { Loader2, Trophy, Trash2, Save } from "lucide-react";
 import { TournamentCategory } from "@/types";
 
 interface CategorySettingsProps {
@@ -221,14 +221,14 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
     const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
     return (
-        <div className="space-y-2 md:space-y-4">
+        <div className="space-y-1 md:space-y-2">
             {/* Dropdown to select category */}
             <div className="space-y-1">
                 <Label>
                     {isThai ? "เลือกประเภทการแข่งขัน" : "Select Category"}
                 </Label>
                 <Select value={selectedCategoryId || ""} onValueChange={setSelectedCategoryId}>
-                    <SelectTrigger className="w-full h-11 border-border/50 bg-background font-semibold">
+                    <SelectTrigger className="w-full">
                         <SelectValue placeholder={isThai ? "เลือกประเภทการแข่งขัน" : "Select Category"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -254,16 +254,16 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
             {/* Form details */}
             <div>
                 {selectedCategory ? (
-                    <div className="space-y-2 md:space-y-4">
+                    <div className="space-y-1 md:space-y-2">
                         <div>
-                            <form onSubmit={handleSave} className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <form onSubmit={handleSave} className="space-y-1 md:space-y-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
                                     <div className="space-y-1">
                                         <Label>
                                             {isThai ? "รุ่นอายุ" : "Age Category"}
                                         </Label>
                                         <Select value={ageCategoryId} onValueChange={setAgeCategoryId}>
-                                            <SelectTrigger className="w-full h-10">
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder={isThai ? "เลือกรุ่นอายุ" : "Select Age Category"} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -281,7 +281,7 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                             {isThai ? "ประเภทเพศ" : "Gender Group"}
                                         </Label>
                                         <Select value={genderType} onValueChange={setGenderType}>
-                                            <SelectTrigger className="w-full h-10 border-border/50">
+                                            <SelectTrigger className="w-full">
                                                 <SelectValue placeholder={isThai ? "เลือกประเภทเพศ" : "Select Gender Group"} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -294,9 +294,7 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                     </div>
 
                                     <div className="space-y-1">
-                                        <Label>
-                                            <Trophy className="h-3 w-3" /> {isThai ? "จำนวนทีมสูงสุด" : "Team Limit"}
-                                        </Label>
+                                        <Label>{isThai ? "จำนวนทีมสูงสุด" : "Team Limit"}</Label>
                                         <Input
                                             type="text"
                                             value={maxTeams}
@@ -305,14 +303,11 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                                 setMaxTeams(val);
                                             }}
                                             placeholder="e.g. 8"
-                                            className="w-full h-10 border-border/50 bg-background"
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <Label>
-                                            <DollarSign className="h-3 w-3" /> {isThai ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
-                                        </Label>
+                                        <Label>{isThai ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}</Label>
                                         <Input
                                             type="text"
                                             value={registrationFee}
@@ -323,7 +318,6 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                                 }
                                             }}
                                             placeholder="0.00"
-                                            className="w-full h-10 border-border/50 bg-background"
                                         />
                                     </div>
                                 </div>

@@ -107,8 +107,8 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
     };
 
     return (
-        <div className="space-y-2 md:space-y-4">
-            <div className="grid gap-2 md:gap-3">
+        <div className="space-y-1 md:space-y-2">
+            <div className="grid gap-1 md:gap-2">
                 {/* Delete Tournament */}
                 <div className="border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">

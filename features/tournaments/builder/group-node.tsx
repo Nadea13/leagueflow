@@ -66,13 +66,13 @@ export const GroupNode = memo(({
     return (
         <div
             className={cn(
-                "relative w-[260px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
+                "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
                 selected
                     ? "border-node-5"
                     : "border-border hover:border-node-5/50"
             )}
         >
-            <div className="flex items-center p-2 border-b bg-muted/50">
+            <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-node-5 rounded flex items-center justify-center">
                         <LayoutGrid className="h-4 w-4 text-background" />
@@ -85,7 +85,7 @@ export const GroupNode = memo(({
 
             {/* Config inputs moved to sidebar */}
 
-            <div className="flex flex-col divide-y divide-border bg-muted/5">
+            <div className="flex flex-col divide-y divide-border">
                 {Math.max(0, data.teamCount || 0) === 0 ? (
                     <div className="p-4 text-center">
                         <p className="text-[10px] text-center text-muted-foreground">

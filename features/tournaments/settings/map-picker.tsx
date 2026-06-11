@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface MapPickerProps {
     value: string;
@@ -156,8 +157,8 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
     };
 
     return (
-        <div className="space-y-2 md:space-y-4">
-            <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between">
+        <div className="space-y-1 md:space-y-2">
+            <div className="flex flex-col md:flex-row gap-1 md:gap-2 items-center justify-between">
                 <div className="relative flex-1 w-full md:w-auto">
                     <Input
                         type="text"
@@ -180,10 +181,11 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
                     disabled={isSearching}
                     variant="outline"
                 >
+                    <Search />
                     Search
                 </Button>
             </div>
-            <div className="relative w-full h-80 rounded-lg overflow-hidden border border-foreground/10 z-10">
+            <div className="relative w-full h-120 rounded-lg overflow-hidden border border-foreground/10 z-10">
                 <div ref={mapContainerRef} className="w-full h-full" />
             </div>
         </div>
