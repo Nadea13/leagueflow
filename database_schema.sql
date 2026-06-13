@@ -1,5 +1,5 @@
 -- LeagueFlow Database Schema Dump (Clean & Organized)
--- Generated on: 13/6/2569 16:21:04
+-- Generated on: 13/6/2569 16:23:00
 
 
 -- =========================================================================
@@ -150,8 +150,6 @@ CREATE SEQUENCE IF NOT EXISTS "public"."age_categories_id_seq"
     CACHE 1;
 
 ALTER SEQUENCE "public"."age_categories_id_seq" OWNER TO "postgres";
-
-ALTER SEQUENCE "public"."age_categories_id_seq" OWNED BY "public"."age_categories"."id";
 
 
 -- =========================================================================
@@ -388,6 +386,8 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
 -- =========================================================================
 -- 5. FOREIGN KEYS & CONSTRAINTS
 -- =========================================================================
+
+ALTER SEQUENCE "public"."age_categories_id_seq" OWNED BY "public"."age_categories"."id";
 
 ALTER TABLE "public"."age_categories" OWNER TO "postgres";
 
