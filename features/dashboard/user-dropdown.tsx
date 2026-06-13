@@ -17,12 +17,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { signOut } from "@/actions/common/auth"
+import Image from "next/image"
 import { LanguageSubMenu } from "@/components/layout/language-sub-menu"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function UserDropdown({ email, name, className }: { email: string | undefined, name?: string | null, className?: string }) {
+export function UserDropdown({ email, name, avatar, className }: { email: string | undefined, name?: string | null, avatar?: string, className?: string }) {
     const { setTheme } = useTheme()
     const locale = useLocale()
     const t = useTranslations("Nav")
@@ -36,8 +37,18 @@ export function UserDropdown({ email, name, className }: { email: string | undef
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className={cn("w-full justify-start p-2", className)}>
                     <div className="flex justify-center items-center gap-2">
-                        <div className="h-8 w-8 border rounded-full flex justify-center items-center">
-                            {displayName?.slice(0, 2).toUpperCase()}
+                        <div className="h-8 w-8 border rounded-full flex justify-center items-center overflow-hidden shrink-0">
+                            {avatar ? (
+                                <Image
+                                    src={avatar}
+                                    alt={displayName || "User"}
+                                    width={32}
+                                    height={32}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                displayName?.slice(0, 2).toUpperCase()
+                            )}
                         </div>
                         <p className="text-sm font-medium leading-none text-foreground truncate">{name}</p>
                     </div>

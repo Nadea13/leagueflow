@@ -18,14 +18,16 @@ export default async function TermsOfServicePage() {
     return (
         <div className="flex flex-col min-h-screen">
             <div className="container mx-auto max-w-4xl py-8 space-y-8 md:py-12 flex-1">
-                <BackButton />
-                <div className="space-y-2 border-b-2 border-primary/20 pb-6">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
-                        {t("title")}
-                    </h1>
-                    <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground opacity-70">
-                        {t("last_updated")}: {new Date().toLocaleDateString()}
-                    </p>
+                <div className="flex items-center gap-2 md:gap-4 border-b-2 border-primary/20 pb-6">
+                    <BackButton />
+                    <div className="space-y-1">
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-foreground leading-none">
+                            {t("title")}
+                        </h1>
+                        <p className="text-[10px] md:text-xs font-bold tracking-widest text-muted-foreground opacity-70">
+                            {t("last_updated")}: {new Date().toLocaleDateString()}
+                        </p>
+                    </div>
                 </div>
 
                 <section className="space-y-4 group">

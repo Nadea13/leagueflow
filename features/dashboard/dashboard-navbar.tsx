@@ -16,6 +16,7 @@ import { BecomeTeamManagerDialog } from "@/features/dashboard/become-team-manage
 interface DashboardNavbarProps {
     userEmail?: string
     userName?: string | null
+    userAvatar?: string
     role?: string
     isOrganizer?: boolean
     isTeamManager?: boolean
@@ -26,6 +27,7 @@ interface DashboardNavbarProps {
 export function DashboardNavbar({ 
     userEmail, 
     userName, 
+    userAvatar,
     role, 
     isOrganizer = false, 
     isTeamManager = false, 
@@ -139,7 +141,7 @@ export function DashboardNavbar({
             <div className="flex-1" />
             <div className="flex items-center gap-2">
                 <div className="hidden lg:block h-8 w-[1px] bg-border mx-2" />
-                <UserDropdown email={userEmail} name={userName} />
+                <UserDropdown email={userEmail} name={userName} avatar={userAvatar} />
             </div>
 
             <BecomeOrganizerDialog 

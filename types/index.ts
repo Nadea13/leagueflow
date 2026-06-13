@@ -198,8 +198,9 @@ export interface Profile {
     email: string | null;
     full_name: string | null;
     role: string | null;
-    avatar_url?: string | null;
+    profile_img?: string | null;
     created_at?: string;
+    phone?: string | null;
 }
 
 export type ActionResponse<T = unknown> = {

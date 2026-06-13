@@ -5,19 +5,34 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateProfile } from "@/actions/common/user";
-import { Loader2, User as UserIcon, Check } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
+import { Profile } from "@/types";
+import { LogoUploader } from "@/components/shared/logo-uploader";
 
-export function ProfileForm({ user }: { user: User }) {
+export function ProfileForm({ user, profile }: { user: User; profile?: Profile }) {
     const t = useTranslations("Profile");
     const tCommon = useTranslations("Common");
+    const tRoster = useTranslations("Roster"); // for tel or phone translation if needed
+    const tTeam = useTranslations("Team"); // for upload_logo/photo related translations if needed
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(profile?.profile_img || user?.user_metadata?.avatar_url || null);
+    const [removeAvatar, setRemoveAvatar] = useState(false);
+
     async function handleUpdate(formData: FormData) {
         setIsLoading(true);
+
+        if (selectedFile) {
+            formData.append("avatar", selectedFile);
+        }
+        formData.append("existing_avatar_url", previewUrl || "");
+        formData.append("remove_avatar", removeAvatar ? "true" : "false");
+
         const result = await updateProfile(formData);
         setIsLoading(false);
 
@@ -36,20 +51,36 @@ export function ProfileForm({ user }: { user: User }) {
     }
 
     return (
-        <div className="bg-card border p-4 md:p-6 space-y-4 md:space-y-6">
-            <div className="flex items-center gap-2 md:gap-3">
-                <UserIcon className="h-6 w-6 text-primary" />
-                <h3 className="text-2xl font-black tracking-tighter text-foreground">
-                    {t("user_info")}
-                </h3>
-            </div>
-
+        <div>
             <div className="relative overflow-hidden group">
                 <form action={handleUpdate} className="grid gap-4 md:gap-6">
                     <div className="space-y-1">
-                        <Label htmlFor="email" className="text-xs font-black tracking-widest text-primary">
-                            {t("email")}
-                        </Label>
+                        <Label>Profile Photo</Label>
+                        <LogoUploader
+                            id="profile-avatar"
+                            initialUrl={previewUrl}
+                            onFileChange={(file) => {
+                                setSelectedFile(file);
+                                setRemoveAvatar(false);
+                                if (file) {
+                                    setPreviewUrl(URL.createObjectURL(file));
+                                } else {
+                                    setPreviewUrl(null);
+                                }
+                            }}
+                            onRemove={() => {
+                                setSelectedFile(null);
+                                setPreviewUrl(null);
+                                setRemoveAvatar(true);
+                            }}
+                            uploadLabel={tTeam("upload_logo") || "Upload Photo"}
+                            clickToUploadLabel={tTeam("click_to_upload") || "Change Photo"}
+                            previewLabel={tCommon("preview") || "Preview"}
+                            imageFit="cover"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>{t("email")}</Label>
                         <Input
                             id="email"
                             value={user?.email}
@@ -58,14 +89,22 @@ export function ProfileForm({ user }: { user: User }) {
                         />
                     </div>
                     <div className="space-y-1">
-                        <Label htmlFor="fullName" className="text-xs font-black tracking-widest text-primary">
-                            {t("full_name")}
-                        </Label>
+                        <Label>{t("full_name")}</Label>
                         <Input
                             id="fullName"
                             name="fullName"
-                            defaultValue={user?.user_metadata?.full_name || ""}
+                            defaultValue={profile?.full_name || user?.user_metadata?.full_name || ""}
                             placeholder={t("enter_full_name")}
+                            className="bg-transparent text-foreground focus-visible:ring-0  text-sm font-bold"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label>{tRoster("tel")}</Label>
+                        <Input
+                            id="phone"
+                            name="phone"
+                            defaultValue={profile?.phone || ""}
+                            placeholder="08x-xxx-xxxx"
                             className="bg-transparent text-foreground focus-visible:ring-0  text-sm font-bold"
                         />
                     </div>

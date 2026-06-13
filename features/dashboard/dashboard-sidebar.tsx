@@ -19,7 +19,8 @@ export function DashboardSidebar({
     isOrganizer = false, 
     isTeamManager = false, 
     userEmail, 
-    userName 
+    userName,
+    userAvatar
 }: { 
     className?: string, 
     role?: string, 
@@ -27,7 +28,8 @@ export function DashboardSidebar({
     isTeamManager?: boolean, 
     forcedMode?: 'organizer' | 'team', 
     userEmail?: string, 
-    userName?: string | null 
+    userName?: string | null,
+    userAvatar?: string
 }) {
     const pathname = usePathname()
     const t = useTranslations("Nav")
@@ -113,7 +115,7 @@ export function DashboardSidebar({
                     <BugReportDialog />
                 </div>
                 <div className="p-4 border-t">
-                    <UserDropdown email={userEmail} name={userName} />
+                    <UserDropdown email={userEmail} name={userName} avatar={userAvatar} />
                 </div>
             </div>
 

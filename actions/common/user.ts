@@ -53,9 +53,45 @@ export async function getUserSubscriptionPlan() {
 export async function updateProfile(formData: FormData): Promise<ActionResponse> {
     const supabase = await createClient();
     const fullName = formData.get("fullName") as string;
+    const phone = formData.get("phone") as string;
+    const avatarFile = formData.get("avatar") as File | null;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { success: false, error: "Authentication required" };
+    }
+
+    let avatarUrl = formData.get("existing_avatar_url") as string || null;
+
+    // Handle avatar upload if provided
+    if (avatarFile && avatarFile.size > 0) {
+        const fileExt = avatarFile.name.split('.').pop() || 'jpg';
+        const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from("avatars")
+            .upload(filePath, avatarFile);
+
+        if (uploadError) {
+            console.error("Avatar upload error:", uploadError);
+            return { success: false, error: "Failed to upload avatar: " + uploadError.message };
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(filePath);
+
+        avatarUrl = publicUrl;
+    } else if (formData.get("remove_avatar") === "true") {
+        avatarUrl = null;
+    }
 
     const { error } = await supabase.auth.updateUser({
-        data: { full_name: fullName }
+        data: { 
+            full_name: fullName,
+            avatar_url: avatarUrl 
+        }
     });
 
     if (error) {
@@ -63,14 +99,15 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
     }
 
     // Direct database update using service role client as well
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-        const adminSupabase = createAdminClient();
-        await adminSupabase
-            .from("users")
-            .update({ full_name: fullName })
-            .eq("id", user.id);
-    }
+    const adminSupabase = createAdminClient();
+    await adminSupabase
+        .from("users")
+        .update({ 
+            full_name: fullName,
+            phone: phone || null,
+            profile_img: avatarUrl
+        })
+        .eq("id", user.id);
 
     revalidatePath("/", "layout");
     return { success: true };

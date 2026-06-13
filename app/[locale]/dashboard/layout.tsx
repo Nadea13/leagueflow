@@ -15,13 +15,14 @@ export default async function OrganizerLayout({ children, params }: { children: 
     // Fetch User Profile
     const { data: profile } = await supabase
         .from("users")
-        .select("role, is_organizer, is_team_manager, full_name")
+        .select("role, is_organizer, is_team_manager, full_name, profile_img")
         .eq("id", user.id)
         .single();
 
     const userRole = profile?.role || 'user';
     const isOrganizer = profile?.is_organizer || false;
     const isTeamManager = profile?.is_team_manager || false;
+    const userAvatar = profile?.profile_img || user?.user_metadata?.avatar_url || undefined;
 
     return (
         <div className="grid h-screen w-full md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr] overflow-hidden">
@@ -34,6 +35,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
                         forcedMode="organizer"
                         userEmail={user?.email}
                         userName={profile?.full_name}
+                        userAvatar={userAvatar}
                     />
                 </div>
             </div>
@@ -41,6 +43,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
                 <DashboardNavbar
                     userEmail={user?.email || undefined}
                     userName={profile?.full_name}
+                    userAvatar={userAvatar}
                     role={userRole}
                     isOrganizer={isOrganizer}
                     isTeamManager={isTeamManager}

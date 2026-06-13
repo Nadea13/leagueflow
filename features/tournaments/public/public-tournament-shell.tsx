@@ -386,7 +386,7 @@ export function PublicTournamentShell({
                                     title={team.name}
                                 >
                                     {team.logo_url ? (
-                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2" alt={team.name} width={96} height={96} />
+                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2 rounded-full" alt={team.name} width={96} height={96} />
                                     ) : (
                                         <span className="font-black text-3xl text-muted-foreground">
                                             {getInitials(team.name)}
@@ -402,7 +402,7 @@ export function PublicTournamentShell({
                                     title={team.name}
                                 >
                                     {team.logo_url ? (
-                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2" alt={team.name} width={96} height={96} />
+                                        <Image src={team.logo_url} className="w-full h-full object-contain p-2 rounded-full" alt={team.name} width={96} height={96} />
                                     ) : (
                                         <span className="font-black text-3xl text-muted-foreground">
                                             {getInitials(team.name)}

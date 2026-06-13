@@ -2,22 +2,19 @@
 
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { ArrowLeft } from 'lucide-react';
 
 export function BackButton() {
     const router = useRouter();
-    const t = useTranslations('Common');
 
     return (
         <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => router.back()}
-            className="group mb-6 -ml-2 text-muted-foreground hover:text-foreground transition-all flex items-center gap-1 font-bold tracking-wider text-[10px]"
+            className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
         >
-            <ChevronLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
-            {t('back')}
+            <ArrowLeft className="h-4 w-4" />
         </Button>
     );
 }
