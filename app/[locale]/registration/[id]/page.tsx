@@ -185,7 +185,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             {/* Right side (2 Columns): Tournament Info, Registered Teams, details */}
                             <div className="lg:col-span-2 space-y-4">
                                 {/* 1. ข้อมูลการแข่งขัน (Tournament Information) */}
-                                <Card className="border rounded-xl py-2 md:py-4">
+                                <Card className="bg-card border rounded-xl py-2 md:py-4">
                                     <CardContent className="space-y-2 md:space-y-4">
                                         <div className="grid gap-3 text-sm">
                                             <div className="flex items-start gap-1 md:gap-2">
@@ -245,7 +245,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 </Card>
 
                                 {/* 2. รายชื่อทีม (Team List) */}
-                                <Card className="border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                                <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
                                         <CardTitle className="text-sm font-semibold">
                                             รายชื่อทีมที่สมัคร {categoryName}
@@ -264,7 +264,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                         return (
                                                             <div
                                                                 key={reg.id}
-                                                                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/10 transition-colors"
+                                                                className="flex items-center justify-between p-2 rounded-sm border transition-colors"
                                                             >
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="h-9 w-9 rounded-full bg-muted/20 flex items-center justify-center overflow-hidden border">
@@ -305,7 +305,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 </Card>
 
                                 {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description) */}
-                                <Card className="border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                                <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
                                     <CardHeader className="flex flex-row items-center space-y-0">
                                         <CardTitle className="text-sm font-semibold">
                                             รายละเอียดการแข่งขัน

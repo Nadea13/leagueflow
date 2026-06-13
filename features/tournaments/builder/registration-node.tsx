@@ -178,7 +178,7 @@ export const RegistrationNode = memo(({ data, selected }: NodeProps) => {
                                 <span className="text-muted-foreground font-semibold flex items-center gap-1 text-[10px] tracking-wider">
                                     Payment Info
                                 </span>
-                                <div className="bg-muted p-2 rounded space-y-1">
+                                <div className="border p-2 rounded space-y-1">
                                     <div className="flex justify-between text-[10px]">
                                         <span className="text-muted-foreground">PromptPay:</span>
                                         <span className="font-bold text-foreground">{tournament.bank_account_number || "-"}</span>

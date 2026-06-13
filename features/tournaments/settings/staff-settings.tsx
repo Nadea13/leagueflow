@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Trash2, Mail, Loader2, UserCheck, Clock, Check } from "lucide-react";
+import { Users, Plus, Trash2, Loader2, UserCheck, Clock, Check } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TournamentMember } from "@/types";
 import {
@@ -125,58 +125,48 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                         </Button>
                     </DialogTrigger>
                     {isPro && (
-                        <DialogContent className="sm:max-w-[500px] bg-card border shadow-2xl p-4 md:p-6 overflow-hidden space-y-4 md:space-y-6">
-                            <DialogHeader>
-                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                                    <Mail className="h-6 w-6 text-primary" />
+                        <DialogContent className="sm:max-w-[500px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+                            <DialogHeader className="relative p-2 md:p-4 border-b">
+                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">
                                     {t("invite_title")}
                                 </DialogTitle>
                             </DialogHeader>
-                            <div className="space-y-4 md:space-y-6">
+                            <div className="p-2 space-y-1 md:p-4 md:space-y-2">
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black tracking-widest text-primary/70">{t("email_placeholder")}</Label>
+                                    <Label>{t("email_placeholder")}</Label>
                                     <Input
                                         type="email"
                                         placeholder="collaborator@example.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-                                        className="bg-foreground/5 border-foreground/10 focus:border-primary/50 focus:ring-0 transition-all h-12"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-[10px] font-black tracking-widest text-primary/70">Role</Label>
+                                    <Label>Role</Label>
                                     <Select value={role} onValueChange={(val: 'co_organizer' | 'staff' | 'referee') => setRole(val)}>
-                                        <SelectTrigger className="w-full bg-foreground/5 border-foreground/10 focus:border-primary/50 transition-all h-12 text-left flex justify-between px-3">
+                                        <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select a role" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-card border shadow-2xl">
+                                        <SelectContent>
                                             <SelectItem value="co_organizer">Co-Organizer</SelectItem>
                                             <SelectItem value="staff">Staff</SelectItem>
                                             <SelectItem value="referee">Referee</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="flex justify-end gap-2 md:gap-3">
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setDialogOpen(false)}
-                                        className="h-12 border-foreground/10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
-                                    >
-                                        {tCommon("cancel")}
-                                    </Button>
-                                    <Button
-                                        onClick={handleInvite}
-                                        disabled={isInviting || !email.trim()}
-                                        className="h-12 bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-black tracking-tighter transition-all relative group/save overflow-hidden"
-                                    >
-                                        <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/save:translate-y-0 transition-transform duration-300" />
-                                        <span className="relative z-10 flex items-center gap-2">
-                                            {isInviting ? <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" /> : <Check className="h-4 w-4" />}
-                                            {t("send_invite")}
-                                        </span>
-                                    </Button>
-                                </div>
+                            </div>
+                            <div className="border-t p-2 md:p-4">
+                                <Button
+                                    onClick={handleInvite}
+                                    disabled={isInviting || !email.trim()}
+                                    className="w-full"
+                                >
+                                    <span className="relative z-10 flex items-center gap-1 md:gap-2">
+                                        {isInviting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                        {t("send_invite")}
+                                    </span>
+                                </Button>
                             </div>
                         </DialogContent>
                     )}

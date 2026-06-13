@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tab } from "@/components/ui/tab";
 import { Standings } from "@/features/tournaments/ranking/standings";
-import { PublicMatches } from "@/features/tournaments/public/public-matches-list";
+import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups";
 import { ShareButton } from "@/features/tournaments/shared/share-button";
 import { Match, MatchEvent, Team, Goal, Tournament, Player, Announcement } from "@/types";
@@ -45,7 +45,7 @@ export function PublicTournamentShell({
     const t = useTranslations("PublicView");
     const tTournament = useTranslations("Tournament");
     const [matches, setMatches] = useState<Match[]>(initialMatches);
-    const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
+    const [_events, setEvents] = useState<MatchEvent[]>(initialEvents);
     const [tournament, setTournament] = useState(initialTournament);
     const router = useRouter();
     const pathname = usePathname();
@@ -618,7 +618,15 @@ export function PublicTournamentShell({
                         </h2>
                         <p className="text-[10px] font-bold text-muted-foreground/60">{t("fixtures_results_desc")}</p>
                     </div>
-                    <PublicMatches matches={matches} tournamentId={tournament.id} events={events} teams={initialTeams} />
+                    <MatchManager
+                        matches={matches}
+                        teams={initialTeams}
+                        tournamentId={tournament.id}
+                        format={tournament.format}
+                        startDate={tournament.start_date}
+                        endDate={tournament.end_date}
+                        isPublic={true}
+                    />
                 </div>
             )}
         </main>

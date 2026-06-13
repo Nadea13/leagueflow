@@ -182,18 +182,17 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                 </div>
 
                 <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
-                    <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">
+                    <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md p-0">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                                <Trash2 className="h-5 w-5 text-destructive" />
-                                {tCommon("delete")}
+                            <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none flex items-center gap-2">
+                                {tCommon("delete") || "Delete"}
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                            <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
                                 {t("delete_desc")}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="mt-6">
-                            <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                            <AlertDialogCancel className="mt-0">
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -201,10 +200,10 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                                     e.preventDefault();
                                     confirmDeletePlayer();
                                 }}
-                                className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15px_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                                className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center gap-2"
                             >
-                                <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                {tCommon("delete")}
+                                <Trash2 className="h-4 w-4" />
+                                {tCommon("delete") || "Delete"}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

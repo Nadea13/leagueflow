@@ -136,10 +136,9 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 </div>
             </div>
 
-            {/* Grid Layout: 5 Columns on Desktop */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 md:gap-4">
                 {/* Left side (3 Columns): Tournament Registration Form */}
-                <div className="lg:col-span-3">
+                <div className="lg:col-span-3 order-2 lg:order-1">
                     <RegistrationForm
                         tournament={{
                             id: tournament.id,
@@ -158,9 +157,44 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 </div>
 
                 {/* Right side (2 Columns): Tournament Info, Registered Teams, details */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="lg:col-span-2 space-y-2 md:space-y-4 order-1 lg:order-2">
+                    {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description) */}
+                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                        <CardHeader className="flex flex-row items-center space-y-0">
+                            <CardTitle>
+                                รายละเอียดการแข่งขัน
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 md:space-y-4">
+                            {tournament.cover_img && (
+                                <div className="aspect-[16/9] w-full rounded-lg overflow-hidden border bg-muted">
+                                    <Image
+                                        src={tournament.cover_img}
+                                        alt={tournament.name}
+                                        width={640}
+                                        height={360}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                            )}
+                            <div className="text-sm text-muted-foreground space-y-2 leading-relaxed">
+                                {tournament.description ? (
+                                    <div
+                                        className="text-foreground/95 whitespace-pre-line break-words [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_p]:mb-2 [&_a]:text-primary [&_a]:underline [&_h1]:text-2xl [&_h1]:font-black [&_h1]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2"
+                                        dangerouslySetInnerHTML={{ __html: tournament.description }}
+                                    />
+                                ) : (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground/75 py-2">
+                                        <Info className="h-4 w-4 shrink-0" />
+                                        <span>ไม่มีคำอธิบายเพิ่มเติมสำหรับการแข่งขันนี้</span>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* 1. ข้อมูลการแข่งขัน (Tournament Information) */}
-                    <Card className="border rounded-xl py-2 md:py-4">
+                    <Card className="bg-card border rounded-xl py-2 md:py-4">
                         <CardContent className="space-y-2 md:space-y-4">
                             <div className="grid gap-3 text-sm">
                                 <div className="flex items-start gap-1 md:gap-2">
@@ -220,7 +254,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     </Card>
 
                     {/* 2. รายชื่อทีม (Team List) */}
-                    <Card className="border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <CardTitle>
                                 รายชื่อทีมที่สมัคร {categoryName}
@@ -239,10 +273,10 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                             return (
                                                 <div
                                                     key={reg.id}
-                                                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/10 transition-colors"
+                                                    className="flex items-center justify-between p-2 rounded-sm border bg-card hover:bg-muted/10 transition-colors"
                                                 >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-9 w-9 rounded-full bg-muted/20 flex items-center justify-center overflow-hidden border">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-8 w-8 rounded-full flex items-center justify-center overflow-hidden border">
                                                             {teamObj?.logo_img ? (
                                                                 <Image
                                                                     src={teamObj.logo_img}
@@ -273,41 +307,6 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                     <div className="text-center py-2 md:py-4 border-2 border-dashed rounded-lg space-y-1 md:space-y-2">
                                         <Users className="h-8 w-8 text-muted-foreground/30 mx-auto" />
                                         <p className="text-xs text-muted-foreground">ยังไม่มีทีมสมัครในรุ่นนี้</p>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description) */}
-                    <Card className="border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
-                        <CardHeader className="flex flex-row items-center space-y-0">
-                            <CardTitle>
-                                รายละเอียดการแข่งขัน
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 md:space-y-4">
-                            {tournament.cover_img && (
-                                <div className="aspect-[16/9] w-full rounded-lg overflow-hidden border bg-muted">
-                                    <Image
-                                        src={tournament.cover_img}
-                                        alt={tournament.name}
-                                        width={640}
-                                        height={360}
-                                        className="h-full w-full object-cover"
-                                    />
-                                </div>
-                            )}
-                            <div className="text-sm text-muted-foreground space-y-2 leading-relaxed">
-                                {tournament.description ? (
-                                    <div
-                                        className="text-foreground/95 whitespace-pre-line break-words [&_strong]:font-bold [&_b]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_p]:mb-2 [&_a]:text-primary [&_a]:underline [&_h1]:text-2xl [&_h1]:font-black [&_h1]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:my-2"
-                                        dangerouslySetInnerHTML={{ __html: tournament.description }}
-                                    />
-                                ) : (
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground/75 py-2">
-                                        <Info className="h-4 w-4 shrink-0" />
-                                        <span>ไม่มีคำอธิบายเพิ่มเติมสำหรับการแข่งขันนี้</span>
                                     </div>
                                 )}
                             </div>

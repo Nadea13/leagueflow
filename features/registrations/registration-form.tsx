@@ -197,7 +197,7 @@ export function RegistrationForm({
     const isExistingTeam = selectedTeamId !== "" && selectedTeamId !== "new";
 
     return (
-        <div className="bg-background space-y-2 md:space-y-4 p-2 md:p-4 border rounded-xl">
+        <div className="bg-card space-y-2 md:space-y-4 p-2 md:p-4 border rounded-xl">
 
             <div className="relative overflow-hidden">
                 {isRegistrationDisabled ? (

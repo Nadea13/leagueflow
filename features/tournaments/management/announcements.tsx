@@ -37,6 +37,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 export function Announcements({
     tournamentId,
@@ -129,35 +130,34 @@ export function Announcements({
     if (mode === 'form') {
         return (
             <div className="bg-card">
-                <form onSubmit={handleAdd} className="p-4 md:p-6 space-y-2 md:space-y-3">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black  tracking-widest text-muted-foreground/60 px-1">{t("title_placeholder")}</label>
-                        <Input
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            placeholder={t("title_placeholder")}
-                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 h-11 font-bold"
-                            required
-                        />
+                <form onSubmit={handleAdd}>
+                    <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                        <div className="space-y-1">
+                            <Label>{t("title_placeholder")}</Label>
+                            <Input
+                                value={title}
+                                onChange={e => setTitle(e.target.value)}
+                                placeholder={t("title_placeholder")}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>{t("content_placeholder")}</Label>
+                            <Textarea
+                                value={content}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
+                                placeholder={t("content_placeholder")}
+                                rows={5}
+                            />
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 px-1">{t("content_placeholder")}</label>
-                        <Textarea
-                            value={content}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-                            placeholder={t("content_placeholder")}
-                            rows={5}
-                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 font-medium text-sm min-h-[120px]"
-                        />
-                    </div>
-                    <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
+                    <div className="p-2 md:p-4 border-t">
                         <Button
                             type="submit"
-                            size="sm"
-                            className="text-[10px] font-black tracking-widest bg-node-4 text-background hover:bg-node-4/90 shadow-[0_0_15px_rgba(222,185,34,0.2)] h-10 px-8"
+                            className="bg-node-4 w-full"
                             disabled={isSaving || !title.trim()}
                         >
-                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             {t("post")}
                         </Button>
                     </div>
@@ -181,10 +181,10 @@ export function Announcements({
                             key={ann.id}
                             className={cn(
                                 "p-2 transition-all relative overflow-hidden group/item rounded",
-                                ann.is_pinned ? "bg-node-4/[0.03] border-node-4/20" : "bg-card hover:bg-foreground/[0.02] hover:border-border/40"
+                                ann.is_pinned ? "bg-node-4/5 border-node-4/20 border border-node-4/60" : "border hover:border-node-4/60"
                             )}
                         >
-                            <div className="space-y-1.5">
+                            <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     {ann.is_pinned && <Pin className="h-3 w-3 text-node-4 shrink-0" />}
                                     <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
@@ -192,7 +192,7 @@ export function Announcements({
                                     </h4>
                                 </div>
                                 {ann.content && (
-                                    <p className="text-muted-foreground/70 text-[10px] leading-relaxed font-medium">
+                                    <p className="text-muted-foreground text-[10px] leading-relaxed font-medium">
                                         {ann.content}
                                     </p>
                                 )}
@@ -206,13 +206,13 @@ export function Announcements({
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                 className="hover:text-node-4 transition-colors"
                                             >
-                                                {ann.is_pinned ? <PinOff className="h-2.5 w-2.5" /> : <Pin className="h-2.5 w-2.5" />}
+                                                {ann.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                                             </button>
                                             <button
                                                 onClick={() => setDeleteId(ann.id)}
                                                 className="hover:text-destructive transition-colors"
                                             >
-                                                <Trash2 className="h-2.5 w-2.5" />
+                                                <Trash2 className="h-4 w-4" />
                                             </button>
                                         </div>
                                     )}
@@ -233,7 +233,7 @@ export function Announcements({
             {!isCompact && mode === 'both' && (
                 <div className="flex items-center justify-between relative z-10">
                     <div className="space-y-1">
-                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-1 md:gap-2">
                             <Megaphone className="h-5 w-5 text-node-4" />
                             {t("title")}
                         </h3>
@@ -250,7 +250,7 @@ export function Announcements({
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-                                <DialogHeader className="p-4 md:p-6 pb-0 md:pb-0">
+                                <DialogHeader className="p-2 md:p-4 pb-0 md:pb-0">
                                     <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
                                         <Megaphone className="h-6 w-6 text-node-4" />
                                         {t("news")}

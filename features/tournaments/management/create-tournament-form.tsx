@@ -99,10 +99,10 @@ export function TournamentCreate() {
                         </DialogHeader>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-4 no-scrollbar">
-                        <div className="space-y-3">
+                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1 md:space-y-2 no-scrollbar">
+                        <div className="space-y-1 md:space-y-2">
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
+                                <Label>
                                     {isThai ? "โลโก้การแข่งขัน" : "Tournament Logo"}
                                 </Label>
                                 <LogoUploader
@@ -125,7 +125,7 @@ export function TournamentCreate() {
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
+                                <Label>
                                     {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 3:1)" : "Cover Image (Recommended 3:1)"}
                                 </Label>
                                 <div 
@@ -215,7 +215,7 @@ export function TournamentCreate() {
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder={t("select_sport")} />
                                 </SelectTrigger>
-                                <SelectContent className="border-border">
+                                <SelectContent>
                                     {sportsList.map((sport) => (
                                         <SelectItem key={sport.id} value={sport.id} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
                                             {sport.sport_name}

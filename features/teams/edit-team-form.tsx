@@ -12,7 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Loader2, Save, Trash2, Lock, RotateCcw } from "lucide-react";
 import { LogoUploader } from "@/components/shared/logo-uploader";
 
@@ -320,8 +331,8 @@ export function EditTeamForm({
                                 <div className="h-px flex-1 bg-destructive" />
                             </div>
 
-                            <Dialog open={resetRosterDialogOpen} onOpenChange={setResetRosterDialogOpen}>
-                                <DialogTrigger asChild>
+                            <AlertDialog open={resetRosterDialogOpen} onOpenChange={setResetRosterDialogOpen}>
+                                <AlertDialogTrigger asChild>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -331,36 +342,31 @@ export function EditTeamForm({
                                         <RotateCcw className="h-4 w-4" />
                                         {t("reset_roster") || "Reset Roster"}
                                     </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-md border-border bg-card">
-                                    <DialogHeader>
-                                        <DialogTitle className="font-black tracking-tight text-destructive">{t("reset_roster") || "Reset Roster"}</DialogTitle>
-                                        <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed">
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md p-0">
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none">{t("reset_roster") || "Reset Roster"}</AlertDialogTitle>
+                                        <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
                                             {t("reset_roster_desc") || "This will delete all players from this team's roster. This action cannot be undone."}
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <DialogFooter className="gap-2 sm:gap-0">
-                                        <Button
-                                            variant="ghost"
-                                            className="font-black text-[10px] tracking-widest"
-                                            onClick={() => setResetRosterDialogOpen(false)}
-                                        >
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                                        <AlertDialogCancel className="mt-0">
                                             {tCommon("cancel")}
-                                        </Button>
-                                        <Button
-                                            variant="default"
-                                            className="font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/60 hover:text-destructive"
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
                                             onClick={handleResetRoster}
                                             disabled={isResettingRoster}
+                                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center gap-2"
                                         >
                                             {isResettingRoster ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                                             {t("confirm_reset") || "Confirm Reset"}
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
 
-                            <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
+                            <Dialog open={deleteTeamDialogOpen} onOpenChange={(open) => { setDeleteTeamDialogOpen(open); if (!open) setDeleteConfirmText(""); }}>
                                 <DialogTrigger asChild>
                                     <Button
                                         type="button"
@@ -372,40 +378,39 @@ export function EditTeamForm({
                                         {tTeam("delete_team") || "Delete Team"}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="sm:max-w-md border-border bg-card">
-                                    <DialogHeader>
-                                        <DialogTitle className="font-black tracking-tight text-red-500">{tTeam("delete_team") || "Delete Team"}</DialogTitle>
-                                        <DialogDescription className="text-[10px] tracking-wider font-medium text-muted-foreground/60 leading-relaxed mt-2">
-                                            {tTeam("delete_desc") || "This action cannot be undone. This will permanently delete your team and all associated data."}
-                                        </DialogDescription>
+                                <DialogContent className="bg-card border rounded-xl shadow-2xl max-w-md p-0">
+                                    <DialogHeader className="border-b p-2 md:p-4">
+                                        <DialogTitle className="text-2xl font-black tracking-tighter leading-none">
+                                            {tTeam("delete_team") || "Delete Team"}
+                                        </DialogTitle>
                                     </DialogHeader>
-                                    <div className="py-6 space-y-3 font-semibold">
-                                        <Label htmlFor="confirm-team-delete" className="text-[10px] font-black tracking-widest text-muted-foreground/60">
-                                            {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
-                                        </Label>
-                                        <Input
-                                            id="confirm-team-delete"
-                                            value={deleteConfirmText}
-                                            onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                            autoComplete="off"
-                                            className="border-t-0 border-x-0 border-border/40 bg-transparent focus-visible:ring-0 h-11 text-lg font-black tracking-tight transition-all p-0"
-                                        />
+                                    <div className="p-2 md:p-4 space-y-3">
+                                        <p className="text-xs font-medium text-muted-foreground/80 leading-relaxed">
+                                            {tTeam("delete_desc") || "This action cannot be undone. This will permanently delete your team and all associated data."}
+                                        </p>
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-bold">
+                                                {tTeam("type_to_confirm", { text: team.name }) || `Please type "${team.name}" to confirm.`}
+                                            </p>
+                                            <div className="py-1">
+                                                <Input
+                                                    id="confirm-team-delete"
+                                                    value={deleteConfirmText}
+                                                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                                    placeholder={team.name}
+                                                    autoComplete="off"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <DialogFooter className="gap-2 sm:gap-0">
-                                        <Button
-                                            variant="ghost"
-                                            className="font-black text-[10px] tracking-widest"
-                                            onClick={() => { setDeleteTeamDialogOpen(false); setDeleteConfirmText(""); }}
-                                        >
-                                            {tCommon("cancel")}
-                                        </Button>
+                                    <DialogFooter className="p-2 md:p-4 border-t">
                                         <Button
                                             variant="destructive"
-                                            className="font-black text-[10px] tracking-widest bg-destructive hover:bg-destructive/80"
-                                            onClick={handleDeleteTeam}
                                             disabled={isDeletingTeam || deleteConfirmText !== team.name}
+                                            onClick={handleDeleteTeam}
+                                            className="bg-destructive w-full"
                                         >
-                                            {isDeletingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                            {isDeletingTeam ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                             {tCommon("delete")}
                                         </Button>
                                     </DialogFooter>

@@ -80,7 +80,7 @@ export function CreateTeamForm() {
                         </DialogHeader>
                     </div>
 
-                    <div className="p-2 space-y-2 md:p-4 md:space-y-4">
+                    <div className="p-2 space-y-1 md:p-4 md:space-y-2">
                         <div className="space-y-1">
                             <Label htmlFor="logo" className="text-xs font-black tracking-widest text-primary">
                                 {t("upload_logo")}

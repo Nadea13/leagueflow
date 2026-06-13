@@ -253,8 +253,8 @@ export default function NotificationsPage() {
                                     <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
                                         <div className="flex items-start gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'accepted' ? 'bg-green-500/10 text-green-500' :
-                                                        currentStatus === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'
+                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'accepted' ? 'bg-primary/10 text-primary' :
+                                                        currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
                                                     }`}>
                                                     <Bell className="h-4 w-4" />
                                                 </div>
@@ -316,12 +316,12 @@ export default function NotificationsPage() {
                             return (
                                 <Card
                                     key={item.id}
-                                    className="bg-card transition-all overflow-hidden border rounded-sm group/item cursor-pointer hover:bg-muted/10"
+                                    className="bg-card transition-all overflow-hidden border rounded-sm group/item cursor-pointer"
                                     onClick={() => router.push(`/${locale}/dashboard/tournament-teams/${item.id}`)}
                                 >
                                     <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
                                         <div className="flex items-start gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
+                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 flex items-center justify-center">
                                                 <div className={`w-full h-full rounded-full flex items-center justify-center ${regStatus === 'approved' ? 'bg-primary/10 text-primary' :
                                                         regStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
                                                     }`}>
@@ -442,8 +442,8 @@ export default function NotificationsPage() {
                                     <CardContent className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
                                         <div className="flex items-start gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'approved' || currentStatus === 'accepted' ? 'bg-green-500/10 text-green-500' :
-                                                        currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-500'
+                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'approved' || currentStatus === 'accepted' ? 'bg-primary/10 text-primary' :
+                                                        currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
                                                     }`}>
                                                     <ShieldCheck className="h-4 w-4" />
                                                 </div>

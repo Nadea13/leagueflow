@@ -894,15 +894,12 @@ function CanvasInternal({
                                             <Megaphone className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                                        <div className="p-4 md:p-6 pb-0">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
-                                                    <Megaphone className="h-6 w-6 text-primary" />
-                                                    {locale === 'th' ? "ประกาศใหม่" : "New Announcement"}
-                                                </DialogTitle>
-                                            </DialogHeader>
-                                        </div>
+                                    <DialogContent className="bg-card rounded-xl sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                                        <DialogHeader className="p-2 md:p-4 pb-0 border-b">
+                                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center">
+                                                {locale === 'th' ? "ประกาศใหม่" : "New Announcement"}
+                                            </DialogTitle>
+                                        </DialogHeader>
                                         <Announcements
                                             tournamentId={tournamentId}
                                             isEditable={!readonly}

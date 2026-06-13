@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { Registration } from "@/types/index";
+import { Registration, TournamentTeam } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { approveRegistration, rejectRegistration } from "@/actions/tournaments/registration";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { toast } from "sonner";
+import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -164,42 +165,57 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
     }
 
     return (
-        <div className="relative overflow-hidden transition-colors space-y-4 md:space-y-6">
+        <div className="relative overflow-hidden transition-colors space-y-1 md:space-y-2">
             <div className="relative overflow-hidden transition-colors">
                 <div className="w-full overflow-x-auto">
-                    <Table className="min-w-[800px]">
+                    <Table className="min-w-[800px] border-t">
                         <TableHeader>
-                            <TableRow className="h-10 hover:bg-transparent border-border/50">
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("team_name")}</TableHead>
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("contact_info")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("payment_status")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("slip")}</TableHead>
-                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50">{t("date")}</TableHead>
-                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest text-muted-foreground/50"></TableHead>
+                            <TableRow className="hover:bg-transparent h-10">
+                                <TableHead className="px-1 md:px-2 text-[10px] font-black tracking-widest">{t("team_name")}</TableHead>
+                                <TableHead className="px-1 md:px-2 text-[10px] font-black tracking-widest">{t("contact_info")}</TableHead>
+                                <TableHead className="text-center px-1 md:px-2 text-[10px] font-black tracking-widest">{t("payment_status")}</TableHead>
+                                <TableHead className="text-center px-1 md:px-2 text-[10px] font-black tracking-widest">{t("slip")}</TableHead>
+                                <TableHead className="px-1 md:px-2 text-[10px] font-black tracking-widest">{t("date")}</TableHead>
+                                <TableHead className="text-center px-1 md:px-2 text-[10px] font-black tracking-widest"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {registrations.map((reg) => (
-                                <TableRow key={reg.id} className="hover:bg-muted/5 transition-colors group border-border/50">
-                                    <TableCell className="px-2 md:px-3 py-3">
-                                        <div className="flex items-center gap-2 md:gap-3">
-                                            {reg.logo_url ? (
-                                                <Image
-                                                    src={reg.logo_url}
-                                                    alt={reg.team_name || "Team logo"}
-                                                    width={24}
-                                                    height={24}
-                                                    className="h-6 w-6 rounded-full object-cover border border-border"
-                                                />
-                                            ) : (
-                                                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
-                                                    <Users className="h-3 w-3 text-muted-foreground" />
+                                <TableRow key={reg.id} className="hover:bg-muted/5 transition-colors group">
+                                    <TableCell className="px-1 md:px-2">
+                                        <RosterDialog
+                                            team={{
+                                                id: reg.existing_team_id || "",
+                                                name: reg.team_name,
+                                                logo_url: reg.logo_url,
+                                                description: reg.description,
+                                                contact_name: reg.contact_name,
+                                                contact_phone: reg.contact_phone,
+                                                sport: 'football'
+                                            } as unknown as TournamentTeam}
+                                            tournamentId={tournamentId}
+                                            readOnly={false}
+                                            trigger={
+                                                <div className="flex items-center gap-1 md:gap-2 cursor-pointer">
+                                                    {reg.logo_url ? (
+                                                        <Image
+                                                            src={reg.logo_url}
+                                                            alt={reg.team_name || "Team logo"}
+                                                            width={24}
+                                                            height={24}
+                                                            className="h-6 w-6 rounded-full object-cover border"
+                                                        />
+                                                    ) : (
+                                                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border border-border">
+                                                            <Users className="h-3 w-3 text-muted-foreground" />
+                                                        </div>
+                                                    )}
+                                                    <span className="font-black tracking-tight text-xs text-foreground group-hover:text-primary transition-colors truncate max-w-[150px]">{reg.team_name}</span>
                                                 </div>
-                                            )}
-                                            <span className="font-black tracking-tight text-xs text-foreground group-hover:text-primary transition-colors truncate max-w-[150px]">{reg.team_name}</span>
-                                        </div>
+                                            }
+                                        />
                                     </TableCell>
-                                    <TableCell className="px-2 md:px-3">
+                                    <TableCell className="px-1 md:px-2">
                                         <div className="flex flex-col gap-1">
                                             <div className="flex items-center gap-2 text-xs group-hover:text-primary transition-colors font-black tracking-tight">
                                                 <User className="h-3 w-3 text-primary" />
@@ -211,7 +227,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center px-2 md:px-3">
+                                    <TableCell className="text-center px-1 md:px-2">
                                         <Badge
                                             variant="outline"
                                             className={cn(
@@ -224,22 +240,21 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             {reg.payment_status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-center px-4">
+                                    <TableCell className="text-center">
                                         {reg.slip_url ? (
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-9 px-3 text-[10px] font-black tracking-widest text-primary hover:text-primary hover:bg-primary/10 border border-primary/20 hover:border-primary/40 transition-all"
                                                 onClick={() => window.open(reg.slip_url!, "_blank")}
                                             >
-                                                <ExternalLink className="h-3.5 w-3.5 mr-2" />
+                                                <ExternalLink className="h-3 w-3" />
                                                 {t("view_slip")}
                                             </Button>
                                         ) : (
                                             <span className="text-[10px] font-black text-muted-foreground/20 tracking-tighter">{t("no_slip") || "No Slip"}</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="px-2 md:px-3 text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap tracking-widest">
+                                    <TableCell className="text-[10px] font-black text-muted-foreground/30 tabular-nums whitespace-nowrap tracking-widest">
                                         {new Date(reg.created_at).toLocaleString('en-US', {
                                             day: '2-digit',
                                             month: 'short',
@@ -248,7 +263,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                             hour12: false
                                         }).replace(',', '')}
                                     </TableCell>
-                                    <TableCell className="px-2 md:px-3 text-right">
+                                    <TableCell className="text-right">
                                         {reg.payment_status === 'PENDING' && (
                                             <div className="flex items-center justify-end gap-2 transition-opacity">
                                                 <Button

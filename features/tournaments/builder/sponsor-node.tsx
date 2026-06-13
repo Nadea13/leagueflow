@@ -72,7 +72,7 @@ export const SponsorNode = memo(({ data, selected }: NodeProps) => {
                         {sponsors.map((sponsor) => (
                             <div 
                                 key={sponsor.id}
-                                className="flex flex-col items-center justify-center p-2 border bg-card/50 rounded-sm group/item relative hover:border-red-500/30 transition-all text-center h-24"
+                                className="flex flex-col items-center justify-center p-2 border rounded group/item relative hover:border-red-500/30 transition-all text-center h-24"
                             >
                                 <div className="h-12 w-full flex items-center justify-center overflow-hidden mb-1">
                                     {sponsor.logo_img ? (

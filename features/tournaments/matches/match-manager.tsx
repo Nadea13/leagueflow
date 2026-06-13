@@ -20,6 +20,7 @@ interface FixturesManagerProps {
     externalEditMode?: boolean;
     externalFilterStage?: string;
     externalSelectedDate?: string | null;
+    isPublic?: boolean;
 }
 
 export function MatchManager({
@@ -27,7 +28,8 @@ export function MatchManager({
     teams,
     tournamentId,
     externalFilterStage = "all",
-    externalSelectedDate = null
+    externalSelectedDate = null,
+    isPublic = false
 }: FixturesManagerProps) {
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
@@ -142,6 +144,7 @@ export function MatchManager({
                                                                 match={match}
                                                                 tournamentId={tournamentId}
                                                                 isEditMode={false}
+                                                                isPublic={isPublic}
                                                                 teams={teams}
                                                             />
                                                         </div>

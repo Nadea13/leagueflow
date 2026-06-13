@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -125,46 +124,32 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                     {t("delete_tournament")}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="bg-card border-destructive/50 shadow-2xl max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle className="text-sm font-black tracking-tighter text-destructive">
+                            <DialogContent className="bg-card rounded-xl shadow-2xl p-0">
+                                <DialogHeader className="border-b p-2 md:p-4">
+                                    <DialogTitle className="text-2xl font-black tracking-tighter leading-none">
                                         {t("delete_tournament")}
                                     </DialogTitle>
-                                    <DialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
-                                        {t("delete_confirm_desc")}
-                                        <div className="mt-4 p-2 md:p-3 bg-destructive/5 border border-destructive/10">
-                                            <p className="text-xs font-bold text-destructive/80">
-                                                {t("type_to_confirm", { name: tournamentName })}
-                                            </p>
-                                        </div>
-                                    </DialogDescription>
                                 </DialogHeader>
-                                <div className="py-2 md:py-4">
-                                    <Input
-                                        value={deleteConfirmText}
-                                        onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                        placeholder={tournamentName}
-                                        className="border-destructive/20 focus:border-destructive focus:ring-0 bg-transparent text-foreground h-12"
-                                    />
+                                <div className="p-2 md:p-4">
+                                    <p className="text-xs font-bold">
+                                        {t("type_to_confirm", { name: tournamentName })}
+                                    </p>
+                                    <div className="py-1 md:py-2">
+                                        <Input
+                                            value={deleteConfirmText}
+                                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                            placeholder={tournamentName}
+                                        />
+                                    </div>
                                 </div>
-                                <DialogFooter>
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => {
-                                            setDeleteDialogOpen(false);
-                                            setDeleteConfirmText("");
-                                        }}
-                                        className="h-12 border-foreground/10 font-black tracking-tighter px-4 md:px-6 hover:bg-foreground/5"
-                                    >
-                                        {tCommon("cancel")}
-                                    </Button>
+                                <DialogFooter className="p-2 md:p-4 border-t">
                                     <Button
                                         variant="destructive"
                                         disabled={deleteConfirmText !== tournamentName || isPending}
                                         onClick={handleDelete}
-                                        className="h-12 bg-destructive hover:bg-red-600 font-black tracking-tighter px-8 transition-all disabled:opacity-50"
+                                        className="bg-destructive w-full"
                                     >
-                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                         {t("confirm_delete")}
                                     </Button>
                                 </DialogFooter>
@@ -193,23 +178,22 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
             </div>
 
             <AlertDialog open={resetFlowDialogOpen} onOpenChange={setResetFlowDialogOpen}>
-                <AlertDialogContent className="bg-card border-primary/20 shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                            <RefreshCw className="h-5 w-5 text-primary" />
+                        <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none">
                             Reset Bracket Flow
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
+                        <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
                             Are you sure you want to reset the bracket flow? This will clear the entire canvas layout and delete all scheduled matches. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                    <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                        <AlertDialogCancel>
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleResetFlow}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="bg-destructive"
                         >
                             Confirm Reset
                         </AlertDialogAction>

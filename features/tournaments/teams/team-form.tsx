@@ -145,7 +145,7 @@ export function TeamForm({
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
+                                <Label>
                                     {t("contact_name") || "Contact Name"}
                                 </Label>
                                 <Input
@@ -157,9 +157,7 @@ export function TeamForm({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">
-                                    {t("contact_phone") || "Phone Number"}
-                                </Label>
+                                <Label>{t("contact_phone") || "Phone Number"}</Label>
                                 <Input
                                     type="text"
                                     name="contact_phone"
@@ -171,9 +169,7 @@ export function TeamForm({
                         </div>
 
                         <div className="space-y-1">
-                            <Label className="text-xs font-black tracking-widest text-primary">
-                                {t("contact_email") || "Email Address"}
-                            </Label>
+                            <Label>{t("contact_email") || "Email Address"}</Label>
                             <Input
                                 type="email"
                                 name="contact_email"
@@ -193,7 +189,7 @@ export function TeamForm({
             </form>
 
             {isLimitReached && (
-                <div className="mt-6 p-3 bg-destructive/10 border-l-2 border-destructive">
+                <div className="mt-6 p-2 bg-destructive/10 border-l-2 border-destructive">
                     <p className="text-[10px] font-bold text-destructive leading-tight tracking-widest">
                         {t("limit_reached_desc")}
                     </p>

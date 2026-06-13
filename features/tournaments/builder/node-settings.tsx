@@ -6,7 +6,7 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, LayoutGrid, Trash2, ListOrdered, ExternalLink, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
@@ -34,7 +34,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Teams } from "@/features/tournaments/teams/team-list";
 import { Registrations } from "@/features/tournaments/management/registrations";
 import { TeamForm } from "@/features/tournaments/teams/team-form";
 import { Plus } from "lucide-react";
@@ -44,6 +43,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogFooter,
 } from "@/components/ui/dialog";
 import { useTranslations } from "next-intl";
 
@@ -131,7 +131,7 @@ export function NodeSettings() {
         formData.append("name", tournamentRecord.name);
         formData.append("status", tournamentRecord.status || "draft");
         formData.append("max_teams", String(tournamentRecord.max_teams || 8));
-        
+
         formData.append("is_registration_open", regOpen ? "true" : "false");
         formData.append("registration_fee", regFee === "" ? "" : String(regFee));
         formData.append("bank_account_number", bankNumber);
@@ -340,7 +340,7 @@ export function NodeSettings() {
                 .select('*')
                 .in('id', matchDbIds)
                 .is('deleted_at', null);
-            
+
             if (results) {
                 setDbMatches(results as Match[]);
             }
@@ -392,7 +392,7 @@ export function NodeSettings() {
                 const rankIndex = parseInt(rankMatch[1], 10);
                 const rankings = (sourceNode.data as { rankings?: string[] }).rankings || [];
                 if (rankings[rankIndex]) return rankings[rankIndex];
-                
+
                 const rankSuffix = rankIndex === 0 ? "1st" : rankIndex === 1 ? "2nd" : rankIndex === 2 ? "3rd" : `${rankIndex + 1}th`;
                 return `${rankSuffix} Place (${sourceNode.data.label})`;
             }
@@ -416,7 +416,7 @@ export function NodeSettings() {
     };
 
     return (
-        <aside className="w-[512px] border-l bg-background flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
+        <aside className="w-[512px] border-l bg-card flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
             <div className="p-2 md:p-4 border-b flex items-center justify-between">
                 <Button
                     variant="ghost"
@@ -435,7 +435,7 @@ export function NodeSettings() {
                         type === 'matchNode' ? 'bg-node-2' :
                             type === 'standingNode' ? 'bg-node-1' :
                                 type === 'teamListNode' ? 'bg-node-3' :
-                                    type === 'sponsorNode' ? 'bg-red-500/10' : 
+                                    type === 'sponsorNode' ? 'bg-red-500/10' :
                                         type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4'
                         }`}>
                         {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
@@ -457,7 +457,7 @@ export function NodeSettings() {
                 </div>
 
                 {/* ── Common Settings ── */}
-                <div className="space-y-2 md:space-y-4">
+                <div className="space-y-1 md:space-y-2">
                     <div className="space-y-1">
                         <Label>
                             Label
@@ -471,10 +471,8 @@ export function NodeSettings() {
                     {/* ── Type Specific Settings ── */}
                     {type === "groupNode" && (
                         <>
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black text-muted-foreground tracking-wider">
-                                    Team Count
-                                </Label>
+                            <div className="space-y-1">
+                                <Label>Team Count</Label>
                                 <Input
                                     type="text"
                                     inputMode="numeric"
@@ -483,18 +481,15 @@ export function NodeSettings() {
                                         const val = e.target.value.replace(/[^0-9]/g, "");
                                         updateNodeData(id, { teamCount: parseInt(val, 10) || 0 });
                                     }}
-                                    className="h-8 text-xs font-bold bg-muted/30 focus-visible:ring-violet-500"
                                 />
                             </div>
                         </>
                     )}
 
                     {type === "standingNode" && (
-                        <div className="space-y-4 pt-2 border-t">
-                            <div className="space-y-1.5">
-                                <Label className="text-[10px] font-black text-muted-foreground tracking-wider">
-                                    Advancing Teams
-                                </Label>
+                        <div className="space-y-1 md:space-y-2">
+                            <div className="space-y-1">
+                                <Label>Advancing Teams</Label>
                                 <Input
                                     type="text"
                                     inputMode="numeric"
@@ -504,13 +499,11 @@ export function NodeSettings() {
                                         const num = parseInt(val, 10) || 0;
                                         updateNodeData(id, { advancingCount: Math.min(16, num) });
                                     }}
-                                    className="h-8 text-xs font-bold bg-muted/30 focus-visible:ring-emerald-500"
                                 />
-                                <p className="text-[9px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
+                                <p className="text-[10px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
                             </div>
 
-                            <h4 className="text-[10px] font-black tracking-widest text-muted-foreground">Column Visibility</h4>
-                            <div className="grid gap-4">
+                            <div className="grid gap-1 md:gap-2">
                                 {[
                                     { label: "Matches Played", key: "showPlayed" },
                                     { label: "Win / Draw / Loss", key: "showWDL", composite: ["showWin", "showDraw", "showLoss"] },
@@ -549,7 +542,7 @@ export function NodeSettings() {
                     {type === "matchNode" && (() => {
                         const groupEdge = edges.find(e => e.target === id && e.targetHandle === 'group-in');
                         const connectedGroupNode = groupEdge ? nodes.find(n => n.id === groupEdge.source) : null;
-                        
+
                         const getSelectOptions = (currentVal: string) => {
                             const options = new Set<string>();
                             if (connectedGroupNode) {
@@ -589,9 +582,9 @@ export function NodeSettings() {
                         };
 
                         return (
-                            <div className="space-y-4 pt-2 border-t">
-                                <h4 className="text-[10px] font-black tracking-widest text-muted-foreground">Matches in Node</h4>
-                                <div className="space-y-3">
+                            <div className="space-y-1 md:space-y-2">
+                                <Label>Matches in Node</Label>
+                                <div className="space-y-1 md:space-y-2">
                                     {((data.matches as MatchItem[]) || [])
                                         .slice()
                                         .sort((a, b) => {
@@ -612,23 +605,23 @@ export function NodeSettings() {
                                                 }
                                             };
 
-                                            const dbMatch = dbMatches.find(m => 
-                                                m.id === match.dbId || 
+                                            const dbMatch = dbMatches.find(m =>
+                                                m.id === match.dbId ||
                                                 (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
                                             );
                                             const liveTeamA = getResolvedTeam(id, `slot-a-${idx}`, dbMatch, 'a');
                                             const liveTeamB = getResolvedTeam(id, `slot-b-${idx}`, dbMatch, 'b');
- 
+
                                             const homeOptions = getSelectOptions(match.placeholderA);
                                             const awayOptions = getSelectOptions(match.placeholderB);
- 
+
                                             const homeSelectItems = getSelectItems(homeOptions, liveTeamA);
                                             const awaySelectItems = getSelectItems(awayOptions, liveTeamB);
- 
+
                                             return (
                                                 <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[10px] font-black text-muted-foreground">Match #{idx + 1}</span>
+                                                        <span className="text-xs font-black">Match #{idx + 1}</span>
                                                         {((data.matches as MatchItem[]).length > 1) && (
                                                             <button
                                                                 onClick={() => {
@@ -649,7 +642,7 @@ export function NodeSettings() {
                                                                 value={liveTeamA || match.placeholderA}
                                                                 onValueChange={(val) => updateMatch({ placeholderA: val })}
                                                             >
-                                                                <SelectTrigger className={`bg-card w-full ${liveTeamA ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                                <SelectTrigger className={`bg-card w-full ${liveTeamA ? "text-violet-600 font-black" : ""}`}>
                                                                     <SelectValue placeholder="Select Team" />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
@@ -669,7 +662,7 @@ export function NodeSettings() {
                                                                 value={liveTeamB || match.placeholderB}
                                                                 onValueChange={(val) => updateMatch({ placeholderB: val })}
                                                             >
-                                                                <SelectTrigger className={`bg-card w-full ${liveTeamB ? "text-violet-600 font-black border-violet-200" : ""}`}>
+                                                                <SelectTrigger className={`bg-card w-full ${liveTeamB ? "text-violet-600 font-black" : ""}`}>
                                                                     <SelectValue placeholder="Select Team" />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
@@ -730,6 +723,7 @@ export function NodeSettings() {
                                             updateNodeData(id, { matches: next });
                                         }}
                                     >
+                                        <Plus />
                                         Add Match to Node
                                     </Button>
                                 </div>
@@ -738,139 +732,107 @@ export function NodeSettings() {
                     })()}
 
                     {type === "teamListNode" && (
-                        <div className="space-y-2 md:space-y-3">
-                            <div className="space-y-2 md:space-y-3">
-                                <div className="flex flex-col gap-1">
-                                    <h4 className="text-[10px] font-black tracking-widest text-amber-500 flex items-center gap-2">
-                                        <ExternalLink className="h-3 w-3" />
-                                        Tournament Registrations
-                                    </h4>
-                                </div>
-                                <div className="custom-scrollbar">
-                                    <Registrations tournamentId={tournamentId} />
-                                </div>
+                        <div className="space-y-1 md:space-y-2">
+                            <div className="flex justify-end">
+                                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            {t("add_team_button") || "Add Team"}
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="bg-card sm:max-w-[500px] rounded-lg p-0">
+                                        <DialogHeader className="p-2 md:p-4 border-b ">
+                                            <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
+                                        </DialogHeader>
+                                        <TeamForm
+                                            tournamentId={tournamentId}
+                                            tournamentCategoryId={activeCategoryId || undefined}
+                                            isLimitReached={false}
+                                            onSuccess={() => {
+                                                setIsAddDialogOpen(false);
+                                                if (activeCategoryId) {
+                                                    fetchTeams(activeCategoryId);
+                                                }
+                                            }}
+                                        />
+                                    </DialogContent>
+                                </Dialog>
                             </div>
 
-                            <div className="space-y-2 md:space-y-3 pt-4 border-t">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="text-[10px] font-black tracking-widest text-primary flex items-center gap-2">
-                                        <Users className="h-3 w-3" />
-                                        {t("participating_teams")}
-                                    </h4>
-
-                                    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-7 px-2 text-[9px] font-black tracking-widest border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-                                            >
-                                                <Plus className="h-3.5 w-3.5 mr-1" />
-                                                {t("add_team_button") || "Add Team"}
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[500px] rounded-lg p-0">
-                                            <DialogHeader className="p-2 md:p-4 border-b ">
-                                                <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
-                                            </DialogHeader>
-                                            <TeamForm
-                                                tournamentId={tournamentId}
-                                                tournamentCategoryId={activeCategoryId || undefined}
-                                                isLimitReached={false}
-                                                onSuccess={() => {
-                                                    setIsAddDialogOpen(false);
-                                                    if (activeCategoryId) {
-                                                        fetchTeams(activeCategoryId);
-                                                    }
-                                                }}
-                                            />
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                                <div className="custom-scrollbar max-h-[400px]">
-                                    <Teams
-                                        teams={teams}
-                                        tournamentId={tournamentId}
-                                        isPro={true}
-                                    />
+                            <div className="space-y-1 md:space-y-2">
+                                <div className="custom-scrollbar">
+                                    <Registrations tournamentId={tournamentId} />
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {type === "sponsorNode" && (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between border-b pb-2">
-                                <h4 className="text-[11px] font-black tracking-widest text-red-500 flex items-center gap-2">
-                                    <Heart className="h-4 w-4 fill-red-500" />
-                                    Manage Sponsors
-                                </h4>
-
+                        <div className="space-y-1 md:space-y-2">
+                            <div className="flex items-center justify-end">
                                 <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
                                     <DialogTrigger asChild>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="h-7 px-2 text-[9px] font-black tracking-widest border-red-200 text-red-500 hover:bg-red-500 hover:text-white transition-all"
                                         >
-                                            <Plus className="h-3.5 w-3.5 mr-1" />
+                                            <Plus className="h-4 w-4" />
                                             New Sponsor
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[450px] rounded-lg p-0">
-                                        <DialogHeader className="p-4 border-b">
+                                    <DialogContent className="sm:max-w-[450px] bg-card rounded-lg p-0">
+                                        <DialogHeader className="p-2 md:p-4 border-b">
                                             <DialogTitle className="text-lg font-black tracking-tighter">Add New Sponsor</DialogTitle>
                                         </DialogHeader>
-                                        <form onSubmit={handleAddSponsorSubmit} className="p-4 space-y-4">
-                                            <div className="space-y-1">
-                                                <Label htmlFor="sponsor-name">Sponsor Name</Label>
-                                                <Input 
-                                                    id="sponsor-name"
-                                                    value={newSponsorName}
-                                                    onChange={e => setNewSponsorName(e.target.value)}
-                                                    placeholder="Sponsor / Company Name"
-                                                    required
-                                                />
+                                        <form onSubmit={handleAddSponsorSubmit}>
+                                            <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                                                <div className="space-y-1">
+                                                    <Label>Sponsor Logo</Label>
+                                                    <LogoUploader
+                                                        id="sponsor-logo-upload"
+                                                        uploadLabel="Upload Logo"
+                                                        clickToUploadLabel="Click to Upload"
+                                                        onFileChange={file => setNewSponsorLogoFile(file)}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label htmlFor="sponsor-name">Sponsor Name</Label>
+                                                    <Input
+                                                        id="sponsor-name"
+                                                        value={newSponsorName}
+                                                        onChange={e => setNewSponsorName(e.target.value)}
+                                                        placeholder="Sponsor / Company Name"
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label htmlFor="sponsor-link">Link URL (Optional)</Label>
+                                                    <Input
+                                                        id="sponsor-link"
+                                                        value={newSponsorLink}
+                                                        onChange={e => setNewSponsorLink(e.target.value)}
+                                                        placeholder="https://example.com"
+                                                        type="url"
+                                                    />
+                                                </div>
                                             </div>
 
-                                            <div className="space-y-1">
-                                                <Label>Sponsor Logo</Label>
-                                                <LogoUploader
-                                                    id="sponsor-logo-upload"
-                                                    uploadLabel="Upload Logo"
-                                                    clickToUploadLabel="Click to Upload"
-                                                    onFileChange={file => setNewSponsorLogoFile(file)}
-                                                />
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <Label htmlFor="sponsor-link">Link URL (Optional)</Label>
-                                                <Input 
-                                                    id="sponsor-link"
-                                                    value={newSponsorLink}
-                                                    onChange={e => setNewSponsorLink(e.target.value)}
-                                                    placeholder="https://example.com"
-                                                    type="url"
-                                                />
-                                            </div>
-
-                                            <div className="flex justify-end gap-2 pt-2 border-t mt-4">
-                                                <Button 
-                                                    type="button" 
-                                                    variant="outline" 
-                                                    onClick={() => setIsAddSponsorOpen(false)}
-                                                    disabled={isSubmittingSponsor}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                                <Button 
-                                                    type="submit" 
+                                            <DialogFooter className="border-t p-2 md:p-4">
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full"
                                                     disabled={isSubmittingSponsor || !newSponsorName}
                                                 >
                                                     {isSubmittingSponsor && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                                                     Add Sponsor
                                                 </Button>
-                                            </div>
+                                            </DialogFooter>
                                         </form>
                                     </DialogContent>
                                 </Dialog>
@@ -889,7 +851,7 @@ export function NodeSettings() {
                                     <p className="text-xs text-muted-foreground italic">No sponsors added yet</p>
                                 </div>
                             ) : (
-                                <div className="space-y-1.5">
+                                <div className="space-y-1 md:space-y-2">
                                     {sponsorsList.map((sponsor, idx) => (
                                         <div
                                             key={sponsor.id}
@@ -902,16 +864,16 @@ export function NodeSettings() {
                                                 draggedIndex === idx && "opacity-50 border-red-500 bg-red-500/5"
                                             )}
                                         >
-                                            <div className="flex items-center gap-3 min-w-0">
+                                            <div className="flex items-center gap-2 min-w-0">
                                                 <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground p-1">
                                                     <GripVertical className="h-4 w-4" />
                                                 </div>
-                                                <div className="h-8 w-8 rounded-sm bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
+                                                <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
                                                     {sponsor.logo_img ? (
-                                                        <Image 
-                                                            src={sponsor.logo_img} 
-                                                            alt={sponsor.sponsor_name || "Sponsor logo"} 
-                                                            className="max-h-full max-w-full object-contain" 
+                                                        <Image
+                                                            src={sponsor.logo_img}
+                                                            alt={sponsor.sponsor_name || "Sponsor logo"}
+                                                            className="max-h-full max-w-full object-contain rounded-full"
                                                             width={32}
                                                             height={32}
                                                         />
@@ -948,27 +910,15 @@ export function NodeSettings() {
                     )}
 
                     {type === "registrationNode" && (
-                        <div className="space-y-4">
-                            <div className="border-b pb-2">
-                                <h4 className="text-[11px] font-black tracking-widest text-violet-500 flex items-center gap-2">
-                                    <ClipboardEdit className="h-4 w-4" />
-                                    Configure Registration Settings
-                                </h4>
-                            </div>
-
+                        <div className="space-y-1 md:space-y-2">
                             {isRegLoading ? (
                                 <div className="flex justify-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
                                 </div>
                             ) : (
-                                <form onSubmit={handleRegSave} className="space-y-4">
-                                    <div className="flex items-center justify-between p-3 border rounded-lg bg-card/30">
-                                        <div className="space-y-0.5">
-                                            <Label htmlFor="is_reg_open" className="text-xs font-bold">Allow Registration</Label>
-                                            <p className="text-[9px] text-muted-foreground font-medium">
-                                                Enable public team registrations
-                                            </p>
-                                        </div>
+                                <form onSubmit={handleRegSave} className="space-y-1 md:space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label>Allow Registration</Label>
                                         <Switch
                                             id="is_reg_open"
                                             checked={regOpen}
@@ -977,9 +927,9 @@ export function NodeSettings() {
                                         />
                                     </div>
 
-                                    <div className="space-y-3 pt-2">
+                                    <div className="space-y-1 md:space-y-2">
                                         <div className="space-y-1">
-                                            <Label htmlFor="reg_fee" className="text-[10px] font-bold tracking-wider text-muted-foreground">Registration Fee (THB)</Label>
+                                            <Label>Registration Fee (THB)</Label>
                                             <Input
                                                 type="number"
                                                 id="reg_fee"
@@ -988,58 +938,55 @@ export function NodeSettings() {
                                                 placeholder="0.00 (Free)"
                                                 min="0"
                                                 step="0.01"
-                                                className="bg-transparent"
                                             />
                                         </div>
 
                                         <div className="space-y-1">
-                                            <Label htmlFor="reg_promptpay" className="text-[10px] font-bold tracking-wider text-muted-foreground">PromptPay ID</Label>
+                                            <Label>PromptPay ID</Label>
                                             <Input
                                                 type="text"
                                                 id="reg_promptpay"
                                                 value={bankNumber}
                                                 onChange={(e) => setBankNumber(e.target.value)}
                                                 placeholder="Mobile number or Identification Card number"
-                                                className="bg-transparent"
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-2 gap-1 md:gap-2">
                                             <div className="space-y-1">
-                                                <Label htmlFor="reg_bank" className="text-[10px] font-bold tracking-wider text-muted-foreground">Bank Name</Label>
+                                                <Label>Bank Name</Label>
                                                 <Select value={bankName} onValueChange={setBankName}>
-                                                    <SelectTrigger id="reg_bank" className="bg-transparent w-full text-xs">
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Select Bank" />
                                                     </SelectTrigger>
-                                                    <SelectContent className="bg-neutral-950 border-foreground/10 text-white">
+                                                    <SelectContent>
                                                         <SelectItem value="PromptPay">PromptPay</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
                                             <div className="space-y-1">
-                                                <Label htmlFor="reg_acc_name" className="text-[10px] font-bold tracking-wider text-muted-foreground">Account Name</Label>
+                                                <Label>Account Name</Label>
                                                 <Input
                                                     type="text"
                                                     id="reg_acc_name"
                                                     value={accountName}
                                                     onChange={(e) => setAccountName(e.target.value)}
                                                     placeholder="Account Name"
-                                                    className="bg-transparent"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-end pt-2 border-t mt-4">
+                                    <div className="flex justify-end mt-2 md:mt-4">
                                         <Button
                                             type="submit"
                                             disabled={isRegSaving}
-                                            className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold"
+                                            className="w-full bg-violet-600 hover:bg-violet-700"
                                         >
                                             {isRegSaving ? (
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : (
-                                                <Check className="h-4 w-4 mr-2" />
+                                                <Check className="h-4 w-4" />
                                             )}
                                             Save Settings
                                         </Button>
