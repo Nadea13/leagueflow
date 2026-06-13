@@ -14,7 +14,7 @@ TRUNCATE storage.buckets CASCADE;
 -- =========================================================================
 
 -- LeagueFlow Database Schema Dump (Clean & Organized)
--- Generated on: 13/6/2569 16:06:28
+-- Generated on: 13/6/2569 16:21:04
 
 
 -- =========================================================================
@@ -153,7 +153,24 @@ ALTER TYPE "public"."user_role" OWNER TO "postgres";
 
 
 -- =========================================================================
--- 3. TABLES
+-- 3. SEQUENCES
+-- =========================================================================
+
+CREATE SEQUENCE IF NOT EXISTS "public"."age_categories_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE "public"."age_categories_id_seq" OWNER TO "postgres";
+
+ALTER SEQUENCE "public"."age_categories_id_seq" OWNED BY "public"."age_categories"."id";
+
+
+-- =========================================================================
+-- 4. TABLES
 -- =========================================================================
 
 CREATE TABLE IF NOT EXISTS "public"."age_categories" (
@@ -384,7 +401,7 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
 
 
 -- =========================================================================
--- 4. FOREIGN KEYS & CONSTRAINTS
+-- 5. FOREIGN KEYS & CONSTRAINTS
 -- =========================================================================
 
 ALTER TABLE "public"."age_categories" OWNER TO "postgres";
@@ -561,14 +578,14 @@ ALTER TABLE ONLY "public"."tournaments"
 
 
 -- =========================================================================
--- 5. INDEXES
+-- 6. INDEXES
 -- =========================================================================
 
 CREATE INDEX "idx_team_mgmt_req_status" ON "public"."team_management_requests" USING "btree" ("status");
 
 
 -- =========================================================================
--- 6. FUNCTIONS & PROCEDURES
+-- 7. FUNCTIONS & PROCEDURES
 -- =========================================================================
 
 CREATE OR REPLACE FUNCTION "public"."check_roster_locked_mechanism"() RETURNS "trigger"
@@ -708,7 +725,7 @@ ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
 
 
 -- =========================================================================
--- 7. TRIGGERS
+-- 8. TRIGGERS
 -- =========================================================================
 
 CREATE OR REPLACE TRIGGER "roster_lock_enforcement_trigger" BEFORE INSERT OR DELETE OR UPDATE ON "public"."player_sports" FOR EACH ROW EXECUTE FUNCTION "public"."check_roster_locked_mechanism"();
@@ -745,7 +762,7 @@ CREATE OR REPLACE TRIGGER "set_timestamp_users" BEFORE UPDATE ON "public"."users
 
 
 -- =========================================================================
--- 8. ROW LEVEL SECURITY (RLS) & POLICIES
+-- 9. ROW LEVEL SECURITY (RLS) & POLICIES
 -- =========================================================================
 
 CREATE POLICY "Users can insert own requests" ON "public"."team_management_requests" FOR INSERT TO "authenticated" WITH CHECK (("requester_id" = "auth"."uid"()));
@@ -948,7 +965,7 @@ CREATE POLICY "users_update" ON "public"."users" FOR UPDATE USING (("auth"."uid"
 
 
 -- =========================================================================
--- 9. GRANTS & PERMISSIONS
+-- 10. GRANTS & PERMISSIONS
 -- =========================================================================
 
 GRANT ALL ON SCHEMA "public" TO PUBLIC;
@@ -1085,22 +1102,10 @@ GRANT ALL ON TABLE "public"."users" TO "service_role";
 
 
 -- =========================================================================
--- 10. MISCELLANEOUS / OTHERS
+-- 11. MISCELLANEOUS / OTHERS
 -- =========================================================================
 
 ALTER SCHEMA "public" OWNER TO "postgres";
-
-CREATE SEQUENCE IF NOT EXISTS "public"."age_categories_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE "public"."age_categories_id_seq" OWNER TO "postgres";
-
-ALTER SEQUENCE "public"."age_categories_id_seq" OWNED BY "public"."age_categories"."id";
 
 ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
