@@ -185,12 +185,12 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 md:gap-4 items-start">
 
                 {/* Left Column: Tournament Listing (8 cols) */}
-                <div className="lg:col-span-8 space-y-2 md:space-y-4">
+                <div className="lg:col-span-8 space-y-2 md:space-y-4 order-2 lg:order-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-background">
                         <h1 className="text-2xl md:text-3xl font-black tracking-tighter">All Tournaments</h1>
 
                         {/* Search input */}
-                        <div className="relative w-1/2">
+                        <div className="relative w-full md:w-1/2">
                             <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
                             <Input
                                 type="search"
@@ -257,7 +257,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 </div>
 
                 {/* Right Column: Master Player Card (4 cols) */}
-                <div className="lg:col-span-4 bg-card border rounded-xl">
+                <div className="lg:col-span-4 bg-card border rounded-xl order-1 lg:order-2">
                     {masterPlayer ? (
                         /* Player ID Card */
                         <div className="relative overflow-hidden">

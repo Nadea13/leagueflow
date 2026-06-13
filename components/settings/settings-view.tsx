@@ -96,15 +96,15 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
 
                         {activeTab === 'preferences' && (
                             <div className="space-y-1 md:space-y-2">                                
-                                <div className="space-y-4 md:space-y-6">
-                                    <div className="flex items-center justify-between gap-6">
+                                <div className="space-y-1 md:space-y-2">
+                                    <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <Label className="text-xs font-black tracking-widest text-primary">{tCommon("language")}</Label>
                                             <p className="text-xs text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
                                         </div>
                                         <LanguageToggle />
                                     </div>
-                                    <div className="flex items-center justify-between gap-6">
+                                    <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <Label className="text-xs font-black tracking-widest text-primary">{tCommon("theme")}</Label>
                                             <p className="text-xs text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
@@ -118,7 +118,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                         {activeTab === 'legal' && (
                             <div className="space-y-1 md:space-y-2">                                
                                 <div className="grid gap-1 md:gap-2">
-                                    <Link href="/privacy-policy" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
+                                    <Link href="/privacy-policy" className="group/item bg-card rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
                                         <div className="flex items-center gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
                                                 <div className="w-full h-full rounded-full flex items-center justify-center bg-muted/10 text-muted-foreground/60 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-all">
@@ -129,7 +129,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
                                     </Link>
-                                    <Link href="/terms-of-service" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
+                                    <Link href="/terms-of-service" className="group/item bg-card rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
                                         <div className="flex items-center gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
                                                 <div className="w-full h-full rounded-full flex items-center justify-center bg-muted/10 text-muted-foreground/60 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-all">
@@ -140,7 +140,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
                                     </Link>
-                                    <Link href="/refund-policy" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
+                                    <Link href="/refund-policy" className="group/item bg-card rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
                                         <div className="flex items-center gap-4">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
                                                 <div className="w-full h-full rounded-full flex items-center justify-center bg-muted/10 text-muted-foreground/60 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-all">
@@ -157,7 +157,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
 
                         {activeTab === 'danger' && (
                             <div className="">
-                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                                     <div className="space-y-1">
                                         <h4 className="text-xs font-black tracking-widest text-destructive">{t("delete_account")}</h4>
                                         <p className="text-xs text-muted-foreground/60 font-medium">{t("delete_account_desc")}</p>

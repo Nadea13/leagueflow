@@ -53,7 +53,7 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
     return (
         <div>
             <div className="relative overflow-hidden group">
-                <form action={handleUpdate} className="grid gap-4 md:gap-6">
+                <form action={handleUpdate} className="grid gap-1 md:gap-2">
                     <div className="space-y-1">
                         <Label>Profile Photo</Label>
                         <LogoUploader

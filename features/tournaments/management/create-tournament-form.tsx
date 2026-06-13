@@ -36,7 +36,11 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function TournamentCreate() {
+interface TournamentCreateProps {
+    iconOnlyMobile?: boolean;
+}
+
+export function TournamentCreate({ iconOnlyMobile = false }: TournamentCreateProps) {
     const t = useTranslations("Dialog");
     const tCommon = useTranslations("Common");
     const locale = useLocale();
@@ -80,9 +84,9 @@ export function TournamentCreate() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
+                <Button className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2" : ""}>
                     <Plus className="h-4 w-4" />
-                    <span>{t("create_button")}</span>
+                    <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-xl shadow-2xl">

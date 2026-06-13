@@ -19,11 +19,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 
-interface BugReportDialogProps {
+interface FeedbackDialogProps {
     className?: string
 }
 
-export function BugReportDialog({ className }: BugReportDialogProps) {
+export function FeedbackDialog({ className }: FeedbackDialogProps) {
     const t = useTranslations("BugReport")
     const [open, setOpen] = useState(false)
     const [message, setMessage] = useState("")
@@ -62,7 +62,7 @@ export function BugReportDialog({ className }: BugReportDialogProps) {
             <DialogTrigger asChild>
                 <Button
                     variant="outline"
-                    className={cn("w-full justify-start gap-2 text-muted-foreground hover:text-primary", className)}
+                    className={cn("w-full justify-start", className)}
                 >
                     <MessageSquareWarning className="h-4 w-4" />
                     <span>{t("title")}</span>

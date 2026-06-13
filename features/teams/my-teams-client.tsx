@@ -44,8 +44,8 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             className="pr-10"
                         />
                     </div>
-                    <VerifyTeamForm />
-                    <CreateTeamForm />
+                    <VerifyTeamForm iconOnlyMobile />
+                    <CreateTeamForm iconOnlyMobile />
                 </div>
             </div>
 

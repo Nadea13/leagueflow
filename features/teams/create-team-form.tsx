@@ -27,7 +27,11 @@ const initialState: ActionResponse = {
     error: undefined,
 };
 
-export function CreateTeamForm() {
+interface CreateTeamFormProps {
+    iconOnlyMobile?: boolean;
+}
+
+export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) {
     const t = useTranslations("Team");
     const tCommon = useTranslations("Common");
     const [open, setOpen] = useState(false);
@@ -62,9 +66,9 @@ export function CreateTeamForm() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
+                <Button className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2" : ""}>
                     <Plus className="h-4 w-4" />
-                    <span>{t("add_team")}</span>
+                    <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">

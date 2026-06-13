@@ -8,7 +8,7 @@ import { getNavItems } from "@/config/nav"
 import { useAnalytics } from "@/hooks/use-analytics"
 import { getPendingInvites } from "@/actions/tournaments/staff"
 
-import { BugReportDialog } from "@/features/dashboard/bug-report-dialog"
+import { FeedbackDialog } from "@/features/dashboard/feedback-dialog"
 import { UserDropdown } from "@/features/dashboard/user-dropdown"
 import { BecomeOrganizerDialog } from "@/features/dashboard/become-organizer-dialog"
 import { BecomeTeamManagerDialog } from "@/features/dashboard/become-team-manager-dialog"
@@ -112,7 +112,7 @@ export function DashboardSidebar({
             </nav>
             <div className="mt-auto">
                 <div className="p-4 border-t">
-                    <BugReportDialog />
+                    <FeedbackDialog />
                 </div>
                 <div className="p-4 border-t">
                     <UserDropdown email={userEmail} name={userName} avatar={userAvatar} />

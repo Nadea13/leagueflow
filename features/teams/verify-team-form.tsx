@@ -19,7 +19,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getTeamsByEmail, submitTeamManagementRequest } from "@/actions/manager/team";
 
-export function VerifyTeamForm() {
+interface VerifyTeamFormProps {
+    iconOnlyMobile?: boolean;
+}
+
+export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) {
     const { toast } = useToast();
 
     const [open, setOpen] = useState(false);
@@ -115,9 +119,9 @@ export function VerifyTeamForm() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="border-primary/30 hover:bg-primary/5 text-primary gap-2">
+                <Button variant="outline" className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2 border-primary/30 hover:bg-primary/5 text-primary" : "border-primary/30 hover:bg-primary/5 text-primary gap-2"}>
                     <ShieldCheck className="h-4 w-4" />
-                    <span>ขอสิทธิ์การจัดการทีม</span>
+                    <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>ขอสิทธิ์การจัดการทีม</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">

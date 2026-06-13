@@ -35,22 +35,27 @@ export function UserDropdown({ email, name, avatar, className }: { email: string
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={cn("w-full justify-start p-2", className)}>
-                    <div className="flex justify-center items-center gap-2">
-                        <div className="h-8 w-8 border rounded-full flex justify-center items-center overflow-hidden shrink-0">
-                            {avatar ? (
-                                <Image
-                                    src={avatar}
-                                    alt={displayName || "User"}
-                                    width={32}
-                                    height={32}
-                                    className="h-full w-full object-cover"
-                                />
-                            ) : (
-                                displayName?.slice(0, 2).toUpperCase()
-                            )}
+                <Button variant="outline" size="lg" className={cn("w-full justify-start p-1 md:p-2 h-auto transition-all text-left", className)}>
+                    <div className="flex items-center gap-3 w-full">
+                        <div className="h-10 w-10 border rounded-full transition-all shrink-0 p-0.5 bg-muted/30 flex items-center justify-center">
+                            <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60">
+                                {avatar ? (
+                                    <Image
+                                        src={avatar}
+                                        alt={displayName || "User"}
+                                        width={36}
+                                        height={36}
+                                        className="h-full w-full object-cover rounded-full"
+                                    />
+                                ) : (
+                                    <span className="text-xs font-bold">{displayName?.slice(0, 2).toUpperCase()}</span>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-sm font-medium leading-none text-foreground truncate">{name}</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-black text-foreground truncate leading-none mb-1">{name || "User"}</p>
+                            <p className="text-[10px] text-muted-foreground/60 truncate font-medium leading-none">{email}</p>
+                        </div>
                     </div>
                 </Button>
             </DropdownMenuTrigger>

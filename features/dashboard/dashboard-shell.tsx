@@ -174,7 +174,7 @@ export function DashboardShell({ tournaments, teams, userPlan, metrics, isOrgani
                     <h1 className="text-2xl md:text-3xl font-black tracking-tighter">{t("title")}</h1>
                 </div>
                 <div className="flex items-center">
-                    <TournamentCreate />
+                    <TournamentCreate iconOnlyMobile />
                 </div>
             </div>
 

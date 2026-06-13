@@ -43,7 +43,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                             className="pr-10"
                         />
                     </div>
-                    <TournamentCreate />
+                    <TournamentCreate iconOnlyMobile />
                 </div>
             </div>
 
