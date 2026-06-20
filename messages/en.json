@@ -412,7 +412,12 @@
         "corner": "Corner",
         "match_log": "Match Log",
         "view_report": "View Report",
-        "second_yellow_warning": "Player already has a yellow card. This will be recorded as a Second Yellow (Red Card). Proceed?"
+        "second_yellow_warning": "Player already has a yellow card. This will be recorded as a Second Yellow (Red Card). Proceed?",
+        "select_starting_lineup": "Lineups",
+        "lineup_selection_title": "Squad Lineups Selection",
+        "lineup_selection_desc": "Select starting players on the field for both teams before starting the match.",
+        "starting_players": "Starting",
+        "substitute_players": "Bench"
     },
     "Team": {
         "dashboard": "Dashboard",

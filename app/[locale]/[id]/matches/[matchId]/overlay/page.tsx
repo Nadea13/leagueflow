@@ -255,6 +255,17 @@ function BroadcastOverlayContent() {
     const displaySeconds = time % 60;
     const timeString = `${displayMinutes}:${String(displaySeconds).padStart(2, "0")}`;
 
+    const isHalfTime = match.status === 'live' && match.timer_status === 'paused' && events.length > 0 && (() => {
+        const lastTimerEvent = events.find(e => 
+            e.event_type === 'kick_off' || 
+            e.event_type === 'match_resumed' || 
+            e.event_type === 'match_paused' || 
+            e.event_type === 'half_time' || 
+            e.event_type === 'full_time'
+        );
+        return lastTimerEvent?.event_type === 'half_time';
+    })();
+
     // Get goals
     const isHomeTeam = (tid: string) => tid === match.home_team_id || tid === match.home_team?.id;
     const isAwayTeam = (tid: string) => tid === match.away_team_id || tid === match.away_team?.id;
@@ -460,6 +471,8 @@ function BroadcastOverlayContent() {
                                             >
                                                 {match.status === "finished" ? (
                                                     <span className="font-extrabold tracking-widest text-xs">FT</span>
+                                                ) : isHalfTime ? (
+                                                    <span className="font-extrabold tracking-widest text-xs">HT</span>
                                                 ) : match.status === "live" ? (
                                                     <span className={cn("font-bold", match.timer_status === "paused" && "")}>
                                                         {timeString}
@@ -668,6 +681,8 @@ function BroadcastOverlayContent() {
                                             >
                                                 {match.status === "finished" ? (
                                                     <span className="text-red-500 font-extrabold tracking-widest text-xs">FT</span>
+                                                ) : isHalfTime ? (
+                                                    <span className="text-amber-500 font-extrabold tracking-widest text-xs">HT</span>
                                                 ) : match.status === "live" ? (
                                                     <span className={cn("text-emerald-400 font-bold", match.timer_status === "paused" && "text-amber-400")}>
                                                         {timeString}
@@ -793,6 +808,8 @@ function BroadcastOverlayContent() {
                                         <div className="flex items-center justify-center bg-white/5 border-l border-white/10 px-5 text-white h-full font-mono text-sm font-bold min-w-[95px]">
                                             {match.status === "finished" ? (
                                                 <span className="text-red-500 font-extrabold tracking-widest text-xs">FT</span>
+                                            ) : isHalfTime ? (
+                                                <span className="text-amber-500 font-extrabold tracking-widest text-xs">HT</span>
                                             ) : match.status === "live" ? (
                                                 <span className={cn("text-emerald-400 font-bold", match.timer_status === "paused" && "text-amber-400")}>
                                                     {timeString}
@@ -812,7 +829,7 @@ function BroadcastOverlayContent() {
                                     <div className="flex items-center justify-between border-b border-white/5 pb-2 text-[10px] font-bold text-white/50 tracking-wider">
                                         <span>{displayHeaderText || "LEAGUEFLOW OVERLAY"}</span>
                                         <span className={cn("font-mono text-xs text-white", match.status === "live" && match.timer_status === "paused" && "text-amber-400")}>
-                                            {match.status === "finished" ? "FULL TIME" : match.status === "live" ? timeString : "UPCOMING"}
+                                            {match.status === "finished" ? "FULL TIME" : isHalfTime ? "HALF TIME" : match.status === "live" ? timeString : "UPCOMING"}
                                         </span>
                                     </div>
 

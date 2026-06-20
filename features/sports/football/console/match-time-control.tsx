@@ -1,4 +1,4 @@
-import { Play, Pause, Square, Clock, Plus } from "lucide-react";
+import { Play, Pause, Square, Clock, Plus, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 
@@ -9,6 +9,7 @@ interface MatchTimeControlProps {
     readOnly?: boolean;
     onStart: () => void;
     onPause: () => void;
+    onHalfTime: () => void;
     onResume: () => void;
     onEnd: () => void;
     onSetTime?: () => void;
@@ -21,6 +22,7 @@ export function MatchTimeControl({
     readOnly = false,
     onStart,
     onPause,
+    onHalfTime,
     onResume,
     onEnd,
     onSetTime,
@@ -44,18 +46,28 @@ export function MatchTimeControl({
                     </div>
                 </Button>
             ) : status === 'live' && isRunning ? (
-                <Button
-                    variant="outline"
-                    onClick={onPause}
-                    className="w-full justify-center md:justify-start px-2 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20 hover:border-orange-500/40 transition-all group active:scale-[0.98]"
-                >
-                    <div className="flex flex-col items-start">
-                        <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-1 w-full">
+                    <Button
+                        variant="outline"
+                        onClick={onPause}
+                        className="w-full justify-center md:justify-start px-2 bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/20 hover:border-orange-500/40 transition-all group active:scale-[0.98]"
+                    >
+                        <div className="flex items-start gap-1 md:gap-2">
                             <Pause className="h-4 w-4 fill-orange-500 text-orange-500" />
-                            <span className="hidden md:inline text-[11px] font-black tracking-widest text-orange-500">{t("pause")}</span>
+                            <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("pause")}</span>
                         </div>
-                    </div>
-                </Button>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={onHalfTime}
+                        className="w-full justify-center md:justify-start px-2 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all group active:scale-[0.98]"
+                    >
+                        <div className="flex items-start gap-1 md:gap-2">
+                            <Coffee className="h-4 w-4 text-amber-500" />
+                            <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("half_time")}</span>
+                        </div>
+                    </Button>
+                </div>
             ) : status === 'live' && !isRunning ? (
                 <Button
                     variant="outline"

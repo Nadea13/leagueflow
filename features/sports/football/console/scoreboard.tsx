@@ -24,7 +24,7 @@ export function Scoreboard({ match, homeScore, awayScore, onTeamClick, timerTime
     };
 
     return (
-        <div className="bg-background border rounded-xl relative overflow-hidden w-full group">
+        <div className="bg-card border rounded-xl relative overflow-hidden w-full group">
             <div className="p-2 lg:p-4 flex flex-col items-center justify-center relative z-10 w-full">
                 <div className="flex items-center justify-between w-full max-w-5xl gap-4 md:gap-12">
                     <div

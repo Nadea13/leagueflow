@@ -52,13 +52,13 @@ export function EmailLoginForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 w-full">
+        <form onSubmit={handleSubmit} className="space-y-1 md:space-y-2 w-full">
             {error && (
-                <div className="text-sm text-red-500 text-center p-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50">
+                <div className="text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
                     {error}
                 </div>
             )}
-            <div className="space-y-2">
+            <div className="space-y-1">
                 <Label htmlFor="email">{t('email')}</Label>
                 <Input
                     id="email"
@@ -68,10 +68,9 @@ export function EmailLoginForm() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-background/50"
                 />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1">
                 <div className="flex items-center justify-between">
                     <Label htmlFor="password">{t('password')}</Label>
                     <Link
@@ -89,7 +88,6 @@ export function EmailLoginForm() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
-                        className="bg-background/50 pr-10"
                     />
                     <button
                         type="button"
@@ -108,7 +106,7 @@ export function EmailLoginForm() {
             <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                     <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         {t('signing_in')}
                     </>
                 ) : (

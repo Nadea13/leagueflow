@@ -22,10 +22,11 @@ import {
     Square,
     Repeat,
     Flag,
-    Trophy,
     Stethoscope,
     Shield,
-    Tv
+    Tv,
+    Users,
+    Volleyball
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -42,6 +43,7 @@ import { WalkoverDialog } from "./console/walkover-dialog";
 import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
 import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
 import { BroadcastOverlayDialog } from "./console/broadcast-overlay-dialog";
+import { RosterSelectionDialog } from "./console/roster-selection-dialog";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
@@ -72,6 +74,22 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const { events, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
     const { time, setTime, isRunning, setIsRunning } = useMatchTimer(match, tournamentId, events);
 
+    const isHalfTime = !isRunning && events.length > 0 && (() => {
+        const lastTimerEvent = events.find(e => 
+            e.event_type === 'kick_off' || 
+            e.event_type === 'match_resumed' || 
+            e.event_type === 'match_paused' || 
+            e.event_type === 'half_time' || 
+            e.event_type === 'full_time'
+        );
+        return lastTimerEvent?.event_type === 'half_time';
+    })();
+
+    // Lineup / Roster Selection States
+    const [rosterDialogOpen, setRosterDialogOpen] = useState(false);
+    const [homeLineup, setHomeLineup] = useState<string[]>([]);
+    const [awayLineup, setAwayLineup] = useState<string[]>([]);
+
     // Dialog States
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     const [woDialogOpen, setWoDialogOpen] = useState(false);
@@ -88,6 +106,34 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     useEffect(() => {
         setMatch(initialMatch);
     }, [initialMatch]);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(`match-lineup-${match.id}`);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.home) setHomeLineup(parsed.home);
+                    if (parsed.away) setAwayLineup(parsed.away);
+                } catch (e) {
+                    console.error("Failed to parse saved lineup:", e);
+                }
+            } else if (!readOnly && match.status !== 'live' && match.status !== 'finished') {
+                setRosterDialogOpen(true);
+            }
+        }
+    }, [match.id, match.status, readOnly]);
+
+    const handleSaveLineup = (homeActive: string[], awayActive: string[]) => {
+        setHomeLineup(homeActive);
+        setAwayLineup(awayActive);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(
+                `match-lineup-${match.id}`,
+                JSON.stringify({ home: homeActive, away: awayActive })
+            );
+        }
+    };
 
     useEffect(() => {
         const loadPlayers = async () => {
@@ -241,6 +287,45 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             setMatch(backupMatch);
             toast({
                 title: "Error pausing match",
+                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
+                variant: "destructive"
+            });
+        }
+    };
+
+    const handleHalfTime = async () => {
+        if (readOnly) return;
+        const currentMinute = Math.floor(time / 60) + 1;
+        const teamId = match.home_team_id || match.away_team_id;
+        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
+
+        const backupMatch = { ...match };
+        const backupIsRunning = isRunning;
+
+        // Optimistic UI Update
+        setIsRunning(false);
+        setMatch(prev => ({ ...prev, timer_status: 'paused', elapsed_before_pause: time }));
+
+        try {
+            const res = await addEvent(resolvedTeamId || null, 'half_time', currentMinute, null, {}, "Half Time");
+            if (!res.success) throw new Error(`${res.error || "Failed to add half time"}`);
+
+            // Clear any 'add_time' events when pausing, so it's reset for the next resumption
+            const addTimeEvents = events.filter(e => e.event_type === 'add_time');
+            for (const e of addTimeEvents) {
+                await deleteEvent(e.id);
+            }
+
+            const updateRes = await updateMatch(match.id, { timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
+            if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match balance"} (Match: ${match.id})`);
+
+            toast({ title: t("half_time") || "Half Time" });
+        } catch (error) {
+            console.error("Half time error:", error);
+            setIsRunning(backupIsRunning);
+            setMatch(backupMatch);
+            toast({
+                title: "Error setting half time",
                 description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
                 variant: "destructive"
             });
@@ -403,7 +488,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     // --- Team Action Grid Component ---
     const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
         const actions = [
-            { type: 'goal', label: t("goal"), icon: Trophy, color: 'hover:bg-primary hover:text-black hover:border-primary' },
+            { type: 'goal', label: t("goal"), icon: Volleyball, color: 'hover:bg-primary hover:text-black hover:border-primary' },
             { type: 'yellow_card', label: t("yellow_card"), icon: Square, color: 'hover:bg-yellow-400 hover:text-black hover:border-yellow-400', iconColor: 'text-yellow-500 fill-yellow-500' },
             { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-foreground hover:border-red-500', iconColor: 'text-red-500 fill-red-500' },
             { type: 'substitution', label: t("substitution"), icon: Repeat, color: 'hover:bg-blue-500 hover:text-foreground hover:border-blue-500' },
@@ -415,7 +500,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         ];
 
         return (
-            <div className="bg-background border rounded-xl p-2 md:p-4 relative overflow-hidden group">
+            <div className="bg-card border rounded-xl p-2 md:p-4 relative overflow-hidden group">
                 <div className="relative z-10 space-y-2 md:space-y-4">
                     <div className="space-y-1">
                         <h3 className="text-xl md:text-2xl font-black tracking-tighter">{name}</h3>
@@ -444,12 +529,12 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
 
     return (
         <div className={cn(
-            "min-h-screen bg-background text-foreground flex flex-col font-display selection:bg-primary/30 space-y-4 md:space-y-6",
+            "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 md:space-y-4",
             readOnly ? "pt-18 md:pt-22 px-2 md:px-0" : "pt-0"
         )}>
             {/* Top Navigation Bar */}
             {readOnly && (
-                <nav className="border-b fixed top-0 border-slate-200 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
+                <nav className="border-b fixed top-0 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
                     <div className="px-4 h-16 flex items-center justify-between">
                         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
                             <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
@@ -470,8 +555,8 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 </nav>
             )}
 
-            <header className="flex items-center justify-between gap-4 md:gap-6">
-                <div className="flex items-start gap-2 md:gap-3 w-full">
+            <header className="flex items-center justify-between gap-2 md:gap-4">
+                <div className="flex items-start gap-1 md:gap-2 w-full">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -494,15 +579,15 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                         <span className="relative flex h-2 w-2">
                             <span className={cn(
                                 "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                match.status === 'live' ? "bg-primary" : "bg-amber-400"
+                                isHalfTime ? "bg-amber-400" : (match.status === 'live' ? "bg-primary" : "bg-amber-400")
                             )}></span>
                             <span className={cn(
                                 "relative inline-flex rounded-full h-2 w-2",
-                                match.status === 'live' ? "bg-primary" : "bg-amber-500"
+                                isHalfTime ? "bg-amber-500" : (match.status === 'live' ? "bg-primary" : "bg-amber-500")
                             )}></span>
                         </span>
                         <span className="text-[10px] font-black tracking-widest text-primary">
-                            {match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status)}
+                            {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
                         </span>
                     </div>
                 )}
@@ -512,7 +597,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 {/* Sidebar: Admin Controls or Match Info */}
                 <aside className="col-span-12 lg:col-span-3 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
                     {/* Match Controls */}
-                    <div className="bg-background border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+                    <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
                         <div className="relative z-10 space-y-2 md:space-y-4">
                             <div className="space-y-1">
                                 <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
@@ -541,6 +626,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                     readOnly={false}
                                     onStart={handleStartMatch}
                                     onPause={handlePauseMatch}
+                                    onHalfTime={handleHalfTime}
                                     onResume={handleResumeMatch}
                                     onEnd={handleEndMatch}
                                     onSetTime={() => setSetTimeDialogOpen(true)}
@@ -551,7 +637,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                     </div>
 
                     {!readOnly && (
-                        <div className="bg-background border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+                        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
                             <div className="relative z-10 space-y-2 md:space-y-4">
                                 <div className="space-y-1">
                                     <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{t("quick_actions")}</h4>
@@ -572,6 +658,14 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                     >
                                         <Tv className="h-4 w-4 text-primary" />
                                         <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setRosterDialogOpen(true)}
+                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                                    >
+                                        <Users className="h-4 w-4 text-primary" />
+                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("select_starting_lineup") || "Lineups"}</span>
                                     </Button>
                                     {match.status === 'finished' && (
                                         <PenaltyShootoutDialog
@@ -621,7 +715,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                             }}
                             timerTime={time}
                             timerReadOnly={readOnly || match.status === 'finished'}
-                            timerCustomText={match.status === 'finished' ? "FT" : null}
+                            timerCustomText={match.status === 'finished' ? "FT" : isHalfTime ? "HT" : null}
                             addedTime={isRunning ? addedTime : null}
                         />
 
@@ -651,7 +745,8 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             </main>
 
             {/* Dialogs */}
-            <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} existingEvents={events} onSave={handleSaveEvent} />
+            <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} existingEvents={events} activeLineupIds={selectedTeamId === match.home_team_id ? homeLineup : awayLineup} onSave={handleSaveEvent} />
+            <RosterSelectionDialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen} homeTeamName={match.home_team?.name || 'Home'} awayTeamName={match.away_team?.name || 'Away'} homePlayers={homePlayers} awayPlayers={awayPlayers} homeActiveIds={homeLineup} awayActiveIds={awayLineup} onSave={handleSaveLineup} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
             <BroadcastOverlayDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
             <SetTimeDialog open={setTimeDialogOpen} onOpenChange={setSetTimeDialogOpen} currentTime={time} onSave={handleSetTime} />

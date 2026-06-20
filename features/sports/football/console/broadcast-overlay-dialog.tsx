@@ -488,7 +488,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-background rounded-xl border p-0 overflow-hidden">
+            <DialogContent className="bg-card rounded-xl border p-0 overflow-hidden">
                 <DialogHeader className="p-2 md:p-4 border-b">
                     <DialogTitle className="flex items-center text-2xl font-black tracking-tighter text-foreground">
                         {t("board_editor")}
@@ -1334,7 +1334,7 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                             <Input
                                 readOnly
                                 value={overlayUrl}
-                                className="bg-black/25 font-mono text-[10px] h-10 select-all border-foreground/10"
+                                className="font-mono text-[10px] h-10 select-all border-foreground/10"
                             />
                             <Button
                                 size="icon"
@@ -1347,30 +1347,22 @@ export function BroadcastOverlayDialog({ open, onOpenChange, matchId, tournament
                     </div>
 
                     {/* Bottom Action Grid */}
-                    <div className="grid grid-cols-3 gap-1 md:gap-2">
-                        <Button
-                            variant="outline"
-                            className="w-full flex items-center justify-center gap-2 font-bold tracking-wider text-xs h-11 border-foreground/10 hover:bg-foreground/5"
-                            onClick={() => onOpenChange(false)}
-                        >
-                            Close Settings
-                        </Button>
-                        <Button
-                            onClick={saveTemplate}
-                            disabled={saving}
-                            className="w-full bg-primary text-black hover:bg-primary/90 flex items-center justify-center gap-2 font-bold tracking-wider text-xs h-11"
-                        >
-                            <Save className="h-4 w-4" />
-                            {saving ? "Saving..." : "Save Template"}
-                        </Button>
+                    <div className="grid grid-cols-2 gap-1 md:gap-2">
                         <Button
                             asChild
-                            className="w-full bg-foreground text-background hover:bg-foreground/90 flex items-center justify-center gap-2 font-bold tracking-wider text-xs h-11"
+                            variant="outline"
                         >
                             <a href={overlayUrl} target="_blank" rel="noopener noreferrer">
                                 <Eye className="h-4 w-4" />
                                 Preview Overlay
                             </a>
+                        </Button>
+                        <Button
+                            onClick={saveTemplate}
+                            disabled={saving}
+                        >
+                            <Save className="h-4 w-4" />
+                            {saving ? "Saving..." : "Save Template"}
                         </Button>
                     </div>
                 </div>

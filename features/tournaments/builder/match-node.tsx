@@ -57,7 +57,7 @@ export const MatchNode = memo(function MatchNode({
                 .from('match_events')
                 .select('*')
                 .in('match_id', matchDbIds)
-                .in('event_type', ['kick_off', 'match_resumed']);
+                .in('event_type', ['kick_off', 'match_resumed', 'half_time', 'match_paused']);
             
             if (evs) {
                 setDbEvents(evs as MatchEvent[]);
@@ -213,8 +213,21 @@ export const MatchNode = memo(function MatchNode({
                                                 const elapsed = dbMatch.elapsed_before_pause || 0;
                                                 let liveSeconds = elapsed;
                                                 
+                                                // Check if half time is the latest event
+                                                const matchEvents = dbEvents.filter(e => e.match_id === dbMatch.id);
+                                                const lastTimerEvent = [...matchEvents].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                                                const isNodeHalfTime = lastTimerEvent?.event_type === 'half_time';
+                                                
+                                                if (isNodeHalfTime) {
+                                                    return (
+                                                        <span className="text-[10px] font-black text-amber-500 flex items-center gap-1">
+                                                            HT
+                                                        </span>
+                                                    );
+                                                }
+
                                                 if (dbMatch.timer_status === 'playing') {
-                                                    const markers = dbEvents.filter(e => e.match_id === dbMatch.id && (e.event_type === 'kick_off' || e.event_type === 'match_resumed'));
+                                                    const markers = matchEvents.filter(e => e.event_type === 'kick_off' || e.event_type === 'match_resumed');
                                                     const latestMarker = markers.length > 0
                                                         ? [...markers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
                                                         : null;

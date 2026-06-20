@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Eye, EyeOff, User, Mail, Phone, Lock, KeyRound } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import { sendSignUpOtp, verifySignUpOtp, completeProfile } from "@/actions/common/auth";
+import { createClient } from "@/lib/supabase/client";
 
 type Step = 'email' | 'otp' | 'profile';
 
@@ -19,6 +20,7 @@ export function SignUpForm() {
     const locale = useLocale();
     const router = useRouter();
     const { toast } = useToast();
+    const supabase = createClient();
 
     // Step state
     const [step, setStep] = useState<Step>('email');
@@ -118,13 +120,15 @@ export function SignUpForm() {
                 return;
             }
 
+            // Sign out the OTP session so they have to login with password
+            await supabase.auth.signOut();
+
             toast({
                 title: t('success_title'),
                 description: t('success_desc'),
             });
 
-            // Registration complete, they are already authenticated via OTP
-            router.push(`/${locale}/dashboard`);
+            router.push(`/${locale}/login`);
         } catch (_err) {
             setError(tCommon('something_went_wrong'));
         } finally {
@@ -135,19 +139,16 @@ export function SignUpForm() {
     return (
         <div className="w-full">
             {error && (
-                <div className="mb-4 text-sm text-red-500 text-center p-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-md">
+                <div className="mb-4 text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
                     {error}
                 </div>
             )}
 
             {step === 'email' && (
-                <form onSubmit={handleSendOtp} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email" className="text-muted-foreground ml-1">{t('email')}</Label>
+                <form onSubmit={handleSendOtp} className="space-y-1 md:space-y-2">
+                    <div className="space-y-1">
+                        <Label>{t('email')}</Label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Mail className="h-5 w-5 text-muted-foreground/70" />
-                            </div>
                             <Input
                                 id="email"
                                 type="email"
@@ -156,7 +157,6 @@ export function SignUpForm() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                className="bg-background/50 pl-10"
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 ml-1">
@@ -166,7 +166,7 @@ export function SignUpForm() {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                                 Sending OTP...
                             </>
                         ) : (
@@ -177,13 +177,10 @@ export function SignUpForm() {
             )}
 
             {step === 'otp' && (
-                <form onSubmit={handleVerifyOtp} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="otp" className="text-muted-foreground ml-1">Verification Code (OTP)</Label>
+                <form onSubmit={handleVerifyOtp} className="space-y-1 md:space-y-2">
+                    <div className="space-y-1">
+                        <Label>Verification Code (OTP)</Label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <KeyRound className="h-5 w-5 text-muted-foreground/70" />
-                            </div>
                             <Input
                                 id="otp"
                                 type="text"
@@ -193,7 +190,6 @@ export function SignUpForm() {
                                 required
                                 maxLength={6}
                                 disabled={isLoading}
-                                className="bg-background/50 pl-10 tracking-widest text-lg"
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 ml-1">
@@ -203,14 +199,14 @@ export function SignUpForm() {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                                 Verifying...
                             </>
                         ) : (
                             "Confirm Code"
                         )}
                     </Button>
-                    <div className="text-center mt-2">
+                    <div className="text-center">
                         <button 
                             type="button" 
                             onClick={() => setStep('email')}
@@ -224,13 +220,10 @@ export function SignUpForm() {
             )}
 
             {step === 'profile' && (
-                <form onSubmit={handleCompleteProfile} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="fullName" className="text-muted-foreground ml-1">{t('full_name')}</Label>
+                <form onSubmit={handleCompleteProfile} className="space-y-1 md:space-y-2">
+                    <div className="space-y-1">
+                        <Label>{t('full_name')}</Label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <User className="h-5 w-5 text-muted-foreground/70" />
-                            </div>
                             <Input
                                 id="fullName"
                                 type="text"
@@ -239,17 +232,13 @@ export function SignUpForm() {
                                 onChange={(e) => setFullName(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                className="bg-background/50 pl-10"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-muted-foreground ml-1">{tCommon('phone', { fallback: 'Phone Number' })}</Label>
+                    <div className="space-y-1">
+                        <Label>{tCommon('phone')}</Label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Phone className="h-5 w-5 text-muted-foreground/70" />
-                            </div>
                             <Input
                                 id="phone"
                                 type="tel"
@@ -258,17 +247,13 @@ export function SignUpForm() {
                                 onChange={(e) => setPhone(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                className="bg-background/50 pl-10"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="password" className="text-muted-foreground ml-1">{t('password')}</Label>
+                    <div className="space-y-1">
+                        <Label>{t('password')}</Label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Lock className="h-5 w-5 text-muted-foreground/70" />
-                            </div>
                             <Input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
@@ -276,7 +261,6 @@ export function SignUpForm() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                className="bg-background/50 pl-10 pr-10"
                             />
                             <button
                                 type="button"
@@ -293,12 +277,9 @@ export function SignUpForm() {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="confirmPassword" className="text-muted-foreground ml-1">{t('confirm_password')}</Label>
+                    <div className="space-y-1">
+                        <Label>{t('confirm_password')}</Label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Lock className="h-5 w-5 text-muted-foreground/70" />
-                            </div>
                             <Input
                                 id="confirmPassword"
                                 type={showPassword ? "text" : "password"}
@@ -306,7 +287,6 @@ export function SignUpForm() {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
                                 disabled={isLoading}
-                                className="bg-background/50 pl-10 pr-10"
                             />
                         </div>
                     </div>
@@ -314,7 +294,7 @@ export function SignUpForm() {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                                 Completing Setup...
                             </>
                         ) : (

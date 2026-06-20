@@ -43,6 +43,7 @@ export function ResetPasswordForm() {
                 return;
             }
 
+            await supabase.auth.signOut();
             setIsSuccess(true);
         } catch (_err) {
             setError(tCommon('something_went_wrong'));
@@ -71,14 +72,14 @@ export function ResetPasswordForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 w-full">
+        <form onSubmit={handleSubmit} className="space-y-1 md:space-y-2 w-full">
             {error && (
-                <div className="text-sm text-red-500 text-center p-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-md">
+                <div className="text-sm rounded-sm text-destructive text-center p-2 bg-destructive/5 border border-destructive/20">
                     {error}
                 </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-1">
                 <Label htmlFor="password">{t('new_password')}</Label>
                 <Input
                     id="password"
@@ -87,11 +88,10 @@ export function ResetPasswordForm() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-background/50"
                 />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
                 <Label htmlFor="confirmPassword">{t('confirm_password')}</Label>
                 <Input
                     id="confirmPassword"
@@ -100,14 +100,13 @@ export function ResetPasswordForm() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-background/50"
                 />
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                     <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         {t('updating')}
                     </>
                 ) : (

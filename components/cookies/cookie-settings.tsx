@@ -30,27 +30,27 @@ export function CookieSettings({ open, onOpenChange, onSave }: CookieSettingsPro
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-[425px] p-0 bg-card rounded-xl">
+                <DialogHeader className="border-b p-2 md:p-4">
                     <DialogTitle>{t("settings")}</DialogTitle>
                     <DialogDescription>
                         {t("description")}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-6 py-4">
+                <div className="grid gap-1 md:gap-2 p-2 md:p-4">
                     {/* Necessary */}
-                    <div className="flex items-center justify-between space-x-2">
-                        <div className="space-y-0.5">
-                            <Label className="text-base font-medium">{t("necessary")}</Label>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <Label>{t("necessary")}</Label>
                             <p className="text-xs text-muted-foreground">{t("necessary_desc")}</p>
                         </div>
                         <Switch checked={true} disabled />
                     </div>
 
                     {/* Analytics */}
-                    <div className="flex items-center justify-between space-x-2">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="analytics" className="text-base font-medium">{t("analytics")}</Label>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <Label>{t("analytics")}</Label>
                             <p className="text-xs text-muted-foreground">{t("analytics_desc")}</p>
                         </div>
                         <Switch
@@ -61,9 +61,9 @@ export function CookieSettings({ open, onOpenChange, onSave }: CookieSettingsPro
                     </div>
 
                     {/* Marketing */}
-                    <div className="flex items-center justify-between space-x-2">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="marketing" className="text-base font-medium">{t("marketing")}</Label>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <Label>{t("marketing")}</Label>
                             <p className="text-xs text-muted-foreground">{t("marketing_desc")}</p>
                         </div>
                         <Switch
@@ -73,7 +73,7 @@ export function CookieSettings({ open, onOpenChange, onSave }: CookieSettingsPro
                         />
                     </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="p-2 md:p-4 border-t">
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                         {t("cancel") || "Cancel"}
                     </Button>

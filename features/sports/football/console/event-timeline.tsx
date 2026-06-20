@@ -20,7 +20,7 @@ export function EventTimeline({ events, match, readOnly = false, onDelete }: Eve
     const t = useTranslations("Console");
 
     return (
-        <div className="bg-background border rounded-xl relative overflow-hidden group">
+        <div className="bg-card border rounded-xl relative overflow-hidden group">
             <div className="px-2 py-2 md:px-4 md:py-4 flex items-center justify-between relative z-10">
                 <div className="space-y-1">
                     <h3 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{t("match_log") || "Match Log"}</h3>

@@ -22,7 +22,7 @@ export function PublicFooter({ managerPlans = [], organizerPlans = [], showPrici
 
     return (
         <footer className="py-10 border-t bg-background" id="footer">
-            <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
+            <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
                 <div className="flex flex-col items-start gap-4 mb-8 md:mb-0">
                     <div className="flex items-center gap-3">
                         <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">

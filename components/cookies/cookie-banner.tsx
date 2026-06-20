@@ -64,7 +64,7 @@ export function CookieBanner() {
     return (
         <>
             <div className="fixed bottom-0 left-0 right-0 p-4 z-50 animate-in slide-in-from-bottom-5 duration-500">
-                <Card className="max-w-screen-lg mx-auto p-6 shadow-2xl border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                <Card className="max-w-screen-lg mx-auto p-2 md:p-4 shadow-2xl border rounded-xl bg-card">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                         <div className="space-y-2 flex-1">
                             <h3 className="text-lg font-semibold flex items-center gap-2">
