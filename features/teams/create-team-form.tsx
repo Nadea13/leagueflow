@@ -86,9 +86,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
 
                     <div className="p-2 space-y-1 md:p-4 md:space-y-2">
                         <div className="space-y-1">
-                            <Label htmlFor="logo" className="text-xs font-black tracking-widest text-primary">
-                                {t("upload_logo")}
-                            </Label>
+                            <Label>{t("upload_logo")}</Label>
                             <LogoUploader
                                 id="logo"
                                 name="logo"
@@ -109,9 +107,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         </div>
 
                         <div className="space-y-1">
-                            <Label htmlFor="name" className="text-xs font-black tracking-widest text-primary">
-                                {t("team_name")}
-                            </Label>
+                            <Label>{t("team_name")}</Label>
                             <Input
                                 id="name"
                                 name="name"
@@ -122,12 +118,10 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         </div>
 
                         <div className="space-y-1">
-                            <Label htmlFor="sport_id" className="text-xs font-black tracking-widest text-primary">
-                                {tCommon("sport") || "Sport"}
-                            </Label>
+                            <Label>{tCommon("sport")}</Label>
                             <Select name="sport_id" value={selectedSport} onValueChange={setSelectedSport}>
                                 <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
-                                    <SelectValue placeholder={t("select_sport") || "Select Sport"} />
+                                    <SelectValue placeholder={t("select_sport")} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {sportsList.map((sport) => (
@@ -140,9 +134,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         </div>
 
                         <div className="space-y-1">
-                            <Label htmlFor="description" className="text-xs font-black tracking-widest text-primary">
-                                {t("team_description")}
-                            </Label>
+                            <Label>{t("team_description")}</Label>
                             <Textarea
                                 id="description"
                                 name="description"
@@ -153,9 +145,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                                <Label htmlFor="contact_name" className="text-xs font-black tracking-widest text-primary">
-                                    {t("contact_name") || "Contact Name"} <span className="text-red-500">*</span>
-                                </Label>
+                                <Label>{t("contact_name")} <span className="text-destructive">*</span></Label>
                                 <Input
                                     id="contact_name"
                                     name="contact_name"
@@ -165,13 +155,11 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label htmlFor="contact_phone" className="text-xs font-black tracking-widest text-primary">
-                                    {t("contact_phone") || "Phone Number"} <span className="text-red-500">*</span>
-                                </Label>
+                                <Label>{t("contact_phone")} <span className="text-destructive">*</span></Label>
                                 <Input
                                     id="contact_phone"
                                     name="contact_phone"
-                                    placeholder={t("contact_phone_placeholder") || "08x-xxx-xxxx"}
+                                    placeholder={t("contact_phone_placeholder")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required
                                 />
@@ -179,7 +167,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         </div>
 
                         {state?.error && (
-                            <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 border-l-4 border-red-500">
+                            <div className="text-xs font-bold text-destructive bg-destructive/10 rounded-sm border border-destructive p-2">
                                 {state.error}
                             </div>
                         )}

@@ -115,7 +115,14 @@ export function DashboardSidebar({
                     <FeedbackDialog />
                 </div>
                 <div className="p-4 border-t">
-                    <UserDropdown email={userEmail} name={userName} avatar={userAvatar} />
+                    <UserDropdown 
+                        email={userEmail} 
+                        name={userName} 
+                        avatar={userAvatar} 
+                        side="right" 
+                        align="end" 
+                        sideOffset={16} 
+                    />
                 </div>
             </div>
 

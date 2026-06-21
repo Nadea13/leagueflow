@@ -57,6 +57,7 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             title={t("no_teams_yet")}
                             description={t("no_teams_desc") || "Create your first team to start participating in tournaments."}
                             action={<CreateTeamForm />}
+                            className="bg-card"
                         />
                     </div>
                 ) : (

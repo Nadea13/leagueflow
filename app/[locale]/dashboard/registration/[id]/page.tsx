@@ -110,6 +110,10 @@ export default async function DashboardRegistrationPage({ params, searchParams }
     const sportsData = (Array.isArray(tournament.sports) ? tournament.sports[0] : tournament.sports) as unknown as { sport_name: string | null } | null;
     const sportName = sportsData?.sport_name || "Sport";
 
+    const isFull = (registeredTeams?.length || 0) >= (activeCategory?.max_teams || 8);
+    const isPastDeadline = tournament.document_deadline ? new Date(tournament.document_deadline) < new Date() : false;
+    const isRegistrationDisabled = isFull || isPastDeadline || !tournament.is_registration_open;
+
     return (
         <div className="space-y-2 md:space-y-4">
             {/* Top Navigation & Action Bar */}
@@ -128,8 +132,8 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                             <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 transition-colors text-[10px] font-black tracking-wider rounded-full px-2">
                                 {sportName}
                             </Badge>
-                            <Badge variant={tournament.is_registration_open ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
-                                {tournament.is_registration_open ? "Registration Open" : "Registration Closed"}
+                            <Badge variant={tournament.is_registration_open && !isRegistrationDisabled ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
+                                {tournament.is_registration_open && !isRegistrationDisabled ? "Registration Open" : "Registration Closed"}
                             </Badge>
                         </div>
                     </div>
@@ -153,6 +157,9 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                         tournamentCategoryId={resolvedCategoryId ? String(resolvedCategoryId) : undefined}
                         initialTeams={myTeams}
                         categories={categories || []}
+                        isFull={isFull}
+                        isPastDeadline={isPastDeadline}
+                        isRegistrationDisabled={isRegistrationDisabled}
                     />
                 </div>
 

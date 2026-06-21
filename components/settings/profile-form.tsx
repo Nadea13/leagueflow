@@ -52,7 +52,7 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
 
     return (
         <div>
-            <div className="relative overflow-hidden group">
+            <div className="relative overflow-hidden group bg-card p-2 md:p-4 rounded-xl border">
                 <form action={handleUpdate} className="grid gap-1 md:gap-2">
                     <div className="space-y-1">
                         <Label>Profile Photo</Label>
@@ -85,7 +85,6 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                             id="email"
                             value={user?.email}
                             disabled
-                            className="bg-transparent text-foreground focus-visible:ring-0  text-sm font-bold"
                         />
                     </div>
                     <div className="space-y-1">
@@ -95,7 +94,6 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                             name="fullName"
                             defaultValue={profile?.full_name || user?.user_metadata?.full_name || ""}
                             placeholder={t("enter_full_name")}
-                            className="bg-transparent text-foreground focus-visible:ring-0  text-sm font-bold"
                         />
                     </div>
                     <div className="space-y-1">
@@ -105,11 +103,10 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                             name="phone"
                             defaultValue={profile?.phone || ""}
                             placeholder="08x-xxx-xxxx"
-                            className="bg-transparent text-foreground focus-visible:ring-0  text-sm font-bold"
                         />
                     </div>
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading} variant="default" className="font-black transition-all disabled:opacity-50">
+                        <Button type="submit" disabled={isLoading} variant="default">
                             {isLoading ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (

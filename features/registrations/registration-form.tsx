@@ -211,11 +211,45 @@ export function RegistrationForm({
                         icon={AlertCircle}
                         className="min-h-[300px]"
                         action={
-                            <Button asChild variant="outline" size="sm" className="px-8 h-12 border-2 font-black tracking-widest text-xs">
-                                <Link href="/manager/tournaments">
-                                    {tCommon("back_to_dashboard")}
-                                </Link>
-                            </Button>
+                            categories && categories.length > 0 ? (
+                                <div className="flex flex-col space-y-1">
+                                    <Label>เลือกรุ่นการแข่งขันอื่น</Label>
+                                    <Select
+                                        value={tournamentCategoryId || ""}
+                                        onValueChange={(val) => {
+                                            const params = new URLSearchParams(searchParams.toString());
+                                            params.set("category", val);
+                                            router.push(`${pathname}?${params.toString()}`);
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-[220px] bg-transparent text-foreground focus-visible:ring-0">
+                                            <SelectValue placeholder="เลือกรุ่นการแข่งขัน" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {categories.map((cat) => {
+                                                const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
+                                                const ageName = ageCategoriesData?.category_name || "General";
+                                                const gender = cat.gender_type === 'open' ? 'Open'
+                                                    : cat.gender_type === 'male' ? 'Male'
+                                                        : cat.gender_type === 'female' ? 'Female'
+                                                            : 'Mixed';
+                                                const label = `${ageName} (${gender})`;
+                                                return (
+                                                    <SelectItem key={String(cat.id)} value={String(cat.id)} className="text-sm tracking-tighter">
+                                                        {label}
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <Button asChild variant="outline">
+                                    <Link href="/manager/tournaments">
+                                        {tCommon("back_to_dashboard")}
+                                    </Link>
+                                </Button>
+                            )
                         }
                     />
                 ) : (
@@ -309,7 +343,7 @@ export function RegistrationForm({
                             </div>
 
                             <div className="space-y-1 col-span-2">
-                                <Label>{t("team_name_label")}</Label>
+                                <Label>{t("team_name_label")} <span className="text-destructive">*</span></Label>
                                 <Input
                                     placeholder={t("team_name_placeholder")}
                                     {...form.register("teamName")}
@@ -338,7 +372,7 @@ export function RegistrationForm({
                             </div>
 
                             <div className="space-y-1">
-                                <Label>{t("contact_name_label")}</Label>
+                                <Label>{t("contact_name_label")} <span className="text-destructive">*</span></Label>
                                 <Input
                                     placeholder={t("contact_name_placeholder")}
                                     {...form.register("contactName")}
@@ -352,7 +386,7 @@ export function RegistrationForm({
                             </div>
 
                             <div className="space-y-1">
-                                <Label>{t("contact_phone_label")}</Label>
+                                <Label>{t("contact_phone_label")} <span className="text-destructive">*</span></Label>
                                 <Input
                                     placeholder={t("contact_phone_placeholder")}
                                     {...form.register("contactPhone")}

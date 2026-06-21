@@ -52,7 +52,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                     title={searchQuery ? "No tournaments found" : undefined}
                     description={searchQuery ? `Search query: "${searchQuery}"` : undefined}
                     action={<TournamentCreate />}
-                    className=""
+                    className="bg-card"
                 />
             ) : (
                 <div className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

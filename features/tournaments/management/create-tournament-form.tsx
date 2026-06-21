@@ -204,7 +204,7 @@ export function TournamentCreate({ iconOnlyMobile = false }: TournamentCreatePro
                         </div>
 
                         <div className="space-y-1">
-                            <Label>{t("name")}</Label>
+                            <Label>{t("name")}  <span className="text-destructive">*</span></Label>
                             <Input
                                 id="name"
                                 name="name"
@@ -214,7 +214,7 @@ export function TournamentCreate({ iconOnlyMobile = false }: TournamentCreatePro
                         </div>
 
                         <div className="space-y-1">
-                            <Label>{tCommon("sport")}</Label>
+                            <Label>{tCommon("sport")}  <span className="text-destructive">*</span></Label>
                             <Select name="sport_id" value={selectedSport} onValueChange={setSelectedSport}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder={t("select_sport")} />

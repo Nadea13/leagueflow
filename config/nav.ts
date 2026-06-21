@@ -1,4 +1,4 @@
-import { LayoutDashboard, Trophy, Users, Settings, Mail, LucideIcon, Home } from "lucide-react"
+import { LayoutDashboard, Trophy, Users, Settings, Inbox, LucideIcon, Home } from "lucide-react"
 
 export interface NavItem {
     titleKey: string
@@ -31,7 +31,7 @@ export const organizerNavItems: NavItem[] = [
     {
         titleKey: "notifications",
         href: "/dashboard/notifications",
-        icon: Mail,
+        icon: Inbox,
     },
     {
         titleKey: "settings",

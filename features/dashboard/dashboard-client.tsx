@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { createMasterPlayer } from "@/actions/common/user";
-import { updateGlobalPlayerInfo, updateGlobalPlayerPhoto } from "@/actions/tournaments/master-player";
 import { Link } from "@/i18n/routing";
 import {
     Trophy, User, Calendar, Phone, Search,
@@ -17,9 +15,8 @@ import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/c
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { LogoUploader } from "@/components/shared/logo-uploader";
 import { Tournament } from "@/types";
+import { EditVerifyProfileDialog } from "@/features/teams/edit-verify-profile-dialog";
 
 export interface MasterPlayer {
     id: string;
@@ -39,7 +36,6 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ initialTournaments, initialMasterPlayer }: DashboardClientProps) {
-    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
     const [masterPlayer, setMasterPlayer] = useState(initialMasterPlayer);
     const [isPending, startTransition] = useTransition();
@@ -55,94 +51,9 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
     // Edit profile state
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [editFirstName, setEditFirstName] = useState("");
-    const [editLastName, setEditLastName] = useState("");
-    const [editGender, setEditGender] = useState("male");
-    const [editBirthday, setEditBirthday] = useState("");
-    const [editTel, setEditTel] = useState("");
-    const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null);
-    const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
-    const [editError, setEditError] = useState<string | null>(null);
 
     const handleOpenEdit = () => {
-        if (masterPlayer) {
-            setEditFirstName(masterPlayer.first_name);
-            setEditLastName(masterPlayer.last_name);
-            setEditGender(masterPlayer.gender || "male");
-            const dob = masterPlayer.birthday ? masterPlayer.birthday.substring(0, 10) : "";
-            setEditBirthday(dob);
-            setEditTel(masterPlayer.tel || "");
-            setEditPreviewUrl(masterPlayer.profile_img || null);
-            setEditPhotoFile(null);
-            setEditError(null);
-            setIsEditDialogOpen(true);
-        }
-    };
-
-    const handleSaveEdit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setEditError(null);
-
-        if (!masterPlayer) return;
-        const currentPlayer = masterPlayer;
-
-        if (!editFirstName || !editLastName || !editGender || !editBirthday) {
-            setEditError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
-            return;
-        }
-
-        startTransition(async () => {
-            // 1. Update text info and possible photo deletion
-            const res = await updateGlobalPlayerInfo(currentPlayer.id, {
-                first_name: editFirstName,
-                last_name: editLastName,
-                gender: editGender,
-                date_of_birth: editBirthday,
-                tel: editTel || null,
-                profile_img: editPreviewUrl === null ? null : undefined
-            });
-
-            if (!res.success) {
-                setEditError(res.error || "เกิดข้อผิดพลาดในการแก้ไขข้อมูล");
-                return;
-            }
-
-            let updatedPhotoUrl = editPreviewUrl === null ? null : currentPlayer.profile_img;
-
-            // 2. Upload photo if selected
-            if (editPhotoFile) {
-                const photoData = new FormData();
-                photoData.append("photo", editPhotoFile);
-                const photoRes = await updateGlobalPlayerPhoto(currentPlayer.id, photoData);
-                if (!photoRes.success) {
-                    setEditError(photoRes.error || "แก้ไขข้อมูลสำเร็จ แต่ไม่สามารถอัปโหลดรูปภาพได้");
-                    setMasterPlayer({
-                        ...currentPlayer,
-                        first_name: editFirstName,
-                        last_name: editLastName,
-                        gender: editGender,
-                        birthday: editBirthday,
-                        tel: editTel
-                    });
-                    return;
-                }
-
-                updatedPhotoUrl = editPreviewUrl;
-            }
-
-            setMasterPlayer({
-                ...currentPlayer,
-                first_name: editFirstName,
-                last_name: editLastName,
-                gender: editGender,
-                birthday: editBirthday,
-                tel: editTel,
-                profile_img: updatedPhotoUrl
-            });
-
-            setIsEditDialogOpen(false);
-            router.refresh();
-        });
+        setIsEditDialogOpen(true);
     };
 
     // Filter tournaments based on search query
@@ -208,6 +119,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             title="ไม่พบการแข่งขัน"
                             description="ยังไม่มีข้อมูลการแข่งขันในระบบหรือค้นหาไม่พบข้อมูล"
                             icon={Trophy}
+                            className="bg-card"
                         />
                     ) : (
                         <div className="flex flex-col gap-4 md:gap-6 group">
@@ -458,141 +370,12 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
             </div>
 
             {/* Edit Profile Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="sm:max-w-[480px] bg-background border-border p-0 overflow-hidden shadow-2xl rounded-xl">
-                    <form onSubmit={handleSaveEdit}>
-                        <div className="relative bg-background p-2 md:p-4 border-b">
-                            <DialogHeader>
-                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
-                                    แก้ไขข้อมูลทะเบียนนักกีฬา
-                                </DialogTitle>
-                                <DialogDescription className="text-muted-foreground text-sm">
-                                    แก้ไขรายละเอียดโปรไฟล์นักกีฬาของคุณ
-                                </DialogDescription>
-                            </DialogHeader>
-                        </div>
-
-                        <div className="p-2 space-y-2 md:p-4 md:space-y-4">
-                            {editError && (
-                                <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 mb-4 animate-shake">
-                                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                    <span>{editError}</span>
-                                </div>
-                            )}
-
-                            <div className="space-y-1">
-                                <Label className="text-xs font-black tracking-widest text-primary">รูปโปรไฟล์</Label>
-                                <LogoUploader
-                                    id="edit-profile-photo"
-                                    initialUrl={editPreviewUrl}
-                                    onFileChange={(file) => {
-                                        setEditPhotoFile(file);
-                                        if (file) {
-                                            setEditPreviewUrl(URL.createObjectURL(file));
-                                        } else {
-                                            setEditPreviewUrl(null);
-                                        }
-                                    }}
-                                    onRemove={() => {
-                                        setEditPhotoFile(null);
-                                        setEditPreviewUrl(null);
-                                    }}
-                                    uploadLabel="อัปโหลดรูปภาพ"
-                                    clickToUploadLabel="เปลี่ยนรูปภาพ"
-                                    previewLabel="รูปตัวอย่าง"
-                                    imageFit="cover"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="editFirstName" className="text-xs font-black tracking-widest text-primary">ชื่อจริง *</Label>
-                                    <Input
-                                        id="editFirstName"
-                                        type="text"
-                                        required
-                                        value={editFirstName}
-                                        onChange={(e) => setEditFirstName(e.target.value)}
-                                        placeholder="ชื่อจริง"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="editLastName" className="text-xs font-black tracking-widest text-primary">นามสกุล *</Label>
-                                    <Input
-                                        id="editLastName"
-                                        type="text"
-                                        required
-                                        value={editLastName}
-                                        onChange={(e) => setEditLastName(e.target.value)}
-                                        placeholder="นามสกุล"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1 flex flex-col justify-end">
-                                    <Label className="text-xs font-black tracking-widest text-primary">เพศ *</Label>
-                                    <Select value={editGender} onValueChange={setEditGender}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="เลือกเพศ" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">ชาย (Male)</SelectItem>
-                                            <SelectItem value="female">หญิง (Female)</SelectItem>
-                                            <SelectItem value="other">อื่นๆ (Other)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="editBirthday" className="text-xs font-black tracking-widest text-primary">วัน/เดือน/ปีเกิด *</Label>
-                                    <Input
-                                        id="editBirthday"
-                                        type="date"
-                                        required
-                                        value={editBirthday}
-                                        onChange={(e) => setEditBirthday(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="editTel" className="text-xs font-black tracking-widest text-primary">เบอร์โทรศัพท์ติดต่อ</Label>
-                                <Input
-                                    id="editTel"
-                                    type="tel"
-                                    value={editTel}
-                                    onChange={(e) => setEditTel(e.target.value)}
-                                    placeholder="เช่น 0891234567"
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter className="border-t p-2 md:p-4 gap-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={() => setIsEditDialogOpen(false)}
-                                disabled={isPending}
-                            >
-                                ยกเลิก
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={isPending}
-                            >
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                        กำลังบันทึก...
-                                    </>
-                                ) : (
-                                    "บันทึกข้อมูล"
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <EditVerifyProfileDialog
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                masterPlayer={masterPlayer}
+                onSave={(updatedPlayer) => setMasterPlayer(updatedPlayer)}
+            />
         </div>
     );
 }

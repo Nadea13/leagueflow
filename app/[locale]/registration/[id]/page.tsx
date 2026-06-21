@@ -113,6 +113,10 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
     const sportsData = (Array.isArray(tournament.sports) ? tournament.sports[0] : tournament.sports) as unknown as { sport_name: string | null } | null;
     const sportName = sportsData?.sport_name || "Sport";
 
+    const isFull = (registeredTeams?.length || 0) >= (activeCategory?.max_teams || 8);
+    const isPastDeadline = tournament.document_deadline ? new Date(tournament.document_deadline) < new Date() : false;
+    const isRegistrationDisabled = isFull || isPastDeadline || !tournament.is_registration_open;
+
     return (
         <div className="min-h-screen bg-background overflow-x-hidden pt-20">
             {/* Navbar */}
@@ -135,10 +139,14 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
             </nav>
 
             <main className="container mx-auto pb-4 max-w-7xl">
-                {!tournament.is_registration_open ? (
+                {!tournament.is_registration_open || isRegistrationDisabled ? (
                     <EmptyState
                         title={t("registration_closed_title")}
-                        description={t("registration_closed_desc")}
+                        description={
+                            isFull
+                                ? t("registration_closed_full_desc")
+                                : (isPastDeadline ? t("registration_closed_deadline_desc") : t("registration_closed_desc"))
+                        }
                         icon={AlertCircle}
                         action={
                             <p className="text-sm font-bold text-primary/60 tracking-widest">{t("contact_organizer")}</p>
@@ -155,8 +163,8 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 transition-colors text-[10px] font-black tracking-wider rounded-full px-2">
                                     {sportName}
                                 </Badge>
-                                <Badge variant={tournament.is_registration_open ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
-                                    {tournament.is_registration_open ? "Registration Open" : "Registration Closed"}
+                                <Badge variant={tournament.is_registration_open && !isRegistrationDisabled ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
+                                    {tournament.is_registration_open && !isRegistrationDisabled ? "Registration Open" : "Registration Closed"}
                                 </Badge>
                             </div>
                         </div>
@@ -179,6 +187,9 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                     tournamentCategoryId={resolvedCategoryId ? String(resolvedCategoryId) : undefined}
                                     initialTeams={myTeams}
                                     categories={categories || []}
+                                    isFull={isFull}
+                                    isPastDeadline={isPastDeadline}
+                                    isRegistrationDisabled={isRegistrationDisabled}
                                 />
                             </div>
 

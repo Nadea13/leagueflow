@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MessageSquareWarning, Send, AlertCircle } from "lucide-react"
+import { MessageSquareWarning, Send, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -68,18 +68,19 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
                     <span>{t("title")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <MessageSquareWarning className="h-5 w-5 text-destructive" />
-                        {t("dialog_title")}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {t("dialog_desc")}
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-[480px] bg-background border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+                <div className="relative bg-background p-2 md:p-4 border-b">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none flex items-center gap-2">
+                            {t("dialog_title")}
+                        </DialogTitle>
+                        <DialogDescription className="text-muted-foreground text-sm mt-1">
+                            {t("dialog_desc")}
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
 
-                <div className="grid gap-4 py-4">
+                <div className="p-2 space-y-2 md:p-4 md:space-y-4">
                     {error && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
@@ -90,20 +91,20 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
                     <Textarea
                         id="bug-message"
                         placeholder={t("placeholder")}
-                        className="min-h-[120px] resize-none"
+                        className="min-h-[120px] resize-none bg-transparent text-foreground focus-visible:ring-0 text-sm"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         disabled={isSubmitting}
                     />
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
-                        {t("cancel")}
-                    </Button>
-                    <Button onClick={handleSubmit} disabled={isSubmitting || !message.trim()}>
+                <DialogFooter className="border-t p-2 md:p-4">
+                    <Button onClick={handleSubmit} disabled={isSubmitting || !message.trim()} className="flex-1">
                         {isSubmitting ? (
-                            t("submitting")
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                {t("submitting")}
+                            </>
                         ) : (
                             <>
                                 <Send className="mr-2 h-4 w-4" />

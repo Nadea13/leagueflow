@@ -49,7 +49,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale } from "next-intl";
 import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
@@ -107,7 +107,6 @@ function CanvasInternal({
     teams: initialTeamsData = [],
     matches: initialMatchesData = [],
 }: CanvasProps) {
-    const tMatch = useTranslations("Match");
     const locale = useLocale();
     const { toast } = useToast();
 
@@ -1110,21 +1109,21 @@ function CanvasInternal({
 
                                         {/* Stage Filter */}
                                         <div className="space-y-2">
-                                            <Label>Stage Filter</Label>
+                                            <Label>{locale === 'th' ? "ตัวกรองรอบการแข่งขัน" : "Stage Filter"}</Label>
                                             <Select value={filterStage} onValueChange={setFilterStage}>
                                                 <SelectTrigger className="w-full h-10 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
-                                                    <SelectValue placeholder={tMatch("round")} />
+                                                    <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-card shadow-2xl">
-                                                    <SelectItem value="all" className="font-black text-[10px] tracking-widest">{tMatch("round")} ({tMatch("all")})</SelectItem>
-                                                    <SelectItem value="group" className="font-black text-[10px] tracking-widest">{tMatch("group")}</SelectItem>
-                                                    {['A', 'B', 'C', 'D'].map(l => (
-                                                        <SelectItem key={l} value={`Group ${l}`} className="font-black text-[10px] tracking-widest">{tMatch("group")} {l}</SelectItem>
-                                                    ))}
-                                                    <SelectItem value="round_of_16" className="font-black text-[10px] tracking-widest">{tMatch("round_of_16")}</SelectItem>
-                                                    <SelectItem value="quarter_final" className="font-black text-[10px] tracking-widest">{tMatch("quarter_final")}</SelectItem>
-                                                    <SelectItem value="semi_final" className="font-black text-[10px] tracking-widest">{tMatch("semi_final")}</SelectItem>
-                                                    <SelectItem value="final" className="font-black text-[10px] tracking-widest">{tMatch("final")}</SelectItem>
+                                                    <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                        {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                                    </SelectItem>
+                                                    <SelectItem value="group" className="font-black text-[10px] tracking-widest">
+                                                        {locale === 'th' ? "กลุ่ม" : "GROUP STAGE"}
+                                                    </SelectItem>
+                                                    <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
+                                                        {locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT STAGE"}
+                                                    </SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

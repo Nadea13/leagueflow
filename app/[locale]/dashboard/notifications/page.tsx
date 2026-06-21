@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Bell, Check, X, Clock, ShieldCheck, Mail, Phone } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Bell, Check, X, Clock, ShieldCheck, Mail, Phone, Inbox } from "lucide-react";
 import { 
     getAllUserInvites, 
     acceptInvite, 
@@ -223,7 +223,7 @@ export default function NotificationsPage() {
             <div className="flex items-start justify-between">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
-                        Notifications
+                        {isTh ? "กล่องข้อความ" : "Inbox"}
                     </h1>
                 </div>
             </div>
@@ -234,9 +234,9 @@ export default function NotificationsPage() {
                 </div>
             ) : notifications.length === 0 ? (
                 <EmptyState
-                    title={t("no_pending_invites") || "No new notifications"}
-                    description={t("pending_invites_desc") || "You're all caught up!"}
-                    icon={Bell}
+                    title={t("no_pending_invites") || (isTh ? "ไม่มีข้อความใหม่" : "No new messages")}
+                    description={t("pending_invites_desc") || (isTh ? "กล่องข้อความของคุณไม่มีการแจ้งเตือนหรือข้อความใหม่" : "Your inbox is empty.")}
+                    icon={Inbox}
                     action={<div />}
                 />
             ) : (

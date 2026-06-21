@@ -23,7 +23,25 @@ import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function UserDropdown({ email, name, avatar, className }: { email: string | undefined, name?: string | null, avatar?: string, className?: string }) {
+export function UserDropdown({ 
+    email, 
+    name, 
+    avatar, 
+    className,
+    side = "bottom",
+    align = "end",
+    sideOffset = 8,
+    alignOffset = 0
+}: { 
+    email: string | undefined, 
+    name?: string | null, 
+    avatar?: string, 
+    className?: string,
+    side?: "top" | "right" | "bottom" | "left",
+    align?: "start" | "center" | "end",
+    sideOffset?: number,
+    alignOffset?: number
+}) {
     const { setTheme } = useTheme()
     const locale = useLocale()
     const t = useTranslations("Nav")
@@ -59,7 +77,14 @@ export function UserDropdown({ email, name, avatar, className }: { email: string
                     </div>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64 bg-card shadow-2xl p-3" align="end" forceMount>
+            <DropdownMenuContent 
+                className="w-64 bg-card border shadow-2xl p-2 rounded-lg" 
+                side={side}
+                align={align} 
+                sideOffset={sideOffset}
+                alignOffset={alignOffset}
+                forceMount
+            >
                 <DropdownMenuLabel className="mb-2">
                     <div className="flex flex-col space-y-1">
                         <p className="text-xs font-bold tracking-widest text-primary">{tCommon("user")}</p>
@@ -89,7 +114,10 @@ export function UserDropdown({ email, name, avatar, className }: { email: string
                         <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="bg-background border-border min-w-[120px]">
+                        <DropdownMenuSubContent 
+                            className="bg-background border border-border min-w-[120px] rounded-lg shadow-xl p-1.5"
+                            sideOffset={8}
+                        >
                             <DropdownMenuItem onClick={() => setTheme("light")} className="focus:bg-muted focus:text-primary text-xs font-bold">
                                 <Sun className="mr-3 h-4 w-4" />
                                 {tCommon("light")}

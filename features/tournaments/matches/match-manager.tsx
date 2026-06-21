@@ -56,6 +56,9 @@ export function MatchManager({
 
         // Stage Filter
         if (filterStage === "all") return true;
+        if (filterStage === "knockout") {
+            return match.stage !== 'group' && match.stage !== 'league';
+        }
         if (filterStage.startsWith("Group")) {
             const groupLetter = filterStage.split(" ")[1];
             if (match.stage !== 'group') return false;

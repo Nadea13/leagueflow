@@ -10,6 +10,16 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useMemo } from "react";
 import { Match, TournamentTeam, MatchEvent } from "@/types";
 
+const getScoreValue = (score: unknown): number => {
+    if (score === undefined || score === null) return 0;
+    if (typeof score === 'object') {
+        if ('total' in score) {
+            return Number((score as { total?: unknown }).total) || 0;
+        }
+    }
+    return Number(score) || 0;
+};
+
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
 
 export const MatchNode = memo(function MatchNode({
@@ -97,7 +107,7 @@ export const MatchNode = memo(function MatchNode({
                     <span className="text-xs font-black tracking-wide text-node-2">
                         {matches.length > 1 ? "Round" : "Match"}
                     </span>
-                    <span className="text-xs font-black tracking-wide text-muted-foreground">
+                    <span className="text-xs font-black tracking-wide">
                         {data.label}
                     </span>
                 </div>
@@ -203,7 +213,7 @@ export const MatchNode = memo(function MatchNode({
                                     {(matches.length > 1 || matchDate || matchTime) && (
                                         <div className="px-2 flex items-center justify-between gap-2 mt-1">
                                             {matches.length > 1 ? (
-                                                <span className="text-[10px] font-black text-node-2/60 tracking-tighter">
+                                                <span className="text-[10px] font-black text-node-2 tracking-tighter">
                                                     Match #{index + 1}
                                                 </span>
                                             ) : (
@@ -220,7 +230,7 @@ export const MatchNode = memo(function MatchNode({
                                                 
                                                 if (isNodeHalfTime) {
                                                     return (
-                                                        <span className="text-[10px] font-black text-amber-500 flex items-center gap-1">
+                                                        <span className="text-[10px] font-black text-primary flex items-center gap-1">
                                                             HT
                                                         </span>
                                                     );
@@ -311,7 +321,8 @@ export const MatchNode = memo(function MatchNode({
                                                         label={liveTeamA || match.placeholderA}
                                                         isResolved={!!liveTeamA}
                                                         score={dbMatch?.home_score}
-                                                        isWinner={dbMatch?.status === 'finished' && (dbMatch.home_score || 0) > (dbMatch.away_score || 0)}
+                                                        isWinner={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.home_score) > getScoreValue(dbMatch?.away_score)}
+                                                        isLoser={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.away_score) > getScoreValue(dbMatch?.home_score)}
                                                         status={dbMatch?.status}
                                                         position="top"
                                                         onDropTeam={(teamName) => {
@@ -329,7 +340,8 @@ export const MatchNode = memo(function MatchNode({
                                                         label={liveTeamB || match.placeholderB}
                                                         isResolved={!!liveTeamB}
                                                         score={dbMatch?.away_score}
-                                                        isWinner={dbMatch?.status === 'finished' && (dbMatch.away_score || 0) > (dbMatch.home_score || 0)}
+                                                        isWinner={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.away_score) > getScoreValue(dbMatch?.home_score)}
+                                                        isLoser={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.home_score) > getScoreValue(dbMatch?.away_score)}
                                                         status={dbMatch?.status}
                                                         position="bottom"
                                                         onDropTeam={(teamName) => {
@@ -361,6 +373,7 @@ function SlotRow({
     label,
     score,
     isWinner,
+    isLoser,
     status,
     isResolved,
     position,
@@ -369,6 +382,7 @@ function SlotRow({
     label: string;
     score?: unknown;
     isWinner?: boolean;
+    isLoser?: boolean;
     status?: string;
     isResolved?: boolean;
     position: "top" | "bottom";
@@ -397,7 +411,10 @@ function SlotRow({
 
     return (
         <div 
-            className="flex items-center gap-2 p-2 transition-colors hover:bg-node-2/5 group/slot cursor-default"
+            className={cn(
+                "flex items-center gap-2 p-2 transition-all hover:bg-node-2/5 group/slot cursor-default",
+                isLoser && "text-muted-foreground/50"
+            )}
             onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
@@ -426,15 +443,18 @@ function SlotRow({
                 )}
             </div>
             <span className={cn(
-                "text-[10px] font-bold tracking-tight truncate flex-1",
-                label === "TBD" ? "text-muted-foreground/50 italic font-medium" : 
-                isWinner ? "text-emerald-600" : 
-                isResolved ? "text-foreground" : "text-foreground"
+                "text-[10px] font-bold tracking-tight truncate flex-1 transition-all",
+                label === "TBD" ? "text-muted-foreground" : 
+                isWinner ? "" : 
+                isResolved ? "" : ""
             )}>
                 {label}
             </span>
             {hasScore && (
-                <div className="w-6 h-6 flex items-center justify-center font-black text-xs">
+                <div className={cn(
+                    "w-6 h-6 flex items-center justify-center font-black text-xs transition-colors",
+                    isWinner && ""
+                )}>
                     {displayScore}
                 </div>
             )}
