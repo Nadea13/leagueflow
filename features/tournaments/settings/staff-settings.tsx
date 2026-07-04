@@ -136,7 +136,6 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                                     <Label>{t("email_placeholder")}</Label>
                                     <Input
                                         type="email"
-                                        placeholder="collaborator@example.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleInvite()}

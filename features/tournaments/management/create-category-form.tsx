@@ -181,7 +181,6 @@ export function CreateCategoryForm({
                                     const val = e.target.value.replace(/[^0-9]/g, "");
                                     setMaxTeams(val);
                                 }}
-                                placeholder="e.g. 8"
                                 className="w-full h-10 bg-background"
                             />
                         </div>
@@ -199,7 +198,7 @@ export function CreateCategoryForm({
                                         setRegistrationFee(val);
                                     }
                                 }}
-                                placeholder="0.00"
+                                placeholder="0.00 (Free)"
                                 className="w-full h-10 bg-background"
                             />
                         </div>

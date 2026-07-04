@@ -160,13 +160,17 @@ export async function createMasterPlayer(formData: FormData): Promise<ActionResp
             return { success: false, error: "Authentication required" };
         }
 
-        const firstName = formData.get("firstName") as string;
-        const lastName = formData.get("lastName") as string;
+        const firstNameTh = formData.get("firstNameTh") as string || null;
+        const middleNameTh = formData.get("middleNameTh") as string || null;
+        const lastNameTh = formData.get("lastNameTh") as string || null;
+        const firstNameEn = formData.get("firstNameEn") as string || null;
+        const middleNameEn = formData.get("middleNameEn") as string || null;
+        const lastNameEn = formData.get("lastNameEn") as string || null;
         const gender = formData.get("gender") as string;
         const birthday = formData.get("birthday") as string;
         const tel = formData.get("tel") as string;
 
-        if (!firstName || !lastName || !gender || !birthday) {
+        if ((!firstNameTh && !firstNameEn) || (!lastNameTh && !lastNameEn) || !gender || !birthday) {
             return { success: false, error: "First name, last name, gender, and birthday are required" };
         }
 
@@ -175,8 +179,12 @@ export async function createMasterPlayer(formData: FormData): Promise<ActionResp
             .from("master_players")
             .insert({
                 user_id: user.id,
-                first_name: firstName,
-                last_name: lastName,
+                first_name_th: firstNameTh,
+                middle_name_th: middleNameTh,
+                last_name_th: lastNameTh,
+                first_name_en: firstNameEn,
+                middle_name_en: middleNameEn,
+                last_name_en: lastNameEn,
                 gender,
                 birthday,
                 tel,
@@ -234,12 +242,12 @@ export async function searchMasterPlayers(query: string) {
         .select("*");
 
     if (query && query.trim().length > 0) {
-        // Search in both first_name and last_name
-        dbQuery = dbQuery.or(`first_name.ilike.%${query.trim()}%,last_name.ilike.%${query.trim()}%`);
+        // Search in English and Thai name columns
+        dbQuery = dbQuery.or(`first_name_th.ilike.%${query.trim()}%,last_name_th.ilike.%${query.trim()}%,first_name_en.ilike.%${query.trim()}%,last_name_en.ilike.%${query.trim()}%`);
     }
 
     const { data, error } = await dbQuery
-        .order("first_name", { ascending: true })
+        .order("first_name_en", { ascending: true })
         .limit(20);
 
     if (error) {
@@ -305,4 +313,147 @@ export async function registerAsTeamManager(): Promise<ActionResponse> {
         return { success: false, error: (error as Error).message };
     }
 }
+
+export async function getMasterPlayerStats(masterPlayerId: string): Promise<ActionResponse<{
+    goals: number;
+    assists: number;
+    yellowCards: number;
+    redCards: number;
+    saves: number;
+    injuries: number;
+    history: {
+        tournamentName: string;
+        teamName: string;
+        goals: number;
+        assists: number;
+        yellowCards: number;
+        redCards: number;
+        saves: number;
+        injuries: number;
+    }[];
+}>> {
+    try {
+        const adminSupabase = createAdminClient();
+        
+        const { data: localPlayers, error: lpError } = await adminSupabase
+            .from("players")
+            .select("id")
+            .eq("master_id", masterPlayerId);
+            
+        if (lpError) throw lpError;
+        
+        if (!localPlayers || localPlayers.length === 0) {
+            return { 
+                success: true, 
+                data: { goals: 0, assists: 0, yellowCards: 0, redCards: 0, saves: 0, injuries: 0, history: [] } 
+            };
+        }
+        
+        const playerIds = localPlayers.map(lp => lp.id);
+        
+        const { data: events, error: evError } = await adminSupabase
+            .from("match_events")
+            .select(`
+                id,
+                event_type,
+                player_id,
+                extra_info,
+                team_id,
+                team:teams(name),
+                match:matches(
+                    tournament_category_id,
+                    category:tournament_categories(
+                        tournament:tournaments(name)
+                    )
+                )
+            `)
+            .or(`player_id.in.(${playerIds.join(',')}),event_type.eq.goal`);
+            
+        if (evError) throw evError;
+
+        let totalGoals = 0;
+        let totalAssists = 0;
+        let totalYellow = 0;
+        let totalRed = 0;
+        let totalSaves = 0;
+        let totalInjuries = 0;
+
+        const tourneyStats = new Map<string, {
+            tournamentName: string;
+            teamName: string;
+            goals: number;
+            assists: number;
+            yellowCards: number;
+            redCards: number;
+            saves: number;
+            injuries: number;
+        }>();
+
+        events?.forEach(event => {
+            const isSelfPlayer = event.player_id && playerIds.includes(event.player_id);
+            const isAssist = event.extra_info && typeof event.extra_info === 'object' && playerIds.includes((event.extra_info as any).assist_player_id);
+
+            if (!isSelfPlayer && !isAssist) return;
+
+            const tName = (event.match as any)?.category?.tournament?.name || "Unknown Tournament";
+            const teamName = (event.team as any)?.name || "Unknown Team";
+            const key = `${tName}-${teamName}`;
+
+            if (!tourneyStats.has(key)) {
+                tourneyStats.set(key, {
+                    tournamentName: tName,
+                    teamName,
+                    goals: 0,
+                    assists: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                    saves: 0,
+                    injuries: 0
+                });
+            }
+
+            const current = tourneyStats.get(key)!;
+
+            if (event.event_type === 'goal') {
+                if (isSelfPlayer) {
+                    totalGoals++;
+                    current.goals++;
+                }
+                if (isAssist) {
+                    totalAssists++;
+                    current.assists++;
+                }
+            } else if (event.event_type === 'yellow_card' && isSelfPlayer) {
+                totalYellow++;
+                current.yellowCards++;
+            } else if (event.event_type === 'red_card' && isSelfPlayer) {
+                totalRed++;
+                current.redCards++;
+            } else if (event.event_type === 'save' && isSelfPlayer) {
+                totalSaves++;
+                current.saves++;
+            } else if (event.event_type === 'injury' && isSelfPlayer) {
+                totalInjuries++;
+                current.injuries++;
+            }
+        });
+
+        return {
+            success: true,
+            data: {
+                goals: totalGoals,
+                assists: totalAssists,
+                yellowCards: totalYellow,
+                redCards: totalRed,
+                saves: totalSaves,
+                injuries: totalInjuries,
+                history: Array.from(tourneyStats.values())
+            }
+        };
+    } catch (err: any) {
+        console.error("Error calculating master player stats:", err);
+        return { success: false, error: err.message };
+    }
+}
+
 

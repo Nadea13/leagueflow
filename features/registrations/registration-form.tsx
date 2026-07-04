@@ -345,7 +345,6 @@ export function RegistrationForm({
                             <div className="space-y-1 col-span-2">
                                 <Label>{t("team_name_label")} <span className="text-destructive">*</span></Label>
                                 <Input
-                                    placeholder={t("team_name_placeholder")}
                                     {...form.register("teamName")}
                                     disabled={isExistingTeam}
                                 />
@@ -359,7 +358,6 @@ export function RegistrationForm({
                             <div className="w-full col-span-2 space-y-1">
                                 <Label>{t("team_description_label")}</Label>
                                 <Textarea
-                                    placeholder={t("team_description_placeholder")}
                                     {...form.register("description")}
                                     className="bg-transparent w-full focus-visible:ring-0 resize-none min-h-[80px] text-sm"
                                     disabled={isExistingTeam}
@@ -374,7 +372,6 @@ export function RegistrationForm({
                             <div className="space-y-1">
                                 <Label>{t("contact_name_label")} <span className="text-destructive">*</span></Label>
                                 <Input
-                                    placeholder={t("contact_name_placeholder")}
                                     {...form.register("contactName")}
                                     disabled={isExistingTeam}
                                 />
@@ -388,7 +385,6 @@ export function RegistrationForm({
                             <div className="space-y-1">
                                 <Label>{t("contact_phone_label")} <span className="text-destructive">*</span></Label>
                                 <Input
-                                    placeholder={t("contact_phone_placeholder")}
                                     {...form.register("contactPhone")}
                                     className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
                                     disabled={isExistingTeam}

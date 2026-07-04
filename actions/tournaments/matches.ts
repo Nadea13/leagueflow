@@ -26,7 +26,7 @@ export async function updateMatch(
         penalty_home_score?: number | null;
         penalty_away_score?: number | null;
         winner_id?: string | null;
-        status?: 'scheduled' | 'live' | 'finished';
+        status?: 'scheduled' | 'live' | 'finished' | 'canceled';
         match_date?: string | null;
         match_time?: string | null;
         venue?: string | null;

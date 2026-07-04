@@ -136,7 +136,6 @@ export function TeamForm({
                             <Input
                                 type="text"
                                 name="name"
-                                placeholder={isLimitReached ? t("limit_reached") : t("team_name_placeholder")}
                                 required
                                 disabled={isLimitReached}
                                 className="bg-transparent"
@@ -151,7 +150,6 @@ export function TeamForm({
                                 <Input
                                     type="text"
                                     name="contact_name"
-                                    placeholder={t("contact_name_placeholder") || "Manager Name"}
                                     disabled={isLimitReached}
                                     className="bg-transparent"
                                 />
@@ -161,7 +159,6 @@ export function TeamForm({
                                 <Input
                                     type="text"
                                     name="contact_phone"
-                                    placeholder={t("contact_phone_placeholder") || "08x-xxx-xxxx"}
                                     disabled={isLimitReached}
                                     className="bg-transparent"
                                 />
@@ -173,7 +170,6 @@ export function TeamForm({
                             <Input
                                 type="email"
                                 name="contact_email"
-                                placeholder={t("contact_email_placeholder") || "mail@example.com"}
                                 disabled={isLimitReached}
                                 className="bg-transparent"
                             />

@@ -765,7 +765,7 @@ export function NodeSettings() {
 
                             <div className="space-y-1 md:space-y-2">
                                 <div className="custom-scrollbar">
-                                    <Registrations tournamentId={tournamentId} />
+                                    <Registrations tournamentId={tournamentId} categoryId={activeCategoryId || undefined} />
                                 </div>
                             </div>
                         </div>
@@ -806,7 +806,6 @@ export function NodeSettings() {
                                                         id="sponsor-name"
                                                         value={newSponsorName}
                                                         onChange={e => setNewSponsorName(e.target.value)}
-                                                        placeholder="Sponsor / Company Name"
                                                         required
                                                     />
                                                 </div>
@@ -817,7 +816,6 @@ export function NodeSettings() {
                                                         id="sponsor-link"
                                                         value={newSponsorLink}
                                                         onChange={e => setNewSponsorLink(e.target.value)}
-                                                        placeholder="https://example.com"
                                                         type="url"
                                                     />
                                                 </div>
@@ -948,7 +946,6 @@ export function NodeSettings() {
                                                 id="reg_promptpay"
                                                 value={bankNumber}
                                                 onChange={(e) => setBankNumber(e.target.value)}
-                                                placeholder="Mobile number or Identification Card number"
                                             />
                                         </div>
 
@@ -971,7 +968,6 @@ export function NodeSettings() {
                                                     id="reg_acc_name"
                                                     value={accountName}
                                                     onChange={(e) => setAccountName(e.target.value)}
-                                                    placeholder="Account Name"
                                                 />
                                             </div>
                                         </div>

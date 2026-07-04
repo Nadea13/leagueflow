@@ -150,8 +150,6 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                                     type="email"
                                     value={contactEmail}
                                     onChange={(e) => handleEmailChange(e.target.value)}
-                                    placeholder="กรอกอีเมลที่ใช้สมัครหรือลงทะเบียนทีม"
-                                    className="bg-transparent text-foreground focus-visible:ring-0 text-xs pr-8"
                                     required
                                 />
                                 <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/45" />
@@ -200,8 +198,6 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                                 id="contact_phone"
                                 value={contactPhone}
                                 onChange={(e) => setContactPhone(e.target.value)}
-                                placeholder="08x-xxx-xxxx"
-                                className="bg-transparent text-foreground focus-visible:ring-0 text-xs"
                                 required
                             />
                         </div>
@@ -215,8 +211,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                                 id="message"
                                 value={requestMessage}
                                 onChange={(e) => setRequestMessage(e.target.value)}
-                                placeholder="แจ้งรายละเอียดเพิ่มเติมเพื่อยืนยันตัวตน เช่น ชื่อผู้จัดการทีม หรือข้อมูลสโมสร"
-                                className="bg-transparent w-full text-foreground focus-visible:ring-0 text-xs resize-none min-h-[80px]"
+                                className="resize-none min-h-[80px]"
                             />
                         </div>
 

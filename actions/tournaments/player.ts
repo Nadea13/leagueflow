@@ -82,8 +82,8 @@ export async function addPlayer(
     const { data: newMaster, error: masterErr } = await adminSupabase
         .from("master_players")
         .insert({
-            first_name: firstName,
-            last_name: lastName,
+            first_name_en: firstName,
+            last_name_en: lastName,
             gender: 'unspecified',
             birthday: birthDate || '1970-01-01',
             status: 'active',
@@ -161,8 +161,10 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
             deleted_at,
             master_player:master_id (
                 id,
-                first_name,
-                last_name,
+                first_name_en,
+                last_name_en,
+                first_name_th,
+                last_name_th,
                 birthday,
                 tel,
                 profile_img
@@ -200,8 +202,10 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
                 deleted_at?: string | null;
                 master_player?: {
                     id: string;
-                    first_name: string;
-                    last_name: string;
+                    first_name_en?: string | null;
+                    last_name_en?: string | null;
+                    first_name_th?: string | null;
+                    last_name_th?: string | null;
                     birthday?: string | null;
                     profile_img?: string | null;
                     tel?: string | null;
@@ -212,7 +216,7 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
         const mp = p?.master_player;
         return {
             id: p?.id || psObj.id,
-            name: p?.display_name || (mp ? `${mp.first_name} ${mp.last_name}` : ''),
+            name: p?.display_name || (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
             number: psObj.shirt_number ? parseInt(psObj.shirt_number) : null,
             position: psObj.position || null,
             birth_date: mp?.birthday || null,

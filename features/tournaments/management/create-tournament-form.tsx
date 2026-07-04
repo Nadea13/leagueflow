@@ -208,7 +208,6 @@ export function TournamentCreate({ iconOnlyMobile = false }: TournamentCreatePro
                             <Input
                                 id="name"
                                 name="name"
-                                placeholder={t("name_placeholder")}
                                 required
                             />
                         </div>

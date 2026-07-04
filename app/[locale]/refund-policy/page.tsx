@@ -1,19 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { BackButton } from "@/components/legal/back-button";
 import { PublicFooter } from "@/components/layout/public-footer";
-import { getPlans } from "@/actions/common/plans";
 
 export default async function RefundPolicyPage() {
     const t = await getTranslations("RefundPolicy");
-
-    // Fetch plans for footer
-    const [
-        { data: managerPlans },
-        { data: organizerPlans }
-    ] = await Promise.all([
-        getPlans({ role: 'manager' }),
-        getPlans({ role: 'organizer' })
-    ]);
     
     return (
         <div className="flex flex-col min-h-screen">
@@ -78,7 +68,7 @@ export default async function RefundPolicyPage() {
                     </div>
                 </section>
             </div>
-            <PublicFooter managerPlans={managerPlans || []} organizerPlans={organizerPlans || []} />
+            <PublicFooter />
         </div>
     );
 }

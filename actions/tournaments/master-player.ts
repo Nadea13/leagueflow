@@ -168,11 +168,11 @@ export async function getGlobalPlayers(
 
     if (search) {
         const term = search.trim();
-        query = query.or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%`);
+        query = query.or(`first_name_th.ilike.%${term}%,last_name_th.ilike.%${term}%,first_name_en.ilike.%${term}%,last_name_en.ilike.%${term}%`);
     }
 
     const { data, error, count } = await query
-        .order("first_name", { ascending: true })
+        .order("first_name_en", { ascending: true })
         .range(from, to);
 
     if (error) {
@@ -181,7 +181,7 @@ export async function getGlobalPlayers(
 
     const mapped: GlobalPlayer[] = (data || []).map((mp) => ({
         id: mp.id,
-        name: `${mp.first_name} ${mp.last_name}`.trim(),
+        name: (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim(),
         photo_url: mp.profile_img,
         id_card_url: mp.id_card_url,
         date_of_birth: mp.birthday,
@@ -217,8 +217,8 @@ export async function createGlobalPlayer(
         .from("master_players")
         .insert({
             user_id: user.id,
-            first_name: firstName,
-            last_name: lastName,
+            first_name_en: firstName,
+            last_name_en: lastName,
             profile_img: photoUrl || null,
             birthday: dateOfBirth || '1970-01-01',
             gender: 'unspecified',
@@ -234,7 +234,7 @@ export async function createGlobalPlayer(
     const mp = data;
     const mapped: GlobalPlayer = {
         id: mp.id,
-        name: `${mp.first_name} ${mp.last_name}`.trim(),
+        name: (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim(),
         photo_url: mp.profile_img,
         id_card_url: mp.id_card_url,
         date_of_birth: mp.birthday,
@@ -253,6 +253,12 @@ export async function updateGlobalPlayerInfo(
         date_of_birth?: string | null;
         first_name?: string;
         last_name?: string;
+        first_name_en?: string;
+        middle_name_en?: string;
+        last_name_en?: string;
+        first_name_th?: string;
+        middle_name_th?: string;
+        last_name_th?: string;
         gender?: string;
         tel?: string | null;
         profile_img?: string | null;
@@ -269,14 +275,30 @@ export async function updateGlobalPlayerInfo(
     const updateData: Record<string, unknown> = {};
     if (data.name !== undefined) {
         const nameParts = data.name.trim().split(" ");
-        updateData.first_name = nameParts[0];
-        updateData.last_name = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+        updateData.first_name_en = nameParts[0];
+        updateData.last_name_en = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
     }
-    if (data.first_name !== undefined) {
-        updateData.first_name = data.first_name;
+    if (data.first_name_en !== undefined) {
+        updateData.first_name_en = data.first_name_en;
+    } else if (data.first_name !== undefined) {
+        updateData.first_name_en = data.first_name;
     }
-    if (data.last_name !== undefined) {
-        updateData.last_name = data.last_name;
+    if (data.middle_name_en !== undefined) {
+        updateData.middle_name_en = data.middle_name_en;
+    }
+    if (data.last_name_en !== undefined) {
+        updateData.last_name_en = data.last_name_en;
+    } else if (data.last_name !== undefined) {
+        updateData.last_name_en = data.last_name;
+    }
+    if (data.first_name_th !== undefined) {
+        updateData.first_name_th = data.first_name_th;
+    }
+    if (data.middle_name_th !== undefined) {
+        updateData.middle_name_th = data.middle_name_th;
+    }
+    if (data.last_name_th !== undefined) {
+        updateData.last_name_th = data.last_name_th;
     }
     if (data.date_of_birth !== undefined) {
         updateData.birthday = data.date_of_birth || '1970-01-01';

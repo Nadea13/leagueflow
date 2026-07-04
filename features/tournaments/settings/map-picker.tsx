@@ -162,7 +162,6 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
                 <div className="relative flex-1 w-full md:w-auto">
                     <Input
                         type="text"
-                        placeholder="Search location to pin..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => {

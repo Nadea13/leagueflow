@@ -62,7 +62,6 @@ function TeamRosterColumn({
             {/* Search Bar */}
             <div className="p-1 md:p-2 border-b flex items-center gap-1 md:gap-2">
                 <Input
-                    placeholder={tCommon("search") || "Search player..."}
                     value={searchVal}
                     onChange={(e) => setSearchVal(e.target.value)}
                 />

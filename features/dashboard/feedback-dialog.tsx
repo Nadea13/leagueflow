@@ -90,7 +90,6 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
 
                     <Textarea
                         id="bug-message"
-                        placeholder={t("placeholder")}
                         className="min-h-[120px] resize-none bg-transparent text-foreground focus-visible:ring-0 text-sm"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}

@@ -40,7 +40,6 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
                         <div className="flex gap-3">
                             <Input
                                 type="number"
-                                placeholder="0"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         const val = parseInt((e.target as HTMLInputElement).value);

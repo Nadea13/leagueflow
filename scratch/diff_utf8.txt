@@ -1,0 +1,427 @@
+﻿diff --git a/features/sports/football/match-console-page.tsx b/features/sports/football/match-console-page.tsx
+index 9187b52..782e48f 100644
+--- a/features/sports/football/match-console-page.tsx
++++ b/features/sports/football/match-console-page.tsx
+@@ -75,11 +75,11 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+     const { time, setTime, isRunning, setIsRunning } = useMatchTimer(match, tournamentId, events);
+ 
+     const isHalfTime = !isRunning && events.length > 0 && (() => {
+-        const lastTimerEvent = events.find(e => 
+-            e.event_type === 'kick_off' || 
+-            e.event_type === 'match_resumed' || 
+-            e.event_type === 'match_paused' || 
+-            e.event_type === 'half_time' || 
++        const lastTimerEvent = events.find(e =>
++            e.event_type === 'kick_off' ||
++            e.event_type === 'match_resumed' ||
++            e.event_type === 'match_paused' ||
++            e.event_type === 'half_time' ||
+             e.event_type === 'full_time'
+         );
+         return lastTimerEvent?.event_type === 'half_time';
+@@ -195,12 +195,12 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+     // --- Score Sync to DB (for MatchCard) ---
+     useEffect(() => {
+         if (readOnly || match.status === 'finished') return;
+-        
++
+         // Only sync if scores differ from DB values
+         if (homeScore !== dbHomeScore || awayScore !== dbAwayScore) {
+             const syncScore = setTimeout(() => {
+                 updateMatch(match.id, { home_score: homeScore, away_score: awayScore }, tournamentId);
+-            }, 500); 
++            }, 500);
+             return () => clearTimeout(syncScore);
+         }
+     }, [homeScore, awayScore, dbHomeScore, dbAwayScore, match.id, tournamentId, readOnly, match.status]);
+@@ -210,7 +210,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+         if (readOnly || match.status !== 'live' || !isRunning) return;
+ 
+         const currentMinute = Math.floor(time / 60) + 1;
+-        
++
+         // Only sync if minute changed and it's different from DB
+         if (currentMinute !== Number(match.current_minute)) {
+             const syncTimer = setTimeout(() => {
+@@ -271,12 +271,6 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+             const res = await addEvent(resolvedTeamId || null, 'match_paused', currentMinute, null, {}, "Match Paused");
+             if (!res.success) throw new Error(`${res.error || "Failed to add match pause"}`);
+ 
+-            // Clear any 'add_time' events when pausing, so it's reset for the next resumption
+-            const addTimeEvents = events.filter(e => e.event_type === 'add_time');
+-            for (const e of addTimeEvents) {
+-                await deleteEvent(e.id);
+-            }
+-
+             const updateRes = await updateMatch(match.id, { timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
+             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match balance"} (Match: ${match.id})`);
+ 
+@@ -310,12 +304,6 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+             const res = await addEvent(resolvedTeamId || null, 'half_time', currentMinute, null, {}, "Half Time");
+             if (!res.success) throw new Error(`${res.error || "Failed to add half time"}`);
+ 
+-            // Clear any 'add_time' events when pausing, so it's reset for the next resumption
+-            const addTimeEvents = events.filter(e => e.event_type === 'add_time');
+-            for (const e of addTimeEvents) {
+-                await deleteEvent(e.id);
+-            }
+-
+             const updateRes = await updateMatch(match.id, { timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
+             if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match balance"} (Match: ${match.id})`);
+ 
+@@ -381,7 +369,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+         }
+         setIsRunning(false);
+         await updateMatch(match.id, { status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute }, tournamentId);
+-        
++
+         // Auto-advance if possible
+         await advanceStage(tournamentId);
+     };
+@@ -389,15 +377,15 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+     const handleWalkover = async (winnerId: string) => {
+         if (!confirm(t("confirm_walkover"))) return;
+         const isHomeWinner = winnerId === match.home_team_id;
+-        
++
+         try {
+             // Add walkover event
+             await addEvent(winnerId, 'walkover', 0, null, { winner_id: winnerId }, `Walkover Victory (${isHomeWinner ? '3-0' : '0-3'})`);
+-            
+-            await updateMatch(match.id, { 
+-                status: 'finished', 
+-                home_score: isHomeWinner ? 3 : 0, 
+-                away_score: isHomeWinner ? 0 : 3, 
++
++            await updateMatch(match.id, {
++                status: 'finished',
++                home_score: isHomeWinner ? 3 : 0,
++                away_score: isHomeWinner ? 0 : 3,
+                 winner_id: winnerId,
+                 current_minute: 0,
+                 winner_to_node_id: winnerId
+@@ -405,7 +393,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+ 
+             // Auto-advance if possible
+             await advanceStage(tournamentId);
+-            
++
+             setWoDialogOpen(false);
+             router.refresh();
+         } catch (error) {
+@@ -473,30 +461,42 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+     const handleSetTime = async (minutes: number, seconds: number) => {
+         const totalSeconds = (minutes * 60) + seconds;
+         const currentMinute = Math.ceil((totalSeconds || 1) / 60);
+-        
++
+         // Optimistic Update
+         setTime(totalSeconds);
+         setMatch(prev => ({ ...prev, elapsed_before_pause: totalSeconds, current_minute: currentMinute }));
+-        
++
+         await updateMatch(match.id, { elapsed_before_pause: totalSeconds, current_minute: currentMinute }, tournamentId);
+         setSetTimeDialogOpen(false);
+     };
+ 
+     const lastAddTimeEvent = [...events].reverse().find(e => e.event_type === 'add_time');
+-    const addedTime = (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null;
++    const lastTimerMarker = [...events].reverse().find(e => 
++        e.event_type === 'kick_off' || 
++        e.event_type === 'match_resumed' || 
++        e.event_type === 'match_paused' ||
++        e.event_type === 'half_time' || 
++        e.event_type === 'full_time'
++    );
++    const isAddedTimeActive = lastAddTimeEvent && lastTimerMarker 
++        ? new Date(lastAddTimeEvent.created_at).getTime() > new Date(lastTimerMarker.created_at).getTime()
++        : !!lastAddTimeEvent;
++    const addedTime = isAddedTimeActive
++        ? (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null
++        : null;
+ 
+     // --- Team Action Grid Component ---
+     const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
+         const actions = [
+-            { type: 'goal', label: t("goal"), icon: Volleyball, color: 'hover:bg-primary hover:text-black hover:border-primary' },
+-            { type: 'yellow_card', label: t("yellow_card"), icon: Square, color: 'hover:bg-yellow-400 hover:text-black hover:border-yellow-400', iconColor: 'text-yellow-500 fill-yellow-500' },
+-            { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-foreground hover:border-red-500', iconColor: 'text-red-500 fill-red-500' },
+-            { type: 'substitution', label: t("substitution"), icon: Repeat, color: 'hover:bg-blue-500 hover:text-foreground hover:border-blue-500' },
+-            { type: 'foul', label: t("foul") || "Foul", icon: Activity, color: 'hover:bg-orange-500 hover:text-foreground hover:border-orange-500' },
+-            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target, color: 'hover:bg-indigo-600 hover:text-foreground hover:border-indigo-600' },
+-            { type: 'save', label: t("save") || "Save", icon: Shield, color: 'hover:bg-teal-600 hover:text-foreground hover:border-teal-600' },
+-            { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope, color: 'hover:bg-amber-600 hover:text-foreground hover:border-amber-600' },
+-            { type: 'corner', label: t("corner") || "Corner", icon: Flag, color: 'hover:bg-cyan-500 hover:text-black hover:border-foreground' },
++            { type: 'goal', label: t("goal"), icon: Volleyball },
++            { type: 'yellow_card', label: t("yellow_card"), icon: Square, iconColor: 'text-yellow-500 fill-yellow-500' },
++            { type: 'red_card', label: t("red_card"), icon: Square, iconColor: 'text-red-500 fill-red-500' },
++            { type: 'substitution', label: t("substitution"), icon: Repeat },
++            { type: 'foul', label: t("foul") || "Foul", icon: Activity },
++            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target },
++            { type: 'save', label: t("save") || "Save", icon: Shield },
++            { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope },
++            { type: 'corner', label: t("corner") || "Corner", icon: Flag },
+         ];
+ 
+         return (
+@@ -512,10 +512,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+                                 variant="outline"
+                                 key={action.type}
+                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
+-                                className={cn(
+-                                    "group flex items-center justify-center border-foreground/5 bg-foreground/5 transition-all duration-300",
+-                                    action.color
+-                                )}
++                                className="group flex items-center justify-center"
+                             >
+                                 <action.icon className={cn("h-5 w-5 transition-transform", action.iconColor)} />
+                                 <span className="hidden md:inline text-[10px] font-black tracking-wider">{action.label}</span>
+@@ -527,6 +524,107 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+         );
+     };
+ 
++
++
++    const matchControlsBox = (
++        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
++            <div className="relative z-10 space-y-2 md:space-y-4">
++                {readOnly ? (
++                    <div className="space-y-4">
++                        <div className="flex items-center justify-between">
++                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("tournament")}</span>
++                            <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{tournamentName}</span>
++                        </div>
++                        <div className="flex items-center justify-between">
++                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
++                            <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
++                        </div>
++                        <div className="pt-4 border-t">
++                            <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
++                                <Timer className="w-6 h-6 text-primary animate-pulse" />
++                                <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">LIVE UPDATES ACTIVE</span>
++                            </div>
++                        </div>
++                    </div>
++                ) : (
++                    <MatchTimeControl
++                        status={match.status}
++                        isRunning={isRunning}
++                        readOnly={false}
++                        onStart={handleStartMatch}
++                        onPause={handlePauseMatch}
++                        onHalfTime={handleHalfTime}
++                        onResume={handleResumeMatch}
++                        onEnd={handleEndMatch}
++                        onSetTime={() => setSetTimeDialogOpen(true)}
++                        onAddTime={() => setAddTimeDialogOpen(true)}
++                    />
++                )}
++            </div>
++        </div>
++    );
++
++    const quickActionsBox = !readOnly ? (
++        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
++            <div className="relative z-10 space-y-2 md:space-y-4">
++                <div className="grid grid-cols-4 md:grid-cols-1 gap-1 md:gap-2">
++                    <Button
++                        variant="outline"
++                        onClick={handleUndo}
++                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
++                    >
++                        <Undo className="h-4 w-4 text-muted-foreground" />
++                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
++                    </Button>
++                    <Button
++                        variant="outline"
++                        onClick={() => setOverlayDialogOpen(true)}
++                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
++                    >
++                        <Tv className="h-4 w-4 text-primary" />
++                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
++                    </Button>
++                    <Button
++                        variant="outline"
++                        onClick={() => setRosterDialogOpen(true)}
++                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
++                    >
++                        <Users className="h-4 w-4 text-primary" />
++                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("select_starting_lineup") || "Lineups"}</span>
++                    </Button>
++                    {match.status === 'finished' && (
++                        <PenaltyShootoutDialog
++                            matchId={match.id}
++                            homeTeamId={match.home_team_id}
++                            awayTeamId={match.away_team_id}
++                            homeTeamName={match.home_team?.name || 'Home'}
++                            awayTeamName={match.away_team?.name || 'Away'}
++                            onUpdate={fetchShots}
++                            trigger={
++                                <Button
++                                    variant="outline"
++                                    disabled={homeScore !== awayScore}
++                                    className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group disabled:opacity-50"
++                                >
++                                    <Target className="h-4 w-4 text-primary" />
++                                    <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
++                                </Button>
++                            }
++                        />
++                    )}
++                    <Button
++                        variant="outline"
++                        onClick={() => setWoDialogOpen(true)}
++                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
++                    >
++                        <Ban className="h-4 w-4 text-destructive" />
++                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("walkover")}</span>
++                    </Button>
++                </div>
++            </div>
++        </div>
++    ) : null;
++
+     return (
+         <div className={cn(
+             "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 md:space-y-4",
+@@ -596,113 +694,23 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+             <main className="flex-1 w-full grid grid-cols-12 gap-2 md:gap-4">
+                 {/* Sidebar: Admin Controls or Match Info */}
+                 <aside className="col-span-12 lg:col-span-3 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
+-                    {/* Match Controls */}
+-                    <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+-                        <div className="relative z-10 space-y-2 md:space-y-4">
+-                            <div className="space-y-1">
+-                                <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
+-                            </div>
+-                            {readOnly ? (
+-                                <div className="space-y-4">
+-                                    <div className="flex items-center justify-between">
+-                                        <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("tournament") || "Tournament"}</span>
+-                                        <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{tournamentName}</span>
+-                                    </div>
+-                                    <div className="flex items-center justify-between">
+-                                        <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
+-                                        <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
+-                                    </div>
+-                                    <div className="pt-4 border-t">
+-                                        <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
+-                                            <Timer className="w-6 h-6 text-primary animate-pulse" />
+-                                            <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">LIVE UPDATES ACTIVE</span>
+-                                        </div>
+-                                    </div>
+-                                </div>
+-                            ) : (
+-                                <MatchTimeControl
+-                                    status={match.status}
+-                                    isRunning={isRunning}
+-                                    readOnly={false}
+-                                    onStart={handleStartMatch}
+-                                    onPause={handlePauseMatch}
+-                                    onHalfTime={handleHalfTime}
+-                                    onResume={handleResumeMatch}
+-                                    onEnd={handleEndMatch}
+-                                    onSetTime={() => setSetTimeDialogOpen(true)}
+-                                    onAddTime={() => setAddTimeDialogOpen(true)}
+-                                />
+-                            )}
+-                        </div>
++                    {/* Match Controls (Desktop only) */}
++                    <div className="hidden lg:block">
++                        {matchControlsBox}
+                     </div>
+ 
+-                    {!readOnly && (
+-                        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+-                            <div className="relative z-10 space-y-2 md:space-y-4">
+-                                <div className="space-y-1">
+-                                    <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{t("quick_actions")}</h4>
+-                                </div>
+-                                <div className="grid grid-cols-3 md:grid-cols-1 gap-1 md:gap-2">
+-                                    <Button
+-                                        variant="outline"
+-                                        onClick={handleUndo}
+-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+-                                    >
+-                                        <Undo className="h-4 w-4 text-muted-foreground" />
+-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
+-                                    </Button>
+-                                    <Button
+-                                        variant="outline"
+-                                        onClick={() => setOverlayDialogOpen(true)}
+-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+-                                    >
+-                                        <Tv className="h-4 w-4 text-primary" />
+-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
+-                                    </Button>
+-                                    <Button
+-                                        variant="outline"
+-                                        onClick={() => setRosterDialogOpen(true)}
+-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+-                                    >
+-                                        <Users className="h-4 w-4 text-primary" />
+-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("select_starting_lineup") || "Lineups"}</span>
+-                                    </Button>
+-                                    {match.status === 'finished' && (
+-                                        <PenaltyShootoutDialog
+-                                            matchId={match.id}
+-                                            homeTeamId={match.home_team_id}
+-                                            awayTeamId={match.away_team_id}
+-                                            homeTeamName={match.home_team?.name || 'Home'}
+-                                            awayTeamName={match.away_team?.name || 'Away'}
+-                                            onUpdate={fetchShots}
+-                                            trigger={
+-                                                <Button
+-                                                    variant="outline"
+-                                                    disabled={homeScore !== awayScore}
+-                                                    className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group disabled:opacity-50"
+-                                                >
+-                                                    <Target className="h-4 w-4 text-primary" />
+-                                                    <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
+-                                                </Button>
+-                                            }
+-                                        />
+-                                    )}
+-                                    <Button
+-                                        variant="outline"
+-                                        onClick={() => setWoDialogOpen(true)}
+-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+-                                    >
+-                                        <Ban className="h-4 w-4 text-destructive" />
+-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("walkover")}</span>
+-                                    </Button>
+-                                </div>
+-                            </div>
+-                        </div>
+-                    )}
++                    <div className="hidden lg:block">
++                        {quickActionsBox}
++                    </div>
+                 </aside>
+ 
+                 {/* Main Content Area */}
+                 <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 md:gap-4">
++                    {/* Match Controls (Mobile only) */}
++                    <div className="block lg:hidden">
++                        {matchControlsBox}
++                    </div>
++
+                     {/* Scoreboard Section */}
+                     <section className="flex flex-col gap-2 md:gap-4">
+                         <Scoreboard
+@@ -716,9 +724,14 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
+                             timerTime={time}
+                             timerReadOnly={readOnly || match.status === 'finished'}
+                             timerCustomText={match.status === 'finished' ? "FT" : isHalfTime ? "HT" : null}
+-                            addedTime={isRunning ? addedTime : null}
++                            addedTime={isHalfTime || match.status === 'finished' ? null : addedTime}
+                         />
+ 
++                        {/* Quick Actions (Mobile only) */}
++                        <div className="block lg:hidden">
++                            {quickActionsBox}
++                        </div>
++
+                         {!readOnly && (
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                                 <TeamActionGrid teamId={match.home_team_id!} name={match.home_team?.name || 'Home'} type="home" />

@@ -38,7 +38,6 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                         <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
                         <Input
                             type="search"
-                            placeholder="Search teams..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pr-10"

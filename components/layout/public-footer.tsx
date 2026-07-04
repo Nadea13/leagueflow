@@ -6,24 +6,15 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { PricingFooter } from "@/components/pricing/pricing-footer";
-import { Plan } from "@/types";
 
-interface PublicFooterProps {
-    managerPlans?: Plan[];
-    organizerPlans?: Plan[];
-    showPricing?: boolean;
-}
-
-export function PublicFooter({ managerPlans = [], organizerPlans = [], showPricing = true }: PublicFooterProps) {
-    const t = useTranslations('Home');
+export function PublicFooter() {
     const tLanding = useTranslations('Landing');
     const tPricing = useTranslations('Pricing');
 
     return (
         <footer className="py-10 border-t bg-background" id="footer">
             <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
-                <div className="flex flex-col items-start gap-4 mb-8 md:mb-0">
+                <div className="flex flex-col items-center md:items-start gap-4 mb-8 md:mb-0">
                     <div className="flex items-center gap-3">
                         <svg viewBox="0 0 160 160" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
                             <path d="M85.4616 21.9501C86.0436 21.9471 86.6256 21.9441 87.2253 21.941C94.6778 21.9214 101.867 22.4122 109.212 23.8001C108.078 25.1269 106.944 26.4529 105.805 27.7751C104.953 28.7693 104.105 29.7682 103.268 30.7751C95.053 40.4796 85.8612 49.0996 75.6116 56.6001C75.0985 56.9801 74.5855 57.3601 74.0569 57.7517C62.719 66.1146 50.7349 73.3682 38.3116 80.0001C37.7382 80.3066 37.1648 80.6131 36.5741 80.9288C32.6149 83.0001 32.6149 83.0001 30.8116 83.0001C30.5549 81.8516 30.3068 80.7011 30.0616 79.5501C29.9223 78.9097 29.7831 78.2693 29.6397 77.6095C28.1595 68.5881 28.3166 59.5618 28.3616 50.4501C28.3656 49.0256 28.3692 47.6012 28.3725 46.1767C28.3812 42.7178 28.395 39.259 28.4116 35.8001C43.3259 28.6069 43.3259 28.6069 49.5616 26.7501C50.1967 26.5597 50.8319 26.3693 51.4864 26.1732C53.3888 25.6225 55.296 25.1029 57.2116 24.6001C58.021 24.3849 58.021 24.3849 58.8467 24.1654C67.5959 21.9748 76.496 21.9759 85.4616 21.9501Z" fill="#0D2C54" />
@@ -35,22 +26,16 @@ export function PublicFooter({ managerPlans = [], organizerPlans = [], showPrici
                         </svg>
                         <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
                     </div>
-                    <div className="flex flex-col items-start gap-2 ml-1 text-[10px] font-black tracking-[0.2em] text-muted-foreground/60 transition-all">
-                        {showPricing && (managerPlans.length > 0 || organizerPlans.length > 0) && (
-                            <PricingFooter managerPlans={managerPlans} organizerPlans={organizerPlans} />
-                        )}
-                        <Link href="/#results" className="hover:text-primary transition-colors hover:opacity-100">{t('matches')}</Link>
-                    </div>
                     <div>
-                        <Button size="lg" asChild className="h-12 px-8 font-black tracking-widest text-xs hover:bg-primary hover:text-primary-foreground transition-all">
+                        <Button asChild>
                             <Link href="/signup">
                                 {tPricing('get_started')} <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
                     </div>
                 </div>
-                <div className="flex flex-col md:flex-row items-center gap-6 md:self-end">
-                    <p className="text-[10px] font-black tracking-[0.2em] opacity-40">
+                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 md:self-end">
+                    <p className="text-xs tracking-wide opacity-40">
                         © {new Date().getFullYear()} League Flow. {tLanding('footer_rights')}
                     </p>
                     <div className="flex items-center gap-2">

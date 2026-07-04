@@ -7,6 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EVENT_TYPES } from "./constants";
 import { EventType, Player, MatchEvent } from "@/types";
 import { useTranslations } from "next-intl";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MatchEventDialogProps {
     open: boolean;
@@ -38,6 +48,7 @@ export function MatchEventDialog({
     const [playerId, setPlayerId] = useState<string>("");
     const [assistPlayerId, setAssistPlayerId] = useState<string>("");
     const [subInPlayerId, setSubInPlayerId] = useState<string>("");
+    const [showConfirm, setShowConfirm] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -46,49 +57,46 @@ export function MatchEventDialog({
                 setPlayerId("");
                 setAssistPlayerId("");
                 setSubInPlayerId("");
+                setShowConfirm(false);
             }, 0);
             return () => clearTimeout(timer);
         }
     }, [open, initialMinute, eventType]);
 
-    // Sort players: active (on field) first
-    const sortedPlayers = [...players].sort((a, b) => {
-        const aActive = activeLineupIds?.includes(a.id) ? 1 : 0;
-        const bActive = activeLineupIds?.includes(b.id) ? 1 : 0;
-        return bActive - aActive;
-    });
+    const startingPlayers = activeLineupIds && activeLineupIds.length > 0
+        ? players.filter(p => activeLineupIds.includes(p.id))
+        : players;
+
+    const substitutePlayers = activeLineupIds && activeLineupIds.length > 0
+        ? players.filter(p => !activeLineupIds.includes(p.id))
+        : players;
 
     const getPlayerLabel = (player: Player) => {
         const numPart = player.number ? `#${player.number} ` : "";
-        if (!activeLineupIds || activeLineupIds.length === 0) {
-            return `${numPart}${player.name}`;
-        }
-        const isActive = activeLineupIds.includes(player.id);
-        const statusText = isActive
-            ? ` (${t("starting_players") || "Starting"})`
-            : ` (${t("substitute_players") || "Bench"})`;
-        return `${numPart}${player.name}${statusText}`;
+        return `${numPart}${player.name}`;
     };
 
-    const handleSave = () => {
+    const handleSave = (bypassConfirm = false) => {
         const min = parseInt(minute) || 0;
         const extraInfo: Record<string, unknown> = {};
         let autoRed = false;
 
         // Card Ban Logic: Check if player already has a yellow card
-        if (eventType === 'yellow_card' && playerId && playerId !== 'unknown') {
+        if (!bypassConfirm && eventType === 'yellow_card' && playerId && playerId !== 'unknown') {
             const previousYellows = existingEvents.filter(e =>
                 e.player_id === playerId &&
                 e.event_type === 'yellow_card'
             );
 
             if (previousYellows.length >= 1) {
-                if (!confirm(t("second_yellow_warning") || "Player already has a yellow card. This will be recorded as a Second Yellow (Red Card). Proceed?")) {
-                    return;
-                }
-                autoRed = true;
-                extraInfo.is_second_yellow = true;
+                setShowConfirm(true);
+                return;
             }
+        }
+
+        if (eventType === 'yellow_card' && playerId && playerId !== 'unknown' && bypassConfirm) {
+            autoRed = true;
+            extraInfo.is_second_yellow = true;
         }
 
         if (eventType === 'goal' && assistPlayerId && assistPlayerId !== 'none') {
@@ -97,8 +105,11 @@ export function MatchEventDialog({
         if (eventType === 'substitution') {
             extraInfo.out_player_id = playerId;
             extraInfo.in_player_id = subInPlayerId;
+            const outPlayer = players.find(p => p.id === playerId);
+            const inPlayer = players.find(p => p.id === subInPlayerId);
+            extraInfo.out_player_name = outPlayer?.name || "Unknown";
+            extraInfo.in_player_name = inPlayer?.name || "Unknown";
         }
-
         onSave({
             minute: min,
             playerId,
@@ -140,7 +151,7 @@ export function MatchEventDialog({
                                 <SelectValue placeholder={t("player_name")} />
                             </SelectTrigger>
                             <SelectContent>
-                                {sortedPlayers.map((player) => (
+                                {startingPlayers.map((player) => (
                                     <SelectItem key={player.id} value={player.id}>
                                         {getPlayerLabel(player)}
                                     </SelectItem>
@@ -162,7 +173,7 @@ export function MatchEventDialog({
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="none">{t("no_assist")}</SelectItem>
-                                    {sortedPlayers.map((player) => (
+                                    {startingPlayers.map((player) => (
                                         <SelectItem key={player.id} value={player.id}>
                                             {getPlayerLabel(player)}
                                         </SelectItem>
@@ -180,9 +191,9 @@ export function MatchEventDialog({
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder={t("select_player_in")} />
                                 </SelectTrigger>
-                                <SelectContent className="bg-card border-foreground/10">
-                                    {sortedPlayers.map((player) => (
-                                        <SelectItem key={player.id} value={player.id} className="focus:bg-primary focus:text-black font-black tracking-widest py-3">
+                                <SelectContent>
+                                    {substitutePlayers.map((player) => (
+                                        <SelectItem key={player.id} value={player.id}>
                                             {getPlayerLabel(player)}
                                         </SelectItem>
                                     ))}
@@ -195,7 +206,7 @@ export function MatchEventDialog({
                 <DialogFooter className="p-2 md:p-4 border-t">
                     <Button
                         type="button"
-                        onClick={handleSave}
+                        onClick={() => handleSave(false)}
                         disabled={!playerId}
                         className="w-full"
                     >
@@ -203,6 +214,33 @@ export function MatchEventDialog({
                     </Button>
                 </DialogFooter>
             </DialogContent>
+
+            <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground border-b p-2 md:p-4">
+                            {t("second_yellow_warning_title") || "Second Yellow Card"}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 p-2 md:p-4">
+                            {t("second_yellow_warning") || "Player already has a yellow card. This will be recorded as a Second Yellow (Red Card). Proceed?"}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-1 md:gap-2 border-t p-2 md:p-4">
+                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                            {tCommon("cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                handleSave(true);
+                                setShowConfirm(false);
+                            }}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
+                        >
+                            {tCommon("confirm") || "Confirm"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </Dialog>
     );
 }

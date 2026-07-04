@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
-import { Trophy, Calendar, ArrowLeft, Award, Megaphone, MapPin, Info } from "lucide-react";
+import { Trophy, Calendar, ArrowLeft, Award, Megaphone, MapPin, Info, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tab } from "@/components/ui/tab";
@@ -37,6 +37,7 @@ export function PublicTournamentShell({
     initialTeams,
     initialMatches,
     initialEvents,
+    initialPlayers = [],
     categories = [],
     selectedCategoryId,
     announcements = [],
@@ -45,7 +46,7 @@ export function PublicTournamentShell({
     const t = useTranslations("PublicView");
     const tTournament = useTranslations("Tournament");
     const [matches, setMatches] = useState<Match[]>(initialMatches);
-    const [_events, setEvents] = useState<MatchEvent[]>(initialEvents);
+    const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
     const [tournament, setTournament] = useState(initialTournament);
     const router = useRouter();
     const pathname = usePathname();
@@ -210,6 +211,116 @@ export function PublicTournamentShell({
         });
     }, [tournament.canvas_data, initialTeams, matches, tournament.id]);
 
+    const resolveTeam = useCallback((teamId: string | null) => {
+        if (!teamId) return null;
+        return initialTeams.find(t => t.id === teamId || (t as Team & { team_id?: string }).team_id === teamId);
+    }, [initialTeams]);
+
+    const playerStats = useMemo(() => {
+        const playersMap = new Map<string, {
+            id: string;
+            name: string;
+            teamName: string;
+            teamLogo: string | null;
+            goals: number;
+            assists: number;
+            yellowCards: number;
+            redCards: number;
+            saves: number;
+            injuries: number;
+        }>();
+
+        const getOrCreatePlayer = (playerId: string, playerName: string, teamId: string | null) => {
+            if (!playersMap.has(playerId)) {
+                const team = resolveTeam(teamId);
+                const teamName = team?.name || "Unknown Team";
+                const teamLogo = team?.logo_url || null;
+                playersMap.set(playerId, {
+                    id: playerId,
+                    name: playerName,
+                    teamName,
+                    teamLogo,
+                    goals: 0,
+                    assists: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                    saves: 0,
+                    injuries: 0
+                });
+            }
+            return playersMap.get(playerId)!;
+        };
+
+        events.forEach(event => {
+            if (!event.player_id) return;
+            const playerId = event.player_id;
+            const playerName = event.player_name || "Unknown Player";
+
+            // 1. Process Goals
+            if (event.event_type === 'goal') {
+                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                player.goals++;
+
+                // Check for assist in goal event extra_info
+                const assistPlayerId = event.extra_info?.assist_player_id as string | undefined;
+                if (assistPlayerId && assistPlayerId !== 'none') {
+                    const assistPlayer = initialPlayers.find(p => p.id === assistPlayerId);
+                    const assistPlayerName = assistPlayer?.name || "Unknown Player";
+                    const assistPlayerObj = getOrCreatePlayer(assistPlayerId, assistPlayerName, assistPlayer?.team_id || event.team_id);
+                    assistPlayerObj.assists++;
+                }
+            }
+            // 2. Process Yellow Cards
+            else if (event.event_type === 'yellow_card') {
+                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                player.yellowCards++;
+            }
+            // 3. Process Red Cards
+            else if (event.event_type === 'red_card') {
+                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                player.redCards++;
+            }
+            // 4. Process Saves
+            else if (event.event_type === 'save') {
+                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                player.saves++;
+            }
+            // 5. Process Injuries
+            else if (event.event_type === 'injury') {
+                const player = getOrCreatePlayer(playerId, playerName, event.team_id);
+                player.injuries++;
+            }
+        });
+
+        const allStats = Array.from(playersMap.values());
+
+        const scorers = [...allStats]
+            .filter(p => p.goals > 0)
+            .sort((a, b) => b.goals - a.goals || b.assists - a.assists);
+
+        const assists = [...allStats]
+            .filter(p => p.assists > 0)
+            .sort((a, b) => b.assists - a.assists || b.goals - a.goals);
+
+        const yellowCards = [...allStats]
+            .filter(p => p.yellowCards > 0)
+            .sort((a, b) => b.yellowCards - a.yellowCards || b.redCards - a.redCards);
+
+        const redCards = [...allStats]
+            .filter(p => p.redCards > 0)
+            .sort((a, b) => b.redCards - a.redCards || b.yellowCards - a.yellowCards);
+
+        const saves = [...allStats]
+            .filter(p => p.saves > 0)
+            .sort((a, b) => b.saves - a.saves);
+
+        const injuries = [...allStats]
+            .filter(p => p.injuries > 0)
+            .sort((a, b) => b.injuries - a.injuries);
+
+        return { scorers, assists, yellowCards, redCards, saves, injuries };
+    }, [events, initialPlayers, resolveTeam]);
+
     const currentTab = searchParams.get('tab') || 'overview';
 
     const handleTabChange = (value: string) => {
@@ -298,9 +409,9 @@ export function PublicTournamentShell({
     };
 
     return (
-        <main className="container mx-auto px-2 md:px-0 py-6 max-w-6xl">
+        <main className="container mx-auto px-2 md:px-0 py-2 md:py-4 max-w-7xl">
             {/* Unified Header Block - Styled like squad-management */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">
+            <div className="flex md:items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-4">
                     <Button
                         variant="ghost"
@@ -313,35 +424,29 @@ export function PublicTournamentShell({
                         </Link>
                     </Button>
                     <div className="flex flex-col gap-1">
-                        <div className="flex flex-wrap items-center gap-2 md:gap-4">
+                        <div className="flex flex-wrap items-center gap-1 md:gap-2">
                             <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
                                 {tournament?.name}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                                <Badge variant="default">
-                                    {tournament?.format?.replace('_', ' ')}
-                                </Badge>
-                                <span className="text-[10px] font-black tracking-wider text-primary/60">
-                                    {initialTeams.length}/{tournament?.max_teams} {tTournament("teams")}
-                                </span>
-                                <Badge className={cn(
-                                    tournament?.status === 'ongoing' && "bg-green-600 hover:bg-green-700 shadow-green-900/20",
-                                    tournament?.status === 'finished' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
-                                    tournament?.status === 'upcoming' && "bg-amber-600 hover:bg-amber-700 shadow-amber-900/20",
-                                    (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
-                                )}>
-                                    {tTournament(tournament?.status || 'draft')}
-                                </Badge>
-                            </div>
+                            {tournament?.status !== 'ongoing' && tournament?.status !== 'upcoming' && (
+                                <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                                    <Badge className={cn(
+                                        tournament?.status === 'finished' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
+                                        (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
+                                    )}>
+                                        {tTournament(tournament?.status || 'draft')}
+                                    </Badge>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 shrink-0 self-end md:self-auto">
+                <div className="flex items-center gap-3 shrink-0 self-end md:self-auto">
                     {categories.length > 0 && (
-                        <div className="flex items-center gap-2 w-full md:w-auto max-w-[280px]">
+                        <div className="flex items-center gap-2 w-fit md:w-auto max-w-[280px]">
                             <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
-                                <SelectTrigger className="w-[180px] bg-background/50 border h-9 text-xs">
+                                <SelectTrigger className="bg-background/50 border h-9 text-xs">
                                     <SelectValue placeholder="เลือกหมวดหมู่" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -360,9 +465,9 @@ export function PublicTournamentShell({
 
 
             {/* Teams Block (Marquee) */}
-            <div className="space-y-4 overflow-hidden relative mb-6">
+            <div className="space-y-1 md:space-y-2 overflow-hidden relative py-1 md:py-2">
                 {initialTeams.length > 0 ? (
-                    <div className="relative w-full overflow-hidden py-4">
+                    <div className="relative w-full overflow-hidden">
                         <style>{`
                             @keyframes marquee {
                                 0% { transform: translateX(0); }
@@ -382,7 +487,7 @@ export function PublicTournamentShell({
                             {marqueeTeams.map((team, index) => (
                                 <div
                                     key={`team-1-${team.id}-${index}`}
-                                    className="w-24 h-24 mx-2 border rounded-full flex items-center justify-center overflow-hidden bg-background hover:border-primary/50 transition-all shrink-0 cursor-pointer"
+                                    className="w-16 h-16 md:w-24 md:h-24 mx-2 border rounded-full flex items-center justify-center overflow-hidden bg-background hover:border-primary/50 transition-all shrink-0 cursor-pointer"
                                     title={team.name}
                                 >
                                     {team.logo_url ? (
@@ -398,7 +503,7 @@ export function PublicTournamentShell({
                             {marqueeTeams.map((team, index) => (
                                 <div
                                     key={`team-2-${team.id}-${index}`}
-                                    className="w-24 h-24 mx-2 border rounded-full flex items-center justify-center overflow-hidden bg-background hover:border-primary/50 transition-all shrink-0 cursor-pointer"
+                                    className="w-16 h-16 md:w-24 md:h-24 mx-2 border rounded-full flex items-center justify-center overflow-hidden bg-background hover:border-primary/50 transition-all shrink-0 cursor-pointer"
                                     title={team.name}
                                 >
                                     {team.logo_url ? (
@@ -423,12 +528,13 @@ export function PublicTournamentShell({
             <Tab
                 value={currentTab}
                 onChange={handleTabChange}
-                className="w-full md:w-max mb-6"
+                className="w-full md:w-max mb-1 md:mb-2 bg-card"
                 itemClassName="flex-1 md:flex-none"
                 options={[
                     { value: 'overview', label: t("overview"), icon: Trophy },
                     { value: 'standings', label: t("league_table"), icon: Award },
                     { value: 'matches', label: t("matches"), icon: Calendar },
+                    { value: 'stats', label: t("player_stats"), icon: Users },
                 ]}
             />
 
@@ -594,7 +700,6 @@ export function PublicTournamentShell({
                             {canvasStandings.map((group) => (
                                 <div key={group.label} className="space-y-3">
                                     <h3 className="text-lg font-black tracking-tighter text-foreground flex items-center gap-2">
-                                        <span className="w-2.5 h-2.5 bg-primary rounded-full shrink-0" />
                                         {group.label}
                                     </h3>
                                     <div className="bg-card border relative overflow-hidden transition-colors rounded-lg">
@@ -627,6 +732,208 @@ export function PublicTournamentShell({
                         endDate={tournament.end_date}
                         isPublic={true}
                     />
+                </div>
+            )}
+
+            {currentTab === 'stats' && (
+                <div className="space-y-1 md:space-y-2 animate-in fade-in duration-200">
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
+                            <Users className="h-5 w-5 text-primary" />
+                            {t("player_stats")}
+                        </h2>
+                        <p className="text-[10px] font-bold text-muted-foreground/60">สถิตินักกีฬาในการแข่งขันทั้งหมด</p>
+                    </div>
+
+                    {!(playerStats.scorers.length > 0 || playerStats.assists.length > 0 || playerStats.saves.length > 0 || playerStats.yellowCards.length > 0 || playerStats.redCards.length > 0 || playerStats.injuries.length > 0) ? (
+                        <div className="bg-card border rounded-xl p-8 text-center text-xs text-muted-foreground/60 font-medium shadow-sm">
+                            {t("no_stats_recorded")}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 md:gap-2">
+                            {/* Top Scorers */}
+                            {playerStats.scorers.length > 0 && (
+                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                    <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                        <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
+                                            {t("goals")}
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y flex-1">
+                                        {playerStats.scorers.map((player, idx) => (
+                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                                            {player.teamLogo && (
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                            )}
+                                                            {player.teamName}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-black text-sm pr-2">{player.goals}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Top Assists */}
+                            {playerStats.assists.length > 0 && (
+                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                    <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                        <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
+                                            {t("assists")}
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y flex-1">
+                                        {playerStats.assists.map((player, idx) => (
+                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                                            {player.teamLogo && (
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                            )}
+                                                            {player.teamName}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-black text-sm pr-2">{player.assists}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Top Saves */}
+                            {playerStats.saves.length > 0 && (
+                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                    <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                        <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
+                                            {t("saves")}
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y flex-1">
+                                        {playerStats.saves.map((player, idx) => (
+                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                                            {player.teamLogo && (
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                            )}
+                                                            {player.teamName}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-black text-sm pr-2">{player.saves}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Top Yellow Cards */}
+                            {playerStats.yellowCards.length > 0 && (
+                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                    <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                        <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
+                                            <span className="w-2.5 h-3.5 bg-amber-500 rounded-xs inline-block shrink-0" />
+                                            {t("yellow_cards")}
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y flex-1">
+                                        {playerStats.yellowCards.map((player, idx) => (
+                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                                            {player.teamLogo && (
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                            )}
+                                                            {player.teamName}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-black text-sm pr-2">{player.yellowCards}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Top Red Cards */}
+                            {playerStats.redCards.length > 0 && (
+                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                    <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                        <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
+                                            <span className="w-2.5 h-3.5 bg-rose-500 rounded-xs inline-block shrink-0" />
+                                            {t("red_cards")}
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y flex-1">
+                                        {playerStats.redCards.map((player, idx) => (
+                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                                            {player.teamLogo && (
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                            )}
+                                                            {player.teamName}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-black text-sm pr-2">{player.redCards}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Injuries */}
+                            {playerStats.injuries.length > 0 && (
+                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                    <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                        <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
+                                            {t("injuries")}
+                                        </h3>
+                                    </div>
+                                    <div className="divide-y flex-1">
+                                        {playerStats.injuries.map((player, idx) => (
+                                            <div key={player.id} className="p-2 md:p-4 flex items-center justify-between hover:bg-muted/5 transition-colors">
+                                                <div className="flex items-center gap-1 md:gap-2">
+                                                    <span className="font-black text-xs text-muted-foreground w-4 text-center">{idx + 1}</span>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-xs text-foreground">{player.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground/80 flex items-center gap-1 font-medium">
+                                                            {player.teamLogo && (
+                                                                <Image src={player.teamLogo} alt={player.teamName} width={12} height={12} className="object-contain rounded-full" />
+                                                            )}
+                                                            {player.teamName}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-black text-sm pr-2">{player.injuries}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </main>

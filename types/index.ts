@@ -1,7 +1,7 @@
 import type { Edge, Node } from "@xyflow/react";
 
 export type TournamentStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished';
-export type MatchStatus = 'scheduled' | 'live' | 'finished';
+export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'canceled';
 export type SportType = 'football';
 
 export interface BracketCanvasData {
@@ -155,6 +155,7 @@ export interface MatchEvent {
     minute: number;
     extra_info?: Record<string, unknown>; // JSONB
     created_at: string;
+    isPending?: boolean;
     // Join
     player_name?: string; // For display convenience if joined
 }

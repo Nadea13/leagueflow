@@ -152,7 +152,6 @@ export function SignUpForm() {
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="name@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -184,7 +183,6 @@ export function SignUpForm() {
                             <Input
                                 id="otp"
                                 type="text"
-                                placeholder="123456"
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
                                 required
@@ -227,7 +225,6 @@ export function SignUpForm() {
                             <Input
                                 id="fullName"
                                 type="text"
-                                placeholder="John Doe"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 required
@@ -242,7 +239,6 @@ export function SignUpForm() {
                             <Input
                                 id="phone"
                                 type="tel"
-                                placeholder="08X-XXX-XXXX"
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 required

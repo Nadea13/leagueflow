@@ -108,16 +108,6 @@ export function SquadList({
 
     return (
         <div className="bg-card space-y-2 md:space-y-4 border rounded-xl p-2 md:p-4">
-            <div className="flex md:items-center justify-between gap-4 mb-2 md:mb-4">
-                <div className="flex items-center gap-3">
-                    <Users className="h-6 w-6 text-primary" />
-                    <h3 className="text-2xl font-black tracking-tighter text-foreground">
-                        {t("title")}
-                    </h3>
-                </div>
-
-
-            </div>
 
             {activePlayers.length === 0 ? (
                 <EmptyState
@@ -209,7 +199,6 @@ export function SquadList({
                                                             value={editNumber}
                                                             onChange={(e) => setEditNumber(e.target.value)}
                                                             className="w-full text-left md:text-center bg-transparent font-black text-sm focus-visible:ring-0 p-0"
-                                                            placeholder="#"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
@@ -248,7 +237,6 @@ export function SquadList({
                                                             value={editTel}
                                                             onChange={(e) => setEditTel(e.target.value)}
                                                             type="tel"
-                                                            placeholder="08X-XXX-XXXX"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>

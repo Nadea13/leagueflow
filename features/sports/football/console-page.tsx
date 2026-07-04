@@ -13,6 +13,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
     Timer,
     ArrowLeft,
     Target,
@@ -26,7 +36,12 @@ import {
     Shield,
     Tv,
     Users,
-    Volleyball
+    Volleyball,
+    XCircle,
+    CalendarRange,
+    Cloud,
+    CloudOff,
+    RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -35,20 +50,20 @@ import { Link } from "@/i18n/routing";
 import { Match, Player, EventType, MatchEvent, PenaltyShot } from "@/types";
 
 // Components & Hooks
-import { MatchTimeControl } from "./console/match-time-control";
+import { MatchTimeControl } from "./console/time-control";
 import { Scoreboard } from "./console/scoreboard";
-import { EventTimeline } from "./console/event-timeline";
-import { MatchEventDialog } from "./console/match-event-dialog";
+import { EventLog } from "./console/log";
+import { MatchEventDialog } from "./console/event-dialog";
 import { WalkoverDialog } from "./console/walkover-dialog";
 import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
 import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
-import { BroadcastOverlayDialog } from "./console/broadcast-overlay-dialog";
+import { BroadcastDialog } from "./console/broadcast-dialog";
 import { RosterSelectionDialog } from "./console/roster-selection-dialog";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
 
-interface MatchConsolePageProps {
+interface ConsolePageProps {
     match: Match;
     tournamentId: string;
     readOnly?: boolean;
@@ -57,13 +72,14 @@ interface MatchConsolePageProps {
     tournamentName?: string;
 }
 
-export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName }: MatchConsolePageProps) {
+export function ConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName }: ConsolePageProps) {
     const t = useTranslations("Console");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
     const tPublic = useTranslations("PublicView");
     const router = useRouter();
     const { toast } = useToast();
+    const supabase = createClient();
 
     // --- State ---
     const [match, setMatch] = useState<Match>(initialMatch);
@@ -71,15 +87,99 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
 
     // Hooks
-    const { events, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
+    const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
     const { time, setTime, isRunning, setIsRunning } = useMatchTimer(match, tournamentId, events);
 
+    // Match updates queue state
+    const [matchQueue, setMatchQueue] = useState<{
+        id: string;
+        data: Parameters<typeof updateMatch>[1];
+        status: "pending" | "syncing" | "failed";
+    }[]>([]);
+    const [isMatchSyncing, setIsMatchSyncing] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(`leagueflow-pending-match-${match.id}`);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    setTimeout(() => {
+                        setMatchQueue(parsed);
+                    }, 0);
+                } catch (_) {}
+            }
+        }
+    }, [match.id]);
+
+    const saveMatchQueue = useCallback((newQueue: typeof matchQueue) => {
+        setMatchQueue(newQueue);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(newQueue));
+        }
+    }, [match.id]);
+
+    const syncMatchQueue = useCallback(async () => {
+        if (isMatchSyncing || readOnly) return;
+        const currentQueue = [...matchQueue];
+        if (currentQueue.length === 0) return;
+
+        setIsMatchSyncing(true);
+        const updated = [...currentQueue];
+
+        for (let i = 0; i < updated.length; i++) {
+            const item = updated[i];
+            if (item.status === 'syncing') continue;
+            
+            item.status = 'syncing';
+            saveMatchQueue([...updated]);
+
+            try {
+                const res = await updateMatch(match.id, item.data, tournamentId);
+                if (res.success) {
+                    updated.splice(i, 1);
+                    i--;
+                } else {
+                    item.status = 'failed';
+                }
+            } catch (_) {
+                item.status = 'failed';
+            }
+            saveMatchQueue([...updated]);
+        }
+        setIsMatchSyncing(false);
+    }, [match.id, tournamentId, matchQueue, isMatchSyncing, readOnly, saveMatchQueue]);
+
+    // Auto-sync match queue on online event
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const handleOnline = () => {
+                syncMatchQueue();
+            };
+            window.addEventListener("online", handleOnline);
+            return () => window.removeEventListener("online", handleOnline);
+        }
+    }, [syncMatchQueue]);
+
+    // Trigger sync automatically when queue receives new items
+    useEffect(() => {
+        if (matchQueue.some(item => item.status === 'pending')) {
+            syncMatchQueue();
+        }
+    }, [matchQueue, syncMatchQueue]);
+
+    const queueMatchUpdate = useCallback(async (data: Parameters<typeof updateMatch>[1]) => {
+        const newItem = { id: `match-${Date.now()}`, data, status: 'pending' as const };
+        saveMatchQueue([...matchQueue, newItem]);
+        setMatch(prev => ({ ...prev, ...data }));
+    }, [matchQueue, saveMatchQueue]);
+
     const isHalfTime = !isRunning && events.length > 0 && (() => {
-        const lastTimerEvent = events.find(e => 
-            e.event_type === 'kick_off' || 
-            e.event_type === 'match_resumed' || 
-            e.event_type === 'match_paused' || 
-            e.event_type === 'half_time' || 
+        const lastTimerEvent = events.find(e =>
+            e.event_type === 'kick_off' ||
+            e.event_type === 'match_resumed' ||
+            e.event_type === 'match_paused' ||
+            e.event_type === 'half_time' ||
             e.event_type === 'full_time'
         );
         return lastTimerEvent?.event_type === 'half_time';
@@ -96,11 +196,28 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     const [addTimeDialogOpen, setAddTimeDialogOpen] = useState(false);
     const [setTimeDialogOpen, setSetTimeDialogOpen] = useState(false);
     const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
-    const [penaltyShots, setPenaltyShots] = useState<PenaltyShot[]>([]);
+    const [_penaltyShots, setPenaltyShots] = useState<PenaltyShot[]>([]);
 
     // Event Selection State
     const [selectedTeamId, setSelectedTeamId] = useState<string>("");
     const [selectedEventType, setSelectedEventType] = useState<EventType | null>(null);
+
+    // Confirm Dialog State
+    const [confirmConfig, setConfirmConfig] = useState<{
+        open: boolean;
+        title: string;
+        description?: string;
+        actionLabel?: string;
+        cancelLabel?: string;
+        onConfirm: () => void | Promise<void>;
+    }>({
+        open: false,
+        title: "",
+        description: "",
+        actionLabel: "",
+        cancelLabel: "",
+        onConfirm: () => {},
+    });
 
     // --- Effects ---
     useEffect(() => {
@@ -137,22 +254,32 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
 
     useEffect(() => {
         const loadPlayers = async () => {
-            const fetchTeam = async (id: string, setter: (players: Player[]) => void) => {
-                const res = await getPlayers(id);
+            const fetchTeam = async (teamId: string, setter: (players: Player[]) => void) => {
+                const { data: ttData } = await supabase
+                    .from("tournament_teams")
+                    .select("id")
+                    .eq("team_id", teamId)
+                    .eq("tournament_category_id", match.tournament_category_id)
+                    .is("deleted_at", null)
+                    .maybeSingle();
+
+                const targetId = ttData?.id || teamId;
+                const res = await getPlayers(targetId);
                 if (res.success && res.data) setter(res.data);
             };
             if (match.home_team_id) fetchTeam(match.home_team_id, setHomePlayers);
             if (match.away_team_id) fetchTeam(match.away_team_id, setAwayPlayers);
         };
         loadPlayers();
-    }, [match.home_team_id, match.away_team_id]);
+    }, [match.home_team_id, match.away_team_id, match.tournament_category_id, supabase]);
 
     const fetchShots = useCallback(async () => {
         const res = await getPenaltyShootout(match.id);
         if (res.success && res.data) {
             setPenaltyShots(res.data);
+            router.refresh();
         }
-    }, [match.id]);
+    }, [match.id, router]);
 
     useEffect(() => {
         fetchShots();
@@ -195,12 +322,12 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
     // --- Score Sync to DB (for MatchCard) ---
     useEffect(() => {
         if (readOnly || match.status === 'finished') return;
-        
+
         // Only sync if scores differ from DB values
         if (homeScore !== dbHomeScore || awayScore !== dbAwayScore) {
             const syncScore = setTimeout(() => {
                 updateMatch(match.id, { home_score: homeScore, away_score: awayScore }, tournamentId);
-            }, 500); 
+            }, 500);
             return () => clearTimeout(syncScore);
         }
     }, [homeScore, awayScore, dbHomeScore, dbAwayScore, match.id, tournamentId, readOnly, match.status]);
@@ -210,15 +337,14 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         if (readOnly || match.status !== 'live' || !isRunning) return;
 
         const currentMinute = Math.floor(time / 60) + 1;
-        
-        // Only sync if minute changed and it's different from DB
+
         if (currentMinute !== Number(match.current_minute)) {
             const syncTimer = setTimeout(() => {
-                updateMatch(match.id, { current_minute: currentMinute }, tournamentId);
-            }, 1000); // Small delay to avoid hammering DB if time jumps
+                queueMatchUpdate({ current_minute: currentMinute });
+            }, 1000);
             return () => clearTimeout(syncTimer);
         }
-    }, [time, isRunning, match.status, match.current_minute, match.id, tournamentId, readOnly]);
+    }, [time, isRunning, match.status, match.current_minute, match.id, tournamentId, readOnly, queueMatchUpdate]);
 
     // --- Handlers ---
     const handleStartMatch = async () => {
@@ -227,30 +353,15 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const teamId = match.home_team_id || match.away_team_id;
         const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
-        const backupMatch = { ...match };
-        const backupIsRunning = isRunning;
-
         // Optimistic UI Update
         setIsRunning(true);
-        setMatch(prev => ({ ...prev, status: 'live', timer_status: 'playing' }));
 
         try {
-            const res = await addEvent(resolvedTeamId || null, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
-            if (!res.success) throw new Error(`${res.error || "Failed to add kick-off"}`);
-
-            const updateRes = await updateMatch(match.id, { status: 'live', timer_status: 'playing', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
-            if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match"} (Match: ${match.id})`);
-
+            await addEvent(resolvedTeamId || null, 'kick_off', currentMinute, null, { start_timestamp: Date.now() }, "Kick Off");
+            await queueMatchUpdate({ status: 'live', timer_status: 'playing', elapsed_before_pause: time, current_minute: currentMinute });
             toast({ title: t("match_started") || "Match Started" });
         } catch (error) {
             console.error("Start match error:", error);
-            setIsRunning(backupIsRunning);
-            setMatch(backupMatch);
-            toast({
-                title: "Error starting match",
-                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
-                variant: "destructive"
-            });
         }
     };
 
@@ -260,36 +371,15 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const teamId = match.home_team_id || match.away_team_id;
         const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
-        const backupMatch = { ...match };
-        const backupIsRunning = isRunning;
-
         // Optimistic UI Update
         setIsRunning(false);
-        setMatch(prev => ({ ...prev, timer_status: 'paused', elapsed_before_pause: time }));
 
         try {
-            const res = await addEvent(resolvedTeamId || null, 'match_paused', currentMinute, null, {}, "Match Paused");
-            if (!res.success) throw new Error(`${res.error || "Failed to add match pause"}`);
-
-            // Clear any 'add_time' events when pausing, so it's reset for the next resumption
-            const addTimeEvents = events.filter(e => e.event_type === 'add_time');
-            for (const e of addTimeEvents) {
-                await deleteEvent(e.id);
-            }
-
-            const updateRes = await updateMatch(match.id, { timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
-            if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match balance"} (Match: ${match.id})`);
-
+            await addEvent(resolvedTeamId || null, 'match_paused', currentMinute, null, {}, "Match Paused");
+            await queueMatchUpdate({ timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
             toast({ title: t("match_paused") || "Match Paused" });
         } catch (error) {
             console.error("Pause match error:", error);
-            setIsRunning(backupIsRunning);
-            setMatch(backupMatch);
-            toast({
-                title: "Error pausing match",
-                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
-                variant: "destructive"
-            });
         }
     };
 
@@ -299,36 +389,15 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const teamId = match.home_team_id || match.away_team_id;
         const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
-        const backupMatch = { ...match };
-        const backupIsRunning = isRunning;
-
         // Optimistic UI Update
         setIsRunning(false);
-        setMatch(prev => ({ ...prev, timer_status: 'paused', elapsed_before_pause: time }));
 
         try {
-            const res = await addEvent(resolvedTeamId || null, 'half_time', currentMinute, null, {}, "Half Time");
-            if (!res.success) throw new Error(`${res.error || "Failed to add half time"}`);
-
-            // Clear any 'add_time' events when pausing, so it's reset for the next resumption
-            const addTimeEvents = events.filter(e => e.event_type === 'add_time');
-            for (const e of addTimeEvents) {
-                await deleteEvent(e.id);
-            }
-
-            const updateRes = await updateMatch(match.id, { timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute }, tournamentId);
-            if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match balance"} (Match: ${match.id})`);
-
+            await addEvent(resolvedTeamId || null, 'half_time', currentMinute, null, {}, "Half Time");
+            await queueMatchUpdate({ timer_status: 'paused', elapsed_before_pause: time, current_minute: currentMinute });
             toast({ title: t("half_time") || "Half Time" });
         } catch (error) {
             console.error("Half time error:", error);
-            setIsRunning(backupIsRunning);
-            setMatch(backupMatch);
-            toast({
-                title: "Error setting half time",
-                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
-                variant: "destructive"
-            });
         }
     };
 
@@ -338,84 +407,132 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const teamId = match.home_team_id || match.away_team_id;
         const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
 
-        const backupMatch = { ...match };
-        const backupIsRunning = isRunning;
-
         // Optimistic UI Update
         setIsRunning(true);
-        setMatch(prev => ({ ...prev, timer_status: 'playing' }));
 
         try {
-            const res = await addEvent(resolvedTeamId || null, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
-            if (!res.success) throw new Error(`${res.error || "Failed to add match resume"}`);
-
-            const updateRes = await updateMatch(match.id, { timer_status: 'playing', current_minute: Math.floor(time / 60) + 1 }, tournamentId);
-            if (!updateRes.success) throw new Error(`${updateRes.error || "Failed to update match resume"} (Match: ${match.id})`);
-
+            await addEvent(resolvedTeamId || null, 'match_resumed', currentMinute, null, { start_timestamp: Date.now() }, "Match Resumed");
+            await queueMatchUpdate({ timer_status: 'playing', current_minute: currentMinute });
             toast({ title: t("match_resumed") || "Match Resumed" });
         } catch (error) {
             console.error("Resume match error:", error);
-            setIsRunning(backupIsRunning);
-            setMatch(backupMatch);
-            toast({
-                title: "Error resuming match",
-                description: `${error instanceof Error ? error.message : String(error)} (Match: ${match.id.substring(0, 8)})`,
-                variant: "destructive"
-            });
         }
     };
 
-    const handleEndMatch = async () => {
-        if (!confirm(t("confirm_end"))) return;
-        const currentMinute = Math.floor(time / 60) + 1;
-        const teamId = match.home_team_id || match.away_team_id;
-        const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
-        const res = await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
-        if (res && !res.success) {
-            toast({
-                title: "Error ending match",
-                description: res.error || "Unknown error occurred",
-                variant: "destructive"
-            });
-            return;
-        }
-        setIsRunning(false);
-        await updateMatch(match.id, { status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute }, tournamentId);
-        
-        // Auto-advance if possible
-        await advanceStage(tournamentId);
+    const handleEndMatch = () => {
+        setConfirmConfig({
+            open: true,
+            title: t("confirm_end") || "End Match?",
+            description: "Are you sure you want to end the match and record final scores?",
+            actionLabel: tCommon("confirm") || "Confirm",
+            cancelLabel: tCommon("cancel") || "Cancel",
+            onConfirm: async () => {
+                const currentMinute = Math.floor(time / 60) + 1;
+                const teamId = match.home_team_id || match.away_team_id;
+                const resolvedTeamId = match.home_team?.id || match.away_team?.id || teamId;
+
+                setIsRunning(false);
+                await addEvent(resolvedTeamId!, 'full_time', currentMinute, null, {}, "Full Time");
+                await queueMatchUpdate({ status: 'finished', home_score: homeScore, away_score: awayScore, current_minute: currentMinute });
+
+                // Auto-advance if possible
+                await advanceStage(tournamentId);
+            }
+        });
     };
 
-    const handleWalkover = async (winnerId: string) => {
-        if (!confirm(t("confirm_walkover"))) return;
+    const handleWalkover = (winnerId: string) => {
         const isHomeWinner = winnerId === match.home_team_id;
-        
-        try {
-            // Add walkover event
-            await addEvent(winnerId, 'walkover', 0, null, { winner_id: winnerId }, `Walkover Victory (${isHomeWinner ? '3-0' : '0-3'})`);
-            
-            await updateMatch(match.id, { 
-                status: 'finished', 
-                home_score: isHomeWinner ? 3 : 0, 
-                away_score: isHomeWinner ? 0 : 3, 
-                winner_id: winnerId,
-                current_minute: 0,
-                winner_to_node_id: winnerId
-            }, tournamentId);
+        setConfirmConfig({
+            open: true,
+            title: t("confirm_walkover") || "Confirm Walkover",
+            description: isHomeWinner ? `Confirm walkover victory for ${match.home_team?.name}` : `Confirm walkover victory for ${match.away_team?.name}`,
+            actionLabel: tCommon("confirm") || "Confirm",
+            cancelLabel: tCommon("cancel") || "Cancel",
+            onConfirm: async () => {
+                try {
+                    await addEvent(winnerId, 'walkover', 0, null, { winner_id: winnerId }, `Walkover Victory (${isHomeWinner ? '3-0' : '0-3'})`);
+                    await queueMatchUpdate({
+                        status: 'finished',
+                        home_score: isHomeWinner ? 3 : 0,
+                        away_score: isHomeWinner ? 0 : 3,
+                        winner_id: winnerId,
+                        current_minute: 0,
+                        winner_to_node_id: winnerId
+                    });
 
-            // Auto-advance if possible
-            await advanceStage(tournamentId);
-            
-            setWoDialogOpen(false);
-            router.refresh();
-        } catch (error) {
-            console.error("Walkover error:", error);
-            toast({
-                title: "Error recording walkover",
-                description: "Please try again",
-                variant: "destructive"
-            });
-        }
+                    // Auto-advance if possible
+                    await advanceStage(tournamentId);
+
+                    setWoDialogOpen(false);
+                    router.refresh();
+                } catch (error) {
+                    console.error("Walkover error:", error);
+                    toast({
+                        title: "Error recording walkover",
+                        description: "Please try again",
+                        variant: "destructive"
+                    });
+                }
+            }
+        });
+    };
+
+    const handleAbandonMatch = () => {
+        setConfirmConfig({
+            open: true,
+            title: t("confirm_abandon") || "Abandon Match?",
+            description: "Are you sure you want to abandon this match?",
+            actionLabel: tCommon("confirm") || "Confirm",
+            cancelLabel: tCommon("cancel") || "Cancel",
+            onConfirm: async () => {
+                try {
+                    await queueMatchUpdate({
+                        status: 'canceled',
+                        timer_status: 'stopped',
+                    });
+
+                    toast({ title: t("abandoned") });
+                    router.refresh();
+                } catch (error) {
+                    console.error("Abandon match error:", error);
+                    toast({
+                        title: "Error abandoning match",
+                        description: "Please try again",
+                        variant: "destructive"
+                    });
+                }
+            }
+        });
+    };
+
+    const handlePostponeMatch = () => {
+        setConfirmConfig({
+            open: true,
+            title: t("confirm_postpone") || "Postpone Match?",
+            description: "Are you sure you want to postpone this match?",
+            actionLabel: tCommon("confirm") || "Confirm",
+            cancelLabel: tCommon("cancel") || "Cancel",
+            onConfirm: async () => {
+                try {
+                    await queueMatchUpdate({
+                        status: 'scheduled',
+                        match_date: null,
+                        match_time: null,
+                    });
+
+                    toast({ title: t("postponed") });
+                    router.refresh();
+                } catch (error) {
+                    console.error("Postpone match error:", error);
+                    toast({
+                        title: "Error postponing match",
+                        description: "Please try again",
+                        variant: "destructive"
+                    });
+                }
+            }
+        });
     };
 
     const handleUndo = async () => {
@@ -426,15 +543,23 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
         const evtConfig = EVENT_TYPES.find(e => e.type === lastEvent.event_type);
         const label = evtConfig ? t(evtConfig.label) : lastEvent.event_type;
 
-        if (!confirm(`${tCommon("delete")} '${label}'?`)) return;
-        const res = await deleteEvent(lastEvent.id);
-        if (res && !res.success) {
-            toast({
-                title: "Error deleting event",
-                description: res.error || "Unknown error occurred",
-                variant: "destructive"
-            });
-        }
+        setConfirmConfig({
+            open: true,
+            title: `${tCommon("delete")} '${label}'?`,
+            description: "This action cannot be undone. This event will be permanently deleted.",
+            actionLabel: tCommon("delete") || "Delete",
+            cancelLabel: tCommon("cancel") || "Cancel",
+            onConfirm: async () => {
+                const res = await deleteEvent(lastEvent.id);
+                if (res && !res.success) {
+                    toast({
+                        title: "Error deleting event",
+                        description: res.error || "Unknown error occurred",
+                        variant: "destructive"
+                    });
+                }
+            }
+        });
     };
 
     const handleQuickAction = async (teamId: string, type: EventType) => {
@@ -467,36 +592,63 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 description: res.error || "Unknown error occurred",
                 variant: "destructive"
             });
+            return;
+        }
+
+        // Swap players in active lineup when substitution occurs
+        if (selectedEventType === 'substitution' && data.extraInfo.in_player_id) {
+            const inPlayerId = data.extraInfo.in_player_id as string;
+            const outPlayerId = data.playerId;
+            if (selectedTeamId === match.home_team_id) {
+                const newHomeLineup = homeLineup.map(id => id === outPlayerId ? inPlayerId : id);
+                setHomeLineup(newHomeLineup);
+                localStorage.setItem(`match-lineup-${match.id}`, JSON.stringify({ home: newHomeLineup, away: awayLineup }));
+            } else if (selectedTeamId === match.away_team_id) {
+                const newAwayLineup = awayLineup.map(id => id === outPlayerId ? inPlayerId : id);
+                setAwayLineup(newAwayLineup);
+                localStorage.setItem(`match-lineup-${match.id}`, JSON.stringify({ home: homeLineup, away: newAwayLineup }));
+            }
         }
     };
 
     const handleSetTime = async (minutes: number, seconds: number) => {
         const totalSeconds = (minutes * 60) + seconds;
         const currentMinute = Math.ceil((totalSeconds || 1) / 60);
-        
+
         // Optimistic Update
         setTime(totalSeconds);
-        setMatch(prev => ({ ...prev, elapsed_before_pause: totalSeconds, current_minute: currentMinute }));
-        
-        await updateMatch(match.id, { elapsed_before_pause: totalSeconds, current_minute: currentMinute }, tournamentId);
+
+        await queueMatchUpdate({ elapsed_before_pause: totalSeconds, current_minute: currentMinute });
         setSetTimeDialogOpen(false);
     };
 
-    const lastAddTimeEvent = [...events].reverse().find(e => e.event_type === 'add_time');
-    const addedTime = (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null;
+    const lastAddTimeEvent = events.find(e => e.event_type === 'add_time');
+    const lastTimerMarker = events.find(e => 
+        e.event_type === 'kick_off' || 
+        e.event_type === 'match_resumed' || 
+        e.event_type === 'match_paused' ||
+        e.event_type === 'half_time' || 
+        e.event_type === 'full_time'
+    );
+    const isAddedTimeActive = lastAddTimeEvent && lastTimerMarker 
+        ? new Date(lastAddTimeEvent.created_at).getTime() > new Date(lastTimerMarker.created_at).getTime()
+        : !!lastAddTimeEvent;
+    const addedTime = isAddedTimeActive
+        ? (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null
+        : null;
 
     // --- Team Action Grid Component ---
     const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
         const actions = [
-            { type: 'goal', label: t("goal"), icon: Volleyball, color: 'hover:bg-primary hover:text-black hover:border-primary' },
-            { type: 'yellow_card', label: t("yellow_card"), icon: Square, color: 'hover:bg-yellow-400 hover:text-black hover:border-yellow-400', iconColor: 'text-yellow-500 fill-yellow-500' },
-            { type: 'red_card', label: t("red_card"), icon: Square, color: 'hover:bg-red-500 hover:text-foreground hover:border-red-500', iconColor: 'text-red-500 fill-red-500' },
-            { type: 'substitution', label: t("substitution"), icon: Repeat, color: 'hover:bg-blue-500 hover:text-foreground hover:border-blue-500' },
-            { type: 'foul', label: t("foul") || "Foul", icon: Activity, color: 'hover:bg-orange-500 hover:text-foreground hover:border-orange-500' },
-            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target, color: 'hover:bg-indigo-600 hover:text-foreground hover:border-indigo-600' },
-            { type: 'save', label: t("save") || "Save", icon: Shield, color: 'hover:bg-teal-600 hover:text-foreground hover:border-teal-600' },
-            { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope, color: 'hover:bg-amber-600 hover:text-foreground hover:border-amber-600' },
-            { type: 'corner', label: t("corner") || "Corner", icon: Flag, color: 'hover:bg-cyan-500 hover:text-black hover:border-foreground' },
+            { type: 'goal', label: t("goal"), icon: Volleyball },
+            { type: 'yellow_card', label: t("yellow_card"), icon: Square, iconColor: 'text-yellow-500 fill-yellow-500' },
+            { type: 'red_card', label: t("red_card"), icon: Square, iconColor: 'text-red-500 fill-red-500' },
+            { type: 'substitution', label: t("substitution"), icon: Repeat },
+            { type: 'foul', label: t("foul") || "Foul", icon: Activity },
+            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target },
+            { type: 'save', label: t("save") || "Save", icon: Shield },
+            { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope },
+            { type: 'corner', label: t("corner") || "Corner", icon: Flag },
         ];
 
         return (
@@ -512,10 +664,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                                 variant="outline"
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
-                                className={cn(
-                                    "group flex items-center justify-center border-foreground/5 bg-foreground/5 transition-all duration-300",
-                                    action.color
-                                )}
+                                className="group flex items-center justify-center"
                             >
                                 <action.icon className={cn("h-5 w-5 transition-transform", action.iconColor)} />
                                 <span className="hidden md:inline text-[10px] font-black tracking-wider">{action.label}</span>
@@ -526,6 +675,123 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             </div>
         );
     };
+
+
+
+    const matchControlsBox = (
+        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+            <div className="relative z-10 space-y-2 md:space-y-4">
+                {readOnly ? (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("tournament")}</span>
+                            <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{tournamentName}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
+                            <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
+                        </div>
+                        <div className="pt-4 border-t">
+                            <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
+                                <Timer className="w-6 h-6 text-primary animate-pulse" />
+                                <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">LIVE UPDATES ACTIVE</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <MatchTimeControl
+                        status={match.status}
+                        isRunning={isRunning}
+                        readOnly={false}
+                        onStart={handleStartMatch}
+                        onPause={handlePauseMatch}
+                        onHalfTime={handleHalfTime}
+                        onResume={handleResumeMatch}
+                        onEnd={handleEndMatch}
+                        onSetTime={() => setSetTimeDialogOpen(true)}
+                        onAddTime={() => setAddTimeDialogOpen(true)}
+                    />
+                )}
+            </div>
+        </div>
+    );
+
+    const quickActionsBox = !readOnly ? (
+        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+            <div className="relative z-10 space-y-2 md:space-y-4">
+                <div className="grid grid-cols-4 md:grid-cols-1 gap-1 md:gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleUndo}
+                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                    >
+                        <Undo className="h-4 w-4 text-muted-foreground" />
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setOverlayDialogOpen(true)}
+                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                    >
+                        <Tv className="h-4 w-4 text-primary" />
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setRosterDialogOpen(true)}
+                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                    >
+                        <Users className="h-4 w-4 text-primary" />
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("select_starting_lineup") || "Lineups"}</span>
+                    </Button>
+                    {match.status === 'finished' && (
+                        <PenaltyShootoutDialog
+                            matchId={match.id}
+                            homeTeamId={match.home_team_id}
+                            awayTeamId={match.away_team_id}
+                            homeTeamName={match.home_team?.name || 'Home'}
+                            awayTeamName={match.away_team?.name || 'Away'}
+                            onUpdate={fetchShots}
+                            trigger={
+                                <Button
+                                    variant="outline"
+                                    disabled={homeScore !== awayScore}
+                                    className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group disabled:opacity-50"
+                                >
+                                    <Target className="h-4 w-4 text-primary" />
+                                    <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
+                                </Button>
+                            }
+                        />
+                    )}
+                    <Button
+                        variant="outline"
+                        onClick={() => setWoDialogOpen(true)}
+                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                    >
+                        <Ban className="h-4 w-4 text-destructive" />
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("walkover")}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={handleAbandonMatch}
+                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                    >
+                        <XCircle className="h-4 w-4 text-destructive" />
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("abandoned")}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={handlePostponeMatch}
+                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                    >
+                        <CalendarRange className="h-4 w-4 text-primary" />
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("postponed")}</span>
+                    </Button>
+                </div>
+            </div>
+        </div>
+    ) : null;
 
     return (
         <div className={cn(
@@ -575,20 +841,44 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 </div>
 
                 {!readOnly && (
-                    <div className="flex items-center gap-1 md:gap-2 px-2 relative group overflow-hidden">
-                        <span className="relative flex h-2 w-2">
-                            <span className={cn(
-                                "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                isHalfTime ? "bg-amber-400" : (match.status === 'live' ? "bg-primary" : "bg-amber-400")
-                            )}></span>
-                            <span className={cn(
-                                "relative inline-flex rounded-full h-2 w-2",
-                                isHalfTime ? "bg-amber-500" : (match.status === 'live' ? "bg-primary" : "bg-amber-500")
-                            )}></span>
-                        </span>
-                        <span className="text-[10px] font-black tracking-widest text-primary">
-                            {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
-                        </span>
+                    <div className="flex items-center gap-2">
+                        {(queue.length + matchQueue.length) > 0 ? (
+                            <div className="flex items-center gap-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-1 rounded-full text-xs font-black tracking-widest animate-pulse">
+                                <CloudOff className="w-3.5 h-3.5" />
+                                <span>{(queue.length + matchQueue.length)} PENDING</span>
+                                <button
+                                    onClick={() => {
+                                        syncQueue();
+                                        syncMatchQueue();
+                                    }}
+                                    disabled={isSyncing || isMatchSyncing}
+                                    className="ml-1 hover:text-white transition-colors"
+                                >
+                                    <RefreshCw className={cn("w-3 h-3", (isSyncing || isMatchSyncing) && "animate-spin")} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-1 rounded-full text-xs font-black tracking-widest">
+                                <Cloud className="w-3.5 h-3.5" />
+                                <span>SYNCED</span>
+                            </div>
+                        )}
+
+                        <div className="flex items-center gap-1 md:gap-2 px-2 relative group overflow-hidden">
+                            <span className="relative flex h-2 w-2">
+                                <span className={cn(
+                                    "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                                    isHalfTime ? "bg-amber-400" : (match.status === 'live' ? "bg-primary" : "bg-amber-400")
+                                )}></span>
+                                <span className={cn(
+                                    "relative inline-flex rounded-full h-2 w-2",
+                                    isHalfTime ? "bg-amber-500" : (match.status === 'live' ? "bg-primary" : "bg-amber-500")
+                                )}></span>
+                            </span>
+                            <span className="text-[10px] font-black tracking-widest text-primary">
+                                {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
+                            </span>
+                        </div>
                     </div>
                 )}
             </header>
@@ -596,119 +886,30 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             <main className="flex-1 w-full grid grid-cols-12 gap-2 md:gap-4">
                 {/* Sidebar: Admin Controls or Match Info */}
                 <aside className="col-span-12 lg:col-span-3 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
-                    {/* Match Controls */}
-                    <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
-                        <div className="relative z-10 space-y-2 md:space-y-4">
-                            <div className="space-y-1">
-                                <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{readOnly ? tMatch("status") || "Match Status" : t("match_controls")}</h4>
-                            </div>
-                            {readOnly ? (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("tournament") || "Tournament"}</span>
-                                        <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{tournamentName}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black tracking-widest text-foreground/40">{t("stage") || "Stage"}</span>
-                                        <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
-                                    </div>
-                                    <div className="pt-4 border-t">
-                                        <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
-                                            <Timer className="w-6 h-6 text-primary animate-pulse" />
-                                            <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">LIVE UPDATES ACTIVE</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <MatchTimeControl
-                                    status={match.status}
-                                    isRunning={isRunning}
-                                    readOnly={false}
-                                    onStart={handleStartMatch}
-                                    onPause={handlePauseMatch}
-                                    onHalfTime={handleHalfTime}
-                                    onResume={handleResumeMatch}
-                                    onEnd={handleEndMatch}
-                                    onSetTime={() => setSetTimeDialogOpen(true)}
-                                    onAddTime={() => setAddTimeDialogOpen(true)}
-                                />
-                            )}
-                        </div>
+                    {/* Match Controls (Desktop only) */}
+                    <div className="hidden lg:block">
+                        {matchControlsBox}
                     </div>
 
-                    {!readOnly && (
-                        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
-                            <div className="relative z-10 space-y-2 md:space-y-4">
-                                <div className="space-y-1">
-                                    <h4 className="text-xl md:text-2xl font-black tracking-tighter text-foreground">{t("quick_actions")}</h4>
-                                </div>
-                                <div className="grid grid-cols-3 md:grid-cols-1 gap-1 md:gap-2">
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleUndo}
-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                                    >
-                                        <Undo className="h-4 w-4 text-muted-foreground" />
-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setOverlayDialogOpen(true)}
-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                                    >
-                                        <Tv className="h-4 w-4 text-primary" />
-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setRosterDialogOpen(true)}
-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                                    >
-                                        <Users className="h-4 w-4 text-primary" />
-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("select_starting_lineup") || "Lineups"}</span>
-                                    </Button>
-                                    {match.status === 'finished' && (
-                                        <PenaltyShootoutDialog
-                                            matchId={match.id}
-                                            homeTeamId={match.home_team_id}
-                                            awayTeamId={match.away_team_id}
-                                            homeTeamName={match.home_team?.name || 'Home'}
-                                            awayTeamName={match.away_team?.name || 'Away'}
-                                            onUpdate={fetchShots}
-                                            trigger={
-                                                <Button
-                                                    variant="outline"
-                                                    disabled={homeScore !== awayScore}
-                                                    className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group disabled:opacity-50"
-                                                >
-                                                    <Target className="h-4 w-4 text-primary" />
-                                                    <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
-                                                </Button>
-                                            }
-                                        />
-                                    )}
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setWoDialogOpen(true)}
-                                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
-                                    >
-                                        <Ban className="h-4 w-4 text-destructive" />
-                                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("walkover")}</span>
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <div className="hidden lg:block">
+                        {quickActionsBox}
+                    </div>
                 </aside>
 
                 {/* Main Content Area */}
                 <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 md:gap-4">
+                    {/* Match Controls (Mobile only) */}
+                    <div className="block lg:hidden">
+                        {matchControlsBox}
+                    </div>
+
                     {/* Scoreboard Section */}
                     <section className="flex flex-col gap-2 md:gap-4">
                         <Scoreboard
                             match={match}
                             homeScore={homeScore}
                             awayScore={awayScore}
+                            events={events}
                             onTeamClick={(teamId) => {
                                 setSelectedTeamId(teamId);
                                 setEventDialogOpen(true);
@@ -716,8 +917,13 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                             timerTime={time}
                             timerReadOnly={readOnly || match.status === 'finished'}
                             timerCustomText={match.status === 'finished' ? "FT" : isHalfTime ? "HT" : null}
-                            addedTime={isRunning ? addedTime : null}
+                            addedTime={isHalfTime || match.status === 'finished' ? null : addedTime}
                         />
+
+                        {/* Quick Actions (Mobile only) */}
+                        <div className="block lg:hidden">
+                            {quickActionsBox}
+                        </div>
 
                         {!readOnly && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
@@ -727,15 +933,10 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                         )}
                     </section>
 
-                    {/* Timeline Section */}
+                    {/* Log Section */}
                     <section className="flex flex-col gap-2 md:gap-4">
-                        <EventTimeline
-                            events={[
-                                ...events,
-                                ...penaltyShots.map((ps: PenaltyShot) => ({
-                                    id: ps.id, match_id: ps.match_id, team_id: ps.team_id, player_id: ps.player_id, event_type: 'penalty_shot' as const, minute: 120, extra_info: { scored: ps.scored, round: ps.round }, created_at: ps.created_at, player_name: ps.player?.name
-                                }))
-                            ].sort((a: MatchEvent, b: MatchEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())}
+                        <EventLog
+                            events={events}
                             match={match}
                             readOnly={readOnly}
                             onDelete={deleteEvent}
@@ -748,7 +949,7 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
             <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} existingEvents={events} activeLineupIds={selectedTeamId === match.home_team_id ? homeLineup : awayLineup} onSave={handleSaveEvent} />
             <RosterSelectionDialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen} homeTeamName={match.home_team?.name || 'Home'} awayTeamName={match.away_team?.name || 'Away'} homePlayers={homePlayers} awayPlayers={awayPlayers} homeActiveIds={homeLineup} awayActiveIds={awayLineup} onSave={handleSaveLineup} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
-            <BroadcastOverlayDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
+            <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
             <SetTimeDialog open={setTimeDialogOpen} onOpenChange={setSetTimeDialogOpen} currentTime={time} onSave={handleSetTime} />
             <AddTimeDialog open={addTimeDialogOpen} onOpenChange={setAddTimeDialogOpen} onSave={(mins) => {
                 const minute = Math.floor(time / 60) + 1;
@@ -757,6 +958,35 @@ export function MatchConsolePage({ match: initialMatch, tournamentId, readOnly =
                 addEvent(resolvedTeamId!, 'add_time', minute, null, { added_minutes: mins }, `+${mins} min`);
                 setAddTimeDialogOpen(false);
             }} />
+
+            <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
+                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground border-b p-2 md:p-4">
+                            {confirmConfig.title}
+                        </AlertDialogTitle>
+                        {confirmConfig.description && (
+                            <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 p-2 md:p-4">
+                                {confirmConfig.description}
+                            </AlertDialogDescription>
+                        )}
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="grid grid-cols-2 gap-1 md:gap-2 border-t p-2 md:p-4">
+                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                            {confirmConfig.cancelLabel}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={async () => {
+                                await confirmConfig.onConfirm();
+                                setConfirmConfig(prev => ({ ...prev, open: false }));
+                            }}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
+                        >
+                            {confirmConfig.actionLabel}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

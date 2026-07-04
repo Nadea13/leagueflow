@@ -181,8 +181,12 @@ CREATE TABLE IF NOT EXISTS "public"."announcements" (
 CREATE TABLE IF NOT EXISTS "public"."master_players" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid",
-    "first_name" character varying(255) NOT NULL,
-    "last_name" character varying(255) NOT NULL,
+    "first_name_th" character varying(255) DEFAULT NULL,
+    "middle_name_th" character varying(255) DEFAULT NULL,
+    "last_name_th" character varying(255) DEFAULT NULL,
+    "first_name_en" character varying(255) DEFAULT NULL,
+    "middle_name_en" character varying(255) DEFAULT NULL,
+    "last_name_en" character varying(255) DEFAULT NULL,
     "gender" "public"."gender_enum" DEFAULT 'unspecified'::"public"."gender_enum" NOT NULL,
     "birthday" "date" NOT NULL,
     "tel" character varying(20) DEFAULT NULL::character varying,
@@ -231,6 +235,24 @@ CREATE TABLE IF NOT EXISTS "public"."matches" (
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone
+);
+
+CREATE TABLE IF NOT EXISTS "public"."payments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid",
+    "tournament_id" "uuid",
+    "team_id" "uuid",
+    "amount" numeric(12,2) NOT NULL,
+    "plan_name" character varying(100),
+    "payment_status" character varying(50) DEFAULT 'pending' NOT NULL,
+    "payment_method" character varying(50),
+    "transaction_id" character varying(255),
+    "raw_gateway_response" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "paid_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "deleted_at" timestamp with time zone,
+    CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
 CREATE TABLE IF NOT EXISTS "public"."player_sports" (
@@ -405,6 +427,8 @@ ALTER TABLE ONLY "public"."matches" REPLICA IDENTITY FULL;
 
 ALTER TABLE "public"."matches" OWNER TO "postgres";
 
+ALTER TABLE "public"."payments" OWNER TO "postgres";
+
 ALTER TABLE "public"."player_sports" OWNER TO "postgres";
 
 ALTER TABLE "public"."players" OWNER TO "postgres";
@@ -494,6 +518,15 @@ ALTER TABLE ONLY "public"."announcements"
 
 ALTER TABLE ONLY "public"."master_players"
     ADD CONSTRAINT "master_players_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("id") ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE SET NULL;
 
 ALTER TABLE ONLY "public"."match_events"
     ADD CONSTRAINT "match_events_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "public"."matches"("id") ON DELETE CASCADE;
@@ -721,6 +754,8 @@ CREATE OR REPLACE TRIGGER "set_timestamp_announcements" BEFORE UPDATE ON "public
 
 CREATE OR REPLACE TRIGGER "set_timestamp_master_players" BEFORE UPDATE ON "public"."master_players" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
+CREATE OR REPLACE TRIGGER "set_timestamp_payments" BEFORE UPDATE ON "public"."payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
 CREATE OR REPLACE TRIGGER "set_timestamp_match_events" BEFORE UPDATE ON "public"."match_events" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 CREATE OR REPLACE TRIGGER "set_timestamp_matches" BEFORE UPDATE ON "public"."matches" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
@@ -789,6 +824,16 @@ CREATE POLICY "master_players_write" ON "public"."master_players" TO "authentica
   WHERE ("users"."id" = "auth"."uid"())) = true))) OR (( SELECT "users"."is_admin"
    FROM "public"."users"
   WHERE ("users"."id" = "auth"."uid"())) = true)));
+
+ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "payments_select" ON "public"."payments" FOR SELECT TO "authenticated" USING ((("auth"."uid"() = "user_id") OR (( SELECT "users"."is_admin"
+   FROM "public"."users"
+  WHERE ("users"."id" = "auth"."uid"())) = true)));
+
+CREATE POLICY "payments_write" ON "public"."payments" TO "authenticated" USING ((( SELECT "users"."is_admin"
+   FROM "public"."users"
+  WHERE ("users"."id" = "auth"."uid"())) = true));
 
 ALTER TABLE "public"."match_events" ENABLE ROW LEVEL SECURITY;
 
@@ -1008,6 +1053,12 @@ GRANT ALL ON TABLE "public"."master_players" TO "anon";
 GRANT ALL ON TABLE "public"."master_players" TO "authenticated";
 
 GRANT ALL ON TABLE "public"."master_players" TO "service_role";
+
+GRANT ALL ON TABLE "public"."payments" TO "anon";
+
+GRANT ALL ON TABLE "public"."payments" TO "authenticated";
+
+GRANT ALL ON TABLE "public"."payments" TO "service_role";
 
 GRANT ALL ON TABLE "public"."match_events" TO "anon";
 

@@ -20,7 +20,7 @@ import {
     Loader2, Plus, Users, X, Save,
     Settings, MapPin, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, RotateCw
 } from "lucide-react";
 import {
     Popover,
@@ -73,6 +73,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const nodeTypes = {
     matchNode: MatchNode,
@@ -109,6 +119,10 @@ function CanvasInternal({
 }: CanvasProps) {
     const locale = useLocale();
     const { toast } = useToast();
+
+    // Dialog state for unsaved changes warning
+    const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+    const [pendingAction, setPendingAction] = useState<{ type: 'navigate'; href: string } | { type: 'close' } | null>(null);
 
     // Lifted Filter States
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -296,15 +310,10 @@ function CanvasInternal({
                     }
 
                     if (targetPath && targetPath !== currentPath) {
-                        const confirmClose = window.confirm(
-                            locale === 'th'
-                                ? "คุณยังไม่ได้บันทึกการเปลี่ยนแปลงบนบอร์ด! ข้อมูลที่แก้ไขจะหายไป คุณแน่ใจหรือไม่ว่าต้องการออกจากหน้านี้โดยไม่บันทึก?"
-                                : "You have unsaved changes on the canvas! Your modifications will be lost. Are you sure you want to leave without saving?"
-                        );
-                        if (!confirmClose) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPendingAction({ type: 'navigate', href });
+                        setShowUnsavedDialog(true);
                     }
                 }
             }
@@ -314,7 +323,22 @@ function CanvasInternal({
         return () => {
             document.removeEventListener('click', handleAnchorClick, true);
         };
-    }, [isDirty, readonly, isLocked, locale]);
+    }, [isDirty, readonly, isLocked]);
+
+    const handleConfirmLeave = () => {
+        setShowUnsavedDialog(false);
+        if (pendingAction?.type === 'navigate') {
+            router.push(pendingAction.href);
+        } else if (pendingAction?.type === 'close') {
+            if (onClose) onClose();
+        }
+        setPendingAction(null);
+    };
+
+    const handleCancelLeave = () => {
+        setShowUnsavedDialog(false);
+        setPendingAction(null);
+    };
 
     const [isStatusUpdating, setIsStatusUpdating] = useState(false);
     const router = useRouter();
@@ -636,15 +660,12 @@ function CanvasInternal({
 
     const handleClose = useCallback(() => {
         if (isDirty && !readonly) {
-            const confirmClose = window.confirm(
-                locale === 'th'
-                    ? "คุณยังไม่ได้บันทึกการเปลี่ยนแปลงบนบอร์ด! ข้อมูลที่แก้ไขจะหายไป คุณแน่ใจหรือไม่ว่าต้องการออกจากหน้านี้โดยไม่บันทึก?"
-                    : "You have unsaved changes on the canvas! Your modifications will be lost. Are you sure you want to leave without saving?"
-            );
-            if (!confirmClose) return;
+            setPendingAction({ type: 'close' });
+            setShowUnsavedDialog(true);
+        } else {
+            if (onClose) onClose();
         }
-        if (onClose) onClose();
-    }, [isDirty, readonly, onClose, locale]);
+    }, [isDirty, readonly, onClose]);
 
     const onDragStop = useCallback(() => {
         setIsDragging(false);
@@ -738,9 +759,26 @@ function CanvasInternal({
 
     return (
         <div className={cn("flex flex-col h-full w-full border bg-card rounded-xl")}>
-            <div className="flex items-center justify-between p-2 md:p-4 border-b">
-                <div className="flex items-center gap-2 md:gap-4">
-                    <div className="flex items-center gap-1 md:gap-2">
+            {/* Mobile Portrait Orientation Warning */}
+            <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center p-6 text-center lg:hidden portrait:flex landscape:hidden">
+                <div className="space-y-4">
+                    <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-bounce">
+                        <RotateCw className="h-8 w-8" />
+                    </div>
+                    <h2 className="text-xl font-black tracking-tight text-foreground">
+                        {locale === 'th' ? 'กรุณาหมุนหน้าจอเป็นแนวนอน' : 'Please rotate your device'}
+                    </h2>
+                    <p className="text-xs text-muted-foreground/80 max-w-xs mx-auto leading-relaxed">
+                        {locale === 'th' 
+                            ? 'ระบบบอร์ดจัดการแข่งขันออกแบบมาสำหรับใช้งานในแนวนอนบนอุปกรณ์มือถือเพื่อความสะดวกในการจัดการ' 
+                            : 'The bracket manager is designed for landscape mode on mobile devices for the best editing experience.'}
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between p-2 lg:p-4 border-b gap-1">
+                <div className="flex items-center gap-2 lg:gap-4">
+                    <div className="flex items-center gap-1 lg:gap-2">
                         {isEditingName && !readonly ? (
                             <Input
                                 value={tempName}
@@ -792,7 +830,7 @@ function CanvasInternal({
                                 }
                             }}
                         >
-                            <SelectTrigger className="w-[200px] h-10 hover:bg-slate-50 dark:hover:bg-foreground/5 font-bold text-xs tracking-tight">
+                            <SelectTrigger className="w-[160px]">
                                 <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
                             </SelectTrigger>
                             <SelectContent className="bg-card">
@@ -859,13 +897,13 @@ function CanvasInternal({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1 md:gap-2">
+                <div className="flex items-center gap-1 lg:gap-2">
                     {onClose && (
                         <Button variant="ghost" size="icon" onClick={handleClose} className="h-10 w-10">
                             <X className="h-4 w-4" />
                         </Button>
                     )}
-                    <div className="flex items-center gap-1 md:gap-2">
+                    <div className="flex items-center gap-1 lg:gap-2">
                         {!readonly && (
                             <Button
                                 onClick={() => handleSave(true)}
@@ -881,7 +919,7 @@ function CanvasInternal({
                             </Button>
                         )}
                         {!readonly && (
-                            <div className="flex items-center gap-1 md:gap-2">
+                            <div className="flex items-center gap-1 lg:gap-2">
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
                                     <DialogTrigger asChild>
@@ -894,7 +932,7 @@ function CanvasInternal({
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="bg-card rounded-xl sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                                        <DialogHeader className="p-2 md:p-4 pb-0 border-b">
+                                        <DialogHeader className="p-2 lg:p-4 pb-0 border-b">
                                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center">
                                                 {locale === 'th' ? "ประกาศใหม่" : "New Announcement"}
                                             </DialogTitle>
@@ -997,7 +1035,7 @@ function CanvasInternal({
                     <div className="absolute inset-0 z-20 flex flex-col">
                         <div className="flex flex-1 overflow-hidden bg-card">
                             {/* Left Controls Sidebar (w-64 like settings) */}
-                            <div className="w-64 border-r flex flex-col p-2 md:p-3 gap-2 shrink-0 z-10">
+                            <div className="w-64 border-r flex flex-col p-2 lg:p-3 gap-2 shrink-0 z-10">
                                 <div>
                                     <div className="space-y-4">
                                         {/* Date Filter */}
@@ -1133,7 +1171,7 @@ function CanvasInternal({
 
                             {/* Main Content */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                <div className="p-2 md:p-4">
+                                <div className="p-2 lg:p-4">
                                     <MatchManager
                                         matches={activeMatches}
                                         teams={teams as unknown as Team[]}
@@ -1223,7 +1261,7 @@ function CanvasInternal({
                             </aside>
 
                             {/* Settings Content Area */}
-                            <main className="flex-1 overflow-y-auto custom-scrollbar p-2 md:p-4 bg-muted/5">
+                            <main className="flex-1 overflow-y-auto custom-scrollbar p-2 lg:p-4 bg-muted/5">
                                 <div className="max-w-3xl mx-auto">
                                     <TournamentSettings
                                         tournament={tournament}
@@ -1371,6 +1409,30 @@ function CanvasInternal({
                     }
                 }}
             />
+
+            {/* Unsaved Changes Warning Dialog */}
+            <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+                <AlertDialogContent className="rounded-xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="p-2 lg:p-4 border-b">
+                            {locale === 'th' ? 'คุณแน่ใจหรือไม่?' : 'Are you sure?'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="p-2 lg:p-4">
+                            {locale === 'th'
+                                ? "คุณยังไม่ได้บันทึกการเปลี่ยนแปลงบนบอร์ด! ข้อมูลที่แก้ไขจะหายไป คุณแน่ใจหรือไม่ว่าต้องการออกจากหน้านี้โดยไม่บันทึก?"
+                                : "You have unsaved changes on the canvas! Your modifications will be lost. Are you sure you want to leave without saving?"}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="p-2 lg:p-4 border-t">
+                        <AlertDialogCancel onClick={handleCancelLeave}>
+                            {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmLeave}>
+                            {locale === 'th' ? 'ยืนยันออกจากหน้า' : 'Confirm'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

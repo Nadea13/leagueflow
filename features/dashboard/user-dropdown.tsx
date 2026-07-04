@@ -23,19 +23,19 @@ import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function UserDropdown({ 
-    email, 
-    name, 
-    avatar, 
+export function UserDropdown({
+    email,
+    name,
+    avatar,
     className,
     side = "bottom",
     align = "end",
     sideOffset = 8,
     alignOffset = 0
-}: { 
-    email: string | undefined, 
-    name?: string | null, 
-    avatar?: string, 
+}: {
+    email: string | undefined,
+    name?: string | null,
+    avatar?: string,
     className?: string,
     side?: "top" | "right" | "bottom" | "left",
     align?: "start" | "center" | "end",
@@ -54,33 +54,25 @@ export function UserDropdown({
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="lg" className={cn("w-full justify-start p-1 md:p-2 h-auto transition-all text-left", className)}>
-                    <div className="flex items-center gap-3 w-full">
-                        <div className="h-10 w-10 border rounded-full transition-all shrink-0 p-0.5 bg-muted/30 flex items-center justify-center">
-                            <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60">
-                                {avatar ? (
-                                    <Image
-                                        src={avatar}
-                                        alt={displayName || "User"}
-                                        width={36}
-                                        height={36}
-                                        className="h-full w-full object-cover rounded-full"
-                                    />
-                                ) : (
-                                    <span className="text-xs font-bold">{displayName?.slice(0, 2).toUpperCase()}</span>
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-foreground truncate leading-none mb-1">{name || "User"}</p>
-                            <p className="text-[10px] text-muted-foreground/60 truncate font-medium leading-none">{email}</p>
-                        </div>
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60">
+                        {avatar ? (
+                            <Image
+                                src={avatar}
+                                alt={displayName || "User"}
+                                width={36}
+                                height={36}
+                                className="h-full w-full object-cover rounded-full"
+                            />
+                        ) : (
+                            <span className="text-xs font-bold">{displayName?.slice(0, 2).toUpperCase()}</span>
+                        )}
                     </div>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-                className="w-64 bg-card border shadow-2xl p-2 rounded-lg" 
+            <DropdownMenuContent
+                className="w-64 bg-card border shadow-2xl p-2 rounded-lg"
                 side={side}
-                align={align} 
+                align={align}
                 sideOffset={sideOffset}
                 alignOffset={alignOffset}
                 forceMount
@@ -114,7 +106,7 @@ export function UserDropdown({
                         <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
-                        <DropdownMenuSubContent 
+                        <DropdownMenuSubContent
                             className="bg-background border border-border min-w-[120px] rounded-lg shadow-xl p-1.5"
                             sideOffset={8}
                         >

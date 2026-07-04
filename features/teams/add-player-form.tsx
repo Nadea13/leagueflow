@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import { Plus, Loader2, UserPlus, ArrowRight, Camera } from "lucide-react";
+import { Loader2, UserPlus, ArrowRight, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,14 @@ interface MasterPlayerSearchResult {
 interface MasterPlayerRow {
     id: string;
     first_name: string;
+    middle_name?: string | null;
     last_name: string;
+    first_name_th?: string | null;
+    middle_name_th?: string | null;
+    last_name_th?: string | null;
+    first_name_en?: string | null;
+    middle_name_en?: string | null;
+    last_name_en?: string | null;
     birthday: string | null;
     tel: string | null;
 }
@@ -80,7 +87,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
             if (res.success && res.data) {
                 const mapped = (res.data as MasterPlayerRow[]).map((mp) => ({
                     id: mp.id,
-                    name: `${mp.first_name} ${mp.last_name}`.trim(),
+                    name: (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim(),
                     date_of_birth: mp.birthday,
                     tel: mp.tel
                 }));
@@ -186,14 +193,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     return (
         <div className="bg-card border relative rounded-xl">
             <div className="p-2 md:p-4">
-                <div className="flex items-center justify-between mb-2 md:mb-4">
-                    <div className="flex items-center gap-3">
-                        <Plus className="h-6 w-6 text-primary" />
-                        <h3 className="text-2xl font-black tracking-tighter text-foreground">
-                            {t("add_player")}
-                        </h3>
-                    </div>
-                </div>
 
                 <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-2 md:gap-3">
                     <div className="space-y-1 shrink-0 flex flex-col items-center">
@@ -225,7 +224,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                         <Input
                             value={newNumber}
                             onChange={e => setNewNumber(e.target.value)}
-                            placeholder="00"
                             type="text"
                             className="bg-transparent text-foreground focus-visible:ring-0"
                         />
@@ -249,7 +247,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                         setIsPopoverOpen(false);
                                     }, 200);
                                 }}
-                                placeholder={t("player_name")}
                                 required
                                 className="bg-transparent text-foreground focus-visible:ring-0 w-full"
                             />
@@ -308,7 +305,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                 value={newTel}
                                 onChange={e => setNewTel(e.target.value)}
                                 type="tel"
-                                placeholder="08X-XXX-XXXX"
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                             />
                         </div>

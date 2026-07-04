@@ -1,8 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { MatchConsolePage } from "@/features/sports/football/match-console-page";
+import { ConsolePage } from "@/features/sports/football/console-page";
 import { MatchEvent } from "@/types";
 import { PublicFooter } from "@/components/layout/public-footer";
-import { getPlans } from "@/actions/common/plans";
 
 export default async function PublicMatchConsole(props: {
     params: Promise<{ locale: string, id: string, matchId: string }>,
@@ -11,18 +10,6 @@ export default async function PublicMatchConsole(props: {
     const { id, matchId } = await props.params;
     const resolvedParams = await props.searchParams;
     const fromTab = typeof resolvedParams.from === 'string' ? resolvedParams.from : 'fixtures';
-
-    // 0. Fetch Plans for Footer
-    const [
-        { data: managerPlans },
-        { data: organizerPlans }
-    ] = await Promise.all([
-        getPlans({ role: 'manager' }),
-        getPlans({ role: 'organizer' })
-    ]);
-
-    const safeManagerPlans = managerPlans || [];
-    const safeOrganizerPlans = organizerPlans || [];
 
     // We use admin client to bypass RLS for public view, standard practice in this repo
     const supabase = createAdminClient();
@@ -89,7 +76,7 @@ export default async function PublicMatchConsole(props: {
     return (
         <div className="flex flex-col min-h-screen">
             <div className="flex-1">
-                <MatchConsolePage
+                <ConsolePage
                     match={match}
                     tournamentId={id}
                     tournamentName={tournament?.name}
@@ -98,7 +85,7 @@ export default async function PublicMatchConsole(props: {
                     backUrl={`/${id}?tab=${fromTab}`}
                 />
             </div>
-            <PublicFooter managerPlans={safeManagerPlans} organizerPlans={safeOrganizerPlans} />
+            <PublicFooter />
         </div>
     );
 }

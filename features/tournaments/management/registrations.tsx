@@ -49,7 +49,7 @@ interface RegistrationQueryResult {
     tournament_categories: CategoryQueryResult | null;
 }
 
-export function Registrations({ tournamentId }: { tournamentId: string }) {
+export function Registrations({ tournamentId, categoryId }: { tournamentId: string; categoryId?: string }) {
     const t = useTranslations("Registrations");
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +59,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
 
     const fetchRegistrations = useCallback(async () => {
         setIsLoading(true);
-        const { data, error } = await supabase
+        let query = supabase
             .from("tournament_teams")
             .select(`
                 id,
@@ -77,12 +77,18 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                     description
                 ),
                 tournament_categories!inner (
+                    id,
                     tournament_id
                 )
             `)
             .eq("tournament_categories.tournament_id", tournamentId)
-            .is("deleted_at", null)
-            .order("created_at", { ascending: false });
+            .is("deleted_at", null);
+
+        if (categoryId) {
+            query = query.eq("tournament_category_id", categoryId);
+        }
+
+        const { data, error } = await query.order("created_at", { ascending: false });
 
         if (!error && data) {
             const mapped: Registration[] = (data as unknown as RegistrationQueryResult[]).map((item) => ({
@@ -105,7 +111,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
             console.error("Error fetching registrations:", error);
         }
         setIsLoading(false);
-    }, [tournamentId, supabase]);
+    }, [tournamentId, categoryId, supabase]);
 
     useEffect(() => {
         const timer = setTimeout(() => fetchRegistrations(), 0);
@@ -185,7 +191,7 @@ export function Registrations({ tournamentId }: { tournamentId: string }) {
                                     <TableCell className="px-1 md:px-2">
                                         <RosterDialog
                                             team={{
-                                                id: reg.existing_team_id || "",
+                                                id: reg.tournament_team_id || "",
                                                 name: reg.team_name,
                                                 logo_url: reg.logo_url,
                                                 description: reg.description,

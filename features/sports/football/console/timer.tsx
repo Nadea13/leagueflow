@@ -1,5 +1,3 @@
-import { Badge } from "@/components/ui/badge";
-
 interface MatchTimerProps {
     time: number;
     readOnly?: boolean;
@@ -17,17 +15,13 @@ export function MatchTimer({ time, readOnly: _readOnly = false, customText, adde
     return (
         <div className="flex flex-col items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2 md:gap-4">
-                <div className="text-2xl lg:text-6xl font-black tracking-tighter text-primary tabular-nums">
-                    {customText ? customText : formatTime(time)}
+                <div className="text-2xl lg:text-6xl font-black tracking-tighter text-primary tabular-nums flex items-baseline gap-1 md:gap-2">
+                    <span>{customText ? customText : formatTime(time)}</span>
+                    {addedTime && (
+                        <span className="text-sm lg:text-3xl text-emerald-400 font-extrabold">+{addedTime}</span>
+                    )}
                 </div>
             </div>
-            {addedTime && (
-                <Badge>
-                    +{addedTime} Min
-                </Badge>
-            )}
         </div>
     );
 }
-
-

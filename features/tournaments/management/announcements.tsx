@@ -137,7 +137,6 @@ export function Announcements({
                             <Input
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                placeholder={t("title_placeholder")}
                                 required
                             />
                         </div>
@@ -146,8 +145,7 @@ export function Announcements({
                             <Textarea
                                 value={content}
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-                                placeholder={t("content_placeholder")}
-                                rows={5}
+                                className="resize-none min-h-[160px]"
                             />
                         </div>
                     </div>

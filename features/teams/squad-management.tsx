@@ -195,7 +195,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 <Tab
                     value={mobileTab}
                     onChange={(val) => setMobileTab(val as 'roster' | 'team')}
-                    className="w-full"
+                    className="w-full bg-card"
                     fullWidth={true}
                     options={[
                         { label: tCommon("players"), value: 'roster', icon: Users },

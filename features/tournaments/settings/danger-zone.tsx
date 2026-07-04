@@ -138,7 +138,6 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                         <Input
                                             value={deleteConfirmText}
                                             onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                            placeholder={tournamentName}
                                         />
                                     </div>
                                 </div>

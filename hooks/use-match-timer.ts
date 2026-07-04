@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Match, MatchEvent } from "@/types";
 
-export function useMatchTimer(match: Match, tournamentId: string, events: MatchEvent[]) {
+export function useMatchTimer(match: Match, tournamentId: string, events: MatchEvent[], delaySeconds: number = 0) {
     // Initialize time with strict trust in elapsed_before_pause
     const [time, setTime] = useState(match.elapsed_before_pause || 0);
     const [isRunning, setIsRunning] = useState(match.timer_status === 'playing');
@@ -40,7 +40,7 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
                 : null;
 
             if (latestMarker) {
-                const now = Date.now();
+                const now = Date.now() - (delaySeconds * 1000);
                 const markerTimestamp = (latestMarker.extra_info?.start_timestamp as number) || new Date(latestMarker.created_at).getTime();
                 const diffSeconds = Math.max(0, Math.floor((now - markerTimestamp) / 1000));
                 const finalTime = (match.elapsed_before_pause || 0) + diffSeconds;
@@ -62,7 +62,7 @@ export function useMatchTimer(match: Match, tournamentId: string, events: MatchE
         // 100ms interval for high-precision responsiveness, but updateTimer uses Date.now() so it's accurate
         const interval = setInterval(updateTimer, 100);
         return () => clearInterval(interval);
-    }, [isRunning, match.id, match.elapsed_before_pause, events]);
+    }, [isRunning, match.id, match.elapsed_before_pause, events, delaySeconds]);
 
     return {
         time,

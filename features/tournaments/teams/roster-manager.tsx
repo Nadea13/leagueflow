@@ -104,17 +104,17 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 bg-card border overflow-hidden flex flex-col">
-                <div className="p-4 md:p-6 bg-card flex-shrink-0">
-                    <div className="flex items-start gap-4 md:gap-6">
-                        <div className="h-10 w-10 md:h-12 md:w-12 flex items-center justify-center border shrink-0">
+            <DialogContent className="p-2 md:p-4 max-w-4xl max-h-[90vh] space-y-1 md:space-y-2 gap-0 bg-card border rounded-xl overflow-hidden flex flex-col">
+                <div className="bg-card flex-shrink-0">
+                    <div className="flex items-start gap-1 md:gap-2">
+                        <div className="h-10 w-10 md:h-12 md:w-12 rounded-full flex items-center justify-center border shrink-0">
                             {team.logo_url ? (
                                 <Image
                                     src={team.logo_url}
                                     alt={team.name}
                                     width={48}
                                     height={48}
-                                    className="p-1 h-full w-full object-contain"
+                                    className="p-1 h-full w-full rounded-full object-contain"
                                 />
                             ) : (
                                 <span className="text-sm font-black text-primary">
@@ -122,7 +122,10 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                                 </span>
                             )}
                         </div>
-                        <div className="space-y-1 md:space-y-2">
+                        <div className="space-y-1">
+                            <h2 className="text-2xl font-black tracking-tighter leading-none text-foreground">
+                                {teamName}
+                            </h2>
                             <div className="flex items-center gap-2 md:gap-3">
                                 <Badge variant="default" className="text-[8px] font-black tracking-widest px-2 py-0.5">
                                     {team.sport?.toUpperCase()}
@@ -131,14 +134,11 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                                     {players.length} {tCommon("players")}
                                 </span>
                             </div>
-                            <h2 className="text-2xl font-black tracking-tighter leading-none text-foreground">
-                                {teamName}
-                            </h2>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-6 space-y-2 md:space-y-3 pb-0 md:pb-3">
+                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 md:space-y-2">
                     <Tab
                         value={mobileTab}
                         onChange={(val) => setMobileTab(val as 'roster' | 'team')}
@@ -150,7 +150,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                         ]}
                     />
 
-                    <div className={cn("space-y-6", mobileTab !== 'roster' && "hidden")}>
+                    <div className={cn("space-y-1 md:space-y-2", mobileTab !== 'roster' && "hidden")}>
                         {!(readOnly || team.managed_by_manager) && (
                             <AddPlayerForm
                                 teamId={team.id}
@@ -170,7 +170,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                         />
                     </div>
 
-                    <div className={cn("space-y-6", mobileTab !== 'team' && "hidden")}>
+                    <div className={cn("space-y-1 md:space-y-2", mobileTab !== 'team' && "hidden")}>
                         <EditTeamForm
                             team={team}
                             onNameChange={setTeamName}

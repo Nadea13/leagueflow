@@ -367,7 +367,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                 sourceGroupId: groupNode.id,
                 teamCount: groupNode.data.teamCount,
                 teams: groupNode.data.teams,
-                label: `Standings: ${groupNode.data.label}`
+                label: groupNode.data.label
             });
         }
 
@@ -845,7 +845,7 @@ export const useBracketStore = create<BracketState>((set, get) => ({
                                     ...target.data,
                                     teamCount: updatedNode.data.teamCount,
                                     teams: updatedNode.data.teams,
-                                    label: `Standings: ${updatedNode.data.label}`
+                                    label: updatedNode.data.label
                                 };
                             }
                         }

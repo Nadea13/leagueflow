@@ -93,7 +93,6 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                             id="fullName"
                             name="fullName"
                             defaultValue={profile?.full_name || user?.user_metadata?.full_name || ""}
-                            placeholder={t("enter_full_name")}
                         />
                     </div>
                     <div className="space-y-1">
@@ -102,7 +101,6 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                             id="phone"
                             name="phone"
                             defaultValue={profile?.phone || ""}
-                            placeholder="08x-xxx-xxxx"
                         />
                     </div>
                     <div className="flex justify-end">

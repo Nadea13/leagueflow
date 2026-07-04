@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { createMasterPlayer } from "@/actions/common/user";
+import { useState, useEffect, useTransition } from "react";
+import { createMasterPlayer, getMasterPlayerStats } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
     Trophy, User, Calendar, Phone, Search,
@@ -21,13 +21,39 @@ import { EditVerifyProfileDialog } from "@/features/teams/edit-verify-profile-di
 export interface MasterPlayer {
     id: string;
     first_name: string;
+    middle_name?: string | null;
     last_name: string;
+    first_name_th?: string | null;
+    middle_name_th?: string | null;
+    last_name_th?: string | null;
+    first_name_en?: string | null;
+    middle_name_en?: string | null;
+    last_name_en?: string | null;
     gender?: 'male' | 'female' | string | null;
     birthday?: string | null;
     tel?: string | null;
     profile_img?: string | null;
     verified?: boolean;
     status?: string;
+}
+
+interface PlayerStats {
+    goals: number;
+    assists: number;
+    yellowCards: number;
+    redCards: number;
+    saves: number;
+    injuries: number;
+    history: {
+        tournamentName: string;
+        teamName: string;
+        goals: number;
+        assists: number;
+        yellowCards: number;
+        redCards: number;
+        saves: number;
+        injuries: number;
+    }[];
 }
 
 interface DashboardClientProps {
@@ -42,9 +68,36 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
+    const [stats, setStats] = useState<PlayerStats | null>(null);
+    const [loadingStats, setLoadingStats] = useState(false);
+
+    useEffect(() => {
+        let active = true;
+        if (masterPlayer?.id) {
+            Promise.resolve().then(() => {
+                if (active) setLoadingStats(true);
+            });
+            getMasterPlayerStats(masterPlayer.id).then((res) => {
+                if (active) {
+                    if (res.success && res.data) {
+                        setStats(res.data);
+                    }
+                    setLoadingStats(false);
+                }
+            });
+        }
+        return () => {
+            active = false;
+        };
+    }, [masterPlayer?.id]);
+
     // Form inputs state
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [firstNameTh, setFirstNameTh] = useState("");
+    const [middleNameTh, setMiddleNameTh] = useState("");
+    const [lastNameTh, setLastNameTh] = useState("");
+    const [firstNameEn, setFirstNameEn] = useState("");
+    const [middleNameEn, setMiddleNameEn] = useState("");
+    const [lastNameEn, setLastNameEn] = useState("");
     const [gender, setGender] = useState("male");
     const [birthday, setBirthday] = useState("");
     const [tel, setTel] = useState("");
@@ -67,14 +120,18 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         setError(null);
         setSuccess(false);
 
-        if (!firstName || !lastName || !gender || !birthday) {
+        if ((!firstNameTh && !firstNameEn) || (!lastNameTh && !lastNameEn) || !gender || !birthday) {
             setError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
             return;
         }
 
         const formData = new FormData();
-        formData.append("firstName", firstName);
-        formData.append("lastName", lastName);
+        formData.append("firstNameTh", firstNameTh);
+        formData.append("middleNameTh", middleNameTh);
+        formData.append("lastNameTh", lastNameTh);
+        formData.append("firstNameEn", firstNameEn);
+        formData.append("middleNameEn", middleNameEn);
+        formData.append("lastNameEn", lastNameEn);
         formData.append("gender", gender);
         formData.append("birthday", birthday);
         formData.append("tel", tel);
@@ -106,7 +163,6 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             <Input
                                 type="search"
                                 name="q"
-                                placeholder="Search tournaments by name, location, or status..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -169,8 +225,9 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 </div>
 
                 {/* Right Column: Master Player Card (4 cols) */}
-                <div className="lg:col-span-4 bg-card border rounded-xl order-1 lg:order-2">
-                    {masterPlayer ? (
+                <div className="lg:col-span-4 space-y-4 order-1 lg:order-2">
+                    <div className="bg-card border rounded-xl">
+                        {masterPlayer ? (
                         /* Player ID Card */
                         <div className="relative overflow-hidden">
                             {/* License Header */}
@@ -183,7 +240,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 hover:bg-muted border"
+                                        className="h-6 w-6"
                                         onClick={handleOpenEdit}
                                     >
                                         <Edit className="h-4 w-4" />
@@ -213,14 +270,14 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                     <Avatar className="h-20 w-20 border-2 bg-background relative z-10 rounded-full">
                                         {masterPlayer.profile_img && <AvatarImage src={masterPlayer.profile_img} alt="Avatar" className="object-cover" />}
                                         <AvatarFallback className="font-black text-foreground text-xl">
-                                            {`${masterPlayer.first_name[0]}${masterPlayer.last_name[0]}`}
+                                            {`${(masterPlayer.first_name_en || masterPlayer.first_name_th || "?")[0]}${(masterPlayer.last_name_en || masterPlayer.last_name_th || "?")[0]}`}
                                         </AvatarFallback>
                                     </Avatar>
                                 </div>
 
                                 <div>
                                     <h3 className="text-xl font-black text-foreground leading-tight">
-                                        {masterPlayer.first_name} {masterPlayer.last_name}
+                                        {masterPlayer.first_name_th || masterPlayer.first_name_en} {masterPlayer.last_name_th || masterPlayer.last_name_en}
                                     </h3>
                                     <p className="text-xs text-primary mt-1 tracking-widest font-bold">
                                         STATUS : {masterPlayer.status}
@@ -283,28 +340,71 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                 )}
 
                                 <form onSubmit={handleCreateProfile} className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1">
-                                            <Label>ชื่อจริง *</Label>
-                                            <Input
-                                                id="firstName"
-                                                type="text"
-                                                required
-                                                value={firstName}
-                                                onChange={(e) => setFirstName(e.target.value)}
-                                                placeholder="ภาษาไทย/อังกฤษ"
-                                            />
+                                    {/* Thai Name */}
+                                    <div className="space-y-2 border-b pb-3">
+                                        <h4 className="text-xs font-bold text-primary tracking-wider uppercase">ชื่อ-นามสกุล (ภาษาไทย)</h4>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground">ชื่อจริง *</Label>
+                                                <Input
+                                                    id="firstNameTh"
+                                                    type="text"
+                                                    value={firstNameTh}
+                                                    onChange={(e) => setFirstNameTh(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground">ชื่อกลาง</Label>
+                                                <Input
+                                                    id="middleNameTh"
+                                                    type="text"
+                                                    value={middleNameTh}
+                                                    onChange={(e) => setMiddleNameTh(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground">นามสกุล *</Label>
+                                                <Input
+                                                    id="lastNameTh"
+                                                    type="text"
+                                                    value={lastNameTh}
+                                                    onChange={(e) => setLastNameTh(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <Label>นามสกุล *</Label>
-                                            <Input
-                                                id="lastName"
-                                                type="text"
-                                                required
-                                                value={lastName}
-                                                onChange={(e) => setLastName(e.target.value)}
-                                                placeholder="ภาษาไทย/อังกฤษ"
-                                            />
+                                    </div>
+
+                                    {/* English Name */}
+                                    <div className="space-y-2 border-b pb-3">
+                                        <h4 className="text-xs font-bold text-primary tracking-wider uppercase">Full Name (English)</h4>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground">First Name *</Label>
+                                                <Input
+                                                    id="firstNameEn"
+                                                    type="text"
+                                                    value={firstNameEn}
+                                                    onChange={(e) => setFirstNameEn(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground">Middle Name</Label>
+                                                <Input
+                                                    id="middleNameEn"
+                                                    type="text"
+                                                    value={middleNameEn}
+                                                    onChange={(e) => setMiddleNameEn(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground">Last Name *</Label>
+                                                <Input
+                                                    id="lastNameEn"
+                                                    type="text"
+                                                    value={lastNameEn}
+                                                    onChange={(e) => setLastNameEn(e.target.value)}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
@@ -341,7 +441,6 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                             type="tel"
                                             value={tel}
                                             onChange={(e) => setTel(e.target.value)}
-                                            placeholder="เช่น 0891234567"
                                         />
                                     </div>
 
@@ -364,6 +463,97 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                     </Button>
                                 </form>
                             </div>
+                        </div>
+                    )}
+                    </div>
+
+                    {masterPlayer && (
+                        <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col animate-in fade-in duration-200">
+                            <div className="p-2 md:p-4 border-b flex items-center justify-between">
+                                <span className="font-black text-foreground leading-tight flex items-center gap-2">
+                                    Player Statistics
+                                </span>
+                            </div>
+                            
+                            {loadingStats ? (
+                                <div className="flex items-center justify-center p-8 text-xs text-muted-foreground/60 gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                    <span>กำลังโหลดสถิติ...</span>
+                                </div>
+                            ) : stats ? (
+                                <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-3 gap-1 md:gap-2 text-center">
+                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
+                                            <span className="text-[10px] font-bold text-muted-foreground block">Goals</span>
+                                            <span className="text-base md:text-lg font-black text-foreground">{stats.goals}</span>
+                                        </div>
+                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
+                                            <span className="text-[10px] font-bold text-muted-foreground block">Assists</span>
+                                            <span className="text-base md:text-lg font-black text-foreground">{stats.assists}</span>
+                                        </div>
+                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
+                                            <span className="text-[10px] font-bold text-muted-foreground block">Saves</span>
+                                            <span className="text-base md:text-lg font-black text-foreground">{stats.saves}</span>
+                                        </div>
+                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
+                                            <span className="text-[10px] font-bold text-muted-foreground block">Yellow</span>
+                                            <span className="text-base md:text-lg font-black text-amber-500">{stats.yellowCards}</span>
+                                        </div>
+                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
+                                            <span className="text-[10px] font-bold text-muted-foreground block">Red</span>
+                                            <span className="text-base md:text-lg font-black text-rose-500">{stats.redCards}</span>
+                                        </div>
+                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
+                                            <span className="text-[10px] font-bold text-muted-foreground block">Injuries</span>
+                                            <span className="text-base md:text-lg font-black text-foreground">{stats.injuries}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Tournament History Table */}
+                                    <div className="space-y-2">
+                                        {stats.history.length === 0 ? (
+                                            <div className="text-center p-4 border border-dashed rounded-lg text-xs text-muted-foreground/60">
+                                                ยังไม่มีประวัติการลงสนามหรือทำสถิติในระบบ
+                                            </div>
+                                        ) : (
+                                            <div className="border rounded-lg overflow-hidden">
+                                                <table className="w-full text-[10px] text-left border-collapse">
+                                                    <thead>
+                                                        <tr className="border-b bg-muted/10">
+                                                            <th className="p-2 font-bold text-muted-foreground">ทัวร์นาเมนต์ (ทีม)</th>
+                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Goals">G</th>
+                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Assists">A</th>
+                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Saves">SV</th>
+                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Yellow Cards">Y</th>
+                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Red Cards">R</th>
+                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Injuries">INJ</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y">
+                                                        {stats.history.map((h, idx) => (
+                                                            <tr key={idx} className="hover:bg-muted/5 transition-colors">
+                                                                <td className="p-2 font-medium">
+                                                                    <div className="font-bold text-foreground line-clamp-1">{h.tournamentName}</div>
+                                                                    <div className="text-muted-foreground text-[9px]">{h.teamName}</div>
+                                                                </td>
+                                                                <td className="p-2 font-black text-center text-foreground">{h.goals}</td>
+                                                                <td className="p-2 font-black text-center text-foreground">{h.assists}</td>
+                                                                <td className="p-2 font-black text-center text-foreground">{h.saves}</td>
+                                                                <td className="p-2 font-black text-center text-amber-500">{h.yellowCards}</td>
+                                                                <td className="p-2 font-black text-center text-rose-500">{h.redCards}</td>
+                                                                <td className="p-2 font-black text-center text-foreground">{h.injuries}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-4 text-center text-xs text-muted-foreground">ไม่สามารถโหลดสถิติได้</div>
+                            )}
                         </div>
                     )}
                 </div>

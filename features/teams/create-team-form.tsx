@@ -111,7 +111,6 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                             <Input
                                 id="name"
                                 name="name"
-                                placeholder={t("team_name_placeholder")}
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                                 required
                             />
@@ -138,7 +137,6 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                             <Textarea
                                 id="description"
                                 name="description"
-                                placeholder={t("team_description_placeholder")}
                                 className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
                             />
                         </div>
@@ -149,7 +147,6 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 <Input
                                     id="contact_name"
                                     name="contact_name"
-                                    placeholder={t("contact_name_placeholder") || "Manager Name"}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required
                                 />
@@ -159,7 +156,6 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 <Input
                                     id="contact_phone"
                                     name="contact_phone"
-                                    placeholder={t("contact_phone_placeholder")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required
                                 />

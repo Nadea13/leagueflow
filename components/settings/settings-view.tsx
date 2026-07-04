@@ -31,61 +31,61 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                 </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-start">
-                {/* Settings Sidebar */}
-                <aside className="w-full md:w-64 flex flex-row md:flex-col shrink-0 border-b md:border-b-0 gap-1 overflow-x-auto md:overflow-x-visible scrollbar-none md:space-y-1">
+            <div className="flex flex-col gap-2 md:gap-4">
+                {/* Settings Tabs Navigation */}
+                <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card">
                     <Link
                         href="/dashboard/settings?tab=profile"
                         className={cn(
-                            "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm whitespace-nowrap",
+                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
                             activeTab === 'profile'
-                                ? "bg-primary/10 text-primary"
+                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
                                 : "text-muted-foreground hover:text-primary"
                         )}
                     >
-                        <UserIcon className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeTab === 'profile' ? "text-primary" : "text-muted-foreground")} />
+                        <UserIcon className="h-3.5 w-3.5" />
                         <span>{tNav("profile") || "Profile"}</span>
                     </Link>
 
                     <Link
                         href="/dashboard/settings?tab=preferences"
                         className={cn(
-                            "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm whitespace-nowrap",
+                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
                             activeTab === 'preferences'
-                                ? "bg-primary/10 text-primary"
+                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
                                 : "text-muted-foreground hover:text-primary"
                         )}
                     >
-                        <Sliders className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeTab === 'preferences' ? "text-primary" : "text-muted-foreground")} />
+                        <Sliders className="h-3.5 w-3.5" />
                         <span>{t("preferences")}</span>
                     </Link>
 
                     <Link
                         href="/dashboard/settings?tab=legal"
                         className={cn(
-                            "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm whitespace-nowrap",
+                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
                             activeTab === 'legal'
-                                ? "bg-primary/10 text-primary"
+                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
                                 : "text-muted-foreground hover:text-primary"
                         )}
                     >
-                        <Scale className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeTab === 'legal' ? "text-primary" : "text-muted-foreground")} />
+                        <Scale className="h-3.5 w-3.5" />
                         <span>{t("legal")}</span>
                     </Link>
 
                     <Link
                         href="/dashboard/settings?tab=danger"
                         className={cn(
-                            "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm whitespace-nowrap",
+                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
                             activeTab === 'danger'
-                                ? "bg-destructive/10 text-destructive"
-                                : "text-destructive/60 hover:text-destructive"
+                                ? "bg-destructive text-destructive-foreground rounded hover:text-destructive-foreground hover:bg-destructive"
+                                : "text-destructive hover:text-destructive"
                         )}
                     >
-                        <AlertTriangle className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
+                        <AlertTriangle className="h-3.5 w-3.5" />
                         <span>{t("danger_zone")}</span>
                     </Link>
-                </aside>
+                </div>
 
                 {/* Settings Content Area */}
                 <main className="flex-1 w-full space-y-2 md:space-y-4">

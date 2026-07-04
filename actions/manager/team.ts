@@ -705,8 +705,10 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
             deleted_at,
             master_player:master_id (
                 id,
-                first_name,
-                last_name,
+                first_name_en,
+                last_name_en,
+                first_name_th,
+                last_name_th,
                 birthday,
                 tel,
                 profile_img
@@ -736,8 +738,10 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                 created_at?: string;
                 master_player: {
                     id: string;
-                    first_name: string;
-                    last_name: string;
+                    first_name_en?: string | null;
+                    last_name_en?: string | null;
+                    first_name_th?: string | null;
+                    last_name_th?: string | null;
                     birthday: string | null;
                     tel: string | null;
                     profile_img: string | null;
@@ -746,7 +750,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
             const mp = p?.master_player;
             return {
                 id: p?.id || ps.id,
-                name: p?.display_name || (mp ? `${mp.first_name} ${mp.last_name}` : ''),
+                name: p?.display_name || (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
                 number: ps.shirt_number ? parseInt(ps.shirt_number) : null,
                 position: ps.position || null,
                 birth_date: mp?.birthday || null,
@@ -781,8 +785,10 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                     deleted_at,
                     master_player:master_id (
                         id,
-                        first_name,
-                        last_name,
+                        first_name_en,
+                        last_name_en,
+                        first_name_th,
+                        last_name_th,
                         birthday,
                         tel,
                         profile_img
@@ -803,8 +809,10 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                         created_at?: string;
                         master_player: {
                             id: string;
-                            first_name: string;
-                            last_name: string;
+                            first_name_en?: string | null;
+                            last_name_en?: string | null;
+                            first_name_th?: string | null;
+                            last_name_th?: string | null;
                             birthday: string | null;
                             tel: string | null;
                             profile_img: string | null;
@@ -813,7 +821,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                     const mp = p?.master_player;
                     return {
                         id: p?.id || ps.id,
-                        name: p?.display_name || (mp ? `${mp.first_name} ${mp.last_name}` : ''),
+                        name: p?.display_name || (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
                         number: ps.shirt_number ? parseInt(ps.shirt_number) : null,
                         position: ps.position || null,
                         birth_date: mp?.birthday || null,
@@ -990,8 +998,8 @@ export async function addPlayer(
             .from("master_players")
             .insert({
                 user_id: matchedUserId,
-                first_name: firstName,
-                last_name: lastName,
+                first_name_en: firstName,
+                last_name_en: lastName,
                 gender: 'unspecified',
                 birthday: '1970-01-01',
                 tel: tel || null,

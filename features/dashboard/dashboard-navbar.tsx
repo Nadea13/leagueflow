@@ -73,9 +73,9 @@ export function DashboardNavbar({
             </div>
 
             {/* Mobile Top Header / Desktop Navbar Header */}
-            <header className={cn("sticky top-0 z-40 flex h-14 md:h-20 items-center justify-between border-b border-border bg-background/80 backdrop-blur-xl px-4 md:px-6 w-full", className)}>
-                <div className="flex items-center gap-3">
-                    <Link href="/dashboard" className="flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 group">
+            <header className={cn("sticky top-0 z-40 flex h-14 md:h-20 items-center justify-between border-b bg-background/80 backdrop-blur-xl px-2 w-full", className)}>
+                <div className="flex items-center gap-1 md:gap-2">
+                    <Link href="/dashboard" className="flex items-center gap-2 transition-transform group">
                         <div className="relative shrink-0">
                             <svg viewBox="0 0 160 160" className="w-7 h-7 md:w-8 md:h-8 drop-shadow-[0_0_8px_rgba(0,196,154,0.3)] transition-all group-hover:drop-shadow-[0_0_12px_rgba(0,196,154,0.5)]" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M85.4616 21.9501C86.0436 21.9471 86.6256 21.9441 87.2253 21.941C94.6778 21.9214 101.867 22.4122 109.212 23.8001C108.078 25.1269 106.944 26.4529 105.805 27.7751C104.953 28.7693 104.105 29.7682 103.268 30.7751C95.053 40.4796 85.8612 49.0996 75.6116 56.6001C75.0985 56.9801 74.5855 57.3601 74.0569 57.7517C62.719 66.1146 50.7349 73.3682 38.3116 80.0001C37.7382 80.3066 37.1648 80.6131 36.5741 80.9288C32.6149 83.0001 32.6149 83.0001 30.8116 83.0001C30.5549 81.8516 30.3068 80.7011 30.0616 79.5501C29.9223 78.9097 29.7831 78.2693 29.6397 77.6095C28.1595 68.5881 28.3166 59.5618 28.3616 50.4501C28.3656 49.0256 28.3692 47.6012 28.3725 46.1767C28.3812 42.7178 28.395 39.259 28.4116 35.8001C43.3259 28.6069 43.3259 28.6069 49.5616 26.7501C50.1967 26.5597 50.8319 26.3693 51.4864 26.1732C53.3888 25.6225 55.296 25.1029 57.2116 24.6001C58.021 24.3849 58.021 24.3849 58.8467 24.1654C67.5959 21.9748 76.496 21.9759 85.4616 21.9501Z" fill="#0D2C54" />

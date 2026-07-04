@@ -68,7 +68,6 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                         name="location_name"
                         value={locationName}
                         onChange={(e) => setLocationName(e.target.value)}
-                        placeholder={t("name_placeholder") || "e.g. Main Stadium"}
                         className="bg-transparent text-foreground focus-visible:ring-0"
                     />
                 </div>

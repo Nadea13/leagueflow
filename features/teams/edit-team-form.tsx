@@ -224,10 +224,8 @@ export function EditTeamForm({
                         <Input
                             value={teamName}
                             onChange={e => setTeamName(e.target.value)}
-                            placeholder={tTeam("team_name")}
                             required
                             readOnly={isLocked}
-                            className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                         />
                     </div>
 
@@ -256,9 +254,8 @@ export function EditTeamForm({
                         <Textarea
                             value={teamDescription}
                             onChange={e => setTeamDescription(e.target.value)}
-                            placeholder={tTeam("team_description_placeholder")}
                             readOnly={isLocked}
-                            className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
+                            className="resize-none min-h-[80px]"
                         />
                     </div>
 
@@ -270,9 +267,7 @@ export function EditTeamForm({
                             <Input
                                 value={contactName}
                                 onChange={e => setContactName(e.target.value)}
-                                placeholder="Manager Name"
                                 readOnly={isLocked}
-                                className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                             />
                         </div>
                         <div className="space-y-1">
@@ -282,9 +277,7 @@ export function EditTeamForm({
                             <Input
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
-                                placeholder="08x-xxx-xxxx"
                                 readOnly={isLocked}
-                                className="bg-transparent text-foreground focus-visible:ring-0 text-sm font-bold"
                             />
                         </div>
                     </div>
@@ -397,7 +390,6 @@ export function EditTeamForm({
                                                     id="confirm-team-delete"
                                                     value={deleteConfirmText}
                                                     onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                                    placeholder={team.name}
                                                     autoComplete="off"
                                                 />
                                             </div>

@@ -110,27 +110,37 @@ export function PenaltyShootoutDialog({
 
     const handleClear = async () => {
         if (!confirm(t("clear_confirm"))) return;
-        await clearPenaltyShootout(matchId);
-        setShots([]);
-        onUpdate?.();
+        const result = await clearPenaltyShootout(matchId);
+        if (result.success) {
+            setShots([]);
+            onUpdate?.();
+        } else {
+            toast({ title: "Error", description: result.error, variant: "destructive" });
+        }
     };
 
     // Determine winner based on mathematical possibility
     const hasWinner = useMemo(() => {
         const hLen = homeShots.length;
         const aLen = awayShots.length;
+        const maxShots = Math.max(hLen, aLen);
 
-        // 1. Regulation Phase (5 shots each)
-        const hRemaining = Math.max(0, 5 - hLen);
-        const aRemaining = Math.max(0, 5 - aLen);
+        // 1. Regulation Phase (up to 5 shots each)
+        if (maxShots <= 5) {
+            const hRemaining = 5 - hLen;
+            const aRemaining = 5 - aLen;
 
-        // Check if home team has already won
-        if (homeScore > awayScore + aRemaining) return 'home';
-        // Check if away team has already won
-        if (awayScore > homeScore + hRemaining) return 'away';
+            // Check if home team has already won
+            if (homeScore > awayScore + aRemaining) return 'home';
+            // Check if away team has already won
+            if (awayScore > homeScore + hRemaining) return 'away';
 
-        // 2. Sudden Death Phase (after 5 shots each and still tied)
-        if (hLen >= 5 && aLen >= 5 && hLen === aLen) {
+            return null;
+        }
+
+        // 2. Sudden Death Phase (more than 5 shots)
+        // Winner is decided ONLY when both teams have taken the same number of shots in a round (hLen === aLen) and scores are not equal.
+        if (hLen === aLen) {
             if (homeScore > awayScore) return 'home';
             if (awayScore > homeScore) return 'away';
         }
@@ -165,7 +175,7 @@ export function PenaltyShootoutDialog({
                                 <p className="text-[9px] font-black tracking-widest text-foreground/40 mb-2 truncate max-w-[120px]">{homeTeamName}</p>
                                 <span className={cn(
                                     "text-5xl font-black tracking-tighter transition-all",
-                                    hasWinner === 'home' ? "text-primary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-foreground"
+                                    hasWinner === 'home' ? "text-primary" : "text-foreground"
                                 )}>
                                     {homeScore}
                                 </span>
@@ -175,7 +185,7 @@ export function PenaltyShootoutDialog({
                                 <p className="text-[9px] font-black tracking-widest text-foreground/40 mb-2 truncate max-w-[120px]">{awayTeamName}</p>
                                 <span className={cn(
                                     "text-5xl font-black tracking-tighter transition-all",
-                                    hasWinner === 'away' ? "text-primary drop-shadow-[0_0_10px_rgba(5,255,163,0.3)]" : "text-foreground"
+                                    hasWinner === 'away' ? "text-primary" : "text-foreground"
                                 )}>
                                     {awayScore}
                                 </span>
@@ -184,7 +194,7 @@ export function PenaltyShootoutDialog({
 
                         {/* Winner/Status Banner */}
                         {hasWinner ? (
-                            <div className="text-center py-3 bg-primary/10 border border-primary/20 relative z-10 overflow-hidden group">
+                            <div className="text-center py-2 rounded-sm bg-primary/10 border border-primary/20 relative z-10 overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 <p className="text-xs font-black tracking-widest text-primary relative z-10">
                                     {t("wins_on_penalties", { team: hasWinner === 'home' ? homeTeamName : awayTeamName })}
@@ -208,7 +218,6 @@ export function PenaltyShootoutDialog({
                             {Array.from({ length: totalRounds }, (_, i) => {
                                 const homeShot = homeShots[i];
                                 const awayShot = awayShots[i];
-                                const isSD = i >= 5;
 
                                 return (
                                     <div key={i} className="contents">
@@ -216,7 +225,7 @@ export function PenaltyShootoutDialog({
                                         <div className="flex justify-center">
                                             {homeShot ? (
                                                 <div className={cn(
-                                                    "w-12 h-12 flex items-center justify-center border transition-all",
+                                                    "w-12 h-12 flex items-center justify-center border transition-all rounded-sm",
                                                     homeShot.scored ? "bg-primary/10 border-primary/30 text-primary" : "bg-destructive/10 border-destructive/30 text-destructive"
                                                 )}>
                                                     {homeShot.scored ? <Check className="h-6 w-6" /> : <X className="h-6 w-6" />}
@@ -245,11 +254,8 @@ export function PenaltyShootoutDialog({
 
                                         {/* Round Number */}
                                         <div className="flex items-center justify-center">
-                                            <span className={cn(
-                                                "text-xs font-black tracking-tighter",
-                                                isSD ? "text-amber-500" : "text-foreground/40"
-                                            )}>
-                                                {isSD ? `SD${i - 4}` : i + 1}
+                                            <span className="text-xs font-black tracking-tighter">
+                                                {i + 1}
                                             </span>
                                         </div>
 
@@ -257,10 +263,10 @@ export function PenaltyShootoutDialog({
                                         <div className="flex justify-center">
                                             {awayShot ? (
                                                 <div className={cn(
-                                                    "w-12 h-12 flex items-center justify-center border transition-all",
-                                                    awayShot.scored ? "bg-primary/10 border-primary/30 text-primary" : "bg-red-500/10 border-red-500/30 text-red-500"
+                                                    "w-12 h-12 flex items-center justify-center border transition-all rounded-sm",
+                                                    awayShot.scored ? "bg-primary/10 border-primary/30 text-primary" : "bg-destructive/10 border-destructive/30 text-destructive"
                                                 )}>
-                                                    {awayShot.scored ? <Check className="h-6 w-6 stroke-[3px]" /> : <X className="h-6 w-6 stroke-[3px]" />}
+                                                    {awayShot.scored ? <Check className="h-6 w-6" /> : <X className="h-6 w-6" />}
                                                 </div>
                                             ) : !hasWinner ? (
                                                 <div className="flex gap-2">

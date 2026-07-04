@@ -50,7 +50,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
                     forcedMode="organizer"
                     className="md:hidden"
                 />
-                <main className="flex-1 h-full overflow-y-auto p-2 md:p-4 pb-16 md:pb-4">
+                <main className="flex-1 h-full overflow-y-auto p-2 md:p-4 pb-17 md:pb-4">
                     {children}
                 </main>
             </div>

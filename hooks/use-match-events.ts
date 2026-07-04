@@ -1,24 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MatchEvent, EventType } from "@/types";
 import { addMatchEvent, deleteMatchEvent, getMatchEvents } from "@/actions/tournaments/event";
 import { createClient } from "@/lib/supabase/client";
 
+export interface QueuedAction {
+    id: string;
+    type: "add_event" | "delete_event";
+    matchId: string;
+    teamId: string | null;
+    eventType?: EventType;
+    minute?: number;
+    playerId?: string | null;
+    extraInfo?: Record<string, unknown>;
+    playerName?: string;
+    eventId?: string;
+    createdAt: number;
+    status: "pending" | "syncing" | "failed";
+    error?: string;
+}
+
 export function useMatchEvents(matchId: string, tournamentId: string, initialData?: MatchEvent[], isReadOnly?: boolean) {
     const [events, setEvents] = useState<MatchEvent[]>(initialData || []);
-    const [isLoading, setIsLoading] = useState(!initialData); // If initialData exists, not loading
+    const [isLoading, setIsLoading] = useState(!initialData);
+    const [queue, setQueue] = useState<QueuedAction[]>([]);
+    const [isSyncing, setIsSyncing] = useState(false);
 
-    // Load events on mount (only if no initial data or to sync?)
-    // If we want to support Realtime, we should probably fetch to be sure, or rely on realtime subscription separately (which we don't have for events yet, only matches table).
-    // Actually, we don't have realtime for events table in this code. `LiveMatchConsole` subscribes to `matches` table changes.
-    // So fetching on mount is the only way to get updates if we don't have `initialData` or if it's stale.
-    // But for Public View, `initialData` comes from Server Component so it's fresh.
-    // And client fetch will likely fail.
+    // Load queue from localStorage on mount
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(`leagueflow-pending-events-${matchId}`);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    setTimeout(() => {
+                        setQueue(parsed);
+                    }, 0);
+                } catch (e) {
+                    console.error("Failed to parse local event queue", e);
+                }
+            }
+        }
+    }, [matchId]);
 
+    // Save queue to localStorage when changed
+    const saveQueue = useCallback((newQueue: QueuedAction[]) => {
+        setQueue(newQueue);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(newQueue));
+        }
+    }, [matchId]);
+
+    // Load events on mount
     useEffect(() => {
         const supabase = createClient();
         let isMounted = true;
 
-        // Client-side fetch using browser Supabase (works for unauthenticated public users)
         const fetchEventsClient = async () => {
             const { data, error } = await supabase
                 .from('match_events')
@@ -37,13 +73,10 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             return data;
         };
 
-        // Load on mount
         const loadEvents = async () => {
             if (isReadOnly) {
-                // Public view: use client-side query (no auth issues)
                 await fetchEventsClient();
             } else {
-                // Admin view: use server action (has proper auth context)
                 const res = await getMatchEvents(matchId);
                 if (isMounted && res.success && res.data) setEvents(res.data);
             }
@@ -52,9 +85,6 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
 
         loadEvents();
         
-        // --- Realtime Subscription ---
-        // Use a unique channel name for this specific hook instance to avoid collisions
-        // when multiple components use the same matchId or during rapid re-mounts.
         const channelId = Math.random().toString(36).substring(7);
         const channel = supabase.channel(`match-events-${matchId}-${channelId}`);
         
@@ -86,7 +116,6 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             })
             .subscribe();
 
-        // Polling fallback for public/read-only views
         let pollInterval: NodeJS.Timeout | null = null;
         if (isReadOnly) {
             pollInterval = setInterval(() => {
@@ -101,6 +130,74 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         };
     }, [matchId, isReadOnly]);
 
+    // Sync function
+    const syncQueue = useCallback(async () => {
+        if (isSyncing || isReadOnly) return;
+        
+        const currentQueue = [...queue];
+        if (currentQueue.length === 0) return;
+
+        setIsSyncing(true);
+        const updatedQueue = [...currentQueue];
+
+        for (let i = 0; i < updatedQueue.length; i++) {
+            const action = updatedQueue[i];
+            if (action.status === 'syncing') continue;
+            
+            action.status = 'syncing';
+            saveQueue([...updatedQueue]);
+
+            try {
+                if (action.type === 'add_event') {
+                    const res = await addMatchEvent(matchId, action.teamId, action.eventType!, action.minute!, action.playerId ?? null, action.extraInfo!, tournamentId);
+                    if (res.success) {
+                        updatedQueue.splice(i, 1);
+                        i--;
+                    } else {
+                        action.status = 'failed';
+                        action.error = res.error || "Unknown error";
+                    }
+                } else if (action.type === 'delete_event') {
+                    const res = await deleteMatchEvent(action.eventId!, tournamentId);
+                    if (res.success) {
+                        updatedQueue.splice(i, 1);
+                        i--;
+                    } else {
+                        action.status = 'failed';
+                        action.error = res.error || "Unknown error";
+                    }
+                }
+            } catch (err) {
+                action.status = 'failed';
+                action.error = err instanceof Error ? err.message : String(err);
+            }
+
+            saveQueue([...updatedQueue]);
+        }
+        setIsSyncing(false);
+    }, [matchId, tournamentId, queue, isSyncing, isReadOnly, saveQueue]);
+
+    // Auto-sync when window becomes online
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const handleOnline = () => {
+                syncQueue();
+            };
+            window.addEventListener("online", handleOnline);
+            return () => window.removeEventListener("online", handleOnline);
+        }
+    }, [syncQueue]);
+
+    // Trigger sync automatically when queue receives new items
+    useEffect(() => {
+        if (queue.some(a => a.status === 'pending')) {
+            const timer = setTimeout(() => {
+                syncQueue();
+            }, 0);
+            return () => clearTimeout(timer);
+        }
+    }, [queue, syncQueue]);
+
     const addEvent = async (
         teamId: string | null,
         type: EventType,
@@ -108,63 +205,79 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
         playerId: string | null = null,
         extraInfo: Record<string, unknown> = {},
         playerName: string = "Unknown"
-    ) => {
-        // Optimistic Update
+    ): Promise<{ success: boolean; error?: string }> => {
         const tempId = `temp-${Date.now()}`;
-        const newEvent: MatchEvent = {
+        const newAction: QueuedAction = {
             id: tempId,
-            match_id: matchId,
-            team_id: teamId,
-            event_type: type,
-            minute: minute,
-            player_id: playerId,
-            extra_info: extraInfo,
-            created_at: new Date().toISOString(),
-            player_name: playerName
+            type: "add_event",
+            matchId,
+            teamId,
+            eventType: type,
+            minute,
+            playerId,
+            extraInfo,
+            playerName,
+            createdAt: Date.now(),
+            status: "pending"
         };
 
-        setEvents(prev => [newEvent, ...prev].sort((a, b) => {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        }));
-
-        // Server Action
-        // Note: The original code handled optimistic binding of ID via state update or re-fetch.
-        // Ideally we update the ID after success.
-        const res = await addMatchEvent(matchId, teamId, type, minute, playerId, extraInfo, tournamentId);
-
-        if (res.success && res.data) {
-            const realId = res.data.id;
-            setEvents(prev => {
-                // If realId already exists (added via realtime INSERT), remove tempId
-                if (prev.some(e => e.id === realId)) {
-                    return prev.filter(e => e.id !== tempId);
-                }
-                // Else replace tempId with realId
-                return prev.map(e => e.id === tempId ? { ...e, id: realId } : e);
-            });
-            return { success: true };
-        } else {
-            // Revert on failure
-            setEvents(prev => prev.filter(e => e.id !== tempId));
-            return { success: false, error: res.error };
-        }
-    };
-
-    const deleteEvent = async (eventId: string) => {
-        const backup = [...events];
-        setEvents(prev => prev.filter(e => e.id !== eventId));
-
-        const res = await deleteMatchEvent(eventId, tournamentId);
-        if (!res.success) {
-            setEvents(backup);
-            return { success: false, error: res.error };
-        }
+        saveQueue([...queue, newAction]);
         return { success: true };
     };
 
+    const deleteEvent = async (eventId: string): Promise<{ success: boolean; error?: string }> => {
+        if (eventId.startsWith("temp-")) {
+            saveQueue(queue.filter(a => a.id !== eventId));
+            return { success: true };
+        }
+
+        const newAction: QueuedAction = {
+            id: `del-${eventId}-${Date.now()}`,
+            type: "delete_event",
+            matchId,
+            teamId: null,
+            eventId,
+            createdAt: Date.now(),
+            status: "pending"
+        };
+
+        saveQueue([...queue, newAction]);
+        return { success: true };
+    };
+
+    const combinedEvents = [...events];
+    queue.forEach(action => {
+        if (action.type === 'add_event') {
+            const exists = events.some(e => e.id === action.id || 
+                (e.event_type === action.eventType && e.minute === action.minute && e.player_id === action.playerId && e.team_id === action.teamId));
+            if (!exists) {
+                combinedEvents.push({
+                    id: action.id,
+                    match_id: action.matchId,
+                    team_id: action.teamId,
+                    event_type: action.eventType!,
+                    minute: action.minute!,
+                    player_id: action.playerId!,
+                    extra_info: action.extraInfo!,
+                    created_at: new Date(action.createdAt).toISOString(),
+                    player_name: action.playerName!,
+                    isPending: true
+                } as MatchEvent & { isPending?: boolean });
+            }
+        }
+    });
+
+    const deletedIds = new Set(queue.filter(a => a.type === 'delete_event').map(a => a.eventId));
+    const visibleEvents = combinedEvents
+        .filter(e => !deletedIds.has(e.id))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
     return {
-        events,
-        setEvents, // Exposed for manual updates if needed (e.g. Realtime push)
+        events: visibleEvents,
+        rawEvents: events,
+        queue,
+        isSyncing,
+        syncQueue,
         addEvent,
         deleteEvent,
         isLoading

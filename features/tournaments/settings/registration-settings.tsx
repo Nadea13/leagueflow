@@ -92,7 +92,7 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                     id="registration_fee"
                                     name="registration_fee"
                                     defaultValue={tournament.registration_fee ?? undefined}
-                                    placeholder="0.00"
+                                    placeholder="0.00 (Free)"
                                     min="0"
                                     step="0.01"
                                     disabled={!isPro}
@@ -106,7 +106,6 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                     id="bank_account_number"
                                     name="bank_account_number"
                                     defaultValue={tournament.bank_account_number ?? undefined}
-                                    placeholder="08xxxxxxxx or ID Card"
                                     disabled={!isPro}
                                     className="bg-transparent"
                                 />
@@ -130,7 +129,6 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                         id="bank_account_name"
                                         name="bank_account_name"
                                         defaultValue={tournament.bank_account_name ?? undefined}
-                                        placeholder={t("account_name")}
                                         disabled={!isPro}
                                         className="bg-transparent"
                                     />

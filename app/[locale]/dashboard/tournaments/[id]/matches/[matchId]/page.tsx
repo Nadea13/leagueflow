@@ -1,6 +1,6 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
-import { MatchConsolePage } from "@/features/sports/football/match-console-page";
+import { ConsolePage } from "@/features/sports/football/console-page";
 import { MatchEvent } from "@/types";
 
 export default async function AdminMatchConsole(props: {
@@ -95,7 +95,7 @@ export default async function AdminMatchConsole(props: {
         : `/dashboard/tournaments/${id}?tab=${fromTab}`;
 
     return (
-        <MatchConsolePage
+        <ConsolePage
             match={match}
             tournamentId={id}
             tournamentName={tournament?.name || undefined}

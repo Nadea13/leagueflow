@@ -181,7 +181,6 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                     id="name"
                                     name="name"
                                     defaultValue={tournament.name}
-                                    placeholder={tDialog("name")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                 />
                             </div>
@@ -193,7 +192,6 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                     id="document_deadline"
                                     name="document_deadline"
                                     defaultValue={tournament.document_deadline ? new Date(tournament.document_deadline).toISOString().split('T')[0] : ""}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
 
@@ -204,7 +202,6 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                     id="start_date"
                                     name="start_date"
                                     defaultValue={tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
                                 />
                             </div>
 
@@ -226,7 +223,6 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                         theme="snow"
                                         value={description}
                                         onChange={setDescription}
-                                        placeholder={tDialog("description_placeholder")}
                                         className="pro-editor h-auto text-foreground"
                                         modules={{
                                             toolbar: [
