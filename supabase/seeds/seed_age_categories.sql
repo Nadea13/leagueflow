@@ -16,7 +16,10 @@ VALUES
     (10, 'U19', 0, 19),
     (11, 'U20', 0, 20),
     (12, 'U21', 0, 21),
-    (13, 'U23', 0, 23);
+    (13, 'U23', 0, 23),
+    (14, 'U40', 0, 40),
+    (15, 'U45', 0, 45),
+    (16, 'U50', 0, 50);
 
 -- Sync the sequence to the maximum ID
 SELECT setval('public.age_categories_id_seq', (SELECT MAX(id) FROM public.age_categories));
