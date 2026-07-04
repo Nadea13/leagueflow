@@ -37,6 +37,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                         <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
                         <Input
                             type="search"
+                            placeholder={t("search_tournaments")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pr-10"
@@ -48,8 +49,8 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
 
             {filteredTournaments.length === 0 ? (
                 <EmptyState
-                    title={searchQuery ? "No tournaments found" : undefined}
-                    description={searchQuery ? `Search query: "${searchQuery}"` : undefined}
+                    title={searchQuery ? t("no_tournaments_found") : t("no_tournaments")}
+                    description={searchQuery ? `${t("search_tournaments")} "${searchQuery}"` : t("create_first")}
                     action={<TournamentCreate />}
                     className="bg-card"
                 />

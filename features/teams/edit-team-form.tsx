@@ -24,7 +24,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Trash2, Lock, RotateCcw } from "lucide-react";
+import { Loader2, Lock, RotateCcw } from "lucide-react";
 import { LogoUploader } from "@/components/shared/logo-uploader";
 
 interface EditTeamFormProps {
@@ -289,7 +289,6 @@ export function EditTeamForm({
                                 className="flex-1"
                                 disabled={isUpdatingTeam || isLocked}
                             >
-                                {isUpdatingTeam ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                                 {tCommon("save")}
                             </Button>
 
@@ -332,7 +331,6 @@ export function EditTeamForm({
                                         className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                                         disabled={isResettingRoster || isLocked}
                                     >
-                                        <RotateCcw className="h-4 w-4" />
                                         {t("reset_roster") || "Reset Roster"}
                                     </Button>
                                 </AlertDialogTrigger>
@@ -350,9 +348,8 @@ export function EditTeamForm({
                                         <AlertDialogAction
                                             onClick={handleResetRoster}
                                             disabled={isResettingRoster}
-                                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center gap-2"
+                                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
                                         >
-                                            {isResettingRoster ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                                             {t("confirm_reset") || "Confirm Reset"}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -367,14 +364,13 @@ export function EditTeamForm({
                                         className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                                         disabled={isDeletingTeam || isLocked}
                                     >
-                                        <Trash2 className="h-4 w-4" />
-                                        {tTeam("delete_team") || "Delete Team"}
+                                        {tTeam("delete_team")}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="bg-card border rounded-xl shadow-2xl max-w-md p-0">
                                     <DialogHeader className="border-b p-2 md:p-4">
                                         <DialogTitle className="text-2xl font-black tracking-tighter leading-none">
-                                            {tTeam("delete_team") || "Delete Team"}
+                                            {tTeam("delete_team")}
                                         </DialogTitle>
                                     </DialogHeader>
                                     <div className="p-2 md:p-4 space-y-3">
@@ -402,7 +398,6 @@ export function EditTeamForm({
                                             onClick={handleDeleteTeam}
                                             className="bg-destructive w-full"
                                         >
-                                            {isDeletingTeam ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                             {tCommon("delete")}
                                         </Button>
                                     </DialogFooter>

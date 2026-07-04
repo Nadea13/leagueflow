@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { Match, Goal, TournamentTeam } from "@/types/index";
 import { CategorySetup } from "@/features/tournaments/management/category-setup";
@@ -7,8 +8,9 @@ import { TournamentContent } from "@/features/tournaments/tournament-content";
 import { getUserRole } from "@/actions/tournaments/staff";
 import { getUserSubscriptionPlan } from "@/actions/common/user";
 
-export default async function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params;
+export default async function TournamentPage({ params }: { params: Promise<{ id: string; locale: string }> }) {
+    const { id, locale } = await params;
+    const t = await getTranslations({ locale, namespace: "Tournament" });
     const supabase = await createClient();
 
     const [tournamentResult, userPlan, roleRes] = await Promise.all([
@@ -57,9 +59,9 @@ export default async function TournamentPage({ params }: { params: Promise<{ id:
                     <div className="h-16 w-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
                         <Trophy className="h-8 w-8" />
                     </div>
-                    <h2 className="text-2xl font-black tracking-tight">Tournament Not Initialized</h2>
+                    <h2 className="text-2xl font-black tracking-tight">{t("not_initialized_title")}</h2>
                     <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-                        The organizer has not set up the tournament category yet. Please check back later.
+                        {t("not_initialized_desc")}
                     </p>
                 </div>
             );

@@ -256,7 +256,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                                 e.preventDefault();
                                 confirmDeletePlayer();
                             }}
-                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center gap-2"
+                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
                         >
                             <Trash2 className="h-4 w-4" />
                             {tCommon("delete") || "Delete"}

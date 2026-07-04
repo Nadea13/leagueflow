@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { updateGlobalPlayerInfo, updateGlobalPlayerPhoto } from "@/actions/tournaments/master-player";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -43,6 +44,7 @@ export function EditVerifyProfileDialog({
     onSave
 }: EditVerifyProfileDialogProps) {
     const router = useRouter();
+    const locale = useLocale();
     const [isPending, startTransition] = useTransition();
 
     const [editFirstNameTh, setEditFirstNameTh] = useState(masterPlayer?.first_name_th || "");
@@ -65,8 +67,13 @@ export function EditVerifyProfileDialog({
         if (!masterPlayer) return;
         const currentPlayer = masterPlayer;
 
-        if ((!editFirstNameTh && !editFirstNameEn) || (!editLastNameTh && !editLastNameEn) || !editGender || !editBirthday) {
-            setEditError("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน");
+        const isThai = locale === 'th';
+        const hasRequiredName = isThai 
+            ? (editFirstNameTh && editLastNameTh) 
+            : (editFirstNameEn && editLastNameEn);
+
+        if (!hasRequiredName || !editGender || !editBirthday) {
+            setEditError(isThai ? "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน" : "Please fill in all required fields.");
             return;
         }
 
@@ -86,7 +93,7 @@ export function EditVerifyProfileDialog({
             });
 
             if (!res.success) {
-                setEditError(res.error || "เกิดข้อผิดพลาดในการแก้ไขข้อมูล");
+                setEditError(res.error || (isThai ? "เกิดข้อผิดพลาดในการแก้ไขข้อมูล" : "An error occurred while saving."));
                 return;
             }
 
@@ -98,7 +105,7 @@ export function EditVerifyProfileDialog({
                 photoData.append("photo", editPhotoFile);
                 const photoRes = await updateGlobalPlayerPhoto(currentPlayer.id, photoData);
                 if (!photoRes.success) {
-                    setEditError(photoRes.error || "แก้ไขข้อมูลสำเร็จ แต่ไม่สามารถอัปโหลดรูปภาพได้");
+                    setEditError(photoRes.error || (isThai ? "แก้ไขข้อมูลสำเร็จ แต่ไม่สามารถอัปโหลดรูปภาพได้" : "Information saved, but profile image upload failed."));
                     onSave({
                         ...currentPlayer,
                         first_name_th: editFirstNameTh,
@@ -136,6 +143,8 @@ export function EditVerifyProfileDialog({
         });
     };
 
+    const isThai = locale === 'th';
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
@@ -143,10 +152,10 @@ export function EditVerifyProfileDialog({
                     <div className="relative p-2 md:p-4 border-b">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
-                                แก้ไขข้อมูลทะเบียนนักกีฬา
+                                {isThai ? "แก้ไขข้อมูลทะเบียนนักกีฬา" : "Edit Athlete Registration Profile"}
                             </DialogTitle>
                             <DialogDescription className="text-muted-foreground text-sm">
-                                แก้ไขรายละเอียดโปรไฟล์นักกีฬาของคุณ
+                                {isThai ? "แก้ไขรายละเอียดโปรไฟล์นักกีฬาของคุณ" : "Modify your athlete profile details."}
                             </DialogDescription>
                         </DialogHeader>
                     </div>
@@ -160,7 +169,7 @@ export function EditVerifyProfileDialog({
                         )}
 
                         <div className="space-y-1">
-                            <Label>รูปโปรไฟล์</Label>
+                            <Label>{isThai ? "รูปโปรไฟล์" : "Profile Picture"}</Label>
                             <LogoUploader
                                 id="edit-profile-photo"
                                 initialUrl={editPreviewUrl}
@@ -176,9 +185,9 @@ export function EditVerifyProfileDialog({
                                     setEditPhotoFile(null);
                                     setEditPreviewUrl(null);
                                 }}
-                                uploadLabel="อัปโหลดรูปภาพ"
-                                clickToUploadLabel="เปลี่ยนรูปภาพ"
-                                previewLabel="รูปตัวอย่าง"
+                                uploadLabel={isThai ? "อัปโหลดรูปภาพ" : "Upload Picture"}
+                                clickToUploadLabel={isThai ? "เปลี่ยนรูปภาพ" : "Change Picture"}
+                                previewLabel={isThai ? "รูปตัวอย่าง" : "Preview"}
                                 imageFit="cover"
                             />
                         </div>
@@ -186,7 +195,7 @@ export function EditVerifyProfileDialog({
                         {/* Thai Name */}
                         <div className="grid grid-cols-3 gap-1 md:gap-2">
                             <div className="space-y-1">
-                                <Label>ชื่อจริง <span className="text-destructive">*</span></Label>
+                                <Label>{isThai ? "ชื่อจริง" : "First Name (TH)"} {isThai && <span className="text-destructive">*</span>}</Label>
                                 <Input
                                     id="editFirstNameTh"
                                     type="text"
@@ -197,7 +206,7 @@ export function EditVerifyProfileDialog({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label>ชื่อกลาง</Label>
+                                <Label>{isThai ? "ชื่อกลาง" : "Middle Name (TH)"}</Label>
                                 <Input
                                     id="editMiddleNameTh"
                                     type="text"
@@ -208,7 +217,7 @@ export function EditVerifyProfileDialog({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label>นามสกุล <span className="text-destructive">*</span></Label>
+                                <Label>{isThai ? "นามสกุล" : "Last Name (TH)"} {isThai && <span className="text-destructive">*</span>}</Label>
                                 <Input
                                     id="editLastNameTh"
                                     type="text"
@@ -223,7 +232,7 @@ export function EditVerifyProfileDialog({
                         {/* English Name */}
                         <div className="grid grid-cols-3 gap-1 md:gap-2">
                             <div className="space-y-1">
-                                <Label>First Name <span className="text-destructive">*</span></Label>
+                                <Label>{isThai ? "ชื่อจริง (EN)" : "First Name"} {!isThai && <span className="text-destructive">*</span>}</Label>
                                 <Input
                                     id="editFirstNameEn"
                                     type="text"
@@ -234,7 +243,7 @@ export function EditVerifyProfileDialog({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label>Middle Name</Label>
+                                <Label>{isThai ? "ชื่อกลาง (EN)" : "Middle Name"}</Label>
                                 <Input
                                     id="editMiddleNameEn"
                                     type="text"
@@ -245,12 +254,13 @@ export function EditVerifyProfileDialog({
                                 />
                             </div>
                             <div className="space-y-1">
-                                <Label>Last Name <span className="text-destructive">*</span></Label>
+                                <Label>{isThai ? "นามสกุล (EN)" : "Last Name"} {!isThai && <span className="text-destructive">*</span>}</Label>
                                 <Input
                                     id="editLastNameEn"
                                     type="text"
                                     value={editLastNameEn}
                                     onChange={(e) => setEditLastNameEn(e.target.value)}
+                                    className="bg-transparent text-foreground focus-visible:ring-0 text-xs"
                                     disabled={isPending}
                                 />
                             </div>
@@ -258,19 +268,19 @@ export function EditVerifyProfileDialog({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1 flex flex-col justify-end">
-                                <Label>เพศ <span className="text-destructive">*</span></Label>
+                                <Label>{isThai ? "เพศ" : "Gender"} <span className="text-destructive">*</span></Label>
                                 <Select value={editGender} onValueChange={setEditGender} disabled={isPending}>
                                     <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="เลือกเพศ" />
+                                        <SelectValue placeholder={isThai ? "เลือกเพศ" : "Select Gender"} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="male" className="font-bold text-xs tracking-tighter">ชาย (Male)</SelectItem>
-                                        <SelectItem value="female" className="font-bold text-xs tracking-tighter">หญิง (Female)</SelectItem>
+                                        <SelectItem value="male" className="font-bold text-xs tracking-tighter">{isThai ? "ชาย (Male)" : "Male"}</SelectItem>
+                                        <SelectItem value="female" className="font-bold text-xs tracking-tighter">{isThai ? "หญิง (Female)" : "Female"}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-1">
-                                <Label>วัน/เดือน/ปีเกิด <span className="text-destructive">*</span></Label>
+                                <Label>{isThai ? "วัน/เดือน/ปีเกิด" : "Date of Birth"} <span className="text-destructive">*</span></Label>
                                 <Input
                                     id="editBirthday"
                                     type="date"
@@ -283,7 +293,7 @@ export function EditVerifyProfileDialog({
                         </div>
 
                         <div className="space-y-1">
-                            <Label>เบอร์โทรศัพท์ติดต่อ</Label>
+                            <Label>{isThai ? "เบอร์โทรศัพท์ติดต่อ" : "Phone Number"}</Label>
                             <Input
                                 id="editTel"
                                 type="tel"
@@ -303,10 +313,10 @@ export function EditVerifyProfileDialog({
                             {isPending ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    กำลังบันทึก...
+                                    {isThai ? "กำลังบันทึก..." : "Saving..."}
                                 </>
                             ) : (
-                                "บันทึกการเปลี่ยนแปลง"
+                                isThai ? "บันทึกการเปลี่ยนแปลง" : "Save Changes"
                             )}
                         </Button>
                     </DialogFooter>

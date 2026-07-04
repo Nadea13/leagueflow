@@ -101,6 +101,10 @@ export function MatchEventDialog({
 
         if (eventType === 'goal' && assistPlayerId && assistPlayerId !== 'none') {
             extraInfo.assist_player_id = assistPlayerId;
+            const assistPlayer = players.find(p => p.id === assistPlayerId);
+            if (assistPlayer) {
+                extraInfo.assist_player_name = assistPlayer.name;
+            }
         }
         if (eventType === 'substitution') {
             extraInfo.out_player_id = playerId;
@@ -226,7 +230,7 @@ export function MatchEventDialog({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-1 md:gap-2 border-t p-2 md:p-4">
-                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel>
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -234,7 +238,6 @@ export function MatchEventDialog({
                                 handleSave(true);
                                 setShowConfirm(false);
                             }}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             {tCommon("confirm") || "Confirm"}
                         </AlertDialogAction>

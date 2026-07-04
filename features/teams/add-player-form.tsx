@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
-import { Loader2, UserPlus, ArrowRight, Camera } from "lucide-react";
+import { Loader2, ArrowRight, Camera } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -316,7 +316,6 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             className="w-full"
                             disabled={isSaving || !newName.trim() || effectivelyLocked}
                         >
-                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
                             {t("add_player")}
                         </Button>
                     </div>

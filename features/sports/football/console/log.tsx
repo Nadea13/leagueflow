@@ -1,6 +1,6 @@
 'use client'
 
-import { Match, MatchEvent } from "@/types";
+import { Match, MatchEvent, Player } from "@/types";
 import { EVENT_TYPES } from "./constants";
 import { Trash2, Clock } from "lucide-react";
 // Removed unused Card, CardContent imports
@@ -14,9 +14,10 @@ interface EventLogProps {
     match: Match;
     readOnly?: boolean;
     onDelete?: (eventId: string) => void;
+    players?: Player[];
 }
 
-export function EventLog({ events, match, readOnly = false, onDelete }: EventLogProps) {
+export function EventLog({ events, match, readOnly = false, onDelete, players = [] }: EventLogProps) {
     const t = useTranslations("Console");
 
     return (
@@ -27,7 +28,7 @@ export function EventLog({ events, match, readOnly = false, onDelete }: EventLog
                         <EmptyState
                             icon={Clock}
                             title={t("no_events") || "No events yet"}
-                            description="Live match updates will appear here"
+                            description={t("live_updates_desc") || "Live match updates will appear here"}
                             className="py-12 min-h-0 border-none"
                         />
                     ) : (
@@ -76,7 +77,7 @@ export function EventLog({ events, match, readOnly = false, onDelete }: EventLog
                                                     <div className="flex flex-col items-center">
                                                         <span className="text-[10px] font-black tracking-wider text-primary">
                                                             {t(evtConfig?.label || event.event_type)}
-                                                            {event.isPending && " (Pending...)"}
+                                                            {event.isPending && ` (${t("pending")})`}
                                                         </span>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm font-black text-muted-foreground">
@@ -107,7 +108,7 @@ export function EventLog({ events, match, readOnly = false, onDelete }: EventLog
                                                             {event.event_type === 'penalty_shot'
                                                                 ? (event.extra_info?.scored ? t("penalty_scored") : t("penalty_missed"))
                                                                 : t(evtConfig?.label || event.event_type)}
-                                                            {event.isPending && " (Pending...)"}
+                                                            {event.isPending && ` (${t("pending")})`}
                                                         </span>
                                                         {!isNeutral && (
                                                             <>
@@ -120,7 +121,7 @@ export function EventLog({ events, match, readOnly = false, onDelete }: EventLog
                                                     </div>
                                                     {event.event_type === 'substitution' ? (
                                                         <p className="text-xs font-black tracking-widest truncate text-foreground">
-                                                            Out: {String(event.extra_info?.out_player_name || 'Unknown')} In: {String(event.extra_info?.in_player_name || 'Unknown')}
+                                                            {t("out_lbl")}: {String(event.extra_info?.out_player_name || t("unknown_player"))} {t("in_lbl")}: {String(event.extra_info?.in_player_name || t("unknown_player"))}
                                                         </p>
                                                     ) : !isUnknownPlayer && (
                                                         <p className={cn(
@@ -130,6 +131,14 @@ export function EventLog({ events, match, readOnly = false, onDelete }: EventLog
                                                             isNeutral ? "text-center" : ""
                                                         )}>
                                                             {event.player_name}
+                                                            {event.event_type === 'goal' && (() => {
+                                                                const assistId = (event.extra_info as any)?.assist_player_id;
+                                                                if (!assistId || assistId === 'none') return null;
+                                                                const assistName = ((event.extra_info as any)?.assist_player_name as string) || 
+                                                                    players?.find(p => p.id === assistId)?.name;
+                                                                if (!assistName) return null;
+                                                                return ` (${t("assist")}: ${assistName})`;
+                                                            })()}
                                                         </p>
                                                     )}
                                                     {!!(event.extra_info as Record<string, unknown> | null)?.reason && (

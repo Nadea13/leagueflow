@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Trash2, RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -120,7 +121,6 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                 <Button
                                     variant="destructive"
                                 >
-                                    <Trash2 className="h-5 w-5" />
                                     {t("delete_tournament")}
                                 </Button>
                             </DialogTrigger>
@@ -131,8 +131,11 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                     </DialogTitle>
                                 </DialogHeader>
                                 <div className="p-2 md:p-4">
+                                    <DialogDescription className="text-sm font-medium text-muted-foreground/80 mb-1 md:mb-2">
+                                        {t("delete_desc")}
+                                    </DialogDescription>
                                     <p className="text-xs font-bold">
-                                        {t("type_to_confirm", { name: tournamentName })}
+                                        {t("type_to_confirm", { text: tournamentName })}
                                     </p>
                                     <div className="py-1 md:py-2">
                                         <Input
@@ -148,7 +151,6 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                         onClick={handleDelete}
                                         className="bg-destructive w-full"
                                     >
-                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                         {t("confirm_delete")}
                                     </Button>
                                 </DialogFooter>
@@ -161,16 +163,15 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                 <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                         <div className="space-y-1">
-                            <h4 className="text-xs font-black tracking-widest text-destructive">Reset Bracket Flow</h4>
-                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">This will clear the entire bracket canvas layout and delete all scheduled matches.</p>
+                            <h4 className="text-xs font-black tracking-widest text-destructive">{t("reset_flow_title")}</h4>
+                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">{t("reset_flow_desc")}</p>
                         </div>
                         <Button
                             variant="destructive"
                             disabled={isPending}
                             onClick={() => setResetFlowDialogOpen(true)}
                         >
-                            <RefreshCw className={isPending ? "h-5 w-5 animate-spin" : "h-5 w-5"} />
-                            Reset Flow
+                            {t("reset_flow_btn")}
                         </Button>
                     </div>
                 </div>
@@ -180,10 +181,10 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                 <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none">
-                            Reset Bracket Flow
+                            {t("reset_flow_title")}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
-                            Are you sure you want to reset the bracket flow? This will clear the entire canvas layout and delete all scheduled matches. This action cannot be undone.
+                            {t("reset_flow_confirm")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
@@ -194,7 +195,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                             onClick={handleResetFlow}
                             className="bg-destructive"
                         >
-                            Confirm Reset
+                            {t("confirm_reset")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

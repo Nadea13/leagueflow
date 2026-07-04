@@ -594,7 +594,7 @@ export function PublicTournamentShell({
                                 <div className="flex items-start gap-3">
                                     <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                                     <div className="space-y-0.5">
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">วันแข่งขัน (Dates)</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">{t("dates")}</span>
                                         <span className="text-sm font-bold text-foreground">
                                             {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : "-"}
                                             {tournament.end_date && ` - ${new Date(tournament.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`}
@@ -606,7 +606,7 @@ export function PublicTournamentShell({
                                 <div className="flex items-start gap-1 md:gap-2">
                                     <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                                     <div className="space-y-0.5">
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">สถานที่แข่งขัน (Venue / Location)</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">{t("location")}</span>
                                         {tournament.location_name ? (
                                             <div className="space-y-1">
                                                 <span className="text-sm font-bold text-foreground block">{tournament.location_name}</span>
@@ -774,7 +774,7 @@ export function PublicTournamentShell({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-sm pr-2">{player.goals}</span>
+                                                <span className="text-sm pr-2">{player.goals}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -804,7 +804,7 @@ export function PublicTournamentShell({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-sm pr-2">{player.assists}</span>
+                                                <span className="text-sm pr-2">{player.assists}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -834,7 +834,7 @@ export function PublicTournamentShell({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-sm pr-2">{player.saves}</span>
+                                                <span className="text-sm pr-2">{player.saves}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -865,7 +865,7 @@ export function PublicTournamentShell({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-sm pr-2">{player.yellowCards}</span>
+                                                <span className="text-sm pr-2">{player.yellowCards}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -896,7 +896,7 @@ export function PublicTournamentShell({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-sm pr-2">{player.redCards}</span>
+                                                <span className="text-sm pr-2">{player.redCards}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -926,7 +926,7 @@ export function PublicTournamentShell({
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-sm pr-2">{player.injuries}</span>
+                                                <span className="text-sm pr-2">{player.injuries}</span>
                                             </div>
                                         ))}
                                     </div>

@@ -23,7 +23,7 @@ export function LanguageSubMenu() {
 
     return (
         <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-3">
+            <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
                 <Globe className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
                 <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("language")}</span>
             </DropdownMenuSubTrigger>

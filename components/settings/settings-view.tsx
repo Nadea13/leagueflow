@@ -22,7 +22,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
     const tLegal = await getTranslations("Legal");
     const tNav = await getTranslations("Nav");
     return (
-        <div className="flex flex-col gap-2 md:gap-4">
+        <div className="flex flex-col gap-2 md:gap-4 max-w-4xl mx-auto">
             <div className="flex items-start justify-between">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight">
@@ -31,7 +31,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                 </div>
             </div>
 
-            <div className="flex flex-col gap-2 md:gap-4">
+            <div className="flex flex-col gap-2 md:gap-4 ">
                 {/* Settings Tabs Navigation */}
                 <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card">
                     <Link
@@ -89,7 +89,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
 
                 {/* Settings Content Area */}
                 <main className="flex-1 w-full space-y-2 md:space-y-4">
-                    <div className="max-w-3xl mx-auto">
+                    <div>
                         {activeTab === 'profile' && (
                             <ProfileForm user={user} profile={profile} />
                         )}
@@ -173,7 +173,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
             {/* Version Info */}
             <div className="flex justify-center items-center gap-2 mt-6">
                 <span className="text-xs font-black tracking-widest text-muted-foreground">
-                    {t("version")} 0.2.1
+                    {t("version")} 0.1.0
                 </span>
             </div>
         </div>

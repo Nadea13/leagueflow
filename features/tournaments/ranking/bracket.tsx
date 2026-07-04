@@ -34,7 +34,7 @@ const CONNECTOR_W = 48;
 const CARD_W = 232;
 const MATCH_SLOT_H = 80;
 const MATCH_GAP = 12;
-type KnockoutStage = Exclude<Match["stage"], "league" | "group">;
+type KnockoutStage = Exclude<Match["stage"], "league" | "group" | "knockout">;
 
 interface BracketProps {
     matches: Match[];

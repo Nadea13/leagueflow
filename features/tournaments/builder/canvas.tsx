@@ -1040,7 +1040,7 @@ function CanvasInternal({
                                     <div className="space-y-4">
                                         {/* Date Filter */}
                                         <div className="space-y-1">
-                                            <Label>Date Selection</Label>
+                                            <Label>{locale === 'th' ? "เลือกวันที่" : "Date Selection"}</Label>
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center border bg-muted/5 rounded-sm">
                                                     <button
@@ -1149,7 +1149,7 @@ function CanvasInternal({
                                         <div className="space-y-2">
                                             <Label>{locale === 'th' ? "ตัวกรองรอบการแข่งขัน" : "Stage Filter"}</Label>
                                             <Select value={filterStage} onValueChange={setFilterStage}>
-                                                <SelectTrigger className="w-full h-10 bg-muted/5 focus:ring-0 font-black text-[10px] tracking-widest">
+                                                <SelectTrigger className="w-full">
                                                     <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-card shadow-2xl">
@@ -1204,7 +1204,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">General</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "ข้อมูลทั่วไป" : "General"}</span>
                                 </button>
 
                                 <button
@@ -1230,7 +1230,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <MapPin className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'location' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">Location</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "สถานที่จัดแข่ง" : "Location"}</span>
                                 </button>
 
                                 <button
@@ -1243,7 +1243,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <Users className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">Staff</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "ทีมงานจัดแข่ง" : "Staff"}</span>
                                 </button>
 
                                 <button
@@ -1256,7 +1256,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <ShieldAlert className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeSettingsTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">Danger</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "พื้นที่อันตราย" : "Danger"}</span>
                                 </button>
                             </aside>
 
@@ -1423,8 +1423,8 @@ function CanvasInternal({
                                 : "You have unsaved changes on the canvas! Your modifications will be lost. Are you sure you want to leave without saving?"}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="p-2 lg:p-4 border-t">
-                        <AlertDialogCancel onClick={handleCancelLeave}>
+                    <AlertDialogFooter className="p-2 lg:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                        <AlertDialogCancel onClick={handleCancelLeave} className="mt-0">
                             {locale === 'th' ? 'ยกเลิก' : 'Cancel'}
                         </AlertDialogCancel>
                         <AlertDialogAction onClick={handleConfirmLeave}>

@@ -59,7 +59,7 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
                         <div className="flex flex-col gap-2 md:gap-3">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-bold text-muted-foreground/50 tracking-widest">Start Date</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground/50 tracking-widest">{tDashboard("start_date")}</span>
                                     <span className="text-xs font-bold tabular-nums">
                                         {tournament.start_date
                                             ? formatDate(tournament.start_date, "MMM d", locale)

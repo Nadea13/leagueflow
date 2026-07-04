@@ -67,6 +67,10 @@ export function UserDropdown({
                             <span className="text-xs font-bold">{displayName?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="hidden md:block text-xs font-bold text-foreground truncate">{name || displayName}</span>
+                        {email && <span className="hidden md:block text-[10px] text-muted-foreground truncate">{email}</span>}
+                    </div>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -90,7 +94,7 @@ export function UserDropdown({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuGroup className="space-y-1">
-                    <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-3">
+                    <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
                         <Link href={profileHref} className="w-full flex items-center">
                             <User className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
                             <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("profile")}</span>
@@ -100,7 +104,7 @@ export function UserDropdown({
                 <DropdownMenuSeparator className="bg-border" />
                 <LanguageSubMenu />
                 <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-3">
+                    <DropdownMenuSubTrigger className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
                         <Sun className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
                         <Moon className="absolute mr-2 md:mr-3 h-4 w-4 text-muted-foreground rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                         <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tCommon("theme")}</span>
@@ -126,7 +130,7 @@ export function UserDropdown({
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem asChild className="text-destructive focus:text-red-400 focus:bg-red-500/10 py-2.5">
+                <DropdownMenuItem asChild className="text-destructive focus:text-red-400 focus:bg-red-500/10 py-2 rounded-sm">
                     <form action={signOut} className="w-full">
                         <input type="hidden" name="locale" value={locale} />
                         <button className="w-full flex items-center text-left cursor-pointer">

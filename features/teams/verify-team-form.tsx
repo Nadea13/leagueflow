@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ShieldCheck, HelpCircle, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ interface VerifyTeamFormProps {
 }
 
 export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) {
+    const t = useTranslations("Team");
     const { toast } = useToast();
 
     const [open, setOpen] = useState(false);
@@ -68,8 +70,8 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
 
         if (!contactEmail || !selectedTeamId || !contactPhone) {
             toast({
-                title: "กรอกข้อมูลไม่ครบถ้วน",
-                description: "กรุณากรอกข้อมูลในช่องที่จำเป็นให้ครบถ้วน",
+                title: t("form_incomplete"),
+                description: t("fill_required_fields"),
                 variant: "destructive",
             });
             return;
@@ -95,20 +97,20 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                 setRequestMessage("");
 
                 toast({
-                    title: "ส่งคำขอสำเร็จ!",
-                    description: "ระบบได้ส่งคำขอตรวจสอบสิทธิ์ไปยังผู้จัดการแข่งขันเรียบร้อยแล้ว กรุณารอการดำเนินการ",
+                    title: t("request_success_title"),
+                    description: t("request_success_desc"),
                 });
             } else {
                 toast({
-                    title: "เกิดข้อผิดพลาด",
-                    description: res.error || "ไม่สามารถส่งคำขอได้ กรุณาลองใหม่อีกครั้ง",
+                    title: t("error_title"),
+                    description: res.error || t("error_desc"),
                     variant: "destructive",
                 });
             }
         } catch {
             toast({
-                title: "เกิดข้อผิดพลาด",
-                description: "ไม่สามารถส่งคำขอได้ กรุณาลองใหม่อีกครั้ง",
+                title: t("error_title"),
+                description: t("error_desc"),
                 variant: "destructive",
             });
         } finally {
@@ -121,7 +123,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
             <DialogTrigger asChild>
                 <Button variant="outline" className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2 border-primary/30 hover:bg-primary/5 text-primary" : "border-primary/30 hover:bg-primary/5 text-primary gap-2"}>
                     <ShieldCheck className="h-4 w-4" />
-                    <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>ขอสิทธิ์การจัดการทีม</span>
+                    <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("verify_title")}</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
@@ -129,10 +131,10 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                     <div className="relative p-2 md:p-4 border-b">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 leading-none">
-                                ขอสิทธิ์การจัดการทีม
+                                {t("verify_title")}
                             </DialogTitle>
                             <DialogDescription className="text-muted-foreground text-xs mt-1.5">
-                                ค้นหาทีมด้วยอีเมลผู้ติดต่อเพื่อส่งคำขอรับสิทธิ์การดูแลทีมจากผู้จัดการแข่งขัน
+                                {t("verify_desc")}
                             </DialogDescription>
                         </DialogHeader>
                     </div>
@@ -141,7 +143,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                         {/* Input Email to search */}
                         <div className="space-y-1">
                             <Label>
-                                <span>อีเมลผู้ติดต่อของทีม (Email) <span className="text-red-500">*</span></span>
+                                <span>{t("contact_email")} <span className="text-red-500">*</span></span>
                                 {isSearchingTeams && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
                             </Label>
                             <div className="relative">
@@ -159,7 +161,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                         {/* Select Team Dropdown */}
                         <div className="space-y-1">
                             <Label>
-                                เลือกทีมที่ตรงกัน (Matching Teams) <span className="text-red-500">*</span>
+                                {t("matching_teams")} <span className="text-red-500">*</span>
                             </Label>
                             <Select
                                 value={selectedTeamId}
@@ -170,12 +172,12 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                                     <SelectValue
                                         placeholder={
                                             contactEmail === ""
-                                                ? "กรุณากรอกอีเมลของทีมก่อน..."
+                                                ? t("fill_email_first")
                                                 : isSearchingTeams
-                                                    ? "กำลังค้นหาทีม..."
+                                                    ? t("searching_teams")
                                                     : matchingTeams.length === 0
-                                                        ? "ไม่พบทีมที่ตรงกับอีเมลนี้"
-                                                        : "เลือกทีมที่ต้องการขอสิทธิ์..."
+                                                        ? t("no_teams_matching_email")
+                                                        : t("select_matching_team")
                                         }
                                     />
                                 </SelectTrigger>
@@ -192,7 +194,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                         {/* Contact Phone */}
                         <div className="space-y-1">
                             <Label>
-                                เบอร์โทรศัพท์สำหรับติดต่อกลับ <span className="text-red-500">*</span>
+                                {t("contact_phone")} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="contact_phone"
@@ -205,7 +207,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                         {/* Message to Organizer */}
                         <div className="space-y-1">
                             <Label>
-                                ข้อความแจ้งรายละเอียดเพิ่มเติม (Optional)
+                                {t("additional_details")}
                             </Label>
                             <Textarea
                                 id="message"
@@ -218,13 +220,13 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                         {/* Helper Tip */}
                         <div className="text-[10px] flex items-start gap-1 md:gap-2 p-1 md:p-2 rounded-sm border border-dashed text-muted-foreground">
                             <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                            <span>หากได้รับการอนุมัติแล้ว ทีมนี้จะปรากฏในเมนูการจัดการทีมของคุณโดยอัตโนมัติ</span>
+                            <span>{t("helper_tip")}</span>
                         </div>
                     </div>
 
                     <DialogFooter className="border-t p-4 flex gap-2">
                         <Button type="submit" disabled={isSubmitting || !selectedTeamId} className="w-full">
-                            ส่งคำขอสิทธิ์
+                            {t("submit_request")}
                         </Button>
                     </DialogFooter>
                 </form>

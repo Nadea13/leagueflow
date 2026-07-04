@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Eye, Check, Save, Plus } from "lucide-react";
+import { Copy, Eye, Check, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -679,6 +679,122 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const locale = typeof window !== "undefined" ? window.location.pathname.split("/")[1] || "th" : "th";
 
+    const dict = locale === "th" ? {
+        desc: "เลือกบล็อกและจัดวางตำแหน่งบนพื้นที่ตารางจำลองได้อย่างอิสระ สามารถสร้างเลย์เอาต์การแสดงผลซ้อนกันตามแบบของคุณเอง",
+        pos_spacing: "ตำแหน่งและระยะห่าง",
+        align_h: "จัดแนวนอน",
+        align_v: "จัดแนวตั้ง",
+        align_x: "จัดตำแหน่งแกน X",
+        align_y: "จัดตำแหน่งแกน Y",
+        left: "ซ้าย",
+        center: "กึ่งกลาง",
+        right: "ขวา",
+        top: "บน",
+        bottom: "ล่าง",
+        x_offset: "ระยะห่างแนวนอน",
+        y_offset: "ระยะห่างแนวตั้ง",
+        width: "ความกว้าง",
+        height: "ความสูง",
+        opacity: "ความโปร่งใส",
+        bg_color: "สีพื้นหลัง",
+        corner_radius: "ความโค้งมนของขอบ",
+        top_left: "บนซ้าย",
+        top_right: "บนขวา",
+        bottom_left: "ล่างซ้าย",
+        bottom_right: "ล่างขวา",
+        link_corners: "ลิงก์ทุกมุมเข้าด้วยกัน",
+        appearance: "ลักษณะทั่วไป",
+        typography: "แบบอักษร",
+        font_family: "รูปแบบอักษร",
+        font_size: "ขนาดตัวอักษร",
+        font_color: "สีตัวอักษร",
+        select_font: "เลือกรูปแบบอักษร",
+        content: "เนื้อหา",
+        team_names_mode: "โหมดชื่อทีม",
+        abbr: "ชื่อย่อ",
+        full_name: "ชื่อเต็มของทีม",
+        show_goal_timeline: "แสดงไทม์ไลน์ผู้ทำประตู",
+        team_color_bars: "แถบสีประจำทีม",
+        home_team: "ทีมเหย้า",
+        away_team: "ทีมเยือน",
+        direction: "ทิศทาง",
+        none: "ไม่มี",
+        bar_color: "สีของแถบ",
+        obs_settings: "การตั้งค่า OBS",
+        obs_bg: "สีพื้นหลังของ OBS Canvas",
+        canvas_type: "ประเภทของพื้นที่ทำงาน (Canvas)",
+        main_canvas: "พื้นที่ทำงานหลัก (Main Canvas)",
+        save_template_settings: "บันทึกการตั้งค่าเทมเพลตพื้นที่ทำงาน",
+        saving: "กำลังบันทึก...",
+        delete_canvas: "ลบ Canvas นี้",
+    } : {
+        desc: "Select a block and place it anywhere on the virtual grid. Build complex stacked layouts freely.",
+        pos_spacing: "Position & Spacing",
+        align_h: "Align Horizontal",
+        align_v: "Align Vertical",
+        align_x: "Align X",
+        align_y: "Align Y",
+        left: "Left",
+        center: "Center",
+        right: "Right",
+        top: "Top",
+        bottom: "Bottom",
+        x_offset: "X Offset (Horizontal)",
+        y_offset: "Y Offset (Vertical)",
+        width: "Width",
+        height: "Height",
+        opacity: "Opacity",
+        bg_color: "Background Color",
+        corner_radius: "Corner Radius",
+        top_left: "Top-Left",
+        top_right: "Top-Right",
+        bottom_left: "Bottom-Left",
+        bottom_right: "Bottom-Right",
+        link_corners: "Link Corners",
+        appearance: "Appearance",
+        typography: "Typography",
+        font_family: "Font Family",
+        font_size: "Font Size",
+        font_color: "Font Color",
+        select_font: "Select font",
+        content: "Content",
+        team_names_mode: "Team Names Mode",
+        abbr: "Abbreviations",
+        full_name: "Full Team Name",
+        show_goal_timeline: "Show Goal Timeline",
+        team_color_bars: "Team Color Bars",
+        home_team: "Home Team",
+        away_team: "Away Team",
+        direction: "Direction",
+        none: "None",
+        bar_color: "Bar Color",
+        obs_settings: "OBS Settings",
+        obs_bg: "OBS Canvas Background",
+        canvas_type: "Canvas Type",
+        main_canvas: "Main Canvas",
+        save_template_settings: "Save Canvas Template Settings",
+        saving: "Saving...",
+        delete_canvas: "Delete Canvas",
+    };
+
+    const getBlockName = (id: string, name: string) => {
+        if (locale === 'th') {
+            switch (id) {
+                case "header-text": return "ชื่อรายการแข่งขัน";
+                case "logo-tournament": return "โลโก้รายการแข่งขัน";
+                case "logo-home": return "โลโก้ทีมเหย้า";
+                case "name-home": return "ชื่อ/ตัวย่อทีมเหย้า";
+                case "score-home": return "กล่องคะแนนทีมเหย้า";
+                case "score-away": return "กล่องคะแนนทีมเยือน";
+                case "name-away": return "ชื่อ/ตัวย่อทีมเยือน";
+                case "logo-away": return "โลโก้ทีมเยือน";
+                case "timer": return "เวลาและนาฬิกาการแข่งขัน";
+                default: return name;
+            }
+        }
+        return name;
+    };
+
     const handleCanvasSwitch = (targetId: string) => {
         // 1. Save the CURRENT editor values to the canvas we are leaving:
         if (selectedCanvasId === "scoreboard") {
@@ -934,7 +1050,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                         {t("board_editor")}
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                        Select a block and place it anywhere on the virtual grid. Build complex stacked layouts freely.
+                        {dict.desc}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -1012,7 +1128,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                                 {b.active ? <Check className="h-4 w-4" /> : <span className="text-[10px] font-black">{b.id.substring(0, 2).toUpperCase()}</span>}
                                                             </div>
                                                             <div className="flex flex-col items-start gap-0.5">
-                                                                <span className={`text-[11px] font-black tracking-tight text-left ${b.active ? "text-foreground font-extrabold" : "text-muted-foreground"}`}>{b.name}</span>
+                                                                <span className={`text-[11px] font-black tracking-tight text-left ${b.active ? "text-foreground font-extrabold" : "text-muted-foreground"}`}>{getBlockName(b.id, b.name)}</span>
                                                                 <span className="text-[8px] text-muted-foreground tracking-tighter font-medium text-left">
                                                                     {b.active ? (locale === 'th' ? "แสดงอยู่บนบอร์ด" : "Visible on Canvas") : (locale === 'th' ? "คลิกเพื่อแสดง" : "Click to show on Canvas")}
                                                                 </span>
@@ -1102,7 +1218,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             {/* Part 2: Canvas Coordinates & Toggles Panel */}
                             <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <Label>Position & Spacing</Label>
+                                    <Label>{dict.pos_spacing}</Label>
 
                                     {/* Block Delete Button */}
                                     {selectedBlock && selectedBlock.active && (
@@ -1126,29 +1242,29 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
                                     {/* Horizontal alignment */}
                                     <div className="space-y-1">
-                                        <Label className="text-[10px]">Align Horizontal</Label>
+                                        <Label className="text-[10px]">{dict.align_h}</Label>
                                         <Select value={posX} onValueChange={(val: string) => setPosX(val as "left" | "center" | "right")}>
                                             <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Align X" />
+                                                <SelectValue placeholder={dict.align_x} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-card">
-                                                <SelectItem value="left">Left</SelectItem>
-                                                <SelectItem value="center">Center</SelectItem>
-                                                <SelectItem value="right">Right</SelectItem>
+                                                <SelectItem value="left">{dict.left}</SelectItem>
+                                                <SelectItem value="center">{dict.center}</SelectItem>
+                                                <SelectItem value="right">{dict.right}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
 
                                     {/* Vertical alignment */}
                                     <div className="space-y-1">
-                                        <Label className="text-[10px]">Align Vertical</Label>
+                                        <Label className="text-[10px]">{dict.align_v}</Label>
                                         <Select value={posY} onValueChange={(val: string) => setPosY(val as "top" | "bottom")}>
                                             <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Align Y" />
+                                                <SelectValue placeholder={dict.align_y} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-card">
-                                                <SelectItem value="top">Top</SelectItem>
-                                                <SelectItem value="bottom">Bottom</SelectItem>
+                                                <SelectItem value="top">{dict.top}</SelectItem>
+                                                <SelectItem value="bottom">{dict.bottom}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -1159,7 +1275,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                             <div className="space-y-1">
                                                 <div className="flex justify-between items-center">
                                                     <Label className="text-[10px] flex justify-between items-center">
-                                                        <span>X Offset (Horizontal)</span>
+                                                        <span>{dict.x_offset}</span>
                                                     </Label>
                                                 </div>
                                                 <div className="flex items-center gap-1 md:gap-2">
@@ -1189,7 +1305,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                             <div className="space-y-1">
                                                 <div className="flex justify-between items-center">
                                                     <Label className="text-[10px] flex justify-between items-center">
-                                                        <span>Y Offset (Vertical)</span>
+                                                        <span>{dict.y_offset}</span>
                                                     </Label>
                                                 </div>
                                                 <div className="flex items-center gap-1 md:gap-2">
@@ -1224,7 +1340,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                     {selectedBlock && (
                                         <div className="space-y-1">
                                             <Label className="text-[10px] flex justify-between items-center">
-                                                <span>Width</span>
+                                                <span>{dict.width}</span>
                                             </Label>
                                             <div className="flex items-center gap-1 md:gap-2">
                                                 <input
@@ -1252,7 +1368,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                     {selectedBlock && (
                                         <div className="space-y-1">
                                             <Label className="text-[10px] flex justify-between items-center">
-                                                <span>Height</span>
+                                                <span>{dict.height}</span>
                                             </Label>
                                             <div className="flex items-center gap-1 md:gap-2">
                                                 <input
@@ -1278,7 +1394,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                                     {/* Appearance Section */}
                                     <div className="md:col-span-2 space-y-2 border-t pt-2 md:pt-4 mt-1 md:mt-2">
-                                        <Label>Appearance</Label>
+                                        <Label>{dict.appearance}</Label>
 
                                         {/* Block Spacing / Gap Slider */}
                                         <div>
@@ -1310,7 +1426,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                         {selectedBlock && (
                                             <div>
                                                 <Label className="text-[10px] flex justify-between items-center">
-                                                    <span>Opacity</span>
+                                                    <span>{dict.opacity}</span>
                                                 </Label>
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <input
@@ -1340,7 +1456,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                         {selectedBlock && (
                                             <div className="space-y-1">
                                                 <Label className="text-[10px] flex justify-between items-center">
-                                                    <span>Fill Color</span>
+                                                    <span>{dict.bg_color}</span>
                                                 </Label>
                                                 <div className="flex items-center gap-1 md:gap-2">
                                                     <input
@@ -1362,19 +1478,19 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                         {selectedBlock && (
                                             <div className="space-y-1 md:space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <Label className="text-[10px]">Radius</Label>
+                                                    <Label className="text-[10px]">{dict.corner_radius}</Label>
                                                     <button
                                                         type="button"
                                                         onClick={applyRadiiToAll}
                                                         className="text-[10px] font-black text-primary hover:underline"
                                                     >
-                                                        Apply to All Blocks
+                                                        {locale === 'th' ? "ใช้กับทุกบล็อก" : "Apply to All Blocks"}
                                                     </button>
                                                 </div>
 
                                                 {/* Link Corners Toggle */}
                                                 <div className="flex items-center justify-between p-2 rounded-sm border h-10">
-                                                    <span className="text-[10px] font-bold text-muted-foreground">Link 4 Corner Borders</span>
+                                                    <span className="text-[10px] font-bold text-muted-foreground">{dict.link_corners}</span>
                                                     <Switch
                                                         checked={linkCorners}
                                                         onCheckedChange={setLinkCorners}
@@ -1385,7 +1501,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                 <div className="grid md:grid-cols-2 gap-1 md:gap-2">
                                                     {/* Top-Left */}
                                                     <div>
-                                                        <Label className="text-[10px]">Top-Left</Label>
+                                                        <Label className="text-[10px]">{dict.top_left}</Label>
                                                         <div className="flex items-center gap-1 md:gap-2 mt-1">
                                                             <input
                                                                 type="range" min="0" max="40" value={selectedBlock.rTL}
@@ -1411,7 +1527,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                     </div>
                                                     {/* Top-Right */}
                                                     <div>
-                                                        <Label className="text-[10px]">Top-Right</Label>
+                                                        <Label className="text-[10px]">{dict.top_right}</Label>
                                                         <div className="flex items-center gap-1 md:gap-2 mt-1">
                                                             <input
                                                                 type="range" min="0" max="40" value={selectedBlock.rTR}
@@ -1437,7 +1553,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                     </div>
                                                     {/* Bottom-Left */}
                                                     <div>
-                                                        <Label className="text-[10px]">Bottom-Left</Label>
+                                                        <Label className="text-[10px]">{dict.bottom_left}</Label>
                                                         <div className="flex items-center gap-1 md:gap-2 mt-1">
                                                             <input
                                                                 type="range" min="0" max="40" value={selectedBlock.rBL}
@@ -1463,7 +1579,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                     </div>
                                                     {/* Bottom-Right */}
                                                     <div>
-                                                        <Label className="text-[10px]">Bottom-Right</Label>
+                                                        <Label className="text-[10px]">{dict.bottom_right}</Label>
                                                         <div className="flex items-center gap-1 md:gap-2 mt-1">
                                                             <input
                                                                 type="range" min="0" max="40" value={selectedBlock.rBR}
@@ -1493,14 +1609,14 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                                         {/* Typography section inside Appearance */}
                                         <div className="space-y-2 border-t pt-2 md:pt-4 mt-2 md:mt-4">
-                                            <Label>Typography</Label>
+                                            <Label>{dict.typography}</Label>
                                             <div className="space-y-2">
                                                 {/* Font Family selector */}
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px]">Font Family</Label>
+                                                    <Label className="text-[10px]">{dict.font_family}</Label>
                                                     <Select value={font} onValueChange={setFont}>
                                                         <SelectTrigger className="w-full h-8 text-xs">
-                                                            <SelectValue placeholder="Select font" />
+                                                            <SelectValue placeholder={dict.select_font} />
                                                         </SelectTrigger>
                                                         <SelectContent className="bg-card">
                                                             <SelectItem value="inter" className="font-sans">Inter (Modern Clean)</SelectItem>
@@ -1516,7 +1632,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                 {selectedBlock && (
                                                     <div className="space-y-1">
                                                         <Label className="text-[10px] flex justify-between items-center">
-                                                            <span>Font Size</span>
+                                                            <span>{dict.font_size}</span>
                                                         </Label>
                                                         <div className="flex items-center gap-1 md:gap-2">
                                                             <input
@@ -1543,7 +1659,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                 {/* Font Color Selector (for selected block) */}
                                                 {selectedBlock && (
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">Font Color</Label>
+                                                        <Label className="text-[10px]">{dict.font_color}</Label>
                                                         <div className="flex items-center gap-1 md:gap-2">
                                                             <input
                                                                 type="color"
@@ -1568,12 +1684,12 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                             {/* Part 4: Display Content Adjustments */}
                             <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
-                                <Label>Content</Label>
+                                <Label>{dict.content}</Label>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2 items-end">
                                     {/* Team Name Style selector */}
                                     <div className="space-y-1">
-                                        <Label className="text-[10px]">Team Names Mode</Label>
+                                        <Label className="text-[10px]">{dict.team_names_mode}</Label>
                                         <div className="grid grid-cols-2 gap-2">
                                             <button
                                                 onClick={() => setTeamNameMode("abbr")}
@@ -1582,7 +1698,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                     : "hover:bg-foreground/10 text-muted-foreground"
                                                     }`}
                                             >
-                                                Abbreviations (3-Letters)
+                                                {dict.abbr}
                                             </button>
                                             <button
                                                 onClick={() => setTeamNameMode("full")}
@@ -1591,14 +1707,14 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                     : "hover:bg-foreground/10 text-muted-foreground"
                                                     }`}
                                             >
-                                                Full Team Name
+                                                {dict.full_name}
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Additional Options */}
                                     <div className="flex items-center justify-between p-2 rounded-sm border h-10 self-end">
-                                        <span className="text-[10px]">Show Goal Timeline</span>
+                                        <span className="text-[10px]">{dict.show_goal_timeline}</span>
                                         <Switch
                                             checked={showTimeline}
                                             onCheckedChange={setShowTimeline}
@@ -1608,29 +1724,29 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                                     {/* Team Name Color Bars */}
                                     <div className="md:col-span-2 space-y-2 border-t pt-2 md:pt-4 mt-1 md:mt-2">
-                                        <Label>Team Color Bars</Label>
+                                        <Label>{dict.team_color_bars}</Label>
                                         <div className="grid gap-1 md:gap-2">
                                             {/* Home Team Color Bar */}
                                             <div className="space-y-2 border p-2 rounded-sm">
-                                                <Label className="text-[10px]">Home Team</Label>
+                                                <Label className="text-[10px]">{dict.home_team}</Label>
                                                 <div className="grid grid-cols-2 gap-1 md:gap-2">
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">Direction</Label>
+                                                        <Label className="text-[10px]">{dict.direction}</Label>
                                                         <Select value={homeBarDir} onValueChange={(val: string) => setHomeBarDir(val as "none" | "top" | "right" | "bottom" | "left")}>
                                                             <SelectTrigger className="w-full">
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent className="bg-card">
-                                                                <SelectItem value="none">None</SelectItem>
-                                                                <SelectItem value="top">Top</SelectItem>
-                                                                <SelectItem value="right">Right</SelectItem>
-                                                                <SelectItem value="bottom">Bottom</SelectItem>
-                                                                <SelectItem value="left">Left</SelectItem>
+                                                                <SelectItem value="none">{dict.none}</SelectItem>
+                                                                <SelectItem value="top">{dict.top}</SelectItem>
+                                                                <SelectItem value="right">{dict.right}</SelectItem>
+                                                                <SelectItem value="bottom">{dict.bottom}</SelectItem>
+                                                                <SelectItem value="left">{dict.left}</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">Bar Color</Label>
+                                                        <Label className="text-[10px]">{dict.bar_color}</Label>
                                                         <div className="flex gap-1 md:gap-2">
                                                             <Input
                                                                 type="text"
@@ -1650,25 +1766,25 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                                             {/* Away Team Color Bar */}
                                             <div className="space-y-2 border p-2 rounded-sm">
-                                                <Label className="text-[10px]">Away Team</Label>
+                                                <Label className="text-[10px]">{dict.away_team}</Label>
                                                 <div className="grid grid-cols-2 gap-1 md:gap-2">
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">Direction</Label>
+                                                        <Label className="text-[10px]">{dict.direction}</Label>
                                                         <Select value={awayBarDir} onValueChange={(val: string) => setAwayBarDir(val as "none" | "top" | "right" | "bottom" | "left")}>
                                                             <SelectTrigger className="w-full">
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent className="bg-card">
-                                                                <SelectItem value="none">None</SelectItem>
-                                                                <SelectItem value="top">Top</SelectItem>
-                                                                <SelectItem value="right">Right</SelectItem>
-                                                                <SelectItem value="bottom">Bottom</SelectItem>
-                                                                <SelectItem value="left">Left</SelectItem>
+                                                                <SelectItem value="none">{dict.none}</SelectItem>
+                                                                <SelectItem value="top">{dict.top}</SelectItem>
+                                                                <SelectItem value="right">{dict.right}</SelectItem>
+                                                                <SelectItem value="bottom">{dict.bottom}</SelectItem>
+                                                                <SelectItem value="left">{dict.left}</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">Bar Color</Label>
+                                                        <Label className="text-[10px]">{dict.bar_color}</Label>
                                                         <div className="flex gap-1 md:gap-2">
                                                             <Input
                                                                 type="text"
@@ -1692,7 +1808,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                             {/* Part 5: Positioning & OBS Canvas */}
                             <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
-                                <Label>OBS Settings</Label>
+                                <Label>{dict.obs_settings}</Label>
 
                                 {/* Notification duration */}
                                 {/* <div className="space-y-1 max-w-[200px]">
@@ -1708,7 +1824,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                 </div> */}
 
                                 <div className="space-y-2">
-                                    <Label className="text-[10px]">OBS Canvas Background</Label>
+                                    <Label className="text-[10px]">{dict.obs_bg}</Label>
                                     <div className="grid grid-cols-3 gap-1 md:gap-2">
                                         {(["transparent", "chromakey", "custom"] as const).map((bgMode) => {
                                             const isPresetBg = bg === "transparent" || bg === "chromakey";
@@ -1765,7 +1881,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                 <div className="flex flex-col gap-4 border-t p-4 shrink-0">
                     {/* Canvas Type Selection */}
                     <div className="flex items-center justify-between gap-2">
-                        <Label className="text-xs font-black tracking-wider text-muted-foreground">Canvas Type</Label>
+                        <Label className="text-xs font-black tracking-wider text-muted-foreground">{dict.canvas_type}</Label>
                         <div className="flex items-center gap-2">
                             {selectedCanvasId !== "scoreboard" && activeBlankCanvas && (
                                 <button
@@ -1777,24 +1893,24 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                     }}
                                     className="text-[10px] text-destructive hover:underline font-bold mr-1"
                                 >
-                                    {locale === 'th' ? "ลบ Canvas นี้" : "Delete Canvas"}
+                                    {dict.delete_canvas}
                                 </button>
                             )}
                             <Select
                                 value={selectedCanvasId}
                                 onValueChange={handleCanvasSwitch}
                             >
-                                <SelectTrigger className="w-[200px] h-8 text-xs font-bold bg-muted/10 border-foreground/10">
+                                <SelectTrigger className="w-[200px]">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card">
-                                    <SelectItem value="scoreboard" className="text-xs font-bold">Main Canvas</SelectItem>
+                                    <SelectItem value="scoreboard">{dict.main_canvas}</SelectItem>
                                     {blankCanvases.map((c) => (
-                                        <SelectItem key={c.id} value={`blank-${c.id}`} className="text-xs font-bold">
+                                        <SelectItem key={c.id} value={`blank-${c.id}`}>
                                             {c.name}
                                         </SelectItem>
                                     ))}
-                                    <SelectItem value="create_blank" className="cursor-pointer text-xs font-bold text-primary focus:text-primary focus:bg-primary/10">
+                                    <SelectItem value="create_blank" className="cursor-pointer text-primary focus:text-primary focus:bg-primary/10">
                                         + {locale === 'th' ? "สร้าง Blank Canvas..." : "Create Blank Canvas..."}
                                     </SelectItem>
                                 </SelectContent>
@@ -1873,10 +1989,9 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                     <Button
                         onClick={saveTemplate}
                         disabled={saving}
-                        className="w-full h-11 text-sm font-bold"
+                        className="w-full"
                     >
-                        <Save className="h-4 w-4 mr-2" />
-                        {saving ? "Saving..." : "Save Canvas Template Settings"}
+                        {saving ? dict.saving : dict.save_template_settings}
                     </Button>
                 </div>
             </DialogContent>

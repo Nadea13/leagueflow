@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateProfile } from "@/actions/common/user";
-import { Loader2, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
@@ -108,8 +108,7 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                             {isLoading ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
-                                <span className="flex items-center gap-2">
-                                    <Check className="h-4 w-4" />
+                                <span className="flex items-center">
                                     {tCommon("save")}
                                 </span>
                             )}

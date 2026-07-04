@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Loader2 } from "lucide-react";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 
@@ -73,7 +72,7 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                 </div>
 
                 <div className="space-y-1">
-                    <Label>Location</Label>
+                    <Label>{t("location")}</Label>
                     <MapPicker
                         value={googleMapUrl}
                         onChange={(url) => setGoogleMapUrl(url)}
@@ -87,7 +86,6 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                         className="md:w-fit w-full"
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2">
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             {tCommon("save")}
                         </span>
                     </Button>

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trophy, Trash2, Save } from "lucide-react";
+import { Loader2, Trophy } from "lucide-react";
 import { TournamentCategory } from "@/types";
 
 interface CategorySettingsProps {
@@ -327,26 +327,14 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                         variant="destructive"
                                         disabled={isDeleting || isSaving}
                                         onClick={handleDelete}
-                                        className="font-bold flex items-center gap-2"
                                     >
-                                        {isDeleting ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Trash2 className="h-4 w-4" />
-                                        )}
                                         {isThai ? "ลบรุ่นการแข่งขัน" : "Delete Category"}
                                     </Button>
 
                                     <Button
                                         type="submit"
                                         disabled={isSaving || isDeleting}
-                                        className="font-bold flex items-center gap-2"
                                     >
-                                        {isSaving ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <Save className="h-4 w-4" />
-                                        )}
                                         {isThai ? "บันทึกการเปลี่ยนแปลง" : "Save Changes"}
                                     </Button>
                                 </div>

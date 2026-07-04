@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { RegistrationForm } from "@/features/registrations/registration-form";
 import { getMyTeams } from "@/actions/manager/team";
@@ -21,12 +22,13 @@ import {
 } from "lucide-react";
 
 interface DashboardRegistrationPageProps {
-    params: Promise<{ id: string }>;
+    params: Promise<{ id: string; locale: string }>;
     searchParams?: Promise<{ category?: string | string[] }>;
 }
 
 export default async function DashboardRegistrationPage({ params, searchParams }: DashboardRegistrationPageProps) {
-    const { id } = await params;
+    const { id, locale } = await params;
+    const t = await getTranslations({ locale, namespace: "Registration" });
     const categoryParam = (await searchParams)?.category;
     const tournamentCategoryId = typeof categoryParam === "string" ? categoryParam : undefined;
     const supabase = await createClient();
@@ -73,13 +75,13 @@ export default async function DashboardRegistrationPage({ params, searchParams }
     type CategoryItem = NonNullable<typeof categories>[number];
 
     const getCategoryDisplayName = (cat: CategoryItem | null | undefined) => {
-        if (!cat) return "Default Category";
+        if (!cat) return t("default_category");
         const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
-        const ageName = ageCategoriesData?.category_name || "General";
-        const gender = cat.gender_type === 'open' ? 'Open'
-            : cat.gender_type === 'male' ? 'Male'
-                : cat.gender_type === 'female' ? 'Female'
-                    : 'Mixed';
+        const ageName = ageCategoriesData?.category_name || t("general");
+        const gender = cat.gender_type === 'open' ? t("gender_open")
+            : cat.gender_type === 'male' ? t("gender_male")
+                : cat.gender_type === 'female' ? t("gender_female")
+                    : t("gender_mixed");
         return `${ageName} (${gender})`;
     };
 
@@ -133,7 +135,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                 {sportName}
                             </Badge>
                             <Badge variant={tournament.is_registration_open && !isRegistrationDisabled ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
-                                {tournament.is_registration_open && !isRegistrationDisabled ? "Registration Open" : "Registration Closed"}
+                                {tournament.is_registration_open && !isRegistrationDisabled ? t("open") : t("closed")}
                             </Badge>
                         </div>
                     </div>
@@ -169,7 +171,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
                         <CardHeader className="flex flex-row items-center space-y-0">
                             <CardTitle>
-                                รายละเอียดการแข่งขัน
+                                {t("details")}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 md:space-y-4">
@@ -193,7 +195,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                 ) : (
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground/75 py-2">
                                         <Info className="h-4 w-4 shrink-0" />
-                                        <span>ไม่มีคำอธิบายเพิ่มเติมสำหรับการแข่งขันนี้</span>
+                                        <span>{t("no_description")}</span>
                                     </div>
                                 )}
                             </div>
@@ -207,9 +209,9 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                 <div className="flex items-start gap-1 md:gap-2">
                                     <Calendar className="h-4 w-4 text-muted-foreground" />
                                     <div className="space-y-1">
-                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">วันเวลาที่แข่งขัน</p>
+                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("dates")}</p>
                                         <p className="text-foreground">
-                                            {new Date(tournament.start_date).toLocaleDateString("th-TH")} - {new Date(tournament.end_date).toLocaleDateString("th-TH")}
+                                            {new Date(tournament.start_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US")} - {new Date(tournament.end_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US")}
                                         </p>
                                     </div>
                                 </div>
@@ -217,8 +219,8 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                 <div className="flex items-start gap-1 md:gap-2">
                                     <MapPin className="h-4 w-4 text-muted-foreground" />
                                     <div className="space-y-1">
-                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">สถานที่จัดการแข่งขัน</p>
-                                        <p className="text-foreground">{tournament.location_name || "ไม่ระบุสถานที่"}</p>
+                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("location")}</p>
+                                        <p className="text-foreground">{tournament.location_name || t("no_location")}</p>
                                         {tournament.google_map_url && (
                                             <a
                                                 href={tournament.google_map_url}
@@ -226,7 +228,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center gap-1 text-xs text-primary font-bold hover:underline group"
                                             >
-                                                ดูแผนที่ Google Maps
+                                                {t("view_map")}
                                                 <ArrowUpRight className="h-3 w-3" />
                                             </a>
                                         )}
@@ -236,9 +238,9 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                 <div className="flex items-start gap-1 md:gap-2">
                                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                                     <div className="space-y-1">
-                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">ค่าสมัครเข้าร่วมการแข่งขัน</p>
+                                        <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("registration_fee")}</p>
                                         <p className="text-foreground font-black text-primary">
-                                            {Number(registrationFee || 0) === 0 ? "ฟรี (Free)" : `${Number(registrationFee).toLocaleString()} บาท`}
+                                            {Number(registrationFee || 0) === 0 ? t("free") : `${Number(registrationFee).toLocaleString()} ${locale === "th" ? "บาท" : "THB"}`}
                                         </p>
                                     </div>
                                 </div>
@@ -248,9 +250,9 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                         <div className="flex items-start gap-1 md:gap-2">
                                             <Clock className="h-4 w-4 text-muted-foreground" />
                                             <div className="space-y-1">
-                                                <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">วันปิดรับเอกสาร</p>
+                                                <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("deadline")}</p>
                                                 <p className="text-foreground">
-                                                    {new Date(tournament.document_deadline).toLocaleDateString("th-TH")}
+                                                    {new Date(tournament.document_deadline).toLocaleDateString(locale === "th" ? "th-TH" : "en-US")}
                                                 </p>
                                             </div>
                                         </div>
@@ -264,10 +266,10 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <CardTitle>
-                                รายชื่อทีมที่สมัคร {categoryName}
+                                {t("registered_list", { category: categoryName })}
                             </CardTitle>
                             <div className="text-xs">
-                                จำนวนทีม: {registeredTeams?.length || 0} / {activeCategory?.max_teams || 8}
+                                {t("teams_count", { current: registeredTeams?.length || 0, max: activeCategory?.max_teams || 8 })}
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -304,7 +306,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                                         variant={isApproved ? "default" : "outline"}
                                                         className={isApproved ? "bg-primary/5 text-primary hover:bg-primary/5 border-primary/20" : "bg-warning/5 text-warning hover:bg-warning/5 border-warning/20"}
                                                     >
-                                                        {isApproved ? "Approved" : "Pending"}
+                                                        {isApproved ? t("approved") : t("pending_status")}
                                                     </Badge>
                                                 </div>
                                             );
@@ -313,7 +315,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                 ) : (
                                     <div className="text-center py-2 md:py-4 border-2 border-dashed rounded-lg space-y-1 md:space-y-2">
                                         <Users className="h-8 w-8 text-muted-foreground/30 mx-auto" />
-                                        <p className="text-xs text-muted-foreground">ยังไม่มีทีมสมัครในรุ่นนี้</p>
+                                        <p className="text-xs text-muted-foreground">{t("no_teams_registered_category")}</p>
                                     </div>
                                 )}
                             </div>

@@ -142,15 +142,15 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>Role</Label>
+                                    <Label>{t("role")}</Label>
                                     <Select value={role} onValueChange={(val: 'co_organizer' | 'staff' | 'referee') => setRole(val)}>
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select a role" />
+                                            <SelectValue placeholder={t("select_role")} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="co_organizer">Co-Organizer</SelectItem>
-                                            <SelectItem value="staff">Staff</SelectItem>
-                                            <SelectItem value="referee">Referee</SelectItem>
+                                            <SelectItem value="co_organizer">{t("role_co_organizer")}</SelectItem>
+                                            <SelectItem value="staff">{t("role_staff")}</SelectItem>
+                                            <SelectItem value="referee">{t("role_referee")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -206,7 +206,7 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                             <EmptyState
                                 icon={Users}
                                 title={t("no_staffSettings")}
-                                description="Invite team members to help manage the tournament"
+                                description={t("no_staff_desc")}
                                 className="py-12"
                             />
                         ) : (
@@ -230,7 +230,7 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-sm font-black tracking-tight text-foreground">{collab.email}</span>
                                                     <Badge variant="outline" className="w-fit text-[10px] px-2 py-0.5 text-primary font-black shrink-0  border-primary/20 bg-primary/5 rounded">
-                                                        {collab.role?.replace('_', ' ')}
+                                                        {collab.role === 'co_organizer' ? t("role_co_organizer") : collab.role === 'referee' ? t("role_referee") : t("role_staff")}
                                                     </Badge>
                                                 </div>
                                                 <span className="text-[10px] font-bold tracking-[0.1em] text-muted-foreground/40">

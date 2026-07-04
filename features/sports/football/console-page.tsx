@@ -423,7 +423,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         setConfirmConfig({
             open: true,
             title: t("confirm_end") || "End Match?",
-            description: "Are you sure you want to end the match and record final scores?",
+            description: t("confirm_end_desc") || "Are you sure you want to end the match and record final scores?",
             actionLabel: tCommon("confirm") || "Confirm",
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
@@ -446,7 +446,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         setConfirmConfig({
             open: true,
             title: t("confirm_walkover") || "Confirm Walkover",
-            description: isHomeWinner ? `Confirm walkover victory for ${match.home_team?.name}` : `Confirm walkover victory for ${match.away_team?.name}`,
+            description: t("confirm_walkover_desc", { teamName: (isHomeWinner ? match.home_team?.name : match.away_team?.name) || "" }) || (isHomeWinner ? `Confirm walkover victory for ${match.home_team?.name}` : `Confirm walkover victory for ${match.away_team?.name}`),
             actionLabel: tCommon("confirm") || "Confirm",
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
@@ -469,8 +469,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 } catch (error) {
                     console.error("Walkover error:", error);
                     toast({
-                        title: "Error recording walkover",
-                        description: "Please try again",
+                        title: t("error_recording_walkover") || "Error recording walkover",
+                        description: t("please_try_again") || "Please try again",
                         variant: "destructive"
                     });
                 }
@@ -482,7 +482,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         setConfirmConfig({
             open: true,
             title: t("confirm_abandon") || "Abandon Match?",
-            description: "Are you sure you want to abandon this match?",
+            description: t("confirm_abandon_desc") || "Are you sure you want to abandon this match?",
             actionLabel: tCommon("confirm") || "Confirm",
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
@@ -497,8 +497,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 } catch (error) {
                     console.error("Abandon match error:", error);
                     toast({
-                        title: "Error abandoning match",
-                        description: "Please try again",
+                        title: t("error_abandoning_match") || "Error abandoning match",
+                        description: t("please_try_again") || "Please try again",
                         variant: "destructive"
                     });
                 }
@@ -510,7 +510,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         setConfirmConfig({
             open: true,
             title: t("confirm_postpone") || "Postpone Match?",
-            description: "Are you sure you want to postpone this match?",
+            description: t("confirm_postpone_desc") || "Are you sure you want to postpone this match?",
             actionLabel: tCommon("confirm") || "Confirm",
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
@@ -526,8 +526,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 } catch (error) {
                     console.error("Postpone match error:", error);
                     toast({
-                        title: "Error postponing match",
-                        description: "Please try again",
+                        title: t("error_postponing_match") || "Error postponing match",
+                        description: t("please_try_again") || "Please try again",
                         variant: "destructive"
                     });
                 }
@@ -545,8 +545,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
         setConfirmConfig({
             open: true,
-            title: `${tCommon("delete")} '${label}'?`,
-            description: "This action cannot be undone. This event will be permanently deleted.",
+            title: t("delete_confirm_title", { label }) || `${tCommon("delete")} '${label}'?`,
+            description: t("delete_event_desc") || "This action cannot be undone. This event will be permanently deleted.",
             actionLabel: tCommon("delete") || "Delete",
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
@@ -694,7 +694,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         <div className="pt-4 border-t">
                             <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
                                 <Timer className="w-6 h-6 text-primary animate-pulse" />
-                                <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">LIVE UPDATES ACTIVE</span>
+                                <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">{t("live_updates_active").toUpperCase()}</span>
                             </div>
                         </div>
                     </div>
@@ -734,7 +734,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
                     >
                         <Tv className="h-4 w-4 text-primary" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay") || "Live Overlay"}</span>
+                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay")}</span>
                     </Button>
                     <Button
                         variant="outline"
@@ -843,9 +843,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 {!readOnly && (
                     <div className="flex items-center gap-2">
                         {(queue.length + matchQueue.length) > 0 ? (
-                            <div className="flex items-center gap-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-1 rounded-full text-xs font-black tracking-widest animate-pulse">
-                                <CloudOff className="w-3.5 h-3.5" />
-                                <span>{(queue.length + matchQueue.length)} PENDING</span>
+                            <div className="flex items-center gap-1 text-warning animate-pulse">
+                                <CloudOff className="w-4 h-4" />
                                 <button
                                     onClick={() => {
                                         syncQueue();
@@ -854,15 +853,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                     disabled={isSyncing || isMatchSyncing}
                                     className="ml-1 hover:text-white transition-colors"
                                 >
-                                    <RefreshCw className={cn("w-3 h-3", (isSyncing || isMatchSyncing) && "animate-spin")} />
+                                    <RefreshCw className={cn("w-4 h-4", (isSyncing || isMatchSyncing) && "animate-spin")} />
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-1 rounded-full text-xs font-black tracking-widest">
-                                <Cloud className="w-3.5 h-3.5" />
-                                <span>SYNCED</span>
+                            <div className="flex items-center justify-center text-primary h-8 w-8" title={t("synced")}>
+                                <Cloud className="w-4 h-4" />
                             </div>
-                        )}
+                        ) }
 
                         <div className="flex items-center gap-1 md:gap-2 px-2 relative group overflow-hidden">
                             <span className="relative flex h-2 w-2">
@@ -940,6 +938,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             match={match}
                             readOnly={readOnly}
                             onDelete={deleteEvent}
+                            players={allPlayers}
                         />
                     </section>
                 </div>
@@ -972,7 +971,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         )}
                     </AlertDialogHeader>
                     <AlertDialogFooter className="grid grid-cols-2 gap-1 md:gap-2 border-t p-2 md:p-4">
-                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel>
                             {confirmConfig.cancelLabel}
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -980,7 +979,6 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                 await confirmConfig.onConfirm();
                                 setConfirmConfig(prev => ({ ...prev, open: false }));
                             }}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
                         >
                             {confirmConfig.actionLabel}
                         </AlertDialogAction>

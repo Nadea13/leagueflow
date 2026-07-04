@@ -285,7 +285,7 @@ export function RegistrationForm({
 
                         {categories && categories.length > 0 && (
                             <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-4 p-2 md:p-4 border rounded-sm">
-                                <h4 className="text-xs font-bold tracking-wider">Tournament Category</h4>
+                                <h4 className="text-xs font-bold tracking-wider">{t("category_title")}</h4>
                                 <Select
                                     value={tournamentCategoryId || ""}
                                     onValueChange={(val) => {
@@ -295,16 +295,16 @@ export function RegistrationForm({
                                     }}
                                 >
                                     <SelectTrigger className="w-full md:w-auto">
-                                        <SelectValue placeholder="Select category" />
+                                        <SelectValue placeholder={t("select_category")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map((cat) => {
                                             const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
-                                            const ageName = ageCategoriesData?.category_name || "General";
-                                            const gender = cat.gender_type === 'open' ? 'Open'
-                                                : cat.gender_type === 'male' ? 'Male'
-                                                    : cat.gender_type === 'female' ? 'Female'
-                                                        : 'Mixed';
+                                            const ageName = ageCategoriesData?.category_name || t("general");
+                                            const gender = cat.gender_type === 'open' ? t("gender_open")
+                                                : cat.gender_type === 'male' ? t("gender_male")
+                                                    : cat.gender_type === 'female' ? t("gender_female")
+                                                        : t("gender_mixed");
                                             const label = `${ageName} (${gender})`;
                                             return (
                                                 <SelectItem key={String(cat.id)} value={String(cat.id)} className="text-sm tracking-tighter">

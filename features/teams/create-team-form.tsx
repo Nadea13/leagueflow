@@ -107,7 +107,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         </div>
 
                         <div className="space-y-1">
-                            <Label>{t("team_name")}</Label>
+                            <Label>{t("team_name")} <span className="text-destructive">*</span></Label>
                             <Input
                                 id="name"
                                 name="name"

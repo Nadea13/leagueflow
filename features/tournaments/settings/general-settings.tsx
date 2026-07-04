@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Check, Loader2, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -245,7 +245,6 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                 className="md:w-fit w-full"
                             >
                                 <span className="relative z-10 flex items-center gap-2">
-                                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                     {tCommon("save")}
                                 </span>
                             </Button>

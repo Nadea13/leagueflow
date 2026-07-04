@@ -179,9 +179,9 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
                     onClick={executeSearch}
                     disabled={isSearching}
                     variant="outline"
+                    className="w-8 md:w-10"
                 >
                     <Search />
-                    Search
                 </Button>
             </div>
             <div className="relative w-full h-120 rounded-lg overflow-hidden border border-foreground/10 z-10">

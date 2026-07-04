@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 import { deleteAccount } from "@/actions/common/user";
@@ -31,7 +30,6 @@ export function DeleteAccountButton({ email }: { email: string }) {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button variant="destructive">
-                    <Trash2 className="h-4 w-4" />
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
@@ -64,7 +62,6 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         disabled={isPending || confirmText !== email}
                         className="bg-destructive w-full"
                     >
-                        {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                         {t("delete_button")}
                     </Button>
                 </DialogFooter>

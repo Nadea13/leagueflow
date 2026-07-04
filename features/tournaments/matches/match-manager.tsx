@@ -80,6 +80,8 @@ export function MatchManager({
         else if (match.stage === 'semi_final') stageLabel = tBracket("semi_final");
         else if (match.stage === 'final') stageLabel = tBracket("final");
         else if (match.stage === 'group') stageLabel = tMatch("group");
+        else if (match.stage === 'knockout') stageLabel = locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT";
+        else if (match.stage === 'league') stageLabel = locale === 'th' ? "ลีก" : "LEAGUE";
         else stageLabel = match.stage?.replace('_', ' ').toUpperCase() || "UNKNOWN";
 
         if (!acc[date]) acc[date] = {};
@@ -108,8 +110,8 @@ export function MatchManager({
                 <div id="fixtures-canvas" className="space-y-1 md:space-y-2">
                     {filteredMatches.length === 0 ? (
                         <EmptyState
-                            title="NO MATCHES FOUND"
-                            description="Adjust your filters or select a different date to see more fixtures."
+                            title={locale === 'th' ? "ไม่พบการแข่งขัน" : "NO MATCHES FOUND"}
+                            description={locale === 'th' ? "ปรับการกรองของคุณหรือเลือกวันที่อื่นเพื่อดูข้อมูลการแข่งขันเพิ่มเติม" : "Adjust your filters or select a different date to see more fixtures."}
                             icon={CalendarIcon}
                         />
                     ) : (
