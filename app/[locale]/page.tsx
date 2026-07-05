@@ -109,7 +109,7 @@ export default async function Home() {
                   <Button size="lg" className="h-12 px-8 font-semibold text-base group shadow-lg shadow-primary/20 cursor-pointer" asChild>
                     <Link href="/signup">
                       สร้างทัวร์นาเมนต์ของคุณ
-                      <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
                 </div>
@@ -831,10 +831,10 @@ export default async function Home() {
               เข้าร่วมกับ League Flow วันนี้ เพื่อยกระดับการจัดการแข่งขันกีฬาของคุณให้เป็นมืออาชีพและง่ายดายยิ่งขึ้น
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" className="w-full sm:w-auto h-12 px-8 font-semibold text-base group shadow-lg shadow-primary/20 cursor-pointer" asChild>
+              <Button size="lg" className="w-full sm:w-auto h-12 px-8 font-semibold text-base group shadow-lg cursor-pointer" asChild>
                 <Link href="/signup">
                   เริ่มต้นสร้างการแข่งขัน
-                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-8 font-semibold text-base cursor-pointer" asChild>

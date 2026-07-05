@@ -60,15 +60,15 @@ export function BecomeTeamManagerDialog({ open, onOpenChange }: BecomeTeamManage
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-background shadow-2xl rounded-2xl">
+            <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border bg-card shadow-2xl rounded-xl">
                 {/* Header with Premium Feel */}
-                <div className="relative bg-primary/10 p-4 md:p-6 border-b border-border/50">
+                <div className="relative p-2 md:p-4 border-b">
                     <DialogHeader>
-                        <DialogTitle className="text-3xl font-black tracking-tighter text-foreground leading-none">
+                        <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
                             {isThai ? "สมัครเป็น " : "Become a "} <span className="text-primary">{isThai ? "ผู้จัดการทีม" : "Team Manager"}</span>
                         </DialogTitle>
-                        <DialogDescription className="text-muted-foreground font-medium pt-2 text-base leading-relaxed">
-                            {isThai 
+                        <DialogDescription className="text-muted-foreground font-medium text-xs">
+                            {isThai
                                 ? "จัดการทีมสโมสรฟุตบอลของคุณ ลงทะเบียนนักเตะ และส่งรายชื่อเข้าแข่งขันลีกต่างๆ"
                                 : "Manage your football club teams, register players, and submit lineups for various tournaments."}
                         </DialogDescription>
@@ -76,28 +76,28 @@ export function BecomeTeamManagerDialog({ open, onOpenChange }: BecomeTeamManage
                 </div>
 
                 {/* Features List */}
-                <div className="p-4 md:p-6 space-y-2 md:space-y-3">
-                    <div className="grid gap-2 md:gap-3">
-                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
-                            <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
-                                <Users className="h-5 w-5 text-primary" />
+                <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                    <div className="grid gap-1 md:gap-2">
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <div className="shrink-0 p-2 bg-primary/10 border border-primary/20 rounded-sm">
+                                <Users className="h-4 w-4 text-primary" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-xs font-black tracking-widest text-foreground">
+                                <p className="text-xs font-bold tracking-widest text-foreground">
                                     {isThai ? "จัดการทีมของคุณ" : "Manage Your Teams"}
                                 </p>
-                                <p className="text-xs text-muted-foreground font-medium">
+                                <p className="text-xs text-muted-foreground">
                                     {isThai ? "สร้างทีมและตั้งค่าโปรไฟล์ข้อมูลสโมสร" : "Create teams and configure club profile information."}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
-                            <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
-                                <Shield className="h-5 w-5 text-primary" />
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <div className="shrink-0 p-2 bg-primary/10 border border-primary/20 rounded-sm">
+                                <Shield className="h-4 w-4 text-primary" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-xs font-black tracking-widest text-foreground">
+                                <p className="text-xs font-bold tracking-widest text-foreground">
                                     {isThai ? "ลงทะเบียนนักเตะ" : "Register Players"}
                                 </p>
                                 <p className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -106,12 +106,12 @@ export function BecomeTeamManagerDialog({ open, onOpenChange }: BecomeTeamManage
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-muted/30 border border-border/50 transition-all hover:bg-muted/50 hover:border-primary/30 group">
-                            <div className="shrink-0 p-2.5 bg-primary/10 border border-primary/20 rounded-lg group-hover:scale-110 transition-transform">
-                                <Zap className="h-5 w-5 text-primary" />
+                        <div className="flex items-center gap-1 md:gap-2">
+                            <div className="shrink-0 p-2 bg-primary/10 border border-primary/20 rounded-sm">
+                                <Zap className="h-4 w-4 text-primary" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-xs font-black tracking-widest text-foreground">
+                                <p className="text-xs font-bold tracking-widest text-foreground">
                                     {isThai ? "เข้าร่วมลีกการแข่งขัน" : "Join Tournament Leagues"}
                                 </p>
                                 <p className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -122,38 +122,23 @@ export function BecomeTeamManagerDialog({ open, onOpenChange }: BecomeTeamManage
                     </div>
 
                     {/* Explicit Confirmation Step */}
-                    <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                    <div className="flex items-center gap-1 md:gap-2 p-1 md:p-2 bg-primary/5 border border-primary/20 rounded-sm">
                         <AlertCircle className="h-5 w-5 text-primary shrink-0" />
                         <p className="text-sm font-bold text-foreground">
                             {isThai ? "คุณพร้อมที่จะเป็นผู้จัดการทีมแล้วหรือยัง?" : "Are you ready to become a team manager?"}
                         </p>
                     </div>
 
-                    <DialogFooter className="pt-2 md:pt-3 flex flex-col sm:flex-row sm:justify-between gap-3">
-                        <Button
-                            className="flex-1 h-10 bg-primary text-primary-foreground hover:bg-primary cursor-pointer"
-                            onClick={handleRegister}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <span className="flex items-center gap-2 font-black tracking-widest text-sm">
-                                    <Users className="h-5 w-5" />
-                                    {isThai ? "ยืนยันการสมัคร" : "Confirm Registration"}
-                                </span>
-                            )}
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            onClick={() => onOpenChange(false)}
-                            disabled={isLoading}
-                            className="h-5 sm:h-10 font-black tracking-widest text-sm hover:bg-transparent hover:text-foreground"
-                        >
-                            {isThai ? "ยกเลิก" : "Cancel"}
-                        </Button>
-                    </DialogFooter>
                 </div>
+                <DialogFooter className="p-2 md:p-4 border-t">
+                    <Button
+                        className="flex-1 h-10 bg-primary text-primary-foreground hover:bg-primary cursor-pointer"
+                        onClick={handleRegister}
+                        disabled={isLoading}
+                    >
+                        {isThai ? "ยืนยันการสมัคร" : "Confirm Registration"}
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

@@ -6,7 +6,7 @@ import { createMasterPlayer, getMasterPlayerStats } from "@/actions/common/user"
 import { Link } from "@/i18n/routing";
 import {
     Trophy, User, Calendar, Phone, Search,
-    AlertCircle, Loader2, UserCheck, UserPlus, Activity, Edit
+    AlertCircle, Loader2, UserCheck, Activity, Edit
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,8 +126,8 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         setError(null);
         setSuccess(false);
 
-        const hasRequiredName = isThai 
-            ? (firstNameTh && lastNameTh) 
+        const hasRequiredName = isThai
+            ? (firstNameTh && lastNameTh)
             : (firstNameEn && lastNameEn);
 
         if (!hasRequiredName || !gender || !birthday) {
@@ -238,245 +238,234 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 <div className="lg:col-span-4 space-y-2 md:space-y-4 order-1 lg:order-2">
                     <div className="bg-card rounded-xl">
                         {masterPlayer ? (
-                        /* Player ID Card */
-                        <div className="relative overflow-hidden">
-                            {/* License Header */}
-                            <div className="flex items-center justify-between border-b p-2 md:p-4">
-                                <div className="flex items-center gap-2 md:gap-4">
-                                    <span className="font-black text-foreground leading-tight">{t("player_verify")}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6"
-                                        onClick={handleOpenEdit}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Badge className={`px-2.5 h-6 rounded-full text-[10px] font-black ${masterPlayer.verified
-                                        ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                                        : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                                        }`}>
-                                        {masterPlayer.verified ? (
-                                            <>
-                                                <UserCheck className="h-3 w-3 mr-1" />
-                                                {t("verified")}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Activity className="h-3 w-3 mr-1 animate-pulse" />
-                                                {t("pending")}
-                                            </>
-                                        )}
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            {/* Main Body */}
-                            <div className="flex flex-col items-center text-center space-y-2 md:space-y-4 p-2 md:p-4 relative z-10">
-                                <div className="relative">
-                                    <Avatar className="h-20 w-20 border-2 bg-background relative z-10 rounded-full">
-                                        {masterPlayer.profile_img && <AvatarImage src={masterPlayer.profile_img} alt="Avatar" className="object-cover" />}
-                                        <AvatarFallback className="font-black text-foreground text-xl">
-                                            {`${(masterPlayer.first_name_en || masterPlayer.first_name_th || "?")[0]}${(masterPlayer.last_name_en || masterPlayer.last_name_th || "?")[0]}`}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </div>
-
-                                <div>
-                                    <h3 className="text-xl font-black text-foreground leading-tight">
-                                        {isThai 
-                                            ? `${masterPlayer.first_name_th || masterPlayer.first_name_en || ""} ${masterPlayer.last_name_th || masterPlayer.last_name_en || ""}`
-                                            : `${masterPlayer.first_name_en || masterPlayer.first_name_th || ""} ${masterPlayer.last_name_en || masterPlayer.last_name_th || ""}`}
-                                    </h3>
-                                    <p className="text-xs text-primary mt-1 tracking-widest font-bold">
-                                        {t("status")} : {masterPlayer.status}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Details list */}
-                            <div className="border-t relative z-10">
-                                <div className="flex items-center justify-between text-xs border-b p-2 md:p-4">
-                                    <span className="flex items-center gap-2 md:gap-4">
-                                        <User className="h-4 w-4 text-primary" />
-                                        {t("gender")}
-                                    </span>
-                                    <span className="font-bold text-foreground">
-                                        {t(masterPlayer.gender || 'other')}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs border-b border-border p-2 md:p-4">
-                                    <span className="flex items-center gap-2 md:gap-4 text-muted-foreground">
-                                        <Calendar className="h-4 w-4 text-primary" />
-                                        {t("birthday")}
-                                    </span>
-                                    <span className="font-bold text-foreground">
-                                        {masterPlayer.birthday ? new Date(masterPlayer.birthday).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "-"}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs p-2 md:p-4">
-                                    <span className="flex items-center gap-2 md:gap-4 text-muted-foreground">
-                                        <Phone className="h-4 w-4 text-primary" />
-                                        {t("phone")}
-                                    </span>
-                                    <span className="font-bold text-foreground">
-                                        {masterPlayer.tel || "-"}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Create Master Player Card / Form */
-                        <div className="border relative overflow-hidden rounded-xl">
-                            <div className="flex flex-row items-center gap-2 md:gap-4 p-2 md:p-4 border-b">
-                                <UserPlus className="h-5 w-5 text-primary" />
-                                <span className="font-black text-foreground leading-tight">{t("create_profile")}</span>
-                            </div>
-
-                            <div className="p-2 md:p-4 space-y-2 md:space-y-4">
-                                {error && (
-                                    <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 mb-4 animate-shake">
-                                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                        <span>{error}</span>
+                            /* Player ID Card */
+                            <div className="relative overflow-hidden">
+                                {/* License Header */}
+                                <div className="flex items-center justify-between border-b p-2 md:p-4">
+                                    <div className="flex items-center gap-2 md:gap-4">
+                                        <span className="font-black text-foreground leading-tight">{t("player_verify")}</span>
                                     </div>
-                                )}
-
-                                {success && (
-                                    <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-xl text-xs flex items-start gap-2 mb-4">
-                                        <UserCheck className="h-4 w-4 shrink-0 mt-0.5" />
-                                        <span>{t("profile_created_success")}</span>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={handleOpenEdit}
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Badge className={`px-2.5 h-6 rounded-full text-[10px] font-black ${masterPlayer.verified
+                                            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                                            : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                            }`}>
+                                            {masterPlayer.verified ? (
+                                                <>
+                                                    <UserCheck className="h-3 w-3 mr-1" />
+                                                    {t("verified")}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Activity className="h-3 w-3 mr-1 animate-pulse" />
+                                                    {t("pending")}
+                                                </>
+                                            )}
+                                        </Badge>
                                     </div>
-                                )}
+                                </div>
 
-                                <form onSubmit={handleCreateProfile} className="space-y-4">
-                                    {/* Thai Name */}
-                                    <div className="space-y-2 border-b pb-3">
-                                        <h4 className="text-xs font-bold text-primary tracking-wider uppercase">{t("thai_name")}</h4>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">{t("first_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
-                                                <Input
-                                                    id="firstNameTh"
-                                                    type="text"
-                                                    value={firstNameTh}
-                                                    onChange={(e) => setFirstNameTh(e.target.value)}
-                                                />
+                                {/* Main Body */}
+                                <div className="flex flex-col items-center text-center space-y-2 md:space-y-4 p-2 md:p-4 relative z-10">
+                                    <div className="relative">
+                                        <Avatar className="h-20 w-20 border-2 bg-background relative z-10 rounded-full">
+                                            {masterPlayer.profile_img && <AvatarImage src={masterPlayer.profile_img} alt="Avatar" className="object-cover" />}
+                                            <AvatarFallback className="font-black text-foreground text-xl">
+                                                {`${(masterPlayer.first_name_en || masterPlayer.first_name_th || "?")[0]}${(masterPlayer.last_name_en || masterPlayer.last_name_th || "?")[0]}`}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-xl font-black text-foreground leading-tight">
+                                            {isThai
+                                                ? `${masterPlayer.first_name_th || masterPlayer.first_name_en || ""} ${masterPlayer.last_name_th || masterPlayer.last_name_en || ""}`
+                                                : `${masterPlayer.first_name_en || masterPlayer.first_name_th || ""} ${masterPlayer.last_name_en || masterPlayer.last_name_th || ""}`}
+                                        </h3>
+                                        <p className="text-xs text-primary mt-1 tracking-widest font-bold">
+                                            {t("status")} : {masterPlayer.status}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Details list */}
+                                <div className="border-t relative z-10">
+                                    <div className="flex items-center justify-between text-xs border-b p-2 md:p-4">
+                                        <span className="flex items-center gap-2 md:gap-4">
+                                            <User className="h-4 w-4 text-primary" />
+                                            {t("gender")}
+                                        </span>
+                                        <span className="font-bold text-foreground">
+                                            {t(masterPlayer.gender || 'other')}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs border-b border-border p-2 md:p-4">
+                                        <span className="flex items-center gap-2 md:gap-4 text-muted-foreground">
+                                            <Calendar className="h-4 w-4 text-primary" />
+                                            {t("birthday")}
+                                        </span>
+                                        <span className="font-bold text-foreground">
+                                            {masterPlayer.birthday ? new Date(masterPlayer.birthday).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "-"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs p-2 md:p-4">
+                                        <span className="flex items-center gap-2 md:gap-4 text-muted-foreground">
+                                            <Phone className="h-4 w-4 text-primary" />
+                                            {t("phone")}
+                                        </span>
+                                        <span className="font-bold text-foreground">
+                                            {masterPlayer.tel || "-"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            /* Create Master Player Card / Form */
+                            <div className="border relative overflow-hidden rounded-xl">
+                                <div className="flex flex-row items-center p-2 md:p-4 border-b">
+                                    <span className="font-black text-foreground leading-tight">{t("create_profile")}</span>
+                                </div>
+
+                                <div className="p-2 md:p-4 space-y-2 md:space-y-4">
+                                    {error && (
+                                        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 mb-4 animate-shake">
+                                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                            <span>{error}</span>
+                                        </div>
+                                    )}
+
+                                    {success && (
+                                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-xl text-xs flex items-start gap-2 mb-4">
+                                            <UserCheck className="h-4 w-4 shrink-0 mt-0.5" />
+                                            <span>{t("profile_created_success")}</span>
+                                        </div>
+                                    )}
+
+                                    <form onSubmit={handleCreateProfile} className="space-y-4">
+                                        {/* Thai Name */}
+                                        <div className="space-y-2 border-b pb-3">
+                                            <Label>{t("thai_name")}</Label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground">{t("first_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
+                                                    <Input
+                                                        id="firstNameTh"
+                                                        type="text"
+                                                        value={firstNameTh}
+                                                        onChange={(e) => setFirstNameTh(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground">{t("middle_name_th")}</Label>
+                                                    <Input
+                                                        id="middleNameTh"
+                                                        type="text"
+                                                        value={middleNameTh}
+                                                        onChange={(e) => setMiddleNameTh(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground">{t("last_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
+                                                    <Input
+                                                        id="lastNameTh"
+                                                        type="text"
+                                                        value={lastNameTh}
+                                                        onChange={(e) => setLastNameTh(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* English Name */}
+                                        <div className="space-y-2 border-b pb-3">
+                                            <Label>{t("english_name")}</Label>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground">{t("first_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
+                                                    <Input
+                                                        id="firstNameEn"
+                                                        type="text"
+                                                        value={firstNameEn}
+                                                        onChange={(e) => setFirstNameEn(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground">{t("middle_name_en")}</Label>
+                                                    <Input
+                                                        id="middleNameEn"
+                                                        type="text"
+                                                        value={middleNameEn}
+                                                        onChange={(e) => setMiddleNameEn(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground">{t("last_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
+                                                    <Input
+                                                        id="lastNameEn"
+                                                        type="text"
+                                                        value={lastNameEn}
+                                                        onChange={(e) => setLastNameEn(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1 flex flex-col justify-end">
+                                                <Label>{t("gender")} <span className="text-destructive">*</span></Label>
+                                                <Select value={gender} onValueChange={setGender}>
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder={t("select_gender")} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="male">{t("male")}</SelectItem>
+                                                        <SelectItem value="female">{t("female")}</SelectItem>
+                                                        <SelectItem value="other">{t("other")}</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">{t("middle_name_th")}</Label>
+                                                <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
                                                 <Input
-                                                    id="middleNameTh"
-                                                    type="text"
-                                                    value={middleNameTh}
-                                                    onChange={(e) => setMiddleNameTh(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">{t("last_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
-                                                <Input
-                                                    id="lastNameTh"
-                                                    type="text"
-                                                    value={lastNameTh}
-                                                    onChange={(e) => setLastNameTh(e.target.value)}
+                                                    id="birthday"
+                                                    type="date"
+                                                    required
+                                                    value={birthday}
+                                                    onChange={(e) => setBirthday(e.target.value)}
                                                 />
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* English Name */}
-                                    <div className="space-y-2 border-b pb-3">
-                                        <h4 className="text-xs font-bold text-primary tracking-wider uppercase">{t("english_name")}</h4>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">{t("first_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
-                                                <Input
-                                                    id="firstNameEn"
-                                                    type="text"
-                                                    value={firstNameEn}
-                                                    onChange={(e) => setFirstNameEn(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">{t("middle_name_en")}</Label>
-                                                <Input
-                                                    id="middleNameEn"
-                                                    type="text"
-                                                    value={middleNameEn}
-                                                    onChange={(e) => setMiddleNameEn(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] text-muted-foreground">{t("last_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
-                                                <Input
-                                                    id="lastNameEn"
-                                                    type="text"
-                                                    value={lastNameEn}
-                                                    onChange={(e) => setLastNameEn(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1 flex flex-col justify-end">
-                                            <Label>{t("gender")} <span className="text-destructive">*</span></Label>
-                                            <Select value={gender} onValueChange={setGender}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder={t("select_gender")} />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="male">{t("male")}</SelectItem>
-                                                    <SelectItem value="female">{t("female")}</SelectItem>
-                                                    <SelectItem value="other">{t("other")}</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
                                         <div className="space-y-1">
-                                            <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
+                                            <Label>{t("phone_number")}</Label>
                                             <Input
-                                                id="birthday"
-                                                type="date"
-                                                required
-                                                value={birthday}
-                                                onChange={(e) => setBirthday(e.target.value)}
+                                                id="tel"
+                                                type="tel"
+                                                value={tel}
+                                                onChange={(e) => setTel(e.target.value)}
                                             />
                                         </div>
-                                    </div>
 
-                                    <div className="space-y-1">
-                                        <Label>{t("phone_number")}</Label>
-                                        <Input
-                                            id="tel"
-                                            type="tel"
-                                            value={tel}
-                                            onChange={(e) => setTel(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <Button
-                                        type="submit"
-                                        disabled={isPending}
-                                        className="w-full"
-                                    >
-                                        {isPending ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                {t("registering")}
-                                            </>
-                                        ) : (
-                                            <>
-                                                <UserPlus className="h-4 w-4" />
-                                                {t("create_card")}
-                                            </>
-                                        )}
-                                    </Button>
-                                </form>
+                                        <Button
+                                            type="submit"
+                                            disabled={isPending}
+                                            className="w-full"
+                                        >
+                                            {t("create_card")}
+                                        </Button>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
                     </div>
 
                     {masterPlayer && (
@@ -486,7 +475,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                     {t("player_statistics")}
                                 </span>
                             </div>
-                            
+
                             {loadingStats ? (
                                 <div className="flex items-center justify-center p-8 text-xs text-muted-foreground/60 gap-2">
                                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
