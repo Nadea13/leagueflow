@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocale } from "next-intl";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Users, Loader2, Shield, Zap, AlertCircle } from "lucide-react";
+import { Users, Shield, Zap, AlertCircle } from "lucide-react";
 import { registerAsTeamManager } from "@/actions/common/user";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";

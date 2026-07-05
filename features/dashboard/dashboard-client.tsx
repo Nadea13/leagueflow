@@ -236,7 +236,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
                 {/* Right Column: Master Player Card (4 cols) */}
                 <div className="lg:col-span-4 space-y-2 md:space-y-4 order-1 lg:order-2">
-                    <div className="bg-card rounded-xl">
+                    <div className="bg-card border rounded-xl">
                         {masterPlayer ? (
                             /* Player ID Card */
                             <div className="relative overflow-hidden">
@@ -330,7 +330,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             </div>
                         ) : (
                             /* Create Master Player Card / Form */
-                            <div className="border relative overflow-hidden rounded-xl">
+                            <div className="relative overflow-hidden rounded-xl">
                                 <div className="flex flex-row items-center p-2 md:p-4 border-b">
                                     <span className="font-black text-foreground leading-tight">{t("create_profile")}</span>
                                 </div>

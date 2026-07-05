@@ -81,7 +81,8 @@
         "closed": "Registration Closed",
         "generate_qr": "Generate QR Code",
         "browse_tournaments_desc": "Start your competitive journey today",
-        "team": "Team"
+        "team": "Team",
+        "back_to_login": "Back to Login"
     },
     "Dashboard": {
         "title": "Dashboard",

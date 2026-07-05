@@ -78,7 +78,8 @@
         "closed": "ปิดรับสมัคร",
         "generate_qr": "สร้าง QR Code",
         "browse_tournaments_desc": "เริ่มต้นการเดินทางแข่งขันของคุณวันนี้",
-        "team": "ทีม"
+        "team": "ทีม",
+        "back_to_login": "กลับไปหน้าเข้าสู่ระบบ"
     },
     "Dashboard": {
         "title": "แดชบอร์ด",

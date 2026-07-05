@@ -37,7 +37,6 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                         <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
                         <Input
                             type="search"
-                            placeholder={t("search_tournaments")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pr-10"
