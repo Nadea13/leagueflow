@@ -740,11 +740,11 @@ export default async function Home() {
                   <p className="text-muted-foreground text-xs mb-2 md:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
                   <div className="flex flex-col mb-2 md:mb-4">
                     <div className="flex items-baseline gap-1 md:gap-2">
-                      <span className="text-3xl md:text-4xl font-black line-through text-muted-foreground/60">฿590</span>
-                      <span className="text-3xl md:text-4xl font-black text-primary ml-2">฿0</span>
+                      <span className="text-3xl md:text-4xl font-black line-through text-muted-foreground/60">฿790</span>
+                      <span className="text-3xl md:text-4xl font-black ml-2">฿0</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
-                    <span className="text-xs text-primary font-black">ฟรีชั่วคราว! (ปกติ ฿5,900/ปี)</span>
+                    <span className="text-xs text-primary font-black">หรือรายปี ฿7,900/ปี</span>
                   </div>
                   <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
@@ -782,10 +782,10 @@ export default async function Home() {
                 </Button>
               </div>
 
-              {/* Enterprise Plan */}
+              {/* Customs Plan */}
               <div className="bg-card border rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 md:space-y-4 transition-all duration-300 shadow-sm relative">
                 <div>
-                  <h3 className="text-xl font-bold mb-1">Enterprise</h3>
+                  <h3 className="text-xl font-bold mb-1">Customs</h3>
                   <p className="text-muted-foreground text-xs mb-2">สำหรับองค์กร สมาคมกีฬา หรือความต้องการปรับแต่งพิเศษ</p>
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="text-3xl font-black">ติดต่อสอบถาม</span>

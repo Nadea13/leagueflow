@@ -236,7 +236,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
                 {/* Right Column: Master Player Card (4 cols) */}
                 <div className="lg:col-span-4 space-y-2 md:space-y-4 order-1 lg:order-2">
-                    <div className="bg-card border rounded-xl">
+                    <div className="bg-card rounded-xl">
                         {masterPlayer ? (
                         /* Player ID Card */
                         <div className="relative overflow-hidden">

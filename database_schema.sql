@@ -95,6 +95,14 @@ CREATE TYPE "public"."payment_status_enum" AS ENUM (
 
 ALTER TYPE "public"."payment_status_enum" OWNER TO "postgres";
 
+CREATE TYPE "public"."payment_status" AS ENUM (
+    'pending',
+    'success',
+    'failed'
+);
+
+ALTER TYPE "public"."payment_status" OWNER TO "postgres";
+
 CREATE TYPE "public"."player_status_enum" AS ENUM (
     'active',
     'injury',
@@ -244,7 +252,7 @@ CREATE TABLE IF NOT EXISTS "public"."payments" (
     "team_id" "uuid",
     "amount" numeric(12,2) NOT NULL,
     "plan_name" character varying(100),
-    "payment_status" character varying(50) DEFAULT 'pending' NOT NULL,
+    "payment_status" "public"."payment_status" DEFAULT 'pending'::"public"."payment_status" NOT NULL,
     "payment_method" character varying(50),
     "transaction_id" character varying(255),
     "raw_gateway_response" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
@@ -827,11 +835,11 @@ CREATE POLICY "master_players_write" ON "public"."master_players" TO "authentica
 
 ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "payments_select" ON "public"."payments" FOR SELECT TO "authenticated" USING ((("auth"."uid"() = "user_id") OR (( SELECT "users"."is_admin"
+CREATE POLICY "payments_select" ON "public"."payments" FOR SELECT TO "authenticated" USING ((("auth"."uid"() = "user_id") OR (( SELECT ("users"."role" = 'admin'::public.user_role)
    FROM "public"."users"
   WHERE ("users"."id" = "auth"."uid"())) = true)));
 
-CREATE POLICY "payments_write" ON "public"."payments" TO "authenticated" USING ((( SELECT "users"."is_admin"
+CREATE POLICY "payments_write" ON "public"."payments" TO "authenticated" USING ((( SELECT ("users"."role" = 'admin'::public.user_role)
    FROM "public"."users"
   WHERE ("users"."id" = "auth"."uid"())) = true));
 

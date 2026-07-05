@@ -119,6 +119,7 @@ export function DashboardSidebar({
                         email={userEmail} 
                         name={userName} 
                         avatar={userAvatar} 
+                        role={role}
                         side="right" 
                         align="end" 
                         sideOffset={16} 

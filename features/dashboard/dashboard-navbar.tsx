@@ -90,7 +90,7 @@ export function DashboardNavbar({
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                    <UserDropdown email={userEmail} name={userName} avatar={userAvatar} className="border-none hover:bg-transparent p-0" />
+                    <UserDropdown email={userEmail} name={userName} avatar={userAvatar} role={role} className="border-none hover:bg-transparent p-0" />
                 </div>
 
                 <BecomeOrganizerDialog

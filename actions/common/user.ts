@@ -28,10 +28,10 @@ export async function getUserSubscriptionPlan() {
 
     const { data: subscription } = await supabase
         .from("payments")
-        .select("plan, subscription_expires_at")
+        .select("plan_name, created_at")
         .eq("user_id", user.id)
-        .eq("status", "success")
-        .in("plan", ["monthly", "yearly", "manager_pro"])
+        .eq("payment_status", "success")
+        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly"])
         .is("tournament_id", null)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -39,11 +39,16 @@ export async function getUserSubscriptionPlan() {
 
     if (subscription) {
         const now = new Date();
-        const expiresAt = subscription.subscription_expires_at
-            ? new Date(subscription.subscription_expires_at)
-            : null;
+        const createdAt = new Date(subscription.created_at);
+        const expiresAt = new Date(createdAt);
+        
+        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro") {
+            expiresAt.setDate(createdAt.getDate() + 30);
+        } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly") {
+            expiresAt.setDate(createdAt.getDate() + 365);
+        }
 
-        return (expiresAt && now > expiresAt) ? 'free' : (subscription.plan || 'free');
+        return now > expiresAt ? 'free' : (subscription.plan_name || 'free');
     }
 
     return 'free';

@@ -245,6 +245,7 @@ export interface Payment {
     tournament_id: string | null;
     provider_id: string | null; // PG Transaction ID
     subscription_expires_at: string | null;
+    slip_url?: string | null;
     // Join
     user?: { email: string; full_name?: string };
 }

@@ -1198,6 +1198,7 @@
         "delete_confirm_desc": "This action cannot be undone. This will permanently delete your account and remove your data from our servers.",
         "type_to_confirm": "Please type \"{text}\" to confirm:",
         "delete_button": "Delete Account",
+        "billing": "Billing",
         "version": "Version"
     },
     "Collaborators": {
@@ -1360,7 +1361,17 @@
         "report_resolved_success": "Report marked as resolved",
         "report_marked_read_success": "Report marked as read",
         "close": "Close",
-        "anonymous": "Anonymous User"
+        "anonymous": "Anonymous User",
+        "approve": "Approve",
+        "reject": "Reject",
+        "is_organizer": "Organizer",
+        "is_team_manager": "Team Manager",
+        "payments_pending": "Pending Approvals",
+        "approve_confirm": "Are you sure you want to approve this payment?",
+        "reject_confirm": "Are you sure you want to reject this payment?",
+        "success_message": "Action completed successfully",
+        "expires_at": "Expires At",
+        "view_slip": "View Slip"
     },
     "BugReport": {
         "title": "Feedback",
@@ -1440,7 +1451,77 @@
         "monthly": { "title": "Monthly Pro" },
         "tournament": { "title": "Per Tournament" },
         "free": { "title": "Starter" },
-        "manager_pro": { "title": "Manager Pro" }
+        "manager_pro": { "title": "Manager Pro" },
+        "recommended": "Recommended",
+        "active_badge": "Active",
+        "active_prefix": "Active: ",
+        "plan_starter": "Starter",
+        "plan_pro": "Pro",
+        "plan_pro_yearly": "Pro Yearly",
+        "plan_customs": "Customs",
+        "starterDesc": "Suitable for small tournaments or beginners.",
+        "proDesc": "Organize professional tournaments with complete payment system.",
+        "proYearlyDesc": "Save big with yearly subscription for sports associations and long-term work.",
+        "customsDesc": "For organizations, sports associations, or special customization needs.",
+        "managerProDesc": "For team managers. Create unlimited teams and manage multiple squads.",
+        "perMonth": " / Month",
+        "perYear": " / Year",
+        "lifetime": " / Lifetime",
+        "contactSales": "Contact Sales",
+        "contactTeam": "Contact Support",
+        "currentPlan": "Current Plan",
+        "subscribePro": "Subscribe Pro",
+        "subscribeProYearly": "Subscribe Pro Yearly",
+        "getStartedFree": "Get Started Free",
+        "complete_payment_desc": "Complete payment for {planName}",
+        "confirm_subscribe_free": "Are you sure you want to subscribe to this plan?",
+        "selectPaymentMethod": "Select Payment Method",
+        "promptpay_scan_hint": "Scan this QR code using your mobile banking application to simulate payment.",
+        "expiryDate": "Expiry Date",
+        "confirmPayment": "Confirm Payment",
+        "transactionId": "Transaction ID",
+        "features": {
+            "starter": [
+                "Create up to 1 tournament",
+                "Create up to 1 tournament category",
+                "Limit up to 12 teams per tournament",
+                "Registration payment system via QR Code",
+                "Real-time match events / scorers / fouls recording",
+                "Live score display for streaming (OBS Overlay)"
+            ],
+            "pro": [
+                "Unlimited tournaments",
+                "Unlimited tournament categories",
+                "Unlimited teams and players",
+                "Real-time match events / scorers / fouls recording",
+                "Add co-staff to manage matches",
+                "Registration system with PromptPay payment",
+                "Live score display for streaming (OBS Overlay)"
+            ],
+            "pro_yearly": [
+                "Save 2 months compared to monthly!",
+                "Unlimited tournaments",
+                "Unlimited tournament categories",
+                "Unlimited teams and players",
+                "Real-time match events / scorers / fouls recording",
+                "Add co-staff to manage matches",
+                "Registration system with PromptPay payment",
+                "Live score display for streaming (OBS Overlay)"
+            ],
+            "customs": [
+                "Access to all Pro features",
+                "Official main sponsor management & advertisement system",
+                "Export player data and standings summary (Excel/CSV)",
+                "Customize tournament page and system with Custom Domain",
+                "VIP support & setup guidance throughout the tournament"
+            ],
+            "manager_pro": [
+                "Create unlimited teams",
+                "Manage multiple squads",
+                "Add co-staff/coaches to manage squads",
+                "Standard customer support"
+            ]
+        }
     },
     "PublicView": {
         "brand": "League Flow",

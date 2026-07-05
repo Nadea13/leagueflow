@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { DeleteAccountButton } from "./delete-account-button";
 import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriangle, User as UserIcon } from "lucide-react";
 import { ProfileForm } from "./profile-form";
+import { BillingTab } from "./billing-tab";
 import { cn } from "@/lib/utils";
 
 interface SettingsViewProps {
@@ -33,7 +34,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
 
             <div className="flex flex-col gap-2 md:gap-4 ">
                 {/* Settings Tabs Navigation */}
-                <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card">
+                <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card overflow-x-auto scrollbar-hide">
                     <Link
                         href="/dashboard/settings?tab=profile"
                         className={cn(
@@ -74,6 +75,19 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                     </Link>
 
                     <Link
+                        href="/dashboard/settings?tab=billing"
+                        className={cn(
+                            "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
+                            activeTab === 'billing'
+                                ? "bg-primary text-primary-foreground rounded hover:text-primary-foreground hover:bg-primary"
+                                : "text-muted-foreground hover:text-primary"
+                        )}
+                    >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        <span>{t("billing")}</span>
+                    </Link>
+
+                    <Link
                         href="/dashboard/settings?tab=danger"
                         className={cn(
                             "flex items-center justify-center gap-2 px-3 py-2 text-[10px] font-black transition-all border-none flex-1 md:flex-none whitespace-nowrap",
@@ -92,6 +106,10 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                     <div>
                         {activeTab === 'profile' && (
                             <ProfileForm user={user} profile={profile} />
+                        )}
+
+                        {activeTab === 'billing' && (
+                            <BillingTab />
                         )}
 
                         {activeTab === 'preferences' && (

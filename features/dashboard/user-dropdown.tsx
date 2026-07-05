@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/routing"
 import { useTheme } from "next-themes"
-import { Laptop, Moon, Sun, LogOut, User } from "lucide-react"
+import { Laptop, Moon, Sun, LogOut, User, CreditCard, Shield } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,6 +27,7 @@ export function UserDropdown({
     email,
     name,
     avatar,
+    role,
     className,
     side = "bottom",
     align = "end",
@@ -36,6 +37,7 @@ export function UserDropdown({
     email: string | undefined,
     name?: string | null,
     avatar?: string,
+    role?: string,
     className?: string,
     side?: "top" | "right" | "bottom" | "left",
     align?: "start" | "center" | "end",
@@ -46,6 +48,7 @@ export function UserDropdown({
     const locale = useLocale()
     const t = useTranslations("Nav")
     const tCommon = useTranslations("Common")
+    const tSettings = useTranslations("DashboardSettings")
 
     const profileHref = '/dashboard/settings'
     const displayName = name || email;
@@ -93,13 +96,27 @@ export function UserDropdown({
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuGroup className="space-y-1">
+                <DropdownMenuGroup>
                     <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
                         <Link href={profileHref} className="w-full flex items-center">
                             <User className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
                             <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("profile")}</span>
                         </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
+                        <Link href="/dashboard/settings?tab=billing" className="w-full flex items-center">
+                            <CreditCard className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                            <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{tSettings("billing")}</span>
+                        </Link>
+                    </DropdownMenuItem>
+                    {role === "admin" && (
+                        <DropdownMenuItem asChild className="group hover:text-primary transition-colors cursor-pointer py-2 rounded-sm">
+                            <Link href="/admin" className="w-full flex items-center">
+                                <Shield className="mr-2 md:mr-3 h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                                <span className="text-xs text-muted-foreground font-bold tracking-tight group-hover:text-primary">{t("admin") || "Admin"}</span>
+                            </Link>
+                        </DropdownMenuItem>
+                    )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="bg-border" />
                 <LanguageSubMenu />
