@@ -137,7 +137,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-3 transition-all cursor-pointer group relative overflow-hidden rounded-lg",
+                "flex flex-col bg-card border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-4 transition-all cursor-pointer group relative overflow-hidden rounded-lg",
             )}
         >
             {/* 1. Status/Time/Badge Section */}

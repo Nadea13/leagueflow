@@ -41,9 +41,9 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, c
     }
 
     return (
-        <div className="space-y-2 md:space-y-3">
+        <div className="space-y-1 md:space-y-2">
             <div id="group-standings-canvas" className={cn(
-                "grid grid-cols-1 gap-2 md:gap-3",
+                "grid grid-cols-1 gap-1 md:gap-4",
                 columns === 2 && "xl:grid-cols-2"
             )}>
                 {sortedGroups.map((group) => {

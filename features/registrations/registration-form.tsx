@@ -30,15 +30,24 @@ const createFormSchema = (isFree: boolean, t: (key: string) => string) => z.obje
     description: z.string().optional(),
     logoFile: z.unknown().optional(),
     slipFile: isFree
-        ? z.instanceof(FileList).optional()
-        : z.instanceof(FileList)
-            .refine((files) => files?.length === 1, t("slip_required"))
+        ? z.unknown().optional()
+        : z.unknown()
+            .refine((files: unknown) => {
+                if (typeof FileList === "undefined") return true;
+                return files instanceof FileList && files.length === 1;
+            }, t("slip_required"))
             .refine(
-                (files) => files?.[0]?.size <= 5 * 1024 * 1024,
+                (files: unknown) => {
+                    if (typeof FileList === "undefined") return true;
+                    return files instanceof FileList && files[0]?.size <= 5 * 1024 * 1024;
+                },
                 t("slip_size_error")
             )
             .refine(
-                (files) => ["image/jpeg", "image/png", "image/webp"].includes(files?.[0]?.type),
+                (files: unknown) => {
+                    if (typeof FileList === "undefined") return true;
+                    return files instanceof FileList && ["image/jpeg", "image/png", "image/webp"].includes(files[0]?.type);
+                },
                 t("slip_type_error")
             ),
 });
@@ -148,8 +157,9 @@ export function RegistrationForm({
                 formData.append("logoUrl", logoPreviewUrl);
             }
 
-            if (!isFree && values.slipFile?.[0]) {
-                formData.append("slipFile", values.slipFile[0]);
+            const slipFileList = values.slipFile as FileList | undefined;
+            if (!isFree && slipFileList?.[0]) {
+                formData.append("slipFile", slipFileList[0]);
             }
 
             const result = await registerTeam(formData);

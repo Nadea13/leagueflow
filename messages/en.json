@@ -929,6 +929,7 @@
         "confirm_reset": "Confirm Reset"
     },
     "Landing": {
+        "brand": "League Flow",
         "nav_features": "Features",
         "nav_pricing": "Pricing",
         "nav_signin": "Sign In",

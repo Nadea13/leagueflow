@@ -132,9 +132,9 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                                         )}>
                                                             {event.player_name}
                                                             {event.event_type === 'goal' && (() => {
-                                                                const assistId = (event.extra_info as any)?.assist_player_id;
+                                                                const assistId = (event.extra_info as Record<string, unknown> | null)?.assist_player_id as string | undefined;
                                                                 if (!assistId || assistId === 'none') return null;
-                                                                const assistName = ((event.extra_info as any)?.assist_player_name as string) || 
+                                                                const assistName = ((event.extra_info as Record<string, unknown> | null)?.assist_player_name as string | undefined) || 
                                                                     players?.find(p => p.id === assistId)?.name;
                                                                 if (!assistName) return null;
                                                                 return ` (${t("assist")}: ${assistName})`;

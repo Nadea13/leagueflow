@@ -371,6 +371,23 @@ export async function getMasterPlayerStats(masterPlayerId: string): Promise<Acti
             
         if (evError) throw evError;
 
+        type QueryEvent = {
+            id: string;
+            event_type: string;
+            player_id: string | null;
+            extra_info: { assist_player_id?: string } | null;
+            team: { name: string } | null;
+            match: {
+                category: {
+                    tournament: {
+                        name: string;
+                    } | null;
+                } | null;
+            } | null;
+        };
+
+        const typedEvents = (events as unknown as QueryEvent[]) || [];
+
         let totalGoals = 0;
         let totalAssists = 0;
         let totalYellow = 0;
@@ -389,14 +406,14 @@ export async function getMasterPlayerStats(masterPlayerId: string): Promise<Acti
             injuries: number;
         }>();
 
-        events?.forEach(event => {
+        typedEvents.forEach(event => {
             const isSelfPlayer = event.player_id && playerIds.includes(event.player_id);
-            const isAssist = event.extra_info && typeof event.extra_info === 'object' && playerIds.includes((event.extra_info as any).assist_player_id);
+            const isAssist = event.extra_info?.assist_player_id && playerIds.includes(event.extra_info.assist_player_id);
 
             if (!isSelfPlayer && !isAssist) return;
 
-            const tName = (event.match as any)?.category?.tournament?.name || "Unknown Tournament";
-            const teamName = (event.team as any)?.name || "Unknown Team";
+            const tName = event.match?.category?.tournament?.name || "Unknown Tournament";
+            const teamName = event.team?.name || "Unknown Team";
             const key = `${tName}-${teamName}`;
 
             if (!tourneyStats.has(key)) {
@@ -450,9 +467,9 @@ export async function getMasterPlayerStats(masterPlayerId: string): Promise<Acti
                 history: Array.from(tourneyStats.values())
             }
         };
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error calculating master player stats:", err);
-        return { success: false, error: err.message };
+        return { success: false, error: err instanceof Error ? err.message : "Unknown error" };
     }
 }
 

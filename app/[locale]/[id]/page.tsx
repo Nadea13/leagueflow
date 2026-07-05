@@ -89,7 +89,7 @@ export default async function PublicViewPage({
         return (
             <div className="flex flex-col min-h-screen bg-background overflow-x-hidden print:pt-0">
                 {/* Navbar */}
-                <PublicNavbar brandText={t("brand")} user={user} />
+                <PublicNavbar user={user} />
 
                 <main className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
                     {/* Subtle Brand Ambient Light */}
@@ -306,7 +306,7 @@ export default async function PublicViewPage({
     return (
         <div className="flex flex-col min-h-screen bg-background overflow-x-hidden print:pt-0">
             {/* Navbar */}
-            <PublicNavbar brandText={t("brand")} user={user} />
+            <PublicNavbar user={user} />
 
             <main className="flex-1">
                 <PublicTournamentShell

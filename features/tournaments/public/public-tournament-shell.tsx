@@ -12,7 +12,7 @@ import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups
 import { ShareButton } from "@/features/tournaments/shared/share-button";
 import { Match, MatchEvent, Team, Goal, Tournament, Player, Announcement } from "@/types";
 import { createClient } from "@/lib/supabase/client";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,8 @@ export function PublicTournamentShell({
 }: PublicTournamentShellProps) {
     const t = useTranslations("PublicView");
     const tTournament = useTranslations("Tournament");
+    const tAnnouncements = useTranslations("Announcements");
+    const locale = useLocale();
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
     const [tournament, setTournament] = useState(initialTournament);
@@ -465,7 +467,7 @@ export function PublicTournamentShell({
 
 
             {/* Teams Block (Marquee) */}
-            <div className="space-y-1 md:space-y-2 overflow-hidden relative py-1 md:py-2">
+            <div className="space-y-2 md:space-y-4 overflow-hidden relative py-2 md:py-4">
                 {initialTeams.length > 0 ? (
                     <div className="relative w-full overflow-hidden">
                         <style>{`
@@ -528,7 +530,7 @@ export function PublicTournamentShell({
             <Tab
                 value={currentTab}
                 onChange={handleTabChange}
-                className="w-full md:w-max mb-1 md:mb-2 bg-card"
+                className="w-full md:w-max mb-2 md:mb-4 bg-card"
                 itemClassName="flex-1 md:flex-none"
                 options={[
                     { value: 'overview', label: t("overview"), icon: Trophy },
@@ -545,20 +547,20 @@ export function PublicTournamentShell({
                         <div className="space-y-2 md:space-y-4">
                             <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-1 md:gap-2">
                                 <Megaphone className="h-5 w-5 text-primary" />
-                                บอร์ดประกาศ (Announcements)
+                                {tAnnouncements("title")}
                             </h2>
-                            <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-1 gap-2 md:gap-4">
                                 {announcements.map((ann) => (
                                     <div
                                         key={ann.id}
                                         className={cn(
-                                            "p-4 border bg-card/40 backdrop-blur-sm relative rounded-lg transition-colors hover:bg-card/60",
+                                            "p-4 border bg-card relative rounded-lg transition-colors hover:bg-card/60",
                                             ann.is_pinned && "border-primary/30 bg-primary/5 hover:bg-primary/[0.07]"
                                         )}
                                     >
                                         {ann.is_pinned && (
                                             <Badge className="absolute top-3 right-3 text-[9px] font-black tracking-wider border-none bg-primary/20 text-primary" variant="default">
-                                                Pinned
+                                                {tAnnouncements("pinned")}
                                             </Badge>
                                         )}
                                         <h4 className="font-bold text-sm text-foreground pr-12">{ann.title}</h4>
@@ -568,7 +570,7 @@ export function PublicTournamentShell({
                                             </p>
                                         )}
                                         <span className="text-[9px] text-muted-foreground/50 mt-3 block font-bold">
-                                            {new Date(ann.created_at).toLocaleDateString(undefined, {
+                                            {new Date(ann.created_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", {
                                                 year: 'numeric',
                                                 month: 'long',
                                                 day: 'numeric',
@@ -588,7 +590,7 @@ export function PublicTournamentShell({
                             <Info className="h-5 w-5 text-primary" />
                             {t("about_tournament")}
                         </h2>
-                        <div className="p-2 md:p-4 border bg-card/40 backdrop-blur-sm rounded-xl space-y-4">
+                        <div className="p-2 md:p-4 border bg-card backdrop-blur-sm rounded-xl space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Date range */}
                                 <div className="flex items-start gap-3">
@@ -596,8 +598,8 @@ export function PublicTournamentShell({
                                     <div className="space-y-0.5">
                                         <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">{t("dates")}</span>
                                         <span className="text-sm font-bold text-foreground">
-                                            {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : "-"}
-                                            {tournament.end_date && ` - ${new Date(tournament.end_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`}
+                                            {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", { year: 'numeric', month: 'long', day: 'numeric' }) : "-"}
+                                            {tournament.end_date && ` - ${new Date(tournament.end_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", { year: 'numeric', month: 'long', day: 'numeric' })}`}
                                         </span>
                                     </div>
                                 </div>
@@ -696,9 +698,9 @@ export function PublicTournamentShell({
                     </div>
 
                     {canvasStandings && canvasStandings.length > 0 ? (
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 md:gap-4">
                             {canvasStandings.map((group) => (
-                                <div key={group.label} className="space-y-3">
+                                <div key={group.label} className="space-y-2 md:space-y-4">
                                     <h3 className="text-lg font-black tracking-tighter text-foreground flex items-center gap-2">
                                         {group.label}
                                     </h3>
@@ -715,7 +717,7 @@ export function PublicTournamentShell({
             )}
 
             {currentTab === 'matches' && (
-                <div className="space-y-4 md:space-y-6">
+                <div className="space-y-2 md:space-y-4">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                             <Calendar className="h-5 w-5 text-primary" />
@@ -736,7 +738,7 @@ export function PublicTournamentShell({
             )}
 
             {currentTab === 'stats' && (
-                <div className="space-y-1 md:space-y-2 animate-in fade-in duration-200">
+                <div className="space-y-2 md:space-y-4 animate-in fade-in duration-200">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
                             <Users className="h-5 w-5 text-primary" />
@@ -750,7 +752,7 @@ export function PublicTournamentShell({
                             {t("no_stats_recorded")}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-1 md:gap-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-4">
                             {/* Top Scorers */}
                             {playerStats.scorers.length > 0 && (
                                 <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
