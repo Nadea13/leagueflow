@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { updateBroadcastSettings } from "@/actions/tournaments/general";
 
 interface BroadcastDialogProps {
     open: boolean;
@@ -28,6 +29,9 @@ const DEFAULT_BLOCKS = [
     { id: "name-away", name: "Away Team Name/Abbr", active: true, x: 95, y: 0, w: 76, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#000000", color: "#ffffff" },
     { id: "logo-away", name: "Away Team Logo", active: true, x: 140, y: 0, w: 40, h: 40, fontSize: 12, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#000000", color: "#ffffff" },
     { id: "timer", name: "Match Timer & Clock", active: true, x: 0, y: 40, w: 90, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#000000", color: "#ffffff" },
+    { id: "add-time", name: "Added Time (+Mins)", active: false, x: 60, y: 40, w: 35, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#ef4444", color: "#ffffff" },
+    { id: "timeline-home", name: "Goal Timeline (Home)", active: false, x: -95, y: 45, w: 120, h: 40, fontSize: 10, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#000000", color: "#ffffff" },
+    { id: "timeline-away", name: "Goal Timeline (Away)", active: false, x: 95, y: 45, w: 120, h: 40, fontSize: 10, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#000000", color: "#ffffff" },
     // { id: "substitution", name: "Substitution (การเปลี่ยนตัว)", active: false, x: 0, y: 80, w: 200, h: 48, fontSize: 12, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: "#000000", color: "#ffffff" },
     // { id: "alerts", name: "Alerts Popup (ใบเหลือง/แดง/ทำประตู)", active: false, x: 0, y: 140, w: 320, h: 80, fontSize: 12, rTL: 12, rTR: 12, rBL: 12, rBR: 12, opacity: 100, bg: "#000000", color: "#ffffff" }
 ];
@@ -136,6 +140,68 @@ const getSnappedCoords = (
     return { x: bestX.val, y: bestY.val };
 };
 
+const DraggableLabel = ({
+    children,
+    value,
+    onChange,
+    step = 1,
+    min,
+    max,
+    className = ""
+}: {
+    children: React.ReactNode;
+    value: number;
+    onChange: (val: number) => void;
+    step?: number;
+    min?: number;
+    max?: number;
+    className?: string;
+}) => {
+    const handlePointerDown = (e: React.PointerEvent<HTMLLabelElement>) => {
+        const startX = e.clientX;
+        const startValue = value;
+        const target = e.currentTarget;
+        target.setPointerCapture(e.pointerId);
+
+        const handlePointerMove = (moveEvent: PointerEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            let newValue = startValue + deltaX * step;
+            if (min !== undefined) {
+                newValue = Math.max(min, newValue);
+            }
+            if (max !== undefined) {
+                newValue = Math.min(max, newValue);
+            }
+            if (step === 0.5) {
+                newValue = Number(newValue.toFixed(1));
+            } else {
+                newValue = Math.round(newValue);
+            }
+            onChange(newValue);
+        };
+
+        const handlePointerUp = (upEvent: PointerEvent) => {
+            try {
+                target.releasePointerCapture(upEvent.pointerId);
+            } catch (_err) { }
+            target.removeEventListener("pointermove", handlePointerMove);
+            target.removeEventListener("pointerup", handlePointerUp);
+        };
+
+        target.addEventListener("pointermove", handlePointerMove);
+        target.addEventListener("pointerup", handlePointerUp);
+    };
+
+    return (
+        <Label
+            onPointerDown={handlePointerDown}
+            className={`cursor-ew-resize select-none ${className}`}
+        >
+            {children}
+        </Label>
+    );
+};
+
 const isLightColor = (color: string): boolean => {
     if (color === "transparent") return false;
     if (color === "chromakey") return true;
@@ -155,6 +221,113 @@ const isLightColor = (color: string): boolean => {
         return hsp > 127.5;
     }
     return false;
+};
+
+const GradientColorPicker = ({
+    label,
+    value,
+    onChange,
+    fallbackColor = "#000000"
+}: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    fallbackColor?: string;
+}) => {
+    const rawVal = value || fallbackColor;
+    const isGradient = rawVal.includes("gradient");
+
+    // Parse helper
+    const parse = (str: string) => {
+        if (!str.includes("gradient")) {
+            return { color1: str, color2: str, angle: 90 };
+        }
+        const matches = str.match(/linear-gradient\((?:(\d+)deg,\s*)?(#[a-fA-F0-9]{6}|#[a-fA-F0-9]{3}|[a-zA-Z]+),\s*(#[a-fA-F0-9]{6}|#[a-fA-F0-9]{3}|[a-zA-Z]+)\)/);
+        if (matches) {
+            return {
+                angle: matches[1] ? Number(matches[1]) : 90,
+                color1: matches[2],
+                color2: matches[3],
+            };
+        }
+        return { color1: "#ef4444", color2: "#000000", angle: 90 };
+    };
+
+    const { color1, color2, angle } = parse(rawVal);
+
+    const updateValue = (c1: string, c2: string, ang: number, forceGradient: boolean) => {
+        if (forceGradient) {
+            onChange(`linear-gradient(${ang}deg, ${c1}, ${c2})`);
+        } else {
+            onChange(c1);
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-between gap-1 w-full">
+            <button
+                type="button"
+                onClick={() => updateValue(color1, color2, angle, !isGradient)}
+                className="flex items-center gap-1 min-w-[65px] shrink-0 text-left transition-opacity"
+            >
+                <Label className="cursor-pointer">{label}</Label>
+            </button>
+
+            <div className="flex items-center gap-1 flex-1 justify-end">
+                <div className="flex items-center gap-1 shrink-0">
+                    <input
+                        type="color"
+                        value={color1.startsWith("#") ? color1 : "#000000"}
+                        onChange={(e) => updateValue(e.target.value, color2, angle, isGradient)}
+                        className="w-10 h-10 cursor-pointer shrink-0"
+                        style={{ padding: 0 }}
+                    />
+                    {isGradient && (
+                        <input
+                            type="color"
+                            value={color2.startsWith("#") ? color2 : "#000000"}
+                            onChange={(e) => updateValue(color1, e.target.value, angle, true)}
+                            className="w-10 h-10 cursor-pointer shrink-0"
+                            style={{ padding: 0 }}
+                        />
+                    )}
+                </div>
+
+                {isGradient ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                        <DraggableLabel
+                            value={angle}
+                            onChange={(val) => {
+                                const looped = ((val % 360) + 360) % 360;
+                                updateValue(color1, color2, looped, true);
+                            }}
+                            step={1}
+                            className="text-xs font-bold select-none cursor-ew-resize px-1"
+                        >
+                            Ang
+                        </DraggableLabel>
+                        <input
+                            type="text"
+                            value={angle}
+                            onChange={(e) => {
+                                const val = Number(e.target.value) || 0;
+                                const looped = ((val % 360) + 360) % 360;
+                                updateValue(color1, color2, looped, true);
+                            }}
+                            className="w-10 h-10 border text-center rounded-sm"
+                        />
+                    </div>
+                ) : (
+                    <Input
+                        type="text"
+                        value={rawVal}
+                        onChange={(e) => onChange(e.target.value)}
+                        className="w-24 h-8 text-xs text-right font-mono"
+                    />
+                )}
+            </div>
+        </div>
+    );
 };
 
 export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: BroadcastDialogProps) {
@@ -249,28 +422,54 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
     ]);
     const [selectedCanvasId, setSelectedCanvasId] = useState<string>("scoreboard");
 
+    interface CanvasSettings {
+        bg: string;
+        posX: "left" | "center" | "right";
+        posY: "top" | "bottom";
+        alertDuration: number;
+        font: string;
+        layout: "top-bar" | "minimal-left" | "minimal-right";
+        size: "small" | "medium" | "large";
+        showTimeline: boolean;
+        scoreBg: string;
+        teamNameMode: "abbr" | "full";
+        showLogos: boolean;
+        headerText: string;
+        homeBarDir: "none" | "top" | "right" | "bottom" | "left";
+        homeBarColor: string;
+        awayBarDir: "none" | "top" | "right" | "bottom" | "left";
+        awayBarColor: string;
+        blockGap: number;
+        blockBg: "spaced" | "docked";
+        rounded: "none" | "md" | "full";
+        blocks: typeof blocks;
+        selectedBlockId?: string;
+        orientation?: "horizontal" | "vertical";
+        delay?: number;
+    }
+
     // Backup of scoreboard (main canvas) settings to restore when switching back
-    const mainCanvasSettingsRef = useRef({
-        bg: "transparent" as string,
-        posX: "center" as "left" | "center" | "right",
-        posY: "top" as "top" | "bottom",
+    const mainCanvasSettingsRef = useRef<CanvasSettings>({
+        bg: "transparent",
+        posX: "center",
+        posY: "top",
         alertDuration: 6,
         font: "inter",
-        layout: "top-bar" as "top-bar" | "minimal-left" | "minimal-right",
-        size: "medium" as "small" | "medium" | "large",
+        layout: "top-bar",
+        size: "medium",
         showTimeline: false,
         scoreBg: "#ef4444",
-        teamNameMode: "abbr" as "abbr" | "full",
+        teamNameMode: "abbr",
         showLogos: true,
         headerText: "",
-        homeBarDir: "none" as "none" | "top" | "right" | "bottom" | "left",
+        homeBarDir: "none",
         homeBarColor: "#10b981",
-        awayBarDir: "none" as "none" | "top" | "right" | "bottom" | "left",
+        awayBarDir: "none",
         awayBarColor: "#3b82f6",
         blockGap: 8,
-        blockBg: "spaced" as "spaced" | "docked",
-        rounded: "md" as "none" | "md" | "full",
-        blocks: [] as typeof blocks
+        blockBg: "spaced",
+        rounded: "md",
+        blocks: []
     });
 
 
@@ -359,6 +558,36 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                         selectedCanvasId?: string;
                     }
                     const settings = data.broadcast_settings as SettingsData;
+                    const mergedMainBlocks = settings.blocks
+                        ? DEFAULT_BLOCKS.map(def => {
+                            const loaded = settings.blocks?.find(b => b.id === def.id);
+                            return loaded ? { ...def, ...loaded } : def;
+                        })
+                        : DEFAULT_BLOCKS;
+
+                    mainCanvasSettingsRef.current = {
+                        bg: settings.bg || "transparent",
+                        posX: settings.posX || "center",
+                        posY: settings.posY || "top",
+                        alertDuration: settings.alertDuration || 6,
+                        font: settings.font || "inter",
+                        layout: settings.layout || "top-bar",
+                        size: settings.size || "medium",
+                        showTimeline: settings.showTimeline ?? false,
+                        scoreBg: settings.scoreBg || "#ef4444",
+                        teamNameMode: settings.teamNameMode || "abbr",
+                        showLogos: settings.showLogos ?? true,
+                        headerText: settings.headerText || "",
+                        homeBarDir: settings.homeBarDir || "none",
+                        homeBarColor: settings.homeBarColor || "#10b981",
+                        awayBarDir: settings.awayBarDir || "none",
+                        awayBarColor: settings.awayBarColor || "#3b82f6",
+                        blockGap: settings.blockGap ?? 8,
+                        blockBg: settings.blockBg || "spaced",
+                        rounded: settings.rounded || "md",
+                        blocks: mergedMainBlocks
+                    };
+
                     if (settings.layout) setLayout(settings.layout);
                     if (settings.bg) setBg(settings.bg);
                     if (settings.size) setSize(settings.size);
@@ -375,13 +604,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                     if (settings.homeBarColor) setHomeBarColor(settings.homeBarColor);
                     if (settings.awayBarDir) setAwayBarDir(settings.awayBarDir);
                     if (settings.awayBarColor) setAwayBarColor(settings.awayBarColor);
-                    if (settings.blocks) {
-                        const merged = DEFAULT_BLOCKS.map(def => {
-                            const loaded = settings.blocks?.find(b => b.id === def.id);
-                            return loaded ? { ...def, ...loaded } : def;
-                        });
-                        setBlocks(merged);
-                    }
+                    setBlocks(mergedMainBlocks);
                     if (settings.selectedBlockId) setSelectedBlockId(settings.selectedBlockId);
                     if (settings.orientation) setOrientation(settings.orientation);
                     if (settings.blockGap !== undefined) setBlockGap(settings.blockGap);
@@ -504,6 +727,28 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                     setBlocks(updated);
                 }
             }
+
+            if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                const idx = blocks.findIndex(b => b.id === selectedBlockId);
+                if (idx !== -1 && blocks[idx].active) {
+                    e.preventDefault();
+                    const updated = [...blocks];
+                    const block = updated[idx];
+                    let newX = block.x;
+                    let newY = block.y;
+                    const step = e.shiftKey ? 5 : 0.5;
+                    if (e.key === "ArrowLeft") newX -= step;
+                    if (e.key === "ArrowRight") newX += step;
+                    if (e.key === "ArrowUp") newY -= step;
+                    if (e.key === "ArrowDown") newY += step;
+
+                    newX = Math.round(newX * 10) / 10;
+                    newY = Math.round(newY * 10) / 10;
+
+                    updated[idx] = { ...block, x: newX, y: newY };
+                    setBlocks(updated);
+                }
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -572,14 +817,39 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                 selectedCanvasId
             };
 
-            const { error } = await supabase
-                .from("tournaments")
-                .update({ broadcast_settings: settings })
-                .eq("id", tournamentId);
+            const res = await updateBroadcastSettings(tournamentId, settings);
 
-            if (error) throw error;
+            if (!res.success) {
+                throw new Error(res.error || "Failed to update broadcast settings");
+            }
 
-            if (!isScoreboard) {
+            if (isScoreboard) {
+                mainCanvasSettingsRef.current = {
+                    layout,
+                    bg,
+                    size,
+                    showTimeline,
+                    font,
+                    scoreBg,
+                    teamNameMode,
+                    showLogos,
+                    headerText,
+                    posX,
+                    posY,
+                    alertDuration,
+                    blocks,
+                    selectedBlockId,
+                    orientation,
+                    blockGap,
+                    blockBg,
+                    rounded,
+                    delay,
+                    homeBarDir,
+                    homeBarColor,
+                    awayBarDir,
+                    awayBarColor
+                };
+            } else {
                 setBlankCanvases(latestBlankCanvases);
             }
 
@@ -627,8 +897,8 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
         let newX = blockStartPos.current.x + dx;
         let newY = blockStartPos.current.y + dy;
 
-        newX = Math.max(-180, Math.min(180, newX));
-        newY = Math.max(-80, Math.min(80, newY));
+        newX = Math.round(newX * 10) / 10;
+        newY = Math.round(newY * 10) / 10;
 
         const snapped = getSnappedCoords(blockId, newX, newY, blocks, blockGap);
         updateCoordinates(blockId, snapped.x, snapped.y);
@@ -721,17 +991,17 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
         none: "ไม่มี",
         bar_color: "สีของแถบ",
         obs_settings: "การตั้งค่า OBS",
-        obs_bg: "สีพื้นหลังของ OBS Canvas",
+        obs_bg: "สีพื้นหลัง",
         canvas_type: "ประเภทของพื้นที่ทำงาน (Canvas)",
         main_canvas: "พื้นที่ทำงานหลัก (Main Canvas)",
-        save_template_settings: "บันทึกการตั้งค่าเทมเพลตพื้นที่ทำงาน",
+        save_template_settings: "บันทึก",
         saving: "กำลังบันทึก...",
         delete_canvas: "ลบ Canvas นี้",
     } : {
         desc: "Select a block and place it anywhere on the virtual grid. Build complex stacked layouts freely.",
         pos_spacing: "Position & Spacing",
-        align_h: "Align Horizontal",
-        align_v: "Align Vertical",
+        align_h: "Horizontal",
+        align_v: "Vertical",
         align_x: "Align X",
         align_y: "Align Y",
         left: "Left",
@@ -739,8 +1009,8 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
         right: "Right",
         top: "Top",
         bottom: "Bottom",
-        x_offset: "X Offset (Horizontal)",
-        y_offset: "Y Offset (Vertical)",
+        x_offset: "X Offset",
+        y_offset: "Y Offset",
         width: "Width",
         height: "Height",
         opacity: "Opacity",
@@ -769,10 +1039,10 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
         none: "None",
         bar_color: "Bar Color",
         obs_settings: "OBS Settings",
-        obs_bg: "OBS Canvas Background",
+        obs_bg: "Background",
         canvas_type: "Canvas Type",
         main_canvas: "Main Canvas",
-        save_template_settings: "Save Canvas Template Settings",
+        save_template_settings: "Save",
         saving: "Saving...",
         delete_canvas: "Delete Canvas",
     };
@@ -789,6 +1059,9 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                 case "name-away": return "ชื่อ/ตัวย่อทีมเยือน";
                 case "logo-away": return "โลโก้ทีมเยือน";
                 case "timer": return "เวลาและนาฬิกาการแข่งขัน";
+                case "add-time": return "ทดเวลาบาดเจ็บ";
+                case "timeline-home": return "ไทม์ไลน์ผู้ทำประตู (ทีมเหย้า)";
+                case "timeline-away": return "ไทม์ไลน์ผู้ทำประตู (ทีมเยือน)";
                 default: return name;
             }
         }
@@ -942,7 +1215,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
     const positionsString = blocks
         .filter(b => b.active)
-        .map(b => `${b.id}:${b.x}:${b.y}:${b.w}:${b.h}:${b.fontSize}:${b.rTL}:${b.rTR}:${b.rBL}:${b.rBR}:${b.opacity ?? 100}:${(b.bg ?? (b.id.startsWith("score") ? scoreBg : "#000000")).replace("#", "")}:${(b.color ?? "#ffffff").replace("#", "")}`)
+        .map(b => `${b.id}:${b.x}:${b.y}:${b.w}:${b.h}:${b.fontSize}:${b.rTL}:${b.rTR}:${b.rBL}:${b.rBR}:${b.opacity ?? 100}:${encodeURIComponent(b.bg ?? (b.id.startsWith("score") ? scoreBg : "#000000"))}:${(b.color ?? "#ffffff").replace("#", "")}`)
         .join(";");
 
     const scoreboardParams = new URLSearchParams({
@@ -1037,6 +1310,9 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
             case "score-home": return "0";
             case "score-away": return "0";
             case "timer": return "00:00";
+            case "add-time": return "+0";
+            case "timeline-home": return "Home Goals";
+            case "timeline-away": return "Away Goals";
             case "substitution": return "Sub: In ⇄ Out";
             default: return id;
         }
@@ -1165,15 +1441,36 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                 borderTopRightRadius: `${b.rTR}px`,
                                                 borderBottomLeftRadius: `${b.rBL}px`,
                                                 borderBottomRightRadius: `${b.rBR}px`,
-                                                backgroundColor: `color-mix(in srgb, ${blockBg} ${b.opacity ?? 100}%, transparent)`,
                                                 color: b.color ?? "#ffffff",
-                                                touchAction: "none"
+                                                touchAction: "none",
+                                                background: "transparent",
+                                                backgroundColor: "transparent",
+                                                isolation: "isolate",
                                             }}
                                             className={`absolute flex items-center justify-center font-black tracking-tight cursor-grab active:cursor-grabbing select-none transition-all duration-75 ${isSelected
                                                 ? "z-20"
                                                 : "overflow-hidden z-10"
                                                 }`}
                                         >
+                                            {/* Background container that supports opacity for gradient without fading text */}
+                                            <div
+                                                style={{
+                                                    position: "absolute",
+                                                    inset: 0,
+                                                    zIndex: -1,
+                                                    borderTopLeftRadius: `${b.rTL}px`,
+                                                    borderTopRightRadius: `${b.rTR}px`,
+                                                    borderBottomLeftRadius: `${b.rBL}px`,
+                                                    borderBottomRightRadius: `${b.rBR}px`,
+                                                    pointerEvents: "none",
+                                                    ...(blockBg.includes("gradient") ? {
+                                                        background: blockBg,
+                                                        opacity: (b.opacity ?? 100) / 100,
+                                                    } : {
+                                                        backgroundColor: `color-mix(in srgb, ${blockBg} ${b.opacity ?? 100}%, transparent)`,
+                                                    })
+                                                }}
+                                            />
                                             {isSelected && (
                                                 <div
                                                     className="absolute -inset-[1px] border border-primary pointer-events-none z-30"
@@ -1187,11 +1484,11 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                 <div
                                                     style={{
                                                         position: "absolute",
-                                                        backgroundColor: homeBarColor,
-                                                        ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px" }),
-                                                        ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px" }),
-                                                        ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px" }),
-                                                        ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px" }),
+                                                        [homeBarColor.includes("gradient") ? "background" : "backgroundColor"]: homeBarColor,
+                                                        ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${b.rTL}px`, borderTopRightRadius: `${b.rTR}px` }),
+                                                        ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${b.rTR}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                                        ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${b.rBL}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                                        ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${b.rTL}px`, borderBottomLeftRadius: `${b.rBL}px` }),
                                                     }}
                                                 />
                                             )}
@@ -1199,11 +1496,11 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                 <div
                                                     style={{
                                                         position: "absolute",
-                                                        backgroundColor: awayBarColor,
-                                                        ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px" }),
-                                                        ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px" }),
-                                                        ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px" }),
-                                                        ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px" }),
+                                                        [awayBarColor.includes("gradient") ? "background" : "backgroundColor"]: awayBarColor,
+                                                        ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${b.rTL}px`, borderTopRightRadius: `${b.rTR}px` }),
+                                                        ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${b.rTR}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                                        ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${b.rBL}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                                        ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${b.rTL}px`, borderBottomLeftRadius: `${b.rBL}px` }),
                                                     }}
                                                 />
                                             )}
@@ -1240,155 +1537,84 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
-                                    {/* Horizontal alignment */}
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px]">{dict.align_h}</Label>
-                                        <Select value={posX} onValueChange={(val: string) => setPosX(val as "left" | "center" | "right")}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder={dict.align_x} />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-card">
-                                                <SelectItem value="left">{dict.left}</SelectItem>
-                                                <SelectItem value="center">{dict.center}</SelectItem>
-                                                <SelectItem value="right">{dict.right}</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {/* Vertical alignment */}
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px]">{dict.align_v}</Label>
-                                        <Select value={posY} onValueChange={(val: string) => setPosY(val as "top" | "bottom")}>
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder={dict.align_y} />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-card">
-                                                <SelectItem value="top">{dict.top}</SelectItem>
-                                                <SelectItem value="bottom">{dict.bottom}</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
 
                                     {/* X, Y Position Offset */}
                                     {selectedBlock && (
                                         <>
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between items-center">
-                                                    <Label className="text-[10px] flex justify-between items-center">
-                                                        <span>{dict.x_offset}</span>
-                                                    </Label>
-                                                </div>
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <input
-                                                        type="range"
-                                                        min="-180"
-                                                        max="180"
-                                                        value={selectedBlock.x}
-                                                        onChange={(e) => updateCoordinates(selectedBlockId, Number(e.target.value), selectedBlock.y)}
-                                                        className="w-full accent-primary bg-foreground/10 h-1 rounded-lg appearance-none cursor-pointer"
-                                                    />
-                                                    <Input
-                                                        type="text"
-                                                        value={selectedBlock.x}
-                                                        onChange={(e) => {
-                                                            let clean = e.target.value.replace(/[^-0-9]/g, "");
-                                                            if (clean.includes("-")) {
-                                                                const isNegative = clean.startsWith("-");
-                                                                clean = (isNegative ? "-" : "") + clean.replace(/-/g, "");
-                                                            }
-                                                            updateCoordinates(selectedBlockId, clean === "" || clean === "-" ? 0 : Number(clean), selectedBlock.y);
-                                                        }}
-                                                        className="w-16"
-                                                    />
-                                                </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <DraggableLabel value={selectedBlock.x} onChange={(val) => updateCoordinates(selectedBlockId, val, selectedBlock.y)} step={0.5}>{dict.x_offset}</DraggableLabel>
+                                                <Input
+                                                    type="text"
+                                                    value={selectedBlock.x}
+                                                    onChange={(e) => {
+                                                        let clean = e.target.value.replace(/[^-0-9.]/g, "");
+                                                        if (clean.includes("-")) {
+                                                            const isNegative = clean.startsWith("-");
+                                                            clean = (isNegative ? "-" : "") + clean.replace(/-/g, "");
+                                                        }
+                                                        // If multiple dots exist, keep only the first one
+                                                        const dots = clean.split(".");
+                                                        if (dots.length > 2) {
+                                                            clean = dots[0] + "." + dots.slice(1).join("");
+                                                        }
+                                                        updateCoordinates(selectedBlockId, clean === "" || clean === "-" || clean === "." ? 0 : Number(clean), selectedBlock.y);
+                                                    }}
+                                                    className="w-24 h-8 text-xs text-right"
+                                                />
                                             </div>
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between items-center">
-                                                    <Label className="text-[10px] flex justify-between items-center">
-                                                        <span>{dict.y_offset}</span>
-                                                    </Label>
-                                                </div>
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <input
-                                                        type="range"
-                                                        min="-80"
-                                                        max="80"
-                                                        value={selectedBlock.y}
-                                                        onChange={(e) => updateCoordinates(selectedBlockId, selectedBlock.x, Number(e.target.value))}
-                                                        className="w-full accent-primary bg-foreground/10 h-1 rounded-lg appearance-none cursor-pointer"
-                                                    />
-                                                    <Input
-                                                        type="text"
-                                                        value={selectedBlock.y}
-                                                        onChange={(e) => {
-                                                            let clean = e.target.value.replace(/[^-0-9]/g, "");
-                                                            if (clean.includes("-")) {
-                                                                const isNegative = clean.startsWith("-");
-                                                                clean = (isNegative ? "-" : "") + clean.replace(/-/g, "");
-                                                            }
-                                                            updateCoordinates(selectedBlockId, selectedBlock.x, clean === "" || clean === "-" ? 0 : Number(clean));
-                                                        }}
-                                                        className="w-16"
-                                                    />
-                                                </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <DraggableLabel value={selectedBlock.y} onChange={(val) => updateCoordinates(selectedBlockId, selectedBlock.x, val)} step={0.5}>{dict.y_offset}</DraggableLabel>
+                                                <Input
+                                                    type="text"
+                                                    value={selectedBlock.y}
+                                                    onChange={(e) => {
+                                                        let clean = e.target.value.replace(/[^-0-9.]/g, "");
+                                                        if (clean.includes("-")) {
+                                                            const isNegative = clean.startsWith("-");
+                                                            clean = (isNegative ? "-" : "") + clean.replace(/-/g, "");
+                                                        }
+                                                        const dots = clean.split(".");
+                                                        if (dots.length > 2) {
+                                                            clean = dots[0] + "." + dots.slice(1).join("");
+                                                        }
+                                                        updateCoordinates(selectedBlockId, selectedBlock.x, clean === "" || clean === "-" || clean === "." ? 0 : Number(clean));
+                                                    }}
+                                                    className="w-24 h-8 text-xs text-right"
+                                                />
                                             </div>
                                         </>
                                     )}
 
 
-                                    {/* Box Width Slider */}
+                                    {/* Box Width */}
                                     {selectedBlock && (
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] flex justify-between items-center">
-                                                <span>{dict.width}</span>
-                                            </Label>
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                <input
-                                                    type="range"
-                                                    min="30"
-                                                    max="250"
-                                                    value={selectedBlock.w}
-                                                    onChange={(e) => updateBlockProperty(selectedBlockId, { w: Number(e.target.value) })}
-                                                    className="w-full accent-primary bg-border h-1 rounded-lg appearance-none cursor-pointer"
-                                                />
-                                                <Input
-                                                    type="text"
-                                                    value={selectedBlock.w || ""}
-                                                    onChange={(e) => {
-                                                        const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                        updateBlockProperty(selectedBlockId, { w: clean === "" ? 0 : Number(clean) });
-                                                    }}
-                                                    className="w-16"
-                                                />
-                                            </div>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <DraggableLabel value={selectedBlock.w || 0} onChange={(val) => updateBlockProperty(selectedBlockId, { w: val })} min={0}>{dict.width}</DraggableLabel>
+                                            <Input
+                                                type="text"
+                                                value={selectedBlock.w || ""}
+                                                onChange={(e) => {
+                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                    updateBlockProperty(selectedBlockId, { w: clean === "" ? 0 : Number(clean) });
+                                                }}
+                                                className="w-24 h-8 text-xs text-right"
+                                            />
                                         </div>
                                     )}
 
-                                    {/* Box Height Slider */}
+                                    {/* Box Height */}
                                     {selectedBlock && (
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] flex justify-between items-center">
-                                                <span>{dict.height}</span>
-                                            </Label>
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                <input
-                                                    type="range"
-                                                    min="20"
-                                                    max="100"
-                                                    value={selectedBlock.h}
-                                                    onChange={(e) => updateBlockProperty(selectedBlockId, { h: Number(e.target.value) })}
-                                                    className="w-full accent-primary bg-border h-1 rounded-lg appearance-none cursor-pointer"
-                                                />
-                                                <Input
-                                                    type="text"
-                                                    value={selectedBlock.h || ""}
-                                                    onChange={(e) => {
-                                                        const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                        updateBlockProperty(selectedBlockId, { h: clean === "" ? 0 : Number(clean) });
-                                                    }}
-                                                    className="w-16"
-                                                />
-                                            </div>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <DraggableLabel value={selectedBlock.h || 0} onChange={(val) => updateBlockProperty(selectedBlockId, { h: val })} min={0}>{dict.height}</DraggableLabel>
+                                            <Input
+                                                type="text"
+                                                value={selectedBlock.h || ""}
+                                                onChange={(e) => {
+                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                    updateBlockProperty(selectedBlockId, { h: clean === "" ? 0 : Number(clean) });
+                                                }}
+                                                className="w-24 h-8 text-xs text-right"
+                                            />
                                         </div>
                                     )}
 
@@ -1396,89 +1622,53 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                     <div className="md:col-span-2 space-y-2 border-t pt-2 md:pt-4 mt-1 md:mt-2">
                                         <Label>{dict.appearance}</Label>
 
-                                        {/* Block Spacing / Gap Slider */}
-                                        <div>
-                                            <Label className="text-[10px] flex justify-between items-center">
-                                                <span>Spacing</span>
-                                            </Label>
-                                            <div className="flex items-center gap-1 md:gap-2">
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="24"
-                                                    value={blockGap}
-                                                    onChange={(e) => setBlockGap(Number(e.target.value))}
-                                                    className="w-full accent-primary bg-border h-1 rounded-lg appearance-none cursor-pointer"
-                                                />
-                                                <Input
-                                                    type="text"
-                                                    value={blockGap || "0"}
-                                                    onChange={(e) => {
-                                                        const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                        setBlockGap(clean === "" ? 0 : Number(clean));
-                                                    }}
-                                                    className="w-16"
-                                                />
-                                            </div>
+                                        {/* Block Spacing / Gap */}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <DraggableLabel value={blockGap || 0} onChange={(val) => setBlockGap(val)} min={0}>Spacing</DraggableLabel>
+                                            <Input
+                                                type="text"
+                                                value={blockGap || "0"}
+                                                onChange={(e) => {
+                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                    setBlockGap(clean === "" ? 0 : Number(clean));
+                                                }}
+                                                className="w-24 h-8 text-xs text-right"
+                                            />
                                         </div>
 
-                                        {/* Opacity Slider */}
+                                        {/* Opacity */}
                                         {selectedBlock && (
-                                            <div>
-                                                <Label className="text-[10px] flex justify-between items-center">
-                                                    <span>{dict.opacity}</span>
-                                                </Label>
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <input
-                                                        type="range"
-                                                        min="0"
-                                                        max="100"
-                                                        value={selectedBlock.opacity ?? 100}
-                                                        onChange={(e) => updateBlockProperty(selectedBlockId, { opacity: Number(e.target.value) })}
-                                                        className="w-full accent-primary bg-border h-1 rounded-lg appearance-none cursor-pointer"
-                                                    />
-                                                    <Input
-                                                        type="text"
-                                                        value={selectedBlock.opacity ?? 100}
-                                                        onChange={(e) => {
-                                                            const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                            let val = clean === "" ? 0 : Number(clean);
-                                                            val = Math.max(0, Math.min(100, val));
-                                                            updateBlockProperty(selectedBlockId, { opacity: val });
-                                                        }}
-                                                        className="w-16"
-                                                    />
-                                                </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <DraggableLabel value={selectedBlock.opacity ?? 100} onChange={(val) => updateBlockProperty(selectedBlockId, { opacity: val })} min={0} max={100}>{dict.opacity}</DraggableLabel>
+                                                <Input
+                                                    type="text"
+                                                    value={selectedBlock.opacity ?? 100}
+                                                    onChange={(e) => {
+                                                        const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                        let val = clean === "" ? 0 : Number(clean);
+                                                        val = Math.max(0, Math.min(100, val));
+                                                        updateBlockProperty(selectedBlockId, { opacity: val });
+                                                    }}
+                                                    className="w-24 h-8 text-xs text-right"
+                                                />
                                             </div>
                                         )}
 
                                         {/* Fill Color Picker */}
                                         {selectedBlock && (
-                                            <div className="space-y-1">
-                                                <Label className="text-[10px] flex justify-between items-center">
-                                                    <span>{dict.bg_color}</span>
-                                                </Label>
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={selectedBlock.bg ?? (selectedBlockId.startsWith("score") ? scoreBg : "#000000")}
-                                                        onChange={(e) => updateBlockProperty(selectedBlockId, { bg: e.target.value })}
-                                                        className="w-10 h-10 cursor-pointer shrink-0"
-                                                    />
-                                                    <Input
-                                                        type="text"
-                                                        value={selectedBlock.bg ?? (selectedBlockId.startsWith("score") ? scoreBg : "#000000")}
-                                                        onChange={(e) => updateBlockProperty(selectedBlockId, { bg: e.target.value })}
-                                                    />
-                                                </div>
-                                            </div>
+                                            <GradientColorPicker
+                                                label={dict.bg_color}
+                                                value={selectedBlock.bg ?? (selectedBlockId.startsWith("score") ? scoreBg : "#000000")}
+                                                onChange={(val) => updateBlockProperty(selectedBlockId, { bg: val })}
+                                                fallbackColor="#000000"
+                                            />
                                         )}
 
                                         {/* Corner Radii 2x2 Grid */}
                                         {selectedBlock && (
                                             <div className="space-y-1 md:space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <Label className="text-[10px]">{dict.corner_radius}</Label>
+                                                    <Label>{dict.corner_radius}</Label>
                                                     <button
                                                         type="button"
                                                         onClick={applyRadiiToAll}
@@ -1500,108 +1690,64 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
                                                 <div className="grid md:grid-cols-2 gap-1 md:gap-2">
                                                     {/* Top-Left */}
-                                                    <div>
-                                                        <Label className="text-[10px]">{dict.top_left}</Label>
-                                                        <div className="flex items-center gap-1 md:gap-2 mt-1">
-                                                            <input
-                                                                type="range" min="0" max="40" value={selectedBlock.rTL}
-                                                                onChange={(e) => {
-                                                                    const val = Number(e.target.value);
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rTL: val });
-                                                                }}
-                                                                className="w-full accent-primary bg-foreground/10 h-1 rounded-lg appearance-none cursor-pointer"
-                                                            />
-                                                            <Input
-                                                                type="text"
-                                                                value={selectedBlock.rTL}
-                                                                onChange={(e) => {
-                                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                                    const val = Math.max(0, Math.min(40, Number(clean) || 0));
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rTL: val });
-                                                                }}
-                                                                className="w-16 h-8 text-xs"
-                                                            />
-                                                        </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <DraggableLabel value={selectedBlock.rTL} onChange={(val) => { if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val }); else updateBlockProperty(selectedBlockId, { rTL: val }); }} min={0}>{dict.top_left}</DraggableLabel>
+                                                        <Input
+                                                            type="text"
+                                                            value={selectedBlock.rTL}
+                                                            onChange={(e) => {
+                                                                const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                                const val = Number(clean) || 0;
+                                                                if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
+                                                                else updateBlockProperty(selectedBlockId, { rTL: val });
+                                                            }}
+                                                            className="w-24 h-8 text-xs text-right"
+                                                        />
                                                     </div>
                                                     {/* Top-Right */}
-                                                    <div>
-                                                        <Label className="text-[10px]">{dict.top_right}</Label>
-                                                        <div className="flex items-center gap-1 md:gap-2 mt-1">
-                                                            <input
-                                                                type="range" min="0" max="40" value={selectedBlock.rTR}
-                                                                onChange={(e) => {
-                                                                    const val = Number(e.target.value);
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rTR: val });
-                                                                }}
-                                                                className="w-full accent-primary bg-foreground/10 h-1 rounded-lg appearance-none cursor-pointer"
-                                                            />
-                                                            <Input
-                                                                type="text"
-                                                                value={selectedBlock.rTR}
-                                                                onChange={(e) => {
-                                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                                    const val = Math.max(0, Math.min(40, Number(clean) || 0));
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rTR: val });
-                                                                }}
-                                                                className="w-16 h-8 text-xs"
-                                                            />
-                                                        </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <DraggableLabel value={selectedBlock.rTR} onChange={(val) => { if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val }); else updateBlockProperty(selectedBlockId, { rTR: val }); }} min={0}>{dict.top_right}</DraggableLabel>
+                                                        <Input
+                                                            type="text"
+                                                            value={selectedBlock.rTR}
+                                                            onChange={(e) => {
+                                                                const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                                const val = Number(clean) || 0;
+                                                                if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
+                                                                else updateBlockProperty(selectedBlockId, { rTR: val });
+                                                            }}
+                                                            className="w-24 h-8 text-xs text-right"
+                                                        />
                                                     </div>
                                                     {/* Bottom-Left */}
-                                                    <div>
-                                                        <Label className="text-[10px]">{dict.bottom_left}</Label>
-                                                        <div className="flex items-center gap-1 md:gap-2 mt-1">
-                                                            <input
-                                                                type="range" min="0" max="40" value={selectedBlock.rBL}
-                                                                onChange={(e) => {
-                                                                    const val = Number(e.target.value);
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rBL: val });
-                                                                }}
-                                                                className="w-full accent-primary bg-foreground/10 h-1 rounded-lg appearance-none cursor-pointer"
-                                                            />
-                                                            <Input
-                                                                type="text"
-                                                                value={selectedBlock.rBL}
-                                                                onChange={(e) => {
-                                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                                    const val = Math.max(0, Math.min(40, Number(clean) || 0));
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rBL: val });
-                                                                }}
-                                                                className="w-16 h-8 text-xs"
-                                                            />
-                                                        </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <DraggableLabel value={selectedBlock.rBL} onChange={(val) => { if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val }); else updateBlockProperty(selectedBlockId, { rBL: val }); }} min={0}>{dict.bottom_left}</DraggableLabel>
+                                                        <Input
+                                                            type="text"
+                                                            value={selectedBlock.rBL}
+                                                            onChange={(e) => {
+                                                                const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                                const val = Number(clean) || 0;
+                                                                if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
+                                                                else updateBlockProperty(selectedBlockId, { rBL: val });
+                                                            }}
+                                                            className="w-24 h-8 text-xs text-right"
+                                                        />
                                                     </div>
                                                     {/* Bottom-Right */}
-                                                    <div>
-                                                        <Label className="text-[10px]">{dict.bottom_right}</Label>
-                                                        <div className="flex items-center gap-1 md:gap-2 mt-1">
-                                                            <input
-                                                                type="range" min="0" max="40" value={selectedBlock.rBR}
-                                                                onChange={(e) => {
-                                                                    const val = Number(e.target.value);
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rBR: val });
-                                                                }}
-                                                                className="w-full accent-primary bg-foreground/10 h-1 rounded-lg appearance-none cursor-pointer"
-                                                            />
-                                                            <Input
-                                                                type="text"
-                                                                value={selectedBlock.rBR}
-                                                                onChange={(e) => {
-                                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                                    const val = Math.max(0, Math.min(40, Number(clean) || 0));
-                                                                    if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
-                                                                    else updateBlockProperty(selectedBlockId, { rBR: val });
-                                                                }}
-                                                                className="w-16 h-8 text-xs"
-                                                            />
-                                                        </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <DraggableLabel value={selectedBlock.rBR} onChange={(val) => { if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val }); else updateBlockProperty(selectedBlockId, { rBR: val }); }} min={0}>{dict.bottom_right}</DraggableLabel>
+                                                        <Input
+                                                            type="text"
+                                                            value={selectedBlock.rBR}
+                                                            onChange={(e) => {
+                                                                const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                                const val = Number(clean) || 0;
+                                                                if (linkCorners) updateBlockProperty(selectedBlockId, { rTL: val, rTR: val, rBL: val, rBR: val });
+                                                                else updateBlockProperty(selectedBlockId, { rBR: val });
+                                                            }}
+                                                            className="w-24 h-8 text-xs text-right"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1612,66 +1758,54 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                             <Label>{dict.typography}</Label>
                                             <div className="space-y-2">
                                                 {/* Font Family selector */}
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px]">{dict.font_family}</Label>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <Label className="shrink-0">{dict.font_family}</Label>
                                                     <Select value={font} onValueChange={setFont}>
-                                                        <SelectTrigger className="w-full h-8 text-xs">
+                                                        <SelectTrigger className="w-24 h-8 text-xs">
                                                             <SelectValue placeholder={dict.select_font} />
                                                         </SelectTrigger>
                                                         <SelectContent className="bg-card">
-                                                            <SelectItem value="inter" className="font-sans">Inter (Modern Clean)</SelectItem>
-                                                            <SelectItem value="orbitron" className="font-mono">Orbitron (Digital Sports)</SelectItem>
-                                                            <SelectItem value="montserrat" className="font-sans font-semibold">Montserrat (Geometric)</SelectItem>
-                                                            <SelectItem value="bebas-neue" className="font-sans font-bold">Bebas Neue (Impact Tall)</SelectItem>
-                                                            <SelectItem value="outfit" className="font-sans">Outfit (Premium Rounded)</SelectItem>
+                                                            <SelectItem value="inter" className="font-sans">Inter</SelectItem>
+                                                            <SelectItem value="orbitron" className="font-mono">Orbitron</SelectItem>
+                                                            <SelectItem value="montserrat" className="font-sans font-semibold">Montserrat</SelectItem>
+                                                            <SelectItem value="bebas-neue" className="font-sans font-bold">Bebas Neue</SelectItem>
+                                                            <SelectItem value="outfit" className="font-sans">Outfit</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
 
                                                 {/* Font Size Selector (for selected block) */}
                                                 {selectedBlock && (
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px] flex justify-between items-center">
-                                                            <span>{dict.font_size}</span>
-                                                        </Label>
-                                                        <div className="flex items-center gap-1 md:gap-2">
-                                                            <input
-                                                                type="range"
-                                                                min="8"
-                                                                max="40"
-                                                                value={selectedBlock.fontSize}
-                                                                onChange={(e) => updateBlockProperty(selectedBlockId, { fontSize: Number(e.target.value) })}
-                                                                className="w-full accent-primary bg-border h-1 rounded-lg appearance-none cursor-pointer"
-                                                            />
-                                                            <Input
-                                                                type="text"
-                                                                value={selectedBlock.fontSize || ""}
-                                                                onChange={(e) => {
-                                                                    const clean = e.target.value.replace(/[^0-9]/g, "");
-                                                                    updateBlockProperty(selectedBlockId, { fontSize: clean === "" ? 0 : Number(clean) });
-                                                                }}
-                                                                className="w-16 h-8 text-xs"
-                                                            />
-                                                        </div>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <DraggableLabel value={selectedBlock.fontSize || 0} onChange={(val) => updateBlockProperty(selectedBlockId, { fontSize: val })} min={0}>{dict.font_size}</DraggableLabel>
+                                                        <Input
+                                                            type="text"
+                                                            value={selectedBlock.fontSize || ""}
+                                                            onChange={(e) => {
+                                                                const clean = e.target.value.replace(/[^0-9]/g, "");
+                                                                updateBlockProperty(selectedBlockId, { fontSize: clean === "" ? 0 : Number(clean) });
+                                                            }}
+                                                            className="w-24 h-8 text-xs text-right"
+                                                        />
                                                     </div>
                                                 )}
 
                                                 {/* Font Color Selector (for selected block) */}
                                                 {selectedBlock && (
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">{dict.font_color}</Label>
-                                                        <div className="flex items-center gap-1 md:gap-2">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <Label className="shrink-0">{dict.font_color}</Label>
+                                                        <div className="flex items-center gap-1 md:gap-2 justify-end">
                                                             <input
                                                                 type="color"
                                                                 value={selectedBlock.color ?? "#ffffff"}
                                                                 onChange={(e) => updateBlockProperty(selectedBlockId, { color: e.target.value })}
-                                                                className="w-10 h-8 cursor-pointer shrink-0"
+                                                                className="w-10 h-10 cursor-pointer shrink-0"
                                                             />
                                                             <Input
                                                                 type="text"
                                                                 value={selectedBlock.color ?? "#ffffff"}
                                                                 onChange={(e) => updateBlockProperty(selectedBlockId, { color: e.target.value })}
-                                                                className="h-8 text-xs font-mono"
+                                                                className="w-24 h-8 text-xs text-right font-mono"
                                                             />
                                                         </div>
                                                     </div>
@@ -1683,13 +1817,13 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             </div>
 
                             {/* Part 4: Display Content Adjustments */}
-                            <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
+                            <div className="border rounded-lg p-2 md:p-4 space-y-1 md:space-y-2">
                                 <Label>{dict.content}</Label>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2 items-end">
                                     {/* Team Name Style selector */}
                                     <div className="space-y-1">
-                                        <Label className="text-[10px]">{dict.team_names_mode}</Label>
+                                        <Label>{dict.team_names_mode}</Label>
                                         <div className="grid grid-cols-2 gap-2">
                                             <button
                                                 onClick={() => setTeamNameMode("abbr")}
@@ -1712,28 +1846,18 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                         </div>
                                     </div>
 
-                                    {/* Additional Options */}
-                                    <div className="flex items-center justify-between p-2 rounded-sm border h-10 self-end">
-                                        <span className="text-[10px]">{dict.show_goal_timeline}</span>
-                                        <Switch
-                                            checked={showTimeline}
-                                            onCheckedChange={setShowTimeline}
-                                            className="data-[state=checked]:bg-primary"
-                                        />
-                                    </div>
 
                                     {/* Team Name Color Bars */}
                                     <div className="md:col-span-2 space-y-2 border-t pt-2 md:pt-4 mt-1 md:mt-2">
                                         <Label>{dict.team_color_bars}</Label>
                                         <div className="grid gap-1 md:gap-2">
                                             {/* Home Team Color Bar */}
-                                            <div className="space-y-2 border p-2 rounded-sm">
-                                                <Label className="text-[10px]">{dict.home_team}</Label>
-                                                <div className="grid grid-cols-2 gap-1 md:gap-2">
+                                            <div className="space-y-1">
+                                                <Label>{dict.home_team}</Label>
+                                                <div className="flex gap-1 md:gap-2">
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">{dict.direction}</Label>
                                                         <Select value={homeBarDir} onValueChange={(val: string) => setHomeBarDir(val as "none" | "top" | "right" | "bottom" | "left")}>
-                                                            <SelectTrigger className="w-full">
+                                                            <SelectTrigger>
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent className="bg-card">
@@ -1745,33 +1869,22 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">{dict.bar_color}</Label>
-                                                        <div className="flex gap-1 md:gap-2">
-                                                            <Input
-                                                                type="text"
-                                                                value={homeBarColor}
-                                                                onChange={(e) => setHomeBarColor(e.target.value)}
-                                                            />
-                                                            <input
-                                                                type="color"
-                                                                value={homeBarColor}
-                                                                onChange={(e) => setHomeBarColor(e.target.value)}
-                                                                className="w-10 h-10 cursor-pointer shrink-0"
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                    <GradientColorPicker
+                                                        label={dict.bar_color}
+                                                        value={homeBarColor}
+                                                        onChange={setHomeBarColor}
+                                                        fallbackColor="#ef4444"
+                                                    />
                                                 </div>
                                             </div>
 
                                             {/* Away Team Color Bar */}
-                                            <div className="space-y-2 border p-2 rounded-sm">
-                                                <Label className="text-[10px]">{dict.away_team}</Label>
-                                                <div className="grid grid-cols-2 gap-1 md:gap-2">
+                                            <div className="space-y-1">
+                                                <Label>{dict.away_team}</Label>
+                                                <div className="flex gap-1 md:gap-2">
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">{dict.direction}</Label>
                                                         <Select value={awayBarDir} onValueChange={(val: string) => setAwayBarDir(val as "none" | "top" | "right" | "bottom" | "left")}>
-                                                            <SelectTrigger className="w-full">
+                                                            <SelectTrigger>
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent className="bg-card">
@@ -1783,22 +1896,12 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                                             </SelectContent>
                                                         </Select>
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <Label className="text-[10px]">{dict.bar_color}</Label>
-                                                        <div className="flex gap-1 md:gap-2">
-                                                            <Input
-                                                                type="text"
-                                                                value={awayBarColor}
-                                                                onChange={(e) => setAwayBarColor(e.target.value)}
-                                                            />
-                                                            <input
-                                                                type="color"
-                                                                value={awayBarColor}
-                                                                onChange={(e) => setAwayBarColor(e.target.value)}
-                                                                className="w-10 h-10 cursor-pointer shrink-0"
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                    <GradientColorPicker
+                                                        label={dict.bar_color}
+                                                        value={awayBarColor}
+                                                        onChange={setAwayBarColor}
+                                                        fallbackColor="#ef4444"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -1810,9 +1913,69 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
                                 <Label>{dict.obs_settings}</Label>
 
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
+                                    {/* Horizontal alignment */}
+                                    <div className="grid grid-cols-3 gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosX("left")}
+                                            className={`px-2 py-1.5 rounded-sm border text-[10px] font-bold transition-all ${posX === "left"
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "hover:bg-foreground/10 text-muted-foreground"
+                                                }`}
+                                        >
+                                            {dict.left}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosX("center")}
+                                            className={`px-2 py-1.5 rounded-sm border text-[10px] font-bold transition-all ${posX === "center"
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "hover:bg-foreground/10 text-muted-foreground"
+                                                }`}
+                                        >
+                                            {dict.center}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosX("right")}
+                                            className={`px-2 py-1.5 rounded-sm border text-[10px] font-bold transition-all ${posX === "right"
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "hover:bg-foreground/10 text-muted-foreground"
+                                                }`}
+                                        >
+                                            {dict.right}
+                                        </button>
+                                    </div>
+
+                                    {/* Vertical alignment */}
+                                    <div className="grid grid-cols-2 gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosY("top")}
+                                            className={`px-2 py-1.5 rounded-sm border text-[10px] font-bold transition-all ${posY === "top"
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "hover:bg-foreground/10 text-muted-foreground"
+                                                }`}
+                                        >
+                                            {dict.top}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPosY("bottom")}
+                                            className={`px-2 py-1.5 rounded-sm border text-[10px] font-bold transition-all ${posY === "bottom"
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "hover:bg-foreground/10 text-muted-foreground"
+                                                }`}
+                                        >
+                                            {dict.bottom}
+                                        </button>
+                                    </div>
+                                </div>
+
                                 {/* Notification duration */}
                                 {/* <div className="space-y-1 max-w-[200px]">
-                                    <Label className="text-[10px]">Alert Display (Seconds)</Label>
+                                    <Label>Alert Display (Seconds)</Label>
                                     <Input
                                         type="number"
                                         min={3}
@@ -1824,7 +1987,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                 </div> */}
 
                                 <div className="space-y-2">
-                                    <Label className="text-[10px]">{dict.obs_bg}</Label>
+                                    <Label>{dict.obs_bg}</Label>
                                     <div className="grid grid-cols-3 gap-1 md:gap-2">
                                         {(["transparent", "chromakey", "custom"] as const).map((bgMode) => {
                                             const isPresetBg = bg === "transparent" || bg === "chromakey";
@@ -1968,7 +2131,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                 </a>
                             </Button>
                             {/* <div className="flex items-center gap-2">
-                                <Label className="text-[10px] text-muted-foreground font-semibold">Delay</Label>
+                                <Label className="text-muted-foreground font-semibold">Delay</Label>
                                 <Input
                                     type="text"
                                     min={0}
@@ -1980,7 +2143,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                                     }}
                                     className="w-16 h-7 text-xs px-2"
                                 />
-                                <Label className="text-[10px] text-muted-foreground font-semibold">Sec</Label>
+                                <Label className="text-muted-foreground font-semibold">Sec</Label>
                             </div> */}
                         </div>
                     )}

@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import { getPlayers } from "@/actions/tournaments/player";
 import { updateMatch, advanceStage } from "@/actions/tournaments/general";
 import { getPenaltyShootout } from "@/actions/tournaments/penalty";
@@ -41,7 +43,8 @@ import {
     CalendarRange,
     Cloud,
     CloudOff,
-    RefreshCw
+    RefreshCw,
+    HelpCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -74,6 +77,7 @@ interface ConsolePageProps {
 
 export function ConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName }: ConsolePageProps) {
     const t = useTranslations("Console");
+    const locale = useLocale();
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
     const tPublic = useTranslations("PublicView");
@@ -679,7 +683,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
 
     const matchControlsBox = (
-        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl" id="console-timer-control">
             <div className="relative z-10 space-y-2 md:space-y-4">
                 {readOnly ? (
                     <div className="space-y-4">
@@ -717,7 +721,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     );
 
     const quickActionsBox = !readOnly ? (
-        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl">
+        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl" id="console-action-panel">
             <div className="relative z-10 space-y-2 md:space-y-4">
                 <div className="grid grid-cols-4 md:grid-cols-1 gap-1 md:gap-2">
                     <Button
@@ -793,6 +797,54 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         </div>
     ) : null;
 
+    const startConsoleTutorial = () => {
+        const steps = [
+            {
+                element: "#console-scoreboard",
+                popover: {
+                    title: locale === "th" ? "กระดานคะแนน (Scoreboard)" : "Scoreboard",
+                    description: locale === "th" ? "แสดงชื่อทีม โลโก้ และคะแนนปัจจุบัน รวมถึงสถานะของแมตช์ (เช่น ครึ่งแรก, ครึ่งหลัง, จบการแข่งขัน)" : "Displays team names, logos, current score, and match status.",
+                    side: "bottom" as const,
+                    align: "start" as const
+                }
+            },
+            {
+                element: "#console-timer-control",
+                popover: {
+                    title: locale === "th" ? "ควบคุมเวลา (Match Timer)" : "Match Timer",
+                    description: locale === "th" ? "ใช้สำหรับควบคุมเวลา เริ่ม/หยุดเวลา หรือปรับตั้งค่าเวลาของแมตช์" : "Start, pause, or configure the match clock.",
+                    side: "bottom" as const,
+                    align: "start" as const
+                }
+            },
+            {
+                element: "#console-action-panel",
+                popover: {
+                    title: locale === "th" ? "แผงควบคุมเหตุการณ์ (Events Panel)" : "Events Panel",
+                    description: locale === "th" ? "กดบันทึกเหตุการณ์สำคัญในสนาม เช่น ทำประตู (Goal), ใบเหลือง/ใบแดง, เปลี่ยนตัวผู้เล่น หรือแจ้งจบการแข่งขัน" : "Log events like Goals, Cards, Substitutions, or finish the match.",
+                    side: "top" as const,
+                    align: "start" as const
+                }
+            },
+            {
+                element: "#console-event-log",
+                popover: {
+                    title: locale === "th" ? "ประวัติการแข่งขัน (Event Log)" : "Event Log",
+                    description: locale === "th" ? "แสดงลำดับประวัติเหตุการณ์ทั้งหมดที่เกิดขึ้นในสนาม โดยเรียงตามนาที สามารถกดย้อนกลับ (Undo) เพื่อลบรายการที่บันทึกผิดได้" : "Chronological log of match events with undo/delete actions.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            }
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            steps
+        });
+        driverObj.drive();
+    };
+
     return (
         <div className={cn(
             "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 md:space-y-4",
@@ -842,6 +894,16 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
                 {!readOnly && (
                     <div className="flex items-center gap-2">
+                        {/* Help Tutorial Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={startConsoleTutorial}
+                            className="h-10 w-10 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all animate-pulse"
+                            title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
+                        >
+                            <HelpCircle className="h-4 w-4 text-primary" />
+                        </Button>
                         {(queue.length + matchQueue.length) > 0 ? (
                             <div className="flex items-center gap-1 text-warning animate-pulse">
                                 <CloudOff className="w-4 h-4" />
@@ -902,7 +964,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     </div>
 
                     {/* Scoreboard Section */}
-                    <section className="flex flex-col gap-2 md:gap-4">
+                    <section className="flex flex-col gap-2 md:gap-4" id="console-scoreboard">
                         <Scoreboard
                             match={match}
                             homeScore={homeScore}
@@ -932,7 +994,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     </section>
 
                     {/* Log Section */}
-                    <section className="flex flex-col gap-2 md:gap-4">
+                    <section className="flex flex-col gap-2 md:gap-4" id="console-event-log">
                         <EventLog
                             events={events}
                             match={match}

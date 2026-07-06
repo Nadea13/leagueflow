@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, Children, cloneElement } from "react";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -174,7 +174,16 @@ function BroadcastOverlayContent() {
                     rBL: parts[8] !== undefined ? Number(parts[8]) : 8,
                     rBR: parts[9] !== undefined ? Number(parts[9]) : 8,
                     opacity: parts[10] !== undefined ? Number(parts[10]) : 100,
-                    bg: parts[11] !== undefined ? `#${parts[11]}` : (blockId.startsWith("score") ? scoreBg : "#000000"),
+                    bg: (() => {
+                        if (parts[11] === undefined) {
+                            return blockId.startsWith("score") ? scoreBg : "#000000";
+                        }
+                        const decoded = decodeURIComponent(parts[11]);
+                        if (!decoded.startsWith("#") && !decoded.includes("gradient") && decoded !== "transparent" && decoded !== "chromakey") {
+                            return `#${decoded}`;
+                        }
+                        return decoded;
+                    })(),
                     color: parts[12] !== undefined ? `#${parts[12]}` : "#ffffff",
                 };
             }
@@ -347,6 +356,21 @@ function BroadcastOverlayContent() {
     const displaySeconds = time % 60;
     const timeString = `${displayMinutes}:${String(displaySeconds).padStart(2, "0")}`;
 
+    const lastAddTimeEvent = events.find(e => e.event_type === 'add_time');
+    const lastTimerMarker = events.find(e => 
+        e.event_type === 'kick_off' || 
+        e.event_type === 'match_resumed' || 
+        e.event_type === 'match_paused' ||
+        e.event_type === 'half_time' || 
+        e.event_type === 'full_time'
+    );
+    const isAddedTimeActive = lastAddTimeEvent && lastTimerMarker 
+        ? new Date(lastAddTimeEvent.created_at).getTime() > new Date(lastTimerMarker.created_at).getTime()
+        : !!lastAddTimeEvent;
+    const addedTime = isAddedTimeActive
+        ? (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null
+        : null;
+
     const isHalfTime = match.status === 'live' && match.timer_status === 'paused' && events.length > 0 && (() => {
         const lastTimerEvent = events.find(e => 
             e.event_type === 'kick_off' || 
@@ -453,12 +477,14 @@ function BroadcastOverlayContent() {
                                             borderTopRightRadius: `${cfg.rTR}px`,
                                             borderBottomLeftRadius: `${cfg.rBL}px`,
                                             borderBottomRightRadius: `${cfg.rBR}px`,
-                                            backgroundColor: `color-mix(in srgb, ${cfg.bg} ${cfg.opacity ?? 100}%, transparent)`,
                                             color: cfg.color ?? "#ffffff",
+                                            background: "transparent",
+                                            backgroundColor: "transparent",
                                         };
 
-                                        // 1. Home Name
-                                        if (blockId === "name-home") {
+                                        const blockElement = (() => {
+                                            // 1. Home Name
+                                            if (blockId === "name-home") {
                                             return (
                                                 <div 
                                                     key={blockId} 
@@ -471,11 +497,11 @@ function BroadcastOverlayContent() {
                                                         <div
                                                             style={{
                                                                 position: "absolute",
-                                                                backgroundColor: homeBarColor,
-                                                                ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px" }),
-                                                                ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px" }),
+                                                                [homeBarColor.includes("gradient") ? "background" : "backgroundColor"]: homeBarColor,
+                                                                ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderTopRightRadius: `${cfg.rTR}px` }),
+                                                                ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${cfg.rTR}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${cfg.rBL}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderBottomLeftRadius: `${cfg.rBL}px` }),
                                                             }}
                                                         />
                                                     )}
@@ -552,11 +578,11 @@ function BroadcastOverlayContent() {
                                                         <div
                                                             style={{
                                                                 position: "absolute",
-                                                                backgroundColor: awayBarColor,
-                                                                ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px" }),
-                                                                ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px" }),
+                                                                [awayBarColor.includes("gradient") ? "background" : "backgroundColor"]: awayBarColor,
+                                                                ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderTopRightRadius: `${cfg.rTR}px` }),
+                                                                ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${cfg.rTR}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${cfg.rBL}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderBottomLeftRadius: `${cfg.rBL}px` }),
                                                             }}
                                                         />
                                                     )}
@@ -660,6 +686,19 @@ function BroadcastOverlayContent() {
                                                 </div>
                                             );
                                         }
+                                        // 8b. Added Time Block
+                                        if (blockId === "add-time") {
+                                            if (!addedTime) return null;
+                                            return (
+                                                <div 
+                                                    key={blockId} 
+                                                    style={absoluteStyle}
+                                                    className="flex items-center justify-center font-mono font-bold select-none bg-black"
+                                                >
+                                                    +{addedTime}
+                                                </div>
+                                            );
+                                        }
                                         // 9. Alerts Block
                                         if (blockId === "alerts") {
                                             const isAlertActive = !!activeNotification;
@@ -707,8 +746,84 @@ function BroadcastOverlayContent() {
                                                 </div>
                                             );
                                         }
+                                        // 9b. Goal Timeline (Home)
+                                        if (blockId === "timeline-home") {
+                                            const homeGoalEvents = goalEvents.filter((e) => e.team_id && isHomeTeam(e.team_id));
+                                            if (homeGoalEvents.length === 0) return null;
+                                            return (
+                                                <div 
+                                                    key={blockId} 
+                                                    style={absoluteStyle}
+                                                    className="flex flex-col gap-1 overflow-hidden p-1 justify-center"
+                                                >
+                                                    {homeGoalEvents.slice(0, 3).map((e) => (
+                                                        <div key={e.id} className="flex items-center gap-1.5 px-2 text-[9px] font-bold truncate">
+                                                            <span className="truncate">{e.player_name} ({e.minute}&apos;)</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
+                                        // 9c. Goal Timeline (Away)
+                                        if (blockId === "timeline-away") {
+                                            const awayGoalEvents = goalEvents.filter((e) => e.team_id && isAwayTeam(e.team_id));
+                                            if (awayGoalEvents.length === 0) return null;
+                                            return (
+                                                <div 
+                                                    key={blockId} 
+                                                    style={absoluteStyle}
+                                                    className="flex flex-col gap-1 overflow-hidden p-1 justify-center"
+                                                >
+                                                    {awayGoalEvents.slice(0, 3).map((e) => (
+                                                        <div key={e.id} className="flex items-center gap-1.5 px-2 text-[9px] font-bold truncate">
+                                                            <span className="truncate">{e.player_name} ({e.minute}&apos;)</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
                                         return null;
-                                    })}
+                                    })();
+
+                                    if (!blockElement) return null;
+
+                                    const hasGradient = cfg.bg?.includes("gradient");
+                                    const bgDiv = (
+                                        <div
+                                            key="block-bg-layer"
+                                            style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                zIndex: -1,
+                                                borderTopLeftRadius: `${cfg.rTL}px`,
+                                                borderTopRightRadius: `${cfg.rTR}px`,
+                                                borderBottomLeftRadius: `${cfg.rBL}px`,
+                                                borderBottomRightRadius: `${cfg.rBR}px`,
+                                                pointerEvents: "none",
+                                                ...(hasGradient ? {
+                                                    background: cfg.bg,
+                                                    opacity: (cfg.opacity ?? 100) / 100,
+                                                } : {
+                                                    backgroundColor: `color-mix(in srgb, ${cfg.bg} ${cfg.opacity ?? 100}%, transparent)`,
+                                                })
+                                            }}
+                                        />
+                                    );
+
+                                    const existingStyle = blockElement.props.style || {};
+                                    const children = Children.toArray(blockElement.props.children);
+                                    children.unshift(bgDiv);
+
+                                    return cloneElement(blockElement, {
+                                        style: {
+                                            ...existingStyle,
+                                            background: "transparent",
+                                            backgroundColor: "transparent",
+                                            isolation: "isolate",
+                                        },
+                                        children: children,
+                                    });
+                                })}
                                 </div>
                             ) : (
                                 /* Modular Blocks Flex Scoreboard */
@@ -723,9 +838,11 @@ function BroadcastOverlayContent() {
                                     {(searchParams.get("blocks") || "").split(",").filter(Boolean).map((blockId) => {
                                         const activeRoundedClass = rounded === "none" ? "rounded-none" : rounded === "full" ? "rounded-full" : "rounded-xl";
                                         const isSpaced = searchParams.get("blockBg") !== "docked";
+                                        const cfg = blockConfigs[blockId] || { x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
                                         
-                                        // 1. Home Name
-                                        if (blockId === "name-home") {
+                                        const blockElement = (() => {
+                                            // 1. Home Name
+                                            if (blockId === "name-home") {
                                             return (
                                                 <div 
                                                     key={blockId} 
@@ -740,11 +857,11 @@ function BroadcastOverlayContent() {
                                                         <div
                                                             style={{
                                                                 position: "absolute",
-                                                                backgroundColor: homeBarColor,
-                                                                ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px" }),
-                                                                ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px" }),
+                                                                [homeBarColor.includes("gradient") ? "background" : "backgroundColor"]: homeBarColor,
+                                                                ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderTopRightRadius: `${cfg.rTR}px` }),
+                                                                ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${cfg.rTR}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${cfg.rBL}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderBottomLeftRadius: `${cfg.rBL}px` }),
                                                             }}
                                                         />
                                                     )}
@@ -780,7 +897,7 @@ function BroadcastOverlayContent() {
                                                         "flex items-center text-white font-black text-xl h-12 px-5 justify-center tracking-tighter shadow-inner min-w-[90px]",
                                                         isSpaced ? cn("border border-white/10", activeRoundedClass) : "border-0"
                                                     )}
-                                                    style={{ backgroundColor: scoreBg }}
+                                                    style={{ [scoreBg.includes("gradient") ? "background" : "backgroundColor"]: scoreBg }}
                                                 >
                                                     <span>{homeScore}</span>
                                                     <span className="mx-2 text-white/50 text-base font-normal">-</span>
@@ -797,7 +914,7 @@ function BroadcastOverlayContent() {
                                                         "flex items-center text-white font-black text-xl h-12 px-4 justify-center tracking-tighter shadow-inner min-w-[45px]",
                                                         isSpaced ? cn("border border-white/10", activeRoundedClass) : "border-0"
                                                     )}
-                                                    style={{ backgroundColor: scoreBg }}
+                                                    style={{ [scoreBg.includes("gradient") ? "background" : "backgroundColor"]: scoreBg }}
                                                 >
                                                     <span>{homeScore}</span>
                                                 </div>
@@ -812,7 +929,7 @@ function BroadcastOverlayContent() {
                                                         "flex items-center text-white font-black text-xl h-12 px-4 justify-center tracking-tighter shadow-inner min-w-[45px]",
                                                         isSpaced ? cn("border border-white/10", activeRoundedClass) : "border-0"
                                                     )}
-                                                    style={{ backgroundColor: scoreBg }}
+                                                    style={{ [scoreBg.includes("gradient") ? "background" : "backgroundColor"]: scoreBg }}
                                                 >
                                                     <span>{awayScore}</span>
                                                 </div>
@@ -834,11 +951,11 @@ function BroadcastOverlayContent() {
                                                         <div
                                                             style={{
                                                                 position: "absolute",
-                                                                backgroundColor: awayBarColor,
-                                                                ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px" }),
-                                                                ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px" }),
-                                                                ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px" }),
+                                                                [awayBarColor.includes("gradient") ? "background" : "backgroundColor"]: awayBarColor,
+                                                                ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderTopRightRadius: `${cfg.rTR}px` }),
+                                                                ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${cfg.rTR}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${cfg.rBL}px`, borderBottomRightRadius: `${cfg.rBR}px` }),
+                                                                ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${cfg.rTL}px`, borderBottomLeftRadius: `${cfg.rBL}px` }),
                                                             }}
                                                         />
                                                     )}
@@ -948,6 +1065,29 @@ function BroadcastOverlayContent() {
                                                 </div>
                                             );
                                         }
+                                        // 8b. Added Time Block
+                                        if (blockId === "add-time") {
+                                            if (!addedTime) return null;
+                                            return (
+                                                <div 
+                                                    key={blockId} 
+                                                    className={cn(
+                                                        "flex items-center justify-center px-3 text-white font-mono text-sm font-bold min-w-[40px] h-12 select-none",
+                                                        isSpaced ? cn("bg-black/85", activeRoundedClass) : "border-0"
+                                                    )}
+                                                    style={{
+                                                        ...(cfg.bg?.includes("gradient") ? { background: cfg.bg } : { backgroundColor: cfg.bg }),
+                                                        color: cfg.color,
+                                                        borderTopLeftRadius: isSpaced ? undefined : `${cfg.rTL}px`,
+                                                        borderTopRightRadius: isSpaced ? undefined : `${cfg.rTR}px`,
+                                                        borderBottomLeftRadius: isSpaced ? undefined : `${cfg.rBL}px`,
+                                                        borderBottomRightRadius: isSpaced ? undefined : `${cfg.rBR}px`,
+                                                    }}
+                                                >
+                                                    +{addedTime}
+                                                </div>
+                                            );
+                                        }
                                         // 9. Alerts Block
                                         if (blockId === "alerts") {
                                             const isAlertActive = !!activeNotification;
@@ -987,8 +1127,109 @@ function BroadcastOverlayContent() {
                                                 </div>
                                             );
                                         }
+                                        // 9b. Goal Timeline (Home)
+                                        if (blockId === "timeline-home") {
+                                            const homeGoalEvents = goalEvents.filter((e) => e.team_id && isHomeTeam(e.team_id));
+                                            if (homeGoalEvents.length === 0) return null;
+                                            return (
+                                                <div 
+                                                    key={blockId} 
+                                                    className={cn(
+                                                        "flex flex-col gap-0.5 justify-center p-1.5 text-white font-bold leading-tight select-none min-w-[100px]",
+                                                        isSpaced ? cn("bg-black/85", activeRoundedClass) : "border-0"
+                                                    )}
+                                                    style={{
+                                                        ...(isSpaced ? {} : (cfg.bg?.includes("gradient") ? { background: cfg.bg } : { backgroundColor: cfg.bg })),
+                                                        color: cfg.color,
+                                                        fontSize: `${cfg.fontSize}px`,
+                                                        borderTopLeftRadius: isSpaced ? undefined : `${cfg.rTL}px`,
+                                                        borderTopRightRadius: isSpaced ? undefined : `${cfg.rTR}px`,
+                                                        borderBottomLeftRadius: isSpaced ? undefined : `${cfg.rBL}px`,
+                                                        borderBottomRightRadius: isSpaced ? undefined : `${cfg.rBR}px`,
+                                                    }}
+                                                >
+                                                    {homeGoalEvents.slice(0, 3).map((e) => (
+                                                        <div key={e.id} className="flex items-center gap-1.5 px-1 text-[9px] truncate">
+                                                            <Trophy className="w-3 h-3 text-emerald-400 shrink-0" />
+                                                            <span className="truncate">{e.player_name} ({e.minute}&apos;)</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
+                                        // 9c. Goal Timeline (Away)
+                                        if (blockId === "timeline-away") {
+                                            const awayGoalEvents = goalEvents.filter((e) => e.team_id && isAwayTeam(e.team_id));
+                                            if (awayGoalEvents.length === 0) return null;
+                                            return (
+                                                <div 
+                                                    key={blockId} 
+                                                    className={cn(
+                                                        "flex flex-col gap-0.5 justify-center p-1.5 text-white font-bold leading-tight select-none min-w-[100px]",
+                                                        isSpaced ? cn("bg-black/85", activeRoundedClass) : "border-0"
+                                                    )}
+                                                    style={{
+                                                        ...(isSpaced ? {} : (cfg.bg?.includes("gradient") ? { background: cfg.bg } : { backgroundColor: cfg.bg })),
+                                                        color: cfg.color,
+                                                        fontSize: `${cfg.fontSize}px`,
+                                                        borderTopLeftRadius: isSpaced ? undefined : `${cfg.rTL}px`,
+                                                        borderTopRightRadius: isSpaced ? undefined : `${cfg.rTR}px`,
+                                                        borderBottomLeftRadius: isSpaced ? undefined : `${cfg.rBL}px`,
+                                                        borderBottomRightRadius: isSpaced ? undefined : `${cfg.rBR}px`,
+                                                    }}
+                                                >
+                                                    {awayGoalEvents.slice(0, 3).map((e) => (
+                                                        <div key={e.id} className="flex items-center gap-1.5 px-1 text-[9px] truncate">
+                                                            <Trophy className="w-3 h-3 text-emerald-400 shrink-0" />
+                                                            <span className="truncate">{e.player_name} ({e.minute}&apos;)</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        }
                                         return null;
-                                    })}
+                                    })();
+
+                                    if (!blockElement) return null;
+
+                                    const finalBg = isSpaced ? cfg.bg : (blockId.startsWith("score") ? scoreBg : "transparent");
+                                    const hasGradient = finalBg?.includes("gradient");
+                                    const bgDiv = (
+                                        <div
+                                            key="block-bg-layer"
+                                            style={{
+                                                position: "absolute",
+                                                inset: 0,
+                                                zIndex: -1,
+                                                borderTopLeftRadius: isSpaced ? `${cfg.rTL}px` : undefined,
+                                                borderTopRightRadius: isSpaced ? `${cfg.rTR}px` : undefined,
+                                                borderBottomLeftRadius: isSpaced ? `${cfg.rBL}px` : undefined,
+                                                borderBottomRightRadius: isSpaced ? `${cfg.rBR}px` : undefined,
+                                                pointerEvents: "none",
+                                                ...(hasGradient ? {
+                                                    background: finalBg,
+                                                    opacity: (cfg.opacity ?? 100) / 100,
+                                                } : {
+                                                    backgroundColor: finalBg === "transparent" ? "transparent" : `color-mix(in srgb, ${finalBg} ${cfg.opacity ?? 100}%, transparent)`,
+                                                })
+                                            }}
+                                        />
+                                    );
+
+                                    const existingStyle = blockElement.props.style || {};
+                                    const children = Children.toArray(blockElement.props.children);
+                                    children.unshift(bgDiv);
+
+                                    return cloneElement(blockElement, {
+                                        style: {
+                                            ...existingStyle,
+                                            background: "transparent",
+                                            backgroundColor: "transparent",
+                                            isolation: "isolate",
+                                        },
+                                        children: children,
+                                    });
+                                })}
                                 </div>
                             )
                         ) : (
@@ -1031,10 +1272,9 @@ function BroadcastOverlayContent() {
                                                 </span>
                                             </div>
 
-                                            {/* Score Box */}
                                             <div 
                                                 className="flex items-center text-white font-black text-2xl h-full px-6 border-x border-white/15 min-w-[100px] justify-center tracking-tighter shadow-inner"
-                                                style={{ backgroundColor: scoreBg }}
+                                                style={{ [scoreBg.includes("gradient") ? "background" : "backgroundColor"]: scoreBg }}
                                             >
                                                 <span>{homeScore}</span>
                                                 <span className="mx-2 text-white/50 text-base font-normal">-</span>

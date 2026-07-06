@@ -23,6 +23,7 @@ export function TournamentContent({
     initialMatches,
     initialTeams,
     initialGoals,
+    userPlan,
     initialIsPro: _initialIsPro,
     id,
     userRole
@@ -189,6 +190,7 @@ export function TournamentContent({
                             hasFixtures={hasFixtures}
                             teams={teams}
                             matches={matches}
+                            userPlan={userPlan}
                         />
                     ) : (
                         <Bracket

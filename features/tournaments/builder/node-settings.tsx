@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
@@ -45,7 +45,9 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 export function NodeSettings() {
     const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, activeCategoryId } = useBracketStore();
@@ -54,6 +56,7 @@ export function NodeSettings() {
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
     const t = useTranslations("Team");
+    const locale = useLocale();
     const { toast } = useToast();
     const supabase = React.useMemo(() => createClient(), []);
 
@@ -351,6 +354,124 @@ export function NodeSettings() {
         return () => clearInterval(interval);
     }, [selectedNode, supabase]);
 
+    const nodeType = selectedNode?.type;
+
+    const startNodeTutorial = useCallback(() => {
+        if (!nodeType) return;
+        const steps = [];
+
+        // Label input step
+        steps.push({
+            element: "#node-settings-label-wrapper",
+            popover: {
+                title: locale === "th" ? "ชื่อโหนด (Label)" : "Node Label",
+                description: locale === "th" ? "กำหนดชื่อที่แสดงของโหนดนี้บนบอร์ด เช่น รอบแบ่งกลุ่ม A, แมตช์ชิงชนะเลิศ" : "Set the display label for this node on the canvas.",
+                side: "left" as const,
+                align: "start" as const
+            }
+        });
+
+        if (nodeType === "groupNode") {
+            steps.push({
+                element: "#node-settings-group-team-count",
+                popover: {
+                    title: locale === "th" ? "จำนวนทีมในกลุ่ม" : "Team Count",
+                    description: locale === "th" ? "กำหนดจำนวนทีมที่จะอยู่ในกลุ่มนี้" : "Set the number of teams that will be in this group.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+        } else if (nodeType === "standingNode") {
+            steps.push({
+                element: "#node-settings-standing-advancing",
+                popover: {
+                    title: locale === "th" ? "จำนวนทีมที่เข้ารอบ" : "Advancing Teams",
+                    description: locale === "th" ? "กำหนดจำนวนทีมจากตารางคะแนนนี้ที่จะได้ผ่านเข้าไปเล่นในรอบถัดไป" : "Set the number of teams from this standings table that advance to the next stage.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+            steps.push({
+                element: "#node-settings-standing-columns",
+                popover: {
+                    title: locale === "th" ? "แสดงคอลัมน์ตารางคะแนน" : "Standings Columns",
+                    description: locale === "th" ? "เลือกแสดงหรือซ่อนคอลัมน์สถิติต่างๆ ในตารางคะแนน เช่น จำนวนนัด, ชนะ/เสมอ/แพ้, ประตูได้เสีย, คะแนนสะสม" : "Choose which statistics columns to show or hide in the standings table.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+        } else if (nodeType === "matchNode") {
+            steps.push({
+                element: "#node-settings-match-schedule",
+                popover: {
+                    title: locale === "th" ? "ตารางและผลการแข่งขัน" : "Match Schedule & Scoring",
+                    description: locale === "th" ? "กรอกรายชื่อทีม ตั้งวัน/เวลาแข่งขัน หรือกดปุ่ม MATCH CONSOLE เพื่อเข้าไปกรอกคะแนนผลแพ้ชนะ" : "Configure team participants, match date/time, or click MATCH CONSOLE to record scores.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+        } else if (nodeType === "teamListNode") {
+            steps.push({
+                element: "#node-settings-teamlist-add",
+                popover: {
+                    title: locale === "th" ? "จัดการทีมที่เข้าร่วม" : "Manage Teams",
+                    description: locale === "th" ? "เพิ่ม ลบ หรือแก้ไขรายชื่อทีมทั้งหมดที่จะแข่งขันในรุ่นนี้" : "Add, remove, or edit the list of teams participating in this category.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+        } else if (nodeType === "sponsorNode") {
+            steps.push({
+                element: "#node-settings-sponsor-list",
+                popover: {
+                    title: locale === "th" ? "ผู้สนับสนุนการแข่งขัน" : "Sponsors List",
+                    description: locale === "th" ? "อัปโหลดโลโก้ของผู้สนับสนุนและใส่ลิงก์เว็บไซต์ของแต่ละราย เพื่อนำไปแสดงผลประชาสัมพันธ์" : "Upload logo and link for sponsors to showcase them on public layouts.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+        } else if (nodeType === "registrationNode") {
+            steps.push({
+                element: "#node-settings-reg-status",
+                popover: {
+                    title: locale === "th" ? "เปิดรับสมัครออนไลน์" : "Online Registration Toggle",
+                    description: locale === "th" ? "สวิตช์เปิด/ปิดรับสมัครทีมใหม่เข้าทัวร์นาเมนต์รุ่นนี้แบบสาธารณะ" : "Toggle whether the public registration page is accepting teams.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+            steps.push({
+                element: "#node-settings-reg-fee",
+                popover: {
+                    title: locale === "th" ? "ค่าสมัครและช่องทางชำระเงิน" : "Registration Fee & Payment",
+                    description: locale === "th" ? "กำหนดค่าสมัครแข่งขัน และกรอกข้อมูลธนาคาร/PromptPay เพื่อให้ทีมที่สมัครสามารถโอนจ่ายและอัปโหลดสลิปได้" : "Set registration fee and banking/PromptPay details for team payment slips.",
+                    side: "left" as const,
+                    align: "start" as const
+                }
+            });
+        }
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            steps
+        });
+        driverObj.drive();
+    }, [nodeType, locale]);
+
+    useEffect(() => {
+        if (!activeNodeId || !nodeType) return;
+        const tourKey = `has_seen_node_tour_${nodeType}`;
+        const hasSeen = localStorage.getItem(tourKey);
+        if (!hasSeen) {
+            const timer = setTimeout(() => {
+                startNodeTutorial();
+                localStorage.setItem(tourKey, "true");
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [activeNodeId, nodeType, startNodeTutorial]);
+
     if (!selectedNode || !activeNodeId) {
         return null;
     }
@@ -421,6 +542,15 @@ export function NodeSettings() {
                 <Button
                     variant="ghost"
                     size="icon"
+                    onClick={startNodeTutorial}
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
+                >
+                    <HelpCircle className="h-4 w-4 text-primary" />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => deleteNode(id)}
                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 >
@@ -458,7 +588,7 @@ export function NodeSettings() {
 
                 {/* ── Common Settings ── */}
                 <div className="space-y-1 md:space-y-2">
-                    <div className="space-y-1">
+                    <div className="space-y-1" id="node-settings-label-wrapper">
                         <Label>
                             Label
                         </Label>
@@ -471,7 +601,7 @@ export function NodeSettings() {
                     {/* ── Type Specific Settings ── */}
                     {type === "groupNode" && (
                         <>
-                            <div className="space-y-1">
+                            <div className="space-y-1" id="node-settings-group-team-count">
                                 <Label>Team Count</Label>
                                 <Input
                                     type="text"
@@ -488,7 +618,7 @@ export function NodeSettings() {
 
                     {type === "standingNode" && (
                         <div className="space-y-1 md:space-y-2">
-                            <div className="space-y-1">
+                            <div className="space-y-1" id="node-settings-standing-advancing">
                                 <Label>Advancing Teams</Label>
                                 <Input
                                     type="text"
@@ -499,11 +629,11 @@ export function NodeSettings() {
                                         const num = parseInt(val, 10) || 0;
                                         updateNodeData(id, { advancingCount: Math.min(16, num) });
                                     }}
-                                />
+                                 />
                                 <p className="text-[10px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
                             </div>
 
-                            <div className="grid gap-1 md:gap-2">
+                            <div className="grid gap-1 md:gap-2" id="node-settings-standing-columns">
                                 {[
                                     { label: "Matches Played", key: "showPlayed" },
                                     { label: "Win / Draw / Loss", key: "showWDL", composite: ["showWin", "showDraw", "showLoss"] },
@@ -582,7 +712,7 @@ export function NodeSettings() {
                         };
 
                         return (
-                            <div className="space-y-1 md:space-y-2">
+                            <div className="space-y-1 md:space-y-2" id="node-settings-match-schedule">
                                 <Label>Matches in Node</Label>
                                 <div className="space-y-1 md:space-y-2">
                                     {((data.matches as MatchItem[]) || [])
@@ -732,7 +862,7 @@ export function NodeSettings() {
                     })()}
 
                     {type === "teamListNode" && (
-                        <div className="space-y-1 md:space-y-2">
+                        <div className="space-y-1 md:space-y-2" id="node-settings-teamlist-add">
                             <div className="flex justify-end">
                                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                                     <DialogTrigger asChild>
@@ -772,7 +902,7 @@ export function NodeSettings() {
                     )}
 
                     {type === "sponsorNode" && (
-                        <div className="space-y-1 md:space-y-2">
+                        <div className="space-y-1 md:space-y-2" id="node-settings-sponsor-list">
                             <div className="flex items-center justify-end">
                                 <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
                                     <DialogTrigger asChild>
@@ -915,7 +1045,7 @@ export function NodeSettings() {
                                 </div>
                             ) : (
                                 <form onSubmit={handleRegSave} className="space-y-1 md:space-y-2">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between" id="node-settings-reg-status">
                                         <Label>Allow Registration</Label>
                                         <Switch
                                             id="is_reg_open"
@@ -925,7 +1055,7 @@ export function NodeSettings() {
                                         />
                                     </div>
 
-                                    <div className="space-y-1 md:space-y-2">
+                                    <div className="space-y-1 md:space-y-2" id="node-settings-reg-fee">
                                         <div className="space-y-1">
                                             <Label>Registration Fee (THB)</Label>
                                             <Input

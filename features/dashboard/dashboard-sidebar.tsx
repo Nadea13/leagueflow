@@ -71,7 +71,7 @@ export function DashboardSidebar({
                 </Link>
             </div>
 
-            <nav className="grid items-start px-2 lg:px-4 space-y-2">
+            <nav className="grid items-start px-2 lg:px-4 space-y-2" id="tour-sidebar-nav">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                     return (

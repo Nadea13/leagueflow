@@ -6,6 +6,7 @@ import { Plus, Upload } from "lucide-react";
 import Image from "next/image";
 import { createTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
     Dialog,
     DialogContent,
@@ -38,11 +39,13 @@ const initialState: ActionResponse = {
 
 interface TournamentCreateProps {
     iconOnlyMobile?: boolean;
+    isDisabled?: boolean;
 }
 
-export function TournamentCreate({ iconOnlyMobile = false }: TournamentCreateProps) {
+export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }: TournamentCreateProps) {
     const t = useTranslations("Dialog");
     const tCommon = useTranslations("Common");
+    const { toast } = useToast();
     const locale = useLocale();
     const isThai = locale === 'th';
     const [open, setOpen] = useState(false);
@@ -81,10 +84,29 @@ export function TournamentCreate({ iconOnlyMobile = false }: TournamentCreatePro
         }
     }, [state.success, open]);
 
+    const handleButtonClick = (e: React.MouseEvent) => {
+        if (isDisabled) {
+            e.preventDefault();
+            e.stopPropagation();
+            toast({
+                title: "Error",
+                description: locale === 'th'
+                    ? "ผู้ใช้ทั่วไปสามารถสร้างการแข่งขันได้สูงสุด 1 รายการเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
+                    : "Starter plan users can create only 1 tournament. Please upgrade to a Pro plan.",
+                variant: "destructive"
+            });
+            return;
+        }
+        setOpen(true);
+    };
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2" : ""}>
+                <Button 
+                    className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2" : ""}
+                    onClick={handleButtonClick}
+                >
                     <Plus className="h-4 w-4" />
                     <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("create_button")}</span>
                 </Button>

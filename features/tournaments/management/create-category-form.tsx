@@ -75,6 +75,47 @@ export function CreateCategoryForm({
 
         setIsPending(true);
         try {
+            // Client-side Pro Check
+            const { getUserSubscriptionPlan } = await import("@/actions/common/user");
+            const activePlan = await getUserSubscriptionPlan();
+            const isProUser = activePlan === "monthly" || activePlan === "yearly" || activePlan === "manager_pro" || activePlan === "pro" || activePlan === "pro_yearly" || activePlan === "customs";
+
+            if (!isProUser) {
+                const supabase = createClient();
+                const { count: categoryCount, error: categoryCountError } = await supabase
+                    .from("tournament_categories")
+                    .select("id", { count: "exact", head: true })
+                    .eq("tournament_id", tournamentId)
+                    .is("deleted_at", null);
+
+                if (categoryCountError) {
+                    console.error("Error counting categories:", categoryCountError);
+                }
+
+                if (categoryCount && categoryCount >= 1) {
+                    toast({
+                        title: "Error",
+                        description: locale === 'th'
+                            ? "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
+                            : "Starter plan users can create only 1 tournament category. Please upgrade to a Pro plan.",
+                        variant: "destructive"
+                    });
+                    setIsPending(false);
+                    return;
+                }
+
+                if (parseInt(maxTeams) > 12) {
+                    toast({
+                        title: "Error",
+                        description: locale === 'th' 
+                            ? "ผู้ใช้ทั่วไปสามารถจำกัดจำนวนทีมได้สูงสุด 12 ทีมเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro" 
+                            : "Starter plan users can set a maximum limit of 12 teams. Please upgrade to a Pro plan.",
+                        variant: "destructive"
+                    });
+                    setIsPending(false);
+                    return;
+                }
+            }
             const res = await createTournamentCategory(
                 tournamentId,
                 parseInt(ageCategoryId),

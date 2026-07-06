@@ -5,7 +5,7 @@ import { Player, Team, Registration, Tournament } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft } from "lucide-react";
+import { Loader2, Trash2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft, HelpCircle } from "lucide-react";
 import { Tab } from "@/components/ui/tab";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,8 @@ import Link from "next/link";
 import { AddPlayerForm } from "@/features/teams/add-player-form";
 import { EditTeamForm } from "@/features/teams/edit-team-form";
 import { SquadList } from "@/features/teams/squad-list";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 import {
     AlertDialog,
@@ -43,6 +45,72 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");
     const { toast } = useToast();
+
+    const startTour = useCallback(() => {
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            steps: [
+                {
+                    element: "#tour-squad-header",
+                    popover: {
+                        title: t("tour_squad_welcome_title"),
+                        description: t("tour_squad_welcome_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-lock-roster-btn",
+                    popover: {
+                        title: t("tour_squad_lock_title"),
+                        description: t("tour_squad_lock_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-add-player-form",
+                    popover: {
+                        title: t("tour_squad_add_title"),
+                        description: t("tour_squad_add_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-squad-list",
+                    popover: {
+                        title: t("tour_squad_list_title"),
+                        description: t("tour_squad_list_desc"),
+                        side: "top" as const,
+                        align: "start" as const
+                    }
+                },
+                ...(document.getElementById("tour-edit-team-form") ? [{
+                    element: "#tour-edit-team-form",
+                    popover: {
+                        title: t("tour_squad_edit_title"),
+                        description: t("tour_squad_edit_desc"),
+                        side: "left" as const,
+                        align: "start" as const
+                    }
+                }] : [])
+            ]
+        });
+        driverObj.drive();
+    }, [t]);
+
+    useEffect(() => {
+        const hasSeenTour = localStorage.getItem("has_seen_squad_tour");
+        if (!hasSeenTour) {
+            const timer = setTimeout(() => {
+                startTour();
+                localStorage.setItem("has_seen_squad_tour", "true");
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [startTour]);
 
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
 
@@ -135,29 +203,40 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="flex gap-2 md:gap-4">
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
-                            {teamName}
-                        </h1>
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <Badge variant="default" className="text-[10px] font-black tracking-wider rounded-full px-2">
-                                {tSports(team.sport)}
-                            </Badge>
-                            <span className="text-[10px] font-black tracking-wider text-primary/60">
-                                {players.length} {tCommon("players") || "Players"}
-                            </span>
-                            {isLocked && (
-                                <div>
-                                    <Badge variant="destructive" className="text-[10px] font-black tracking-wider">
-                                        <Lock className="h-3 w-3 mr-1.5" />
-                                        {tCommon("secured")}
-                                    </Badge>
-                                </div>
-                            )}
+                    <div className="flex items-center gap-3">
+                        <div className="flex gap-2 md:gap-4" id="tour-squad-header">
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
+                                {teamName}
+                            </h1>
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <Badge variant="default" className="text-[10px] font-black tracking-wider rounded-full px-2">
+                                    {tSports(team.sport)}
+                                </Badge>
+                                <span className="text-[10px] font-black tracking-wider text-primary/60">
+                                    {players.length} {tCommon("players") || "Players"}
+                                </span>
+                                {isLocked && (
+                                    <div>
+                                        <Badge variant="destructive" className="text-[10px] font-black tracking-wider">
+                                            <Lock className="h-3 w-3 mr-1.5" />
+                                            {tCommon("secured")}
+                                        </Badge>
+                                    </div>
+                                )}
+                            </div>
                         </div>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={startTour} 
+                            className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
+                        >
+                            <HelpCircle className="h-3.5 w-3.5" />
+                            {t("tour_button")}
+                        </Button>
                     </div>
                 </div>
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2" id="tour-lock-roster-btn">
                     <Button
                         variant={effectivelyLocked ? "outline" : "warning"}
                         onClick={handleToggleLock}
@@ -209,31 +288,37 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     "flex-1 w-full min-w-0 space-y-2 md:space-y-4",
                     mobileTab !== 'roster' && "hidden lg:block"
                 )}>
-                    <AddPlayerForm
-                        teamId={team.id}
-                        onSuccess={refreshPlayers}
-                        effectivelyLocked={effectivelyLocked}
-                    />
-                    <SquadList
-                        players={players}
-                        team={team}
-                        effectivelyLocked={effectivelyLocked}
-                        refreshPlayers={refreshPlayers}
-                        onDeletePlayer={setPlayerToDelete}
-                        t={t}
-                        tCommon={tCommon}
-                    />
+                    <div id="tour-add-player-form">
+                        <AddPlayerForm
+                            teamId={team.id}
+                            onSuccess={refreshPlayers}
+                            effectivelyLocked={effectivelyLocked}
+                        />
+                    </div>
+                    <div id="tour-squad-list">
+                        <SquadList
+                            players={players}
+                            team={team}
+                            effectivelyLocked={effectivelyLocked}
+                            refreshPlayers={refreshPlayers}
+                            onDeletePlayer={setPlayerToDelete}
+                            t={t}
+                            tCommon={tCommon}
+                        />
+                    </div>
                 </div>
 
                 <div className={cn(
                     "w-full lg:w-[380px] shrink-0 space-y-6 lg:sticky lg:top-6",
                     mobileTab !== 'team' && "hidden lg:block"
                 )}>
-                    <EditTeamForm
-                        team={team}
-                        onNameChange={setTeamName}
-                        isLocked={effectivelyLocked}
-                    />
+                    <div id="tour-edit-team-form">
+                        <EditTeamForm
+                            team={team}
+                            onNameChange={setTeamName}
+                            isLocked={effectivelyLocked}
+                        />
+                    </div>
                 </div>
             </div>
 

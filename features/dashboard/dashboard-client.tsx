@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createMasterPlayer, getMasterPlayerStats } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
     Trophy, User, Calendar, Phone, Search,
-    AlertCircle, Loader2, UserCheck, Activity, Edit
+    AlertCircle, Loader2, UserCheck, Activity, Edit, HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmptyState } from "@/components/shared/empty-state";
 import { Tournament } from "@/types";
 import { EditVerifyProfileDialog } from "@/features/teams/edit-verify-profile-dialog";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
 export interface MasterPlayer {
     id: string;
@@ -63,6 +65,11 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ initialTournaments, initialMasterPlayer }: DashboardClientProps) {
+    const locale = useLocale();
+    const isThai = locale === 'th';
+    const t = useTranslations("Dashboard");
+    const tCommon = useTranslations("Common");
+
     const [searchQuery, setSearchQuery] = useState("");
     const [masterPlayer, setMasterPlayer] = useState(initialMasterPlayer);
     const [isPending, startTransition] = useTransition();
@@ -110,10 +117,80 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         setIsEditDialogOpen(true);
     };
 
-    const locale = useLocale();
-    const isThai = locale === 'th';
-    const t = useTranslations("Dashboard");
-    const tCommon = useTranslations("Common");
+    const startTour = useCallback(() => {
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            steps: [
+                {
+                    element: "#tour-all-tournaments-header",
+                    popover: {
+                        title: t("tour_welcome_title"),
+                        description: t("tour_welcome_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-search-input",
+                    popover: {
+                        title: t("tour_search_title"),
+                        description: t("tour_search_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-tournaments-list",
+                    popover: {
+                        title: t("tour_tournaments_title"),
+                        description: t("tour_tournaments_desc"),
+                        side: "top" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-player-card",
+                    popover: {
+                        title: t("tour_profile_title"),
+                        description: t("tour_profile_desc"),
+                        side: "left" as const,
+                        align: "start" as const
+                    }
+                },
+                ...(document.getElementById("tour-edit-profile-btn") ? [{
+                    element: "#tour-edit-profile-btn",
+                    popover: {
+                        title: t("tour_profile_edit_title"),
+                        description: t("tour_profile_edit_desc"),
+                        side: "left" as const,
+                        align: "start" as const
+                    }
+                }] : []),
+                ...(document.getElementById("tour-sidebar-nav") ? [{
+                    element: "#tour-sidebar-nav",
+                    popover: {
+                        title: t("tour_sidebar_title"),
+                        description: t("tour_sidebar_desc"),
+                        side: "right" as const,
+                        align: "start" as const
+                    }
+                }] : [])
+            ]
+        });
+        driverObj.drive();
+    }, [t]);
+
+    useEffect(() => {
+        const hasSeenTour = localStorage.getItem("has_seen_dashboard_tour");
+        if (!hasSeenTour) {
+            const timer = setTimeout(() => {
+                startTour();
+                localStorage.setItem("has_seen_dashboard_tour", "true");
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [startTour]);
 
     // Filter tournaments based on search query
     const filteredTournaments = initialTournaments.filter(t =>
@@ -165,7 +242,20 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 {/* Left Column: Tournament Listing (8 cols) */}
                 <div className="lg:col-span-8 space-y-2 md:space-y-4 order-2 lg:order-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-background">
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter">{t("all_tournaments")}</h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tighter" id="tour-all-tournaments-header">
+                                {t("all_tournaments")}
+                            </h1>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={startTour} 
+                                className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
+                            >
+                                <HelpCircle className="h-3.5 w-3.5" />
+                                {t("tour_button")}
+                            </Button>
+                        </div>
 
                         {/* Search input */}
                         <div className="relative w-full md:w-1/2">
@@ -175,6 +265,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                 name="q"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                id="tour-search-input"
                             />
                         </div>
                     </div>
@@ -188,7 +279,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             className="bg-card"
                         />
                     ) : (
-                        <div className="flex flex-col gap-4 md:gap-6 group">
+                        <div className="flex flex-col gap-4 md:gap-6 group" id="tour-tournaments-list">
                             {filteredTournaments.map((tournament) => (
                                 <Link key={tournament.id} href={`/dashboard/registration/${tournament.id}`} className="block">
                                     <Card
@@ -236,7 +327,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
                 {/* Right Column: Master Player Card (4 cols) */}
                 <div className="lg:col-span-4 space-y-2 md:space-y-4 order-1 lg:order-2">
-                    <div className="bg-card border rounded-xl">
+                    <div className="bg-card border rounded-xl" id="tour-player-card">
                         {masterPlayer ? (
                             /* Player ID Card */
                             <div className="relative overflow-hidden">
@@ -252,6 +343,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                             size="icon"
                                             className="h-6 w-6"
                                             onClick={handleOpenEdit}
+                                            id="tour-edit-profile-btn"
                                         >
                                             <Edit className="h-4 w-4" />
                                         </Button>

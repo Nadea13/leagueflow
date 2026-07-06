@@ -27,6 +27,9 @@ import {
     PopoverContent,
     PopoverTrigger
 } from "@/components/ui/popover";
+import { HelpCircle } from "lucide-react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import {
     Select,
     SelectContent,
@@ -49,7 +52,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
@@ -105,6 +108,7 @@ interface CanvasProps {
     hasFixtures?: boolean;
     teams?: TournamentTeam[];
     matches?: Match[];
+    userPlan?: string;
 }
 
 function CanvasInternal({
@@ -116,9 +120,96 @@ function CanvasInternal({
     hasFixtures = false,
     teams: initialTeamsData = [],
     matches: initialMatchesData = [],
+    userPlan,
 }: CanvasProps) {
     const locale = useLocale();
     const { toast } = useToast();
+    const t = useTranslations("Tournament");
+    const tSettings = useTranslations("Settings");
+
+    const startTour = useCallback(() => {
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            steps: [
+                {
+                    element: "#tour-console-header",
+                    popover: {
+                        title: t("tour_console_welcome_title"),
+                        description: t("tour_console_welcome_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-console-name",
+                    popover: {
+                        title: t("tour_console_name_title"),
+                        description: t("tour_console_name_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-console-category",
+                    popover: {
+                        title: t("tour_console_category_title"),
+                        description: t("tour_console_category_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                {
+                    element: "#tour-console-status",
+                    popover: {
+                        title: t("tour_console_status_title"),
+                        description: t("tour_console_status_desc"),
+                        side: "bottom" as const,
+                        align: "start" as const
+                    }
+                },
+                ...(document.getElementById("tour-console-add-components") ? [{
+                    element: "#tour-console-add-components",
+                    popover: {
+                        title: t("tour_console_add_title"),
+                        description: t("tour_console_add_desc"),
+                        side: "left" as const,
+                        align: "start" as const
+                    }
+                }] : []),
+                ...(document.getElementById("tour-console-canvas-wrapper") ? [{
+                    element: "#tour-console-canvas-wrapper",
+                    popover: {
+                        title: t("tour_console_canvas_title"),
+                        description: t("tour_console_canvas_desc"),
+                        side: "top" as const,
+                        align: "start" as const
+                    }
+                }] : []),
+                ...(document.getElementById("tour-console-sidebar-buttons") ? [{
+                    element: "#tour-console-sidebar-buttons",
+                    popover: {
+                        title: t("tour_console_sidebar_title"),
+                        description: t("tour_console_sidebar_desc"),
+                        side: "left" as const,
+                        align: "start" as const
+                    }
+                }] : [])
+            ]
+        });
+        driverObj.drive();
+    }, [t]);
+
+    useEffect(() => {
+        const hasSeenTour = localStorage.getItem("has_seen_console_tour");
+        if (!hasSeenTour) {
+            const timer = setTimeout(() => {
+                startTour();
+                localStorage.setItem("has_seen_console_tour", "true");
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [startTour]);
 
     // Dialog state for unsaved changes warning
     const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -776,7 +867,7 @@ function CanvasInternal({
                 </div>
             </div>
 
-            <div className="flex items-center justify-between p-2 lg:p-4 border-b gap-1">
+            <div className="flex items-center justify-between p-2 lg:p-4 border-b gap-1" id="tour-console-header">
                 <div className="flex items-center gap-2 lg:gap-4">
                     <div className="flex items-center gap-1 lg:gap-2">
                         {isEditingName && !readonly ? (
@@ -795,6 +886,7 @@ function CanvasInternal({
                             />
                         ) : (
                             <span
+                                id="tour-console-name"
                                 className={cn(
                                     "text-lg font-bold tracking-tight cursor-pointer hover:text-primary transition-colors",
                                     readonly && "cursor-default hover:text-foreground"
@@ -804,6 +896,16 @@ function CanvasInternal({
                                 {currentName}
                             </span>
                         )}
+
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={startTour} 
+                            className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer ml-2"
+                        >
+                            <HelpCircle className="h-3.5 w-3.5" />
+                            {t("tour_button")}
+                        </Button>
 
                         <Button
                             variant={isLocked ? "default" : "outline"}
@@ -820,80 +922,95 @@ function CanvasInternal({
                         </Button>
 
                         {/* Category Select Selector */}
-                        <Select
-                            value={activeCategoryId || ""}
-                            onValueChange={(val) => {
-                                if (val === "create_new") {
-                                    setIsCreateOpen(true);
-                                } else {
-                                    handleCategorySwitch(val);
-                                }
-                            }}
-                        >
-                            <SelectTrigger className="w-[160px]">
-                                <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card">
-                                {categories.length === 0 ? (
-                                    <SelectItem value="none" disabled className="text-muted-foreground text-xs font-semibold">
-                                        {locale === 'th' ? "ยังไม่ได้ตั้งค่าประเภทการแข่งขัน" : "No categories configured yet"}
-                                    </SelectItem>
-                                ) : (
-                                    categories.map((cat) => {
-                                        const catName = getCategoryDisplayName(cat);
-                                        return (
-                                            <SelectItem
-                                                key={cat.id}
-                                                value={toCategoryId(cat.id)}
-                                                className="cursor-pointer text-xs font-bold"
-                                            >
-                                                {catName} ({cat.max_teams} Teams)
-                                            </SelectItem>
-                                        );
-                                    })
-                                )}
-                                {!readonly && (
-                                    <SelectItem
-                                        value="create_new"
-                                        className="cursor-pointer text-xs font-bold text-primary focus:text-primary focus:bg-primary/10 flex items-center gap-1.5"
-                                    >
-                                        + {locale === 'th' ? "สร้างประเภทการแข่งขัน..." : "Create Category..."}
-                                    </SelectItem>
-                                )}
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-                            value={currentStatus}
-                            onValueChange={handleStatusChange}
-                            disabled={isStatusUpdating}
-                        >
-                            <SelectTrigger
-                                className={cn(
-                                    "",
-                                    currentStatus === 'ongoing' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" :
-                                        currentStatus === 'finished' ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
-                                            currentStatus === 'upcoming' ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
-                                                "bg-muted/50 text-muted-foreground border-muted-foreground/20 hover:bg-muted"
-                                )}
+                        <div id="tour-console-category">
+                            <Select
+                                value={activeCategoryId || ""}
+                                onValueChange={(val) => {
+                                    if (val === "create_new") {
+                                        const isProUser = userPlan === "monthly" || userPlan === "yearly" || userPlan === "manager_pro" || userPlan === "pro" || userPlan === "pro_yearly" || userPlan === "customs";
+                                        if (!isProUser && categories.length >= 1) {
+                                            toast({
+                                                title: "Error",
+                                                description: locale === 'th'
+                                                    ? "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
+                                                    : "Starter plan users can create only 1 tournament category. Please upgrade to a Pro plan.",
+                                                variant: "destructive"
+                                            });
+                                            return;
+                                        }
+                                        setIsCreateOpen(true);
+                                    } else {
+                                        handleCategorySwitch(val);
+                                    }
+                                }}
                             >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card text-[10px] font-black tracking-widest">
-                                <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "แบบร่าง" : "Draft"}
-                                </SelectItem>
-                                <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "เร็วๆ นี้" : "Upcoming"}
-                                </SelectItem>
-                                <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "กำลังดำเนินการ" : "Ongoing"}
-                                </SelectItem>
-                                <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
-                                    {locale === 'th' ? "เสร็จสิ้น" : "Finished"}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                                <SelectTrigger className="w-[160px]">
+                                    <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card">
+                                    {categories.length === 0 ? (
+                                        <SelectItem value="none" disabled className="text-muted-foreground text-xs font-semibold">
+                                            {locale === 'th' ? "ยังไม่ได้ตั้งค่าประเภทการแข่งขัน" : "No categories configured yet"}
+                                        </SelectItem>
+                                    ) : (
+                                        categories.map((cat) => {
+                                            const catName = getCategoryDisplayName(cat);
+                                            return (
+                                                <SelectItem
+                                                    key={cat.id}
+                                                    value={toCategoryId(cat.id)}
+                                                    className="cursor-pointer text-xs font-bold"
+                                                >
+                                                    {catName} ({cat.max_teams} Teams)
+                                                </SelectItem>
+                                            );
+                                        })
+                                    )}
+                                    {!readonly && (
+                                        <SelectItem
+                                            value="create_new"
+                                            className="cursor-pointer text-xs font-bold text-primary focus:text-primary focus:bg-primary/10 flex items-center gap-1.5"
+                                        >
+                                            + {locale === 'th' ? "สร้างประเภทการแข่งขัน..." : "Create Category..."}
+                                        </SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div id="tour-console-status">
+                            <Select
+                                value={currentStatus}
+                                onValueChange={handleStatusChange}
+                                disabled={isStatusUpdating}
+                            >
+                                <SelectTrigger
+                                    className={cn(
+                                        "",
+                                        currentStatus === 'ongoing' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" :
+                                            currentStatus === 'finished' ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
+                                                currentStatus === 'upcoming' ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
+                                                    "bg-muted/50 text-muted-foreground border-muted-foreground/20 hover:bg-muted"
+                                    )}
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card text-[10px] font-black tracking-widest">
+                                    <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
+                                        {locale === 'th' ? "แบบร่าง" : "Draft"}
+                                    </SelectItem>
+                                    <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
+                                        {locale === 'th' ? "เร็วๆ นี้" : "Upcoming"}
+                                    </SelectItem>
+                                    <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
+                                        {locale === 'th' ? "กำลังดำเนินการ" : "Ongoing"}
+                                    </SelectItem>
+                                    <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
+                                        {locale === 'th' ? "เสร็จสิ้น" : "Finished"}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
 
@@ -919,7 +1036,7 @@ function CanvasInternal({
                             </Button>
                         )}
                         {!readonly && (
-                            <div className="flex items-center gap-1 lg:gap-2">
+                            <div className="flex items-center gap-1 lg:gap-2" id="tour-console-sidebar-buttons">
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
                                     <DialogTrigger asChild>
@@ -1204,7 +1321,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "ข้อมูลทั่วไป" : "General"}</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("general_info")}</span>
                                 </button>
 
                                 <button
@@ -1217,7 +1334,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <Trophy className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'categories' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "รุ่นการแข่งขัน" : "Categories"}</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("categories")}</span>
                                 </button>
 
                                 <button
@@ -1230,7 +1347,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <MapPin className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'location' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "สถานที่จัดแข่ง" : "Location"}</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("location")}</span>
                                 </button>
 
                                 <button
@@ -1243,7 +1360,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <Users className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "ทีมงานจัดแข่ง" : "Staff"}</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("staff")}</span>
                                 </button>
 
                                 <button
@@ -1256,7 +1373,7 @@ function CanvasInternal({
                                     )}
                                 >
                                     <ShieldAlert className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeSettingsTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{locale === 'th' ? "พื้นที่อันตราย" : "Danger"}</span>
+                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("danger_zone")}</span>
                                 </button>
                             </aside>
 
@@ -1278,7 +1395,7 @@ function CanvasInternal({
                     <>
                         <div className="flex-1 relative">
                             {!readonly && !isLocked && activeSidebar !== 'schedule' && (
-                                <div className="absolute top-4 right-4 z-50">
+                                <div className="absolute top-4 right-4 z-50" id="tour-console-add-components">
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -1320,69 +1437,71 @@ function CanvasInternal({
                                     </Popover>
                                 </div>
                             )}
-                            <ReactFlow
-                                nodes={nodes}
-                                edges={edges}
-                                proOptions={{ hideAttribution: true }}
-                                onNodesChange={readonly ? undefined : onNodesChange}
-                                onEdgesChange={readonly ? undefined : onEdgesChange}
-                                onConnect={readonly ? undefined : onConnectWithSave}
-                                isValidConnection={isValidConnection}
-                                onNodeDragStart={readonly ? undefined : onNodeDragStart}
-                                onNodeDragStop={readonly ? undefined : onDragStop}
-                                onSelectionDragStop={readonly ? undefined : onDragStop}
-                                onNodeClick={(_, node) => {
-                                    if (isLocked) return;
-                                    setActiveNodeId(node.id);
-                                    selectNode(node.id);
-                                }}
-                                onPaneClick={() => {
-                                    if (isLocked) return;
-                                    setActiveNodeId(null);
-                                    selectNode(null);
-                                }}
-                                onEdgeClick={() => {
-                                    if (isLocked) return;
-                                    setActiveNodeId(null);
-                                    selectNode(null);
-                                }}
-                                nodeTypes={nodeTypes}
-                                fitView={false}
-                                defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-                                minZoom={0.1}
-                                maxZoom={1.5}
-                                nodesDraggable={!readonly && !isLocked}
-                                nodesConnectable={!readonly && !isLocked}
-                                elementsSelectable={!readonly && !isLocked}
-                                panOnDrag={!readonly}
-                                panOnScroll={!readonly}
-                                zoomOnScroll={!readonly}
-                                zoomOnPinch={!readonly}
-                                zoomOnDoubleClick={!readonly}
-                                deleteKeyCode={readonly || isLocked ? null : ["Backspace", "Delete"]}
-                                autoPanOnConnect={!readonly && !isLocked}
-                                autoPanOnNodeDrag={!readonly && !isLocked}
-                                colorMode="light"
-                                connectionMode={ConnectionMode.Loose}
-                                connectionRadius={50}
-                                connectionLineStyle={{ stroke: "#00c692", strokeWidth: 2 }}
-                                connectionLineType={ConnectionLineType.Bezier}
-                                snapToGrid
-                                snapGrid={[10, 10]}
-                                defaultEdgeOptions={{
-                                    type: "default",
-                                    style: {
-                                        stroke: "#00c692",
-                                        strokeWidth: 2,
-                                    },
-                                }}
-                            >
-                                <Background color="#555" variant={BackgroundVariant.Dots} gap={16} size={1} style={{ opacity: 1 }} />
-                                <Controls
-                                    showInteractive={false}
-                                    className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
-                                />
-                            </ReactFlow>
+                            <div className="w-full h-full" id="tour-console-canvas-wrapper">
+                                <ReactFlow
+                                    nodes={nodes}
+                                    edges={edges}
+                                    proOptions={{ hideAttribution: true }}
+                                    onNodesChange={readonly ? undefined : onNodesChange}
+                                    onEdgesChange={readonly ? undefined : onEdgesChange}
+                                    onConnect={readonly ? undefined : onConnectWithSave}
+                                    isValidConnection={isValidConnection}
+                                    onNodeDragStart={readonly ? undefined : onNodeDragStart}
+                                    onNodeDragStop={readonly ? undefined : onDragStop}
+                                    onSelectionDragStop={readonly ? undefined : onDragStop}
+                                    onNodeClick={(_, node) => {
+                                        if (isLocked) return;
+                                        setActiveNodeId(node.id);
+                                        selectNode(node.id);
+                                    }}
+                                    onPaneClick={() => {
+                                        if (isLocked) return;
+                                        setActiveNodeId(null);
+                                        selectNode(null);
+                                    }}
+                                    onEdgeClick={() => {
+                                        if (isLocked) return;
+                                        setActiveNodeId(null);
+                                        selectNode(null);
+                                    }}
+                                    nodeTypes={nodeTypes}
+                                    fitView={false}
+                                    defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+                                    minZoom={0.1}
+                                    maxZoom={1.5}
+                                    nodesDraggable={!readonly && !isLocked}
+                                    nodesConnectable={!readonly && !isLocked}
+                                    elementsSelectable={!readonly && !isLocked}
+                                    panOnDrag={!readonly}
+                                    panOnScroll={!readonly}
+                                    zoomOnScroll={!readonly}
+                                    zoomOnPinch={!readonly}
+                                    zoomOnDoubleClick={!readonly}
+                                    deleteKeyCode={readonly || isLocked ? null : ["Backspace", "Delete"]}
+                                    autoPanOnConnect={!readonly && !isLocked}
+                                    autoPanOnNodeDrag={!readonly && !isLocked}
+                                    colorMode="light"
+                                    connectionMode={ConnectionMode.Loose}
+                                    connectionRadius={50}
+                                    connectionLineStyle={{ stroke: "#00c692", strokeWidth: 2 }}
+                                    connectionLineType={ConnectionLineType.Bezier}
+                                    snapToGrid
+                                    snapGrid={[10, 10]}
+                                    defaultEdgeOptions={{
+                                        type: "default",
+                                        style: {
+                                            stroke: "#00c692",
+                                            strokeWidth: 2,
+                                        },
+                                    }}
+                                >
+                                    <Background color="#555" variant={BackgroundVariant.Dots} gap={16} size={1} style={{ opacity: 1 }} />
+                                    <Controls
+                                        showInteractive={false}
+                                        className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
+                                    />
+                                </ReactFlow>
+                            </div>
                         </div>
 
                         {!readonly && !isLocked && <NodeSettings />}

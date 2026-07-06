@@ -464,6 +464,36 @@ export async function createTournament(_prevState: ActionResponse, formData: For
             return { success: false, error: "Name is required" };
         }
 
+        // Check if user is Pro
+        const { getUserSubscriptionPlan } = await import("@/actions/common/user");
+        const activePlan = await getUserSubscriptionPlan();
+        const isProUser = activePlan === "monthly" || activePlan === "yearly" || activePlan === "manager_pro" || activePlan === "pro" || activePlan === "pro_yearly" || activePlan === "customs";
+
+        if (!isProUser) {
+            // Count current tournaments
+            const { count, error: countError } = await supabase
+                .from("tournaments")
+                .select("id", { count: "exact", head: true })
+                .eq("organizer_id", user.id);
+
+            if (countError) {
+                console.error("Error counting tournaments:", countError);
+                return { success: false, error: "Failed to verify tournament limit." };
+            }
+
+            if (count && count >= 1) {
+                const { getLocale } = await import("next-intl/server");
+                const locale = await getLocale();
+                const isThai = locale === 'th';
+                return { 
+                    success: false, 
+                    error: isThai 
+                        ? "ผู้ใช้ทั่วไปสามารถสร้างทัวร์นาเมนต์ได้สูงสุด 1 รายการเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro" 
+                        : "Starter plan users can create only 1 tournament. Please upgrade to a Pro plan." 
+                };
+            }
+        }
+
         if (!sport_id) {
             return { success: false, error: "Sport is required" };
         }
@@ -724,6 +754,47 @@ export async function createTournamentCategory(
 
         if (!isOwner && !isMember) {
             return { success: false, error: "Unauthorized to modify this tournament" };
+        }
+
+        // Check if user is Pro
+        const { getUserSubscriptionPlan } = await import("@/actions/common/user");
+        const activePlan = await getUserSubscriptionPlan();
+        const isProUser = activePlan === "monthly" || activePlan === "yearly" || activePlan === "manager_pro" || activePlan === "pro" || activePlan === "pro_yearly" || activePlan === "customs";
+
+        const { getLocale } = await import("next-intl/server");
+        const locale = await getLocale();
+        const isThai = locale === 'th';
+
+        if (!isProUser) {
+            // Count existing categories for this tournament
+            const { count: categoryCount, error: categoryCountError } = await supabase
+                .from("tournament_categories")
+                .select("id", { count: "exact", head: true })
+                .eq("tournament_id", tournamentId)
+                .is("deleted_at", null);
+
+            if (categoryCountError) {
+                console.error("Error counting tournament categories:", categoryCountError);
+                return { success: false, error: "Failed to verify category limit." };
+            }
+
+            if (categoryCount && categoryCount >= 1) {
+                return {
+                    success: false,
+                    error: isThai
+                        ? "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
+                        : "Starter plan users can create only 1 tournament category. Please upgrade to a Pro plan."
+                };
+            }
+
+            if (maxTeams > 12) {
+                return {
+                    success: false,
+                    error: isThai
+                        ? "ผู้ใช้ทั่วไปสามารถจำกัดจำนวนทีมได้สูงสุด 12 ทีมเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
+                        : "Starter plan users can set a maximum limit of 12 teams. Please upgrade to a Pro plan."
+                };
+            }
         }
 
         const formattedFee = Math.round(registrationFee * 100) / 100;
@@ -1617,6 +1688,32 @@ export async function deleteTournamentCategory(
         return { success: true };
     } catch (error) {
         console.error("Unexpected error in deleteTournamentCategory:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
+export async function updateBroadcastSettings(
+    tournamentId: string,
+    settings: unknown
+): Promise<ActionResponse> {
+    try {
+        const access = await validateTournamentAccess(tournamentId, 'editor');
+        if (!access.success) return { success: false, error: access.error };
+
+        const adminSupabase = createAdminClient();
+        const { error } = await adminSupabase
+            .from("tournaments")
+            .update({ broadcast_settings: settings })
+            .eq("id", tournamentId);
+
+        if (error) {
+            console.error("Update broadcast settings error:", error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("Unexpected error in updateBroadcastSettings:", error);
         return { success: false, error: "An unexpected error occurred" };
     }
 }

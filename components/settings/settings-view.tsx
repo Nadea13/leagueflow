@@ -10,6 +10,7 @@ import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriang
 import { ProfileForm } from "./profile-form";
 import { BillingTab } from "./billing-tab";
 import { cn } from "@/lib/utils";
+import { SettingsTourButton } from "./settings-tour-button";
 
 interface SettingsViewProps {
     user: User;
@@ -24,17 +25,18 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
     const tNav = await getTranslations("Nav");
     return (
         <div className="flex flex-col gap-2 md:gap-4 max-w-4xl mx-auto">
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between" id="tour-settings-header">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight">
                         {t("title")}
                     </h1>
                 </div>
+                <SettingsTourButton />
             </div>
 
             <div className="flex flex-col gap-2 md:gap-4 ">
                 {/* Settings Tabs Navigation */}
-                <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card overflow-x-auto scrollbar-hide">
+                <div className="flex p-1 rounded-sm gap-1 border border-border h-auto w-full md:w-max bg-card overflow-x-auto scrollbar-hide" id="tour-settings-tabs">
                     <Link
                         href="/dashboard/settings?tab=profile"
                         className={cn(
@@ -102,7 +104,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                 </div>
 
                 {/* Settings Content Area */}
-                <main className="flex-1 w-full space-y-2 md:space-y-4">
+                <main className="flex-1 w-full space-y-2 md:space-y-4" id="tour-settings-content">
                     <div>
                         {activeTab === 'profile' && (
                             <ProfileForm user={user} profile={profile} />

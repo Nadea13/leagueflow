@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { RegistrationForm } from "@/features/registrations/registration-form";
+import { RegistrationTourButton } from "@/features/registrations/registration-tour-button";
 import { getMyTeams } from "@/actions/manager/team";
 import { Team } from "@/types";
 import Link from "next/link";
@@ -126,7 +127,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="flex md:items-start lg:items-center gap-2 md:gap-4">
+                    <div className="flex md:items-start lg:items-center gap-2 md:gap-4" id="tour-registration-header">
                         <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
                             {tournament.name}
                         </h1>
@@ -140,11 +141,14 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                         </div>
                     </div>
                 </div>
+                <div className="flex items-center">
+                    <RegistrationTourButton />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 md:gap-4">
                 {/* Left side (3 Columns): Tournament Registration Form */}
-                <div className="lg:col-span-3 order-2 lg:order-1">
+                <div className="lg:col-span-3 order-2 lg:order-1" id="tour-registration-form">
                     <RegistrationForm
                         tournament={{
                             id: tournament.id,
@@ -168,7 +172,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 {/* Right side (2 Columns): Tournament Info, Registered Teams, details */}
                 <div className="lg:col-span-2 space-y-2 md:space-y-4 order-1 lg:order-2">
                     {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description) */}
-                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4" id="tour-registration-details">
                         <CardHeader className="flex flex-row items-center space-y-0">
                             <CardTitle>
                                 {t("details")}
@@ -203,7 +207,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     </Card>
 
                     {/* 1. ข้อมูลการแข่งขัน (Tournament Information) */}
-                    <Card className="bg-card border rounded-xl py-2 md:py-4">
+                    <Card className="bg-card border rounded-xl py-2 md:py-4" id="tour-registration-info">
                         <CardContent className="space-y-2 md:space-y-4">
                             <div className="grid gap-3 text-sm">
                                 <div className="flex items-start gap-1 md:gap-2">
@@ -263,7 +267,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     </Card>
 
                     {/* 2. รายชื่อทีม (Team List) */}
-                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4" id="tour-registration-teams">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <CardTitle>
                                 {t("registered_list", { category: categoryName })}
