@@ -37,6 +37,10 @@ vi.mock('@/lib/profile', () => ({
     ensureProfileExists: vi.fn(() => Promise.resolve(true)),
 }));
 
+vi.mock('@/actions/common/user', () => ({
+    getUserSubscriptionPlan: vi.fn(() => Promise.resolve('pro')),
+}));
+
 vi.mock('@/lib/file-validation', () => ({
     validateUploadedFile: vi.fn(() => ({ valid: true })),
 }));
