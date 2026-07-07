@@ -78,3 +78,9 @@ FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 GRANT ALL ON TABLE "public"."payments" TO "anon";
 GRANT ALL ON TABLE "public"."payments" TO "authenticated";
 GRANT ALL ON TABLE "public"."payments" TO "service_role";
+
+-- 3. Sync auth.users to public.users trigger
+DROP TRIGGER IF EXISTS "on_auth_user_created" ON "auth"."users";
+CREATE TRIGGER "on_auth_user_created"
+    AFTER INSERT ON "auth"."users"
+    FOR EACH ROW EXECUTE FUNCTION "public"."handle_new_user_sync_auth"();
