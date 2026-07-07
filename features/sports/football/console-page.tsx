@@ -899,7 +899,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             variant="ghost"
                             size="icon"
                             onClick={startConsoleTutorial}
-                            className="h-10 w-10 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all animate-pulse"
+                            className="h-10 w-10 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
                             title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                         >
                             <HelpCircle className="h-4 w-4 text-primary" />

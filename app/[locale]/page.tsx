@@ -112,6 +112,11 @@ export default async function Home() {
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
+                  <Button size="lg" variant="outline" className="h-12 px-8 font-semibold text-base cursor-pointer" asChild>
+                    <Link href="/overlay">
+                      ลองใช้งาน Live Overlay ฟรี
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
