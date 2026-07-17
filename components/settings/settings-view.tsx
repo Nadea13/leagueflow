@@ -1,16 +1,16 @@
 import { getTranslations } from "next-intl/server";
 import { User } from "@supabase/supabase-js";
 import { Profile } from "@/types";
-import { Label } from "@/components/ui/label";
 import { Link } from "@/i18n/routing";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { DeleteAccountButton } from "./delete-account-button";
-import { ChevronRight, FileText, Shield, CreditCard, Sliders, Scale, AlertTriangle, User as UserIcon } from "lucide-react";
+import { ChevronRight, CreditCard, Sliders, Scale, AlertTriangle, User as UserIcon } from "lucide-react";
 import { ProfileForm } from "./profile-form";
 import { BillingTab } from "./billing-tab";
 import { cn } from "@/lib/utils";
 import { SettingsTourButton } from "./settings-tour-button";
+import { Header } from "../ui/header";
 
 interface SettingsViewProps {
     user: User;
@@ -27,9 +27,9 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
         <div className="flex flex-col gap-2 md:gap-4 max-w-4xl mx-auto">
             <div className="flex items-center justify-between" id="tour-settings-header">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+                    <Header level={2} className="text-2xl md:text-3xl font-black tracking-tight">
                         {t("title")}
-                    </h1>
+                    </Header>
                 </div>
                 <SettingsTourButton />
             </div>
@@ -115,18 +115,18 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                         )}
 
                         {activeTab === 'preferences' && (
-                            <div className="space-y-1 md:space-y-2 bg-card p-2 md:p-4 rounded-xl border">                                
+                            <div className="space-y-1 md:space-y-2 bg-card p-2 md:p-4 rounded-sm border">                                
                                 <div className="space-y-1 md:space-y-2">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <Label className="text-xs font-black tracking-widest text-primary">{tCommon("language")}</Label>
+                                            <Header level={4}>{tCommon("language")}</Header>
                                             <p className="text-xs text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
                                         </div>
                                         <LanguageToggle />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <Label className="text-xs font-black tracking-widest text-primary">{tCommon("theme")}</Label>
+                                            <Header level={4}>{tCommon("theme")}</Header>
                                             <p className="text-xs text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
                                         </div>
                                         <ThemeToggle />
@@ -136,38 +136,23 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                         )}
 
                         {activeTab === 'legal' && (
-                            <div className="space-y-1 md:space-y-2 bg-card p-2 md:p-4 rounded-xl border">                                
+                            <div className="space-y-1 md:space-y-2 bg-card p-2 md:p-4 rounded-sm border">                                
                                 <div className="grid gap-1 md:gap-2">
                                     <Link href="/privacy-policy" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className="w-full h-full rounded-full flex items-center justify-center bg-muted/10 text-muted-foreground/60 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-all">
-                                                    <Shield className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            <span className="font-black text-xs tracking-tight">{tLegal("privacy")}</span>
+                                            <Header level={4}>{tLegal("privacy")}</Header>
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
                                     </Link>
                                     <Link href="/terms-of-service" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className="w-full h-full rounded-full flex items-center justify-center bg-muted/10 text-muted-foreground/60 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-all">
-                                                    <FileText className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            <span className="font-black text-xs tracking-tight">{tLegal("terms")}</span>
+                                            <Header level={4}>{tLegal("terms")}</Header>
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
                                     </Link>
                                     <Link href="/refund-policy" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className="w-full h-full rounded-full flex items-center justify-center bg-muted/10 text-muted-foreground/60 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-all">
-                                                    <CreditCard className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            <span className="font-black text-xs tracking-tight">{tLegal("refund")}</span>
+                                            <Header level={4}>{tLegal("refund")}</Header>
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
                                     </Link>
@@ -176,11 +161,11 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                         )}
 
                         {activeTab === 'danger' && (
-                            <div className=" bg-card p-2 md:p-4 rounded-xl border">
+                            <div className=" bg-card p-2 md:p-4 rounded-sm border">
                                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                                     <div className="space-y-1">
-                                        <h4 className="text-xs font-black tracking-widest text-destructive">{t("delete_account")}</h4>
-                                        <p className="text-xs text-muted-foreground/60 font-medium">{t("delete_account_desc")}</p>
+                                        <Header level={4} className="text-destructive">{t("delete_account")}</Header>
+                                        <p className="text-xs text-muted-foreground font-medium">{t("delete_account_desc")}</p>
                                     </div>
                                     <DeleteAccountButton email={user?.email || ""} />
                                 </div>

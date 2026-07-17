@@ -75,7 +75,7 @@ export function LogoUploader({
     };
 
     return (
-        <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-lg">
+        <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-sm">
             <div className="relative group">
                 <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm border-border">
                     {isCompressing ? (

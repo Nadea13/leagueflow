@@ -10,6 +10,7 @@ import { CreateTeamForm } from "@/features/teams/create-team-form";
 import { VerifyTeamForm } from "@/features/teams/verify-team-form";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Team } from "@/types/index";
+import { Header } from "@/components/ui/header";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
@@ -96,28 +97,24 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
     return (
         <div className="flex flex-col gap-2 md:gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter" id="tour-my-teams-header">
-                        {t("my_teams")}
-                    </h1>
+                <div className="flex items-center gap-1 lg:gap-2">
+                    <Header level={2}>{t("my_teams")}</Header>
                     <Button 
-                        variant="outline" 
-                        size="sm" 
+                        variant="ghost" 
+                        size="icon-sm" 
                         onClick={startTour} 
-                        className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
                     >
-                        <HelpCircle className="h-3.5 w-3.5" />
-                        {t("tour_button")}
+                        <HelpCircle className="h-4 w-4" />
                     </Button>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:h-10 sm:w-64 sm:flex-none" id="tour-my-teams-search">
+                    <div className="relative flex-1 lg:w-128 sm:flex-none" id="tour-my-teams-search">
                         <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
                         <Input
                             type="search"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pr-10"
+                            className="bg-card"
                         />
                     </div>
                     <div id="tour-verify-team-btn" className="inline-block">
@@ -137,7 +134,7 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             title={t("no_teams_yet")}
                             description={t("no_teams_desc") || "Create your first team to start participating in tournaments."}
                             action={<CreateTeamForm />}
-                            className="bg-card"
+                            className="bg-card rounded-sm border"
                         />
                     </div>
                 ) : (

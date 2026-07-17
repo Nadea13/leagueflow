@@ -7,7 +7,6 @@ import { getPlans } from "@/actions/common/plans";
 import { getUserPayments, getUserTournaments, createPaymentRecord, createPaymentRecordWithSlip } from "@/actions/common/payments";
 import { getUserSubscriptionDetails } from "@/actions/common/user";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,8 +16,10 @@ import { PromptPayQR } from "@/features/registrations/promptpay-qr";
 import { Loader2, X, Upload, CreditCard } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useRouter } from "next/navigation";
+import { Header } from "@/components/ui/header";
 import Image from "next/image";
 import { Tab } from "@/components/ui/tab";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const getPlanPrice = (plan: Plan) => {
     const isFreeOrPro = plan.id === "starter" || plan.id === "pro";
@@ -176,29 +177,27 @@ export function BillingTab() {
     return (
         <div className="space-y-2 md:space-y-4">
             {/* Current Plan overview */}
-            <Card className="bg-card border rounded-lg">
-                <CardContent className="p-2 md:p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-lg font-black tracking-tight">{t("title")}</CardTitle>
-                            <CardDescription className="text-xs">{t("description")}</CardDescription>
-                            {expiryDate && (
-                                <p className="text-[10px] text-muted-foreground mt-1.5 font-bold">
-                                    {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                </p>
-                            )}
-                        </div>
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1 font-bold">
-                            {t("active_prefix")}{getPlanName(activePlan)}
-                        </Badge>
+            <div className="bg-card border rounded-sm p-2 md:p-4">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <Header level={4}>{t("title")}</Header>
+                        <p className="text-xs text-muted-foreground font-medium">{t("description")}</p>
+                        {expiryDate && (
+                            <p className="text-[10px] text-muted-foreground mt-1 font-bold">
+                                {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
+                        )}
                     </div>
-                </CardContent>
-            </Card>
+                    <Badge variant="outline">
+                        {t("active_prefix")}{getPlanName(activePlan)}
+                    </Badge>
+                </div>
+            </div>
 
             {/* Plans List */}
             <div className="space-y-2 md:space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <Label>{t("plansTitle")}</Label>
+                    <Header level={4}>{t("plansTitle")}</Header>
                     <Tab
                         options={[
                             { value: "monthly", label: t("monthly_label") || "รายเดือน" },
@@ -208,13 +207,27 @@ export function BillingTab() {
                         onChange={(val) => setBillingCycle(val)}
                         showIcons={false}
                         fullWidth={true}
-                        className="w-full sm:w-auto"
+                        className="w-full sm:w-auto bg-card"
                     />
                 </div>
 
                 {loadingData && plans.length === 0 ? (
-                    <div className="flex items-center justify-center min-h-[200px]">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 items-stretch animate-pulse">
+                        {[...Array(4)].map((_, idx) => (
+                            <div key={idx} className="bg-card border rounded-sm p-2 md:p-4 flex flex-col justify-between space-y-4">
+                                <div className="space-y-3">
+                                    <Skeleton className="h-6 w-1/2 rounded-sm" />
+                                    <Skeleton className="h-8 w-1/3 rounded-sm" />
+                                    <Skeleton className="h-3.5 w-3/4 rounded-sm" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Skeleton className="h-3 w-full rounded-sm" />
+                                    <Skeleton className="h-3 w-5/6 rounded-sm" />
+                                    <Skeleton className="h-3 w-4/5 rounded-sm" />
+                                </div>
+                                <Skeleton className="h-9 w-full rounded-sm mt-4" />
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 items-stretch">
@@ -231,7 +244,7 @@ export function BillingTab() {
                             return (
                                 <div
                                     key={plan.id}
-                                    className={`bg-card border rounded-lg p-2 md:p-4 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative ${isCurrent
+                                    className={`bg-card border rounded-sm p-2 md:p-4 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative ${isCurrent
                                         ? "border-2 border-primary shadow-lg"
                                         : isRecommended
                                             ? "shadow-sm hover:border-primary"
@@ -239,7 +252,7 @@ export function BillingTab() {
                                         }`}
                                 >
                                     {isRecommended && (
-                                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-0.5 rounded-full tracking-wider">
+                                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-0.5 rounded tracking-wider">
                                             {t("recommended")}
                                         </div>
                                     )}
@@ -247,7 +260,7 @@ export function BillingTab() {
                                         <div className="flex justify-between items-start mb-1">
                                             <h3 className="text-md font-black">{getPlanName(plan.id)}</h3>
                                             {isCurrent && (
-                                                <Badge className="text-[10px] font-bold bg-primary/25 text-primary border-none">
+                                                <Badge variant="outline" className="text-[10px]">
                                                     {t("active_badge")}
                                                 </Badge>
                                             )}
@@ -367,13 +380,40 @@ export function BillingTab() {
 
             {/* Billing History */}
             <div className="space-y-2 md:space-y-4">
-                <Label>{t("historyTitle")}</Label>
-                {payments.length === 0 ? (
+                <Header level={4}>{t("historyTitle")}</Header>
+                {loadingData && payments.length === 0 ? (
+                    <div className="border rounded-sm bg-card overflow-hidden">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="text-xs font-black">{t("transactionId")}</TableHead>
+                                    <TableHead className="text-xs font-black">{t("plan")}</TableHead>
+                                    <TableHead className="text-xs font-black">{t("amount_col")}</TableHead>
+                                    <TableHead className="text-xs font-black">{t("method")}</TableHead>
+                                    <TableHead className="text-xs font-black">{t("status")}</TableHead>
+                                    <TableHead className="text-xs font-black text-right">{t("expires_at")}</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {[...Array(3)].map((_, idx) => (
+                                    <TableRow key={idx} className="text-xs">
+                                        <TableCell><Skeleton className="h-4 w-20 rounded-sm" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-24 rounded-sm" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-12 rounded-sm" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-16 rounded-sm" /></TableCell>
+                                        <TableCell><Skeleton className="h-4 w-14 rounded-sm" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-4 w-16 rounded-sm ml-auto" /></TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                ) : payments.length === 0 ? (
                     <EmptyState
                         icon={CreditCard}
                         title={t("no_history")}
                         description={t("no_history_desc")}
-                        className="min-h-[250px]"
+                        className="min-h-[250px] border bg-card rounded-sm"
                     />
                 ) : (
                     <div className="border rounded-md bg-card overflow-hidden">

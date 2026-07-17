@@ -77,7 +77,7 @@ export function UserDropdown({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-64 bg-card border shadow-2xl p-2 rounded-lg"
+                className="w-64 bg-card border shadow-2xl p-2 rounded-sm"
                 side={side}
                 align={align}
                 sideOffset={sideOffset}

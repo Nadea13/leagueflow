@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MessageSquareWarning, Send, AlertCircle, Loader2 } from "lucide-react"
+import { MessageSquareWarning, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -68,17 +68,11 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
                     <span>{t("title")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] bg-background border-border p-0 overflow-hidden shadow-2xl rounded-xl">
-                <div className="relative bg-background p-2 md:p-4 border-b">
+            <DialogContent className="sm:max-w-[640px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-sm">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none flex items-center gap-2">
-                            {t("dialog_title")}
-                        </DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-sm mt-1">
-                            {t("dialog_desc")}
-                        </DialogDescription>
+                        <DialogTitle>{t("dialog_title")}</DialogTitle>
+                        <DialogDescription>{t("dialog_desc")}</DialogDescription>
                     </DialogHeader>
-                </div>
 
                 <div className="p-2 space-y-2 md:p-4 md:space-y-4">
                     {error && (
@@ -90,7 +84,7 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
 
                     <Textarea
                         id="bug-message"
-                        className="min-h-[120px] resize-none bg-transparent text-foreground focus-visible:ring-0 text-sm"
+                        className="min-h-[240px] resize-none bg-transparent text-foreground focus-visible:ring-0 text-sm"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         disabled={isSubmitting}
@@ -101,12 +95,10 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
                     <Button onClick={handleSubmit} disabled={isSubmitting || !message.trim()} className="flex-1">
                         {isSubmitting ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
                                 {t("submitting")}
                             </>
                         ) : (
                             <>
-                                <Send className="mr-2 h-4 w-4" />
                                 {t("submit")}
                             </>
                         )}

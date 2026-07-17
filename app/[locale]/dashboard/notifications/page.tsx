@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Bell, Check, X, Clock, ShieldCheck, Mail, Phone, Inbox } from "lucide-react";
+import { CheckCircle2, XCircle, Bell, Check, X, Clock, ShieldCheck, Mail, Phone, Inbox } from "lucide-react";
 import { 
     getAllUserInvites, 
     acceptInvite, 
@@ -18,7 +18,8 @@ import {
 import { EmptyState } from "@/components/shared/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-
+import {Header} from "@/components/ui/header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 
 type NotificationItem =
@@ -222,22 +223,44 @@ export default function NotificationsPage() {
         <div className="flex flex-col gap-2 md:gap-4 max-w-4xl mx-auto">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
+                    <Header level={2} className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
                         {isTh ? "กล่องข้อความ" : "Inbox"}
-                    </h1>
+                    </Header>
                 </div>
             </div>
 
             {isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
+                <Card className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
+                    {[...Array(4)].map((_, idx) => (
+                        <div
+                            key={idx}
+                            className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4"
+                        >
+                            <div className="flex items-start gap-4 w-full">
+                                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                                <div className="space-y-2 flex-1">
+                                    <Skeleton className="h-4 w-3/4 rounded-sm" />
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-3 w-24 rounded-sm" />
+                                        <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                        <Skeleton className="h-3 w-16 rounded-sm" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                <Skeleton className="h-8 w-10 rounded-sm" />
+                                <Skeleton className="h-8 w-20 rounded-sm" />
+                            </div>
+                        </div>
+                    ))}
+                </Card>
             ) : notifications.length === 0 ? (
                 <EmptyState
                     title={t("no_pending_invites") || (isTh ? "ไม่มีข้อความใหม่" : "No new messages")}
                     description={t("pending_invites_desc") || (isTh ? "กล่องข้อความของคุณไม่มีการแจ้งเตือนหรือข้อความใหม่" : "Your inbox is empty.")}
                     icon={Inbox}
                     action={<div />}
+                    className="bg-card rounded-sm border"
                 />
             ) : (
                 <Card className="bg-card border rounded-sm divide-y divide-border overflow-hidden">

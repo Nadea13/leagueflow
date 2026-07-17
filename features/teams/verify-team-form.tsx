@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ShieldCheck, HelpCircle, Loader2, Search } from "lucide-react";
+import { ShieldCheck, HelpCircle, Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -121,23 +121,26 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2 border-primary/30 hover:bg-primary/5 text-primary" : "border-primary/30 hover:bg-primary/5 text-primary gap-2"}>
+                <Button variant="outline" className={iconOnlyMobile ? "h-8 w-8 sm:w-auto gap-1" : ""}>
                     <ShieldCheck className="h-4 w-4" />
                     <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("verify_title")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-sm">
                 <form onSubmit={handleSubmit}>
-                    <div className="relative p-2 md:p-4 border-b">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-2 leading-none">
-                                {t("verify_title")}
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground text-xs mt-1.5">
-                                {t("verify_desc")}
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>{t("verify_title")}</DialogTitle>
+                        <DialogDescription>{t("verify_desc")}</DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => setOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
 
                     <div className="p-2 md:p-4 space-y-1 md:space-y-2">
                         {/* Input Email to search */}
@@ -218,7 +221,7 @@ export function VerifyTeamForm({ iconOnlyMobile = false }: VerifyTeamFormProps) 
                         </div>
 
                         {/* Helper Tip */}
-                        <div className="text-[10px] flex items-start gap-1 md:gap-2 p-1 md:p-2 rounded-sm border border-dashed text-muted-foreground">
+                        <div className="text-[10px] flex items-start gap-1 md:gap-2 text-muted-foreground">
                             <HelpCircle className="h-4 w-4 text-primary shrink-0" />
                             <span>{t("helper_tip")}</span>
                         </div>

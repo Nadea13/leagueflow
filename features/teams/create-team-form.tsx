@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { createTeam, getSports } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,25 +66,32 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2" : ""}>
+                <Button className={iconOnlyMobile ? "h-8 w-8 p-0 sm:w-auto gap-1" : ""}>
                     <Plus className="h-4 w-4" />
                     <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-sm">
                 <form action={formAction}>
-                    <div className="relative p-2 md:p-4 border-b">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
-                                {t("add_team")}
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground text-sm">
-                                {t("no_teams_desc")}
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>
+                            {t("add_team")}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t("no_teams_desc")}
+                        </DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => setOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
 
-                    <div className="p-2 space-y-1 md:p-4 md:space-y-2">
+                    <div className="p-2 md:p-4 space-y-1 md:space-y-2">
                         <div className="space-y-1">
                             <Label>{t("upload_logo")}</Label>
                             <LogoUploader

@@ -51,71 +51,69 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
     }
 
     return (
-        <div>
-            <div className="relative overflow-hidden group bg-card p-2 md:p-4 rounded-xl border">
-                <form action={handleUpdate} className="grid gap-1 md:gap-2">
-                    <div className="space-y-1">
-                        <Label>Profile Photo</Label>
-                        <LogoUploader
-                            id="profile-avatar"
-                            initialUrl={previewUrl}
-                            onFileChange={(file) => {
-                                setSelectedFile(file);
-                                setRemoveAvatar(false);
-                                if (file) {
-                                    setPreviewUrl(URL.createObjectURL(file));
-                                } else {
-                                    setPreviewUrl(null);
-                                }
-                            }}
-                            onRemove={() => {
-                                setSelectedFile(null);
+        <div className="relative overflow-hidden group bg-card p-2 md:p-4 rounded-sm border">
+            <form action={handleUpdate} className="grid gap-1 md:gap-2">
+                <div className="space-y-1">
+                    <Label>Profile Photo</Label>
+                    <LogoUploader
+                        id="profile-avatar"
+                        initialUrl={previewUrl}
+                        onFileChange={(file) => {
+                            setSelectedFile(file);
+                            setRemoveAvatar(false);
+                            if (file) {
+                                setPreviewUrl(URL.createObjectURL(file));
+                            } else {
                                 setPreviewUrl(null);
-                                setRemoveAvatar(true);
-                            }}
-                            uploadLabel={tTeam("upload_logo") || "Upload Photo"}
-                            clickToUploadLabel={tTeam("click_to_upload") || "Change Photo"}
-                            previewLabel={tCommon("preview") || "Preview"}
-                            imageFit="cover"
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>{t("email")}</Label>
-                        <Input
-                            id="email"
-                            value={user?.email}
-                            disabled
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>{t("full_name")}</Label>
-                        <Input
-                            id="fullName"
-                            name="fullName"
-                            defaultValue={profile?.full_name || user?.user_metadata?.full_name || ""}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label>{tRoster("tel")}</Label>
-                        <Input
-                            id="phone"
-                            name="phone"
-                            defaultValue={profile?.phone || ""}
-                        />
-                    </div>
-                    <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading} variant="default">
-                            {isLoading ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <span className="flex items-center">
-                                    {tCommon("save")}
-                                </span>
-                            )}
-                        </Button>
-                    </div>
-                </form>
-            </div>
+                            }
+                        }}
+                        onRemove={() => {
+                            setSelectedFile(null);
+                            setPreviewUrl(null);
+                            setRemoveAvatar(true);
+                        }}
+                        uploadLabel={tTeam("upload_logo") || "Upload Photo"}
+                        clickToUploadLabel={tTeam("click_to_upload") || "Change Photo"}
+                        previewLabel={tCommon("preview") || "Preview"}
+                        imageFit="cover"
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label>{t("email")}</Label>
+                    <Input
+                        id="email"
+                        value={user?.email}
+                        disabled
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label>{t("full_name")}</Label>
+                    <Input
+                        id="fullName"
+                        name="fullName"
+                        defaultValue={profile?.full_name || user?.user_metadata?.full_name || ""}
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label>{tRoster("tel")}</Label>
+                    <Input
+                        id="phone"
+                        name="phone"
+                        defaultValue={profile?.phone || ""}
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <Button type="submit" disabled={isLoading} variant="default">
+                        {isLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <span className="flex items-center">
+                                {tCommon("save")}
+                            </span>
+                        )}
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 }
