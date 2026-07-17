@@ -39,7 +39,7 @@ export function EmptyState({
                 {displayDescription}
             </p>
             {action && (
-                <div className="relative z-10">
+                <div className="relative z-10 mt-2">
                     {action}
                 </div>
             )}

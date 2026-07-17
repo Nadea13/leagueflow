@@ -244,7 +244,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 {/* Left Column: Tournament Listing (8 cols) */}
                 <div className="lg:col-span-8 space-y-2 md:space-y-4 order-2 lg:order-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-background">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 md:gap-2">
                             <Header level={2}>{t("all_tournaments")}</Header>
                             <Button
                                 variant="ghost"
@@ -256,7 +256,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                         </div>
 
                         {/* Search input */}
-                        <div className="relative w-full md:w-1/2">
+                        <div className="relative w-full md:w-128">
                             <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
                             <Input
                                 type="search"

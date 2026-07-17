@@ -13,7 +13,9 @@ import { toast } from "sonner";
 import { searchMasterPlayers } from "@/actions/common/user";
 import { submitRosterWithSender } from "@/actions/tournaments/registration";
 
-interface UserRegisteredTeam {
+import { Player } from "@/types/index";
+
+export interface UserRegisteredTeam {
     id: string;
     contact_name: string | null;
     contact_phone: string | null;
@@ -62,9 +64,17 @@ interface MasterPlayerRow {
     tel: string | null;
 }
 
+const createInitialBulkPlayers = () => Array.from({ length: 3 }, () => ({
+    name: "",
+    number: "",
+    position: "",
+    tel: "",
+    photoFile: null,
+    photoPreview: null
+}));
+
 export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormProps) {
     const t = useTranslations("Roster");
-    const tCommon = useTranslations("Common");
 
     const [isOpen, setIsOpen] = useState(false);
     const [selectedRegId, setSelectedRegId] = useState<string>("");
@@ -72,20 +82,12 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
     const [senderPhone, setSenderPhone] = useState<string>("");
     const [isPending, startTransition] = useTransition();
 
-    const initialBulkPlayers = Array.from({ length: 3 }, () => ({
-        name: "",
-        number: "",
-        position: "",
-        tel: "",
-        photoFile: null,
-        photoPreview: null
-    }));
-    const [bulkPlayers, setBulkPlayers] = useState<BulkPlayerInput[]>(initialBulkPlayers);
+    const [bulkPlayers, setBulkPlayers] = useState<BulkPlayerInput[]>(createInitialBulkPlayers());
 
     const [focusedBulkIndex, setFocusedBulkIndex] = useState<number | null>(null);
     const [bulkSearchResults, setBulkSearchResults] = useState<MasterPlayerSearchResult[]>([]);
     const [isBulkSearching, setIsBulkSearching] = useState(false);
-    const [existingPlayers, setExistingPlayers] = useState<any[]>([]);
+    const [existingPlayers, setExistingPlayers] = useState<Player[]>([]);
     const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
     useEffect(() => {
@@ -108,14 +110,14 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                     })));
                 } else {
                     setExistingPlayers([]);
-                    setBulkPlayers(initialBulkPlayers);
+                    setBulkPlayers(createInitialBulkPlayers());
                 }
                 setIsLoadingExisting(false);
             };
             fetchExisting();
         } else {
             setExistingPlayers([]);
-            setBulkPlayers(initialBulkPlayers);
+            setBulkPlayers(createInitialBulkPlayers());
         }
     }, [selectedRegId]);
 
@@ -272,7 +274,7 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                 console.log("submitRosterWithSender response:", res);
                 if (res.success) {
                     toast.success(res.message || "ส่งรายชื่อนักกีฬาเรียบร้อยแล้ว");
-                    setBulkPlayers(initialBulkPlayers);
+                    setBulkPlayers(createInitialBulkPlayers());
                     setSelectedRegId("");
                     setSenderName("");
                     setSenderPhone("");
@@ -280,7 +282,7 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                 } else {
                     toast.error(res.error || "เกิดข้อผิดพลาดในการส่งรายชื่อ");
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("submitRosterWithSender threw exception:", err);
                 toast.error("เกิดข้อผิดพลาดในการส่งรายชื่อนักกีฬา");
             }

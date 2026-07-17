@@ -133,7 +133,7 @@ export async function submitRosterWithSender(
 
         if (!participation) return { success: false, error: "Registration record not found" };
 
-        const teamOwnerId = (participation.teams as any)?.user_id;
+        const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
         if (teamOwnerId !== user.id) {
             return { success: false, error: "Unauthorized to manage this roster" };
         }
@@ -158,8 +158,7 @@ export async function submitRosterWithSender(
         }
 
         const globalTeamId = participation.team_id;
-        const sportId = (participation.teams as any)?.sport_id;
-        const tournamentId = (participation.tournament_categories as any)?.tournament_id;
+        const tournamentId = (participation.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
 
         if (!globalTeamId) return { success: false, error: "Global team not found" };
         if (!tournamentId) return { success: false, error: "Tournament not found" };
@@ -235,7 +234,6 @@ export async function submitRosterWithSender(
             }
 
             // Create in master_players if not exists
-            let finalMasterId = existingMaster?.id;
             if (!existingMaster) {
                 let matchedUserId: string | null = null;
                 if (tel) {
@@ -269,8 +267,6 @@ export async function submitRosterWithSender(
 
                 if (masterErr || !newMaster) {
                     console.error(`[submitRosterWithSender] Create master player failed for ${name}:`, masterErr);
-                } else {
-                    finalMasterId = newMaster.id;
                 }
             }
 
@@ -283,18 +279,15 @@ export async function submitRosterWithSender(
                 .maybeSingle();
 
             if (existingSub) {
-                const updatePayload: any = {
-                    shirt_number: number || null,
-                    position: position || null,
-                    tel: tel || null,
-                    status: 'pending'
-                };
-                if (photoUrl) {
-                    updatePayload.photo_url = photoUrl;
-                }
                 const { error: updateErr } = await adminSupabase
                     .from("tournament_roster_submissions")
-                    .update(updatePayload)
+                    .update({
+                        shirt_number: number || null,
+                        position: position || null,
+                        tel: tel || null,
+                        status: 'pending',
+                        ...(photoUrl ? { photo_url: photoUrl } : {})
+                    })
                     .eq("id", existingSub.id);
 
                 if (updateErr) {
@@ -321,9 +314,9 @@ export async function submitRosterWithSender(
 
         revalidatePath(`/dashboard/registration/${tournamentId}`);
         return { success: true, message: "Roster submitted successfully!" };
-    } catch (e: any) {
+    } catch (e) {
         console.error("Error in submitRosterWithSender:", e);
-        return { success: false, error: e.message || "An unexpected error occurred." };
+        return { success: false, error: e instanceof Error ? e.message : "An unexpected error occurred." };
     }
 }
 
@@ -472,9 +465,9 @@ export async function approveRoster(
 
         revalidatePath(`/organizer/tournaments/${tournamentId}`);
         return { success: true, message: "Roster approved successfully!" };
-    } catch (e: any) {
+    } catch (e) {
         console.error("Error in approveRoster:", e);
-        return { success: false, error: e.message || "An unexpected error occurred." };
+        return { success: false, error: e instanceof Error ? e.message : "An unexpected error occurred." };
     }
 }
 
@@ -532,7 +525,7 @@ export async function requestRosterAddition(
 
     if (!participation) return { success: false, error: "Registration not found" };
 
-    const teamOwnerId = (participation.teams as any)?.user_id;
+    const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
     if (teamOwnerId !== user.id) {
         return { success: false, error: "Unauthorized to manage this roster" };
     }
@@ -575,7 +568,7 @@ export async function requestRosterUnlock(
 
     if (!participation) return { success: false, error: "Registration not found" };
 
-    const teamOwnerId = (participation.teams as any)?.user_id;
+    const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
     if (teamOwnerId !== user.id) {
         return { success: false, error: "Unauthorized to manage this roster" };
     }

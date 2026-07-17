@@ -209,12 +209,30 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
         }
 
         const mappedPlayers: Player[] = (data || []).map((tp) => {
-            const mp = tp.player as any; // Now references master_players directly
+            const tpObj = tp as unknown as {
+                id: string;
+                position: string | null;
+                shirt_number: string | null;
+                tournament_team_id: string;
+                player: {
+                    id: string;
+                    first_name_en: string | null;
+                    last_name_en: string | null;
+                    first_name_th: string | null;
+                    last_name_th: string | null;
+                    birthday: string | null;
+                    tel: string | null;
+                    profile_img: string | null;
+                    created_at: string;
+                    deleted_at: string | null;
+                } | null;
+            };
+            const mp = tpObj.player;
             return {
-                id: tp.id,
+                id: tpObj.id,
                 name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-                number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
-                position: tp.position || null,
+                number: tpObj.shirt_number ? parseInt(tpObj.shirt_number) : null,
+                position: tpObj.position || null,
                 birth_date: mp?.birthday || null,
                 photo_url: mp?.profile_img || null,
                 team_id: teamId,
@@ -346,12 +364,30 @@ export async function getTournamentPlayersDirect(teamId: string): Promise<{ succ
     }
 
     const mappedPlayers: Player[] = (data || []).map((tp) => {
-        const mp = tp.player as any;
+        const tpObj = tp as unknown as {
+            id: string;
+            position: string | null;
+            shirt_number: string | null;
+            tournament_team_id: string;
+            player: {
+                id: string;
+                first_name_en: string | null;
+                last_name_en: string | null;
+                first_name_th: string | null;
+                last_name_th: string | null;
+                birthday: string | null;
+                tel: string | null;
+                profile_img: string | null;
+                created_at: string;
+                deleted_at: string | null;
+            } | null;
+        };
+        const mp = tpObj.player;
         return {
-            id: tp.id,
+            id: tpObj.id,
             name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
-            number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
-            position: tp.position || null,
+            number: tpObj.shirt_number ? parseInt(tpObj.shirt_number) : null,
+            position: tpObj.position || null,
             birth_date: mp?.birthday || null,
             photo_url: mp?.profile_img || null,
             team_id: teamId,

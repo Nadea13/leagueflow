@@ -488,7 +488,7 @@ function CanvasInternal({
                         contact_phone: item.contact_phone,
                         created_at: item.created_at,
                         tournament_category_id: item.tournament_category_id,
-                        unlock_requested: (item as any).unlock_requested || false,
+                        unlock_requested: (item as { unlock_requested?: boolean | null }).unlock_requested || false,
                         team: teamData ? {
                             id: teamData.id,
                             name: teamData.name,

@@ -169,13 +169,29 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 <div className="flex items-center gap-2">
                     <RegistrationTourButton />
                     <RosterSubmissionForm 
-                        registeredTeams={(userRegisteredTeams || []).map((item) => ({
-                            id: item.id,
-                            contact_name: item.contact_name,
-                            contact_phone: item.contact_phone,
-                            team: Array.isArray(item.team) ? item.team[0] : item.team,
-                            tournament_categories: Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories
-                        })) as any} 
+                        registeredTeams={(userRegisteredTeams || []).map((item) => {
+                            const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
+                            const catData = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
+                            const ageCatData = (catData && Array.isArray(catData.age_categories) ? catData.age_categories[0] : (catData?.age_categories || null)) as { category_name: string | null } | null;
+                            
+                            return {
+                                id: item.id,
+                                contact_name: item.contact_name,
+                                contact_phone: item.contact_phone,
+                                team: teamData ? {
+                                    id: teamData.id,
+                                    name: teamData.name,
+                                    logo_img: teamData.logo_img
+                                } : null,
+                                tournament_categories: catData ? {
+                                    id: catData.id,
+                                    gender_type: catData.gender_type,
+                                    age_categories: ageCatData ? {
+                                        category_name: ageCatData.category_name
+                                    } : null
+                                } : null
+                            };
+                        })} 
                         locale={locale} 
                     />
                 </div>

@@ -713,7 +713,19 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
         }
 
         const mappedPlayers: Player[] = (approvedData || []).map((tp) => {
-            const mp = tp.player as any;
+            const rawPlayer = Array.isArray(tp.player) ? tp.player[0] : tp.player;
+            const mp = rawPlayer as {
+                id: string;
+                first_name_en: string | null;
+                last_name_en: string | null;
+                first_name_th: string | null;
+                last_name_th: string | null;
+                birthday: string | null;
+                tel: string | null;
+                profile_img: string | null;
+                created_at: string | null;
+                deleted_at: string | null;
+            } | null;
             return {
                 id: tp.id,
                 name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
@@ -846,7 +858,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
         });
 
     // Auto-clone roster if participation roster is empty
-    const part = participation as any;
+    const part = participation as { team_id: string | null } | null;
     if (part && mappedPlayers.length === 0 && part.team_id) {
         const globalTeamId = part.team_id;
         const cloneResult = await importRoster(teamId, globalTeamId);

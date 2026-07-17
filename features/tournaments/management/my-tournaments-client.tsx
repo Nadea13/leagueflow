@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Search, HelpCircle } from "lucide-react";
+import { Search, HelpCircle, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Tournament } from "@/types/index";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import { Header } from "@/components/ui/header";
 
 interface MyTournamentsClientProps {
     initialTournaments: (Tournament & { role?: string })[];
@@ -85,35 +86,31 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
     );
 
     return (
-        <div className="flex flex-col gap-2 md:gap-4">
+        <div className="flex flex-col gap-2 lg:gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter" id="tour-my-tournaments-header">
-                        {t("my_tournaments")}
-                    </h1>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={startTour} 
-                        className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
+                <div className="flex items-center gap-1 lg:gap-2">
+                    <Header level={2}>{t("my_tournaments")}</Header>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={startTour}
                     >
-                        <HelpCircle className="h-3.5 w-3.5" />
-                        {t("tour_button")}
+                        <HelpCircle className="h-4 w-4" />
                     </Button>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <div className="relative flex-1 sm:h-10 sm:w-64 sm:flex-none" id="tour-my-tournaments-search">
-                        <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
+                    <div className="relative flex-1 lg:w-128 sm:flex-none" id="tour-my-tournaments-search">
+                        <Search className="absolute right-2 lg:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
                         <Input
                             type="search"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pr-10"
+                            className="bg-card"
                         />
                     </div>
                     <div id="tour-create-tournament-btn" className="inline-block">
-                        <TournamentCreate 
-                            iconOnlyMobile 
+                        <TournamentCreate
+                            iconOnlyMobile
                             isDisabled={
                                 !(userPlan === "monthly" || userPlan === "yearly" || userPlan === "manager_pro" || userPlan === "pro" || userPlan === "pro_yearly" || userPlan === "customs") &&
                                 initialTournaments.filter(t => t.role === 'owner').length >= 1
@@ -127,9 +124,10 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                 <EmptyState
                     title={searchQuery ? t("no_tournaments_found") : t("no_tournaments")}
                     description={searchQuery ? `${t("search_tournaments")} "${searchQuery}"` : t("create_first")}
+                    icon={Trophy}
                     action={
                         <div id="tour-create-tournament-btn-empty">
-                            <TournamentCreate 
+                            <TournamentCreate
                                 isDisabled={
                                     !(userPlan === "monthly" || userPlan === "yearly" || userPlan === "manager_pro" || userPlan === "pro" || userPlan === "pro_yearly" || userPlan === "customs") &&
                                     initialTournaments.filter(t => t.role === 'owner').length >= 1
@@ -137,7 +135,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                             />
                         </div>
                     }
-                    className="bg-card"
+                    className="bg-card rounded-sm border"
                 />
             ) : (
                 <div id="tour-tournaments-grid" className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

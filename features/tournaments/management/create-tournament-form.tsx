@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { createTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
@@ -103,27 +103,30 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button 
-                    className={iconOnlyMobile ? "h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 sm:py-2 gap-2" : ""}
+                <Button
+                    className={iconOnlyMobile ? "h-8 w-8 p-0 lg:h-10 lg:w-auto lg:px-4 lg:py-2 gap-2" : ""}
                     onClick={handleButtonClick}
                 >
                     <Plus className="h-4 w-4" />
-                    <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("create_button")}</span>
+                    <span className={iconOnlyMobile ? "hidden lg:inline" : ""}>{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-xl shadow-2xl">
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-sm shadow-2xl">
                 <form action={formAction}>
                     {/* Premium Header */}
-                    <div className="p-2 md:p-4 border-b">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
-                                {t("create_title")}
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground text-sm">
-                                {t("create_desc")}
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>{t("create_title")}</DialogTitle>
+                        <DialogDescription>{t("create_desc")}</DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => setOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1 md:space-y-2 no-scrollbar">
                         <div className="space-y-1 md:space-y-2">
@@ -154,16 +157,16 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                                 <Label>
                                     {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 3:1)" : "Cover Image (Recommended 3:1)"}
                                 </Label>
-                                <div 
+                                <div
                                     onClick={() => coverInputRef.current?.click()}
                                     className="relative h-28 w-full border border-dashed border-border hover:border-primary/50 transition-all rounded-lg overflow-hidden flex flex-col items-center justify-center cursor-pointer group bg-muted/5"
                                 >
                                     {coverPreviewUrl ? (
                                         <>
-                                            <Image 
-                                                src={coverPreviewUrl} 
-                                                alt="Cover Preview" 
-                                                fill 
+                                            <Image
+                                                src={coverPreviewUrl}
+                                                alt="Cover Preview"
+                                                fill
                                                 className="object-cover transition-transform group-hover:scale-105"
                                             />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -208,7 +211,7 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                                         </div>
                                     )}
                                 </div>
-                                <input 
+                                <input
                                     id="cover_img"
                                     name="cover_img"
                                     type="file"
@@ -287,7 +290,7 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                         )}
                     </div>
 
-                    <DialogFooter className="border-t p-2 md:p-4">
+                    <DialogFooter>
                         <SubmitButton className="w-full">
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>

@@ -50,7 +50,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const tSports = useTranslations("Sports");
     const { toast } = useToast();
     const router = useRouter();
-    const [rosterStatus, setRosterStatus] = useState<string | null>(team.roster_status || null);
+    const rosterStatus = team.roster_status;
     const [unlockRequested, setUnlockRequested] = useState(team.unlock_requested || false);
     const [isRequestingUnlock, setIsRequestingUnlock] = useState(false);
 
