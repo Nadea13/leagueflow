@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LogoUploader } from "@/components/shared/logo-uploader";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, X } from "lucide-react";
 
 export interface PlayerData {
     id: string;
@@ -68,8 +68,8 @@ export function EditVerifyProfileDialog({
         const currentPlayer = masterPlayer;
 
         const isThai = locale === 'th';
-        const hasRequiredName = isThai 
-            ? (editFirstNameTh && editLastNameTh) 
+        const hasRequiredName = isThai
+            ? (editFirstNameTh && editLastNameTh)
             : (editFirstNameEn && editLastNameEn);
 
         if (!hasRequiredName || !editGender || !editBirthday) {
@@ -147,18 +147,25 @@ export function EditVerifyProfileDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card p-0 overflow-hidden shadow-2xl rounded-sm">
                 <form key={open ? `open-${masterPlayer?.id}` : 'closed'} onSubmit={handleSaveEdit}>
-                    <div className="relative p-2 md:p-4 border-b">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">
-                                {isThai ? "แก้ไขข้อมูลทะเบียนนักกีฬา" : "Edit Athlete Registration Profile"}
-                            </DialogTitle>
-                            <DialogDescription className="text-muted-foreground text-sm">
-                                {isThai ? "แก้ไขรายละเอียดโปรไฟล์นักกีฬาของคุณ" : "Modify your athlete profile details."}
-                            </DialogDescription>
-                        </DialogHeader>
-                    </div>
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>
+                            {isThai ? "แก้ไขข้อมูลทะเบียนนักกีฬา" : "Edit Athlete Registration Profile"}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {isThai ? "แก้ไขรายละเอียดโปรไฟล์นักกีฬาของคุณ" : "Modify your athlete profile details."}
+                        </DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
 
                     <div className="p-2 space-y-2 md:p-4 md:space-y-4">
                         {editError && (
@@ -304,7 +311,7 @@ export function EditVerifyProfileDialog({
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t p-2 md:p-4 gap-2">
+                    <DialogFooter>
                         <Button
                             type="submit"
                             disabled={isPending}

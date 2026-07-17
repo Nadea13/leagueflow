@@ -5,17 +5,19 @@ import { useLocale, useTranslations } from "next-intl";
 import { createMasterPlayer, getMasterPlayerStats } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
-    Trophy, User, Calendar, Phone, Search,
-    AlertCircle, Loader2, UserCheck, Activity, Edit, HelpCircle
+    Trophy, User, Calendar, Phone, Search, HelpCircle,
+    AlertCircle, UserCheck, Activity, Edit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Header } from "@/components/ui/header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tournament } from "@/types";
 import { EditVerifyProfileDialog } from "@/features/teams/edit-verify-profile-dialog";
 import { driver } from "driver.js";
@@ -77,20 +79,20 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
     const [success, setSuccess] = useState(false);
 
     const [stats, setStats] = useState<PlayerStats | null>(null);
-    const [loadingStats, setLoadingStats] = useState(false);
+    const [statsPlayerId, setStatsPlayerId] = useState<string | null>(null);
+    const loadingStats = masterPlayer?.id ? statsPlayerId !== masterPlayer.id : false;
 
     useEffect(() => {
         let active = true;
         if (masterPlayer?.id) {
-            Promise.resolve().then(() => {
-                if (active) setLoadingStats(true);
-            });
             getMasterPlayerStats(masterPlayer.id).then((res) => {
                 if (active) {
                     if (res.success && res.data) {
                         setStats(res.data);
+                    } else {
+                        setStats(null);
                     }
-                    setLoadingStats(false);
+                    setStatsPlayerId(masterPlayer.id);
                 }
             });
         }
@@ -243,17 +245,13 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                 <div className="lg:col-span-8 space-y-2 md:space-y-4 order-2 lg:order-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-background">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl md:text-3xl font-black tracking-tighter" id="tour-all-tournaments-header">
-                                {t("all_tournaments")}
-                            </h1>
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={startTour} 
-                                className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
+                            <Header level={2}>{t("all_tournaments")}</Header>
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={startTour}
                             >
-                                <HelpCircle className="h-3.5 w-3.5" />
-                                {t("tour_button")}
+                                <HelpCircle className="h-4 w-4" />
                             </Button>
                         </div>
 
@@ -266,17 +264,39 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 id="tour-search-input"
+                                className="bg-card"
                             />
                         </div>
                     </div>
 
                     {/* Tournaments Grid */}
-                    {filteredTournaments.length === 0 ? (
+                    {loadingStats ? (
+                        <div className="flex flex-col gap-2 md:gap-4">
+                            {[...Array(2)].map((_, idx) => (
+                                <div key={idx} className="bg-card border rounded-sm p-2 md:p-4 flex gap-2 md:gap-4">
+                                    <div className="flex gap-2 md:gap-4 flex-1">
+                                        <Skeleton className="h-14 w-14 rounded-full shrink-0" />
+                                        <div className="flex flex-col gap-2 justify-center flex-1">
+                                            <Skeleton className="h-5 w-1/3 rounded-sm" />
+                                            <Skeleton className="h-4 w-1/4 rounded-sm" />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0 items-center">
+                                        <Skeleton className="h-8 w-8 rounded-sm" />
+                                        <div className="space-y-1">
+                                            <Skeleton className="h-3.5 w-12 rounded-sm" />
+                                            <Skeleton className="h-4 w-28 rounded-sm" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : filteredTournaments.length === 0 ? (
                         <EmptyState
                             title={t("no_tournaments_found")}
                             description={t("no_tournaments_found_desc")}
                             icon={Trophy}
-                            className="bg-card"
+                            className="bg-card rounded-sm border"
                         />
                     ) : (
                         <div className="flex flex-col gap-2 md:gap-4 group" id="tour-tournaments-list">
@@ -307,7 +327,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">{t("schedule")}</p>
-                                                        <p className="text-xs font-bold text-foreground truncate">
+                                                        <p className="text-xs font-bold truncate">
                                                             {tournament.start_date && tournament.end_date ? (
                                                                 `${new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })}`
                                                             ) : (
@@ -327,38 +347,72 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
                 {/* Right Column: Master Player Card (4 cols) */}
                 <div className="lg:col-span-4 space-y-2 md:space-y-4 order-1 lg:order-2">
-                    <div className="bg-card border rounded-xl" id="tour-player-card">
-                        {masterPlayer ? (
+                    <div className="bg-card border rounded-sm" id="tour-player-card">
+                        {loadingStats ? (
+                            /* Player ID Card Skeleton */
+                            <div className="relative overflow-hidden">
+                                {/* License Header Skeleton */}
+                                <div className="flex items-center justify-between border-b p-2 md:p-4">
+                                    <Header level={3}>{t("player_verify")}</Header>
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-8 w-8 rounded-sm" />
+                                        <Skeleton className="h-5 w-16 rounded-sm" />
+                                    </div>
+                                </div>
+
+                                {/* Main Body Skeleton */}
+                                <div className="flex flex-col items-center space-y-3 p-2 md:p-4">
+                                    <Skeleton className="h-20 w-20 rounded-full" />
+                                    <div className="space-y-2 flex flex-col items-center">
+                                        <Skeleton className="h-5 w-36 rounded-sm" />
+                                        <Skeleton className="h-4.5 w-16 rounded-sm" />
+                                    </div>
+                                </div>
+
+                                {/* Details list Skeleton */}
+                                <div className="border-t">
+                                    <div className="flex items-center justify-between p-2 md:p-4 border-b">
+                                        <Skeleton className="h-4 w-16 rounded-sm" />
+                                        <Skeleton className="h-4 w-12 rounded-sm" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 md:p-4 border-b">
+                                        <Skeleton className="h-4 w-16 rounded-sm" />
+                                        <Skeleton className="h-4 w-28 rounded-sm" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 md:p-4">
+                                        <Skeleton className="h-4 w-16 rounded-sm" />
+                                        <Skeleton className="h-4 w-24 rounded-sm" />
+                                    </div>
+                                </div>
+                            </div>
+                        ) : masterPlayer ? (
                             /* Player ID Card */
                             <div className="relative overflow-hidden">
                                 {/* License Header */}
                                 <div className="flex items-center justify-between border-b p-2 md:p-4">
-                                    <div className="flex items-center gap-2 md:gap-4">
-                                        <span className="font-black text-foreground leading-tight">{t("player_verify")}</span>
-                                    </div>
+                                    <Header level={3}>{t("player_verify")}</Header>
                                     <div className="flex items-center gap-2">
                                         <Button
                                             type="button"
                                             variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
+                                            size="icon-sm"
                                             onClick={handleOpenEdit}
                                             id="tour-edit-profile-btn"
                                         >
                                             <Edit className="h-4 w-4" />
                                         </Button>
-                                        <Badge className={`px-2.5 h-6 rounded-full text-[10px] font-black ${masterPlayer.verified
-                                            ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                                            : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                        <Badge className={`${masterPlayer.verified
+                                            ? "bg-primary"
+                                            : "bg-warning"
                                             }`}>
                                             {masterPlayer.verified ? (
                                                 <>
-                                                    <UserCheck className="h-3 w-3 mr-1" />
+                                                    <UserCheck className="h-3 w-3" />
                                                     {t("verified")}
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Activity className="h-3 w-3 mr-1 animate-pulse" />
+                                                    <Activity className="h-3 w-3 animate-pulse" />
                                                     {t("pending")}
                                                 </>
                                             )}
@@ -367,67 +421,67 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                 </div>
 
                                 {/* Main Body */}
-                                <div className="flex flex-col items-center text-center space-y-2 md:space-y-4 p-2 md:p-4 relative z-10">
+                                <div className="flex flex-col items-center text-center space-y-1 md:space-y-2 p-2 md:p-4 relative z-10">
                                     <div className="relative">
-                                        <Avatar className="h-20 w-20 border-2 bg-background relative z-10 rounded-full">
+                                        <Avatar className="h-20 w-20 border relative z-10 rounded-full">
                                             {masterPlayer.profile_img && <AvatarImage src={masterPlayer.profile_img} alt="Avatar" className="object-cover" />}
-                                            <AvatarFallback className="font-black text-foreground text-xl">
+                                            <AvatarFallback className="font-black text-2xl">
                                                 {`${(masterPlayer.first_name_en || masterPlayer.first_name_th || "?")[0]}${(masterPlayer.last_name_en || masterPlayer.last_name_th || "?")[0]}`}
                                             </AvatarFallback>
                                         </Avatar>
                                     </div>
 
-                                    <div>
-                                        <h3 className="text-xl font-black text-foreground leading-tight">
+                                    <div className="space-y-1 md:space-y-2">
+                                        <Header level={4}>
                                             {isThai
                                                 ? `${masterPlayer.first_name_th || masterPlayer.first_name_en || ""} ${masterPlayer.last_name_th || masterPlayer.last_name_en || ""}`
                                                 : `${masterPlayer.first_name_en || masterPlayer.first_name_th || ""} ${masterPlayer.last_name_en || masterPlayer.last_name_th || ""}`}
-                                        </h3>
-                                        <p className="text-xs text-primary mt-1 tracking-widest font-bold">
-                                            {t("status")} : {masterPlayer.status}
-                                        </p>
+                                        </Header>
+                                        <Badge variant="outline">
+                                            {masterPlayer.status}
+                                        </Badge>
                                     </div>
                                 </div>
 
                                 {/* Details list */}
                                 <div className="border-t relative z-10">
                                     <div className="flex items-center justify-between text-xs border-b p-2 md:p-4">
-                                        <span className="flex items-center gap-2 md:gap-4">
+                                        <Label className="gap-1 md:gap-2">
                                             <User className="h-4 w-4 text-primary" />
                                             {t("gender")}
-                                        </span>
-                                        <span className="font-bold text-foreground">
+                                        </Label>
+                                        <Label>
                                             {t(masterPlayer.gender || 'other')}
-                                        </span>
+                                        </Label>
                                     </div>
                                     <div className="flex items-center justify-between text-xs border-b border-border p-2 md:p-4">
-                                        <span className="flex items-center gap-2 md:gap-4 text-muted-foreground">
+                                        <Label className="gap-1 md:gap-2">
                                             <Calendar className="h-4 w-4 text-primary" />
                                             {t("birthday")}
-                                        </span>
-                                        <span className="font-bold text-foreground">
+                                        </Label>
+                                        <Label>
                                             {masterPlayer.birthday ? new Date(masterPlayer.birthday).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "-"}
-                                        </span>
+                                        </Label>
                                     </div>
                                     <div className="flex items-center justify-between text-xs p-2 md:p-4">
-                                        <span className="flex items-center gap-2 md:gap-4 text-muted-foreground">
+                                        <Label className="gap-1 md:gap-2">
                                             <Phone className="h-4 w-4 text-primary" />
                                             {t("phone")}
-                                        </span>
-                                        <span className="font-bold text-foreground">
+                                        </Label>
+                                        <Label>
                                             {masterPlayer.tel || "-"}
-                                        </span>
+                                        </Label>
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             /* Create Master Player Card / Form */
-                            <div className="relative overflow-hidden rounded-xl">
+                            <div className="relative overflow-hidden">
                                 <div className="flex flex-row items-center p-2 md:p-4 border-b">
-                                    <span className="font-black text-foreground leading-tight">{t("create_profile")}</span>
+                                    <span className="font-black leading-tight">{t("create_profile")}</span>
                                 </div>
 
-                                <div className="p-2 md:p-4 space-y-2 md:space-y-4">
+                                <div className="space-y-2 md:space-y-4">
                                     {error && (
                                         <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 mb-4 animate-shake">
                                             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -442,118 +496,120 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                         </div>
                                     )}
 
-                                    <form onSubmit={handleCreateProfile} className="space-y-4">
-                                        {/* Thai Name */}
-                                        <div className="space-y-2 border-b pb-3">
-                                            <Label>{t("thai_name")}</Label>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground">{t("first_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
-                                                    <Input
-                                                        id="firstNameTh"
-                                                        type="text"
-                                                        value={firstNameTh}
-                                                        onChange={(e) => setFirstNameTh(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground">{t("middle_name_th")}</Label>
-                                                    <Input
-                                                        id="middleNameTh"
-                                                        type="text"
-                                                        value={middleNameTh}
-                                                        onChange={(e) => setMiddleNameTh(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground">{t("last_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
-                                                    <Input
-                                                        id="lastNameTh"
-                                                        type="text"
-                                                        value={lastNameTh}
-                                                        onChange={(e) => setLastNameTh(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* English Name */}
-                                        <div className="space-y-2 border-b pb-3">
-                                            <Label>{t("english_name")}</Label>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground">{t("first_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
-                                                    <Input
-                                                        id="firstNameEn"
-                                                        type="text"
-                                                        value={firstNameEn}
-                                                        onChange={(e) => setFirstNameEn(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground">{t("middle_name_en")}</Label>
-                                                    <Input
-                                                        id="middleNameEn"
-                                                        type="text"
-                                                        value={middleNameEn}
-                                                        onChange={(e) => setMiddleNameEn(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] text-muted-foreground">{t("last_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
-                                                    <Input
-                                                        id="lastNameEn"
-                                                        type="text"
-                                                        value={lastNameEn}
-                                                        onChange={(e) => setLastNameEn(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1 flex flex-col justify-end">
-                                                <Label>{t("gender")} <span className="text-destructive">*</span></Label>
-                                                <Select value={gender} onValueChange={setGender}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder={t("select_gender")} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="male">{t("male")}</SelectItem>
-                                                        <SelectItem value="female">{t("female")}</SelectItem>
-                                                        <SelectItem value="other">{t("other")}</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                    <form onSubmit={handleCreateProfile}>
+                                        <div className="space-y-1 md:space-y-2 p-2 md:p-4">
+                                            {/* Thai Name */}
                                             <div className="space-y-1">
-                                                <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <div className="space-y-1">
+                                                        <Label>{t("first_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
+                                                        <Input
+                                                            id="firstNameTh"
+                                                            type="text"
+                                                            value={firstNameTh}
+                                                            onChange={(e) => setFirstNameTh(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label>{t("middle_name_th")}</Label>
+                                                        <Input
+                                                            id="middleNameTh"
+                                                            type="text"
+                                                            value={middleNameTh}
+                                                            onChange={(e) => setMiddleNameTh(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label>{t("last_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
+                                                        <Input
+                                                            id="lastNameTh"
+                                                            type="text"
+                                                            value={lastNameTh}
+                                                            onChange={(e) => setLastNameTh(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* English Name */}
+                                            <div className="space-y-1">
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <div className="space-y-1">
+                                                        <Label>{t("first_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
+                                                        <Input
+                                                            id="firstNameEn"
+                                                            type="text"
+                                                            value={firstNameEn}
+                                                            onChange={(e) => setFirstNameEn(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label>{t("middle_name_en")}</Label>
+                                                        <Input
+                                                            id="middleNameEn"
+                                                            type="text"
+                                                            value={middleNameEn}
+                                                            onChange={(e) => setMiddleNameEn(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label>{t("last_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
+                                                        <Input
+                                                            id="lastNameEn"
+                                                            type="text"
+                                                            value={lastNameEn}
+                                                            onChange={(e) => setLastNameEn(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-1 md:gap-2">
+                                                <div className="space-y-1 flex flex-col justify-end">
+                                                    <Label>{t("gender")} <span className="text-destructive">*</span></Label>
+                                                    <Select value={gender} onValueChange={setGender}>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder={t("select_gender")} />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="male">{t("male")}</SelectItem>
+                                                            <SelectItem value="female">{t("female")}</SelectItem>
+                                                            <SelectItem value="other">{t("other")}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
+                                                    <Input
+                                                        id="birthday"
+                                                        type="date"
+                                                        required
+                                                        value={birthday}
+                                                        onChange={(e) => setBirthday(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{t("phone_number")}</Label>
                                                 <Input
-                                                    id="birthday"
-                                                    type="date"
-                                                    required
-                                                    value={birthday}
-                                                    onChange={(e) => setBirthday(e.target.value)}
+                                                    id="tel"
+                                                    type="tel"
+                                                    value={tel}
+                                                    onChange={(e) => setTel(e.target.value)}
                                                 />
                                             </div>
-                                        </div>
 
-                                        <div className="space-y-1">
-                                            <Label>{t("phone_number")}</Label>
-                                            <Input
-                                                id="tel"
-                                                type="tel"
-                                                value={tel}
-                                                onChange={(e) => setTel(e.target.value)}
-                                            />
                                         </div>
-
-                                        <Button
-                                            type="submit"
-                                            disabled={isPending}
-                                            className="w-full"
-                                        >
-                                            {t("create_card")}
-                                        </Button>
+                                        <div className="border-t p-2 md:p-4">
+                                            <Button
+                                                type="submit"
+                                                disabled={isPending}
+                                                className="w-full"
+                                            >
+                                                {t("create_card")}
+                                            </Button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
@@ -561,54 +617,86 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                     </div>
 
                     {masterPlayer && (
-                        <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col animate-in fade-in duration-200">
+                        <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col animate-in fade-in duration-200">
                             <div className="p-2 md:p-4 border-b flex items-center justify-between">
-                                <span className="font-black text-foreground leading-tight flex items-center gap-2">
-                                    {t("player_statistics")}
-                                </span>
+                                <Header level={3}>{t("player_statistics")}</Header>
                             </div>
 
                             {loadingStats ? (
-                                <div className="flex items-center justify-center p-8 text-xs text-muted-foreground/60 gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                    <span>{t("loading_stats")}</span>
+                                <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                                    {/* Stats Grid Skeleton */}
+                                    <div className="grid grid-cols-3 gap-1 md:gap-2">
+                                        {[...Array(6)].map((_, i) => (
+                                            <div key={i} className="p-2 rounded-sm border flex flex-col items-center justify-center space-y-2 h-[58px]">
+                                                <Skeleton className="h-3 w-12 rounded-sm" />
+                                                <Skeleton className="h-4 w-6 rounded-sm" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {/* Tournament History Table Skeleton */}
+                                    <div className="space-y-2">
+                                        <div className="border rounded-sm overflow-hidden p-2 space-y-3">
+                                            <div className="flex justify-between items-center pb-2 border-b">
+                                                <Skeleton className="h-3 w-24 rounded-sm" />
+                                                <div className="flex gap-4">
+                                                    <Skeleton className="h-3 w-4 rounded-sm" />
+                                                    <Skeleton className="h-3 w-4 rounded-sm" />
+                                                    <Skeleton className="h-3 w-4 rounded-sm" />
+                                                </div>
+                                            </div>
+                                            {[...Array(2)].map((_, i) => (
+                                                <div key={i} className="flex justify-between items-center py-1">
+                                                    <div className="space-y-1">
+                                                        <Skeleton className="h-3.5 w-32 rounded-sm" />
+                                                        <Skeleton className="h-2.5 w-16 rounded-sm" />
+                                                    </div>
+                                                    <div className="flex gap-4">
+                                                        <Skeleton className="h-3.5 w-4 rounded-sm" />
+                                                        <Skeleton className="h-3.5 w-4 rounded-sm" />
+                                                        <Skeleton className="h-3.5 w-4 rounded-sm" />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             ) : stats ? (
                                 <div className="p-2 md:p-4 space-y-1 md:space-y-2">
                                     {/* Stats Grid */}
                                     <div className="grid grid-cols-3 gap-1 md:gap-2 text-center">
-                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
-                                            <span className="text-[10px] font-bold text-muted-foreground block">{t("goals")}</span>
-                                            <span className="text-base md:text-lg text-foreground">{stats.goals}</span>
+                                        <div className="p-2 rounded-sm border transition-all">
+                                            <Label className="block">{t("goals")}</Label>
+                                            <span className="text-base md:text-lg">{stats.goals}</span>
                                         </div>
-                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
-                                            <span className="text-[10px] font-bold text-muted-foreground block">{t("assists")}</span>
-                                            <span className="text-base md:text-lg text-foreground">{stats.assists}</span>
+                                        <div className="p-2 rounded-sm border transition-all">
+                                            <Label className="block">{t("assists")}</Label>
+                                            <span className="text-base md:text-lg">{stats.assists}</span>
                                         </div>
-                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
-                                            <span className="text-[10px] font-bold text-muted-foreground block">{t("saves")}</span>
-                                            <span className="text-base md:text-lg text-foreground">{stats.saves}</span>
+                                        <div className="p-2 rounded-sm border transition-all">
+                                            <Label className="block">{t("saves")}</Label>
+                                            <span className="text-base md:text-lg">{stats.saves}</span>
                                         </div>
-                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
-                                            <span className="text-[10px] font-bold text-muted-foreground block">{t("yellow")}</span>
-                                            <span className="text-base md:text-lg text-amber-500">{stats.yellowCards}</span>
+                                        <div className="p-2 rounded-sm border transition-all">
+                                            <Label className="block text-warning">{t("yellow")}</Label>
+                                            <span className="text-base md:text-lg">{stats.yellowCards}</span>
                                         </div>
-                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
-                                            <span className="text-[10px] font-bold text-muted-foreground block">{t("red")}</span>
-                                            <span className="text-base md:text-lg text-rose-500">{stats.redCards}</span>
+                                        <div className="p-2 rounded-sm border transition-all">
+                                            <Label className="block text-destructive">{t("red")}</Label>
+                                            <span className="text-base md:text-lg">{stats.redCards}</span>
                                         </div>
-                                        <div className="p-2 rounded-lg border bg-card hover:bg-muted/5 transition-all">
-                                            <span className="text-[10px] font-bold text-muted-foreground block">{t("injuries")}</span>
-                                            <span className="text-base md:text-lg text-foreground">{stats.injuries}</span>
+                                        <div className="p-2 rounded-sm border transition-all">
+                                            <Label className="block">{t("injuries")}</Label>
+                                            <span className="text-base md:text-lg">{stats.injuries}</span>
                                         </div>
                                     </div>
 
                                     {/* Tournament History Table */}
                                     <div className="space-y-2">
                                         {stats.history.length === 0 ? (
-                                            <div className="text-center p-4 border border-dashed rounded-lg text-xs text-muted-foreground/60">
-                                                {t("no_history")}
-                                            </div>
+                                            <EmptyState
+                                                description={t("no_history")}
+                                                className="bg-card rounded-sm border border-dashed min-h-[80px]"
+                                            />
                                         ) : (
                                             <div className="border rounded-lg overflow-hidden">
                                                 <table className="w-full text-[10px] text-left border-collapse">
@@ -627,15 +715,15 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                         {stats.history.map((h, idx) => (
                                                             <tr key={idx} className="hover:bg-muted/5 transition-colors">
                                                                 <td className="p-2 font-medium">
-                                                                    <div className="font-bold text-foreground line-clamp-1">{h.tournamentName}</div>
+                                                                    <div className="font-bold line-clamp-1">{h.tournamentName}</div>
                                                                     <div className="text-muted-foreground text-[9px]">{h.teamName}</div>
                                                                 </td>
-                                                                <td className="p-2 text-center text-foreground">{h.goals}</td>
-                                                                <td className="p-2 text-center text-foreground">{h.assists}</td>
-                                                                <td className="p-2 text-center text-foreground">{h.saves}</td>
+                                                                <td className="p-2 text-center">{h.goals}</td>
+                                                                <td className="p-2 text-center">{h.assists}</td>
+                                                                <td className="p-2 text-center">{h.saves}</td>
                                                                 <td className="p-2 text-center text-amber-500">{h.yellowCards}</td>
                                                                 <td className="p-2 text-center text-rose-500">{h.redCards}</td>
-                                                                <td className="p-2 text-center text-foreground">{h.injuries}</td>
+                                                                <td className="p-2 text-center">{h.injuries}</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>

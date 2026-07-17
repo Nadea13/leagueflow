@@ -350,6 +350,11 @@
   body {
     @apply bg-background text-foreground overflow-x-hidden;
   }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
 }
 
 /* React Flow Selection Box Styles */
