@@ -11,7 +11,9 @@ import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AddPlayerForm } from "@/features/teams/add-player-form";
+import { AddPlayersDialog } from "@/features/teams/add-players-dialog";
 import { EditTeamForm } from "@/features/teams/edit-team-form";
 import { SquadList } from "@/features/teams/squad-list";
 import { driver } from "driver.js";
@@ -36,6 +38,8 @@ interface SquadManagementProps {
         isParticipation?: boolean;
         tournament?: Tournament;
         team_id?: string | null;
+        roster_status?: string | null;
+        unlock_requested?: boolean;
     };
     initialPlayers: Player[];
 }
@@ -45,6 +49,46 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const tCommon = useTranslations("Common");
     const tSports = useTranslations("Sports");
     const { toast } = useToast();
+    const router = useRouter();
+    const [rosterStatus, setRosterStatus] = useState<string | null>(team.roster_status || null);
+    const [unlockRequested, setUnlockRequested] = useState(team.unlock_requested || false);
+    const [isRequestingUnlock, setIsRequestingUnlock] = useState(false);
+
+    const handleRequestUnlock = async () => {
+        setIsRequestingUnlock(true);
+        const { requestRosterUnlock } = await import("@/actions/tournaments/registration");
+        const result = await requestRosterUnlock(team.id);
+        setIsRequestingUnlock(false);
+
+        if (result.success) {
+            setUnlockRequested(true);
+            toast({
+                title: tCommon("success"),
+                description: "ส่งคำขอปลดล็อกรายชื่อไปยังผู้จัดแล้ว กรุณารอการอนุมัติ"
+            });
+            router.refresh();
+        } else {
+            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        }
+    };
+
+    const handleRequestRosterAddition = async () => {
+        setIsRequestingUnlock(true);
+        const { requestRosterUnlock } = await import("@/actions/tournaments/registration");
+        const result = await requestRosterUnlock(team.id);
+        setIsRequestingUnlock(false);
+
+        if (result.success) {
+            setUnlockRequested(true);
+            toast({
+                title: tCommon("success"),
+                description: "ส่งคำขอเพิ่มรายชื่อนักกีฬาแล้วและรออนุมัติปลดล็อกชั่วคราวจาก Organizer"
+            });
+            router.refresh();
+        } else {
+            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        }
+    };
 
     const startTour = useCallback(() => {
         const driverObj = driver({
@@ -138,6 +182,8 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
     // Delete confirmation state
     const [playerToDelete, setPlayerToDelete] = useState<string | null>(null);
+
+
 
     const handleImportRoster = useCallback(async (sourceId: string) => {
         setIsImporting(true);
@@ -237,13 +283,18 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     </div>
                 </div>
                 <div className="flex items-start gap-2" id="tour-lock-roster-btn">
+                    <AddPlayersDialog 
+                        teamId={team.id} 
+                        onSuccess={refreshPlayers} 
+                        effectivelyLocked={effectivelyLocked} 
+                    />
                     <Button
                         variant={effectivelyLocked ? "outline" : "warning"}
-                        onClick={handleToggleLock}
-                        disabled={isLocking || isDeadlinePassed}
-                        title={effectivelyLocked ? t("unlock_roster") : t("submit_lock")}
+                        onClick={effectivelyLocked ? (isDeadlinePassed ? handleRequestUnlock : handleToggleLock) : handleToggleLock}
+                        disabled={isLocking || isRequestingUnlock || (effectivelyLocked && isDeadlinePassed && unlockRequested)}
+                        title={effectivelyLocked ? (isDeadlinePassed && unlockRequested ? "กำลังรอการปลดล็อก" : t("unlock_roster")) : t("submit_lock")}
                     >
-                        {isLocking ? (
+                        {isLocking || isRequestingUnlock ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                         ) : effectivelyLocked ? (
                             <Unlock className="h-4 w-4" />
@@ -251,7 +302,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             <Lock className="h-4 w-4" />
                         )}
                         <span className="hidden md:inline">
-                            {effectivelyLocked ? t("unlock_roster") : t("submit_lock")}
+                            {effectivelyLocked ? (isDeadlinePassed && unlockRequested ? "รออนุมัติปลดล็อก" : t("unlock_roster")) : t("submit_lock")}
                         </span>
                     </Button>
                 </div>
@@ -265,6 +316,66 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         <p className="text-xs opacity-90">
                             {t("deadline_locked_desc", { date: new Date(documentDeadline!).toLocaleString() })}
                         </p>
+                    </div>
+                </div>
+            )}
+
+            {unlockRequested && (
+                <div className="bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-600 rounded-lg animate-in fade-in">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <div className="flex-1">
+                        <p className="text-xs font-bold">ส่งคำขอปลดล็อกข้อมูลและรายชื่อแล้ว กำลังรอการอนุมัติจาก Organizer</p>
+                    </div>
+                </div>
+            )}
+
+            {rosterStatus === 'pending' && (
+                <div className="bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-600 rounded-lg animate-in fade-in">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <div className="flex-1">
+                        <p className="text-xs font-bold">ส่งรายชื่อนักกีฬาแล้วและกำลังรอการตรวจสอบ/อนุมัติจาก Organizer</p>
+                    </div>
+                </div>
+            )}
+
+            {rosterStatus === 'approved' && (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 flex items-center justify-between gap-3 text-emerald-600 rounded-lg animate-in fade-in">
+                    <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <p className="text-xs font-bold">รายชื่อนักกีฬาได้รับการอนุมัติเรียบร้อยแล้ว</p>
+                    </div>
+                    {team.isParticipation && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={isDeadlinePassed ? handleRequestRosterAddition : async () => {
+                                setIsLocking(true);
+                                const { toggleRosterLock } = await import("@/actions/manager/team");
+                                const result = await toggleRosterLock(team.id, false);
+                                setIsLocking(false);
+                                if (result.success) {
+                                    setIsLocked(false);
+                                    toast({ title: tCommon("success"), description: "ปลดล็อกรายชื่อแล้ว" });
+                                    router.refresh();
+                                } else {
+                                    toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+                                }
+                            }}
+                            disabled={isRequestingUnlock || isLocking || (isDeadlinePassed && unlockRequested)}
+                            className="h-8 text-xs border-emerald-500/30 hover:bg-emerald-500/10 cursor-pointer"
+                        >
+                            {isRequestingUnlock || isLocking ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                            {isDeadlinePassed ? (unlockRequested ? "รออนุมัติปลดล็อก" : "ขอส่งรายชื่อเพิ่ม") : "แก้ไขรายชื่อ"}
+                        </Button>
+                    )}
+                </div>
+            )}
+
+            {rosterStatus === 'rejected' && (
+                <div className="bg-destructive/10 border border-destructive/30 p-4 flex items-center gap-3 text-destructive rounded-lg animate-in fade-in">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <div className="flex-1">
+                        <p className="text-xs font-bold">รายชื่อนักกีฬาถูกปฏิเสธกรุณาตรวจสอบและแก้ไขส่งใหม่</p>
                     </div>
                 </div>
             )}

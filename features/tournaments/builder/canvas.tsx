@@ -1,6 +1,7 @@
 "use client";
 
 import { NodeTools } from "./node-tools";
+import Image from "next/image";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
@@ -20,7 +21,7 @@ import {
     Loader2, Plus, Users, X, Save,
     Settings, MapPin, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, RotateCw
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, RotateCw, Inbox
 } from "lucide-react";
 import {
     Popover,
@@ -47,6 +48,8 @@ import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMont
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { updateTournament } from "@/actions/tournaments/general";
+import { approveRegistration, rejectRegistration, approveRoster, rejectRoster } from "@/actions/tournaments/registration";
+import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
@@ -111,6 +114,23 @@ interface CanvasProps {
     userPlan?: string;
 }
 
+interface InboxItem {
+    id: string;
+    registration_status: string | null;
+    payment_status: string | null;
+    roster_status: string | null;
+    contact_name: string | null;
+    contact_phone: string | null;
+    created_at: string;
+    tournament_category_id: string | number;
+    unlock_requested?: boolean;
+    team: {
+        id: string;
+        name: string;
+        logo_img: string | null;
+    } | null;
+}
+
 function CanvasInternal({
     tournamentId,
     tournamentName,
@@ -155,15 +175,6 @@ function CanvasInternal({
                     popover: {
                         title: t("tour_console_category_title"),
                         description: t("tour_console_category_desc"),
-                        side: "bottom" as const,
-                        align: "start" as const
-                    }
-                },
-                {
-                    element: "#tour-console-status",
-                    popover: {
-                        title: t("tour_console_status_title"),
-                        description: t("tour_console_status_desc"),
                         side: "bottom" as const,
                         align: "start" as const
                     }
@@ -431,10 +442,74 @@ function CanvasInternal({
         setPendingAction(null);
     };
 
-    const [isStatusUpdating, setIsStatusUpdating] = useState(false);
     const router = useRouter();
 
     const [categories, setCategories] = useState<TournamentCategory[]>([]);
+    const [inboxOpen, setInboxOpen] = useState(false);
+    const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
+    const [isInboxLoading, setIsInboxLoading] = useState(false);
+
+     const fetchInboxItems = useCallback(async () => {
+        if (categories.length === 0) return;
+        setIsInboxLoading(true);
+        try {
+            const supabase = createClient();
+             const { data, error } = await supabase
+                .from("tournament_teams")
+                .select(`
+                    id,
+                    registration_status,
+                    payment_status,
+                    roster_status,
+                    contact_name,
+                    contact_phone,
+                    created_at,
+                    tournament_category_id,
+                    unlock_requested,
+                    team:teams (
+                        id,
+                        name,
+                        logo_img
+                    )
+                `)
+                .in("tournament_category_id", categories.map(c => c.id))
+                .is("deleted_at", null)
+                .order("created_at", { ascending: false });
+
+            if (!error && data) {
+                const formattedItems: InboxItem[] = data.map((item) => {
+                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
+                    return {
+                        id: item.id,
+                        registration_status: item.registration_status,
+                        payment_status: item.payment_status,
+                        roster_status: (item as { roster_status: string | null }).roster_status || null,
+                        contact_name: item.contact_name,
+                        contact_phone: item.contact_phone,
+                        created_at: item.created_at,
+                        tournament_category_id: item.tournament_category_id,
+                        unlock_requested: (item as any).unlock_requested || false,
+                        team: teamData ? {
+                            id: teamData.id,
+                            name: teamData.name,
+                            logo_img: teamData.logo_img
+                        } : null
+                    };
+                });
+                setInboxItems(formattedItems);
+            }
+        } catch (err) {
+            console.error("Error fetching inbox items:", err);
+        } finally {
+            setIsInboxLoading(false);
+        }
+    }, [categories]);
+
+    useEffect(() => {
+        if (categories.length > 0) {
+            fetchInboxItems();
+        }
+    }, [categories, fetchInboxItems]);
     const searchParams = useSearchParams();
     const pathname = usePathname();
     // Read persisted category from URL (?category=id), fallback to null (first category)
@@ -569,39 +644,6 @@ function CanvasInternal({
             setCurrentStatus(tournament.status);
         }
     }, [tournament?.status]);
-
-    const handleStatusChange = async (newStatus: string) => {
-        setIsStatusUpdating(true);
-        const formData = new FormData();
-        formData.append("status", newStatus);
-        formData.append("form_type", "general");
-
-        try {
-            const res = await updateTournament(tournamentId, null, formData);
-            if (res.success) {
-                setCurrentStatus(newStatus as TournamentStatus);
-                toast({
-                    title: "Success",
-                    description: "Tournament status updated successfully",
-                });
-                router.refresh();
-            } else {
-                toast({
-                    title: "Error",
-                    description: res.error || "Failed to update tournament status",
-                    variant: "destructive",
-                });
-            }
-        } catch {
-            toast({
-                title: "Error",
-                description: "An unexpected error occurred",
-                variant: "destructive",
-            });
-        } finally {
-            setIsStatusUpdating(false);
-        }
-    };
 
     const getCenterPos = () => {
         return screenToFlowPosition({
@@ -860,8 +902,8 @@ function CanvasInternal({
                         {locale === 'th' ? 'กรุณาหมุนหน้าจอเป็นแนวนอน' : 'Please rotate your device'}
                     </h2>
                     <p className="text-xs text-muted-foreground/80 max-w-xs mx-auto leading-relaxed">
-                        {locale === 'th' 
-                            ? 'ระบบบอร์ดจัดการแข่งขันออกแบบมาสำหรับใช้งานในแนวนอนบนอุปกรณ์มือถือเพื่อความสะดวกในการจัดการ' 
+                        {locale === 'th'
+                            ? 'ระบบบอร์ดจัดการแข่งขันออกแบบมาสำหรับใช้งานในแนวนอนบนอุปกรณ์มือถือเพื่อความสะดวกในการจัดการ'
                             : 'The bracket manager is designed for landscape mode on mobile devices for the best editing experience.'}
                     </p>
                 </div>
@@ -888,7 +930,7 @@ function CanvasInternal({
                             <span
                                 id="tour-console-name"
                                 className={cn(
-                                    "text-lg font-bold tracking-tight cursor-pointer hover:text-primary transition-colors",
+                                    "lg:text-lg text-base font-bold tracking-tight cursor-pointer hover:text-primary transition-colors",
                                     readonly && "cursor-default hover:text-foreground"
                                 )}
                                 onClick={() => !readonly && setIsEditingName(true)}
@@ -897,22 +939,21 @@ function CanvasInternal({
                             </span>
                         )}
 
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={startTour} 
-                            className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer ml-2"
-                        >
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={startTour}
+                            className="h-6 w-6"                        >
                             <HelpCircle className="h-3.5 w-3.5" />
-                            {t("tour_button")}
                         </Button>
 
                         <Button
                             variant={isLocked ? "default" : "outline"}
+                            size="icon"
                             onClick={() => setIsLocked(!isLocked)}
                             disabled={currentStatus === 'finished' || readonly}
                             className={cn(
-                                "transition-all w-10",
+                                "transition-all",
                                 isLocked
                                     ? "bg-warning"
                                     : "text-warning"
@@ -947,7 +988,7 @@ function CanvasInternal({
                                 <SelectTrigger className="w-[160px]">
                                     <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
                                 </SelectTrigger>
-                                <SelectContent className="bg-card">
+                                <SelectContent>
                                     {categories.length === 0 ? (
                                         <SelectItem value="none" disabled className="text-muted-foreground text-xs font-semibold">
                                             {locale === 'th' ? "ยังไม่ได้ตั้งค่าประเภทการแข่งขัน" : "No categories configured yet"}
@@ -974,40 +1015,6 @@ function CanvasInternal({
                                             + {locale === 'th' ? "สร้างประเภทการแข่งขัน..." : "Create Category..."}
                                         </SelectItem>
                                     )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div id="tour-console-status">
-                            <Select
-                                value={currentStatus}
-                                onValueChange={handleStatusChange}
-                                disabled={isStatusUpdating}
-                            >
-                                <SelectTrigger
-                                    className={cn(
-                                        "",
-                                        currentStatus === 'ongoing' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20" :
-                                            currentStatus === 'finished' ? "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20" :
-                                                currentStatus === 'upcoming' ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" :
-                                                    "bg-muted/50 text-muted-foreground border-muted-foreground/20 hover:bg-muted"
-                                    )}
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-card text-[10px] font-black tracking-widest">
-                                    <SelectItem value="draft" className="text-muted-foreground font-black text-[10px] tracking-widest cursor-pointer">
-                                        {locale === 'th' ? "แบบร่าง" : "Draft"}
-                                    </SelectItem>
-                                    <SelectItem value="upcoming" className="text-amber-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                        {locale === 'th' ? "เร็วๆ นี้" : "Upcoming"}
-                                    </SelectItem>
-                                    <SelectItem value="ongoing" className="text-emerald-500 font-black text-[10px] tracking-widest cursor-pointer">
-                                        {locale === 'th' ? "กำลังดำเนินการ" : "Ongoing"}
-                                    </SelectItem>
-                                    <SelectItem value="finished" className="text-primary font-black text-[10px] tracking-widest cursor-pointer">
-                                        {locale === 'th' ? "เสร็จสิ้น" : "Finished"}
-                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -1060,6 +1067,263 @@ function CanvasInternal({
                                             mode="form"
                                             onSuccess={() => setIsAnnouncementOpen(false)}
                                         />
+                                    </DialogContent>
+                                </Dialog>
+
+                                <Dialog open={inboxOpen} onOpenChange={(val) => {
+                                    setInboxOpen(val);
+                                    if (val) fetchInboxItems();
+                                }}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="relative text-foreground transition-all"
+                                        >
+                                            <Inbox className="h-4 w-4" />
+                                            {inboxItems.filter(item => item.registration_status === 'pending' || item.roster_status === 'pending').length > 0 && (
+                                                <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2"/>
+                                            )}
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="bg-card rounded-xl sm:max-w-[600px] p-0 max-h-[90vh] flex flex-col overflow-hidden">
+                                        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
+                                            <DialogTitle className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
+                                                <span>กล่องข้อความ / รายการแจ้งเตือน</span>
+                                            </DialogTitle>
+                                        </DialogHeader>
+
+                                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                            {isInboxLoading ? (
+                                                <div className="flex flex-col items-center justify-center py-12 gap-2">
+                                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                    <span className="text-xs text-muted-foreground/60">กำลังโหลดรายการแจ้งเตือน...</span>
+                                                </div>
+                                            ) : inboxItems.length === 0 ? (
+                                                <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
+                                                    <Inbox className="h-10 w-10 text-muted-foreground/20" />
+                                                    <h3 className="font-bold text-foreground text-sm">ไม่มีข้อความใหม่</h3>
+                                                    <p className="text-xs text-muted-foreground max-w-xs">
+                                                        ยังไม่มีทีมลงสมัครหรือทำรายการใด ๆ ในทัวร์นาเมนต์นี้
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                inboxItems.map((item) => {
+                                                    const isPendingReg = item.registration_status === 'pending';
+                                                    const hasRoster = item.contact_name || item.contact_phone;
+                                                    const category = categories.find(c => String(c.id) === String(item.tournament_category_id));
+                                                    const categoryName = category?.age_categories?.category_name || "ทั่วไป";
+
+                                                    return (
+                                                        <div key={item.id} className="border rounded-lg p-3 space-y-3 bg-card/50 hover:bg-muted/10 transition-colors">
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <div className="h-9 w-9 rounded-full border overflow-hidden flex items-center justify-center bg-background">
+                                                                        {item.team?.logo_img ? (
+                                                                            <Image
+                                                                                src={item.team.logo_img}
+                                                                                alt={item.team.name}
+                                                                                width={36}
+                                                                                height={36}
+                                                                                className="h-full w-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <Users className="h-4 w-4 text-muted-foreground/60" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="font-bold text-sm text-foreground">{item.team?.name || "ไม่ทราบชื่อทีม"}</h4>
+                                                                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                                            รุ่นการแข่งขัน: {categoryName} • {new Date(item.created_at).toLocaleString(locale === 'th' ? 'th-TH' : 'en-US')}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <span className={cn(
+                                                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                                                    isPendingReg
+                                                                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                                                        : item.registration_status === 'approved'
+                                                                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                                                            : "bg-destructive/10 text-destructive border-destructive/20"
+                                                                )}>
+                                                                    {isPendingReg ? "รอดำเนินการ" : item.registration_status === 'approved' ? "อนุมัติแล้ว" : "ปฏิเสธ"}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Notification Details & Actions */}
+                                                            <div className="bg-muted/30 p-2.5 rounded-md text-xs space-y-2">
+                                                                {isPendingReg ? (
+                                                                    <p className="text-foreground">
+                                                                        📢 <strong>ยื่นใบสมัครใหม่</strong> ต้องการขอเข้าร่วมการแข่งขันในรุ่นนี้
+                                                                    </p>
+                                                                ) : item.unlock_requested ? (
+                                                                    <p className="text-foreground">
+                                                                        🔑 <strong>ขอปลดล็อกรายชื่อ/ข้อมูลทีม</strong> ต้องการแก้ไขข้อมูลและนักกีฬา
+                                                                    </p>
+                                                                ) : hasRoster ? (
+                                                                    <p className="text-foreground">
+                                                                        {item.roster_status === 'pending' ? (
+                                                                            <>📋 <strong>ส่งรายชื่อนักกีฬาแล้ว (รออนุมัติ)</strong></>
+                                                                        ) : item.roster_status === 'approved' ? (
+                                                                            <>✅ <strong>อนุมัติรายชื่อแล้ว</strong></>
+                                                                        ) : item.roster_status === 'rejected' ? (
+                                                                            <>❌ <strong>ปฏิเสธรายชื่อแล้ว (รอแก้ไข)</strong></>
+                                                                        ) : (
+                                                                            <>📋 <strong>ส่งรายชื่อนักกีฬาแล้ว</strong></>
+                                                                        )} ผู้ติดต่อ: {item.contact_name} ({item.contact_phone})
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-muted-foreground">
+                                                                        ทีมนี้ได้ลงทะเบียนสำเร็จแล้ว แต่ยังไม่ได้ส่งรายชื่อนักกีฬา
+                                                                    </p>
+                                                                )}
+
+                                                                {/* Action Buttons */}
+                                                                <div className="flex gap-2 justify-end pt-1">
+                                                                    {isPendingReg && (
+                                                                        <>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                type="button"
+                                                                                className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                                onClick={async () => {
+                                                                                    const res = await rejectRegistration(item.id, tournamentId);
+                                                                                    if (res.success) {
+                                                                                        toast({ title: "ปฏิเสธการลงทะเบียนเรียบร้อยแล้ว" });
+                                                                                        fetchInboxItems();
+                                                                                    } else {
+                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                ปฏิเสธ
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="default"
+                                                                                type="button"
+                                                                                className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                                                onClick={async () => {
+                                                                                    const res = await approveRegistration(item.id, tournamentId);
+                                                                                    if (res.success) {
+                                                                                        toast({ title: "อนุมัติการลงทะเบียนเรียบร้อยแล้ว" });
+                                                                                        fetchInboxItems();
+                                                                                    } else {
+                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                อนุมัติใบสมัคร
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
+                                                                    {item.unlock_requested ? (
+                                                                        <>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                type="button"
+                                                                                className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                                onClick={async () => {
+                                                                                    const { rejectRosterUnlock } = await import("@/actions/tournaments/registration");
+                                                                                    const res = await rejectRosterUnlock(item.id, tournamentId);
+                                                                                    if (res.success) {
+                                                                                        toast({ title: "ปฏิเสธคำขอปลดล็อกเรียบร้อยแล้ว" });
+                                                                                        fetchInboxItems();
+                                                                                    } else {
+                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                ปฏิเสธคำขอ
+                                                                            </Button>
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="default"
+                                                                                type="button"
+                                                                                className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                                                onClick={async () => {
+                                                                                    const { approveRosterUnlock } = await import("@/actions/tournaments/registration");
+                                                                                    const res = await approveRosterUnlock(item.id, tournamentId);
+                                                                                    if (res.success) {
+                                                                                        toast({ title: "อนุมัติคำขอปลดล็อกเรียบร้อยแล้ว" });
+                                                                                        fetchInboxItems();
+                                                                                    } else {
+                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                อนุมัติปลดล็อก
+                                                                            </Button>
+                                                                        </>
+                                                                    ) : hasRoster && (
+                                                                         <>
+                                                                             <RosterDialog
+                                                                                 team={{
+                                                                                     id: item.id,
+                                                                                     name: item.team?.name || "",
+                                                                                     logo_url: item.team?.logo_img,
+                                                                                     contact_name: item.contact_name,
+                                                                                     contact_phone: item.contact_phone,
+                                                                                     sport: 'football'
+                                                                                 } as unknown as TournamentTeam}
+                                                                                 tournamentId={tournamentId}
+                                                                                 readOnly={item.roster_status === 'approved'}
+                                                                                 trigger={
+                                                                                     <Button size="sm" variant="outline" type="button" className="h-8 text-xs">
+                                                                                         ตรวจสอบรายชื่อนักกีฬา
+                                                                                     </Button>
+                                                                                 }
+                                                                             />
+                                                                             {item.roster_status === 'pending' && (
+                                                                                 <>
+                                                                                     <Button
+                                                                                         size="sm"
+                                                                                         variant="outline"
+                                                                                         type="button"
+                                                                                         className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                                         onClick={async () => {
+                                                                                             const res = await rejectRoster(item.id, tournamentId);
+                                                                                             if (res.success) {
+                                                                                                 toast({ title: "ปฏิเสธรายชื่อเรียบร้อยแล้ว" });
+                                                                                                 fetchInboxItems();
+                                                                                             } else {
+                                                                                                 toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                             }
+                                                                                         }}
+                                                                                     >
+                                                                                         ปฏิเสธรายชื่อ
+                                                                                     </Button>
+                                                                                     <Button
+                                                                                         size="sm"
+                                                                                         variant="default"
+                                                                                         type="button"
+                                                                                         className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                                                         onClick={async () => {
+                                                                                             const res = await approveRoster(item.id, tournamentId);
+                                                                                             if (res.success) {
+                                                                                                 toast({ title: "อนุมัติรายชื่อเรียบร้อยแล้ว" });
+                                                                                                 fetchInboxItems();
+                                                                                             } else {
+                                                                                                 toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                             }
+                                                                                         }}
+                                                                                     >
+                                                                                         อนุมัติรายชื่อ
+                                                                                     </Button>
+                                                                                 </>
+                                                                             )}
+                                                                         </>
+                                                                     )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     </DialogContent>
                                 </Dialog>
 
@@ -1118,9 +1382,10 @@ function CanvasInternal({
 
                                 <Button
                                     variant={activeSidebar === 'schedule' ? "default" : "outline"}
+                                    size="icon"
                                     onClick={() => setActiveSidebar(activeSidebar === 'schedule' ? 'teams' : 'schedule')}
                                     className={cn(
-                                        "transition-all w-10",
+                                        "transition-all",
                                         activeSidebar === 'schedule'
                                             ? "bg-primary"
                                             : "text-foreground"
@@ -1131,9 +1396,10 @@ function CanvasInternal({
 
                                 <Button
                                     variant={activeSidebar === 'settings' ? "default" : "outline"}
+                                    size="icon"
                                     onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
                                     className={cn(
-                                        "transition-all w-10",
+                                        "transition-all",
                                         activeSidebar === 'settings'
                                             ? "bg-primary"
                                             : "text-foreground"

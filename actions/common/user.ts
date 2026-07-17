@@ -31,7 +31,7 @@ export async function getUserSubscriptionPlan() {
         .select("plan_name, created_at")
         .eq("user_id", user.id)
         .eq("payment_status", "success")
-        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly"])
+        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly", "cup", "cup_yearly"])
         .is("tournament_id", null)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -42,9 +42,9 @@ export async function getUserSubscriptionPlan() {
         const createdAt = new Date(subscription.created_at);
         const expiresAt = new Date(createdAt);
         
-        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro") {
+        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup") {
             expiresAt.setDate(createdAt.getDate() + 30);
-        } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly") {
+        } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly" || subscription.plan_name === "cup_yearly") {
             expiresAt.setDate(createdAt.getDate() + 365);
         }
 
@@ -52,6 +52,55 @@ export async function getUserSubscriptionPlan() {
     }
 
     return 'free';
+}
+
+export async function getUserSubscriptionDetails() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { plan: 'free', expiresAt: null };
+
+    await ensureProfileExists(supabase, user);
+
+    const { data: profile } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+    if (profile?.role === 'admin') {
+        return { plan: 'yearly', expiresAt: null };
+    }
+
+    const { data: subscription } = await supabase
+        .from("payments")
+        .select("plan_name, created_at")
+        .eq("user_id", user.id)
+        .eq("payment_status", "success")
+        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly", "cup", "cup_yearly"])
+        .is("tournament_id", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+    if (subscription) {
+        const now = new Date();
+        const createdAt = new Date(subscription.created_at);
+        const expiresAt = new Date(createdAt);
+        
+        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup") {
+            expiresAt.setDate(createdAt.getDate() + 30);
+        } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly" || subscription.plan_name === "cup_yearly") {
+            expiresAt.setDate(createdAt.getDate() + 365);
+        }
+
+        if (now > expiresAt) {
+            return { plan: 'free', expiresAt: null };
+        }
+        return { plan: subscription.plan_name || 'free', expiresAt: expiresAt.toISOString() };
+    }
+
+    return { plan: 'free', expiresAt: null };
 }
 
 

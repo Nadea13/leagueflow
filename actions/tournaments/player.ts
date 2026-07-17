@@ -142,10 +142,92 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
         .select(`
             id,
             team_id,
-            tournament_id
+            tournament_id,
+            roster_status
         `)
         .eq("id", teamId)
         .single();
+
+    if (participation && participation.roster_status !== 'approved') {
+        const { data: staged, error: stagedErr } = await supabase
+            .from("tournament_roster_submissions")
+            .select("*")
+            .eq("tournament_team_id", teamId)
+            .eq("status", "approved");
+
+        if (stagedErr) {
+            console.error("Error fetching staged players:", stagedErr);
+            return { success: false, error: "Failed to fetch staged players" };
+        }
+
+        const mappedPlayers: Player[] = (staged || []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            number: s.shirt_number ? parseInt(s.shirt_number) : null,
+            position: s.position || null,
+            birth_date: null,
+            photo_url: s.photo_url || null,
+            team_id: teamId,
+            global_team_id: null,
+            global_player_id: null,
+            tel: s.tel || null,
+            status: s.status,
+            created_at: s.created_at,
+            deleted_at: null
+        }));
+
+        return { success: true, data: mappedPlayers };
+    }
+
+    if (participation) {
+        const { data, error } = await supabase
+            .from("tournament_players")
+            .select(`
+                id,
+                position,
+                shirt_number,
+                tournament_team_id,
+                player:master_player_id!inner (
+                    id,
+                    first_name_en,
+                    last_name_en,
+                    first_name_th,
+                    last_name_th,
+                    birthday,
+                    tel,
+                    profile_img,
+                    created_at,
+                    deleted_at
+                )
+            `)
+            .eq("tournament_team_id", teamId)
+            .is("player.deleted_at", null);
+
+        if (error) {
+            console.error("Error fetching tournament players:", error);
+            return { success: false, error: "Failed to fetch tournament players" };
+        }
+
+        const mappedPlayers: Player[] = (data || []).map((tp) => {
+            const mp = tp.player as any; // Now references master_players directly
+            return {
+                id: tp.id,
+                name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
+                number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
+                position: tp.position || null,
+                birth_date: mp?.birthday || null,
+                photo_url: mp?.profile_img || null,
+                team_id: teamId,
+                global_team_id: null,
+                global_player_id: mp?.id || null,
+                tel: mp?.tel || null,
+                created_at: mp?.created_at || new Date().toISOString(),
+                deleted_at: mp?.deleted_at || null
+            };
+        });
+
+        return { success: true, data: mappedPlayers };
+    }
 
     let query = supabase.from("player_sports").select(`
         id,
@@ -158,6 +240,7 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
             id,
             display_name,
             tel,
+            created_at,
             deleted_at,
             master_player:master_id (
                 id,
@@ -174,11 +257,7 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
     .is("deleted_at", null)
     .is("player.deleted_at", null);
 
-    if (participation) {
-        query = query.eq("team_id", participation.team_id);
-    } else {
-        query = query.eq("team_id", teamId);
-    }
+    query = query.eq("team_id", teamId);
 
     const { data, error } = await query;
 
@@ -221,12 +300,66 @@ export async function getPlayers(teamId: string): Promise<{ success: boolean; da
             position: psObj.position || null,
             birth_date: mp?.birthday || null,
             photo_url: mp?.profile_img || null,
-            team_id: participation ? teamId : null,
-            global_team_id: participation ? null : teamId,
+            team_id: null,
+            global_team_id: teamId,
             global_player_id: mp?.id || null,
             tel: p?.tel || mp?.tel || null,
             created_at: p?.created_at || new Date().toISOString(),
             deleted_at: psObj.deleted_at || p?.deleted_at || null
+        };
+    });
+
+    mappedPlayers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return { success: true, data: mappedPlayers };
+}
+
+export async function getTournamentPlayersDirect(teamId: string): Promise<{ success: boolean; data?: Player[]; error?: string }> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("tournament_players")
+        .select(`
+            id,
+            position,
+            shirt_number,
+            tournament_team_id,
+            player:master_player_id!inner (
+                id,
+                first_name_en,
+                last_name_en,
+                first_name_th,
+                last_name_th,
+                birthday,
+                tel,
+                profile_img,
+                created_at,
+                deleted_at
+            )
+        `)
+        .eq("tournament_team_id", teamId)
+        .is("player.deleted_at", null);
+
+    if (error) {
+        console.error("Error fetching tournament players direct:", error);
+        return { success: false, error: "Failed to fetch tournament players" };
+    }
+
+    const mappedPlayers: Player[] = (data || []).map((tp) => {
+        const mp = tp.player as any;
+        return {
+            id: tp.id,
+            name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
+            number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
+            position: tp.position || null,
+            birth_date: mp?.birthday || null,
+            photo_url: mp?.profile_img || null,
+            team_id: teamId,
+            global_team_id: null,
+            global_player_id: mp?.id || null,
+            tel: mp?.tel || null,
+            created_at: mp?.created_at || new Date().toISOString(),
+            deleted_at: mp?.deleted_at || null
         };
     });
 

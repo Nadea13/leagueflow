@@ -1,3 +1,18 @@
+-- WIPE ALL EXISTING DATA & SCHEMA FOR A CLEAN PUSH
+-- 1. Drop public schema to delete all tables, views, triggers, functions, and types
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+
+-- Restore default schema permissions for Supabase services
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO public;
+
+-- 2. Wipe Supabase Storage (Delete all buckets and files)
+TRUNCATE storage.objects CASCADE;
+TRUNCATE storage.buckets CASCADE;
+
+-- =========================================================================
+
 -- LeagueFlow Database Schema Dump (Clean & Organized)
 -- Generated on: 13/6/2569 16:23:00
 
@@ -95,14 +110,6 @@ CREATE TYPE "public"."payment_status_enum" AS ENUM (
 
 ALTER TYPE "public"."payment_status_enum" OWNER TO "postgres";
 
-CREATE TYPE "public"."payment_status" AS ENUM (
-    'pending',
-    'success',
-    'failed'
-);
-
-ALTER TYPE "public"."payment_status" OWNER TO "postgres";
-
 CREATE TYPE "public"."player_status_enum" AS ENUM (
     'active',
     'injury',
@@ -189,12 +196,8 @@ CREATE TABLE IF NOT EXISTS "public"."announcements" (
 CREATE TABLE IF NOT EXISTS "public"."master_players" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid",
-    "first_name_th" character varying(255) DEFAULT NULL,
-    "middle_name_th" character varying(255) DEFAULT NULL,
-    "last_name_th" character varying(255) DEFAULT NULL,
-    "first_name_en" character varying(255) DEFAULT NULL,
-    "middle_name_en" character varying(255) DEFAULT NULL,
-    "last_name_en" character varying(255) DEFAULT NULL,
+    "first_name" character varying(255) NOT NULL,
+    "last_name" character varying(255) NOT NULL,
     "gender" "public"."gender_enum" DEFAULT 'unspecified'::"public"."gender_enum" NOT NULL,
     "birthday" "date" NOT NULL,
     "tel" character varying(20) DEFAULT NULL::character varying,
@@ -243,24 +246,6 @@ CREATE TABLE IF NOT EXISTS "public"."matches" (
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone
-);
-
-CREATE TABLE IF NOT EXISTS "public"."payments" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid",
-    "tournament_id" "uuid",
-    "team_id" "uuid",
-    "amount" numeric(12,2) NOT NULL,
-    "plan_name" character varying(100),
-    "payment_status" "public"."payment_status" DEFAULT 'pending'::"public"."payment_status" NOT NULL,
-    "payment_method" character varying(50),
-    "transaction_id" character varying(255),
-    "raw_gateway_response" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
-    "paid_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "deleted_at" timestamp with time zone,
-    CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
 CREATE TABLE IF NOT EXISTS "public"."player_sports" (
@@ -366,35 +351,11 @@ CREATE TABLE IF NOT EXISTS "public"."tournament_teams" (
     "slip_img" "text",
     "registration_status" "public"."registration_status_enum" DEFAULT 'pending'::"public"."registration_status_enum" NOT NULL,
     "remark" "text",
-    "is_roster_locked" boolean DEFAULT false NOT NULL,
-    "roster_status" "public"."registration_status_enum" DEFAULT 'pending'::"public"."registration_status_enum" NOT NULL,
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone,
     "contact_name" "text",
     "contact_phone" "text"
-);
-
-CREATE TABLE IF NOT EXISTS "public"."tournament_roster_submissions" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "tournament_team_id" "uuid" NOT NULL,
-    "name" "text" NOT NULL,
-    "shirt_number" character varying(10),
-    "position" character varying(100),
-    "tel" character varying(20),
-    "photo_url" "text",
-    "status" "public"."registration_status_enum" DEFAULT 'pending'::"public"."registration_status_enum" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS "public"."tournament_players" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "tournament_team_id" "uuid" NOT NULL,
-    "master_player_id" "uuid" NOT NULL,
-    "shirt_number" character varying(10),
-    "position" character varying(100),
-    "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "public"."tournaments" (
@@ -458,8 +419,6 @@ ALTER TABLE "public"."match_events" OWNER TO "postgres";
 ALTER TABLE ONLY "public"."matches" REPLICA IDENTITY FULL;
 
 ALTER TABLE "public"."matches" OWNER TO "postgres";
-
-ALTER TABLE "public"."payments" OWNER TO "postgres";
 
 ALTER TABLE "public"."player_sports" OWNER TO "postgres";
 
@@ -551,15 +510,6 @@ ALTER TABLE ONLY "public"."announcements"
 ALTER TABLE ONLY "public"."master_players"
     ADD CONSTRAINT "master_players_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
 
-ALTER TABLE ONLY "public"."payments"
-    ADD CONSTRAINT "payments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE SET NULL;
-
-ALTER TABLE ONLY "public"."payments"
-    ADD CONSTRAINT "payments_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "public"."tournaments"("id") ON DELETE SET NULL;
-
-ALTER TABLE ONLY "public"."payments"
-    ADD CONSTRAINT "payments_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE SET NULL;
-
 ALTER TABLE ONLY "public"."match_events"
     ADD CONSTRAINT "match_events_match_id_fkey" FOREIGN KEY ("match_id") REFERENCES "public"."matches"("id") ON DELETE CASCADE;
 
@@ -620,15 +570,6 @@ ALTER TABLE ONLY "public"."tournament_teams"
 ALTER TABLE ONLY "public"."tournament_teams"
     ADD CONSTRAINT "tournament_teams_tournament_category_id_fkey" FOREIGN KEY ("tournament_category_id") REFERENCES "public"."tournament_categories"("id") ON DELETE CASCADE;
 
-ALTER TABLE ONLY "public"."tournament_roster_submissions"
-    ADD CONSTRAINT "tournament_roster_submissions_tournament_team_id_fkey" FOREIGN KEY ("tournament_team_id") REFERENCES "public"."tournament_teams"("id") ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."tournament_players"
-    ADD CONSTRAINT "tournament_players_tournament_team_id_fkey" FOREIGN KEY ("tournament_team_id") REFERENCES "public"."tournament_teams"("id") ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."tournament_players"
-    ADD CONSTRAINT "tournament_players_master_player_id_fkey" FOREIGN KEY ("master_player_id") REFERENCES "public"."master_players"("id") ON DELETE CASCADE;
-
 ALTER TABLE ONLY "public"."tournaments"
     ADD CONSTRAINT "tournaments_organizer_id_fkey" FOREIGN KEY ("organizer_id") REFERENCES "public"."users"("id") ON DELETE RESTRICT;
 
@@ -659,16 +600,10 @@ BEGIN
         target_team_id := NEW.team_id;
     END IF;
 
-    -- Check both global team status and specific tournament_teams status
     IF EXISTS (
         SELECT 1
         FROM public.teams
         WHERE id = target_team_id
-          AND is_roster_locked = true
-    ) OR EXISTS (
-        SELECT 1
-        FROM public.tournament_teams
-        WHERE team_id = target_team_id
           AND is_roster_locked = true
     ) THEN
         RAISE EXCEPTION 'Roster is locked';
@@ -801,8 +736,6 @@ CREATE OR REPLACE TRIGGER "set_timestamp_announcements" BEFORE UPDATE ON "public
 
 CREATE OR REPLACE TRIGGER "set_timestamp_master_players" BEFORE UPDATE ON "public"."master_players" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
-CREATE OR REPLACE TRIGGER "set_timestamp_payments" BEFORE UPDATE ON "public"."payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
-
 CREATE OR REPLACE TRIGGER "set_timestamp_match_events" BEFORE UPDATE ON "public"."match_events" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 CREATE OR REPLACE TRIGGER "set_timestamp_matches" BEFORE UPDATE ON "public"."matches" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
@@ -871,16 +804,6 @@ CREATE POLICY "master_players_write" ON "public"."master_players" TO "authentica
   WHERE ("users"."id" = "auth"."uid"())) = true))) OR (( SELECT "users"."is_admin"
    FROM "public"."users"
   WHERE ("users"."id" = "auth"."uid"())) = true)));
-
-ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "payments_select" ON "public"."payments" FOR SELECT TO "authenticated" USING ((("auth"."uid"() = "user_id") OR (( SELECT ("users"."role" = 'admin'::public.user_role)
-   FROM "public"."users"
-  WHERE ("users"."id" = "auth"."uid"())) = true)));
-
-CREATE POLICY "payments_write" ON "public"."payments" TO "authenticated" USING ((( SELECT ("users"."role" = 'admin'::public.user_role)
-   FROM "public"."users"
-  WHERE ("users"."id" = "auth"."uid"())) = true));
 
 ALTER TABLE "public"."match_events" ENABLE ROW LEVEL SECURITY;
 
@@ -1101,12 +1024,6 @@ GRANT ALL ON TABLE "public"."master_players" TO "authenticated";
 
 GRANT ALL ON TABLE "public"."master_players" TO "service_role";
 
-GRANT ALL ON TABLE "public"."payments" TO "anon";
-
-GRANT ALL ON TABLE "public"."payments" TO "authenticated";
-
-GRANT ALL ON TABLE "public"."payments" TO "service_role";
-
 GRANT ALL ON TABLE "public"."match_events" TO "anon";
 
 GRANT ALL ON TABLE "public"."match_events" TO "authenticated";
@@ -1170,16 +1087,6 @@ GRANT ALL ON TABLE "public"."tournament_teams" TO "anon";
 GRANT ALL ON TABLE "public"."tournament_teams" TO "authenticated";
 
 GRANT ALL ON TABLE "public"."tournament_teams" TO "service_role";
-
-GRANT ALL ON TABLE "public"."tournament_roster_submissions" TO "anon";
-GRANT ALL ON TABLE "public"."tournament_roster_submissions" TO "authenticated";
-GRANT ALL ON TABLE "public"."tournament_roster_submissions" TO "service_role";
-
-GRANT ALL ON TABLE "public"."tournament_players" TO "anon";
-GRANT ALL ON TABLE "public"."tournament_players" TO "authenticated";
-GRANT ALL ON TABLE "public"."tournament_players" TO "service_role";
-
-
 
 GRANT ALL ON TABLE "public"."tournaments" TO "anon";
 

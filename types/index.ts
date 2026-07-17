@@ -110,6 +110,21 @@ export interface TournamentTeam {
     created_at: string;
 }
 
+export type RosterSubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface TournamentRosterSubmission {
+    id: string;
+    tournament_team_id: string;
+    name: string;
+    shirt_number?: string | null;
+    position?: string | null;
+    tel?: string | null;
+    photo_url?: string | null;
+    status: RosterSubmissionStatus;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Player {
     id: string;
     team_id?: string | null;
@@ -121,6 +136,7 @@ export interface Player {
     photo_url?: string | null;
     global_player_id?: string | null;
     created_at: string;
+    status?: RosterSubmissionStatus; // Status for submissions if mapped
     // Join
     global_player?: GlobalPlayer | null;
     deleted_at?: string | null;

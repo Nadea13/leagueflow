@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Payment, Tournament, Plan } from "@/types";
 import { getPlans } from "@/actions/common/plans";
 import { getUserPayments, getUserTournaments, createPaymentRecord, createPaymentRecordWithSlip } from "@/actions/common/payments";
-import { getUserSubscriptionPlan } from "@/actions/common/user";
+import { getUserSubscriptionDetails } from "@/actions/common/user";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +18,7 @@ import { Loader2, X, Upload, CreditCard } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { Tab } from "@/components/ui/tab";
 
 const getPlanPrice = (plan: Plan) => {
     const isFreeOrPro = plan.id === "starter" || plan.id === "pro";
@@ -30,9 +31,20 @@ export function BillingTab() {
     const router = useRouter();
 
     const [activePlan, setActivePlan] = useState<string>("free");
+    const [expiryDate, setExpiryDate] = useState<string | null>(null);
     const [plans, setPlans] = useState<Plan[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
+    // Filter plans based on billing cycle (lifetime/customs show in both)
+    const filteredPlans = plans.filter((plan) => {
+        if (billingCycle === 'monthly') {
+            return plan.duration === 'lifetime' || plan.duration === 'monthly';
+        } else {
+            return plan.duration === 'lifetime' || plan.duration === 'yearly';
+        }
+    });
 
     // Slip upload state
     const [slipFile, setSlipFile] = useState<File | null>(null);
@@ -49,9 +61,10 @@ export function BillingTab() {
     const loadData = async () => {
         setLoadingData(true);
         try {
-            // Load user subscription plan
-            const plan = await getUserSubscriptionPlan();
-            setActivePlan(plan);
+            // Load user subscription details
+            const subDetails = await getUserSubscriptionDetails();
+            setActivePlan(subDetails.plan);
+            setExpiryDate(subDetails.expiresAt);
 
             // Load plans
             const plansRes = await getPlans();
@@ -141,8 +154,10 @@ export function BillingTab() {
     // Helper to get plan displayName
     const getPlanName = (planId: string) => {
         if (planId === "starter" || planId === "free") return t("plan_starter");
-        if (planId === "pro") return t("plan_pro") || "Pro";
+        if (planId === "pro") return t("plan_pro") || "Event";
         if (planId === "pro_yearly" || planId === "yearly") return t("plan_pro_yearly");
+        if (planId === "cup") return t("plan_cup") || "Cup";
+        if (planId === "cup_yearly") return t("plan_cup_yearly") || "Cup Yearly";
         if (planId === "customs") return t("plan_customs") || "Customs";
         if (planId === "manager_pro") return t("manager_pro.title") || "Manager Pro";
         return t("plan_starter") || "Starter";
@@ -167,6 +182,11 @@ export function BillingTab() {
                         <div>
                             <CardTitle className="text-lg font-black tracking-tight">{t("title")}</CardTitle>
                             <CardDescription className="text-xs">{t("description")}</CardDescription>
+                            {expiryDate && (
+                                <p className="text-[10px] text-muted-foreground mt-1.5 font-bold">
+                                    {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </p>
+                            )}
                         </div>
                         <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs px-3 py-1 font-bold">
                             {t("active_prefix")}{getPlanName(activePlan)}
@@ -177,20 +197,35 @@ export function BillingTab() {
 
             {/* Plans List */}
             <div className="space-y-2 md:space-y-4">
-                <Label>{t("plansTitle")}</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <Label>{t("plansTitle")}</Label>
+                    <Tab
+                        options={[
+                            { value: "monthly", label: t("monthly_label") || "รายเดือน" },
+                            { value: "yearly", label: t("yearly_label") || "รายปี" }
+                        ]}
+                        value={billingCycle}
+                        onChange={(val) => setBillingCycle(val)}
+                        showIcons={false}
+                        fullWidth={true}
+                        className="w-full sm:w-auto"
+                    />
+                </div>
 
                 {loadingData && plans.length === 0 ? (
                     <div className="flex items-center justify-center min-h-[200px]">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 items-stretch">
-                        {plans.map((plan) => {
-                            const isCurrent = activePlan === plan.id || (plan.id === 'starter' && activePlan === 'free') || (plan.id === 'pro_yearly' && activePlan === 'yearly');
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 items-stretch">
+                        {filteredPlans.map((plan) => {
+                            const isCurrent = activePlan === plan.id || (plan.id === 'starter' && activePlan === 'free') || (plan.id === 'pro' && activePlan === 'monthly') || (plan.id === 'pro_yearly' && activePlan === 'yearly');
                             const isCustoms = plan.id === 'customs';
                             const isPro = plan.id === 'pro';
                             const isProYearly = plan.id === 'pro_yearly';
                             const isManagerPro = plan.id === 'manager_pro';
+                            const isCup = plan.id === 'cup';
+                            const isCupYearly = plan.id === 'cup_yearly';
                             const isRecommended = isPro || isManagerPro;
 
                             return (
@@ -210,7 +245,7 @@ export function BillingTab() {
                                     )}
                                     <div>
                                         <div className="flex justify-between items-start mb-1">
-                                            <h3 className="text-md font-black">{plan.name}</h3>
+                                            <h3 className="text-md font-black">{getPlanName(plan.id)}</h3>
                                             {isCurrent && (
                                                 <Badge className="text-[10px] font-bold bg-primary/25 text-primary border-none">
                                                     {t("active_badge")}
@@ -224,9 +259,13 @@ export function BillingTab() {
                                                     ? t("starterDesc")
                                                     : isProYearly
                                                         ? t("proYearlyDesc")
-                                                        : isManagerPro
-                                                            ? t("managerProDesc")
-                                                            : t("customsDesc")
+                                                        : isCup
+                                                            ? t("cupDesc")
+                                                            : isCupYearly
+                                                                ? t("cupYearlyDesc")
+                                                                : isManagerPro
+                                                                    ? t("managerProDesc")
+                                                                    : t("customsDesc")
                                             }
                                         </p>
 
@@ -251,6 +290,16 @@ export function BillingTab() {
                                                 </div>
                                             ) : isCustoms ? (
                                                 <span className="text-xl font-black py-1">{t("contactSales")}</span>
+                                            ) : isCup ? (
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-2xl font-black">฿1,790</span>
+                                                    <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
+                                                </div>
+                                            ) : isCupYearly ? (
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-2xl font-black">฿17,900</span>
+                                                    <span className="text-muted-foreground text-xs">{t("perYear")}</span>
+                                                </div>
                                             ) : (
                                                 <div className="flex items-baseline gap-1">
                                                     <span className="text-2xl font-black">฿0</span>
@@ -282,10 +331,10 @@ export function BillingTab() {
                                             </Button>
                                         ) : (
                                             <Button
-                                                variant={isCurrent ? "outline" : ((isRecommended || isProYearly) ? "default" : "outline")}
+                                                variant={isCurrent ? "outline" : ((isRecommended || isProYearly || isCup || isCupYearly) ? "default" : "outline")}
                                                 className={`w-full text-xs font-bold h-9 ${isCurrent
                                                     ? "border-primary text-primary hover:bg-primary/10"
-                                                    : (isRecommended || isProYearly) && !isCurrent
+                                                    : (isRecommended || isProYearly || isCup || isCupYearly) && !isCurrent
                                                         ? "bg-primary text-primary-foreground hover:bg-primary/95"
                                                         : ""
                                                     }`}
@@ -298,9 +347,13 @@ export function BillingTab() {
                                                         ? t("subscribePro")
                                                         : plan.id === "pro_yearly"
                                                             ? t("subscribeProYearly")
-                                                            : plan.id === "manager_pro"
-                                                                ? t("manager_pro.title") || "Subscribe Manager Pro"
-                                                                : t("getStartedFree")
+                                                            : plan.id === "cup"
+                                                                ? t("subscribeCup") || "สมัคร Cup"
+                                                                : plan.id === "cup_yearly"
+                                                                    ? t("subscribeCupYearly") || "สมัคร Cup รายปี"
+                                                                    : plan.id === "manager_pro"
+                                                                        ? t("manager_pro.title") || "Subscribe Manager Pro"
+                                                                        : t("getStartedFree")
                                                 }
                                             </Button>
                                         )}

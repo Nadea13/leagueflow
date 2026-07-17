@@ -118,6 +118,51 @@ file_size_limit = "50MiB"
 # allowed_mime_types = ["image/png", "image/jpeg"]
 # objects_path = "./images"
 
+[storage.buckets.avatars]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.team-logos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.player-photos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.slips]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.logos]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.announcements]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.tournaments]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.teams]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
+[storage.buckets.players]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]
+
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]
 enabled = true

@@ -693,11 +693,11 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
               {/* Starter Plan */}
               <div className="bg-card border rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 md:space-y-4 transition-all duration-300 shadow-sm relative">
                 <div>
-                  <h3 className="text-xl font-bold mb-1">Starter</h3>
+                  <h3 className="text-xl font-bold mb-1">Match</h3>
                   <p className="text-muted-foreground text-xs mb-2">เหมาะสำหรับทัวร์นาเมนต์ขนาดเล็กหรือผู้เริ่มต้นจัดแข่งขัน</p>
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="text-4xl font-black">฿0</span>
@@ -741,7 +741,7 @@ export default async function Home() {
                   ยอดนิยม
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1 md:mb-2">Pro</h3>
+                  <h3 className="text-xl font-bold mb-1 md:mb-2">Event</h3>
                   <p className="text-muted-foreground text-xs mb-2 md:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
                   <div className="flex flex-col mb-2 md:mb-4">
                     <div className="flex items-baseline gap-1 md:gap-2">
@@ -754,15 +754,15 @@ export default async function Home() {
                   <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างทัวร์นาเมนต์ไม่จำกัด
+                      สร้างทัวร์นาเมนต์ 5 รายการ
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างรุ่นการแข่งขันไม่จำกัด
+                      สร้างรุ่นการแข่งขัน 15 รายการ
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      ไม่จำกัดจำนวนทีมและผู้แข่งขัน
+                      จำกัดจำนวนทีมสูงสุด 32 ทีม
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -783,7 +783,52 @@ export default async function Home() {
                   </ul>
                 </div>
                 <Button className="w-full" asChild>
-                  <Link href="/signup">สมัครแพ็คเกจ Pro</Link>
+                  <Link href="/signup">สมัครแพ็คเกจ Event</Link>
+                </Button>
+              </div>
+
+              {/* Cup Plan */}
+              <div className="bg-card border rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 md:space-y-4 transition-all duration-300 shadow-sm relative">
+                <div>
+                  <h3 className="text-xl font-bold mb-1">Cup</h3>
+                  <p className="text-muted-foreground text-xs mb-2">จัดทัวร์นาเมนต์ขนาดใหญ่และลีกประสิทธิภาพสูง</p>
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <span className="text-4xl font-black">฿1,790</span>
+                    <span className="text-muted-foreground text-sm">/ เดือน</span>
+                  </div>
+                  <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      สร้างทัวร์นาเมนต์ 20 รายการ
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      สร้างรุ่นการแข่งขัน 60 รุ่น
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      จำกัดจำนวนทีมสูงสุด 128 ทีม
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      บันทึกเหตุการณ์สด/ผู้ทำประตู/การฟาวล์ แบบเรียลไทม์
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      เพิ่มสตาฟดูแลการแข่งขันร่วมกัน
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      ระบบลงทะเบียนพร้อมจ่ายเงิน PromptPay
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      หน้าแสดงผลคะแนนสดสำหรับต่อเข้าจอถ่ายทอดสด (OBS Overlay)
+                    </li>
+                  </ul>
+                </div>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/signup">สมัครแพ็คเกจ Cup</Link>
                 </Button>
               </div>
 

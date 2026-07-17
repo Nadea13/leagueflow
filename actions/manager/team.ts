@@ -163,6 +163,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             sportId = sportData?.id || "a821b9db-6a6e-4c5b-aea4-1ed122076db2"; // fallback
         }
 
+        const teamId = crypto.randomUUID();
         let logoUrl = null;
 
         // Handle logo upload if provided
@@ -171,11 +172,11 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
             const fileExt = logoFile.name.split('.').pop();
-            const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = `logos/${fileName}`;
+            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const filePath = `${teamId}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from("team-logos")
+                .from("teams")
                 .upload(filePath, logoFile);
 
             if (uploadError) {
@@ -184,7 +185,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             }
 
             const { data: { publicUrl } } = supabase.storage
-                .from("team-logos")
+                .from("teams")
                 .getPublicUrl(filePath);
 
             logoUrl = publicUrl;
@@ -194,6 +195,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
         const { error: insertError } = await supabase
             .from("teams")
             .insert({
+                id: teamId,
                 name,
                 logo_img: logoUrl,
                 sport_id: sportId,
@@ -209,19 +211,7 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             return { success: false, error: insertError.message };
         }
         
-        // Fetch the inserted team to get its ID
-        const { data: insertedTeam } = await supabase
-            .from("teams")
-            .select("id")
-            .eq("name", name)
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-
-        if (insertedTeam) {
-            await logActivity('CREATE_TEAM', 'team', insertedTeam.id, { name, sport_id: sportId });
-        }
+        await logActivity('CREATE_TEAM', 'team', teamId, { name, sport_id: sportId });
 
         revalidatePath("/manager/my-teams");
         revalidatePath("/manager/dashboard");
@@ -449,11 +439,11 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
             const fileExt = logoFile.name.split('.').pop();
-            const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = `logos/${fileName}`;
+            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const filePath = `${teamId}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from("team-logos")
+                .from("teams")
                 .upload(filePath, logoFile);
 
             if (uploadError) {
@@ -462,7 +452,7 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             }
 
             const { data: { publicUrl } } = supabase.storage
-                .from("team-logos")
+                .from("teams")
                 .getPublicUrl(filePath);
 
             logoUrl = publicUrl;
@@ -686,10 +676,100 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
             id,
             team_id,
             tournament_category_id,
+            roster_status,
             tournament_categories ( tournament_id )
         `)
         .eq("id", teamId)
         .single();
+
+    if (participation) {
+        // 1. Fetch approved players from tournament_players
+        const { data: approvedData, error: approvedError } = await supabase
+            .from("tournament_players")
+            .select(`
+                id,
+                position,
+                shirt_number,
+                tournament_team_id,
+                player:master_player_id!inner (
+                    id,
+                    first_name_en,
+                    last_name_en,
+                    first_name_th,
+                    last_name_th,
+                    birthday,
+                    tel,
+                    profile_img,
+                    created_at,
+                    deleted_at
+                )
+            `)
+            .eq("tournament_team_id", teamId)
+            .is("player.deleted_at", null);
+
+        if (approvedError) {
+            console.error(`[getPlayers] Error fetching tournament players for ${teamId}:`, approvedError);
+            return { success: false, error: approvedError.message, data: [] };
+        }
+
+        const mappedPlayers: Player[] = (approvedData || []).map((tp) => {
+            const mp = tp.player as any;
+            return {
+                id: tp.id,
+                name: (mp ? (mp.first_name_th ? `${mp.first_name_th} ${mp.last_name_th || ''}` : `${mp.first_name_en || ''} ${mp.last_name_en || ''}`).trim() : ''),
+                number: tp.shirt_number ? parseInt(tp.shirt_number) : null,
+                position: tp.position || null,
+                birth_date: mp?.birthday || null,
+                photo_url: mp?.profile_img || null,
+                team_id: teamId,
+                global_team_id: null,
+                global_player_id: mp?.id || null,
+                tel: mp?.tel || null,
+                status: 'approved',
+                created_at: mp?.created_at || new Date().toISOString(),
+                deleted_at: mp?.deleted_at || null
+            };
+        });
+
+        // 2. Fetch pending roster submissions
+        const { data: submissions, error: subErr } = await supabase
+            .from("tournament_roster_submissions")
+            .select("*")
+            .eq("tournament_team_id", teamId)
+            .eq("status", "pending");
+
+        if (!subErr && submissions) {
+            const pendingPlayers: Player[] = submissions.map((s) => ({
+                id: s.id,
+                name: s.name,
+                number: s.shirt_number ? parseInt(s.shirt_number) : null,
+                position: s.position || null,
+                birth_date: null,
+                photo_url: s.photo_url || null,
+                team_id: teamId,
+                global_team_id: null,
+                global_player_id: null,
+                tel: s.tel || null,
+                status: 'pending',
+                created_at: s.created_at,
+                deleted_at: null
+            }));
+            mappedPlayers.push(...pendingPlayers);
+        }
+
+        // Auto-clone roster if participation roster is empty
+        if (mappedPlayers.length === 0 && participation.team_id) {
+            const globalTeamId = participation.team_id;
+            const cloneResult = await importRoster(teamId, globalTeamId);
+            
+            if (cloneResult.success) {
+                // Re-fetch players after successful import
+                return getPlayers(teamId);
+            }
+        }
+
+        return { success: true, data: mappedPlayers };
+    }
 
     let query = adminSupabase.from("player_sports").select(`
         id,
@@ -702,6 +782,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
             id,
             display_name,
             tel,
+            created_at,
             deleted_at,
             master_player:master_id (
                 id,
@@ -755,18 +836,19 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                 position: ps.position || null,
                 birth_date: mp?.birthday || null,
                 photo_url: mp?.profile_img || null,
-                team_id: participation ? teamId : null,
-                global_team_id: participation ? null : teamId,
+                team_id: null,
+                global_team_id: teamId,
                 global_player_id: mp?.id || null,
                 tel: p?.tel || mp?.tel || null,
                 created_at: p?.created_at || new Date().toISOString(),
-                deleted_at: ps.deleted_at || p?.deleted_at || null
+                deleted_at: p?.deleted_at || null
             };
         });
 
     // Auto-clone roster if participation roster is empty
-    if (participation && mappedPlayers.length === 0 && participation.team_id) {
-        const globalTeamId = participation.team_id;
+    const part = participation as any;
+    if (part && mappedPlayers.length === 0 && part.team_id) {
+        const globalTeamId = part.team_id;
         const cloneResult = await importRoster(teamId, globalTeamId);
         
         if (cloneResult.success) {
@@ -782,6 +864,7 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
                     id,
                     display_name,
                     tel,
+                    created_at,
                     deleted_at,
                     master_player:master_id (
                         id,
@@ -838,6 +921,8 @@ export async function getPlayers(teamId: string): Promise<ActionResponse<Player[
         }
     }
 
+    mappedPlayers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
     return { success: true, data: mappedPlayers };
 }
 
@@ -879,29 +964,53 @@ export async function addPlayer(
         .eq("id", teamId)
         .single();
         
+    if (participation) {
+        let photoUrl = null;
+        if (photoFile && photoFile.size > 0) {
+            const fileExt = photoFile.name.split('.').pop() || 'jpg';
+            const fileName = `${teamId}/photo_${Date.now()}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage
+                .from('players')
+                .upload(fileName, photoFile);
+            
+            if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('players')
+                    .getPublicUrl(fileName);
+                photoUrl = publicUrl;
+            } else {
+                console.error("[addPlayer] Photo upload failed:", uploadError);
+            }
+        }
+
+        const { error: insertErr } = await adminSupabase
+            .from("tournament_roster_submissions")
+            .insert({
+                tournament_team_id: teamId,
+                name: name,
+                shirt_number: number || null,
+                position: position || null,
+                tel: tel || null,
+                photo_url: photoUrl,
+                status: 'pending'
+            });
+
+        if (insertErr) {
+            return { success: false, error: "Failed to add player submission: " + insertErr.message };
+        }
+
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        return { success: true };
+    }
+
     let globalTeamId = null;
     let sportId = null;
     let tournamentId = null;
 
-    if (participation) {
-        globalTeamId = participation.team_id;
-        if (participation.tournament_category_id) {
-            const { data: category } = await adminSupabase
-                .from("tournament_categories")
-                .select("tournament_id")
-                .eq("id", participation.tournament_category_id)
-                .single();
-            if (category) tournamentId = category.tournament_id;
-        }
-        
-        const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", globalTeamId).single();
-        if (teamData) sportId = teamData.sport_id;
-    } else {
-        const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
-        if (globalCheck) {
-            globalTeamId = globalCheck.id;
-            sportId = globalCheck.sport_id;
-        }
+    const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
+    if (globalCheck) {
+        globalTeamId = globalCheck.id;
+        sportId = globalCheck.sport_id;
     }
 
     if (!globalTeamId) {
@@ -1020,12 +1129,12 @@ export async function addPlayer(
             const fileExt = photoFile.name.split('.').pop();
             const fileName = `${finalMasterId}/photo_${Date.now()}.${fileExt}`;
             const { error: uploadError } = await supabase.storage
-                .from('player-photos')
+                .from('players')
                 .upload(fileName, photoFile);
             
             if (!uploadError) {
                 const { data: { publicUrl } } = supabase.storage
-                    .from('player-photos')
+                    .from('players')
                     .getPublicUrl(fileName);
                 await adminSupabase
                     .from("master_players")
@@ -1070,6 +1179,392 @@ export async function addPlayer(
         if (psError) {
             // Log but don't fail the whole action if the table doesn't exist yet in the live DB
             console.error("[addPlayer] player_sports insert failed:", psError);
+        }
+    }
+
+    revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+    return { success: true };
+}
+
+/**
+ * Add multiple players to a team roster at once.
+ */
+export async function addPlayersBatch(
+    teamId: string,
+    playersList: { name: string; number?: string; position?: string; tel?: string; }[]
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const authorized = await isAuthorizedForTeam(teamId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+
+    // Fetch team info
+    const { data: participation } = await adminSupabase
+        .from("tournament_teams")
+        .select(`id, team_id, tournament_category_id`)
+        .eq("id", teamId)
+        .single();
+        
+    let globalTeamId = null;
+    let sportId = null;
+    let tournamentId = null;
+
+    if (participation) {
+        globalTeamId = participation.team_id;
+        if (participation.tournament_category_id) {
+            const { data: category } = await adminSupabase
+                .from("tournament_categories")
+                .select("tournament_id")
+                .eq("id", participation.tournament_category_id)
+                .single();
+            if (category) tournamentId = category.tournament_id;
+        }
+        
+        const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", globalTeamId).single();
+        if (teamData) sportId = teamData.sport_id;
+    } else {
+        const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
+        if (globalCheck) {
+            globalTeamId = globalCheck.id;
+            sportId = globalCheck.sport_id;
+        }
+    }
+
+    if (!globalTeamId) {
+        return { success: false, error: "Team record not found." };
+    }
+
+    // Ensure we have a tournament_id (required by players table in new schema)
+    if (!tournamentId) {
+        const { data: parts } = await adminSupabase
+            .from("tournament_teams")
+            .select("id, tournament_category_id")
+            .eq("team_id", globalTeamId)
+            .limit(1);
+        if (parts && parts.length > 0) {
+            const part = parts[0];
+            if (part.tournament_category_id) {
+                const { data: category } = await adminSupabase
+                    .from("tournament_categories")
+                    .select("tournament_id")
+                    .eq("id", part.tournament_category_id)
+                    .single();
+                if (category) tournamentId = category.tournament_id;
+            }
+        }
+    }
+
+    if (!tournamentId) {
+        const { data: anyTournament } = await adminSupabase
+            .from("tournaments")
+            .select("id")
+            .limit(1);
+        if (anyTournament && anyTournament.length > 0) {
+            tournamentId = anyTournament[0].id;
+        }
+    }
+
+    if (!tournamentId) {
+        return { success: false, error: "A tournament is required to add players to the roster." };
+    }
+
+    for (const playerInfo of playersList) {
+        const name = playerInfo.name?.trim();
+        if (!name) continue;
+
+        const nameParts = name.split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+
+        let matchedUserId: string | null = null;
+        if (playerInfo.tel) {
+            const { data: matchedUser } = await adminSupabase
+                .from("users")
+                .select("id")
+                .eq("phone", playerInfo.tel)
+                .maybeSingle();
+            if (matchedUser) {
+                matchedUserId = matchedUser.id;
+            }
+        }
+
+        // 1. Create master player
+        const { data: newMaster, error: masterErr } = await adminSupabase
+            .from("master_players")
+            .insert({
+                user_id: matchedUserId,
+                first_name_en: firstName,
+                last_name_en: lastName,
+                gender: 'unspecified',
+                birthday: '1970-01-01',
+                tel: playerInfo.tel || null,
+                status: 'active',
+                verified: matchedUserId ? true : false
+            })
+            .select("id")
+            .single();
+
+        if (masterErr || !newMaster) {
+            console.error("[addPlayersBatch] Create master player failed:", masterErr);
+            continue;
+        }
+
+        // 2. Insert into players
+        const { data: newPlayer, error: playerError } = await adminSupabase
+            .from("players")
+            .insert({
+                master_id: newMaster.id,
+                display_name: name,
+                tel: playerInfo.tel || null
+            })
+            .select("id")
+            .single();
+
+        if (playerError || !newPlayer) {
+            console.error("[addPlayersBatch] players insert failed:", playerError);
+            continue;
+        }
+
+        // 3. Insert into player_sports
+        if (sportId) {
+            await adminSupabase
+                .from("player_sports")
+                .insert({
+                    player_id: newPlayer.id,
+                    sport_id: sportId,
+                    team_id: teamId,
+                    position: playerInfo.position || null,
+                    shirt_number: playerInfo.number || null
+                });
+        }
+    }
+
+    revalidatePath(`/manager/my-teams/${teamId}`);
+    revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+    return { success: true };
+}
+
+/**
+ * Add multiple players with photos using FormData.
+ */
+export async function addPlayersBatchForm(
+    formData: FormData
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const adminSupabase = createAdminClient();
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Authentication required" };
+
+    const teamId = formData.get("teamId") as string;
+    const authorized = await isAuthorizedForTeam(teamId, user.id);
+    if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
+
+    const count = parseInt(formData.get("count") as string || "0");
+    if (count === 0) return { success: false, error: "No players provided" };
+
+    // Fetch team info
+    const { data: participation } = await adminSupabase
+        .from("tournament_teams")
+        .select(`id, team_id, tournament_category_id`)
+        .eq("id", teamId)
+        .single();
+        
+    if (participation) {
+        for (let i = 0; i < count; i++) {
+            const name = formData.get(`name_${i}`) as string;
+            if (!name || !name.trim()) continue;
+
+            const number = formData.get(`number_${i}`) as string;
+            const position = formData.get(`position_${i}`) as string;
+            const tel = formData.get(`tel_${i}`) as string;
+            const photoFile = formData.get(`photo_${i}`) as File;
+
+            let photoUrl = null;
+            if (photoFile && photoFile.size > 0) {
+                const fileCheck = validateUploadedFile(photoFile);
+                if (fileCheck.valid) {
+                    const fileExt = photoFile.name.split('.').pop() || 'jpg';
+                    const fileName = `${teamId}/photo_${Date.now()}_${i}.${fileExt}`;
+                    const { error: uploadError } = await supabase.storage
+                        .from('players')
+                        .upload(fileName, photoFile);
+                    
+                    if (!uploadError) {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('players')
+                            .getPublicUrl(fileName);
+                        photoUrl = publicUrl;
+                    }
+                }
+            }
+
+            await adminSupabase
+                .from("tournament_roster_submissions")
+                .insert({
+                    tournament_team_id: teamId,
+                    name: name,
+                    shirt_number: number || null,
+                    position: position || null,
+                    tel: tel || null,
+                    photo_url: photoUrl,
+                    status: 'pending'
+                });
+        }
+
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        return { success: true };
+    }
+
+    let globalTeamId = null;
+    let sportId = null;
+    let tournamentId = null;
+
+    const { data: globalCheck } = await adminSupabase.from("teams").select("id, sport_id").eq("id", teamId).single();
+    if (globalCheck) {
+        globalTeamId = globalCheck.id;
+        sportId = globalCheck.sport_id;
+    }
+
+    if (!globalTeamId) {
+        return { success: false, error: "Team record not found." };
+    }
+
+    // Ensure we have a tournament_id (required by players table in new schema)
+    if (!tournamentId) {
+        const { data: parts } = await adminSupabase
+            .from("tournament_teams")
+            .select("id, tournament_category_id")
+            .eq("team_id", globalTeamId)
+            .limit(1);
+        if (parts && parts.length > 0) {
+            const part = parts[0];
+            if (part.tournament_category_id) {
+                const { data: category } = await adminSupabase
+                    .from("tournament_categories")
+                    .select("tournament_id")
+                    .eq("id", part.tournament_category_id)
+                    .single();
+                if (category) tournamentId = category.tournament_id;
+            }
+        }
+    }
+
+    if (!tournamentId) {
+        const { data: anyTournament } = await adminSupabase
+            .from("tournaments")
+            .select("id")
+            .limit(1);
+        if (anyTournament && anyTournament.length > 0) {
+            tournamentId = anyTournament[0].id;
+        }
+    }
+
+    if (!tournamentId) {
+        return { success: false, error: "A tournament is required to add players to the roster." };
+    }
+
+    for (let i = 0; i < count; i++) {
+        const name = formData.get(`name_${i}`) as string;
+        if (!name || !name.trim()) continue;
+
+        const number = formData.get(`number_${i}`) as string;
+        const position = formData.get(`position_${i}`) as string;
+        const tel = formData.get(`tel_${i}`) as string;
+        const photoFile = formData.get(`photo_${i}`) as File | null;
+
+        const nameParts = name.trim().split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "-";
+
+        let matchedUserId: string | null = null;
+        if (tel) {
+            const { data: matchedUser } = await adminSupabase
+                .from("users")
+                .select("id")
+                .eq("phone", tel)
+                .maybeSingle();
+            if (matchedUser) {
+                matchedUserId = matchedUser.id;
+            }
+        }
+
+        // 1. Create master player
+        const { data: newMaster, error: masterErr } = await adminSupabase
+            .from("master_players")
+            .insert({
+                user_id: matchedUserId,
+                first_name_en: firstName,
+                last_name_en: lastName,
+                gender: 'unspecified',
+                birthday: '1970-01-01',
+                tel: tel || null,
+                status: 'active',
+                verified: matchedUserId ? true : false
+            })
+            .select("id")
+            .single();
+
+        if (masterErr || !newMaster) {
+            console.error(`[addPlayersBatchForm] Create master player failed for ${name}:`, masterErr);
+            continue;
+        }
+
+        const finalMasterId = newMaster.id;
+
+        // Upload photo if present
+        if (photoFile && photoFile.size > 0) {
+            const fileExt = photoFile.name.split('.').pop() || 'jpg';
+            const fileName = `${finalMasterId}/photo_${Date.now()}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage
+                .from('players')
+                .upload(fileName, photoFile);
+            
+            if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage
+                    .from('players')
+                    .getPublicUrl(fileName);
+                await adminSupabase
+                    .from("master_players")
+                    .update({ profile_img: publicUrl })
+                    .eq("id", finalMasterId);
+            } else {
+                console.error(`[addPlayersBatchForm] Photo upload failed for ${name}:`, uploadError);
+            }
+        }
+
+        // 2. Insert into players
+        const { data: newPlayer, error: playerError } = await adminSupabase
+            .from("players")
+            .insert({
+                master_id: finalMasterId,
+                display_name: name,
+                tel: tel || null
+            })
+            .select("id")
+            .single();
+
+        if (playerError || !newPlayer) {
+            console.error(`[addPlayersBatchForm] players insert failed for ${name}:`, playerError);
+            continue;
+        }
+
+        // 3. Insert into player_sports
+        if (sportId) {
+            await adminSupabase
+                .from("player_sports")
+                .insert({
+                    player_id: newPlayer.id,
+                    sport_id: sportId,
+                    team_id: teamId,
+                    position: position || null,
+                    shirt_number: number || null
+                });
         }
     }
 
@@ -1148,6 +1643,33 @@ export async function deletePlayer(playerId: string, teamId: string): Promise<Ac
     const authorized = await isAuthorizedForTeam(teamId, user.id);
     if (!authorized) return { success: false, error: "Unauthorized to manage this roster" };
 
+    // 1. Try deleting from tournament_roster_submissions first
+    const { data: subDeleted, error: subErr } = await adminSupabase
+        .from("tournament_roster_submissions")
+        .delete()
+        .eq("id", playerId)
+        .select();
+
+    if (!subErr && subDeleted && subDeleted.length > 0) {
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        return { success: true };
+    }
+
+    // 2. Try deleting from tournament_players
+    const { data: tpDeleted, error: tpErr } = await adminSupabase
+        .from("tournament_players")
+        .delete()
+        .eq("id", playerId)
+        .select();
+
+    if (!tpErr && tpDeleted && tpDeleted.length > 0) {
+        revalidatePath(`/manager/my-teams/${teamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${teamId}`);
+        return { success: true };
+    }
+
+    // 3. Fallback: Delete from global players
     const { error } = await adminSupabase
         .from("players")
         .delete()
@@ -1197,27 +1719,42 @@ export async function importRoster(
         return { success: false, error: "Target team not found." };
     }
 
+    if (participationCheck) {
+        // Clear existing staged players for this target
+        await adminSupabase
+            .from("tournament_roster_submissions")
+            .delete()
+            .eq("tournament_team_id", targetTeamId);
+
+        // Insert into staging table
+        const stagedToInsert = sourcePlayers.map(p => ({
+            tournament_team_id: targetTeamId,
+            name: p.name,
+            shirt_number: p.number ? String(p.number) : null,
+            position: p.position || null,
+            tel: p.tel || null,
+            photo_url: p.photo_url || null
+        }));
+
+        const { error: stagedError } = await adminSupabase
+            .from("tournament_roster_submissions")
+            .insert(stagedToInsert);
+
+        if (stagedError) {
+            console.error("[importRoster] Staged insert failed:", stagedError);
+            return { success: false, error: stagedError.message };
+        }
+
+        revalidatePath(`/manager/my-teams/${targetTeamId}`);
+        revalidatePath(`/dashboard/tournament-teams/${targetTeamId}`);
+        return { success: true, message: `Successfully imported ${sourcePlayers.length} players to staging.` };
+    }
+
     let targetGlobalTeamId = null;
     let targetSportId = null;
     let targetTournamentId = null;
 
-    if (participationCheck) {
-        const { data: part } = await adminSupabase
-            .from("tournament_teams")
-            .select(`
-                team_id,
-                tournament_category_id,
-                tournament_categories ( tournament_id )
-            `)
-            .eq("id", targetTeamId)
-            .single();
-        if (part) {
-            targetGlobalTeamId = part.team_id;
-            targetTournamentId = (part.tournament_categories as unknown as { tournament_id: string } | null)?.tournament_id;
-            const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", targetGlobalTeamId).single();
-            if (teamData) targetSportId = teamData.sport_id;
-        }
-    } else if (globalCheck) {
+    if (globalCheck) {
         targetGlobalTeamId = globalCheck.id;
         const { data: teamData } = await adminSupabase.from("teams").select("sport_id").eq("id", targetGlobalTeamId).single();
         if (teamData) targetSportId = teamData.sport_id;

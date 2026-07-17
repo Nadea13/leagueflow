@@ -321,7 +321,7 @@ export async function updateGlobalPlayerInfo(
                 .single();
             
             if (existingPlayer?.profile_img) {
-                await deleteFileFromUrl(existingPlayer.profile_img, 'player-photos');
+                await deleteFileFromUrl(existingPlayer.profile_img, 'players');
             }
         }
     }
@@ -408,7 +408,7 @@ export async function updateGlobalPlayerPhoto(
     const fileName = `${globalPlayerId}/photo_${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
-        .from('player-photos')
+        .from('players')
         .upload(fileName, file);
 
     if (uploadError) {
@@ -420,7 +420,7 @@ export async function updateGlobalPlayerPhoto(
     }
 
     const { data: { publicUrl } } = supabase.storage
-        .from('player-photos')
+        .from('players')
         .getPublicUrl(fileName);
 
     const { data: existingPlayer } = await adminSupabase
@@ -430,7 +430,7 @@ export async function updateGlobalPlayerPhoto(
         .single();
     
     if (existingPlayer?.profile_img) {
-        await deleteFileFromUrl(existingPlayer.profile_img, 'player-photos');
+        await deleteFileFromUrl(existingPlayer.profile_img, 'players');
     }
 
     const { error: updateError } = await adminSupabase

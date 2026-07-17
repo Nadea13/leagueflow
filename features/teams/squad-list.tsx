@@ -124,10 +124,11 @@ export function SquadList({
                                 <div
                                 className={cn(
                                     "group rounded-sm border relative overflow-hidden transition-all",
-                                    !effectivelyLocked && "hover:border-primary hover:shadow-md cursor-pointer"
+                                    !effectivelyLocked && player.status !== 'pending' && "hover:border-primary hover:shadow-md cursor-pointer",
+                                    player.status === 'pending' && "opacity-50 border-dashed bg-muted/20"
                                 )}
                                 onClick={() => {
-                                    if (!effectivelyLocked && editingPlayerId !== player.id) {
+                                    if (!effectivelyLocked && editingPlayerId !== player.id && player.status !== 'pending') {
                                         setOpenProfileId(player.id);
                                     }
                                 }}
@@ -276,6 +277,11 @@ export function SquadList({
                                                             <Badge variant="outline" className="border-muted text-forground text-[8px] font-black px-1 py-0 rounded">
                                                                 {player.position || "N/A"}
                                                             </Badge>
+                                                            {player.status === 'pending' && (
+                                                                <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] font-black px-1 py-0 rounded" variant="outline">
+                                                                    รออนุมัติ
+                                                                </Badge>
+                                                            )}
                                                             <span className="text-[9px] font-bold tracking-widest text-muted-foreground/40 font-mono">
                                                                 {player.tel || ""}
                                                             </span>
@@ -321,7 +327,7 @@ export function SquadList({
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-1">
-                                                {!effectivelyLocked && (
+                                                {(!effectivelyLocked || player.status === 'pending') && (
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button
@@ -334,22 +340,24 @@ export function SquadList({
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="border-border bg-card w-48 p-0">
-                                                            <DropdownMenuItem
-                                                                className="py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setEditingPlayerId(player.id);
-                                                                    setEditNumber(player.number?.toString() || "");
-                                                                    setEditPosition(player.position || "");
-                                                                    setEditTel(player.tel || "");
-                                                                    setEditName(player.name || "");
-                                                                    setEditPhotoFile(null);
-                                                                    setEditPhotoPreview(null);
-                                                                }}
-                                                            >
-                                                                <Edit2 className="mr-3 h-4 w-4" />
-                                                                {tCommon("edit")}
-                                                            </DropdownMenuItem>
+                                                            {player.status !== 'pending' && (
+                                                                <DropdownMenuItem
+                                                                    className="py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setEditingPlayerId(player.id);
+                                                                        setEditNumber(player.number?.toString() || "");
+                                                                        setEditPosition(player.position || "");
+                                                                        setEditTel(player.tel || "");
+                                                                        setEditName(player.name || "");
+                                                                        setEditPhotoFile(null);
+                                                                        setEditPhotoPreview(null);
+                                                                    }}
+                                                                >
+                                                                    <Edit2 className="mr-3 h-4 w-4" />
+                                                                    {tCommon("edit")}
+                                                                </DropdownMenuItem>
+                                                            )}
                                                             <DropdownMenuItem
                                                                 className="py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
                                                                 onClick={(e) => {

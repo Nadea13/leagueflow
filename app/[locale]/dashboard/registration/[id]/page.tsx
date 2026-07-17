@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { RegistrationForm } from "@/features/registrations/registration-form";
+import { RosterSubmissionForm } from "@/features/registrations/roster-submission-form";
 import { RegistrationTourButton } from "@/features/registrations/registration-tour-button";
 import { getMyTeams } from "@/actions/manager/team";
 import { Team } from "@/types";
@@ -110,6 +111,30 @@ export default async function DashboardRegistrationPage({ params, searchParams }
     const teamsResult = await getMyTeams();
     const myTeams = (teamsResult.success ? (teamsResult.data as Team[]) : []) || [];
 
+    const { data: userRegisteredTeams } = await supabase
+        .from("tournament_teams")
+        .select(`
+            id,
+            contact_name,
+            contact_phone,
+            team:teams (
+                id,
+                name,
+                logo_img
+            ),
+            tournament_categories!inner (
+                id,
+                tournament_id,
+                gender_type,
+                age_categories (
+                    category_name
+                )
+            )
+        `)
+        .eq("tournament_categories.tournament_id", id)
+        .in("team_id", myTeams.map(t => t.id).length > 0 ? myTeams.map(t => t.id) : ["00000000-0000-0000-0000-000000000000"])
+        .is("deleted_at", null);
+
     const sportsData = (Array.isArray(tournament.sports) ? tournament.sports[0] : tournament.sports) as unknown as { sport_name: string | null } | null;
     const sportName = sportsData?.sport_name || "Sport";
 
@@ -141,14 +166,24 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                     <RegistrationTourButton />
+                    <RosterSubmissionForm 
+                        registeredTeams={(userRegisteredTeams || []).map((item) => ({
+                            id: item.id,
+                            contact_name: item.contact_name,
+                            contact_phone: item.contact_phone,
+                            team: Array.isArray(item.team) ? item.team[0] : item.team,
+                            tournament_categories: Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories
+                        })) as any} 
+                        locale={locale} 
+                    />
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 md:gap-4">
                 {/* Left side (3 Columns): Tournament Registration Form */}
-                <div className="lg:col-span-3 order-2 lg:order-1" id="tour-registration-form">
+                <div className="lg:col-span-3 order-2 lg:order-1 space-y-4">
                     <RegistrationForm
                         tournament={{
                             id: tournament.id,

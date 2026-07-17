@@ -12,6 +12,13 @@ import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { LogoUploader } from "@/components/shared/logo-uploader";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
@@ -183,6 +190,32 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                     defaultValue={tournament.name}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                 />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>{isThai ? "สถานะการแข่งขัน" : "Tournament Status"}</Label>
+                                <Select
+                                    name="status"
+                                    defaultValue={tournament.status}
+                                >
+                                    <SelectTrigger className="w-full bg-transparent text-foreground">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card">
+                                        <SelectItem value="draft" className="text-muted-foreground font-black text-xs cursor-pointer">
+                                            {isThai ? "แบบร่าง" : "Draft"}
+                                        </SelectItem>
+                                        <SelectItem value="upcoming" className="text-amber-500 font-black text-xs cursor-pointer">
+                                            {isThai ? "เร็วๆ นี้" : "Upcoming"}
+                                        </SelectItem>
+                                        <SelectItem value="ongoing" className="text-emerald-500 font-black text-xs cursor-pointer">
+                                            {isThai ? "กำลังดำเนินการ" : "Ongoing"}
+                                        </SelectItem>
+                                        <SelectItem value="finished" className="text-primary font-black text-xs cursor-pointer">
+                                            {isThai ? "เสร็จสิ้น" : "Finished"}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="space-y-1">

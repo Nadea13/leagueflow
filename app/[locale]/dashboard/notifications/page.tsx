@@ -240,291 +240,283 @@ export default function NotificationsPage() {
                     action={<div />}
                 />
             ) : (
-                <div className="space-y-2 md:space-y-4">
+                <Card className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
                     {notifications.map((item) => {
                         if (item.type === 'invite') {
                             const currentStatus = actionState[item.id] || item.status;
 
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="bg-card transition-all overflow-hidden border rounded-sm group/item"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors"
                                 >
-                                    <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'accepted' ? 'bg-primary/10 text-primary' :
-                                                        currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
-                                                    }`}>
-                                                    <Bell className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-medium leading-relaxed">
-                                                    You have been invited to join <span className="font-black text-foreground">{item.tournament_name || "Unknown Tournament"}</span> as <span className="font-black text-foreground">{item.role?.replace('_', ' ')}</span>
-                                                </p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                        Tournament Invitation
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                    <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                        {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
-                                                    </span>
-                                                </div>
+                                    <div className="flex items-start gap-4">
+                                        <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
+                                            <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'accepted' ? 'bg-primary/10 text-primary' :
+                                                    currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
+                                                }`}>
+                                                <Bell className="h-4 w-4" />
                                             </div>
                                         </div>
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium leading-relaxed">
+                                                You have been invited to join <span className="font-black text-foreground">{item.tournament_name || "Unknown Tournament"}</span> as <span className="font-black text-foreground">{item.role?.replace('_', ' ')}</span>
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
+                                                    Tournament Invitation
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
+                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                        <div className="flex items-center gap-1 md:gap-2">
-                                            {currentStatus === 'accepted' ? (
-                                                <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    <span>Accepted</span>
-                                                </Badge>
-                                            ) : currentStatus === 'rejected' ? (
-                                                <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    <span>Declined</span>
-                                                </Badge>
-                                            ) : currentStatus === 'error' ? (
-                                                <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    <span>Error occurred</span>
-                                                </Badge>
-                                            ) : (
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <Button
-                                                        variant="destructive"
-                                                        onClick={() => handleReject(item.tournament_id, item.id)}
-                                                        disabled={isPending}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => handleAccept(item.tournament_id, item.id)}
-                                                        disabled={isPending}
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                        Accept
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                        {currentStatus === 'accepted' ? (
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                <span>Accepted</span>
+                                            </Badge>
+                                        ) : currentStatus === 'rejected' ? (
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                <span>Declined</span>
+                                            </Badge>
+                                        ) : currentStatus === 'error' ? (
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                <span>Error occurred</span>
+                                            </Badge>
+                                        ) : (
+                                            <div className="flex items-center gap-1 md:gap-2">
+                                                <Button
+                                                    variant="destructive"
+                                                    onClick={() => handleReject(item.tournament_id, item.id)}
+                                                    disabled={isPending}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    onClick={() => handleAccept(item.tournament_id, item.id)}
+                                                    disabled={isPending}
+                                                >
+                                                    <Check className="h-4 w-4" />
+                                                    Accept
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             );
                         } else if (item.type === 'registration') {
                             // Registration Notification
                             const regStatus = item.registration_status;
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="bg-card transition-all overflow-hidden border rounded-sm group/item cursor-pointer"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors cursor-pointer"
                                     onClick={() => router.push(`/${locale}/dashboard/tournament-teams/${item.id}`)}
                                 >
-                                    <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${regStatus === 'approved' ? 'bg-primary/10 text-primary' :
-                                                        regStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
-                                                    }`}>
-                                                    {regStatus === 'approved' ? (
-                                                        <CheckCircle2 className="h-4 w-4" />
-                                                    ) : regStatus === 'rejected' ? (
-                                                        <XCircle className="h-4 w-4" />
-                                                    ) : (
-                                                        <Clock className="h-4 w-4" />
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                {isTh ? (
-                                                    <p className="text-sm font-medium leading-relaxed">
-                                                        การสมัครของทีม <span className="font-black text-foreground">{item.team_name}</span> ในรายการ <span className="font-black text-foreground">{item.tournament_name}</span> ได้รับการ <span className="font-black text-foreground">{getStatusText(regStatus)}</span>
-                                                    </p>
+                                    <div className="flex items-start gap-4">
+                                        <div className="h-10 w-10 border rounded-full shrink-0 p-1 flex items-center justify-center bg-muted/30">
+                                            <div className={`w-full h-full rounded-full flex items-center justify-center ${regStatus === 'approved' ? 'bg-primary/10 text-primary' :
+                                                    regStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
+                                                }`}>
+                                                {regStatus === 'approved' ? (
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                ) : regStatus === 'rejected' ? (
+                                                    <XCircle className="h-4 w-4" />
                                                 ) : (
-                                                    <p className="text-sm font-medium leading-relaxed">
-                                                        Registration for team <span className="font-black text-foreground">{item.team_name}</span> in <span className="font-black text-foreground">{item.tournament_name}</span> is <span className="font-black text-foreground">{getStatusText(regStatus)}</span>
-                                                    </p>
+                                                    <Clock className="h-4 w-4" />
                                                 )}
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                        {tReg("nav_team_registration") || "Team Registration"}
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                    <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                        {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
-                                                    </span>
-                                                </div>
                                             </div>
                                         </div>
-
-                                        <div className="flex items-center gap-1 md:gap-2">
-                                            {regStatus === 'approved' ? (
-                                                <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {getStatusText(regStatus)}
-                                                </Badge>
-                                            ) : regStatus === 'rejected' ? (
-                                                <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {getStatusText(regStatus)}
-                                                </Badge>
+                                        <div className="space-y-1">
+                                            {isTh ? (
+                                                <p className="text-sm font-medium leading-relaxed">
+                                                    การสมัครของทีม <span className="font-black text-foreground">{item.team_name}</span> ในรายการ <span className="font-black text-foreground">{item.tournament_name}</span> ได้รับการ <span className="font-black text-foreground">{getStatusText(regStatus)}</span>
+                                                </p>
                                             ) : (
-                                                <Badge className="bg-warning/10 text-warning hover:bg-warning/10 border-warning/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {getStatusText(regStatus)}
-                                                </Badge>
+                                                <p className="text-sm font-medium leading-relaxed">
+                                                    Registration for team <span className="font-black text-foreground">{item.team_name}</span> in <span className="font-black text-foreground">{item.tournament_name}</span> is <span className="font-black text-foreground">{getStatusText(regStatus)}</span>
+                                                </p>
                                             )}
+                                            <div className="flex items-center gap-1 md:gap-2">
+                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
+                                                    {tReg("nav_team_registration") || "Team Registration"}
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
+                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                        {regStatus === 'approved' ? (
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {getStatusText(regStatus)}
+                                            </Badge>
+                                        ) : regStatus === 'rejected' ? (
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {getStatusText(regStatus)}
+                                            </Badge>
+                                        ) : (
+                                            <Badge className="bg-warning/10 text-warning hover:bg-warning/10 border-warning/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {getStatusText(regStatus)}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
                             );
                         } else if (item.type === 'team_request') {
                             // Team Management Request Notification (Own Claims)
                             const reqStatus = item.status;
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="bg-card transition-all overflow-hidden border rounded-sm group/item"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors"
                                 >
-                                    <CardContent className="p-2 md:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${reqStatus === 'approved' ? 'bg-primary/10 text-primary' :
-                                                        reqStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-500'
-                                                    }`}>
-                                                    <ShieldCheck className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                {isTh ? (
-                                                    <p className="text-sm font-medium leading-relaxed">
-                                                        คำขอสิทธิ์การจัดการทีม <span className="font-black text-foreground">{item.team_name}</span> {reqStatus === 'approved' ? 'ได้รับการอนุมัติแล้ว' : reqStatus === 'rejected' ? 'ถูกปฏิเสธ' : 'กำลังรอการอนุมัติ'}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-sm font-medium leading-relaxed">
-                                                        Team management request for <span className="font-black text-foreground">{item.team_name}</span> is <span className="font-black text-foreground">{getStatusText(reqStatus)}</span>
-                                                    </p>
-                                                )}
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                        {isTh ? 'ขอสิทธิ์การจัดการทีม (ส่งคำขอ)' : 'Team Management Request (Sent)'}
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                    <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                        {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
-                                                    </span>
-                                                </div>
+                                    <div className="flex items-start gap-4">
+                                        <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
+                                            <div className={`w-full h-full rounded-full flex items-center justify-center ${reqStatus === 'approved' ? 'bg-primary/10 text-primary' :
+                                                    reqStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-500'
+                                                }`}>
+                                                <ShieldCheck className="h-4 w-4" />
                                             </div>
                                         </div>
-
-                                        <div className="flex items-center gap-1 md:gap-2">
-                                            {reqStatus === 'approved' ? (
-                                                <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {getStatusText(reqStatus)}
-                                                </Badge>
-                                            ) : reqStatus === 'rejected' ? (
-                                                <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {getStatusText(reqStatus)}
-                                                </Badge>
+                                        <div className="space-y-1">
+                                            {isTh ? (
+                                                <p className="text-sm font-medium leading-relaxed">
+                                                    คำขอสิทธิ์การจัดการทีม <span className="font-black text-foreground">{item.team_name}</span> {reqStatus === 'approved' ? 'ได้รับการอนุมัติแล้ว' : reqStatus === 'rejected' ? 'ถูกปฏิเสธ' : 'กำลังรอการอนุมัติ'}
+                                                </p>
                                             ) : (
-                                                <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border-amber-500/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {getStatusText(reqStatus)}
-                                                </Badge>
+                                                <p className="text-sm font-medium leading-relaxed">
+                                                    Team management request for <span className="font-black text-foreground">{item.team_name}</span> is <span className="font-black text-foreground">{getStatusText(reqStatus)}</span>
+                                                </p>
                                             )}
+                                            <div className="flex items-center gap-1 md:gap-2">
+                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
+                                                    {isTh ? 'ขอสิทธิ์การจัดการทีม (ส่งคำขอ)' : 'Team Management Request (Sent)'}
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
+                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                        {reqStatus === 'approved' ? (
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {getStatusText(reqStatus)}
+                                            </Badge>
+                                        ) : reqStatus === 'rejected' ? (
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {getStatusText(reqStatus)}
+                                            </Badge>
+                                        ) : (
+                                            <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border-amber-500/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {getStatusText(reqStatus)}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
                             );
                         } else {
                             // Incoming Team Management Request Notification (For Organizer/Collaborator)
                             const currentStatus = actionState[item.id] || item.status;
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="bg-card transition-all overflow-hidden border rounded-sm group/item"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors"
                                 >
-                                    <CardContent className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
-                                                <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'approved' || currentStatus === 'accepted' ? 'bg-primary/10 text-primary' :
-                                                        currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
-                                                    }`}>
-                                                    <ShieldCheck className="h-4 w-4" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                {isTh ? (
-                                                    <p className="text-sm font-medium leading-relaxed">
-                                                        <span className="font-black text-foreground">{item.requester_name}</span> ขอสิทธิ์การจัดการทีม <span className="font-black text-foreground">{item.team_name}</span>
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-sm font-medium leading-relaxed">
-                                                        <span className="font-black text-foreground">{item.requester_name}</span> is requesting management rights for team <span className="font-black text-foreground">{item.team_name}</span>
-                                                    </p>
-                                                )}
-                                                
-                                                <div className="flex flex-col gap-1 text-[12px] text-muted-foreground mt-1">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Mail className="h-3 w-3 shrink-0" />
-                                                        <span>{item.requester_email}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Phone className="h-3 w-3 shrink-0" />
-                                                        <span>{item.contact_phone}</span>
-                                                    </div>
-                                                    {item.message && (
-                                                        <div className="bg-muted/50 p-2 rounded-sm italic border-l-2 border-primary/20 text-xs mt-1">
-                                                            &ldquo;{item.message}&rdquo;
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex items-center gap-1 md:gap-2 pt-1">
-                                                    <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
-                                                        {isTh ? 'คำขอสิทธิ์การจัดการทีม (รออนุมัติ)' : 'Incoming Team Management Request'}
-                                                    </span>
-                                                    <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
-                                                    <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                        {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
-                                                    </span>
-                                                </div>
+                                    <div className="flex items-start gap-4">
+                                        <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
+                                            <div className={`w-full h-full rounded-full flex items-center justify-center ${currentStatus === 'approved' || currentStatus === 'accepted' ? 'bg-primary/10 text-primary' :
+                                                    currentStatus === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'
+                                                }`}>
+                                                <ShieldCheck className="h-4 w-4" />
                                             </div>
                                         </div>
-
-                                        <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                                            {currentStatus === 'approved' || currentStatus === 'accepted' ? (
-                                                <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {isTh ? "อนุมัติแล้ว" : "Approved"}
-                                                </Badge>
-                                            ) : currentStatus === 'rejected' ? (
-                                                <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
-                                                </Badge>
-                                            ) : currentStatus === 'error' ? (
-                                                <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
-                                                    <span>Error occurred</span>
-                                                </Badge>
+                                        <div className="space-y-1">
+                                            {isTh ? (
+                                                <p className="text-sm font-medium leading-relaxed">
+                                                    <span className="font-black text-foreground">{item.requester_name}</span> ขอสิทธิ์การจัดการทีม <span className="font-black text-foreground">{item.team_name}</span>
+                                                </p>
                                             ) : (
-                                                <div className="flex items-center gap-1 md:gap-2">
-                                                    <Button
-                                                        variant="destructive"
-                                                        onClick={() => handleRejectTeamRequest(item.id)}
-                                                        disabled={isPending}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => handleApproveTeamRequest(item.id)}
-                                                        disabled={isPending}
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                        {isTh ? "อนุมัติ" : "Approve"}
-                                                    </Button>
-                                                </div>
+                                                <p className="text-sm font-medium leading-relaxed">
+                                                    <span className="font-black text-foreground">{item.requester_name}</span> is requesting management rights for team <span className="font-black text-foreground">{item.team_name}</span>
+                                                </p>
                                             )}
+                                            
+                                            <div className="flex flex-col gap-1 text-[12px] text-muted-foreground mt-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <Mail className="h-3 w-3 shrink-0" />
+                                                    <span>{item.requester_email}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Phone className="h-3 w-3 shrink-0" />
+                                                    <span>{item.contact_phone}</span>
+                                                </div>
+                                                {item.message && (
+                                                    <div className="bg-muted/50 p-2 rounded-sm italic border-l-2 border-primary/20 text-xs mt-1">
+                                                        &ldquo;{item.message}&rdquo;
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-1 md:gap-2 pt-1">
+                                                <span className="text-[10px] text-muted-foreground/50 font-bold tracking-widest block">
+                                                    {isTh ? 'คำขอสิทธิ์การจัดการทีม (รออนุมัติ)' : 'Incoming Team Management Request'}
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
+                                                <span className="text-[10px] text-muted-foreground/50 font-medium">
+                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+
+                                    <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                        {currentStatus === 'approved' || currentStatus === 'accepted' ? (
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {isTh ? "อนุมัติแล้ว" : "Approved"}
+                                            </Badge>
+                                        ) : currentStatus === 'rejected' ? (
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
+                                            </Badge>
+                                        ) : currentStatus === 'error' ? (
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                <span>Error occurred</span>
+                                            </Badge>
+                                        ) : (
+                                            <div className="flex items-center gap-1 md:gap-2">
+                                                <Button
+                                                    variant="destructive"
+                                                    onClick={() => handleRejectTeamRequest(item.id)}
+                                                    disabled={isPending}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    onClick={() => handleApproveTeamRequest(item.id)}
+                                                    disabled={isPending}
+                                                >
+                                                    <Check className="h-4 w-4" />
+                                                    {isTh ? "อนุมัติ" : "Approve"}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             );
                         }
                     })}
-                </div>
+                </Card>
             )}
         </div>
     );

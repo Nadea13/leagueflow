@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Player, TournamentTeam } from "@/types/index";
-import { getPlayers, deletePlayer } from "@/actions/tournaments/player";
+import { getTournamentPlayersDirect, deletePlayer } from "@/actions/tournaments/player";
 import { EditTeamForm } from "@/features/teams/edit-team-form";
 
 import { AddPlayerForm } from "@/features/teams/add-player-form";
@@ -49,7 +49,7 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
 
 
     const fetchPlayers = useCallback(async () => {
-        const result = await getPlayers(team.id);
+        const result = await getTournamentPlayersDirect(team.id);
         if (result.success && result.data) {
             setPlayers(result.data);
         } else {

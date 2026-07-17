@@ -279,7 +279,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             className="bg-card"
                         />
                     ) : (
-                        <div className="flex flex-col gap-4 md:gap-6 group" id="tour-tournaments-list">
+                        <div className="flex flex-col gap-2 md:gap-4 group" id="tour-tournaments-list">
                             {filteredTournaments.map((tournament) => (
                                 <Link key={tournament.id} href={`/dashboard/registration/${tournament.id}`} className="block">
                                     <Card

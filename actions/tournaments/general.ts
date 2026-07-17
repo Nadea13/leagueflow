@@ -59,6 +59,7 @@ export async function addTeam(
         return { success: false, error: "Tournament category setup not found" };
     }
 
+    const teamId = crypto.randomUUID();
     let logo_url = logoUrlInput || null;
 
     // Handle File Upload if URL is not provided
@@ -67,11 +68,11 @@ export async function addTeam(
         if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
         const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${tournamentId}/${fileName}`;
+        const fileName = `logo-${Date.now()}.${fileExt}`;
+        const filePath = `${teamId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-            .from('team-logos')
+            .from('teams')
             .upload(filePath, logoFile);
 
         if (uploadError) {
@@ -79,7 +80,7 @@ export async function addTeam(
             return { success: false, error: `Logo upload failed: ${uploadError.message}` };
         } else {
             const { data: { publicUrl } } = supabase.storage
-                .from('team-logos')
+                .from('teams')
                 .getPublicUrl(filePath);
             logo_url = publicUrl;
         }
@@ -89,6 +90,7 @@ export async function addTeam(
     const { data: globalTeam, error: globalTeamError } = await supabase
         .from("teams")
         .insert({
+            id: teamId,
             name,
             sport_id: tournament?.sport_id,
             user_id: user.id,
@@ -160,30 +162,6 @@ export async function updateTeam(
 
     let logo_url = existingLogoUrl;
 
-    // Handle File Upload
-    if (logoFile && logoFile.size > 0) {
-        const fileCheck = validateUploadedFile(logoFile);
-        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
-
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${tournamentId}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-            .from('team-logos')
-            .upload(filePath, logoFile);
-
-        if (uploadError) {
-            console.error("Logo upload failed", uploadError);
-            return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-        } else {
-            const { data: { publicUrl } } = supabase.storage
-                .from('team-logos')
-                .getPublicUrl(filePath);
-            logo_url = publicUrl;
-        }
-    }
-
     // Get team_id from tournament_teams
     const { data: registration } = await supabase
         .from("tournament_teams")
@@ -193,6 +171,30 @@ export async function updateTeam(
 
     if (!registration || !registration.team_id) {
         return { success: false, error: "Team registration not found" };
+    }
+
+    // Handle File Upload
+    if (logoFile && logoFile.size > 0) {
+        const fileCheck = validateUploadedFile(logoFile);
+        if (!fileCheck.valid) return { success: false, error: fileCheck.error };
+
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `logo-${Date.now()}.${fileExt}`;
+        const filePath = `${registration.team_id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('teams')
+            .upload(filePath, logoFile);
+
+        if (uploadError) {
+            console.error("Logo upload failed", uploadError);
+            return { success: false, error: `Logo upload failed: ${uploadError.message}` };
+        } else {
+            const { data: { publicUrl } } = supabase.storage
+                .from('teams')
+                .getPublicUrl(filePath);
+            logo_url = publicUrl;
+        }
     }
 
     const updateData: Record<string, string | null> = {
@@ -306,7 +308,7 @@ export async function updateTournament(
             const filePath = `${tournamentId}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('team-logos')
+                .from('tournaments')
                 .upload(filePath, logoFile);
 
             if (uploadError) {
@@ -314,7 +316,7 @@ export async function updateTournament(
                 return { success: false, error: `Logo upload failed: ${uploadError.message}` };
             } else {
                 const { data: { publicUrl } } = supabase.storage
-                    .from('team-logos')
+                    .from('tournaments')
                     .getPublicUrl(filePath);
                 updateData.logo_img = publicUrl;
             }
@@ -331,7 +333,7 @@ export async function updateTournament(
             const filePath = `${tournamentId}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('team-logos')
+                .from('tournaments')
                 .upload(filePath, coverFile);
 
             if (uploadError) {
@@ -339,7 +341,7 @@ export async function updateTournament(
                 return { success: false, error: `Cover upload failed: ${uploadError.message}` };
             } else {
                 const { data: { publicUrl } } = supabase.storage
-                    .from('team-logos')
+                    .from('tournaments')
                     .getPublicUrl(filePath);
                 updateData.cover_img = publicUrl;
             }
@@ -533,7 +535,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
             const filePath = `${tournament.id}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('team-logos')
+                .from('tournaments')
                 .upload(filePath, logoFile);
 
             if (uploadError) {
@@ -541,7 +543,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
                 return { success: false, error: `Logo upload failed: ${uploadError.message}` };
             } else {
                 const { data: { publicUrl } } = supabase.storage
-                    .from('team-logos')
+                    .from('tournaments')
                     .getPublicUrl(filePath);
                 logo_img = publicUrl;
             }
@@ -557,7 +559,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
             const filePath = `${tournament.id}/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('team-logos')
+                .from('tournaments')
                 .upload(filePath, coverFile);
 
             if (uploadError) {
@@ -565,7 +567,7 @@ export async function createTournament(_prevState: ActionResponse, formData: For
                 return { success: false, error: `Cover upload failed: ${uploadError.message}` };
             } else {
                 const { data: { publicUrl } } = supabase.storage
-                    .from('team-logos')
+                    .from('tournaments')
                     .getPublicUrl(filePath);
                 cover_img = publicUrl;
             }

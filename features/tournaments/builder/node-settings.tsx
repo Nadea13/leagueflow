@@ -259,7 +259,7 @@ export function NodeSettings() {
                 const filePath = `sponsors/${fileName}`;
 
                 const { error } = await supabase.storage
-                    .from('team-logos')
+                    .from('tournaments')
                     .upload(filePath, newSponsorLogoFile, {
                         cacheControl: '3600',
                         upsert: false
@@ -268,7 +268,7 @@ export function NodeSettings() {
                 if (error) throw error;
 
                 const { data: { publicUrl } } = supabase.storage
-                    .from('team-logos')
+                    .from('tournaments')
                     .getPublicUrl(filePath);
 
                 logoUrl = publicUrl;

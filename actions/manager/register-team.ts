@@ -149,21 +149,25 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
 
         console.log("[registerTeam] Tournament isFree:", isFree);
 
+        // Pre-determine team ID if a new team will be created
+        const finalTeamId = existingTeamId || crypto.randomUUID();
+
         // Handle Logo Upload if provided as file
         if (logoFile && logoFile instanceof File && logoFile.size > 0) {
             const fileCheck = validateUploadedFile(logoFile);
             if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
             const fileExt = logoFile.name.split('.').pop();
-            const fileName = `${tournamentId}/logo-${Date.now()}.${fileExt}`;
+            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const filePath = `${finalTeamId}/${fileName}`;
             const { error: logoUploadError } = await supabase.storage
-                .from('team-logos')
-                .upload(fileName, logoFile);
+                .from('teams')
+                .upload(filePath, logoFile);
 
             if (!logoUploadError) {
                 const { data: logoUrlData } = supabase.storage
-                    .from('team-logos')
-                    .getPublicUrl(fileName);
+                    .from('teams')
+                    .getPublicUrl(filePath);
                 finalLogoUrl = logoUrlData.publicUrl;
             }
         }
@@ -243,13 +247,12 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         const adminSupabase = createAdminClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        let finalTeamId = existingTeamId;
-
-        if (!finalTeamId) {
+        if (!existingTeamId) {
             // Insert into global teams table
             const { data: newTeam, error: teamInsertError } = await adminSupabase
                 .from("teams")
                 .insert({
+                    id: finalTeamId,
                     name: teamName,
                     sport_id: tournament.sport_id,
                     user_id: user?.id || null,
@@ -267,7 +270,6 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 console.error("Team insertion failed", teamInsertError);
                 return { success: false, error: `Failed to create team: ${teamInsertError?.message}` };
             }
-            finalTeamId = newTeam.id;
         }
 
         // Insert registration record directly in tournament_teams
