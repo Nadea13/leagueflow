@@ -25,7 +25,7 @@ export default async function OrganizerLayout({ children, params }: { children: 
     const userAvatar = profile?.profile_img || user?.user_metadata?.avatar_url || undefined;
 
     return (
-        <div className="grid h-screen w-full md:grid-cols-[200px_1fr] lg:grid-cols-[220px_1fr] overflow-hidden">
+        <div className="grid h-screen w-full md:grid-cols-[64px_1fr] overflow-hidden">
             <div className="border-r bg-muted/40 hidden md:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <DashboardSidebar

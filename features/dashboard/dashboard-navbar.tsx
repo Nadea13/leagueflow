@@ -89,8 +89,8 @@ export function DashboardNavbar({
                         <span className="text-base md:text-lg font-black tracking-tighter text-foreground shrink-0 leading-none">League Flow</span>
                     </Link>
                 </div>
-                <div className="flex items-center gap-2">
-                    <UserDropdown email={userEmail} name={userName} avatar={userAvatar} role={role} className="border-none hover:bg-transparent p-0" />
+                <div className="flex items-center">
+                    <UserDropdown email={userEmail} name={userName} avatar={userAvatar} role={role} className="border-none hover:bg-transparent p-0" hideText />
                 </div>
 
                 <BecomeOrganizerDialog

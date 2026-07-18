@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MessageSquareWarning, AlertCircle } from "lucide-react"
+import { MessageSquareWarning, AlertCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -61,17 +61,29 @@ export function FeedbackDialog({ className }: FeedbackDialogProps) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant="outline"
-                    className={cn("w-full justify-start", className)}
+                    variant="ghost"
+                    className={cn(
+                        "w-full h-auto flex items-center gap-0 group-hover/sidebar:gap-2 p-2 rounded-sm transition-all relative group/btn tracking-wide justify-center md:justify-start text-muted-foreground hover:text-muted-foreground/90 hover:bg-primary/10 font-normal",
+                        className
+                    )}
                 >
-                    <MessageSquareWarning className="h-4 w-4" />
-                    <span>{t("title")}</span>
+                    <MessageSquareWarning className="h-4 w-4 shrink-0 transition-transform text-muted-foreground" />
+                    <span className="text-sm font-medium whitespace-nowrap transition-all duration-300 opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto overflow-hidden">{t("title")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[640px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-sm">
-                    <DialogHeader>
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-sm">
+                    <DialogHeader className="relative pr-10">
                         <DialogTitle>{t("dialog_title")}</DialogTitle>
                         <DialogDescription>{t("dialog_desc")}</DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => setOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </DialogHeader>
 
                 <div className="p-2 space-y-2 md:p-4 md:space-y-4">

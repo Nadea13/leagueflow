@@ -32,7 +32,8 @@ export function UserDropdown({
     side = "bottom",
     align = "end",
     sideOffset = 8,
-    alignOffset = 0
+    alignOffset = 0,
+    hideText = false
 }: {
     email: string | undefined,
     name?: string | null,
@@ -42,7 +43,8 @@ export function UserDropdown({
     side?: "top" | "right" | "bottom" | "left",
     align?: "start" | "center" | "end",
     sideOffset?: number,
-    alignOffset?: number
+    alignOffset?: number,
+    hideText?: boolean
 }) {
     const { setTheme } = useTheme()
     const locale = useLocale()
@@ -56,8 +58,8 @@ export function UserDropdown({
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="lg" className={cn("w-full justify-start p-1 md:p-2 h-auto transition-all text-left", className)}>
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60">
+                <Button variant="ghost" size="lg" className={cn("w-full justify-center md:justify-start md:group-hover/sidebar:justify-start p-0 md:py-2 md:group-hover/sidebar:p-2 h-auto transition-all text-left overflow-hidden", className)}>
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-muted/10 text-muted-foreground/60 shrink-0">
                         {avatar ? (
                             <Image
                                 src={avatar}
@@ -70,14 +72,16 @@ export function UserDropdown({
                             <span className="text-xs font-bold">{displayName?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="hidden md:block text-xs font-bold text-foreground truncate">{name || displayName}</span>
-                        {email && <span className="hidden md:block text-[10px] text-muted-foreground truncate">{email}</span>}
-                    </div>
+                    {!hideText && (
+                        <div className="flex flex-col min-w-0 transition-all duration-300 opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto md:group-hover/sidebar:ml-2 overflow-hidden">
+                            <span className="text-xs font-bold text-foreground truncate">{name || displayName}</span>
+                            {email && <span className="text-[10px] text-muted-foreground truncate">{email}</span>}
+                        </div>
+                    )}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-64 bg-card border shadow-2xl p-2 rounded-sm"
+                className="w-64 bg-card border shadow-2xl ml-4 mt-3 p-2 rounded-sm"
                 side={side}
                 align={align}
                 sideOffset={sideOffset}

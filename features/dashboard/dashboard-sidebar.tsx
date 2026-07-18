@@ -52,10 +52,10 @@ export function DashboardSidebar({
     const navItems = getNavItems(mode, role)
 
     return (
-        <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[200px] lg:w-[220px] bg-background border-r z-50", className)}>
-            <div className="flex items-center p-2 md:p-4">
-                <Link href="/dashboard" className="flex items-center gap-3 transition-transform group">
-                    <div className="relative">
+        <div className={cn("flex h-full max-h-screen flex-col gap-0 fixed md:w-[64px] hover:md:w-[200px] hover:lg:w-[220px] bg-background border-r z-50 transition-all duration-300 ease-in-out group/sidebar overflow-hidden shadow-lg", className)}>
+            <div className="flex items-center justify-center md:justify-start p-4">
+                <Link href="/dashboard" className="flex items-center gap-3 transition-transform group shrink-0">
+                    <div className="relative shrink-0">
                         <svg viewBox="0 0 160 160" className="w-8 h-8 transition-all" xmlns="http://www.w3.org/2000/svg">
                             <path d="M85.4616 21.9501C86.0436 21.9471 86.6256 21.9441 87.2253 21.941C94.6778 21.9214 101.867 22.4122 109.212 23.8001C108.078 25.1269 106.944 26.4529 105.805 27.7751C104.953 28.7693 104.105 29.7682 103.268 30.7751C95.053 40.4796 85.8612 49.0996 75.6116 56.6001C75.0985 56.9801 74.5855 57.3601 74.0569 57.7517C62.719 66.1146 50.7349 73.3682 38.3116 80.0001C37.7382 80.3066 37.1648 80.6131 36.5741 80.9288C32.6149 83.0001 32.6149 83.0001 30.8116 83.0001C30.5549 81.8516 30.3068 80.7011 30.0616 79.5501C29.9223 78.9097 29.7831 78.2693 29.6397 77.6095C28.1595 68.5881 28.3166 59.5618 28.3616 50.4501C28.3656 49.0256 28.3692 47.6012 28.3725 46.1767C28.3812 42.7178 28.395 39.259 28.4116 35.8001C43.3259 28.6069 43.3259 28.6069 49.5616 26.7501C50.1967 26.5597 50.8319 26.3693 51.4864 26.1732C53.3888 25.6225 55.296 25.1029 57.2116 24.6001C58.021 24.3849 58.021 24.3849 58.8467 24.1654C67.5959 21.9748 76.496 21.9759 85.4616 21.9501Z" fill="#0D2C54" />
                             <path d="M143.612 48.5996C144.14 48.5996 144.668 48.5996 145.212 48.5996C145.95 75.4476 143.218 103.372 125.212 124.6C124.536 125.405 123.861 126.21 123.165 127.04C114.98 136.526 99.6453 150.742 86.8117 152.6C84.5742 151.628 84.5742 151.628 82.2117 150.25C81.4238 149.797 80.636 149.344 79.8242 148.878C79.2261 148.522 78.628 148.166 78.0117 147.8C78.0117 145.4 78.0117 145.4 79.3117 144.04C79.9387 143.515 80.5657 142.99 81.2117 142.45C90.2309 134.585 98.7241 126.103 106.012 116.6C106.823 115.571 107.634 114.543 108.446 113.515C123.99 93.7006 135.136 72.2987 143.612 48.5996Z" fill="#0D2C54" />
@@ -65,13 +65,13 @@ export function DashboardSidebar({
                             <path d="M140.411 36.5996C142.712 43.4067 137.507 52.0474 134.811 58.1996C134.394 59.1908 133.977 60.1825 133.561 61.1746C122.113 88.2649 104.9 111.364 84.2613 132.15C83.5297 132.889 82.798 133.628 82.0441 134.39C69.3737 147 69.3737 147 66.0113 147C65.3187 145.454 64.6375 143.903 63.9613 142.35C63.5808 141.486 63.2003 140.623 62.8082 139.734C62.0113 137.4 62.0113 137.4 62.8113 135C64.3926 133.731 64.3926 133.731 66.5113 132.3C81.2412 121.83 95.1535 108.643 106.011 94.1996C106.769 93.2149 107.528 92.2306 108.286 91.2465C121.242 74.329 132.257 56.3321 140.411 36.5996Z" fill="#00C49A" />
                         </svg>
                     </div>
-                    <div className="flex flex-col">
-                        <span className="text-xl font-black tracking-tighter text-foreground">League Flow</span>
+                    <div className="flex flex-col transition-all duration-300 opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto overflow-hidden">
+                        <span className="text-xl font-black tracking-tighter text-foreground whitespace-nowrap">League Flow</span>
                     </div>
                 </Link>
             </div>
 
-            <nav className="grid items-start px-2 lg:px-4 space-y-2" id="tour-sidebar-nav">
+            <nav className="grid items-start px-4 space-y-2" id="tour-sidebar-nav">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                     return (
@@ -93,16 +93,19 @@ export function DashboardSidebar({
                                 trackClick('NAV_ITEM', 'navigation', { target: item.href });
                             }}
                             className={cn(
-                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide",
+                                "flex items-center gap-0 group-hover/sidebar:gap-2 p-2 rounded-sm transition-all relative group tracking-wide justify-center md:justify-start",
                                 isActive
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:text-primary"
                             )}
                         >
-                            <item.icon className={cn("h-4 w-4 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
-                            <span className="text-sm font-medium whitespace-nowrap">{t(item.titleKey)}</span>
+                            <item.icon className={cn("h-4 w-4 shrink-0 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
+                            <span className="text-sm font-medium whitespace-nowrap transition-all duration-300 opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto overflow-hidden">{t(item.titleKey)}</span>
                             {item.titleKey === "notifications" && pendingCount > 0 && (
-                                <span className="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive text-[10px] text-foreground">
+                                <span className={cn(
+                                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive text-[10px] text-foreground transition-all duration-300",
+                                    "absolute md:absolute md:group-hover/sidebar:relative right-1 top-1 md:right-1 md:top-1 md:group-hover/sidebar:right-auto md:group-hover/sidebar:top-auto md:group-hover/sidebar:ml-auto"
+                                )}>
                                     {pendingCount}
                                 </span>
                             )}
