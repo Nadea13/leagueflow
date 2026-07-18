@@ -4,9 +4,10 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Header } from "@/components/ui/header";
 import {
     Dialog,
     DialogContent,
@@ -110,11 +111,11 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
         <div className="space-y-1 md:space-y-2">
             <div className="grid gap-1 md:gap-2">
                 {/* Delete Tournament */}
-                <div className="border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+                <div className="border relative overflow-hidden transition-colors p-2 md:p-4 rounded-sm">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
                         <div className="space-y-1">
-                            <h4 className="text-xs font-black tracking-widest text-destructive">{t("delete_tournament")}</h4>
-                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">{t("delete_desc")}</p>
+                            <Header level={4} className="text-destructive">{t("delete_tournament")}</Header>
+                            <p className="text-xs text-muted-foreground font-medium">{t("delete_desc")}</p>
                         </div>
                         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                             <DialogTrigger asChild>
@@ -124,19 +125,24 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                     {t("delete_tournament")}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="bg-card rounded-xl shadow-2xl p-0">
-                                <DialogHeader className="border-b p-2 md:p-4">
-                                    <DialogTitle className="text-2xl font-black tracking-tighter leading-none">
-                                        {t("delete_tournament")}
-                                    </DialogTitle>
+                            <DialogContent showCloseButton={false} className="bg-card rounded-sm shadow-2xl p-0">
+                                <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                                    <DialogTitle>{t("delete_tournament")}</DialogTitle>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="absolute right-2 top-2"
+                                        onClick={() => setDeleteDialogOpen(false)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
                                 </DialogHeader>
                                 <div className="p-2 md:p-4">
-                                    <DialogDescription className="text-sm font-medium text-muted-foreground/80 mb-1 md:mb-2">
-                                        {t("delete_desc")}
-                                    </DialogDescription>
-                                    <p className="text-xs font-bold">
+                                    <DialogDescription className="mb-1">{t("delete_desc")}</DialogDescription>
+                                    <DialogDescription className="font-bold">
                                         {t("type_to_confirm", { text: tournamentName })}
-                                    </p>
+                                    </DialogDescription>
                                     <div className="py-1 md:py-2">
                                         <Input
                                             value={deleteConfirmText}
@@ -160,11 +166,11 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                 </div>
 
                 {/* Reset Bracket Flow */}
-                <div className="bg-card border border-destructive/50 relative overflow-hidden transition-colors p-2 md:p-4 rounded-lg">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
+                <div className="border relative overflow-hidden transition-colors p-2 md:p-4 rounded-sm">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
                         <div className="space-y-1">
-                            <h4 className="text-xs font-black tracking-widest text-destructive">{t("reset_flow_title")}</h4>
-                            <p className="text-[10px] font-bold text-muted-foreground tracking-wider">{t("reset_flow_desc")}</p>
+                            <Header level={4} className="text-destructive">{t("reset_flow_title")}</Header>
+                            <p className="text-xs text-muted-foreground font-medium">{t("reset_flow_desc")}</p>
                         </div>
                         <Button
                             variant="destructive"
@@ -178,12 +184,12 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
             </div>
 
             <AlertDialog open={resetFlowDialogOpen} onOpenChange={setResetFlowDialogOpen}>
-                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none">
+                        <AlertDialogTitle className="p-2 md:p-4 border-b">
                             {t("reset_flow_title")}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
+                        <AlertDialogDescription className="p-2 md:p-4">
                             {t("reset_flow_confirm")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>

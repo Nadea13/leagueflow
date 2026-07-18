@@ -30,15 +30,15 @@ export function LanguageToggle() {
                     <span className="sr-only">{t("language")}</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px]">
-                <DropdownMenuItem onClick={() => switchLocale("en")} className="flex items-center justify-between">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-sm">
+                <DropdownMenuItem onClick={() => switchLocale("en")} className="flex items-center justify-between rounded-none">
                     <div className="flex items-center gap-2">
                         <span className="text-base">🇺🇸</span>
                         <span>English</span>
                     </div>
                     {locale === "en" && <Check className="h-4 w-4" />}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchLocale("th")} className="flex items-center justify-between">
+                <DropdownMenuItem onClick={() => switchLocale("th")} className="flex items-center justify-between rounded">
                     <div className="flex items-center gap-2">
                         <span className="text-base">🇹🇭</span>
                         <span>ไทย</span>

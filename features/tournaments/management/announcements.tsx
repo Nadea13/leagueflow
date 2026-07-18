@@ -59,7 +59,7 @@ export function Announcements({
     const tCommon = useTranslations("Common");
     const locale = useLocale();
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(mode !== 'form');
     const [isDialogOpen, setIsDialogOpen] = useState(defaultAddOpen);
     const [isSaving, setIsSaving] = useState(false);
     const [title, setTitle] = useState("");
@@ -76,11 +76,12 @@ export function Announcements({
     }, [tournamentId]);
 
     useEffect(() => {
+        if (mode === 'form') return;
         const timer = setTimeout(() => {
             fetchData();
         }, 0);
         return () => clearTimeout(timer);
-    }, [fetchData]);
+    }, [fetchData, mode]);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();

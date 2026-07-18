@@ -216,15 +216,14 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
             <DialogTrigger asChild>
                 <Button 
                     variant="outline" 
-                    className="flex items-center gap-1.5 h-10 text-xs font-bold border border-primary text-primary hover:bg-primary/5 transition-all cursor-pointer"
                 >
                     <Plus className="h-4 w-4" />
-                    <span>เพิ่มหลายคน</span>
+                    <span className="hidden lg:block">เพิ่มหลายคน</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-5xl md:max-w-6xl bg-card border rounded-xl max-h-[95vh] md:max-h-[90vh] flex flex-col">
                 <DialogHeader className="relative">
-                    <DialogTitle className="">
+                    <DialogTitle>
                         เพิ่มรายชื่อนักกีฬาหลายคน
                     </DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">

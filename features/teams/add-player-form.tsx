@@ -191,10 +191,10 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
     };
 
     return (
-        <div className="bg-card border relative rounded-xl">
+        <div className="bg-card border relative rounded-sm">
             <div className="p-2 md:p-4">
 
-                <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-2 md:gap-3">
+                <form onSubmit={handleAddPlayer} className="flex flex-wrap items-end gap-1 md:gap-2">
                     <div className="space-y-1 shrink-0 flex flex-col items-center">
                         <input
                             type="file"

@@ -56,6 +56,8 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
@@ -449,12 +451,12 @@ function CanvasInternal({
     const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
     const [isInboxLoading, setIsInboxLoading] = useState(false);
 
-     const fetchInboxItems = useCallback(async () => {
+    const fetchInboxItems = useCallback(async () => {
         if (categories.length === 0) return;
         setIsInboxLoading(true);
         try {
             const supabase = createClient();
-             const { data, error } = await supabase
+            const { data, error } = await supabase
                 .from("tournament_teams")
                 .select(`
                     id,
@@ -891,7 +893,7 @@ function CanvasInternal({
 
 
     return (
-        <div className={cn("flex flex-col h-full w-full border bg-card rounded-xl")}>
+        <div className={cn("flex flex-col h-full w-full border bg-card rounded-sm")}>
             {/* Mobile Portrait Orientation Warning */}
             <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center p-6 text-center lg:hidden portrait:flex landscape:hidden">
                 <div className="space-y-4">
@@ -911,7 +913,7 @@ function CanvasInternal({
 
             <div className="flex items-center justify-between p-2 lg:p-4 border-b gap-1" id="tour-console-header">
                 <div className="flex items-center gap-2 lg:gap-4">
-                    <div className="flex items-center gap-1 lg:gap-2">
+                    <div className="flex items-center">
                         {isEditingName && !readonly ? (
                             <Input
                                 value={tempName}
@@ -942,20 +944,19 @@ function CanvasInternal({
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={startTour}
-                            className="h-6 w-6"                        >
-                            <HelpCircle className="h-3.5 w-3.5" />
+                            onClick={startTour}                    >
+                            <HelpCircle className="h-4 w-4" />
                         </Button>
 
                         <Button
-                            variant={isLocked ? "default" : "outline"}
+                            variant={isLocked ? "default" : "ghost"}
                             size="icon"
                             onClick={() => setIsLocked(!isLocked)}
                             disabled={currentStatus === 'finished' || readonly}
                             className={cn(
                                 "transition-all",
                                 isLocked
-                                    ? "bg-warning"
+                                    ? "bg-warning hover:bg-warning/80"
                                     : "text-warning"
                             )}
                         >
@@ -1027,12 +1028,12 @@ function CanvasInternal({
                             <X className="h-4 w-4" />
                         </Button>
                     )}
-                    <div className="flex items-center gap-1 lg:gap-2">
+                    <div className="flex items-center">
                         {!readonly && (
                             <Button
                                 onClick={() => handleSave(true)}
                                 disabled={!isDirty || isSaving}
-                                variant={isDirty ? "default" : "outline"}
+                                variant={isDirty ? "default" : "ghost"}
                             >
                                 {isSaving ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -1043,23 +1044,32 @@ function CanvasInternal({
                             </Button>
                         )}
                         {!readonly && (
-                            <div className="flex items-center gap-1 lg:gap-2" id="tour-console-sidebar-buttons">
+                            <div className="flex items-center" id="tour-console-sidebar-buttons">
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
                                     <DialogTrigger asChild>
                                         <Button
-                                            variant="outline"
+                                            variant="ghost"
                                             size="icon"
                                             className="text-node-4 transition-all"
                                         >
                                             <Megaphone className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="bg-card rounded-xl sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                                        <DialogHeader className="p-2 lg:p-4 pb-0 border-b">
-                                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center">
+                                    <DialogContent showCloseButton={false} className="bg-card rounded-sm sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                                        <DialogHeader className="p-4 border-b relative pr-10">
+                                            <DialogTitle>
                                                 {locale === 'th' ? "ประกาศใหม่" : "New Announcement"}
                                             </DialogTitle>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                className="absolute right-2 top-2"
+                                                onClick={() => setIsAnnouncementOpen(false)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </DialogHeader>
                                         <Announcements
                                             tournamentId={tournamentId}
@@ -1076,37 +1086,59 @@ function CanvasInternal({
                                 }}>
                                     <DialogTrigger asChild>
                                         <Button
-                                            variant="outline"
+                                            variant="ghost"
                                             size="icon"
                                             className="relative text-foreground transition-all"
                                         >
                                             <Inbox className="h-4 w-4" />
                                             {inboxItems.filter(item => item.registration_status === 'pending' || item.roster_status === 'pending').length > 0 && (
-                                                <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2"/>
+                                                <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
                                             )}
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="bg-card rounded-xl sm:max-w-[600px] p-0 max-h-[90vh] flex flex-col overflow-hidden">
-                                        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
-                                            <DialogTitle className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
-                                                <span>กล่องข้อความ / รายการแจ้งเตือน</span>
-                                            </DialogTitle>
+                                    <DialogContent showCloseButton={false} className="bg-card rounded-sm sm:max-w-[640px] p-0 max-h-[90vh] flex flex-col overflow-hidden">
+                                        <DialogHeader className="p-4 border-b relative pr-10">
+                                            <DialogTitle>กล่องข้อความ</DialogTitle>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                className="absolute right-2 top-2"
+                                                onClick={() => setInboxOpen(false)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </DialogHeader>
 
                                         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                                             {isInboxLoading ? (
-                                                <div className="flex flex-col items-center justify-center py-12 gap-2">
-                                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                                    <span className="text-xs text-muted-foreground/60">กำลังโหลดรายการแจ้งเตือน...</span>
+                                                <div className="space-y-3 animate-pulse">
+                                                    {[...Array(3)].map((_, idx) => (
+                                                        <div key={idx} className="border rounded-lg p-3 space-y-3 bg-card/50">
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div className="flex items-center gap-2.5 w-full">
+                                                                    <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                                                                    <div className="space-y-1.5 flex-1">
+                                                                        <Skeleton className="h-4 w-1/3 rounded-sm" />
+                                                                        <Skeleton className="h-3 w-1/2 rounded-sm" />
+                                                                    </div>
+                                                                </div>
+                                                                <Skeleton className="h-4 w-12 rounded-full shrink-0" />
+                                                            </div>
+                                                            <div className="bg-muted/30 p-2.5 rounded-md space-y-2">
+                                                                <Skeleton className="h-3 w-3/4 rounded-sm" />
+                                                                <Skeleton className="h-3 w-1/2 rounded-sm" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             ) : inboxItems.length === 0 ? (
-                                                <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
-                                                    <Inbox className="h-10 w-10 text-muted-foreground/20" />
-                                                    <h3 className="font-bold text-foreground text-sm">ไม่มีข้อความใหม่</h3>
-                                                    <p className="text-xs text-muted-foreground max-w-xs">
-                                                        ยังไม่มีทีมลงสมัครหรือทำรายการใด ๆ ในทัวร์นาเมนต์นี้
-                                                    </p>
-                                                </div>
+                                                <EmptyState
+                                                    icon={Inbox}
+                                                    title="ไม่มีข้อความใหม่"
+                                                    description="ยังไม่มีทีมลงสมัครหรือทำรายการใด ๆ ในทัวร์นาเมนต์นี้"
+                                                    action={<div />}
+                                                />
                                             ) : (
                                                 inboxItems.map((item) => {
                                                     const isPendingReg = item.registration_status === 'pending';
@@ -1259,64 +1291,64 @@ function CanvasInternal({
                                                                             </Button>
                                                                         </>
                                                                     ) : hasRoster && (
-                                                                         <>
-                                                                             <RosterDialog
-                                                                                 team={{
-                                                                                     id: item.id,
-                                                                                     name: item.team?.name || "",
-                                                                                     logo_url: item.team?.logo_img,
-                                                                                     contact_name: item.contact_name,
-                                                                                     contact_phone: item.contact_phone,
-                                                                                     sport: 'football'
-                                                                                 } as unknown as TournamentTeam}
-                                                                                 tournamentId={tournamentId}
-                                                                                 readOnly={item.roster_status === 'approved'}
-                                                                                 trigger={
-                                                                                     <Button size="sm" variant="outline" type="button" className="h-8 text-xs">
-                                                                                         ตรวจสอบรายชื่อนักกีฬา
-                                                                                     </Button>
-                                                                                 }
-                                                                             />
-                                                                             {item.roster_status === 'pending' && (
-                                                                                 <>
-                                                                                     <Button
-                                                                                         size="sm"
-                                                                                         variant="outline"
-                                                                                         type="button"
-                                                                                         className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
-                                                                                         onClick={async () => {
-                                                                                             const res = await rejectRoster(item.id, tournamentId);
-                                                                                             if (res.success) {
-                                                                                                 toast({ title: "ปฏิเสธรายชื่อเรียบร้อยแล้ว" });
-                                                                                                 fetchInboxItems();
-                                                                                             } else {
-                                                                                                 toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                             }
-                                                                                         }}
-                                                                                     >
-                                                                                         ปฏิเสธรายชื่อ
-                                                                                     </Button>
-                                                                                     <Button
-                                                                                         size="sm"
-                                                                                         variant="default"
-                                                                                         type="button"
-                                                                                         className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                                                         onClick={async () => {
-                                                                                             const res = await approveRoster(item.id, tournamentId);
-                                                                                             if (res.success) {
-                                                                                                 toast({ title: "อนุมัติรายชื่อเรียบร้อยแล้ว" });
-                                                                                                 fetchInboxItems();
-                                                                                             } else {
-                                                                                                 toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                             }
-                                                                                         }}
-                                                                                     >
-                                                                                         อนุมัติรายชื่อ
-                                                                                     </Button>
-                                                                                 </>
-                                                                             )}
-                                                                         </>
-                                                                     )}
+                                                                        <>
+                                                                            <RosterDialog
+                                                                                team={{
+                                                                                    id: item.id,
+                                                                                    name: item.team?.name || "",
+                                                                                    logo_url: item.team?.logo_img,
+                                                                                    contact_name: item.contact_name,
+                                                                                    contact_phone: item.contact_phone,
+                                                                                    sport: 'football'
+                                                                                } as unknown as TournamentTeam}
+                                                                                tournamentId={tournamentId}
+                                                                                readOnly={item.roster_status === 'approved'}
+                                                                                trigger={
+                                                                                    <Button size="sm" variant="outline" type="button" className="h-8 text-xs">
+                                                                                        ตรวจสอบรายชื่อนักกีฬา
+                                                                                    </Button>
+                                                                                }
+                                                                            />
+                                                                            {item.roster_status === 'pending' && (
+                                                                                <>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="outline"
+                                                                                        type="button"
+                                                                                        className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
+                                                                                        onClick={async () => {
+                                                                                            const res = await rejectRoster(item.id, tournamentId);
+                                                                                            if (res.success) {
+                                                                                                toast({ title: "ปฏิเสธรายชื่อเรียบร้อยแล้ว" });
+                                                                                                fetchInboxItems();
+                                                                                            } else {
+                                                                                                toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        ปฏิเสธรายชื่อ
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="default"
+                                                                                        type="button"
+                                                                                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                                                        onClick={async () => {
+                                                                                            const res = await approveRoster(item.id, tournamentId);
+                                                                                            if (res.success) {
+                                                                                                toast({ title: "อนุมัติรายชื่อเรียบร้อยแล้ว" });
+                                                                                                fetchInboxItems();
+                                                                                            } else {
+                                                                                                toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        อนุมัติรายชื่อ
+                                                                                    </Button>
+                                                                                </>
+                                                                            )}
+                                                                        </>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1330,7 +1362,7 @@ function CanvasInternal({
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
-                                            variant="outline"
+                                            variant="ghost"
                                             size="icon"
                                             className="text-foreground transition-all"
                                         >
@@ -1381,7 +1413,7 @@ function CanvasInternal({
                                 </DropdownMenu>
 
                                 <Button
-                                    variant={activeSidebar === 'schedule' ? "default" : "outline"}
+                                    variant={activeSidebar === 'schedule' ? "default" : "ghost"}
                                     size="icon"
                                     onClick={() => setActiveSidebar(activeSidebar === 'schedule' ? 'teams' : 'schedule')}
                                     className={cn(
@@ -1395,7 +1427,7 @@ function CanvasInternal({
                                 </Button>
 
                                 <Button
-                                    variant={activeSidebar === 'settings' ? "default" : "outline"}
+                                    variant={activeSidebar === 'settings' ? "default" : "ghost"}
                                     size="icon"
                                     onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
                                     className={cn(
@@ -1664,11 +1696,9 @@ function CanvasInternal({
                                 <div className="absolute top-4 right-4 z-50" id="tour-console-add-components">
                                     <Popover>
                                         <PopoverTrigger asChild>
-                                            <Button
-                                                variant="default"
-                                            >
+                                            <Button>
                                                 <Plus className="h-4 w-4" />
-                                                NEW
+                                                New
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent

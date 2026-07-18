@@ -24,22 +24,22 @@ export function ThemeToggle() {
                     <span className="sr-only">Toggle theme</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px]">
-                <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-sm">
+                <DropdownMenuItem onClick={() => setTheme("light")} className="flex items-center justify-between rounded">
                     <div className="flex items-center gap-2">
                         <Sun className="h-4 w-4" />
                         <span>Light</span>
                     </div>
                     {theme === "light" && <Check className="h-4 w-4" />}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between">
+                <DropdownMenuItem onClick={() => setTheme("dark")} className="flex items-center justify-between rounded">
                     <div className="flex items-center gap-2">
                         <Moon className="h-4 w-4" />
                         <span>Dark</span>
                     </div>
                     {theme === "dark" && <Check className="h-4 w-4" />}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between">
+                <DropdownMenuItem onClick={() => setTheme("system")} className="flex items-center justify-between rounded">
                     <div className="flex items-center gap-2">
                         <Monitor className="h-4 w-4" />
                         <span>System</span>

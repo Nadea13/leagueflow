@@ -184,7 +184,7 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
                     <Search />
                 </Button>
             </div>
-            <div className="relative w-full h-120 rounded-lg overflow-hidden border border-foreground/10 z-10">
+            <div className="relative w-full h-120 rounded-sm overflow-hidden border border-foreground/10 z-10">
                 <div ref={mapContainerRef} className="w-full h-full" />
             </div>
         </div>

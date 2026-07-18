@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
 
 import { deleteAccount } from "@/actions/common/user";
 
@@ -33,11 +34,20 @@ export function DeleteAccountButton({ email }: { email: string }) {
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card rounded-xl shadow-2xl p-0">
-                <DialogHeader className="border-b p-2 md:p-4">
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm shadow-2xl p-0">
+                <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
                     <DialogTitle className="text-2xl font-black tracking-tighter leading-none">
                         {t("delete_confirm_title")}
                     </DialogTitle>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </DialogHeader>
                 <div className="p-2 md:p-4 space-y-3">
                     <DialogDescription className="text-xs font-bold text-muted-foreground">

@@ -39,7 +39,7 @@ export default function TeamsLoading() {
             {/* Grid Skeleton */}
             <div className="grid gap-2 md:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {[...Array(6)].map((_, idx) => (
-                    <div key={idx} className="flex flex-col h-full bg-card border rounded-lg overflow-hidden p-4 space-y-4">
+                    <div key={idx} className="flex flex-col h-full bg-card border rounded-sm overflow-hidden p-4 space-y-4">
                         {/* Header */}
                         <div className="flex items-start justify-between">
                             <div className="flex gap-2 md:gap-4 overflow-hidden w-full">

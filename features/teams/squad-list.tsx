@@ -107,7 +107,7 @@ export function SquadList({
     const activePlayers = players.filter((player) => !player.deleted_at);
 
     return (
-        <div className="bg-card space-y-2 md:space-y-4 border rounded-xl p-2 md:p-4">
+        <div className="bg-card space-y-2 md:space-y-4 border rounded-sm p-2 md:p-4">
 
             {activePlayers.length === 0 ? (
                 <EmptyState
@@ -339,10 +339,10 @@ export function SquadList({
                                                                 <MoreVertical className="h-5 w-5" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="border-border bg-card w-48 p-0">
+                                                        <DropdownMenuContent align="end" className="w-36 rounded-sm">
                                                             {player.status !== 'pending' && (
                                                                 <DropdownMenuItem
-                                                                    className="py-3 px-4 text-[10px] font-black tracking-widest focus:bg-primary focus:text-black cursor-pointer transition-all"
+                                                                    className="flex items-center rounded"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         setEditingPlayerId(player.id);
@@ -354,18 +354,18 @@ export function SquadList({
                                                                         setEditPhotoPreview(null);
                                                                     }}
                                                                 >
-                                                                    <Edit2 className="mr-3 h-4 w-4" />
+                                                                    <Edit2 className="h-4 w-4" />
                                                                     {tCommon("edit")}
                                                                 </DropdownMenuItem>
                                                             )}
                                                             <DropdownMenuItem
-                                                                className="py-3 px-4 text-[10px] font-black tracking-widest text-red-500 focus:bg-red-500 focus:text-foreground cursor-pointer transition-all border-t border-border/20"
+                                                                className="flex items-center rounded"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     onDeletePlayer(player.id);
                                                                 }}
                                                             >
-                                                                <Trash2 className="mr-3 h-4 w-4" />
+                                                                <Trash2 className="h-4 w-4" />
                                                                 {tCommon("delete")}
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>

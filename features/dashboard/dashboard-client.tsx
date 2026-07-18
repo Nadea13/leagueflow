@@ -695,7 +695,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                         {stats.history.length === 0 ? (
                                             <EmptyState
                                                 description={t("no_history")}
-                                                className="bg-card rounded-sm border border-dashed min-h-[80px]"
+                                                className="bg-card rounded-sm border min-h-[80px]"
                                             />
                                         ) : (
                                             <div className="border rounded-lg overflow-hidden">

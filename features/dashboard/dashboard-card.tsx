@@ -37,7 +37,7 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
 
         return (
             <Link href={`/dashboard/tournaments/${tournament.id}`} className="block h-full group">
-                <Card className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
+                <Card className="flex flex-col h-full bg-card border rounded-sm transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
                     <CardHeader className="pt-2 md:pt-4 relative z-10">
                         <div className="flex gap-2 md:gap-4 overflow-hidden">
                             <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
@@ -78,7 +78,7 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
     const team = data as Team & { tournament?: { name: string } | null };
     return (
         <Link href={`/${mode === 'organizer' ? 'dashboard/teams' : 'manager/my-teams'}/${team.id}`} className="block h-full group">
-            <Card className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
+            <Card className="flex flex-col h-full bg-card border rounded-sm transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
                 <CardHeader className="pt-2 md:pt-4 relative z-10">
                     <div className="flex items-start justify-between">
                         <div className="flex gap-2 md:gap-4 overflow-hidden">

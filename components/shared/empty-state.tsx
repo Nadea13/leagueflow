@@ -23,7 +23,7 @@ export function EmptyState({
 
     return (
         <div className={cn(
-            "flex min-h-[400px] flex-col items-center justify-center text-center animate-in fade-in-50 relative overflow-hidden group",
+            "flex min-h-[240px] flex-col items-center justify-center text-center animate-in fade-in-50 relative overflow-hidden group",
             className
         )}>
             {Icon && (

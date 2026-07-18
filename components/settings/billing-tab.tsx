@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Payment, Tournament, Plan } from "@/types";
 import { getPlans } from "@/actions/common/plans";
 import { getUserPayments, getUserTournaments, createPaymentRecord, createPaymentRecordWithSlip } from "@/actions/common/payments";
@@ -29,6 +29,7 @@ const getPlanPrice = (plan: Plan) => {
 export function BillingTab() {
     const t = useTranslations("Billing");
     const tReg = useTranslations("Registration");
+    const locale = useLocale();
     const router = useRouter();
 
     const [activePlan, setActivePlan] = useState<string>("free");
@@ -464,12 +465,21 @@ export function BillingTab() {
 
             {/* Checkout Dialog */}
             <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
-                <DialogContent className="max-w-2xl bg-card border rounded-xl p-0">
-                    <DialogHeader className="p-2 md:p-4 border-b">
+                <DialogContent showCloseButton={false} className="max-w-2xl bg-card border rounded-sm p-0">
+                    <DialogHeader className="p-2 md:p-4 border-b relative pr-10">
                         <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none">{t("payment_details_title")}</DialogTitle>
                         <DialogDescription className="text-muted-foreground text-xs">
                             {t("complete_payment_desc", { planName: selectedPlan?.name || "" })}
                         </DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => setIsCheckoutOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </DialogHeader>
 
                     {selectedPlan && (
@@ -501,46 +511,41 @@ export function BillingTab() {
 
                             {/* Conditionally show PromptPay QR or free subscription confirmation */}
                             {getPlanPrice(selectedPlan) === 0 ? (
-                                <div className="border rounded-lg p-2 md:p-4 space-y-1 md:space-y-2 w-full">
-                                    <div className="space-y-1 md:space-y-2 text-sm">
-                                        <div className="flex justify-between items-center">
-                                            <Label>{t("plan")}</Label>
-                                            <span className="text-sm">{selectedPlan.name}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <Label>{t("amount_col")}</Label>
-                                            <div className="flex items-center gap-2">
-                                                {selectedPlan.price > 0 && (
-                                                    <span className="line-through text-muted-foreground/60 text-xs font-normal">฿{selectedPlan.price.toLocaleString()}</span>
-                                                )}
-                                                <span className="text-sm">฿0.00</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <Label>{t("method")}</Label>
-                                            <span className="text-sm">{t("getStartedFree") || "Free"}</span>
-                                        </div>
+                                <div className="col-span-2 flex justify-between items-center border rounded-sm p-2 md:p-4">
+                                    <div className="flex flex-col">
+                                        <Header level={4}>{selectedPlan.name}</Header>
+                                        <p className="text-xs text-muted-foreground">
+                                            {selectedPlan.id.includes("yearly") || selectedPlan.id === "yearly"
+                                                ? (locale === 'th' ? "สมัครสมาชิกรายปี" : "Yearly Subscription")
+                                                : (selectedPlan.name === "Single Tournament"
+                                                    ? (locale === 'th' ? "การชำระเงินรายทัวร์นาเมนต์" : "Per Tournament Payment")
+                                                    : (locale === 'th' ? "สมัครสมาชิกรายเดือน" : "Monthly Subscription")
+                                                )
+                                            }
+                                        </p>
                                     </div>
+                                    <Header level={1} className="text-sm">฿{getPlanPrice(selectedPlan).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Header>
                                 </div>
                             ) : (
                                 /* PromptPay Payment QR & Slip Uploader Side-by-Side */
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
-                                    <div className="col-span-2 border rounded-lg p-2 md:p-4 space-y-1 md:space-y-2">
-                                        <div className="flex justify-between items-center">
-                                            <Label>{t("plan")}</Label>
-                                            <span className="text-sm">{selectedPlan.name}</span>
+                                    <div className="col-span-2 flex justify-between items-center border rounded-sm p-2 md:p-4">
+                                        <div className="flex flex-col">
+                                            <Header level={4}>{selectedPlan.name}</Header>
+                                            <p className="text-xs text-muted-foreground">
+                                                {selectedPlan.id.includes("yearly") || selectedPlan.id === "yearly"
+                                                    ? (locale === 'th' ? "สมัครสมาชิกรายปี" : "Yearly Subscription")
+                                                    : (selectedPlan.name === "Single Tournament"
+                                                        ? (locale === 'th' ? "การชำระเงินรายทัวร์นาเมนต์" : "Per Tournament Payment")
+                                                        : (locale === 'th' ? "สมัครสมาชิกรายเดือน" : "Monthly Subscription")
+                                                    )
+                                                }
+                                            </p>
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <Label>{t("amount")}</Label>
-                                            <span className="text-sm">฿{getPlanPrice(selectedPlan)}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <Label>{t("method")}</Label>
-                                            <span className="text-sm">{t("promptpay")}</span>
-                                        </div>
+                                        <Header level={1} className="text-sm">฿{getPlanPrice(selectedPlan).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Header>
                                     </div>
                                     <div className="flex flex-col gap-2 md:gap-4">
-                                        <div className="border rounded-lg overflow-hidden">
+                                        <div className="border rounded-sm overflow-hidden">
                                             <div className="flex justify-center bg-[#113566] p-2">
                                                 <svg width="761" height="227" viewBox="0 0 761 227" className="h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M595.456 145.496V161.836H624.416V174.086H595.476V188.956H627.806V201.776H581.266V132.766H626.246V145.506H595.466L595.456 145.496Z" fill="#FFFEFE" />
@@ -585,7 +590,7 @@ export function BillingTab() {
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center items-center w-full min-h-[140px] md:h-[398px] max-h-[398px]">
                                         {!slipPreviewUrl ? (
-                                            <div className="py-12 border-2 border-dashed rounded-lg hover:border-primary/40 transition-colors text-center cursor-pointer relative w-full flex-1 flex items-center justify-center h-full">
+                                            <div className="py-12 border-2 border-dashed rounded-sm hover:border-primary/40 transition-colors text-center cursor-pointer relative w-full flex-1 flex items-center justify-center h-full">
                                                 <input
                                                     type="file"
                                                     accept="image/jpeg,image/png,image/webp"

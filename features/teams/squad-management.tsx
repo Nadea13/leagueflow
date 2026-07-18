@@ -5,12 +5,13 @@ import { Player, Team, Registration, Tournament } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft, HelpCircle } from "lucide-react";
+import { Loader2, Users, AlertCircle, Lock, Unlock, LayoutGrid, ArrowLeft, HelpCircle } from "lucide-react";
 import { Tab } from "@/components/ui/tab";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { Header } from "@/components/ui/header";
 import { useRouter } from "next/navigation";
 import { AddPlayerForm } from "@/features/teams/add-player-form";
 import { AddPlayersDialog } from "@/features/teams/add-players-dialog";
@@ -242,20 +243,23 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     return (
         <div className="space-y-2 md:space-y-4">
             {/* Top Navigation & Action Bar */}
-            <div className="flex md:items-start justify-between gap-2 md:gap-4">
-                <div className="flex items-center gap-2 md:gap-4">
-                    <Button variant="ghost" size="icon" asChild className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
+            <div className="flex md:items-start justify-between gap-2 lg:gap-4">
+                <div className="flex items-center gap-1 lg:gap-2">
+                    <Button variant="ghost" size="icon" asChild className="shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href="/dashboard/teams">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="flex items-center gap-3">
-                        <div className="flex gap-2 md:gap-4" id="tour-squad-header">
-                            <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
+                    <div className="flex items-center gap-1 lg:gap-2">
+                        <div className="flex gap-1 md:gap-2" id="tour-squad-header">
+                            <Header level={2} className="md:hidden">
+                                {teamName && teamName.length > 12 ? `${teamName.slice(0, 12)}...` : teamName}
+                            </Header>
+                            <Header level={2} className="hidden md:block">
                                 {teamName}
-                            </h1>
-                            <div className="flex items-center gap-2 md:gap-3">
-                                <Badge variant="default" className="text-[10px] font-black tracking-wider rounded-full px-2">
+                            </Header>
+                            <div className="flex items-center gap-1 md:gap-2">
+                                <Badge variant="default">
                                     {tSports(team.sport)}
                                 </Badge>
                                 <span className="text-[10px] font-black tracking-wider text-primary/60">
@@ -272,13 +276,11 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             </div>
                         </div>
                         <Button 
-                            variant="outline" 
-                            size="sm" 
+                            variant="ghost" 
+                            size="icon-sm" 
                             onClick={startTour} 
-                            className="flex items-center gap-1.5 h-8 text-xs font-bold border-dashed border-primary hover:bg-primary/5 transition-all cursor-pointer"
                         >
                             <HelpCircle className="h-3.5 w-3.5" />
-                            {t("tour_button")}
                         </Button>
                     </div>
                 </div>
@@ -434,10 +436,10 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
             </div>
 
             <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
-                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md p-0">
+                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl p-2 md:p-4 mb-0 border-b font-black tracking-tighter leading-none flex items-center">
-                            {t("remove_player") || "Remove Player"}
+                        <AlertDialogTitle className="p-2 md:p-4 border-b">
+                            {t("remove_player")}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
                             {t("delete_confirm")}
@@ -454,8 +456,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             }}
                             className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
                         >
-                            <Trash2 className="h-4 w-4" />
-                            {tCommon("delete") || "Delete"}
+                            {tCommon("delete")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

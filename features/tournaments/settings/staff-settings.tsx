@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Trash2, Loader2, UserCheck, Clock, Check } from "lucide-react";
+import { Users, Plus, Loader2, UserCheck, Clock, Check, X } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TournamentMember } from "@/types";
 import {
@@ -125,11 +125,18 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                         </Button>
                     </DialogTrigger>
                     {isPro && (
-                        <DialogContent className="sm:max-w-[500px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-xl">
-                            <DialogHeader className="relative p-2 md:p-4 border-b">
-                                <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">
-                                    {t("invite_title")}
-                                </DialogTitle>
+                        <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card overflow-hidden shadow-2xl rounded-sm">
+                            <DialogHeader className="relative p-2 md:p-4 border-b pr-10">
+                                <DialogTitle>{t("invite_title")}</DialogTitle>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="absolute right-2 top-2"
+                                    onClick={() => setDialogOpen(false)}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
                             </DialogHeader>
                             <div className="p-2 space-y-1 md:p-4 md:space-y-2">
                                 <div className="space-y-1">
@@ -174,10 +181,10 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
 
             <div className="relative overflow-hidden transition-colors">
 
-                <div className="relative z-10 space-y-4 md:space-y-6">
+                <div className="relative z-10 space-y-2 lg:space-y-4">
 
                     {!isPro && (
-                        <div className="p-2 md:p-3 bg-primary/[0.03] border border-primary/10 relative overflow-hidden group/upsell">
+                        <div className="p-1 lg:p-2 border relative overflow-hidden group/upsell">
                             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 <div className="space-y-1">
                                     <h4 className="text-[10px] font-black tracking-[0.2em] text-primary/80">{t("title")} (PRO)</h4>
@@ -199,7 +206,7 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                         </div>
                     )}
 
-                    <div className={cn("space-y-2 md:space-y-3", !isPro && "opacity-40 grayscale pointer-events-none")}>
+                    <div className={cn("space-y-2 md:space-y-4", !isPro && "opacity-40 grayscale pointer-events-none")}>
                         {isLoading ? (
                             null
                         ) : staffSettings.length === 0 ? (
@@ -210,13 +217,13 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                                 className="py-12"
                             />
                         ) : (
-                            <div className="space-y-2 md:space-y-4">
+                            <div className="space-y-1 md:space-y-2">
                                 {staffSettings.map((collab) => (
                                     <div
                                         key={collab.id}
-                                        className="flex items-center justify-between p-2 md:p-4 bg-card border rounded-lg hover:border-primary transition-colors group/item"
+                                        className="flex items-center justify-between p-1 md:p-2 bg-card border rounded-sm hover:border-primary transition-colors group/item"
                                     >
-                                        <div className="flex items-center gap-2 md:gap-4">
+                                        <div className="flex items-center gap-1 lg:gap-2">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
                                                 <div className="w-full h-full bg-primary/5 rounded-full flex items-center justify-center">
                                                     {collab.status === 'accepted' ? (
@@ -227,25 +234,25 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                                                 </div>
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-1 lg:gap-2">
                                                     <span className="text-sm font-black tracking-tight text-foreground">{collab.email}</span>
-                                                    <Badge variant="outline" className="w-fit text-[10px] px-2 py-0.5 text-primary font-black shrink-0  border-primary/20 bg-primary/5 rounded">
+                                                </div>
+                                                <div className="text-[10px] font-bold tracking-widest text-muted-foreground flex items-center gap-2">
+                                                    <Badge variant="outline" className="text-[10px]">
                                                         {collab.role === 'co_organizer' ? t("role_co_organizer") : collab.role === 'referee' ? t("role_referee") : t("role_staff")}
                                                     </Badge>
-                                                </div>
-                                                <span className="text-[10px] font-bold tracking-[0.1em] text-muted-foreground/40">
                                                     {collab.status === 'accepted' ? t("status_accepted") : t("status_pending")}
-                                                </span>
+                                                </div>
                                             </div>
                                         </div>
                                         <Button
                                             variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 text-red-500 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                                            size="icon-sm"
+                                            className="h-8 w-8 transition-all"
                                             onClick={() => setRemoveMemberId(collab.id)}
                                             disabled={isPending}
                                         >
-                                            <Trash2 className="h-5 w-5" />
+                                            <X className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
@@ -255,18 +262,13 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                 </div>
 
                 <AlertDialog open={!!removeMemberId} onOpenChange={(open) => !open && setRemoveMemberId(null)}>
-                    <AlertDialogContent className="bg-card shadow-2xl max-w-md">
+                    <AlertDialogContent className="bg-card border lg:rounded-sm shadow-2xl max-w-md p-0">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2">
-                                <Trash2 className="h-5 w-5 text-destructive" />
-                                {t("remove_collaborator") || "Remove Collaborator"}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 mt-2">
-                                {t("confirm_remove")}
-                            </AlertDialogDescription>
+                            <AlertDialogTitle className="p-2 md:p-4 border-b">{t("remove_collaborator")}</AlertDialogTitle>
+                            <AlertDialogDescription className="p-2 md:p-4">{t("confirm_remove")}</AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter className="mt-6">
-                            <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                            <AlertDialogCancel className="mt-0">
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -274,9 +276,8 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
                                     e.preventDefault();
                                     confirmRemove();
                                 }}
-                                className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                                className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
                             >
-                                <Trash2 className="h-3.5 w-3.5 mr-2" />
                                 {t("remove") || "Remove"}
                             </AlertDialogAction>
                         </AlertDialogFooter>
