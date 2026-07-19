@@ -20,7 +20,8 @@ export function PromptPayQR({ phoneNumber, amount }: PromptPayQRProps) {
         async function generate() {
             try {
                 setLoading(true);
-                const payload = generatePayload(phoneNumber, { amount });
+                const cleanNumber = phoneNumber.replace(/[^0-9]/g, "");
+                const payload = generatePayload(cleanNumber, { amount });
                 const url = await QRCode.toDataURL(payload, {
                     margin: 1,
                     width: 400,

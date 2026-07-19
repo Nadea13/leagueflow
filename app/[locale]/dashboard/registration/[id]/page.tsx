@@ -22,6 +22,8 @@ import {
     Info,
     ArrowLeft
 } from "lucide-react";
+import { Header } from "@/components/ui/header";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface DashboardRegistrationPageProps {
     params: Promise<{ id: string; locale: string }>;
@@ -104,6 +106,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 )
             `)
             .eq("tournament_category_id", resolvedCategoryId)
+            .neq("registration_status", "rejected")
             .is("deleted_at", null)
             .order("created_at", { ascending: true })
         : { data: [] };
@@ -146,27 +149,29 @@ export default async function DashboardRegistrationPage({ params, searchParams }
         <div className="space-y-2 md:space-y-4">
             {/* Top Navigation & Action Bar */}
             <div className="flex md:items-start justify-between gap-2 md:gap-4">
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-1 md:gap-2">
                     <Button variant="ghost" size="icon" asChild className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                         <Link href="/dashboard">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="flex md:items-start lg:items-center gap-2 md:gap-4" id="tour-registration-header">
-                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
-                            {tournament.name}
-                        </h1>
-                        <div className="flex items-center gap-2 md:gap-3">
-                            <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 transition-colors text-[10px] font-black tracking-wider rounded-full px-2">
+                    <div className="flex md:items-start lg:items-center gap-1 md:gap-2" id="tour-registration-header">
+                        <Header level={2}>
+                            <span className="md:hidden">
+                                {tournament.name && tournament.name.length > 16
+                                    ? `${tournament.name.substring(0, 16)}...`
+                                    : tournament.name}
+                            </span>
+                            <span className="hidden md:inline">
+                                {tournament.name}
+                            </span>
+                        </Header>
+                            <Badge variant="outline">
                                 {sportName}
                             </Badge>
-                            <Badge variant={tournament.is_registration_open && !isRegistrationDisabled ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
-                                {tournament.is_registration_open && !isRegistrationDisabled ? t("open") : t("closed")}
-                            </Badge>
-                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center">
                     <RegistrationTourButton />
                     <RosterSubmissionForm 
                         registeredTeams={(userRegisteredTeams || []).map((item) => {
@@ -223,15 +228,13 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 {/* Right side (2 Columns): Tournament Info, Registered Teams, details */}
                 <div className="lg:col-span-2 space-y-2 md:space-y-4 order-1 lg:order-2">
                     {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description) */}
-                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4" id="tour-registration-details">
-                        <CardHeader className="flex flex-row items-center space-y-0">
-                            <CardTitle>
-                                {t("details")}
-                            </CardTitle>
+                    <Card className="bg-card border rounded-sm py-2 md:py-4 space-y-2 md:space-y-4">
+                                    <CardHeader className="flex flex-row items-center space-y-0">
+                            <CardTitle>{t("details")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 md:space-y-4">
                             {tournament.cover_img && (
-                                <div className="aspect-[16/9] w-full rounded-lg overflow-hidden border bg-muted">
+                                <div className="aspect-[2/1] w-full rounded-sm overflow-hidden border bg-muted">
                                     <Image
                                         src={tournament.cover_img}
                                         alt={tournament.name}
@@ -258,7 +261,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     </Card>
 
                     {/* 1. ข้อมูลการแข่งขัน (Tournament Information) */}
-                    <Card className="bg-card border rounded-xl py-2 md:py-4" id="tour-registration-info">
+                    <Card className="bg-card border rounded-sm py-2 md:py-4" id="tour-registration-info">
                         <CardContent className="space-y-2 md:space-y-4">
                             <div className="grid gap-3 text-sm">
                                 <div className="flex items-start gap-1 md:gap-2">
@@ -318,7 +321,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                     </Card>
 
                     {/* 2. รายชื่อทีม (Team List) */}
-                    <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4" id="tour-registration-teams">
+                    <Card className="bg-card border rounded-sm py-2 md:py-4 space-y-2 md:space-y-4" id="tour-registration-teams">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <CardTitle>
                                 {t("registered_list", { category: categoryName })}
@@ -333,7 +336,6 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                     <div className="grid gap-1 md:gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                                         {registeredTeams.map((reg) => {
                                             const teamObj = (Array.isArray(reg.team) ? reg.team[0] : reg.team) as unknown as { id: string; name: string; logo_img: string | null } | null;
-                                            const isApproved = reg.registration_status === "approved";
                                             return (
                                                 <div
                                                     key={reg.id}
@@ -357,21 +359,16 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                                                             {teamObj?.name || "Unknown Team"}
                                                         </span>
                                                     </div>
-                                                    <Badge
-                                                        variant={isApproved ? "default" : "outline"}
-                                                        className={isApproved ? "bg-primary/5 text-primary hover:bg-primary/5 border-primary/20" : "bg-warning/5 text-warning hover:bg-warning/5 border-warning/20"}
-                                                    >
-                                                        {isApproved ? t("approved") : t("pending_status")}
-                                                    </Badge>
                                                 </div>
                                             );
                                         })}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-2 md:py-4 border-2 border-dashed rounded-lg space-y-1 md:space-y-2">
-                                        <Users className="h-8 w-8 text-muted-foreground/30 mx-auto" />
-                                        <p className="text-xs text-muted-foreground">{t("no_teams_registered_category")}</p>
-                                    </div>
+                                    <EmptyState
+                                        icon={Users}
+                                        description={t("no_teams_registered_category")}
+                                        className="min-h-[160px]"
+                                    />
                                 )}
                             </div>
                         </CardContent>

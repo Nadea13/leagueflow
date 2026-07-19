@@ -105,11 +105,11 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
 
                             <div className="space-y-1">
                                 <Label>
-                                    {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 3:1)" : "Cover Image (Recommended 3:1)"}
+                                    {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 2:1)" : "Cover Image (Recommended 2:1)"}
                                 </Label>
                                 <div 
                                     onClick={() => coverInputRef.current?.click()}
-                                    className="relative h-28 w-full border border-dashed border-border hover:border-primary/50 transition-all rounded-lg overflow-hidden flex flex-col items-center justify-center cursor-pointer group bg-muted/5"
+                                    className="relative aspect-[2/1] w-full border border-dashed border-2 hover:border-primary/50 transition-all rounded-sm overflow-hidden flex flex-col items-center justify-center cursor-pointer group"
                                 >
                                     {coverPreviewUrl ? (
                                         <>
@@ -149,15 +149,15 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center p-4 text-center">
-                                            <div className="p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform mb-2">
-                                                <Upload className="h-5 w-5" />
+                                        <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
+                                            <div className="p-4 bg-primary/10 rounded-sm text-primary transition-transform">
+                                                <Upload className="h-4 w-4" />
                                             </div>
                                             <p className="text-xs font-bold text-foreground">
                                                 {isThai ? "คลิกเพื่ออัปโหลดภาพหน้าปก" : "Click to upload cover banner"}
                                             </p>
-                                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                                (1200x400)
+                                            <p className="text-[10px] text-muted-foreground">
+                                                (1440x720)
                                             </p>
                                         </div>
                                     )}
@@ -218,7 +218,28 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                 </Select>
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="col-span-2 space-y-1">
+                                <Label>{tDialog("description")}</Label>
+                                <div className="pro-editor-wrapper relative">
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={description}
+                                        onChange={setDescription}
+                                        className="pro-editor h-auto text-foreground"
+                                        modules={{
+                                            toolbar: [
+                                                [{ 'header': [1, 2, false] }],
+                                                ['bold', 'underline'],
+                                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                                ['clean']
+                                            ]
+                                        }}
+                                    />
+                                </div>
+                                <input type="hidden" name="description" value={description} />
+                            </div>
+
+                            <div className="col-span-2 space-y-1">
                                 <Label>{t("document_deadline")}</Label>
                                 <Input
                                     type="date"
@@ -250,24 +271,54 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                             </div>
 
                             <div className="col-span-2 space-y-1">
-                                <Label>{tDialog("description")}</Label>
-                                <div className="pro-editor-wrapper relative">
-                                    <ReactQuill
-                                        theme="snow"
-                                        value={description}
-                                        onChange={setDescription}
-                                        className="pro-editor h-auto text-foreground"
-                                        modules={{
-                                            toolbar: [
-                                                [{ 'header': [1, 2, false] }],
-                                                ['bold', 'underline'],
-                                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                                ['clean']
-                                            ]
-                                        }}
-                                    />
-                                </div>
-                                <input type="hidden" name="description" value={description} />
+                                <Label>{isThai ? "ธนาคาร" : "Bank Name"}</Label>
+                                <Select
+                                    name="bank_name"
+                                    defaultValue={tournament.bank_name || ""}
+                                >
+                                    <SelectTrigger className="w-full bg-transparent text-foreground">
+                                        <SelectValue placeholder={isThai ? "เลือกธนาคาร" : "Select Bank"} />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card">
+                                        {(() => {
+                                            const defaultBanks = [
+                                                { value: "PromptPay", label: "พร้อมเพย์ (PromptPay)" },
+                                            ];
+                                            const currentBank = tournament.bank_name || "";
+                                            const isCustom = currentBank && !defaultBanks.some(b => b.value === currentBank);
+                                            const options = isCustom 
+                                                ? [...defaultBanks, { value: currentBank, label: currentBank }]
+                                                : defaultBanks;
+                                            return options.map((bank) => (
+                                                <SelectItem key={bank.value} value={bank.value} className="font-bold text-xs cursor-pointer">
+                                                    {bank.label}
+                                                </SelectItem>
+                                            ));
+                                        })()}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>{isThai ? "ชื่อบัญชี" : "Bank Account Name"}</Label>
+                                <Input
+                                    type="text"
+                                    id="bank_account_name"
+                                    name="bank_account_name"
+                                    defaultValue={tournament.bank_account_name || ""}
+                                    className="bg-transparent text-foreground focus-visible:ring-0"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>{isThai ? "เลขบัญชี / เบอร์พร้อมเพย์" : "Account Number / PromptPay"}</Label>
+                                <Input
+                                    type="text"
+                                    id="bank_account_number"
+                                    name="bank_account_number"
+                                    defaultValue={tournament.bank_account_number || ""}
+                                    className="bg-transparent text-foreground focus-visible:ring-0"
+                                />
                             </div>
                         </div>
 

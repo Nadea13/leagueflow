@@ -604,8 +604,8 @@ export function BillingTab() {
                                                     }}
                                                 />
                                                 <div className="flex flex-col items-center gap-2">
-                                                    <div className="p-3 bg-primary/5 text-primary rounded-sm transition-transform shadow-[0_0_15px_rgba(var(--primary),0.1)]">
-                                                        <Upload className="w-6 h-6" />
+                                                    <div className="p-4 bg-primary/10 text-primary rounded-sm transition-transform">
+                                                        <Upload className="w-4 h-4" />
                                                     </div>
                                                     <div className="space-y-1">
                                                         <div className="text-xs tracking-wide text-foreground">

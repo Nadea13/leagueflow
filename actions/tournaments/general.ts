@@ -294,6 +294,9 @@ export async function updateTournament(
         if (formData.has("start_date")) updateData.start_date = formData.get("start_date") as string || null;
         if (formData.has("end_date")) updateData.end_date = formData.get("end_date") as string || null;
         if (formData.has("document_deadline")) updateData.document_deadline = formData.get("document_deadline") as string || null;
+        if (formData.has("bank_name")) updateData.bank_name = formData.get("bank_name") as string;
+        if (formData.has("bank_account_name")) updateData.bank_account_name = formData.get("bank_account_name") as string;
+        if (formData.has("bank_account_number")) updateData.bank_account_number = formData.get("bank_account_number") as string;
 
         // Handle logo and cover file uploads
         const logoFile = formData.get("logo_img") as File | null;

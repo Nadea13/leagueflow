@@ -15,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Trophy, DollarSign } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 import {
     Dialog,
@@ -107,8 +107,8 @@ export function CreateCategoryForm({
                 if (parseInt(maxTeams) > 12) {
                     toast({
                         title: "Error",
-                        description: locale === 'th' 
-                            ? "ผู้ใช้ทั่วไปสามารถจำกัดจำนวนทีมได้สูงสุด 12 ทีมเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro" 
+                        description: locale === 'th'
+                            ? "ผู้ใช้ทั่วไปสามารถจำกัดจำนวนทีมได้สูงสุด 12 ทีมเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
                             : "Starter plan users can set a maximum limit of 12 teams. Please upgrade to a Pro plan.",
                         variant: "destructive"
                     });
@@ -165,17 +165,24 @@ export function CreateCategoryForm({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col bg-background p-0 rounded-xl shadow-2xl">
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-sm shadow-2xl">
                 <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
-                    <div className="p-2 md:p-4 border-b">
-                        <DialogHeader>
-                            <DialogTitle className="text-2xl font-black tracking-tighter text-foreground leading-none flex items-center gap-2">
-                                {locale === 'th' ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
-                            </DialogTitle>
-                        </DialogHeader>
-                    </div>
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>
+                            {locale === 'th' ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
+                        </DialogTitle>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-4 no-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1 md:space-y-2 no-scrollbar">
                         <div className="space-y-1">
                             <Label>
                                 {locale === 'th' ? "รุ่นอายุ" : "Age Category"}
@@ -195,7 +202,7 @@ export function CreateCategoryForm({
                         </div>
 
                         <div className="space-y-1">
-                            <Label className="text-xs font-bold tracking-widest text-muted-foreground">
+                            <Label>
                                 {locale === 'th' ? "ประเภทเพศ" : "Gender Group"}
                             </Label>
                             <Select value={genderType} onValueChange={setGenderType}>
@@ -212,8 +219,8 @@ export function CreateCategoryForm({
                         </div>
 
                         <div className="space-y-1">
-                            <Label className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1">
-                                <Trophy className="h-3 w-3" /> {locale === 'th' ? "จำนวนทีมสูงสุด" : "Team Limit"}
+                            <Label>
+                                {locale === 'th' ? "จำนวนทีมสูงสุด" : "Team Limit"}
                             </Label>
                             <Input
                                 type="text"
@@ -222,13 +229,12 @@ export function CreateCategoryForm({
                                     const val = e.target.value.replace(/[^0-9]/g, "");
                                     setMaxTeams(val);
                                 }}
-                                className="w-full h-10 bg-background"
                             />
                         </div>
 
                         <div className="space-y-1">
-                            <Label className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1">
-                                <DollarSign className="h-3 w-3" /> {locale === 'th' ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
+                            <Label>
+                                {locale === 'th' ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
                             </Label>
                             <Input
                                 type="text"
@@ -240,16 +246,15 @@ export function CreateCategoryForm({
                                     }
                                 }}
                                 placeholder="0.00 (Free)"
-                                className="w-full h-10 bg-background"
                             />
                         </div>
                     </div>
 
                     <DialogFooter className="border-t p-2 md:p-4">
-                        <Button type="submit" disabled={isPending} className="w-full font-bold">
+                        <Button type="submit" disabled={isPending} className="w-full">
                             {isPending ? (
                                 <>
-                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    <Loader2 className="h-4 w-4 animate-spin" />
                                     {locale === 'th' ? "กำลังสร้าง..." : "Creating..."}
                                 </>
                             ) : (

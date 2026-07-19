@@ -636,3 +636,137 @@ export async function rejectRosterUnlock(
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
     return { success: true, message: "Unlock request rejected." };
 }
+
+export async function getPendingInboxCount(): Promise<ActionResponse<number>> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: "Authentication required" };
+    }
+
+    // 1. Fetch all tournaments owned by user
+    const { data: ownedTournaments } = await supabase
+        .from("tournaments")
+        .select("id")
+        .eq("organizer_id", user.id);
+
+    // 2. Fetch all tournaments where the user is an accepted collaborator
+    const { data: collaboratedTournaments } = await supabase
+        .from("tournament_invitations")
+        .select("tournament_id")
+        .eq("user_id", user.id)
+        .eq("status", "accepted")
+        .is("deleted_at", null);
+
+    const tournamentIds = [
+        ...(ownedTournaments || []).map(t => t.id),
+        ...(collaboratedTournaments || []).map(t => t.tournament_id)
+    ];
+
+    if (tournamentIds.length === 0) {
+        return { success: true, data: 0 };
+    }
+
+    // 3. Fetch all categories of those tournaments
+    const { data: categories } = await supabase
+        .from("tournament_categories")
+        .select("id")
+        .in("tournament_id", tournamentIds)
+        .is("deleted_at", null);
+
+    if (!categories || categories.length === 0) {
+        return { success: true, data: 0 };
+    }
+
+    const categoryIds = categories.map(c => c.id);
+
+    // 4. Query tournament_teams for pending count
+    const { data: teams, error } = await supabase
+        .from("tournament_teams")
+        .select("registration_status, roster_status, contact_name, contact_phone, unlock_requested")
+        .in("tournament_category_id", categoryIds)
+        .is("deleted_at", null);
+
+    if (error) {
+        console.error("Error fetching pending inbox count:", error);
+        return { success: false, error: error.message };
+    }
+
+    const pendingCount = (teams || []).filter(item => 
+        item.registration_status === 'pending' || 
+        item.unlock_requested === true || 
+        (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
+    ).length;
+
+    return { success: true, data: pendingCount };
+}
+
+export async function withdrawTournamentTeam(
+    registrationId: string
+): Promise<ActionResponse> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { success: false, error: "Authentication required" };
+    }
+
+    const { data: reg, error: fetchError } = await supabase
+        .from("tournament_teams")
+        .select(`
+            id,
+            tournament_category_id,
+            team_id,
+            tournament_categories (
+                tournament_id,
+                tournaments (
+                    organizer_id
+                )
+            )
+        `)
+        .eq("id", registrationId)
+        .single();
+
+    if (fetchError || !reg) {
+        return { success: false, error: "Registration not found" };
+    }
+
+    const category = reg.tournament_categories as unknown as { tournament_id: string; tournaments: { organizer_id: string } } | null;
+    const tournamentId = category?.tournament_id;
+    const organizerId = category?.tournaments?.organizer_id;
+
+    let isAuthorized = organizerId === user.id;
+
+    if (!isAuthorized && reg.team_id) {
+        const { data: team } = await supabase
+            .from("teams")
+            .select("user_id")
+            .eq("id", reg.team_id)
+            .single();
+        if (team && team.user_id === user.id) {
+            isAuthorized = true;
+        }
+    }
+
+    if (!isAuthorized) {
+        return { success: false, error: "Access denied" };
+    }
+
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase
+        .from("tournament_teams")
+        .update({ 
+            registration_status: 'rejected'
+        })
+        .eq("id", registrationId);
+
+    if (error) {
+        return { success: false, error: "Failed to withdraw team: " + error.message };
+    }
+
+    if (tournamentId) {
+        revalidatePath(`/organizer/tournaments/${tournamentId}`);
+    }
+    return { success: true, message: "Team withdrawn successfully." };
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition, useEffect } from "react";
-import { Plus, X, Loader2, ArrowRight, Camera, User, Phone, ClipboardList } from "lucide-react";
+import { Plus, X, Loader2, ArrowRight, Camera, User, ClipboardList } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from "sonner";
 import { searchMasterPlayers } from "@/actions/common/user";
 import { submitRosterWithSender } from "@/actions/tournaments/registration";
+import { EmptyState } from "@/components/shared/empty-state";
 
 import { Player } from "@/types/index";
+import { Header } from "@/components/ui/header";
 
 export interface UserRegisteredTeam {
     id: string;
@@ -292,41 +294,38 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="flex items-center gap-1.5 h-8 text-xs font-bold transition-all cursor-pointer bg-primary text-primary-foreground hover:bg-primary/95"
+                <Button
+                    variant="default"
                 >
-                    <ClipboardList className="h-3.5 w-3.5" />
-                    <span>ส่งรายชื่อนักกีฬา</span>
+                    <ClipboardList className="h-4 w-4" />
+                    <span className="hidden md:block">ส่งรายชื่อนักกีฬา</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-5xl md:max-w-6xl bg-card border rounded-xl max-h-[95vh] md:max-h-[90vh] flex flex-col">
-                <DialogHeader className="relative">
-                    <DialogTitle className="text-xl font-black tracking-tight">
+            <DialogContent showCloseButton={false} className="min-w-[1280px] bg-card border rounded-sm max-h-[95vh] md:max-h-[90vh] flex flex-col">
+                <DialogHeader className="relative pr-10">
+                    <DialogTitle>
                         ส่งรายชื่อนักกีฬาเข้าร่วมแข่งขัน
                     </DialogTitle>
-                    <DialogDescription className="text-xs text-muted-foreground">
+                    <DialogDescription>
                         กรุณาเลือกทีมที่ลงทะเบียนแล้ว กรอกข้อมูลผู้ติดต่อ และเพิ่มรายชื่อนักกีฬาลงในตารางด้านล่าง จากนั้นกดปุ่มส่งรายชื่อนักกีฬา
                     </DialogDescription>
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
                         onClick={() => setIsOpen(false)}
-                        className="absolute right-2 top-2 md:right-4 md:top-4 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
                     >
                         <X className="h-4 w-4" />
-                        <span className="sr-only">Close</span>
-                    </button>
+                    </Button>
                 </DialogHeader>
 
                 {registeredTeams.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-2">
-                        <ClipboardList className="h-12 w-12 text-muted-foreground/30" />
-                        <h3 className="font-bold text-foreground">ไม่พบประวัติการลงทะเบียนทีม</h3>
-                        <p className="text-xs text-muted-foreground max-w-sm">
-                            บัญชีของคุณยังไม่มีทีมที่ผ่านการสมัครลงทะเบียนในรายการนี้ จึงไม่สามารถส่งรายชื่อนักกีฬาได้
-                        </p>
-                    </div>
+                    <EmptyState
+                        icon={ClipboardList}
+                        title="ไม่พบประวัติการลงทะเบียนทีม"
+                        description="บัญชีของคุณยังไม่มีทีมที่ผ่านการสมัครลงทะเบียนในรายการนี้ จึงไม่สามารถส่งรายชื่อนักกีฬาได้"
+                    />
                 ) : (
                     <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
                         <div className="flex-1 overflow-y-auto space-y-4 p-2 md:p-4">
@@ -359,7 +358,6 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                 <div className="space-y-1">
                                     <Label className="text-xs font-bold">ชื่อผู้ส่งรายชื่อ / ผู้ติดต่อ <span className="text-destructive">*</span></Label>
                                     <div className="relative">
-                                        <User className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             type="text"
                                             placeholder="ชื่อ-นามสกุล"
@@ -373,7 +371,6 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                 <div className="space-y-1">
                                     <Label className="text-xs font-bold">เบอร์โทรศัพท์ผู้ติดต่อ <span className="text-destructive">*</span></Label>
                                     <div className="relative">
-                                        <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             type="tel"
                                             placeholder="เบอร์โทรศัพท์มือถือ"
@@ -386,25 +383,23 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                 </div>
                             </div>
 
-                            
-
-                                                        {/* Bulk Roster Grid */}
-                            <div className="space-y-2 pt-2">
-                                <Label className="text-xs font-bold">รายชื่อนักกีฬา</Label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 border p-2 rounded-lg bg-muted/10 max-h-[380px] overflow-y-auto custom-scrollbar">
+                            {/* Bulk Roster Grid */}
+                            <div className="space-y-2">
+                                <Header level={4}>รายชื่อนักกีฬา</Header>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 border rounded-sm max-h-[46.4vh] overflow-auto no-scrollbar">
                                     {/* Existing Players (Read-Only / Disabled) */}
                                     {selectedRegId && !isLoadingExisting && existingPlayers.map((player) => (
-                                        <div key={`existing-${player.id}`} className="border rounded-lg p-2 relative flex flex-col items-center gap-2 bg-card/60 opacity-70">
+                                        <div key={`existing-${player.id}`} className="border relative flex flex-col items-center gap-2">
                                             {/* Photo Display */}
                                             <div className="relative">
-                                                <div className="h-14 w-14 rounded-full border flex items-center justify-center overflow-hidden bg-muted">
+                                                <div className="h-24 w-24 rounded-full border flex items-center justify-center overflow-hidden bg-muted">
                                                     {player.photo_url ? (
-                                                        <Image 
-                                                            src={player.photo_url} 
-                                                            alt={player.name} 
-                                                            width={56} 
-                                                            height={56} 
-                                                            className="h-full w-full object-cover" 
+                                                        <Image
+                                                            src={player.photo_url}
+                                                            alt={player.name}
+                                                            width={56}
+                                                            height={56}
+                                                            className="h-full w-full object-cover"
                                                         />
                                                     ) : (
                                                         <User className="h-6 w-6 text-muted-foreground/60" />
@@ -419,15 +414,15 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                                     type="text"
                                                     value={player.name}
                                                     disabled
-                                                    className="h-8 text-xs bg-muted/30"
+                                                    className="h-8 text-xs"
                                                 />
-                                                <div className="grid grid-cols-2 gap-1">
+                                                <div className="grid grid-cols-2 gap-1 lg:gap-2">
                                                     <Input
                                                         type="text"
                                                         value={player.number || ""}
                                                         disabled
                                                         placeholder="เบอร์เสื้อ"
-                                                        className="h-8 text-xs px-1.5 bg-muted/30"
+                                                        className="h-8 text-xs"
                                                     />
                                                     <Input
                                                         type="text"
@@ -456,8 +451,8 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                     )}
 
                                     {bulkPlayers.map((player, idx) => (
-                                        <div key={idx} className="border rounded-lg p-2 relative flex flex-col items-center gap-2 bg-card">
-                                            
+                                        <div key={idx} className="border rounded-sm p-2 relative flex flex-col items-center gap-2 bg-card">
+
                                             {/* Photo Selector */}
                                             <div className="relative">
                                                 <input
@@ -469,20 +464,20 @@ export function RosterSubmissionForm({ registeredTeams }: RosterSubmissionFormPr
                                                 />
                                                 <label
                                                     htmlFor={`roster-photo-input-${idx}`}
-                                                    className="h-14 w-14 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group cursor-pointer"
+                                                    className="h-24 w-24 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group cursor-pointer"
                                                 >
                                                     {player.photoPreview ? (
-                                                        <Image 
-                                                            src={player.photoPreview} 
-                                                            alt="Preview" 
-                                                            width={36} 
-                                                            height={36} 
-                                                            className="h-full w-full object-cover" 
+                                                        <Image
+                                                            src={player.photoPreview}
+                                                            alt="Preview"
+                                                            width={36}
+                                                            height={36}
+                                                            className="h-full w-full object-cover"
                                                         />
                                                     ) : (
                                                         <Camera className="h-4 w-4 text-primary" />
                                                     )}
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-10 transition-opacity flex items-center justify-center">
                                                         <Camera className="h-4 w-4 text-foreground" />
                                                     </div>
                                                 </label>

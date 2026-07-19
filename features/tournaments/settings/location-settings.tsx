@@ -77,6 +77,7 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                         value={googleMapUrl}
                         onChange={(url) => setGoogleMapUrl(url)}
                     />
+                    <input type="hidden" name="google_map_url" value={googleMapUrl} />
                 </div>
 
                 <div className="flex justify-end">

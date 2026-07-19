@@ -275,7 +275,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             {[...Array(2)].map((_, idx) => (
                                 <div key={idx} className="bg-card border rounded-sm p-2 md:p-4 flex gap-2 md:gap-4">
                                     <div className="flex gap-2 md:gap-4 flex-1">
-                                        <Skeleton className="h-14 w-14 rounded-full shrink-0" />
+                                        <Skeleton className="h-12 w-12 rounded-full shrink-0" />
                                         <div className="flex flex-col gap-2 justify-center flex-1">
                                             <Skeleton className="h-5 w-1/3 rounded-sm" />
                                             <Skeleton className="h-4 w-1/4 rounded-sm" />
@@ -303,11 +303,11 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             {filteredTournaments.map((tournament) => (
                                 <Link key={tournament.id} href={`/dashboard/registration/${tournament.id}`} className="block">
                                     <Card
-                                        className="flex flex-col h-full bg-card border rounded-lg transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer"
+                                        className="flex flex-col h-full bg-card border rounded-sm transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer"
                                     >
-                                        <CardContent className="flex py-2 md:py-4 relative z-10 gap-2 md:gap-4">
-                                            <div className="flex gap-2 md:gap-4 overflow-hidden">
-                                                <Avatar className="h-14 w-14 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
+                                        <CardContent className="flex justify-between py-2 md:py-4 relative z-10">
+                                            <div className="flex items-center gap-1 md:gap-2 overflow-hidden">
+                                                <Avatar className="h-12 w-12 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
                                                     <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
                                                     <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}</AvatarFallback>
                                                 </Avatar>
@@ -320,7 +320,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                     </CardDescription>
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2 md:gap-4">
+                                            <div className="flex items-center gap-2 md:gap-4">
                                                 <div className="flex gap-2">
                                                     <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary">
                                                         <Calendar className="h-4 w-4" />

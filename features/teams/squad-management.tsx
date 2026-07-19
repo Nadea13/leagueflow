@@ -240,6 +240,27 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
         }
     };
 
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
+    const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+
+    const handleWithdraw = async () => {
+        setIsWithdrawing(true);
+        const { withdrawTournamentTeam } = await import("@/actions/tournaments/registration");
+        const result = await withdrawTournamentTeam(team.id);
+        setIsWithdrawing(false);
+        setShowWithdrawDialog(false);
+
+        if (result.success) {
+            toast({
+                title: tCommon("success"),
+                description: "ถอนทีมเรียบร้อยแล้ว"
+            });
+            router.push("/dashboard/teams");
+        } else {
+            toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
+        }
+    };
+
     return (
         <div className="space-y-2 md:space-y-4">
             {/* Top Navigation & Action Bar */}
@@ -285,6 +306,16 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     </div>
                 </div>
                 <div className="flex items-start gap-2" id="tour-lock-roster-btn">
+                    {team.isParticipation && team.roster_status !== 'rejected' && (
+                        <Button
+                            variant="destructive"
+                            onClick={() => setShowWithdrawDialog(true)}
+                            disabled={isWithdrawing}
+                        >
+                            {isWithdrawing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            ถอนทีม
+                        </Button>
+                    )}
                     <AddPlayersDialog 
                         teamId={team.id} 
                         onSuccess={refreshPlayers} 
@@ -457,6 +488,33 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
                         >
                             {tCommon("delete")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <AlertDialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="p-2 md:p-4 border-b">
+                            ยืนยันการถอนทีม
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="p-2 md:p-4 text-sm font-medium text-muted-foreground/80">
+                            คุณแน่ใจหรือไม่ว่าต้องการถอนทีมออกจากการแข่งขันนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
+                        <AlertDialogCancel className="mt-0">
+                            ยกเลิก
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleWithdraw();
+                            }}
+                            className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
+                        >
+                            ยืนยันการถอนทีม
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -24,6 +24,7 @@ import {
     AlertCircle,
     ArrowLeft
 } from "lucide-react";
+import { Header } from "@/components/ui/header";
 
 interface RegisterPageProps {
     params: Promise<{ id: string; locale: string }>;
@@ -108,6 +109,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                 )
             `)
             .eq("tournament_category_id", resolvedCategoryId)
+            .neq("registration_status", "rejected")
             .is("deleted_at", null)
             .order("created_at", { ascending: true })
         : { data: [] };
@@ -161,7 +163,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                 ) : (
                     <div className="space-y-2 md:space-y-4">
                         {/* Title & Badges */}
-                        <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                        <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-4">
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -174,17 +176,12 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             </Button>
                             <div className="flex flex-col gap-1">
                                 <div className="flex flex-wrap items-center gap-1 md:gap-2">
-                                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
+                                    <Header level={2}>
                                         {tournament.name}
-                                    </h1>
-                                    <div className="flex items-center gap-2 md:gap-3">
-                                        <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 transition-colors text-[10px] font-black tracking-wider rounded-full px-2">
-                                            {sportName}
-                                        </Badge>
-                                        <Badge variant={tournament.is_registration_open && !isRegistrationDisabled ? "default" : "outline"} className="text-[10px] font-black tracking-wider rounded-full px-2">
-                                            {tournament.is_registration_open && !isRegistrationDisabled ? t("open") : t("closed")}
-                                        </Badge>
-                                    </div>
+                                    </Header>
+                                    <Badge variant="outline">
+                                        {sportName}
+                                    </Badge>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +213,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                             {/* Right side (2 Columns): Tournament Info, Registered Teams, details */}
                             <div className="lg:col-span-2 space-y-2 md:space-y-4 order-1 lg:order-2">
                                 {/* 3. รายละเอียดการแข่งขัน (Tournament Details / Description) */}
-                                <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                                <Card className="bg-card border rounded-sm py-2 md:py-4 space-y-2 md:space-y-4">
                                     <CardHeader className="flex flex-row items-center space-y-0">
                                         <CardTitle>
                                             {t("details")}
@@ -224,7 +221,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                     </CardHeader>
                                     <CardContent className="space-y-2 md:space-y-4">
                                         {tournament.cover_img && (
-                                            <div className="aspect-[16/9] w-full rounded-lg overflow-hidden border bg-muted">
+                                            <div className="aspect-[2/1] w-full rounded-sm overflow-hidden border bg-muted">
                                                 <Image
                                                     src={tournament.cover_img}
                                                     alt={tournament.name}
@@ -251,7 +248,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 </Card>
 
                                 {/* 1. ข้อมูลการแข่งขัน (Tournament Information) */}
-                                <Card className="bg-card border rounded-xl py-2 md:py-4">
+                                <Card className="bg-card border rounded-sm py-2 md:py-4">
                                     <CardContent className="space-y-2 md:space-y-4">
                                         <div className="grid gap-3 text-sm">
                                             <div className="flex items-start gap-1 md:gap-2">
@@ -311,7 +308,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 </Card>
 
                                 {/* 2. รายชื่อทีม (Team List) */}
-                                <Card className="bg-card border rounded-xl py-2 md:py-4 space-y-2 md:space-y-4">
+                                <Card className="bg-card border rounded-sm py-2 md:py-4 space-y-2 md:space-y-4">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
                                         <CardTitle>
                                             {t("registered_list", { category: categoryName })}
@@ -326,7 +323,6 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                 <div className="grid gap-1 md:gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                                                     {registeredTeams.map((reg) => {
                                                         const teamObj = (Array.isArray(reg.team) ? reg.team[0] : reg.team) as unknown as { id: string; name: string; logo_img: string | null } | null;
-                                                        const isApproved = reg.registration_status === "approved";
                                                         return (
                                                             <div
                                                                 key={reg.id}
@@ -350,12 +346,6 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                                         {teamObj?.name || "Unknown Team"}
                                                                     </span>
                                                                 </div>
-                                                                <Badge
-                                                                    variant={isApproved ? "default" : "outline"}
-                                                                    className={isApproved ? "bg-primary/5 text-primary hover:bg-primary/5 border-primary/20" : "bg-warning/5 text-warning hover:bg-warning/5 border-warning/20"}
-                                                                >
-                                                                    {isApproved ? t("approved") : t("pending_status")}
-                                                                </Badge>
                                                             </div>
                                                         );
                                                     })}

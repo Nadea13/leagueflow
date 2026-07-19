@@ -112,7 +112,7 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                 </Button>
             </DialogTrigger>
             <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-sm shadow-2xl">
-                <form action={formAction}>
+                <form action={formAction} className="flex flex-col h-full max-h-[96vh] overflow-hidden">
                     {/* Premium Header */}
                     <DialogHeader className="relative pr-10">
                         <DialogTitle>{t("create_title")}</DialogTitle>
@@ -128,7 +128,7 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                         </Button>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1 md:space-y-2 no-scrollbar">
+                    <div className="flex-1 overflow-y-auto no-scrollbar p-2 md:p-4 space-y-1 md:space-y-2">
                         <div className="space-y-1 md:space-y-2">
                             <div className="space-y-1">
                                 <Label>
@@ -155,11 +155,11 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
 
                             <div className="space-y-1">
                                 <Label>
-                                    {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 3:1)" : "Cover Image (Recommended 3:1)"}
+                                    {isThai ? "ภาพหน้าปก (แนะนำอัตราส่วน 2:1)" : "Cover Image (Recommended 2:1)"}
                                 </Label>
                                 <div
                                     onClick={() => coverInputRef.current?.click()}
-                                    className="relative h-28 w-full border border-dashed border-border hover:border-primary/50 transition-all rounded-lg overflow-hidden flex flex-col items-center justify-center cursor-pointer group bg-muted/5"
+                                    className="relative aspect-[2/1] w-full border border-dashed border-2 hover:border-primary/50 transition-all rounded-sm overflow-hidden flex flex-col items-center justify-center cursor-pointer group"
                                 >
                                     {coverPreviewUrl ? (
                                         <>
@@ -198,15 +198,15 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="flex flex-col items-center justify-center p-4 text-center">
-                                            <div className="p-2 bg-primary/10 rounded-full text-primary group-hover:scale-110 transition-transform mb-2">
-                                                <Upload className="h-5 w-5" />
+                                        <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
+                                            <div className="p-4 bg-primary/10 rounded-sm text-primary transition-transform">
+                                                <Upload className="h-4 w-4" />
                                             </div>
                                             <p className="text-xs font-bold text-foreground">
                                                 {isThai ? "คลิกเพื่ออัปโหลดภาพหน้าปก" : "Click to upload cover banner"}
                                             </p>
-                                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                                (1200x400)
+                                            <p className="text-[10px] text-muted-foreground">
+                                                (1440x720)
                                             </p>
                                         </div>
                                     )}

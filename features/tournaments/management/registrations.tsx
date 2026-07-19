@@ -9,11 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Loader2, ExternalLink, Phone, User, Users, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useTranslations } from "next-intl";
-import { approveRegistration, rejectRegistration } from "@/actions/tournaments/registration";
+import { useTranslations, useLocale } from "next-intl";
+import { approveRegistration, rejectRegistration, withdrawTournamentTeam } from "@/actions/tournaments/registration";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { toast } from "sonner";
 import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -51,10 +53,14 @@ interface RegistrationQueryResult {
 
 export function Registrations({ tournamentId, categoryId }: { tournamentId: string; categoryId?: string }) {
     const t = useTranslations("Registrations");
+    const locale = useLocale();
     const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isActing, setIsActing] = useState<string | null>(null);
     const [registrationToReject, setRegistrationToReject] = useState<string | null>(null);
+    const [withdrawingReg, setWithdrawingReg] = useState<{ id: string; name: string } | null>(null);
+    const [withdrawConfirmText, setWithdrawConfirmText] = useState("");
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
     const supabase = createClient();
 
     const fetchRegistrations = useCallback(async () => {
@@ -155,6 +161,31 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
             toast.error(res.error);
         }
         setIsActing(null);
+    };
+
+    const handleWithdraw = async () => {
+        if (!withdrawingReg) return;
+        if (withdrawConfirmText !== withdrawingReg.name) {
+            toast.error(locale === 'th' ? "ชื่อทีมไม่ถูกต้อง" : "Invalid team name");
+            return;
+        }
+
+        setIsWithdrawing(true);
+        const res = await withdrawTournamentTeam(withdrawingReg.id);
+        if (res.success) {
+            toast.success(res.message);
+            fetchRegistrations();
+            setWithdrawingReg(null);
+            setWithdrawConfirmText("");
+            // Re-fetch bracket store teams so sidebar + canvas update in real-time
+            const activeCategoryId = useBracketStore.getState().activeCategoryId;
+            if (activeCategoryId) {
+                useBracketStore.getState().fetchTeams(activeCategoryId);
+            }
+        } else {
+            toast.error(res.error);
+        }
+        setIsWithdrawing(false);
     };
 
     if (isLoading) {
@@ -270,7 +301,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                         }).replace(',', '')}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {reg.payment_status === 'PENDING' && (
+                                        {reg.payment_status === 'PENDING' ? (
                                             <div className="flex items-center justify-end gap-2 transition-opacity">
                                                 <Button
                                                     size="sm"
@@ -293,7 +324,19 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                                     <X className="h-5 w-5" />
                                                 </Button>
                                             </div>
-                                        )}
+                                        ) : reg.payment_status === 'PAID' ? (
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                    disabled={isActing !== null}
+                                                    onClick={() => setWithdrawingReg({ id: reg.id, name: reg.team_name })}
+                                                >
+                                                    {locale === 'th' ? "ถอนทีม" : "Withdraw"}
+                                                </Button>
+                                            </div>
+                                        ) : null}
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -330,6 +373,77 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={!!withdrawingReg} onOpenChange={(open) => {
+                if (!open) {
+                    setWithdrawingReg(null);
+                    setWithdrawConfirmText("");
+                }
+            }}>
+                <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
+                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                        <DialogTitle>
+                            {locale === 'th' ? "ถอนทีมออกจากการแข่งขัน" : "Withdraw Team from Tournament"}
+                        </DialogTitle>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => {
+                                setWithdrawingReg(null);
+                                setWithdrawConfirmText("");
+                            }}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
+                    <div className="p-2 md:p-4 space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                            {locale === 'th' 
+                                ? "คุณแน่ใจหรือไม่ที่จะถอนทีมนี้ออกจากการแข่งขัน? การดำเนินการนี้ไม่สามารถย้อนกลับได้" 
+                                : "Are you sure you want to withdraw this team from the tournament? This action cannot be undone."}
+                        </p>
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold">
+                                {locale === 'th'
+                                    ? `กรุณากรอกชื่อทีม "${withdrawingReg?.name}" เพื่อยืนยันการถอนทีม`
+                                    : `Please type "${withdrawingReg?.name}" to confirm.`}
+                            </p>
+                            <Input
+                                value={withdrawConfirmText}
+                                onChange={(e) => setWithdrawConfirmText(e.target.value)}
+                                autoComplete="off"
+                                className="h-9 text-xs"
+                            />
+                        </div>
+                    </div>
+                    <div className="p-2 md:p-4 border-t flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                setWithdrawingReg(null);
+                                setWithdrawConfirmText("");
+                            }}
+                            disabled={isWithdrawing}
+                        >
+                            {locale === 'th' ? "ยกเลิก" : "Cancel"}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            disabled={isWithdrawing || withdrawConfirmText !== withdrawingReg?.name}
+                            onClick={handleWithdraw}
+                        >
+                            {isWithdrawing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            {locale === 'th' ? "ยืนยันการถอนทีม" : "Confirm Withdraw"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

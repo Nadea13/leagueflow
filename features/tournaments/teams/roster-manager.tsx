@@ -23,10 +23,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Tab } from "@/components/ui/tab";
-import { Trash2, Users, LayoutGrid, Eye } from "lucide-react";
+import { Trash2, Users, LayoutGrid, Eye, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/ui/header";
 
 interface RosterDialogProps {
     team: TournamentTeam;
@@ -104,9 +105,9 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="p-2 md:p-4 max-w-4xl max-h-[90vh] space-y-1 md:space-y-2 gap-0 bg-card border rounded-xl overflow-hidden flex flex-col">
-                <div className="bg-card flex-shrink-0">
-                    <div className="flex items-start gap-1 md:gap-2">
+            <DialogContent showCloseButton={false} className="p-2 md:p-4 min-w-[640px] max-h-[90vh] space-y-1 md:space-y-2 bg-card border rounded-sm overflow-hidden flex flex-col shadow-2xl">
+                <div className="bg-card flex-shrink-0 relative pr-10">
+                    <div className="flex items-center gap-1 md:gap-2">
                         <div className="h-10 w-10 md:h-12 md:w-12 rounded-full flex items-center justify-center border shrink-0">
                             {team.logo_url ? (
                                 <Image
@@ -122,20 +123,25 @@ export function RosterDialog({ team, tournamentId, trigger, readOnly = false }: 
                                 </span>
                             )}
                         </div>
-                        <div className="space-y-1">
-                            <h2 className="text-2xl font-black tracking-tighter leading-none text-foreground">
-                                {teamName}
-                            </h2>
-                            <div className="flex items-center gap-2 md:gap-3">
-                                <Badge variant="default" className="text-[8px] font-black tracking-widest px-2 py-0.5">
-                                    {team.sport?.toUpperCase()}
-                                </Badge>
-                                <span className="text-[10px] font-black tracking-wider text-primary/60">
-                                    {players.length} {tCommon("players")}
-                                </span>
-                            </div>
+                        <div className="flex items-center gap-1 lg:gap-2">
+                            <Header level={2}>{teamName}</Header>
+                            <Badge variant="outline" className="text-[10px]">
+                                {team.sport?.toUpperCase()}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                                {players.length} {tCommon("players")}
+                            </Badge>
                         </div>
                     </div>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-0 top-4 -translate-y-1/2"
+                        onClick={() => setOpen(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 md:space-y-2">

@@ -34,19 +34,43 @@ export function DashboardSidebar({
     const pathname = usePathname()
     const t = useTranslations("Nav")
     const { trackClick } = useAnalytics()
-    const [pendingCount, setPendingCount] = useState<number>(0)
+    const [hasUnread, setHasUnread] = useState(false)
     const [showOrganizerDialog, setShowOrganizerDialog] = useState(false)
     const [showManagerDialog, setShowManagerDialog] = useState(false)
 
     useEffect(() => {
         const fetchPending = async () => {
+            let pCount = 0;
+            let iCount = 0;
+
             const res = await getPendingInvites();
             if (res.success && res.data) {
-                setPendingCount(res.data.length);
+                pCount = res.data.length;
+            }
+
+            try {
+                const { getPendingInboxCount } = await import("@/actions/tournaments/registration");
+                const inboxRes = await getPendingInboxCount();
+                if (inboxRes.success && inboxRes.data !== undefined) {
+                    iCount = inboxRes.data;
+                }
+            } catch (err) {
+                console.error("Failed to fetch pending inbox count:", err);
+            }
+
+            const total = pCount + iCount;
+            const ackCountStr = localStorage.getItem("acknowledgedNotificationsCount");
+            const ackCount = ackCountStr ? parseInt(ackCountStr, 10) : 0;
+
+            if (pathname === "/dashboard/notifications") {
+                localStorage.setItem("acknowledgedNotificationsCount", String(total));
+                setHasUnread(false);
+            } else {
+                setHasUnread(total > ackCount);
             }
         };
         fetchPending();
-    }, []);
+    }, [pathname]);
 
     const mode = 'organizer'
     const navItems = getNavItems(mode, role)
@@ -101,13 +125,8 @@ export function DashboardSidebar({
                         >
                             <item.icon className={cn("h-4 w-4 shrink-0 transition-transform group-hover:text-primary", isActive ? "text-primary" : "text-muted-foreground")} />
                             <span className="text-sm font-medium whitespace-nowrap transition-all duration-300 opacity-100 w-auto md:opacity-0 md:w-0 md:group-hover/sidebar:opacity-100 md:group-hover/sidebar:w-auto overflow-hidden">{t(item.titleKey)}</span>
-                            {item.titleKey === "notifications" && pendingCount > 0 && (
-                                <span className={cn(
-                                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive text-[10px] text-foreground transition-all duration-300",
-                                    "absolute md:absolute md:group-hover/sidebar:relative right-1 top-1 md:right-1 md:top-1 md:group-hover/sidebar:right-auto md:group-hover/sidebar:top-auto md:group-hover/sidebar:ml-auto"
-                                )}>
-                                    {pendingCount}
-                                </span>
+                            {item.titleKey === "notifications" && hasUnread && (
+                                <span className="absolute right-1 top-1.5 h-2 w-2 rounded-full bg-destructive" />
                             )}
                         </Link>
                     );

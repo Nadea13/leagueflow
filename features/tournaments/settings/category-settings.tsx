@@ -12,6 +12,17 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Trophy } from "lucide-react";
 import { TournamentCategory } from "@/types";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface CategorySettingsProps {
     tournamentId: string;
@@ -34,6 +45,7 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
     const [registrationFee, setRegistrationFee] = useState<string>("0");
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -157,11 +169,6 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
 
     const handleDelete = async () => {
         if (!selectedCategoryId) return;
-        const confirmMsg = isThai
-            ? "คุณแน่ใจหรือไม่ว่าต้องการลบรุ่นการแข่งขันนี้? ข้อมูลในรุ่นการแข่งขันนี้จะถูกลบทั้งหมด"
-            : "Are you sure you want to delete this category? All matches and data for this category will be removed.";
-
-        if (!window.confirm(confirmMsg)) return;
 
         setIsDeleting(true);
         try {
@@ -189,6 +196,7 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
             });
         } finally {
             setIsDeleting(false);
+            setShowDeleteDialog(false);
         }
     };
 
@@ -322,14 +330,51 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <Button
-                                        type="button"
-                                        variant="destructive"
-                                        disabled={isDeleting || isSaving}
-                                        onClick={handleDelete}
-                                    >
-                                        {isThai ? "ลบรุ่นการแข่งขัน" : "Delete Category"}
-                                    </Button>
+                                    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                                        <AlertDialogTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                disabled={isDeleting || isSaving}
+                                            >
+                                                {isThai ? "ลบรุ่นการแข่งขัน" : "Delete Category"}
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent className="bg-card rounded-sm">
+                                            <AlertDialogHeader className="p-2 lg:p-4 border-b">
+                                                <AlertDialogTitle>
+                                                    {isThai ? "ยืนยันการลบรุ่นการแข่งขัน" : "Confirm Category Deletion"}
+                                                </AlertDialogTitle>
+                                            </AlertDialogHeader>
+                                                <AlertDialogDescription className="p-2 lg:p-4 ">
+                                                    {isThai
+                                                        ? "คุณแน่ใจหรือไม่ว่าต้องการลบรุ่นการแข่งขันนี้? ข้อมูลในรุ่นการแข่งขันนี้จะถูกลบทั้งหมด"
+                                                        : "Are you sure you want to delete this category? All matches and data for this category will be removed."}
+                                                </AlertDialogDescription>
+                                            <AlertDialogFooter className="grid grid-cols-2 p-2 lg:p-4 border-t gap-1 lg:gap-2">
+                                                <AlertDialogCancel disabled={isDeleting}>
+                                                    {isThai ? "ยกเลิก" : "Cancel"}
+                                                </AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleDelete();
+                                                    }}
+                                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                                                    disabled={isDeleting}
+                                                >
+                                                    {isDeleting ? (
+                                                        <>
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            {isThai ? "กำลังลบ..." : "Deleting..."}
+                                                        </>
+                                                    ) : (
+                                                        isThai ? "ลบ" : "Delete"
+                                                    )}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
 
                                     <Button
                                         type="submit"

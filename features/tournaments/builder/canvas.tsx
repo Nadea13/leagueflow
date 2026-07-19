@@ -48,7 +48,7 @@ import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMont
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { updateTournament } from "@/actions/tournaments/general";
-import { approveRegistration, rejectRegistration, approveRoster, rejectRoster } from "@/actions/tournaments/registration";
+import { approveRegistration, rejectRegistration, approveRoster, rejectRoster, withdrawTournamentTeam } from "@/actions/tournaments/registration";
 import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
@@ -77,6 +77,7 @@ import { CreateCategoryForm } from "@/features/tournaments/management/create-cat
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -91,6 +92,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 const nodeTypes = {
     matchNode: MatchNode,
@@ -126,6 +128,7 @@ interface InboxItem {
     created_at: string;
     tournament_category_id: string | number;
     unlock_requested?: boolean;
+    slip_img?: string | null;
     team: {
         id: string;
         name: string;
@@ -363,6 +366,7 @@ function CanvasInternal({
     const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
     const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
+    const [isCategoryLoading, setIsCategoryLoading] = useState(false);
 
 
     // Sync isLocked with readonly prop or finished status if it changes
@@ -450,6 +454,9 @@ function CanvasInternal({
     const [inboxOpen, setInboxOpen] = useState(false);
     const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
     const [isInboxLoading, setIsInboxLoading] = useState(false);
+    const [withdrawingItem, setWithdrawingItem] = useState<InboxItem | null>(null);
+    const [withdrawConfirmText, setWithdrawConfirmText] = useState("");
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
 
     const fetchInboxItems = useCallback(async () => {
         if (categories.length === 0) return;
@@ -468,6 +475,7 @@ function CanvasInternal({
                     created_at,
                     tournament_category_id,
                     unlock_requested,
+                    slip_img,
                     team:teams (
                         id,
                         name,
@@ -491,6 +499,7 @@ function CanvasInternal({
                         created_at: item.created_at,
                         tournament_category_id: item.tournament_category_id,
                         unlock_requested: (item as { unlock_requested?: boolean | null }).unlock_requested || false,
+                        slip_img: (item as { slip_img?: string | null }).slip_img || null,
                         team: teamData ? {
                             id: teamData.id,
                             name: teamData.name,
@@ -507,6 +516,50 @@ function CanvasInternal({
         }
     }, [categories]);
 
+    const handleWithdrawTeam = async () => {
+        if (!withdrawingItem || !withdrawingItem.team) return;
+        if (withdrawConfirmText !== withdrawingItem.team.name) {
+            toast({
+                title: locale === 'th' ? "ชื่อทีมไม่ถูกต้อง" : "Invalid team name",
+                description: locale === 'th' ? "กรุณากรอกชื่อทีมให้ถูกต้องเพื่อยืนยัน" : "Please enter the correct team name to confirm.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setIsWithdrawing(true);
+        try {
+            const res = await withdrawTournamentTeam(withdrawingItem.id);
+            if (res.success) {
+                toast({
+                    title: locale === 'th' ? "ถอนทีมสำเร็จ" : "Team withdrawn",
+                    description: res.message || (locale === 'th' ? "ถอนทีมออกจากการแข่งขันแล้ว" : "The team has been withdrawn from the tournament.")
+                });
+                setWithdrawingItem(null);
+                setWithdrawConfirmText("");
+                fetchInboxItems();
+                // Re-fetch bracket store teams so sidebar + canvas update in real-time
+                if (activeCategoryId) {
+                    useBracketStore.getState().fetchTeams(activeCategoryId);
+                }
+            } else {
+                toast({
+                    title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error",
+                    description: res.error,
+                    variant: "destructive"
+                });
+            }
+        } catch (err) {
+            toast({
+                title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error",
+                description: err instanceof Error ? err.message : "Failed to withdraw team",
+                variant: "destructive"
+            });
+        } finally {
+            setIsWithdrawing(false);
+        }
+    };
+
     useEffect(() => {
         if (categories.length > 0) {
             fetchInboxItems();
@@ -518,6 +571,10 @@ function CanvasInternal({
     const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
         searchParams.get("category")
     );
+    const filteredInboxItems = useMemo(() => {
+        if (!activeCategoryId) return inboxItems;
+        return inboxItems.filter(item => String(item.tournament_category_id) === String(activeCategoryId));
+    }, [inboxItems, activeCategoryId]);
     const [ageCategories, setAgeCategories] = useState<{ id: number; category_name: string }[]>([]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const toCategoryId = useCallback((id: unknown) => String(id), []);
@@ -719,6 +776,8 @@ function CanvasInternal({
     const handleCategorySwitch = useCallback(async (newCategoryId: string) => {
         const normalizedCategoryId = toCategoryId(newCategoryId);
         if (normalizedCategoryId === activeCategoryId) return;
+        
+        setIsCategoryLoading(true);
         if (isDirty) {
             await handleSave(false);
         }
@@ -727,8 +786,18 @@ function CanvasInternal({
         hydrate(cached?.canvas_data ?? null);
         setActiveCategoryId(normalizedCategoryId);
         setStoreCategoryId(normalizedCategoryId);
-        fetchTeams(normalizedCategoryId);
-        fetchMatches(normalizedCategoryId);
+        
+        try {
+            await Promise.all([
+                fetchTeams(normalizedCategoryId),
+                fetchMatches(normalizedCategoryId)
+            ]);
+        } catch (error) {
+            console.error("Error fetching category data:", error);
+        } finally {
+            setIsCategoryLoading(false);
+        }
+        
         // Persist to URL without adding a history entry
         const params = new URLSearchParams(searchParams.toString());
         params.set("category", normalizedCategoryId);
@@ -1091,7 +1160,11 @@ function CanvasInternal({
                                             className="relative text-foreground transition-all"
                                         >
                                             <Inbox className="h-4 w-4" />
-                                            {inboxItems.filter(item => item.registration_status === 'pending' || item.roster_status === 'pending').length > 0 && (
+                                            {filteredInboxItems.some(item => 
+                                                item.registration_status === 'pending' || 
+                                                item.unlock_requested || 
+                                                (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
+                                            ) && (
                                                 <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
                                             )}
                                         </Button>
@@ -1110,7 +1183,7 @@ function CanvasInternal({
                                             </Button>
                                         </DialogHeader>
 
-                                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                        <div className="flex-1 overflow-y-auto p-4 space-y-1 lg:space-y-2 custom-scrollbar">
                                             {isInboxLoading ? (
                                                 <div className="space-y-3 animate-pulse">
                                                     {[...Array(3)].map((_, idx) => (
@@ -1132,35 +1205,35 @@ function CanvasInternal({
                                                         </div>
                                                     ))}
                                                 </div>
-                                            ) : inboxItems.length === 0 ? (
+                                            ) : filteredInboxItems.length === 0 ? (
                                                 <EmptyState
                                                     icon={Inbox}
                                                     title="ไม่มีข้อความใหม่"
-                                                    description="ยังไม่มีทีมลงสมัครหรือทำรายการใด ๆ ในทัวร์นาเมนต์นี้"
+                                                    description="ยังไม่มีทีมลงสมัครหรือทำรายการใด ๆ ในรุ่นการแข่งขันนี้"
                                                     action={<div />}
                                                 />
                                             ) : (
-                                                inboxItems.map((item) => {
+                                                filteredInboxItems.map((item) => {
                                                     const isPendingReg = item.registration_status === 'pending';
                                                     const hasRoster = item.contact_name || item.contact_phone;
                                                     const category = categories.find(c => String(c.id) === String(item.tournament_category_id));
                                                     const categoryName = category?.age_categories?.category_name || "ทั่วไป";
 
                                                     return (
-                                                        <div key={item.id} className="border rounded-lg p-3 space-y-3 bg-card/50 hover:bg-muted/10 transition-colors">
-                                                            <div className="flex items-start justify-between gap-3">
-                                                                <div className="flex items-center gap-2.5">
-                                                                    <div className="h-9 w-9 rounded-full border overflow-hidden flex items-center justify-center bg-background">
+                                                        <div key={item.id} className="border rounded-sm p-2 space-y-2">
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="h-10 w-10 rounded-full border overflow-hidden flex items-center justify-center">
                                                                         {item.team?.logo_img ? (
                                                                             <Image
                                                                                 src={item.team.logo_img}
                                                                                 alt={item.team.name}
-                                                                                width={36}
-                                                                                height={36}
+                                                                                width={40}
+                                                                                height={40}
                                                                                 className="h-full w-full object-cover"
                                                                             />
                                                                         ) : (
-                                                                            <Users className="h-4 w-4 text-muted-foreground/60" />
+                                                                            <Users className="h-4 w-4" />
                                                                         )}
                                                                     </div>
                                                                     <div>
@@ -1171,38 +1244,38 @@ function CanvasInternal({
                                                                     </div>
                                                                 </div>
 
-                                                                <span className={cn(
-                                                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                                                <Badge className={cn(
+                                                                    "text-[10px]",
                                                                     isPendingReg
-                                                                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                                                        ? "bg-warning/10 text-warning border-warning/50"
                                                                         : item.registration_status === 'approved'
-                                                                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                                                                            : "bg-destructive/10 text-destructive border-destructive/20"
+                                                                            ? "bg-primary/10 text-primary border-primary/50"
+                                                                            : "bg-destructive/10 text-destructive border-destructive/50"
                                                                 )}>
                                                                     {isPendingReg ? "รอดำเนินการ" : item.registration_status === 'approved' ? "อนุมัติแล้ว" : "ปฏิเสธ"}
-                                                                </span>
+                                                                </Badge>
                                                             </div>
 
                                                             {/* Notification Details & Actions */}
-                                                            <div className="bg-muted/30 p-2.5 rounded-md text-xs space-y-2">
+                                                            <div className="rounded-sm text-xs space-y-2">
                                                                 {isPendingReg ? (
                                                                     <p className="text-foreground">
-                                                                        📢 <strong>ยื่นใบสมัครใหม่</strong> ต้องการขอเข้าร่วมการแข่งขันในรุ่นนี้
+                                                                        <strong>ยื่นใบสมัครใหม่</strong> ต้องการขอเข้าร่วมการแข่งขันในรุ่นนี้
                                                                     </p>
                                                                 ) : item.unlock_requested ? (
                                                                     <p className="text-foreground">
-                                                                        🔑 <strong>ขอปลดล็อกรายชื่อ/ข้อมูลทีม</strong> ต้องการแก้ไขข้อมูลและนักกีฬา
+                                                                        <strong>ขอปลดล็อกรายชื่อ/ข้อมูลทีม</strong> ต้องการแก้ไขข้อมูลและนักกีฬา
                                                                     </p>
                                                                 ) : hasRoster ? (
                                                                     <p className="text-foreground">
                                                                         {item.roster_status === 'pending' ? (
-                                                                            <>📋 <strong>ส่งรายชื่อนักกีฬาแล้ว (รออนุมัติ)</strong></>
+                                                                            <><strong>ส่งรายชื่อนักกีฬาแล้ว (รออนุมัติ)</strong></>
                                                                         ) : item.roster_status === 'approved' ? (
-                                                                            <>✅ <strong>อนุมัติรายชื่อแล้ว</strong></>
+                                                                            <><strong>อนุมัติรายชื่อแล้ว</strong></>
                                                                         ) : item.roster_status === 'rejected' ? (
-                                                                            <>❌ <strong>ปฏิเสธรายชื่อแล้ว (รอแก้ไข)</strong></>
+                                                                            <><strong>ปฏิเสธรายชื่อแล้ว (รอแก้ไข)</strong></>
                                                                         ) : (
-                                                                            <>📋 <strong>ส่งรายชื่อนักกีฬาแล้ว</strong></>
+                                                                            <><strong>ส่งรายชื่อนักกีฬาแล้ว</strong></>
                                                                         )} ผู้ติดต่อ: {item.contact_name} ({item.contact_phone})
                                                                     </p>
                                                                 ) : (
@@ -1212,14 +1285,44 @@ function CanvasInternal({
                                                                 )}
 
                                                                 {/* Action Buttons */}
-                                                                <div className="flex gap-2 justify-end pt-1">
+                                                                <div className="flex gap-2 justify-end">
+                                                                    <div className="flex gap-1 md:gap-2 mr-auto">
+                                                                        {item.slip_img && (
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="outline"
+                                                                                type="button"
+                                                                                onClick={() => window.open(item.slip_img!, '_blank')}
+                                                                            >
+                                                                                {locale === 'th' ? "ดูสลิปการโอน" : "View Slip"}
+                                                                            </Button>
+                                                                        )}
+                                                                        {item.registration_status !== 'rejected' && (
+                                                                            <RosterDialog
+                                                                                team={{
+                                                                                    id: item.id,
+                                                                                    name: item.team?.name || "",
+                                                                                    logo_url: item.team?.logo_img,
+                                                                                    contact_name: item.contact_name,
+                                                                                    contact_phone: item.contact_phone,
+                                                                                    sport: 'football'
+                                                                                } as unknown as TournamentTeam}
+                                                                                tournamentId={tournamentId}
+                                                                                readOnly={item.roster_status === 'approved' || isPendingReg}
+                                                                                trigger={
+                                                                                    <Button size="sm" variant="outline" type="button">
+                                                                                        {locale === 'th' ? "ดูรายชื่อนักกีฬา" : "View Roster"}
+                                                                                    </Button>
+                                                                                }
+                                                                            />
+                                                                        )}
+                                                                    </div>
                                                                     {isPendingReg && (
                                                                         <>
                                                                             <Button
                                                                                 size="sm"
                                                                                 variant="outline"
                                                                                 type="button"
-                                                                                className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
                                                                                 onClick={async () => {
                                                                                     const res = await rejectRegistration(item.id, tournamentId);
                                                                                     if (res.success) {
@@ -1236,7 +1339,6 @@ function CanvasInternal({
                                                                                 size="sm"
                                                                                 variant="default"
                                                                                 type="button"
-                                                                                className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
                                                                                 onClick={async () => {
                                                                                     const res = await approveRegistration(item.id, tournamentId);
                                                                                     if (res.success) {
@@ -1250,6 +1352,17 @@ function CanvasInternal({
                                                                                 อนุมัติใบสมัคร
                                                                             </Button>
                                                                         </>
+                                                                    )}
+                                                                    {item.registration_status === 'approved' && (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            type="button"
+                                                                            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
+                                                                            onClick={() => setWithdrawingItem(item)}
+                                                                        >
+                                                                            {locale === 'th' ? "ถอนทีม" : "Withdraw"}
+                                                                        </Button>
                                                                     )}
                                                                     {item.unlock_requested ? (
                                                                         <>
@@ -1292,23 +1405,6 @@ function CanvasInternal({
                                                                         </>
                                                                     ) : hasRoster && (
                                                                         <>
-                                                                            <RosterDialog
-                                                                                team={{
-                                                                                    id: item.id,
-                                                                                    name: item.team?.name || "",
-                                                                                    logo_url: item.team?.logo_img,
-                                                                                    contact_name: item.contact_name,
-                                                                                    contact_phone: item.contact_phone,
-                                                                                    sport: 'football'
-                                                                                } as unknown as TournamentTeam}
-                                                                                tournamentId={tournamentId}
-                                                                                readOnly={item.roster_status === 'approved'}
-                                                                                trigger={
-                                                                                    <Button size="sm" variant="outline" type="button" className="h-8 text-xs">
-                                                                                        ตรวจสอบรายชื่อนักกีฬา
-                                                                                    </Button>
-                                                                                }
-                                                                            />
                                                                             {item.roster_status === 'pending' && (
                                                                                 <>
                                                                                     <Button
@@ -1446,361 +1542,418 @@ function CanvasInternal({
             </div>
 
             <div className="flex flex-1 overflow-hidden relative">
-                {activeSidebar === 'schedule' && tournament ? (
-                    <div className="absolute inset-0 z-20 flex flex-col">
-                        <div className="flex flex-1 overflow-hidden bg-card">
-                            {/* Left Controls Sidebar (w-64 like settings) */}
-                            <div className="w-64 border-r flex flex-col p-2 lg:p-3 gap-2 shrink-0 z-10">
-                                <div>
-                                    <div className="space-y-4">
-                                        {/* Date Filter */}
-                                        <div className="space-y-1">
-                                            <Label>{locale === 'th' ? "เลือกวันที่" : "Date Selection"}</Label>
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center border bg-muted/5 rounded-sm">
-                                                    <button
-                                                        onClick={() => setSelectedDate(null)}
-                                                        className={cn(
-                                                            "px-2 py-3 text-[10px] font-black tracking-tighter transition-all border-r rounded-l-sm",
-                                                            selectedDate === null
-                                                                ? "bg-primary text-black"
-                                                                : "text-muted-foreground hover:text-foreground"
-                                                        )}
-                                                    >
-                                                        {locale === 'th' ? "ทั้งหมด" : "ALL"}
-                                                    </button>
-                                                    <div className="flex items-center justify-between flex-1 px-1">
-                                                        <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
-                                                            <ChevronLeft className="h-4 w-4" />
-                                                        </button>
-                                                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                                            <PopoverTrigger asChild>
-                                                                <Button variant="ghost" className="gap-2 hover:bg-muted transition-all">
-                                                                    <CalendarIcon className="h-4 w-4 text-primary" />
-                                                                    <div className="flex flex-col items-start overflow-hidden">
-                                                                        <span className="text-[10px] font-black tracking-tight truncate">
-                                                                            {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
-                                                                        </span>
-                                                                    </div>
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="right" sideOffset={10}>
-                                                                <div className="p-3 border-b flex items-center justify-between bg-muted/20">
-                                                                    <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
-                                                                        <ChevronLeft className="h-4 w-4" />
-                                                                    </button>
-                                                                    <span className="text-xs font-black tracking-widest">
-                                                                        {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
-                                                                    </span>
-                                                                    <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
-                                                                        <ChevronRight className="h-4 w-4" />
-                                                                    </button>
-                                                                </div>
-                                                                <div className="p-4 space-y-4">
-                                                                    <div className="grid grid-cols-7 gap-1">
-                                                                        {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
-                                                                            <div key={`${d}-${idx}`} className="text-[9px] text-center font-black opacity-30">{d}</div>
-                                                                        ))}
-                                                                    </div>
-                                                                    <div className="grid grid-cols-7 gap-1">
-                                                                        {calendarDays.map((day, i) => {
-                                                                            if (!day) return <div key={`empty-${i}`} />;
-                                                                            const dateStr = format(day, 'yyyy-MM-dd');
-                                                                            const isSel = selectedDate === dateStr;
-                                                                            const hasMatch = datesWithMatches.has(dateStr);
-                                                                            const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
-                                                                            const isOutsideRange = !!((tournament?.start_date && dateStr < tournament.start_date) || (tournament?.end_date && dateStr > tournament.end_date));
-
-                                                                            return (
-                                                                                <button
-                                                                                    key={dateStr}
-                                                                                    disabled={isOutsideRange}
-                                                                                    onClick={() => {
-                                                                                        setSelectedDate(dateStr);
-                                                                                        setIsCalendarOpen(false);
-                                                                                    }}
-                                                                                    className={cn(
-                                                                                        "h-9 flex flex-col items-center justify-center relative transition-all",
-                                                                                        isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
-                                                                                        isToday && !isSel && "border border-primary text-primary",
-                                                                                        isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
-                                                                                    )}
-                                                                                >
-                                                                                    <span className="text-[11px]">{format(day, 'd')}</span>
-                                                                                    {hasMatch && (
-                                                                                        <div className={cn(
-                                                                                            "absolute bottom-1.5 h-1 w-1 rounded-full",
-                                                                                            isSel ? "bg-black" : "bg-primary"
-                                                                                        )} />
-                                                                                    )}
-                                                                                </button>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => {
-                                                                            setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
-                                                                            setViewDate(new Date());
-                                                                            setIsCalendarOpen(false);
-                                                                        }}
-                                                                        className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
-                                                                    >
-                                                                        {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
-                                                                    </Button>
-                                                                </div>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                        <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
-                                                            <ChevronRight className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
+                {isCategoryLoading ? (
+                    <>
+                        {/* Main Flow Editor Area Skeleton */}
+                        <div className="flex-1 relative flex items-center justify-center bg-muted/5 overflow-hidden animate-pulse">
+                            {/* Grid Background Lines (Dot Pattern style representation) */}
+                            <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] opacity-50" />
+                            
+                            {/* Floating Nodes Skeletons */}
+                            <div className="relative w-full h-full flex items-center justify-center gap-12 p-8">
+                                {/* Round 1 Column */}
+                                <div className="space-y-16">
+                                    {[...Array(2)].map((_, idx) => (
+                                        <div key={idx} className="w-64 border rounded-sm p-3 bg-card space-y-2 relative shadow-sm">
+                                            <div className="flex justify-between">
+                                                <Skeleton className="h-4 w-12 rounded-sm" />
+                                                <Skeleton className="h-4 w-20 rounded-sm" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between items-center p-1 bg-muted/20 rounded-sm">
+                                                    <Skeleton className="h-4 w-24 rounded-sm" />
+                                                    <Skeleton className="h-4 w-6 rounded-sm" />
+                                                </div>
+                                                <div className="flex justify-between items-center p-1 bg-muted/20 rounded-sm">
+                                                    <Skeleton className="h-4 w-24 rounded-sm" />
+                                                    <Skeleton className="h-4 w-6 rounded-sm" />
                                                 </div>
                                             </div>
                                         </div>
+                                    ))}
+                                </div>
 
-                                        {/* Stage Filter */}
-                                        <div className="space-y-2">
-                                            <Label>{locale === 'th' ? "ตัวกรองรอบการแข่งขัน" : "Stage Filter"}</Label>
-                                            <Select value={filterStage} onValueChange={setFilterStage}>
-                                                <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-card shadow-2xl">
-                                                    <SelectItem value="all" className="font-black text-[10px] tracking-widest">
-                                                        {locale === 'th' ? "ทั้งหมด" : "ALL"}
-                                                    </SelectItem>
-                                                    <SelectItem value="group" className="font-black text-[10px] tracking-widest">
-                                                        {locale === 'th' ? "กลุ่ม" : "GROUP STAGE"}
-                                                    </SelectItem>
-                                                    <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
-                                                        {locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT STAGE"}
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                {/* Round 2 Column */}
+                                <div className="space-y-32">
+                                    <div className="w-64 border rounded-sm p-3 bg-card space-y-2 relative shadow-sm">
+                                        <div className="flex justify-between">
+                                            <Skeleton className="h-4 w-12 rounded-sm" />
+                                            <Skeleton className="h-4 w-20 rounded-sm" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between items-center p-1 bg-muted/20 rounded-sm">
+                                                <Skeleton className="h-4 w-24 rounded-sm" />
+                                                <Skeleton className="h-4 w-6 rounded-sm" />
+                                            </div>
+                                            <div className="flex justify-between items-center p-1 bg-muted/20 rounded-sm">
+                                                <Skeleton className="h-4 w-24 rounded-sm" />
+                                                <Skeleton className="h-4 w-6 rounded-sm" />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Main Content */}
-                            <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                <div className="p-2 lg:p-4">
-                                    <MatchManager
-                                        matches={activeMatches}
-                                        teams={teams as unknown as Team[]}
-                                        tournamentId={tournament.id}
-                                        format={tournament.format}
-                                        startDate={tournament.start_date}
-                                        endDate={tournament.end_date}
-                                        hideControls={true}
-                                        externalFilterStage={filterStage}
-                                        externalSelectedDate={selectedDate}
-                                    />
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                ) : null}
-
-                {activeSidebar === 'settings' && tournament ? (
-                    <div className="absolute inset-0 z-20 flex flex-col">
-                        <div className="flex flex-1 overflow-hidden">
-                            {/* Settings Sidebar */}
-                            <aside className="w-64 border-r flex flex-col shrink-0 py-4 px-2 lg:px-4 space-y-1">
-                                <button
-                                    onClick={() => setActiveSettingsTab('general')}
-                                    className={cn(
-                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                        activeSettingsTab === 'general'
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:text-primary"
-                                    )}
-                                >
-                                    <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("general_info")}</span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveSettingsTab('categories')}
-                                    className={cn(
-                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                        activeSettingsTab === 'categories'
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:text-primary"
-                                    )}
-                                >
-                                    <Trophy className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'categories' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("categories")}</span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveSettingsTab('location')}
-                                    className={cn(
-                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                        activeSettingsTab === 'location'
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:text-primary"
-                                    )}
-                                >
-                                    <MapPin className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'location' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("location")}</span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveSettingsTab('staff')}
-                                    className={cn(
-                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                        activeSettingsTab === 'staff'
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:text-primary"
-                                    )}
-                                >
-                                    <Users className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("staff")}</span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveSettingsTab('danger')}
-                                    className={cn(
-                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                        activeSettingsTab === 'danger'
-                                            ? "bg-destructive/10 text-destructive"
-                                            : "text-destructive/60 hover:text-destructive"
-                                    )}
-                                >
-                                    <ShieldAlert className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeSettingsTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
-                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("danger_zone")}</span>
-                                </button>
-                            </aside>
-
-                            {/* Settings Content Area */}
-                            <main className="flex-1 overflow-y-auto custom-scrollbar p-2 lg:p-4 bg-muted/5">
-                                <div className="max-w-3xl mx-auto">
-                                    <TournamentSettings
-                                        tournament={tournament}
-                                        hasFixtures={hasFixtures}
-                                        teams={initialTeamsData}
-                                        activeTab={activeSettingsTab}
-                                        activeCategoryId={activeCategoryId}
-                                    />
-                                </div>
-                            </main>
-                        </div>
-                    </div>
+                    </>
                 ) : (
                     <>
-                        <div className="flex-1 relative">
-                            {!readonly && !isLocked && activeSidebar !== 'schedule' && (
-                                <div className="absolute top-4 right-4 z-50" id="tour-console-add-components">
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button>
-                                                <Plus className="h-4 w-4" />
-                                                New
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            side="bottom"
-                                            align="end"
-                                            className="w-64 p-0 bg-card shadow-2xl mt-1 rounded-sm"
-                                            sideOffset={5}
-                                        >
-                                            <div className="p-2 border-b">
-                                                <span className="text-xs font-bold tracking-wider">Add Components</span>
-                                            </div>
-                                            <NodeTools
-                                                onAddMatch={() => addMatchNode(getCenterPos())}
-                                                onAddGroup={() => addGroupNode(getCenterPos())}
-                                                onAddStanding={() => addStandingNode(getCenterPos())}
-                                                onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
-                                                onAddAnnouncement={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
-                                                onAddSponsor={() => addSponsorNode(tournamentId, readonly, getCenterPos())}
-                                                onAddRegistration={() => addRegistrationNode(tournamentId, getCenterPos())}
-                                            />
-                                            <div className="p-2 border-t mt-1 flex items-center justify-between">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[9px] text-muted-foreground font-bold">Elements</span>
-                                                    <span className="text-[11px] font-black">{nodes.length}</span>
-                                                </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[9px] text-muted-foreground font-bold">Connections</span>
-                                                    <span className="text-[11px] font-black">{edges.length}</span>
-                                                </div>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                            )}
-                            <div className="w-full h-full" id="tour-console-canvas-wrapper">
-                                <ReactFlow
-                                    nodes={nodes}
-                                    edges={edges}
-                                    proOptions={{ hideAttribution: true }}
-                                    onNodesChange={readonly ? undefined : onNodesChange}
-                                    onEdgesChange={readonly ? undefined : onEdgesChange}
-                                    onConnect={readonly ? undefined : onConnectWithSave}
-                                    isValidConnection={isValidConnection}
-                                    onNodeDragStart={readonly ? undefined : onNodeDragStart}
-                                    onNodeDragStop={readonly ? undefined : onDragStop}
-                                    onSelectionDragStop={readonly ? undefined : onDragStop}
-                                    onNodeClick={(_, node) => {
-                                        if (isLocked) return;
-                                        setActiveNodeId(node.id);
-                                        selectNode(node.id);
-                                    }}
-                                    onPaneClick={() => {
-                                        if (isLocked) return;
-                                        setActiveNodeId(null);
-                                        selectNode(null);
-                                    }}
-                                    onEdgeClick={() => {
-                                        if (isLocked) return;
-                                        setActiveNodeId(null);
-                                        selectNode(null);
-                                    }}
-                                    nodeTypes={nodeTypes}
-                                    fitView={false}
-                                    defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-                                    minZoom={0.1}
-                                    maxZoom={1.5}
-                                    nodesDraggable={!readonly && !isLocked}
-                                    nodesConnectable={!readonly && !isLocked}
-                                    elementsSelectable={!readonly && !isLocked}
-                                    panOnDrag={!readonly}
-                                    panOnScroll={!readonly}
-                                    zoomOnScroll={!readonly}
-                                    zoomOnPinch={!readonly}
-                                    zoomOnDoubleClick={!readonly}
-                                    deleteKeyCode={readonly || isLocked ? null : ["Backspace", "Delete"]}
-                                    autoPanOnConnect={!readonly && !isLocked}
-                                    autoPanOnNodeDrag={!readonly && !isLocked}
-                                    colorMode="light"
-                                    connectionMode={ConnectionMode.Loose}
-                                    connectionRadius={50}
-                                    connectionLineStyle={{ stroke: "#00c692", strokeWidth: 2 }}
-                                    connectionLineType={ConnectionLineType.Bezier}
-                                    snapToGrid
-                                    snapGrid={[10, 10]}
-                                    defaultEdgeOptions={{
-                                        type: "default",
-                                        style: {
-                                            stroke: "#00c692",
-                                            strokeWidth: 2,
-                                        },
-                                    }}
-                                >
-                                    <Background color="#555" variant={BackgroundVariant.Dots} gap={16} size={1} style={{ opacity: 1 }} />
-                                    <Controls
-                                        showInteractive={false}
-                                        className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
-                                    />
-                                </ReactFlow>
-                            </div>
-                        </div>
+                        {activeSidebar === 'schedule' && tournament ? (
+                            <div className="absolute inset-0 z-20 flex flex-col">
+                                <div className="flex flex-1 overflow-hidden bg-card">
+                                    {/* Left Controls Sidebar (w-64 like settings) */}
+                                    <div className="w-64 border-r flex flex-col p-2 lg:p-3 gap-2 shrink-0 z-10">
+                                        <div>
+                                            <div className="space-y-4">
+                                                {/* Date Filter */}
+                                                <div className="space-y-1">
+                                                    <Label>{locale === 'th' ? "เลือกวันที่" : "Date Selection"}</Label>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center border bg-muted/5 rounded-sm">
+                                                            <button
+                                                                onClick={() => setSelectedDate(null)}
+                                                                className={cn(
+                                                                    "px-2 py-3 text-[10px] font-black tracking-tighter transition-all border-r rounded-l-sm",
+                                                                    selectedDate === null
+                                                                        ? "bg-primary text-black"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                            >
+                                                                {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                                            </button>
+                                                            <div className="flex items-center justify-between flex-1 px-1">
+                                                                <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
+                                                                    <ChevronLeft className="h-4 w-4" />
+                                                                </button>
+                                                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button variant="ghost" className="gap-2 hover:bg-muted transition-all">
+                                                                            <CalendarIcon className="h-4 w-4 text-primary" />
+                                                                            <div className="flex flex-col items-start overflow-hidden">
+                                                                                <span className="text-[10px] font-black tracking-tight truncate">
+                                                                                    {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
+                                                                                </span>
+                                                                            </div>
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="right" sideOffset={10}>
+                                                                        <div className="p-3 border-b flex items-center justify-between bg-muted/20">
+                                                                            <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
+                                                                                <ChevronLeft className="h-4 w-4" />
+                                                                            </button>
+                                                                            <span className="text-xs font-black tracking-widest">
+                                                                                {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
+                                                                            </span>
+                                                                            <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
+                                                                                <ChevronRight className="h-4 w-4" />
+                                                                            </button>
+                                                                        </div>
+                                                                        <div className="p-4 space-y-4">
+                                                                            <div className="grid grid-cols-7 gap-1">
+                                                                                {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
+                                                                                    <div key={`${d}-${idx}`} className="text-[9px] text-center font-black opacity-30">{d}</div>
+                                                                                ))}
+                                                                            </div>
+                                                                            <div className="grid grid-cols-7 gap-1">
+                                                                                {calendarDays.map((day, i) => {
+                                                                                    if (!day) return <div key={`empty-${i}`} />;
+                                                                                    const dateStr = format(day, 'yyyy-MM-dd');
+                                                                                    const isSel = selectedDate === dateStr;
+                                                                                    const hasMatch = datesWithMatches.has(dateStr);
+                                                                                    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+                                                                                    const isOutsideRange = !!((tournament?.start_date && dateStr < tournament.start_date) || (tournament?.end_date && dateStr > tournament.end_date));
 
-                        {!readonly && !isLocked && <NodeSettings />}
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={dateStr}
+                                                                                            disabled={isOutsideRange}
+                                                                                            onClick={() => {
+                                                                                                setSelectedDate(dateStr);
+                                                                                                setIsCalendarOpen(false);
+                                                                                            }}
+                                                                                            className={cn(
+                                                                                                "h-9 flex flex-col items-center justify-center relative transition-all",
+                                                                                                isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                                                                                                isToday && !isSel && "border border-primary text-primary",
+                                                                                                isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
+                                                                                            )}
+                                                                                        >
+                                                                                            <span className="text-[11px]">{format(day, 'd')}</span>
+                                                                                            {hasMatch && (
+                                                                                                <div className={cn(
+                                                                                                    "absolute bottom-1.5 h-1 w-1 rounded-full",
+                                                                                                    isSel ? "bg-black" : "bg-primary"
+                                                                                                )} />
+                                                                                            )}
+                                                                                        </button>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="sm"
+                                                                                onClick={() => {
+                                                                                    setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+                                                                                    setViewDate(new Date());
+                                                                                    setIsCalendarOpen(false);
+                                                                                }}
+                                                                                className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                            >
+                                                                                {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                                <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
+                                                                    <ChevronRight className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Stage Filter */}
+                                                <div className="space-y-2">
+                                                    <Label>{locale === 'th' ? "ตัวกรองรอบการแข่งขัน" : "Stage Filter"}</Label>
+                                                    <Select value={filterStage} onValueChange={setFilterStage}>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-card shadow-2xl">
+                                                            <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                                {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                                            </SelectItem>
+                                                            <SelectItem value="group" className="font-black text-[10px] tracking-widest">
+                                                                {locale === 'th' ? "กลุ่ม" : "GROUP STAGE"}
+                                                            </SelectItem>
+                                                            <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
+                                                                {locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT STAGE"}
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Main Content */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                        <div className="p-2 lg:p-4">
+                                            <MatchManager
+                                                matches={activeMatches}
+                                                teams={teams as unknown as Team[]}
+                                                tournamentId={tournament.id}
+                                                format={tournament.format}
+                                                startDate={tournament.start_date}
+                                                endDate={tournament.end_date}
+                                                hideControls={true}
+                                                externalFilterStage={filterStage}
+                                                externalSelectedDate={selectedDate}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        {activeSidebar === 'settings' && tournament ? (
+                            <div className="absolute inset-0 z-20 flex flex-col">
+                                <div className="flex flex-1 overflow-hidden">
+                                    {/* Settings Sidebar */}
+                                    <aside className="w-64 border-r flex flex-col shrink-0 py-4 px-2 lg:px-4 space-y-1">
+                                        <button
+                                            onClick={() => setActiveSettingsTab('general')}
+                                            className={cn(
+                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                                activeSettingsTab === 'general'
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:text-primary"
+                                            )}
+                                        >
+                                            <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
+                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("general_info")}</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setActiveSettingsTab('categories')}
+                                            className={cn(
+                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                                activeSettingsTab === 'categories'
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:text-primary"
+                                            )}
+                                        >
+                                            <Trophy className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'categories' ? "text-primary" : "text-muted-foreground")} />
+                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("categories")}</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setActiveSettingsTab('location')}
+                                            className={cn(
+                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                                activeSettingsTab === 'location'
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:text-primary"
+                                            )}
+                                        >
+                                            <MapPin className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'location' ? "text-primary" : "text-muted-foreground")} />
+                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("location")}</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setActiveSettingsTab('staff')}
+                                            className={cn(
+                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                                activeSettingsTab === 'staff'
+                                                    ? "bg-primary/10 text-primary"
+                                                    : "text-muted-foreground hover:text-primary"
+                                            )}
+                                        >
+                                            <Users className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
+                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("staff")}</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => setActiveSettingsTab('danger')}
+                                            className={cn(
+                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                                activeSettingsTab === 'danger'
+                                                    ? "bg-destructive/10 text-destructive"
+                                                    : "text-destructive/60 hover:text-destructive"
+                                            )}
+                                        >
+                                            <ShieldAlert className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeSettingsTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
+                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("danger_zone")}</span>
+                                        </button>
+                                    </aside>
+
+                                    {/* Settings Content Area */}
+                                    <main className="flex-1 overflow-y-auto custom-scrollbar p-2 lg:p-4 bg-muted/5">
+                                        <div className="max-w-3xl mx-auto">
+                                            <TournamentSettings
+                                                tournament={tournament}
+                                                hasFixtures={hasFixtures}
+                                                teams={initialTeamsData}
+                                                activeTab={activeSettingsTab}
+                                                activeCategoryId={activeCategoryId}
+                                            />
+                                        </div>
+                                    </main>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex-1 relative">
+                                    {!readonly && !isLocked && activeSidebar !== 'schedule' && (
+                                        <div className="absolute top-4 right-4 z-50" id="tour-console-add-components">
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button>
+                                                        <Plus className="h-4 w-4" />
+                                                        New
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent
+                                                    side="bottom"
+                                                    align="end"
+                                                    className="w-64 p-0 bg-card shadow-2xl mt-1 rounded-sm"
+                                                    sideOffset={5}
+                                                >
+                                                    <div className="p-2 border-b">
+                                                        <span className="text-xs font-bold tracking-wider">Add Components</span>
+                                                    </div>
+                                                    <NodeTools
+                                                        onAddMatch={() => addMatchNode(getCenterPos())}
+                                                        onAddGroup={() => addGroupNode(getCenterPos())}
+                                                        onAddStanding={() => addStandingNode(getCenterPos())}
+                                                        onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
+                                                        onAddAnnouncement={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
+                                                        onAddSponsor={() => addSponsorNode(tournamentId, readonly, getCenterPos())}
+                                                        onAddRegistration={() => addRegistrationNode(tournamentId, getCenterPos())}
+                                                    />
+                                                    <div className="p-2 border-t mt-1 flex items-center justify-between">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[9px] text-muted-foreground font-bold">Elements</span>
+                                                            <span className="text-[11px] font-black">{nodes.length}</span>
+                                                        </div>
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-[9px] text-muted-foreground font-bold">Connections</span>
+                                                            <span className="text-[11px] font-black">{edges.length}</span>
+                                                        </div>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                    )}
+                                    <div className="w-full h-full" id="tour-console-canvas-wrapper">
+                                        <ReactFlow
+                                            nodes={nodes}
+                                            edges={edges}
+                                            proOptions={{ hideAttribution: true }}
+                                            onNodesChange={readonly ? undefined : onNodesChange}
+                                            onEdgesChange={readonly ? undefined : onEdgesChange}
+                                            onConnect={readonly ? undefined : onConnectWithSave}
+                                            isValidConnection={isValidConnection}
+                                            onNodeDragStart={readonly ? undefined : onNodeDragStart}
+                                            onNodeDragStop={readonly ? undefined : onDragStop}
+                                            onSelectionDragStop={readonly ? undefined : onDragStop}
+                                            onNodeClick={(_, node) => {
+                                                if (isLocked) return;
+                                                setActiveNodeId(node.id);
+                                                selectNode(node.id);
+                                            }}
+                                            onPaneClick={() => {
+                                                if (isLocked) return;
+                                                setActiveNodeId(null);
+                                                selectNode(null);
+                                            }}
+                                            onEdgeClick={() => {
+                                                if (isLocked) return;
+                                                setActiveNodeId(null);
+                                                selectNode(null);
+                                            }}
+                                            nodeTypes={nodeTypes}
+                                            fitView={false}
+                                            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+                                            minZoom={0.1}
+                                            maxZoom={1.5}
+                                            nodesDraggable={!readonly && !isLocked}
+                                            nodesConnectable={!readonly && !isLocked}
+                                            elementsSelectable={!readonly && !isLocked}
+                                            panOnDrag={!readonly}
+                                            panOnScroll={!readonly}
+                                            zoomOnScroll={!readonly}
+                                            zoomOnPinch={!readonly}
+                                            zoomOnDoubleClick={!readonly}
+                                            deleteKeyCode={readonly || isLocked ? null : ["Backspace", "Delete"]}
+                                            autoPanOnConnect={!readonly && !isLocked}
+                                            autoPanOnNodeDrag={!readonly && !isLocked}
+                                            colorMode="light"
+                                            connectionMode={ConnectionMode.Loose}
+                                            connectionRadius={50}
+                                            connectionLineStyle={{ stroke: "#00c692", strokeWidth: 2 }}
+                                            connectionLineType={ConnectionLineType.Bezier}
+                                            snapToGrid
+                                            snapGrid={[10, 10]}
+                                            defaultEdgeOptions={{
+                                                type: "default",
+                                                style: {
+                                                    stroke: "#00c692",
+                                                    strokeWidth: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Background color="#555" variant={BackgroundVariant.Dots} gap={16} size={1} style={{ opacity: 1 }} />
+                                            <Controls
+                                                showInteractive={false}
+                                                className="!bg-card !border-border !!shadow-none [&>button]:!bg-card [&>button]:!border-border [&>button:hover]:!bg-muted"
+                                            />
+                                        </ReactFlow>
+                                    </div>
+                                </div>
+
+                                {!readonly && !isLocked && <NodeSettings />}
+                            </>
+                        )}
                     </>
                 )}
             </div>
@@ -1848,6 +2001,65 @@ function CanvasInternal({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={!!withdrawingItem} onOpenChange={(open) => {
+                if (!open) {
+                    setWithdrawingItem(null);
+                    setWithdrawConfirmText("");
+                }
+            }}>
+                <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
+                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                        <DialogTitle>
+                            {locale === 'th' ? "ถอนทีมออกจากการแข่งขัน" : "Withdraw Team from Tournament"}
+                        </DialogTitle>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => {
+                                setWithdrawingItem(null);
+                                setWithdrawConfirmText("");
+                            }}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
+                    <div className="p-2 lg:p-4 space-y-1 lg:space-y-2">
+                        <DialogDescription>
+                            {locale === 'th'
+                                ? "คุณแน่ใจหรือไม่ที่จะถอนทีมนี้ออกจากการแข่งขัน? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+                                : "Are you sure you want to withdraw this team from the tournament? This action cannot be undone."}
+                        </DialogDescription>
+                        <div className="space-y-1 lg:space-y-2">
+                            <DialogDescription className="font-bold">
+                                {locale === 'th'
+                                    ? `กรุณากรอกชื่อทีม "${withdrawingItem?.team?.name}" เพื่อยืนยันการถอนทีม`
+                                    : `Please type "${withdrawingItem?.team?.name}" to confirm.`}
+                            </DialogDescription>
+                            <Input
+                                value={withdrawConfirmText}
+                                onChange={(e) => setWithdrawConfirmText(e.target.value)}
+                                autoComplete="off"
+                                className="h-9 text-xs"
+                            />
+                        </div>
+                    </div>
+                    <div className="p-2 md:p-4 border-t gap-2">
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={isWithdrawing || withdrawConfirmText !== withdrawingItem?.team?.name}
+                            onClick={handleWithdrawTeam}
+                            className="w-full"
+                        >
+                            {isWithdrawing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                            {locale === 'th' ? "ยืนยันการถอนทีม" : "Confirm Withdraw"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
