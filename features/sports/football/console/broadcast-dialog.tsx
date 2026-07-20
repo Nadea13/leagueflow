@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, Eye, Check, Plus } from "lucide-react";
+import { Copy, Eye, Check, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -1320,24 +1320,29 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card rounded-xl border p-0 overflow-hidden max-w-5xl md:max-w-6xl max-h-[95vh] md:max-h-[90vh] flex flex-col">
-                <DialogHeader className="p-2 md:p-4 border-b shrink-0">
-                    <DialogTitle className="flex items-center text-2xl font-black tracking-tighter text-foreground">
-                        {t("board_editor")}
-                    </DialogTitle>
-                    <DialogDescription className="text-xs">
-                        {dict.desc}
-                    </DialogDescription>
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm border overflow-hidden min-w-[1280px] max-h-[95vh] md:max-h-[90vh] flex flex-col">
+                <DialogHeader className="relative pr-10 p-2 md:p-4 border-b shrink-0">
+                    <DialogTitle>{t("board_editor")}</DialogTitle>
+                    <DialogDescription>{dict.desc}</DialogDescription>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto min-h-0">
-                    <div className="p-2 md:p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div className="p-2 md:p-4 grid grid-cols-1 md:grid-cols-12 gap-1 lg:gap-2">
                         {/* Left Column: Canvas Preview (col-span-7) */}
                         <div className="md:col-span-7 space-y-1">
 
                             {/* Visual Dotted Grid Board */}
                             <div
-                                className="w-full h-[320px] md:h-[480px] border rounded-lg relative overflow-hidden flex items-center justify-center transition-colors duration-300"
+                                className="w-full min-h-[49vh] max-h-[58vh] border rounded-sm relative overflow-hidden flex items-center justify-center transition-colors duration-300"
                                 style={{
                                     backgroundColor: bg === "transparent"
                                         ? undefined
@@ -1511,9 +1516,9 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                         </div>
 
                         {/* Right Column: Editor Tools (col-span-5) */}
-                        <div className="md:col-span-5 space-y-4 h-[480px] overflow-y-auto pr-1">
+                        <div className="md:col-span-5 space-y-1 lg:space-y-2 min-h-[49vh] max-h-[58vh] overflow-y-auto">
                             {/* Part 2: Canvas Coordinates & Toggles Panel */}
-                            <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
+                            <div className="border rounded-sm p-2 md:p-4 space-y-2 md:space-y-4">
                                 <div className="flex items-center justify-between">
                                     <Label>{dict.pos_spacing}</Label>
 
@@ -1817,7 +1822,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             </div>
 
                             {/* Part 4: Display Content Adjustments */}
-                            <div className="border rounded-lg p-2 md:p-4 space-y-1 md:space-y-2">
+                            <div className="border rounded-sm p-2 md:p-4 space-y-1 md:space-y-2">
                                 <Label>{dict.content}</Label>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2 items-end">
@@ -1910,7 +1915,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             </div>
 
                             {/* Part 5: Positioning & OBS Canvas */}
-                            <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4">
+                            <div className="border rounded-sm p-2 md:p-4 space-y-2 md:space-y-4">
                                 <Label>{dict.obs_settings}</Label>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">

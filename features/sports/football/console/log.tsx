@@ -21,7 +21,7 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
     const t = useTranslations("Console");
 
     return (
-        <div className="bg-card border rounded-xl relative overflow-hidden group">
+        <div className="bg-card border rounded-sm relative overflow-hidden group">
             <div className="relative z-10">
                 <div className="overflow-y-auto no-scrollbar scroll-smooth">
                     {events.length === 0 ? (
@@ -29,7 +29,6 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                             icon={Clock}
                             title={t("no_events") || "No events yet"}
                             description={t("live_updates_desc") || "Live match updates will appear here"}
-                            className="py-12 min-h-0 border-none"
                         />
                     ) : (
                         events.map((event: MatchEvent) => {
@@ -48,7 +47,7 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                 <div
                                     key={event.id}
                                     className={cn(
-                                        "relative flex items-center gap-2 md:gap-4 group/item w-full p-2 md:p-4 transition-all duration-300",
+                                        "relative flex items-center gap-1 lg:gap-2 group/item w-full p-2 lg:p-4 transition-all duration-300",
                                         isNeutral ? "flex-row justify-center" : (isHome ? "flex-row" : "flex-row-reverse"),
                                         event.isPending && "opacity-50 select-none animate-pulse"
                                     )}
@@ -64,11 +63,11 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
 
                                     <div className={cn(
                                         "flex-1 min-w-0 transition-all relative rounded-sm",
-                                        isNeutral ? "py-2" : "p-2 md:p-4 border",
+                                        isNeutral ? "py-2" : "p-1 lg:p-2 border",
                                         !isNeutral && (isHome ? "text-left" : "text-right")
                                     )}>
                                         <div className={cn(
-                                            "flex items-center justify-between gap-1 md:gap-2",
+                                            "flex items-center justify-between gap-1 lg:gap-2",
                                             isNeutral ? "flex-row" : (isHome ? "flex-row" : "flex-row-reverse")
                                         )}>
                                             {isNeutral ? (
@@ -99,7 +98,7 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                                         isNeutral ? "justify-center" : (isHome ? "flex-row" : "flex-row-reverse")
                                                     )}>
                                                         <span className={cn(
-                                                            "text-[10px] font-black tracking-widest",
+                                                            "text-xs font-black tracking-widest",
                                                             event.event_type === 'goal' ? "text-primary" :
                                                             event.event_type === 'yellow_card' ? "text-yellow-500" :
                                                             event.event_type === 'red_card' ? "text-red-500" :
@@ -112,8 +111,8 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                                         </span>
                                                         {!isNeutral && (
                                                             <>
-                                                                 <span className="text-[10px] text-foreground/20">•</span>
-                                                                 <span className="text-[10px] font-black tracking-tighter text-foreground truncate max-w-[120px]">
+                                                                 <span className="text-xs">•</span>
+                                                                 <span className="text-xs font-bold truncate max-w-[120px]">
                                                                     {isHome ? match.home_team?.name : match.away_team?.name}
                                                                  </span>
                                                             </>
@@ -150,8 +149,8 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                             {!readOnly && onDelete && (
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-foreground/20 hover:text-destructive hover:bg-destructive/10 opacity-100 md:opacity-0 group-hover/item:opacity-100 transition-all shrink-0"
+                                                    size="icon-sm"
+                                                    className="h-8 w-8 text-foreground/20 hover:text-destructive hover:bg-destructive/10 opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-all shrink-0"
                                                     onClick={() => onDelete(event.id)}
                                                 >
                                                     <Trash2 className="h-3 w-3" />

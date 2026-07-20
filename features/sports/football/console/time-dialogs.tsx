@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
+import { X } from "lucide-react";
 
 interface AddTimeDialogProps {
     open: boolean;
@@ -15,15 +16,22 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card rounded-xl p-0 overflow-hidden max-w-md">
-                <DialogHeader className="p-2 md:p-4 border-b">
-                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
-                        {t("add_added_time")}
-                    </DialogTitle>
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden">
+                <DialogHeader className="relative pr-10">
+                    <DialogTitle>{t("add_added_time")}</DialogTitle>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </DialogHeader>
 
-                <div className="p-2 md:p-4 space-y-1 md:space-y-2 relative">
-                    <div className="grid grid-cols-3 gap-1 md:gap-2 relative z-10">
+                <div className="p-2 lg:p-4 space-y-1 lg:space-y-2 relative">
+                    <div className="grid grid-cols-3 gap-1 lg:gap-2 relative z-10">
                         {[1, 2, 3, 4, 5, 6].map(mins => (
                             <Button
                                 key={mins}
@@ -37,7 +45,7 @@ export function AddTimeDialog({ open, onOpenChange, onSave }: AddTimeDialogProps
 
                     <div className="space-y-1">
                         <Label>{t("custom")}</Label>
-                        <div className="flex gap-3">
+                        <div className="flex gap-1 lg:gap-2">
                             <Input
                                 type="number"
                                 onKeyDown={(e) => {
@@ -75,7 +83,7 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card rounded-xl p-0 overflow-hidden max-w-md">
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
@@ -85,35 +93,40 @@ export function SetTimeDialog({ open, onOpenChange, currentTime, onSave }: SetTi
                         onSave(m, s);
                     }}
                 >
-                    <DialogHeader className="p-2 md:p-4 border-b">
-                        <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
-                            {t("set_match_time")}
-                        </DialogTitle>
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>{t("set_match_time")}</DialogTitle>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
                     </DialogHeader>
 
-                    <div className="p-2 md:p-4 space-y-1 md:space-y-2 relative">
+                    <div className="p-2 lg:p-4 space-y-1 lg:space-y-2 relative">
                         <div className="flex items-center justify-center gap-4 relative z-10">
                             <div className="space-y-1 flex-1">
                                 <Label>{t("min")}</Label>
                                 <Input
                                     name="minutes" type="number" min="0"
-                                    className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-primary/50 text-foreground"
                                     defaultValue={Math.floor(currentTime / 60)}
                                 />
                             </div>
-                            <span className="text-3xl font-black text-foreground/20 mt-6">:</span>
+                            <span className="text-3xl font-black mt-5">:</span>
                             <div className="space-y-1 flex-1">
                                 <Label>{t("sec")}</Label>
                                 <Input
                                     name="seconds" type="number" min="0" max="59"
-                                    className="h-16 text-center text-3xl font-black bg-foreground/5 border-foreground/5 focus:border-primary/50 text-foreground"
                                     defaultValue={currentTime % 60}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t p-2 md:p-4">
+                    <DialogFooter className="border-t p-2 lg:p-4">
                         <Button
                             type="submit"
                             className="w-full"

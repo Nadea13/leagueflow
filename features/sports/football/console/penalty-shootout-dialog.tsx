@@ -156,11 +156,18 @@ export function PenaltyShootoutDialog({
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="bg-card rounded-xl p-0 overflow-hidden max-w-md">
-                <DialogHeader className="p-2 md:p-4 border-b">
-                    <DialogTitle className="flex items-center gap-2 md:gap-3 text-2xl font-black tracking-tighter text-foreground">
-                        {t("title")}
-                    </DialogTitle>
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden max-w-md">
+                <DialogHeader className="relative pr-10 p-2 md:p-4 border-b">
+                    <DialogTitle>{t("title")}</DialogTitle>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
+                        onClick={() => setOpen(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </DialogHeader>
 
                 {isLoading ? (
@@ -170,7 +177,7 @@ export function PenaltyShootoutDialog({
                 ) : (
                     <div className="p-2 md:p-4 space-y-1 md:space-y-2 relative">
                         {/* Score Summary Scoreboard Style */}
-                        <div className="flex items-center justify-center gap-10 py-1 md:py-2 border rounded-lg relative z-10 overflow-hidden">
+                        <div className="flex items-center justify-center gap-10 py-1 md:py-2 border rounded-sm relative z-10 overflow-hidden">
                             <div className="text-center relative z-10">
                                 <p className="text-[9px] font-black tracking-widest text-foreground/40 mb-2 truncate max-w-[120px]">{homeTeamName}</p>
                                 <span className={cn(

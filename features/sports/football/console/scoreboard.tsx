@@ -33,29 +33,29 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
     };
 
     return (
-        <div className="bg-card border rounded-xl relative overflow-hidden w-full group">
+        <div className="bg-card border rounded-sm relative overflow-hidden w-full group">
             <div className="p-2 lg:p-4 flex flex-col items-center justify-center relative z-10 w-full">
-                <div className="flex items-center justify-between w-full max-w-5xl gap-4 md:gap-12">
+                <div className="flex items-center justify-between w-full max-w-5xl gap-4 lg:gap-12">
                     <div
-                        className="flex-1 flex flex-row-reverse items-center justify-start gap-2 md:flex-col md:items-center md:gap-4 cursor-pointer group/home min-w-0"
+                        className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/home min-w-0"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-24 md:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-1 md:p-2 relative group/logo shrink-0">
+                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-1 lg:p-2 relative group/logo shrink-0">
                             {match.home_team?.logo_url ? (
                                 <Image src={match.home_team.logo_url} width={64} height={64} className="w-full h-full object-contain relative z-10 rounded-full" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{getInitials(match.home_team?.name || '')}</span>
                             )}
                         </div>
-                        <div className="min-w-0 max-w-[80px] md:max-w-none">
-                            <h2 className="text-xs md:text-base lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/home:text-primary transition-colors">
+                        <div className="min-w-0 max-w-[80px] lg:max-w-none">
+                            <h2 className="text-xs lg:text-3xl font-black tracking-tighter text-foreground truncate group-hover/home:text-primary transition-colors">
                                 {formatTeamName(match.home_team?.name)}
                             </h2>
                         </div>
                     </div>
 
                     {/* Central Score Area */}
-                    <div className="flex flex-col items-center gap-0 md:gap-4 px-0 md:px-6 md:border-x border-foreground/5 shrink-0">
+                    <div className="flex flex-col items-center">
                         {timerTime !== undefined && (
                             <MatchTimer
                                 time={timerTime}
@@ -65,12 +65,12 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                             />
                         )}
 
-                        <div className="flex items-center gap-4 md:gap-6 tabular-nums">
-                            <span className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{homeScore}</span>
+                        <div className="flex items-center gap-4 lg:gap-8 tabular-nums">
+                            <span className="text-5xl lg:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{homeScore}</span>
                             <div className="flex flex-col items-center gap-2">
                                 <span className="text-primary text-2xl lg:text-4xl font-black">-</span>
                             </div>
-                            <span className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{awayScore}</span>
+                            <span className="text-5xl lg:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{awayScore}</span>
                         </div>
 
                         {/* Penalty Shootout Score */}
@@ -86,7 +86,7 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                             // Only show if there's at least one penalty shot logged
                             if (pEvents.length > 0) {
                                 return (
-                                    <div className="px-2 py-0.5 rounded text-xs md:text-base font-black tracking-widest text-primary">
+                                    <div className="px-2 py-0.5 rounded text-xs lg:text-base font-black tracking-widest text-primary">
                                         (PEN {showHomeScore} - {showAwayScore})
                                     </div>
                                 );
@@ -96,18 +96,18 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                     </div>
 
                     <div
-                        className="flex-1 flex flex-row items-center justify-start gap-2 md:flex-col md:items-center md:gap-4 cursor-pointer group/away min-w-0"
+                        className="flex-1 flex flex-row items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/away min-w-0"
                         onClick={() => onTeamClick?.(match.away_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-24 md:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-1 md:p-2 relative group/logo shrink-0">
+                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full border p-1 lg:p-2 relative group/logo shrink-0">
                             {match.away_team?.logo_url ? (
                                 <Image src={match.away_team.logo_url} width={64} height={64} className="w-full h-full object-contain relative z-10 rounded-full" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{getInitials(match.away_team?.name || '')}</span>
                             )}
                         </div>
-                        <div className="min-w-0 max-w-[80px] md:max-w-none">
-                            <h2 className="text-xs md:text-base lg:text-4xl font-black tracking-tighter text-foreground truncate group-hover/away:text-primary transition-colors">
+                        <div className="min-w-0 max-w-[80px] lg:max-w-none">
+                            <h2 className="text-xs lg:text-3xl font-black tracking-tighter text-foreground truncate group-hover/away:text-primary transition-colors">
                                 {formatTeamName(match.away_team?.name)}
                             </h2>
                         </div>

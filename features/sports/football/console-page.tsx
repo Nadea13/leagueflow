@@ -11,6 +11,7 @@ import { getPenaltyShootout } from "@/actions/tournaments/penalty";
 import { createClient } from "@/lib/supabase/client";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +66,8 @@ import { RosterSelectionDialog } from "./console/roster-selection-dialog";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
+import { Header } from "@/components/ui/header";
+import { Label } from "@/components/ui/label";
 
 interface ConsolePageProps {
     match: Match;
@@ -89,6 +92,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const [match, setMatch] = useState<Match>(initialMatch);
     const [homePlayers, setHomePlayers] = useState<Player[]>([]);
     const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
+    const [playersLoading, setPlayersLoading] = useState(true);
 
     // Hooks
     const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
@@ -111,7 +115,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     setTimeout(() => {
                         setMatchQueue(parsed);
                     }, 0);
-                } catch (_) {}
+                } catch (_) { }
             }
         }
     }, [match.id]);
@@ -134,7 +138,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         for (let i = 0; i < updated.length; i++) {
             const item = updated[i];
             if (item.status === 'syncing') continue;
-            
+
             item.status = 'syncing';
             saveMatchQueue([...updated]);
 
@@ -220,7 +224,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         description: "",
         actionLabel: "",
         cancelLabel: "",
-        onConfirm: () => {},
+        onConfirm: () => { },
     });
 
     // --- Effects ---
@@ -258,6 +262,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     useEffect(() => {
         const loadPlayers = async () => {
+            setPlayersLoading(true);
             const fetchTeam = async (teamId: string, setter: (players: Player[]) => void) => {
                 const { data: ttData } = await supabase
                     .from("tournament_teams")
@@ -271,8 +276,12 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 const res = await getPlayers(targetId);
                 if (res.success && res.data) setter(res.data);
             };
-            if (match.home_team_id) fetchTeam(match.home_team_id, setHomePlayers);
-            if (match.away_team_id) fetchTeam(match.away_team_id, setAwayPlayers);
+            const promises = [];
+            if (match.home_team_id) promises.push(fetchTeam(match.home_team_id, setHomePlayers));
+            if (match.away_team_id) promises.push(fetchTeam(match.away_team_id, setAwayPlayers));
+
+            await Promise.all(promises);
+            setPlayersLoading(false);
         };
         loadPlayers();
     }, [match.home_team_id, match.away_team_id, match.tournament_category_id, supabase]);
@@ -627,14 +636,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     };
 
     const lastAddTimeEvent = events.find(e => e.event_type === 'add_time');
-    const lastTimerMarker = events.find(e => 
-        e.event_type === 'kick_off' || 
-        e.event_type === 'match_resumed' || 
+    const lastTimerMarker = events.find(e =>
+        e.event_type === 'kick_off' ||
+        e.event_type === 'match_resumed' ||
         e.event_type === 'match_paused' ||
-        e.event_type === 'half_time' || 
+        e.event_type === 'half_time' ||
         e.event_type === 'full_time'
     );
-    const isAddedTimeActive = lastAddTimeEvent && lastTimerMarker 
+    const isAddedTimeActive = lastAddTimeEvent && lastTimerMarker
         ? new Date(lastAddTimeEvent.created_at).getTime() > new Date(lastTimerMarker.created_at).getTime()
         : !!lastAddTimeEvent;
     const addedTime = isAddedTimeActive
@@ -656,22 +665,21 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         ];
 
         return (
-            <div className="bg-card border rounded-xl p-2 md:p-4 relative overflow-hidden group">
-                <div className="relative z-10 space-y-2 md:space-y-4">
+            <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group">
+                <div className="relative z-10 space-y-2 lg:space-y-4">
                     <div className="space-y-1">
-                        <h3 className="text-xl md:text-2xl font-black tracking-tighter">{name}</h3>
+                        <h3 className="text-xl lg:text-2xl font-black tracking-tighter">{name}</h3>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1 md:gap-2">
+                    <div className="grid grid-cols-3 gap-1 lg:gap-2">
                         {actions.map((action) => (
                             <Button
                                 variant="outline"
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
-                                className="group flex items-center justify-center"
                             >
                                 <action.icon className={cn("h-5 w-5 transition-transform", action.iconColor)} />
-                                <span className="hidden md:inline text-[10px] font-black tracking-wider">{action.label}</span>
+                                <Label className="hidden lg:inline">{action.label}</Label>
                             </Button>
                         ))}
                     </div>
@@ -680,11 +688,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         );
     };
 
-
-
     const matchControlsBox = (
-        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl" id="console-timer-control">
-            <div className="relative z-10 space-y-2 md:space-y-4">
+        <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="console-timer-control">
+            <div className="relative z-10 space-y-2 lg:space-y-4">
                 {readOnly ? (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -721,32 +727,32 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     );
 
     const quickActionsBox = !readOnly ? (
-        <div className="bg-card border p-2 md:p-4 relative overflow-hidden group rounded-xl" id="console-action-panel">
-            <div className="relative z-10 space-y-2 md:space-y-4">
-                <div className="grid grid-cols-4 md:grid-cols-1 gap-1 md:gap-2">
+        <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="console-action-panel">
+            <div className="relative z-10 space-y-2 lg:space-y-4">
+                <div className="grid grid-cols-4 lg:grid-cols-1 gap-1 lg:gap-2">
                     <Button
                         variant="outline"
                         onClick={handleUndo}
-                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                        className="w-full flex justify-center lg:justify-start items-center"
                     >
                         <Undo className="h-4 w-4 text-muted-foreground" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("undo")}</span>
+                        <span className="hidden lg:inline">{t("undo")}</span>
                     </Button>
                     <Button
                         variant="outline"
                         onClick={() => setOverlayDialogOpen(true)}
-                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                        className="w-full flex justify-center lg:justify-start items-center"
                     >
                         <Tv className="h-4 w-4 text-primary" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("broadcast_overlay")}</span>
+                        <span className="hidden lg:inline">{t("broadcast_overlay")}</span>
                     </Button>
                     <Button
                         variant="outline"
                         onClick={() => setRosterDialogOpen(true)}
-                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                        className="w-full flex justify-center lg:justify-start items-center"
                     >
                         <Users className="h-4 w-4 text-primary" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("select_starting_lineup") || "Lineups"}</span>
+                        <span className="hidden lg:inline">{t("select_starting_lineup") || "Lineups"}</span>
                     </Button>
                     {match.status === 'finished' && (
                         <PenaltyShootoutDialog
@@ -760,37 +766,37 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                 <Button
                                     variant="outline"
                                     disabled={homeScore !== awayScore}
-                                    className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group disabled:opacity-50"
+                                    className="w-full flex justify-center lg:justify-start items-center disabled:opacity-50"
                                 >
                                     <Target className="h-4 w-4 text-primary" />
-                                    <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("penalty_shootout")}</span>
+                                    <span className="hidden lg:inline">{t("penalty_shootout")}</span>
                                 </Button>
                             }
                         />
                     )}
                     <Button
                         variant="outline"
+                        onClick={handlePostponeMatch}
+                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                    >
+                        <CalendarRange className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{t("postponed")}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
                         onClick={() => setWoDialogOpen(true)}
-                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
                     >
                         <Ban className="h-4 w-4 text-destructive" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("walkover")}</span>
+                        <span className="hidden lg:inline">{t("walkover")}</span>
                     </Button>
                     <Button
                         variant="outline"
                         onClick={handleAbandonMatch}
-                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
                     >
                         <XCircle className="h-4 w-4 text-destructive" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("abandoned")}</span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={handlePostponeMatch}
-                        className="w-full flex justify-center md:justify-start items-center gap-1 md:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                    >
-                        <CalendarRange className="h-4 w-4 text-primary" />
-                        <span className="hidden md:inline text-xs font-bold tracking-widest text-foreground">{t("postponed")}</span>
+                        <span className="hidden lg:inline">{t("abandoned")}</span>
                     </Button>
                 </div>
             </div>
@@ -845,10 +851,121 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         driverObj.drive();
     };
 
+    if (playersLoading) {
+        return (
+            <div className={cn(
+                "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 lg:space-y-4 animate-pulse",
+                readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : "pt-0"
+            )}>
+                {/* Header Skeleton */}
+                <header className="flex items-center justify-between gap-1 lg:gap-2 h-10 dark:border-foreground/10">
+                    <div className="flex items-center gap-1 lg:gap-2 w-full">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
+                            asChild
+                        >
+                            <Link href={backUrl}>
+                                <ArrowLeft className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                        <div className="flex justify-between items-center w-full">
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-8 w-24 lg:w-32 bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-8 w-8 lg:w-8 bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-8 w-24 lg:w-32 bg-muted/60 rounded-sm" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-10 w-10 lg:w-10 bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-10 lg:w-10 bg-muted/60 rounded-sm" />
+                                <Skeleton className="h-10 w-10 lg:w-10 bg-muted/60 rounded-sm" />
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 w-full grid grid-cols-12 gap-2 lg:gap-4">
+                    {/* Sidebar Skeleton */}
+                    <aside className="col-span-12 lg:col-span-3 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col">
+                        {/* Match Controls Skeleton */}
+                        <div className="bg-card border p-2 lg:p-4 rounded-sm space-y-2">
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                        </div>
+                        {/* Quick Actions Skeleton */}
+                        <div className="bg-card border p-2 lg:p-4 rounded-sm space-y-2">
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-10 w-full bg-muted/60 rounded-sm" />
+                        </div>
+                    </aside>
+
+                    {/* Main Content Skeleton */}
+                    <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4">
+                        {/* Scoreboard Skeleton */}
+                        <div className="bg-card border rounded-sm w-full">
+                            <div className="p-2 lg:p-4 flex flex-col items-center justify-center w-full h-[120px] lg:h-[220px]">
+                                <div className="flex items-center justify-between w-full max-w-5xl gap-4 lg:gap-12">
+                                    <div className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 min-w-0">
+                                        <Skeleton className="w-12 h-12 lg:w-24 lg:h-24 rounded-full bg-muted/60 shrink-0" />
+                                        <Skeleton className="h-4 w-16 lg:h-7 lg:w-32 bg-muted/60 rounded-sm shrink-0" />
+                                    </div>
+
+                                    <div className="flex flex-col items-center gap-1 lg:gap-3 shrink-0">
+                                        <Skeleton className="h-4 w-12 lg:h-6 lg:w-20 bg-muted/60 rounded-sm" />
+                                        <div className="flex items-center gap-4 lg:gap-8">
+                                            <Skeleton className="h-10 w-8 lg:h-24 lg:w-16 bg-muted/60 rounded-sm" />
+                                            <span className="text-xl lg:text-4xl font-black text-foreground/20">-</span>
+                                            <Skeleton className="h-10 w-8 lg:h-24 lg:w-16 bg-muted/60 rounded-sm" />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 flex flex-row items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 min-w-0">
+                                        <Skeleton className="w-12 h-12 lg:w-24 lg:h-24 rounded-full bg-muted/60 shrink-0" />
+                                        <Skeleton className="h-4 w-16 lg:h-7 lg:w-32 bg-muted/60 rounded-sm shrink-0" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Team Action Grid Skeleton */}
+                        {!readOnly && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
+                                {[1, 2].map((i) => (
+                                    <div key={i} className="bg-card border rounded-sm p-2 lg:p-4 space-y-4">
+                                        <Skeleton className="h-8 w-24 bg-muted/60 rounded-sm" />
+                                        <div className="grid grid-cols-3 gap-1 lg:gap-2">
+                                            {Array.from({ length: 9 }).map((_, idx) => (
+                                                <Skeleton key={idx} className="h-10 w-full bg-muted/60 rounded-sm" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Event Log Skeleton */}
+                        <div className="bg-card border rounded-sm p-4 space-y-2">
+                            <Skeleton className="h-12 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-12 w-full bg-muted/60 rounded-sm" />
+                            <Skeleton className="h-12 w-full bg-muted/60 rounded-sm" />
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className={cn(
-            "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 md:space-y-4",
-            readOnly ? "pt-18 md:pt-22 px-2 md:px-0" : "pt-0"
+            "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 lg:space-y-4",
+            readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : "pt-0"
         )}>
             {/* Top Navigation Bar */}
             {readOnly && (
@@ -865,7 +982,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             </svg>
                             <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
                         </Link>
-                        <div className="flex items-center gap-2 md:gap-3">
+                        <div className="flex items-center gap-2 lg:gap-3">
                             <span className="text-sm text-muted-foreground">{tPublic("public_view")}</span>
                             <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5">{tPublic("beta")}</Badge>
                         </div>
@@ -873,8 +990,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 </nav>
             )}
 
-            <header className="flex items-center justify-between gap-2 md:gap-4">
-                <div className="flex items-start gap-1 md:gap-2 w-full">
+            <header className="flex items-center justify-between gap-1 lg:gap-2">
+                <div className="flex items-center gap-1 lg:gap-2 w-full">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -885,24 +1002,23 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <div className="text-2xl md:text-3xl font-black tracking-tighter gap-2 md:gap-4">
+                    <Header level={2}>
                         <span>{match.home_team?.name || 'Home'}</span>
-                        <span className="text-primary text-xs md:text-sm font-black tracking-widest opacity-50 px-2 leading-none">VS</span>
+                        <span className="text-xs lg:text-sm font-black tracking-widest px-2">VS</span>
                         <span>{match.away_team?.name || 'Away'}</span>
-                    </div>
+                    </Header>
                 </div>
 
                 {!readOnly && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                         {/* Help Tutorial Button */}
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={startConsoleTutorial}
-                            className="h-10 w-10 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
                             title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                         >
-                            <HelpCircle className="h-4 w-4 text-primary" />
+                            <HelpCircle className="h-4 w-4" />
                         </Button>
                         {(queue.length + matchQueue.length) > 0 ? (
                             <div className="flex items-center gap-1 text-warning animate-pulse">
@@ -922,20 +1038,20 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             <div className="flex items-center justify-center text-primary h-8 w-8" title={t("synced")}>
                                 <Cloud className="w-4 h-4" />
                             </div>
-                        ) }
+                        )}
 
-                        <div className="flex items-center gap-1 md:gap-2 px-2 relative group overflow-hidden">
+                        <div className="flex items-center gap-1 lg:gap-2 px-2 relative group overflow-hidden">
                             <span className="relative flex h-2 w-2">
                                 <span className={cn(
                                     "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                    isHalfTime ? "bg-amber-400" : (match.status === 'live' ? "bg-primary" : "bg-amber-400")
+                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
                                 )}></span>
                                 <span className={cn(
                                     "relative inline-flex rounded-full h-2 w-2",
-                                    isHalfTime ? "bg-amber-500" : (match.status === 'live' ? "bg-primary" : "bg-amber-500")
+                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
                                 )}></span>
                             </span>
-                            <span className="text-[10px] font-black tracking-widest text-primary">
+                            <span className="text-[10px] font-black tracking-widest">
                                 {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
                             </span>
                         </div>
@@ -943,9 +1059,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 )}
             </header>
 
-            <main className="flex-1 w-full grid grid-cols-12 gap-2 md:gap-4">
+            <main className="flex-1 w-full grid grid-cols-12 gap-2 lg:gap-4">
                 {/* Sidebar: Admin Controls or Match Info */}
-                <aside className="col-span-12 lg:col-span-3 gap-2 md:gap-4 order-2 lg:order-1 flex flex-col">
+                <aside className="col-span-12 lg:col-span-3 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col">
                     {/* Match Controls (Desktop only) */}
                     <div className="hidden lg:block">
                         {matchControlsBox}
@@ -957,14 +1073,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 </aside>
 
                 {/* Main Content Area */}
-                <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 md:gap-4">
+                <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4">
                     {/* Match Controls (Mobile only) */}
                     <div className="block lg:hidden">
                         {matchControlsBox}
                     </div>
 
                     {/* Scoreboard Section */}
-                    <section className="flex flex-col gap-2 md:gap-4" id="console-scoreboard">
+                    <section className="flex flex-col gap-2 lg:gap-4" id="console-scoreboard">
                         <Scoreboard
                             match={match}
                             homeScore={homeScore}
@@ -986,7 +1102,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         </div>
 
                         {!readOnly && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
                                 <TeamActionGrid teamId={match.home_team_id!} name={match.home_team?.name || 'Home'} type="home" />
                                 <TeamActionGrid teamId={match.away_team_id!} name={match.away_team?.name || 'Away'} type="away" />
                             </div>
@@ -994,7 +1110,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     </section>
 
                     {/* Log Section */}
-                    <section className="flex flex-col gap-2 md:gap-4" id="console-event-log">
+                    <section className="flex flex-col gap-2 lg:gap-4" id="console-event-log">
                         <EventLog
                             events={events}
                             match={match}
@@ -1021,18 +1137,18 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             }} />
 
             <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
-                <AlertDialogContent className="bg-card border rounded-xl shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black tracking-tighter text-foreground border-b p-2 md:p-4">
+                        <AlertDialogTitle className="border-b p-2 lg:p-4">
                             {confirmConfig.title}
                         </AlertDialogTitle>
                         {confirmConfig.description && (
-                            <AlertDialogDescription className="text-sm font-medium text-muted-foreground/80 p-2 md:p-4">
+                            <AlertDialogDescription className="p-2 lg:p-4">
                                 {confirmConfig.description}
                             </AlertDialogDescription>
                         )}
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="grid grid-cols-2 gap-1 md:gap-2 border-t p-2 md:p-4">
+                    <AlertDialogFooter className="grid grid-cols-2 gap-1 lg:gap-2 border-t p-2 lg:p-4">
                         <AlertDialogCancel>
                             {confirmConfig.cancelLabel}
                         </AlertDialogCancel>

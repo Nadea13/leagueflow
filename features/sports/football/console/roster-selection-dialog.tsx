@@ -7,7 +7,8 @@ import { Tab } from "@/components/ui/tab";
 import { Player } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { Users, Check } from "lucide-react";
+import { Users, Check, X } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface TeamRosterColumnProps {
     team: 'home' | 'away';
@@ -38,7 +39,7 @@ function TeamRosterColumn({
     tCommon
 }: TeamRosterColumnProps) {
     return (
-        <div className="flex flex-col border rounded-lg overflow-hidden">
+        <div className="flex flex-col border rounded-sm overflow-hidden">
             {/* Team Header */}
             <div className="p-1 md:p-2 border-b flex items-center justify-between">
                 <div>
@@ -70,10 +71,11 @@ function TeamRosterColumn({
             {/* Player List */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {filteredPlayers.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-32 text-center p-4">
-                        <Users className="h-8 w-8 text-muted-foreground/30 mb-2" />
-                        <p className="text-xs font-bold text-muted-foreground">{tCommon("no_results") || "No players found"}</p>
-                    </div>
+                    <EmptyState
+                        icon={Users}
+                        description={tCommon("no_results")}
+                        className="min-h-[160px]"
+                    />
                 ) : (
                     filteredPlayers.map(player => {
                         const isSelected = selectedIds.includes(player.id);
@@ -222,19 +224,25 @@ export function RosterSelectionDialog({
         p.name.toLowerCase().includes(awaySearch.toLowerCase()) ||
         (p.number?.toString() || "").includes(awaySearch)
     );
-
-
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card p-0 overflow-hidden max-w-4xl w-[95vw] rounded-xl flex flex-col h-[90vh] md:h-[650px] shadow-2xl">
-                <DialogHeader className="p-2 md:p-4 border-b shrink-0">
+            <DialogContent showCloseButton={false} className="bg-card overflow-hidden min-w-[640px] w-[95vw] rounded-sm flex flex-col h-[90vh] md:h-[650px] shadow-2xl">
+                <DialogHeader className="relative pr-10 p-2 md:p-4 border-b shrink-0">
                     <DialogTitle className="flex items-center text-2xl font-black tracking-tighter text-foreground">
                         {t("lineup_selection_title") || "Squad Lineups Selection"}
                     </DialogTitle>
                     <DialogDescription className="text-xs font-bold text-muted-foreground">
                         {t("lineup_selection_desc") || "Select starting players on the field for both teams before starting the match."}
                     </DialogDescription>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </DialogHeader>
 
                 {/* Main Content Area */}

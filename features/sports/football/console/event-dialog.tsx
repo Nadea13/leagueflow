@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EVENT_TYPES } from "./constants";
 import { EventType, Player, MatchEvent } from "@/types";
 import { useTranslations } from "next-intl";
+import { X } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -129,11 +130,20 @@ export function MatchEventDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-card p-0 rounded-xl overflow-hidden max-w-md">
-                <DialogHeader className="p-2 md:p-4 border-b">
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden">
+                <DialogHeader className="relative pr-10 p-2 md:p-4 border-b">
                     <DialogTitle className="flex items-center text-2xl font-black tracking-tighter">
                         {eventConfig?.label && t(eventConfig.label)}
                     </DialogTitle>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 </DialogHeader>
 
                 <div className="p-2 md:p-4 space-y-1 md:space-y-2">
