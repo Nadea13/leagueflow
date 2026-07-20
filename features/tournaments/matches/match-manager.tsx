@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Match, Team } from "@/types/index";
+import { Match, Team, BracketCanvasData } from "@/types/index";
 import { MatchCard } from "@/features/tournaments/matches/match-card";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDate } from "@/lib/date";
+import { useBracketStore } from "@/lib/stores/bracket-store";
 
 interface FixturesManagerProps {
     teams: Team[];
@@ -21,6 +22,7 @@ interface FixturesManagerProps {
     externalFilterStage?: string;
     externalSelectedDate?: string | null;
     isPublic?: boolean;
+    canvasData?: BracketCanvasData | null;
 }
 
 export function MatchManager({
@@ -29,7 +31,8 @@ export function MatchManager({
     tournamentId,
     externalFilterStage = "all",
     externalSelectedDate = null,
-    isPublic = false
+    isPublic = false,
+    canvasData = null
 }: FixturesManagerProps) {
     const tMatch = useTranslations("Match");
     const tFixtures = useTranslations("Fixtures");
@@ -59,12 +62,37 @@ export function MatchManager({
         if (filterStage === "knockout") {
             return match.stage !== 'group' && match.stage !== 'league';
         }
-        if (filterStage.startsWith("Group")) {
-            const groupLetter = filterStage.split(" ")[1];
+        if (filterStage.toLowerCase() !== "group" && (filterStage.startsWith("Group") || filterStage.toLowerCase().startsWith("group"))) {
+            const parts = filterStage.split(" ");
+            const groupLetter = parts[parts.length - 1];
             if (match.stage !== 'group') return false;
+
+            // 1. Check if home or away team belongs to this group
             const homeGroup = teams.find(t => t.id === match.home_team_id)?.group_name;
             const awayGroup = teams.find(t => t.id === match.away_team_id)?.group_name;
-            return homeGroup === groupLetter || awayGroup === groupLetter;
+            if (homeGroup === groupLetter || awayGroup === groupLetter) return true;
+
+            // 2. Check if the match node label contains this group
+            let nodeLabel = "";
+            if (match.node_id) {
+                try {
+                    const storeNodes = useBracketStore.getState().nodes;
+                    const node = storeNodes.find(n => n.id === match.node_id);
+                    if (node?.data?.label) nodeLabel = String(node.data.label);
+                } catch {}
+
+                if (!nodeLabel && canvasData?.nodes) {
+                    const node = canvasData.nodes.find((n) => n.id === match.node_id);
+                    if (node?.data?.label) nodeLabel = String(node.data.label);
+                }
+            }
+
+            if (nodeLabel) {
+                const lowerLabel = nodeLabel.toLowerCase();
+                if (lowerLabel.includes(`group ${groupLetter.toLowerCase()}`)) return true;
+            }
+
+            return false;
         }
         return match.stage === filterStage;
     });
@@ -92,9 +120,10 @@ export function MatchManager({
 
     const sortedDates = Object.keys(groupedMatches)
         .sort((a, b) => {
+            if (a === "TBD" && b === "TBD") return 0;
             if (a === "TBD") return 1;
             if (b === "TBD") return -1;
-            return new Date(a).getTime() - new Date(b).getTime(); // Chronological for manager
+            return a.localeCompare(b);
         });
 
     return (
@@ -104,7 +133,7 @@ export function MatchManager({
                     icon={CalendarIcon}
                     title={tFixtures("ready_to_start")}
                     description={tFixtures("generate_instruction")}
-                    className="py-24 border border-dashed"
+                    className="border rounded-sm"
                 />
             ) : (
                 <div id="fixtures-canvas" className="space-y-1 md:space-y-2">
@@ -116,7 +145,7 @@ export function MatchManager({
                         />
                     ) : (
                         sortedDates.map(date => (
-                            <div key={date} className="space-y-1 md:space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            <div key={date} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                                 {/* Date Header */}
                                 {date !== "TBD" && (
                                     <div className="flex items-center gap-1 md:gap-2">
@@ -151,6 +180,7 @@ export function MatchManager({
                                                                 isEditMode={false}
                                                                 isPublic={isPublic}
                                                                 teams={teams}
+                                                                canvasData={canvasData}
                                                             />
                                                         </div>
                                                     ))}

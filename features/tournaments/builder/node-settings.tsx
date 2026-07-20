@@ -807,25 +807,26 @@ export function NodeSettings() {
                                                             </Select>
                                                         </div>
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div className="space-y-1">
-                                                            <Label className="text-[10px]">Date</Label>
-                                                            <Input
-                                                                type="date"
-                                                                value={match.match_date || ""}
-                                                                onChange={(e) => updateMatch({ match_date: e.target.value })}
-                                                                className="bg-card"
-                                                            />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <Label className="text-[10px]">Time</Label>
-                                                            <Input
-                                                                type="time"
-                                                                value={match.match_time || ""}
-                                                                onChange={(e) => updateMatch({ match_time: e.target.value })}
-                                                                className="bg-card"
-                                                            />
-                                                        </div>
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px]">Date & Time</Label>
+                                                        <Input
+                                                            type="datetime-local"
+                                                            value={
+                                                                match.match_date
+                                                                    ? `${match.match_date}T${match.match_time || "00:00"}`
+                                                                    : ""
+                                                            }
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (val) {
+                                                                    const [date, time] = val.split("T");
+                                                                    updateMatch({ match_date: date, match_time: time });
+                                                                } else {
+                                                                    updateMatch({ match_date: "", match_time: "" });
+                                                                }
+                                                            }}
+                                                            className="bg-card w-full"
+                                                        />
                                                     </div>
 
                                                     {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (

@@ -234,6 +234,7 @@ function CanvasInternal({
     // Lifted Filter States
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [filterStage, setFilterStage] = useState<string>("all");
+    const [filterTeam, setFilterTeam] = useState<string>("all");
     const [viewDate, setViewDate] = useState(new Date());
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -1723,11 +1724,46 @@ function CanvasInternal({
                                                                 {locale === 'th' ? "ทั้งหมด" : "ALL"}
                                                             </SelectItem>
                                                             <SelectItem value="group" className="font-black text-[10px] tracking-widest">
-                                                                {locale === 'th' ? "กลุ่ม" : "GROUP STAGE"}
+                                                                {locale === 'th' ? "รอบแบ่งกลุ่ม (ทั้งหมด)" : "GROUP STAGE (ALL)"}
                                                             </SelectItem>
+                                                            {nodes
+                                                                .filter(n => n.type === 'groupNode')
+                                                                .map(node => {
+                                                                    const label = (node.data as { label?: string })?.label || "Group";
+                                                                    return (
+                                                                        <SelectItem 
+                                                                            key={node.id} 
+                                                                            value={label} 
+                                                                            className="font-black text-[10px] tracking-widest pl-4"
+                                                                        >
+                                                                            - {label}
+                                                                        </SelectItem>
+                                                                    );
+                                                                })
+                                                            }
                                                             <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
-                                                                {locale === 'th' ? "น็อคเอาท์" : "KNOCKOUT STAGE"}
+                                                                {locale === 'th' ? "รอบน็อคเอาท์" : "KNOCKOUT STAGE"}
                                                             </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {/* Team Filter */}
+                                                <div className="space-y-2">
+                                                    <Label>{locale === 'th' ? "ตัวกรองทีม" : "Team Filter"}</Label>
+                                                    <Select value={filterTeam} onValueChange={setFilterTeam}>
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder={locale === 'th' ? "เลือกทีม" : "Select Team"} />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-card shadow-2xl">
+                                                            <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                                {locale === 'th' ? "แสดงทั้งหมด" : "SHOW ALL"}
+                                                            </SelectItem>
+                                                            {teams.map(team => (
+                                                                <SelectItem key={team.id} value={team.id} className="font-black text-[10px] tracking-widest">
+                                                                    {team.name}
+                                                                </SelectItem>
+                                                            ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -1739,7 +1775,19 @@ function CanvasInternal({
                                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                                         <div className="p-2 lg:p-4">
                                             <MatchManager
-                                                matches={activeMatches}
+                                                matches={filterTeam === "all"
+                                                    ? activeMatches
+                                                    : activeMatches.filter(m => {
+                                                        const selTeam = teams.find(t => t.id === filterTeam);
+                                                        const targetIds = selTeam 
+                                                            ? [selTeam.id, selTeam.team_id].filter(Boolean) as string[]
+                                                            : [filterTeam];
+                                                        return targetIds.includes(m.home_team_id || "") || 
+                                                               targetIds.includes(m.away_team_id || "") ||
+                                                               (m.home_team?.id && targetIds.includes(m.home_team.id)) ||
+                                                               (m.away_team?.id && targetIds.includes(m.away_team.id));
+                                                    })
+                                                }
                                                 teams={teams as unknown as Team[]}
                                                 tournamentId={tournament.id}
                                                 format={tournament.format}

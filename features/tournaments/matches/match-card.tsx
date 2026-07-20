@@ -5,10 +5,10 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Eraser } from "lucide-react";
-import { Match, Team } from "@/types/index";
+import { Match, Team, BracketCanvasData } from "@/types/index";
 import { updateMatch } from "@/actions/tournaments/matches";
 import { Button } from "@/components/ui/button";
-
+import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ const getScore = (score: number | { total?: number } | null | undefined): number
     return score;
 };
 
-export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [] }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[] }) {
+export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [], canvasData = null }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; canvasData?: BracketCanvasData | null }) {
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
@@ -183,137 +183,180 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
             </div>
 
             {/* 2. Teams & Score Section */}
-            <div className="flex flex-row items-center justify-between w-full gap-2 md:gap-3">
+            <div className="flex flex-col items-center w-full gap-1 md:gap-2">
+                {/* Match Label (Middle Top) */}
+                <div className="text-[10px] font-black tracking-wider text-muted-foreground/60">
+                    {(() => {
+                        let nodeLabel = "";
+                        const nodeId = match.node_id;
+                        if (nodeId) {
+                            try {
+                                const storeNodes = useBracketStore.getState().nodes;
+                                const node = storeNodes.find(n => n.id === nodeId);
+                                if (node?.data?.label) {
+                                    nodeLabel = String(node.data.label);
+                                }
+                            } catch (_e) {}
 
-                {/* Home Team */}
-                <div className="flex-1 flex items-center justify-end gap-3 md:gap-6 text-right w-[40%]">
-                    <div className={cn(
-                        "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-end group-hover:text-primary transition-colors duration-300",
-                        (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground/60"
-                    )}>
-                        {isEditMode ? (
-                            <div onClick={e => e.stopPropagation()}>
-                                <Select
-                                    value={match.home_team_id || "tbd"}
-                                    onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
-                                >
-                                    <SelectTrigger className="w-[120px] md:w-[180px]">
-                                        <SelectValue placeholder={tMatch("select_team")} />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-card">
-                                        <SelectItem value="tbd" className="font-black text-xs text-foreground">{tMatch("tbd")}</SelectItem>
-                                        {teams.map((t) => (
-                                            <SelectItem key={t.id} value={t.id} className="font-black text-xs text-foreground">{t.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <>
-                                <span className="line-clamp-1 py-1 px-2 text-foreground">
-                                    {match.home_team?.name || tMatch("tbd")}
-                                </span>
-                                {match.home_team?.logo_url ? (
-                                    <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
-                                ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
-                                        <span className="text-sm md:text-base font-black text-muted-foreground">
-                                            {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
-                                        </span>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
+                            if (!nodeLabel && canvasData?.nodes) {
+                                const node = canvasData.nodes.find((n) => n.id === nodeId);
+                                if (node?.data?.label) {
+                                    nodeLabel = String(node.data.label);
+                                }
+                            }
+                        }
+
+                        const matchNum = match.match_index ? `#${match.match_index}` : "";
+
+                        if (nodeLabel) {
+                            const lowerLabel = nodeLabel.toLowerCase();
+                            if (lowerLabel.includes("group") || lowerLabel.includes("matches:")) {
+                                return `${nodeLabel} - match ${matchNum}`.trim();
+                            }
+                            return nodeLabel;
+                        }
+
+                        const homeTeam = teams.find(t => t.id === match.home_team_id);
+                        const awayTeam = teams.find(t => t.id === match.away_team_id);
+                        const groupName = homeTeam?.group_name || awayTeam?.group_name;
+                        if (groupName) {
+                            return `matches: group ${groupName} - match ${matchNum}`.trim();
+                        }
+                        return `match ${matchNum}`.trim();
+                    })()}
                 </div>
 
-                {/* Score Box */}
-                <div className="flex items-center justify-center shrink-0">
-                    <div className={cn(
-                        "flex flex-col items-center justify-center transition-all duration-300",
-                        isLive ? " text-primary-foreground scale-110" :
-                            isFinished ? " text-foreground" : " text-muted-foreground/40"
-                    )}>
-                        {isLive || isFinished ? (
-                            <div className="flex flex-col w-[5rem] items-center leading-none">
-                                <div className="flex items-center gap-1 md:gap-3">
-                                    <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
-                                        {getScore(match.home_score)}
+                <div className="flex flex-row items-center justify-between w-full gap-2 md:gap-3">
+                    {/* Home Team */}
+                    <div className="flex-1 flex items-center justify-end gap-3 md:gap-6 text-right w-[40%]">
+                        <div className={cn(
+                            "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-end group-hover:text-primary transition-colors duration-300",
+                            (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground/60"
+                        )}>
+                            {isEditMode ? (
+                                <div onClick={e => e.stopPropagation()}>
+                                    <Select
+                                        value={match.home_team_id || "tbd"}
+                                        onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
+                                    >
+                                        <SelectTrigger className="w-[120px] md:w-[180px]">
+                                            <SelectValue placeholder={tMatch("select_team")} />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-card">
+                                            <SelectItem value="tbd" className="font-black text-xs text-foreground">{tMatch("tbd")}</SelectItem>
+                                            {teams.map((t) => (
+                                                <SelectItem key={t.id} value={t.id} className="font-black text-xs text-foreground">{t.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <>
+                                    <span className="line-clamp-1 py-1 px-2 text-foreground">
+                                        {match.home_team?.name || tMatch("tbd")}
                                     </span>
-                                    <span className="text-muted-foreground font-black">-</span>
-                                    <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
-                                        {getScore(match.away_score)}
+                                    {match.home_team?.logo_url ? (
+                                        <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
+                                    ) : (
+                                        <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
+                                            <span className="text-sm md:text-base font-black text-muted-foreground">
+                                                {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
+                                            </span>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Score Box */}
+                    <div className="flex items-center justify-center shrink-0">
+                        <div className={cn(
+                            "flex flex-col items-center justify-center transition-all duration-300",
+                            isLive ? " text-primary-foreground scale-110" :
+                                isFinished ? " text-foreground" : " text-muted-foreground/40"
+                        )}>
+                            {isLive || isFinished ? (
+                                <div className="flex flex-col w-[5rem] items-center leading-none">
+                                    <div className="flex items-center gap-1 md:gap-3">
+                                        <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
+                                            {getScore(match.home_score)}
+                                        </span>
+                                        <span className="text-muted-foreground font-black">-</span>
+                                        <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
+                                            {getScore(match.away_score)}
+                                        </span>
+                                    </div>
+                                    {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (
+                                        <span className="text-[10px] font-black tracking-tighter">
+                                            ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PK)
+                                        </span>
+                                    )}
+                                    {isLiveStatus && (
+                                        <span className="text-[10px] font-black text-primary tabular-nums">
+                                            {formatSeconds(liveTime)}
+                                        </span>
+                                    )}
+                                </div>
+                            ) : isEditMode ? (
+                                <div className="flex flex-col items-center justify-center transition-transform duration-300">
+                                    <Input
+                                        type="time"
+                                        value={formatTime(matchTime) || ""}
+                                        className="bg-card text-foreground"
+                                        onChange={(e) => handleTimeUpdate(e.target.value)}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center min-w-[5rem] transition-transform duration-300">
+                                    <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-primary transition-colors">
+                                        {formatTime(match.match_time) || "--:--"}
                                     </span>
                                 </div>
-                                {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (
-                                    <span className="text-[10px] font-black tracking-tighter">
-                                        ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PK)
-                                    </span>
-                                )}
-                                {isLiveStatus && (
-                                    <span className="text-[10px] font-black text-primary tabular-nums">
-                                        {formatSeconds(liveTime)}
-                                    </span>
-                                )}
-                            </div>
-                        ) : isEditMode ? (
-                            <div className="flex flex-col items-center justify-center transition-transform duration-300">
-                                <Input
-                                    type="time"
-                                    value={formatTime(matchTime) || ""}
-                                    className="bg-card text-foreground"
-                                    onChange={(e) => handleTimeUpdate(e.target.value)}
-                                />
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center min-w-[5rem] transition-transform duration-300">
-                                <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-primary transition-colors">
-                                    {formatTime(match.match_time) || "--:--"}
-                                </span>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                {/* Away Team */}
-                <div className="flex-1 flex items-center justify-start gap-3 md:gap-6 text-left w-[40%]">
-                    <div className={cn(
-                        "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-start group-hover:text-primary transition-colors duration-300",
-                        (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground/60"
-                    )}>
-                        {isEditMode ? (
-                            <div onClick={e => e.stopPropagation()}>
-                                <Select
-                                    value={match.away_team_id || "tbd"}
-                                    onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
-                                >
-                                    <SelectTrigger className="w-[120px] md:w-[180px]">
-                                        <SelectValue placeholder={tMatch("select_team")} />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-card">
-                                        <SelectItem value="tbd" className="font-black text-xs">{tMatch("tbd")}</SelectItem>
-                                        {teams.map((t) => (
-                                            <SelectItem key={t.id} value={t.id} className="font-black text-xs">{t.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <>
-                                {match.away_team?.logo_url ? (
-                                    <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
-                                ) : (
-                                    <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
-                                        <span className="text-sm md:text-base font-black text-muted-foreground">
-                                            {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
-                                        </span>
-                                    </div>
-                                )}
-                                <span className="line-clamp-1 py-1 px-2 text-foreground">
-                                    {match.away_team?.name || tMatch("tbd")}
-                                </span>
-                            </>
-                        )}
+                    {/* Away Team */}
+                    <div className="flex-1 flex items-center justify-start gap-3 md:gap-6 text-left w-[40%]">
+                        <div className={cn(
+                            "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-start group-hover:text-primary transition-colors duration-300",
+                            (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground/60"
+                        )}>
+                            {isEditMode ? (
+                                <div onClick={e => e.stopPropagation()}>
+                                    <Select
+                                        value={match.away_team_id || "tbd"}
+                                        onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
+                                    >
+                                        <SelectTrigger className="w-[120px] md:w-[180px]">
+                                            <SelectValue placeholder={tMatch("select_team")} />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-card">
+                                            <SelectItem value="tbd" className="font-black text-xs">{tMatch("tbd")}</SelectItem>
+                                            {teams.map((t) => (
+                                                <SelectItem key={t.id} value={t.id} className="font-black text-xs">{t.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <>
+                                    {match.away_team?.logo_url ? (
+                                        <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
+                                    ) : (
+                                        <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
+                                            <span className="text-sm md:text-base font-black text-muted-foreground">
+                                                {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <span className="line-clamp-1 py-1 px-2 text-foreground">
+                                        {match.away_team?.name || tMatch("tbd")}
+                                    </span>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

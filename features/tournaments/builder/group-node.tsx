@@ -123,7 +123,7 @@ export const GroupNode = memo(({
                                     type="target"
                                     position={Position.Left}
                                     id={`team-in-${index}`}
-                                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-primary transition-all z-50!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50"
+                                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50"
                                     style={{ left: "-1px" }}
                                 />
                                 <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-5/50 group-hover/slot:bg-node-5/10 transition-colors text-muted-foreground group-hover/slot:text-node-5">
@@ -164,6 +164,16 @@ export const GroupNode = memo(({
                 className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-emerald transition-all z-50"
                 style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
             />
+
+            {/* Bottom handle to MatchNode */}
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center translate-y-[1px]">
+                <Handle
+                    type="source"
+                    position={Position.Bottom}
+                    id="group-matches"
+                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50"
+                />
+            </div>
         </div>
     );
 });

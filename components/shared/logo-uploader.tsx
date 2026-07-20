@@ -77,9 +77,9 @@ export function LogoUploader({
     return (
         <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-sm">
             <div className="relative group">
-                <div className="h-20 w-20 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm border-border">
+                <div className="h-16 w-16 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm border-border">
                     {isCompressing ? (
-                        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                        <Loader2 className="h-4 w-4 text-primary animate-spin" />
                     ) : previewUrl ? (
                         <Image
                             src={previewUrl}
@@ -91,7 +91,7 @@ export function LogoUploader({
                             }`}
                         />
                     ) : (
-                        <Upload className="h-8 w-8 text-primary" />
+                        <Upload className="h-4 w-4 text-primary" />
                     )}
                 </div>
             </div>

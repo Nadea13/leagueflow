@@ -498,8 +498,8 @@ export function RegistrationForm({
                                                                 />
                                                                 <Button
                                                                     type="button"
-                                                                    variant="destructive"
-                                                                    size="icon"
+                                                                    variant="ghost"
+                                                                    size="icon-sm"
                                                                     className="absolute top-0 right-0 h-8 w-8"
                                                                     onClick={() => {
                                                                         form.setValue("slipFile", undefined);

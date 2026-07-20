@@ -733,6 +733,7 @@ export function PublicTournamentShell({
                         startDate={tournament.start_date}
                         endDate={tournament.end_date}
                         isPublic={true}
+                        canvasData={tournament.canvas_data}
                     />
                 </div>
             )}
