@@ -137,7 +137,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col bg-card border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-4 transition-all cursor-pointer group relative overflow-hidden rounded-lg",
+                "flex flex-col bg-card border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-4 transition-all cursor-pointer group relative overflow-hidden rounded-sm",
             )}
         >
             {/* 1. Status/Time/Badge Section */}
@@ -152,7 +152,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                             !match.away_team_id && "text-muted-foreground"
                         )}
                     >
-                        {!match.away_team_id ? t("scheduled") : (
+                        {isFinished ? t("ft") : (!match.away_team_id ? t("scheduled") : (
                             isLive ? (
                                 <span className="flex items-center gap-2">
                                     <span className="relative flex h-2 w-2">
@@ -160,10 +160,8 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
                                     </span>
                                 </span>
-                            ) : (
-                                isFinished ? t("ft") : t("scheduled")
-                            )
-                        )}
+                            ) : t("scheduled")
+                        ))}
                     </div>
                 )}
 

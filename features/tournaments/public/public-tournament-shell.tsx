@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
-import { Trophy, Calendar, ArrowLeft, Award, Megaphone, MapPin, Info, Users } from "lucide-react";
+import { Trophy, Calendar, ArrowLeft, Award, Pin, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tab } from "@/components/ui/tab";
 import { Standings } from "@/features/tournaments/ranking/standings";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { StandingsGroups } from "@/features/tournaments/ranking/standings-groups";
-import { ShareButton } from "@/features/tournaments/shared/share-button";
 import { Match, MatchEvent, Team, Goal, Tournament, Player, Announcement } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations, useLocale } from "next-intl";
@@ -18,6 +17,9 @@ import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sponsor } from "@/actions/tournaments/sponsor";
+import { Header } from "@/components/ui/header";
+import { Label } from "@/components/ui/label";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface PublicTournamentShellProps {
     tournament: Tournament;
@@ -45,7 +47,6 @@ export function PublicTournamentShell({
 }: PublicTournamentShellProps) {
     const t = useTranslations("PublicView");
     const tTournament = useTranslations("Tournament");
-    const tAnnouncements = useTranslations("Announcements");
     const locale = useLocale();
     const [matches, setMatches] = useState<Match[]>(initialMatches);
     const [events, setEvents] = useState<MatchEvent[]>(initialEvents);
@@ -414,7 +415,7 @@ export function PublicTournamentShell({
         <main className="container mx-auto px-2 md:px-0 py-2 md:py-4 max-w-7xl">
             {/* Unified Header Block - Styled like squad-management */}
             <div className="flex md:items-center justify-between">
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-1 md:gap-2">
                     <Button
                         variant="ghost"
                         size="icon"
@@ -427,9 +428,7 @@ export function PublicTournamentShell({
                     </Button>
                     <div className="flex flex-col gap-1">
                         <div className="flex flex-wrap items-center gap-1 md:gap-2">
-                            <h1 className="text-2xl md:text-3xl font-black tracking-tighter">
-                                {tournament?.name}
-                            </h1>
+                            <Header level={2}>{tournament?.name}</Header>
                             {tournament?.status !== 'ongoing' && tournament?.status !== 'upcoming' && (
                                 <div className="flex flex-wrap items-center gap-1 md:gap-2">
                                     <Badge className={cn(
@@ -444,11 +443,11 @@ export function PublicTournamentShell({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0 self-end md:self-auto">
+                <div className="flex items-center gap-1 lg:gap-2 shrink-0 self-end md:self-auto">
                     {categories.length > 0 && (
                         <div className="flex items-center gap-2 w-fit md:w-auto max-w-[280px]">
                             <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
-                                <SelectTrigger className="bg-background/50 border h-9 text-xs">
+                                <SelectTrigger className="bg-card border h-9 text-xs">
                                     <SelectValue placeholder="เลือกหมวดหมู่" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -461,7 +460,6 @@ export function PublicTournamentShell({
                             </Select>
                         </div>
                     )}
-                    <ShareButton tournamentId={tournament.id} />
                 </div>
             </div>
 
@@ -520,7 +518,7 @@ export function PublicTournamentShell({
                         </div>
                     </div>
                 ) : (
-                    <p className="text-xs text-muted-foreground/60 bg-muted/20 p-4 border border-dashed text-center rounded-lg">
+                    <p className="text-xs text-muted-foreground/60 bg-muted/20 p-4 border border-dashed text-center rounded-sm">
                         ยังไม่มีรายชื่อทีมที่สมัครเข้าร่วมในหมวดหมู่นี้
                     </p>
                 )}
@@ -542,105 +540,138 @@ export function PublicTournamentShell({
 
             {currentTab === 'overview' && (
                 <div className="space-y-2 md:space-y-4">
+                    {/* Tournament Banner & Profile Logo */}
+                    <div className="relative border rounded-sm overflow-hidden bg-card">
+                        {/* Cover Image */}
+                        <div className="w-full aspect-2/1 lg:aspect-3/1 overflow-hidden shadow-inner bg-muted/20 relative">
+                            {tournament.cover_img ? (
+                                <Image
+                                    src={tournament.cover_img}
+                                    alt={tournament.name}
+                                    fill
+                                    className="object-cover"
+                                    priority
+                                />
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-background to-primary/5 flex items-center justify-center">
+                                    <Trophy className="h-10 w-10 md:h-16 md:w-16 text-muted-foreground/20" />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Profile Logo & Info */}
+                        <div className="p-4 flex flex-col items-center text-center gap-1 lg:gap-2 relative z-10 -mt-10 md:-mt-16 p-2 lg:p-4">
+                            {/* Logo */}
+                            <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border-4 lg:border-8 border-card bg-card overflow-hidden flex items-center justify-center shrink-0 shadow-lg relative z-20 mx-auto">
+                                {tournament.logo_img ? (
+                                    <Image
+                                        src={tournament.logo_img}
+                                        alt={tournament.name}
+                                        width={128}
+                                        height={128}
+                                        className="w-full h-full object-contain rounded-full"
+                                    />
+                                ) : (
+                                    <span className="font-black text-2xl md:text-4xl text-muted-foreground">
+                                        {getInitials(tournament.name)}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-1 flex-1 md:mb-2 w-full text-left">
+                                {tournament.description && (
+                                    <div
+                                        className="text-xs md:text-sm text-left"
+                                        dangerouslySetInnerHTML={{ __html: tournament.description }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
                     {/* Announcements Block */}
                     {announcements.length > 0 && (
-                        <div className="space-y-2 md:space-y-4">
-                            <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-1 md:gap-2">
-                                <Megaphone className="h-5 w-5 text-primary" />
-                                {tAnnouncements("title")}
-                            </h2>
-                            <div className="grid grid-cols-1 gap-2 md:gap-4">
-                                {announcements.map((ann) => (
-                                    <div
-                                        key={ann.id}
-                                        className={cn(
-                                            "p-4 border bg-card relative rounded-lg transition-colors hover:bg-card/60",
-                                            ann.is_pinned && "border-primary/30 bg-primary/5 hover:bg-primary/[0.07]"
-                                        )}
-                                    >
-                                        {ann.is_pinned && (
-                                            <Badge className="absolute top-3 right-3 text-[9px] font-black tracking-wider border-none bg-primary/20 text-primary" variant="default">
-                                                {tAnnouncements("pinned")}
-                                            </Badge>
-                                        )}
-                                        <h4 className="font-bold text-sm text-foreground pr-12">{ann.title}</h4>
-                                        {ann.content && (
-                                            <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap leading-relaxed">
-                                                {ann.content}
-                                            </p>
-                                        )}
-                                        <span className="text-[9px] text-muted-foreground/50 mt-3 block font-bold">
-                                            {new Date(ann.created_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                        <div className="grid grid-cols-1 gap-1 md:gap-2">
+                            {announcements.map((ann) => (
+                                <div
+                                    key={ann.id}
+                                    className={cn(
+                                        "p-2 lg:p-4 border bg-card relative rounded-sm transition-colors",
+                                        ann.is_pinned && "border-primary/50 bg-primary/10"
+                                    )}
+                                >
+                                    {ann.is_pinned && (
+                                        <Pin className="absolute top-2 right-2 lg:top-4 lg:right-4 h-4 w-4 text-primary" />
+                                    )}
+                                    <Header level={4}>{ann.title}</Header>
+                                    {ann.content && (
+                                        <p className="text-xs text-muted-foreground mt-1 lg:mt-2 whitespace-pre-wrap leading-relaxed">
+                                            {ann.content}
+                                        </p>
+                                    )}
+                                    <span className="text-[9px] text-muted-foreground/50 mt-2 lg:mt-4 block font-bold">
+                                        {new Date(ann.created_at).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     )}
 
                     {/* General Information */}
-                    <div className="space-y-2 md:space-y-4">
-                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-1 md:gap-2">
-                            <Info className="h-5 w-5 text-primary" />
-                            {t("about_tournament")}
-                        </h2>
-                        <div className="p-2 md:p-4 border bg-card backdrop-blur-sm rounded-xl space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {/* Date range */}
-                                <div className="flex items-start gap-3">
-                                    <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                                    <div className="space-y-0.5">
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">{t("dates")}</span>
-                                        <span className="text-sm font-bold text-foreground">
-                                            {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", { year: 'numeric', month: 'long', day: 'numeric' }) : "-"}
-                                            {tournament.end_date && ` - ${new Date(tournament.end_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", { year: 'numeric', month: 'long', day: 'numeric' })}`}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Location */}
-                                <div className="flex items-start gap-1 md:gap-2">
-                                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                                    <div className="space-y-0.5">
-                                        <span className="text-[10px] font-bold text-muted-foreground/60 tracking-wider block">{t("location")}</span>
-                                        {tournament.location_name ? (
-                                            <div className="space-y-1">
-                                                <span className="text-sm font-bold text-foreground block">{tournament.location_name}</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-sm font-bold text-foreground">-</span>
-                                        )}
-                                    </div>
+                    <div className="p-2 md:p-4 border bg-card rounded-sm space-y-2 md:space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Date range */}
+                            <div className="flex items-start gap-1 lg:gap-2">
+                                <Calendar className="h-4 w-4 text-primary" />
+                                <div className="space-y-0.5">
+                                    <Label>{t("dates")}</Label>
+                                    <p className="text-sm">
+                                        {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", { year: 'numeric', month: 'long', day: 'numeric' }) : "-"}
+                                        {tournament.end_date && ` - ${new Date(tournament.end_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US", { year: 'numeric', month: 'long', day: 'numeric' })}`}
+                                    </p>
                                 </div>
                             </div>
 
-                            {/* Embedded Map Canvas */}
-                            {tournament.location_name && (
-                                <div className="w-full h-72 border rounded-sm overflow-hidden shadow-inner bg-muted/20 relative mt-4">
-                                    <iframe
-                                        title="Venue Location Map"
-                                        width="100%"
-                                        height="100%"
-                                        className="border-0"
-                                        loading="lazy"
-                                        allowFullScreen
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                        src={`https://maps.google.com/maps?q=${encodeURIComponent(tournament.location_name)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                                    />
+                            {/* Location */}
+                            <div className="flex items-start gap-1 md:gap-2">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                <div className="space-y-0.5">
+                                    <Label>{t("location")}</Label>
+                                    {tournament.location_name ? (
+                                        <p className="text-sm">{tournament.location_name}</p>
+                                    ) : (
+                                        <p className="text-sm">-</p>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
+
+                        {/* Embedded Map Canvas */}
+                        {tournament.location_name && (
+                            <div className="w-full aspect-2/1 border rounded-sm overflow-hidden shadow-inner relative">
+                                <iframe
+                                    title="Venue Location Map"
+                                    width="100%"
+                                    height="100%"
+                                    className="border-0"
+                                    loading="lazy"
+                                    allowFullScreen
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    src={`https://maps.google.com/maps?q=${encodeURIComponent(tournament.location_name)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Sponsors Block */}
                     {sponsors && sponsors.length > 0 && (
-                        <div className="space-y-2 md:space-y-4 text-center mt-6">
+                        <div className="space-y-2 md:space-y-4 text-center">
                             <h2 className="tracking-tighter text-foreground flex items-center justify-center gap-1 md:gap-2 font-black text-xl">
                                 Sponsored By
                             </h2>
@@ -648,13 +679,13 @@ export function PublicTournamentShell({
                                 {sponsors.map((sponsor) => {
                                     const content = (
                                         <div
-                                            className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer"
+                                            className="w-16 h-16 md:w-24 md:h-24 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer rounded-sm group"
                                             title={sponsor.sponsor_name}
                                         >
                                             {sponsor.logo_img ? (
-                                                <Image src={sponsor.logo_img} className="w-full h-full object-contain" alt={sponsor.sponsor_name} width={96} height={96} />
+                                                <Image src={sponsor.logo_img} className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110" alt={sponsor.sponsor_name} width={96} height={96} />
                                             ) : (
-                                                <span className="font-black text-2xl text-muted-foreground">
+                                                <span className="font-black text-2xl text-muted-foreground transition-transform duration-200 group-hover:scale-110">
                                                     {getInitials(sponsor.sponsor_name)}
                                                 </span>
                                             )}
@@ -668,7 +699,7 @@ export function PublicTournamentShell({
                                                 href={sponsor.link_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="transition-transform hover:scale-105"
+                                                className="inline-block"
                                             >
                                                 {content}
                                             </a>
@@ -704,7 +735,7 @@ export function PublicTournamentShell({
                                     <h3 className="text-lg font-black tracking-tighter text-foreground flex items-center gap-2">
                                         {group.label}
                                     </h3>
-                                    <div className="bg-card border relative overflow-hidden transition-colors rounded-lg">
+                                    <div className="bg-card border relative overflow-hidden transition-colors rounded-sm">
                                         <Standings standings={group.standings} />
                                     </div>
                                 </div>
@@ -718,13 +749,6 @@ export function PublicTournamentShell({
 
             {currentTab === 'matches' && (
                 <div className="space-y-2 md:space-y-4">
-                    <div className="flex flex-col gap-1">
-                        <h2 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-2 md:gap-3">
-                            <Calendar className="h-5 w-5 text-primary" />
-                            {t("fixtures_results")}
-                        </h2>
-                        <p className="text-[10px] font-bold text-muted-foreground/60">{t("fixtures_results_desc")}</p>
-                    </div>
                     <MatchManager
                         matches={matches}
                         teams={initialTeams}
@@ -749,14 +773,17 @@ export function PublicTournamentShell({
                     </div>
 
                     {!(playerStats.scorers.length > 0 || playerStats.assists.length > 0 || playerStats.saves.length > 0 || playerStats.yellowCards.length > 0 || playerStats.redCards.length > 0 || playerStats.injuries.length > 0) ? (
-                        <div className="bg-card border rounded-xl p-8 text-center text-xs text-muted-foreground/60 font-medium shadow-sm">
-                            {t("no_stats_recorded")}
+                        <div className="bg-card border rounded-sm">
+                            <EmptyState
+                                icon={Users}
+                                title={t("no_stats_recorded")}
+                            />
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 md:gap-4">
                             {/* Top Scorers */}
                             {playerStats.scorers.length > 0 && (
-                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col">
                                     <div className="p-2 md:p-4 border-b flex items-center justify-between">
                                         <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
                                             {t("goals")}
@@ -786,7 +813,7 @@ export function PublicTournamentShell({
 
                             {/* Top Assists */}
                             {playerStats.assists.length > 0 && (
-                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col">
                                     <div className="p-2 md:p-4 border-b flex items-center justify-between">
                                         <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
                                             {t("assists")}
@@ -816,7 +843,7 @@ export function PublicTournamentShell({
 
                             {/* Top Saves */}
                             {playerStats.saves.length > 0 && (
-                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col">
                                     <div className="p-2 md:p-4 border-b flex items-center justify-between">
                                         <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
                                             {t("saves")}
@@ -846,7 +873,7 @@ export function PublicTournamentShell({
 
                             {/* Top Yellow Cards */}
                             {playerStats.yellowCards.length > 0 && (
-                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col">
                                     <div className="p-2 md:p-4 border-b flex items-center justify-between">
                                         <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
                                             <span className="w-2.5 h-3.5 bg-amber-500 rounded-xs inline-block shrink-0" />
@@ -877,10 +904,10 @@ export function PublicTournamentShell({
 
                             {/* Top Red Cards */}
                             {playerStats.redCards.length > 0 && (
-                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col">
                                     <div className="p-2 md:p-4 border-b flex items-center justify-between">
                                         <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
-                                            <span className="w-2.5 h-3.5 bg-rose-500 rounded-xs inline-block shrink-0" />
+                                            <span className="w-2.5 h-3.5 bg-rose-500 rounded-sm inline-block shrink-0" />
                                             {t("red_cards")}
                                         </h3>
                                     </div>
@@ -908,7 +935,7 @@ export function PublicTournamentShell({
 
                             {/* Injuries */}
                             {playerStats.injuries.length > 0 && (
-                                <div className="bg-card border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col">
                                     <div className="p-2 md:p-4 border-b flex items-center justify-between">
                                         <h3 className="font-black text-sm flex items-center gap-2 text-foreground">
                                             {t("injuries")}

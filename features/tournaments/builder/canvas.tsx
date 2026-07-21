@@ -1793,7 +1793,6 @@ function CanvasInternal({
                                                 format={tournament.format}
                                                 startDate={tournament.start_date}
                                                 endDate={tournament.end_date}
-                                                hideControls={true}
                                                 externalFilterStage={filterStage}
                                                 externalSelectedDate={selectedDate}
                                             />
