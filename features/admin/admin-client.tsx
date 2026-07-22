@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { Tab, TabOption } from "@/components/ui/tab"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, ExternalLink } from "lucide-react"
+import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, Server, RefreshCw, ExternalLink, HardDrive, Zap } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/hooks/use-toast"
 import { Payment } from "@/types"
-import { AdminUser, updatePaymentStatus, updateUserFields } from "@/actions/common/admin"
+import { AdminUser, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats } from "@/actions/common/admin"
 import { cn } from "@/lib/utils"
 
 interface AdminClientProps {
@@ -21,7 +21,7 @@ interface AdminClientProps {
     initialUsers: AdminUser[]
 }
 
-type TabType = "pending" | "payments" | "users"
+type TabType = "pending" | "payments" | "users" | "monitor"
 
 export function AdminClient({ initialPayments, initialUsers }: AdminClientProps) {
     const t = useTranslations("Admin")
@@ -33,6 +33,25 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
     const [paymentSearch, setPaymentSearch] = useState("")
     const [userSearch, setUserSearch] = useState("")
     const [isPending, startTransition] = useTransition()
+    const [monitorStats, setMonitorStats] = useState<SystemMonitorStats | null>(null)
+    const [isLoadingStats, setIsLoadingStats] = useState(false)
+
+    const fetchMonitorStats = async () => {
+        setIsLoadingStats(true)
+        const res = await getSystemMonitorStats()
+        if (res.success && res.data) {
+            setMonitorStats(res.data)
+        }
+        setIsLoadingStats(false)
+    }
+
+    useEffect(() => {
+        if (activeTab === "monitor") {
+            queueMicrotask(() => {
+                fetchMonitorStats()
+            })
+        }
+    }, [activeTab])
 
     const tabOptions: TabOption<TabType>[] = [
         {
@@ -50,28 +69,33 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
             value: "users",
             label: t("users") || "Users & Roles",
             icon: Users
+        },
+        {
+            value: "monitor",
+            label: "System Monitor",
+            icon: Activity
         }
     ]
 
     const handlePaymentAction = async (paymentId: string, status: 'success' | 'failed') => {
-        const confirmMessage = status === 'success' 
+        const confirmMessage = status === 'success'
             ? t("approve_confirm") || "Are you sure you want to approve this payment?"
             : t("reject_confirm") || "Are you sure you want to reject this payment?"
-        
+
         if (!window.confirm(confirmMessage)) return
 
         startTransition(async () => {
             const res = await updatePaymentStatus(paymentId, status)
             if (res.success) {
-                setPayments(prev => 
-                    prev.map(p => p.id === paymentId 
-                        ? { 
-                            ...p, 
+                setPayments(prev =>
+                    prev.map(p => p.id === paymentId
+                        ? {
+                            ...p,
                             status,
-                            subscription_expires_at: status === 'success' 
+                            subscription_expires_at: status === 'success'
                                 ? new Date(Date.now() + (p.plan === 'yearly' || p.plan === 'pro_yearly' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString()
                                 : null
-                          } 
+                        }
                         : p
                     )
                 )
@@ -162,41 +186,7 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                         Global administrative console for managing plans, payments, and users.
                     </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 gap-1.5 text-xs font-semibold"
-                            asChild
-                        >
-                            <a
-                                href={process.env.NEXT_PUBLIC_SUPABASE_STUDIO_URL || "http://127.0.0.1:55323"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <ExternalLink className="h-3.5 w-3.5 text-emerald-500" />
-                                Supabase Studio
-                            </a>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 gap-1.5 text-xs font-semibold"
-                            asChild
-                        >
-                            <a
-                                href={process.env.NEXT_PUBLIC_INBUCKET_URL || "http://127.0.0.1:55324"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <ExternalLink className="h-3.5 w-3.5 text-sky-500" />
-                                Email Testing (Inbucket)
-                            </a>
-                        </Button>
-                    </div>
-                    <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} />
-                </div>
+                <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} />
             </div>
 
             {activeTab === "pending" && (
@@ -238,9 +228,9 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                                                         <span className="font-bold">{pmt.user?.full_name || "N/A"}</span>
                                                         <span className="text-[10px] text-muted-foreground">{pmt.user?.email || "N/A"}</span>
                                                         {pmt.slip_url && (
-                                                            <a 
-                                                                href={pmt.slip_url} 
-                                                                target="_blank" 
+                                                            <a
+                                                                href={pmt.slip_url}
+                                                                target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="text-primary hover:underline text-[10px] font-bold mt-1 inline-block"
                                                             >
@@ -345,9 +335,9 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                                                         <span className="font-bold">{pmt.user?.full_name || "N/A"}</span>
                                                         <span className="text-[10px] text-muted-foreground">{pmt.user?.email || "N/A"}</span>
                                                         {pmt.slip_url && (
-                                                            <a 
-                                                                href={pmt.slip_url} 
-                                                                target="_blank" 
+                                                            <a
+                                                                href={pmt.slip_url}
+                                                                target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="text-primary hover:underline text-[10px] font-bold mt-1 inline-block"
                                                             >
@@ -363,8 +353,8 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                                                     ฿{pmt.amount.toLocaleString()}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge 
-                                                        variant="outline" 
+                                                    <Badge
+                                                        variant="outline"
                                                         className={cn(
                                                             "text-[9px] font-bold px-1.5 py-0.5",
                                                             pmt.status === "success" && "bg-green-500/10 text-green-500 border-green-500/20",
@@ -382,8 +372,8 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                                                     {new Date(pmt.created_at).toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="text-right text-muted-foreground text-[10px]">
-                                                    {pmt.subscription_expires_at 
-                                                        ? new Date(pmt.subscription_expires_at).toLocaleDateString() 
+                                                    {pmt.subscription_expires_at
+                                                        ? new Date(pmt.subscription_expires_at).toLocaleDateString()
                                                         : "-"
                                                     }
                                                 </TableCell>
@@ -488,6 +478,177 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                         )}
                     </CardContent>
                 </Card>
+            )}
+
+            {activeTab === "monitor" && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center bg-card p-4 rounded-lg border">
+                        <div>
+                            <h3 className="text-sm font-bold flex items-center gap-2">
+                                <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
+                                System Infrastructure & Database Metrics
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Real-time connection status, latency, and Supabase data breakdown.
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={fetchMonitorStats}
+                            disabled={isLoadingStats}
+                            className="h-8 gap-1.5 text-xs font-medium"
+                        >
+                            <RefreshCw className={cn("h-3.5 w-3.5", isLoadingStats && "animate-spin")} />
+                            Refresh Stats
+                        </Button>
+                    </div>
+
+                    {/* Services Status Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardDescription className="text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+                                    <span>Database (PostgreSQL)</span>
+                                    <Database className="h-4 w-4 text-emerald-500" />
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-black">
+                                        {monitorStats?.services.database === 'operational' ? (
+                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
+                                                <CheckCircle className="h-4 w-4" /> Operational
+                                            </span>
+                                        ) : (
+                                            <span className="text-destructive flex items-center gap-1.5 text-base">
+                                                <XCircle className="h-4 w-4" /> Issue Detected
+                                            </span>
+                                        )}
+                                    </span>
+                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                        {monitorStats?.latencyMs ? `${monitorStats.latencyMs} ms` : '-'}
+                                    </Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardDescription className="text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+                                    <span>Auth Service (GoTrue)</span>
+                                    <Shield className="h-4 w-4 text-sky-500" />
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-black">
+                                        {monitorStats?.services.auth === 'operational' ? (
+                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
+                                                <CheckCircle className="h-4 w-4" /> Operational
+                                            </span>
+                                        ) : (
+                                            <span className="text-destructive flex items-center gap-1.5 text-base">
+                                                <XCircle className="h-4 w-4" /> Service Down
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-2">
+                                <CardDescription className="text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
+                                    <span>Storage Engine</span>
+                                    <HardDrive className="h-4 w-4 text-purple-500" />
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-black">
+                                        {monitorStats?.services.storage === 'operational' ? (
+                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
+                                                <CheckCircle className="h-4 w-4" /> Operational
+                                            </span>
+                                        ) : (
+                                            <span className="text-destructive flex items-center gap-1.5 text-base">
+                                                <XCircle className="h-4 w-4" /> Service Down
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Table Row Breakdown */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
+                                <Server className="h-4 w-4" />
+                                Database Table Statistics
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                                Live row counts across core data tables in Supabase.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-center">
+                                <div className="p-3 rounded-md bg-muted/40 border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.users ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Users</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-muted/40 border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.tournaments ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Tournaments</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-muted/40 border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.teams ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Teams</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-muted/40 border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.matches ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Matches</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-muted/40 border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.payments ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Payments</div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Supabase Studio Direct Embed / Full View */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
+                                    <Zap className="h-4 w-4 text-amber-500" />
+                                    Deep Diagnostics & Supabase Studio
+                                </CardTitle>
+                                <CardDescription className="text-xs mt-1">
+                                    Open local Supabase Studio console for SQL query performance, API logs, and authentication details.
+                                </CardDescription>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="default"
+                                className="h-8 gap-1.5 text-xs font-semibold"
+                                asChild
+                            >
+                                <a
+                                    href={process.env.NEXT_PUBLIC_SUPABASE_STUDIO_URL || "http://127.0.0.1:55323"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                    Launch Supabase Studio
+                                </a>
+                            </Button>
+                        </CardHeader>
+                    </Card>
+                </div>
             )}
         </div>
     )

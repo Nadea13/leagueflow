@@ -197,3 +197,80 @@ export async function updateUserFields(
         return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
     }
 }
+
+export interface SystemMonitorStats {
+    dbConnected: boolean
+    latencyMs: number
+    tableCounts: {
+        users: number
+        tournaments: number
+        teams: number
+        matches: number
+        payments: number
+    }
+    recentErrorsCount: number
+    services: {
+        database: 'operational' | 'degraded' | 'down'
+        auth: 'operational' | 'degraded' | 'down'
+        storage: 'operational' | 'degraded' | 'down'
+    }
+}
+
+export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMonitorStats>> {
+    try {
+        const { isAdmin, error } = await verifyAdmin()
+        if (!isAdmin) return { success: false, error }
+
+        const supabase = await createClient()
+        const startTime = Date.now()
+
+        // 1. Health check & latency
+        const { error: pingError } = await supabase.from("users").select("id").limit(1)
+        const latencyMs = Date.now() - startTime
+
+        if (pingError) throw pingError
+
+        // 2. Table row counts
+        const [
+            { count: usersCount },
+            { count: tournamentsCount },
+            { count: teamsCount },
+            { count: matchesCount },
+            { count: paymentsCount }
+        ] = await Promise.all([
+            supabase.from("users").select("*", { count: "exact", head: true }),
+            supabase.from("tournaments").select("*", { count: "exact", head: true }),
+            supabase.from("teams").select("*", { count: "exact", head: true }),
+            supabase.from("matches").select("*", { count: "exact", head: true }),
+            supabase.from("payments").select("*", { count: "exact", head: true })
+        ])
+
+        // 3. Check auth & storage status
+        const { error: authError } = await supabase.auth.getSession()
+        const { error: storageError } = await supabase.storage.listBuckets()
+
+        return {
+            success: true,
+            data: {
+                dbConnected: !pingError,
+                latencyMs,
+                tableCounts: {
+                    users: usersCount || 0,
+                    tournaments: tournamentsCount || 0,
+                    teams: teamsCount || 0,
+                    matches: matchesCount || 0,
+                    payments: paymentsCount || 0
+                },
+                recentErrorsCount: 0,
+                services: {
+                    database: pingError ? 'down' : (latencyMs > 500 ? 'degraded' : 'operational'),
+                    auth: authError ? 'down' : 'operational',
+                    storage: storageError ? 'down' : 'operational'
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching system monitor stats:", e)
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
+    }
+}
