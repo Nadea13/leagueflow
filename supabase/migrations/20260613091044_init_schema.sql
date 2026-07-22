@@ -1,15 +1,15 @@
--- WIPE ALL EXISTING DATA & SCHEMA FOR A CLEAN PUSH
+-- WIPE ALL EXISTING DATA & SCHEMA FOR A CLEAN PUSH (Use with caution in local dev)
 -- 1. Drop public schema to delete all tables, views, triggers, functions, and types
-DROP SCHEMA IF EXISTS public CASCADE;
-CREATE SCHEMA public;
+-- DROP SCHEMA IF EXISTS public CASCADE;
+-- CREATE SCHEMA public;
 
 -- Restore default schema permissions for Supabase services
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO public;
+-- GRANT ALL ON SCHEMA public TO postgres;
+-- GRANT ALL ON SCHEMA public TO public;
 
 -- 2. Wipe Supabase Storage (Delete all buckets and files)
-TRUNCATE storage.objects CASCADE;
-TRUNCATE storage.buckets CASCADE;
+-- TRUNCATE storage.objects CASCADE;
+-- TRUNCATE storage.buckets CASCADE;
 
 -- =========================================================================
 

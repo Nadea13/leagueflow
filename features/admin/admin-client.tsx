@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, ExternalLink } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/hooks/use-toast"
 import { Payment } from "@/types"
@@ -162,7 +162,41 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                         Global administrative console for managing plans, payments, and users.
                     </p>
                 </div>
-                <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} />
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs font-semibold"
+                            asChild
+                        >
+                            <a
+                                href={process.env.NEXT_PUBLIC_SUPABASE_STUDIO_URL || "http://127.0.0.1:55323"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5 text-emerald-500" />
+                                Supabase Studio
+                            </a>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs font-semibold"
+                            asChild
+                        >
+                            <a
+                                href={process.env.NEXT_PUBLIC_INBUCKET_URL || "http://127.0.0.1:55324"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5 text-sky-500" />
+                                Email Testing (Inbucket)
+                            </a>
+                        </Button>
+                    </div>
+                    <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} />
+                </div>
             </div>
 
             {activeTab === "pending" && (
