@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { ActionResponse, Payment } from "@/types"
+import { headers } from "next/headers"
 
 interface AdminPaymentRow {
     id: string
@@ -198,6 +199,15 @@ export async function updateUserFields(
     }
 }
 
+export interface SystemLogItem {
+    id: string
+    event: string
+    level: 'info' | 'warning' | 'error'
+    message: string
+    timestamp: string
+    isAuthenticated?: boolean
+}
+
 export interface SystemMonitorStats {
     dbConnected: boolean
     latencyMs: number
@@ -214,6 +224,7 @@ export interface SystemMonitorStats {
         auth: 'operational' | 'degraded' | 'down'
         storage: 'operational' | 'degraded' | 'down'
     }
+    recentLogs?: SystemLogItem[]
 }
 
 export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMonitorStats>> {
@@ -248,6 +259,108 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
         // 3. Check auth & storage status
         const { error: authError } = await supabase.auth.getSession()
         const { error: storageError } = await supabase.storage.listBuckets()
+        // 4. Fetch recent system activity logs from actual Supabase tables (payments, users, tournaments, teams, players)
+        const headerList = await headers()
+        const clientIp = headerList.get("x-client-ip") || headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip") || "127.0.0.1"
+
+        const [
+            { data: recentPayments },
+            { data: recentUsers },
+            { data: recentTournaments },
+            { data: recentTeams },
+            { data: recentPlayers }
+        ] = await Promise.all([
+            supabase.from("payments").select("id, amount, payment_status, created_at, plan_name").order("created_at", { ascending: false }).limit(5),
+            supabase.from("users").select("id, email, full_name, created_at").order("created_at", { ascending: false }).limit(5),
+            supabase.from("tournaments").select("id, name, created_at").order("created_at", { ascending: false }).limit(5),
+            supabase.from("teams").select("id, name, created_at").order("created_at", { ascending: false }).limit(5),
+            supabase.from("players").select("id, name, first_name, last_name, created_at").order("created_at", { ascending: false }).limit(5)
+        ])
+
+        // Check current session to mark active visitor authentication state
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+
+        const logs: SystemLogItem[] = [
+            {
+                id: `ip_active_${Date.now()}`,
+                event: "PAGE_VIEW",
+                level: "info",
+                message: currentUser 
+                    ? `Authenticated session active from IP: ${clientIp} (${currentUser.email})`
+                    : `Guest (Public Visitor) connected from IP: ${clientIp}`,
+                timestamp: new Date().toISOString(),
+                isAuthenticated: !!currentUser
+            }
+        ]
+
+        if (recentUsers) {
+            recentUsers.forEach(u => {
+                logs.push({
+                    id: `usr_${u.id}`,
+                    event: "USER_REGISTERED",
+                    level: "info",
+                    message: `New user registered: ${u.full_name || u.email}`,
+                    timestamp: u.created_at,
+                    isAuthenticated: true
+                })
+            })
+        }
+
+        if (recentPayments) {
+            recentPayments.forEach(p => {
+                logs.push({
+                    id: `pay_${p.id}`,
+                    event: "PAYMENT_TRANSACTION",
+                    level: p.payment_status === "failed" ? "error" : p.payment_status === "pending" ? "warning" : "info",
+                    message: `Payment ${p.payment_status}: ${p.plan_name} (${Number(p.amount).toLocaleString()} THB)`,
+                    timestamp: p.created_at,
+                    isAuthenticated: true
+                })
+            })
+        }
+
+        if (recentTournaments) {
+            recentTournaments.forEach(t => {
+                logs.push({
+                    id: `tour_${t.id}`,
+                    event: "TOURNAMENT_CREATED",
+                    level: "info",
+                    message: `Tournament created: "${t.name}"`,
+                    timestamp: t.created_at,
+                    isAuthenticated: true
+                })
+            })
+        }
+
+        if (recentTeams) {
+            recentTeams.forEach(tm => {
+                logs.push({
+                    id: `team_${tm.id}`,
+                    event: "TEAM_REGISTERED",
+                    level: "info",
+                    message: `New team registered: "${tm.name}"`,
+                    timestamp: tm.created_at,
+                    isAuthenticated: true
+                })
+            })
+        }
+
+        if (recentPlayers) {
+            recentPlayers.forEach(pl => {
+                const playerName = pl.name || `${pl.first_name || ''} ${pl.last_name || ''}`.trim() || 'Unnamed Player'
+                logs.push({
+                    id: `plr_${pl.id}`,
+                    event: "PLAYER_ADDED",
+                    level: "info",
+                    message: `Player added: ${playerName}`,
+                    timestamp: pl.created_at,
+                    isAuthenticated: true
+                })
+            })
+        }
+
+        // Sort combined logs by timestamp descending
+        logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
         return {
             success: true,
@@ -261,12 +374,13 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
                     matches: matchesCount || 0,
                     payments: paymentsCount || 0
                 },
-                recentErrorsCount: 0,
+                recentErrorsCount: logs.filter(l => l.level === "error").length,
                 services: {
                     database: pingError ? 'down' : (latencyMs > 500 ? 'degraded' : 'operational'),
                     auth: authError ? 'down' : 'operational',
                     storage: storageError ? 'down' : 'operational'
-                }
+                },
+                recentLogs: logs.slice(0, 12)
             }
         }
     } catch (e) {

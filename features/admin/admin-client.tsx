@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, Server, RefreshCw, ExternalLink, HardDrive, Zap } from "lucide-react"
+import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, Server, RefreshCw, HardDrive, Zap } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/hooks/use-toast"
 import { Payment } from "@/types"
 import { AdminUser, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats } from "@/actions/common/admin"
+import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 
 interface AdminClientProps {
@@ -27,7 +28,7 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
     const t = useTranslations("Admin")
     const tCommon = useTranslations("Common")
     const { toast } = useToast()
-    const [activeTab, setActiveTab] = useState<TabType>("pending")
+    const [activeTab, setActiveTab] = useState<TabType>("monitor")
     const [payments, setPayments] = useState<Payment[]>(initialPayments)
     const [users, setUsers] = useState<AdminUser[]>(initialUsers)
     const [paymentSearch, setPaymentSearch] = useState("")
@@ -35,25 +36,45 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
     const [isPending, startTransition] = useTransition()
     const [monitorStats, setMonitorStats] = useState<SystemMonitorStats | null>(null)
     const [isLoadingStats, setIsLoadingStats] = useState(false)
+    const [logFilterTab, setLogFilterTab] = useState<"all" | "auth" | "guest">("all")
 
-    const fetchMonitorStats = async () => {
-        setIsLoadingStats(true)
+    const fetchMonitorStats = async (showLoading = false) => {
+        if (showLoading) setIsLoadingStats(true)
         const res = await getSystemMonitorStats()
         if (res.success && res.data) {
             setMonitorStats(res.data)
         }
-        setIsLoadingStats(false)
+        if (showLoading) setIsLoadingStats(false)
     }
 
     useEffect(() => {
-        if (activeTab === "monitor") {
-            queueMicrotask(() => {
-                fetchMonitorStats()
-            })
+        if (activeTab !== "monitor") return
+
+        // Initial fetch on tab switch
+        Promise.resolve().then(() => fetchMonitorStats(true))
+
+        // Set up Supabase Realtime Subscription for zero-cost immediate updates
+        const supabase = createClient()
+        const channel = supabase
+            .channel('admin-system-monitor')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => fetchMonitorStats(false))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchMonitorStats(false))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => fetchMonitorStats(false))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => fetchMonitorStats(false))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => fetchMonitorStats(false))
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
         }
     }, [activeTab])
 
     const tabOptions: TabOption<TabType>[] = [
+        {
+            value: "monitor",
+            label: "System Monitor",
+            icon: Activity
+        },
         {
             value: "pending",
             label: t("payments_pending") || "Pending Approvals",
@@ -69,11 +90,6 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
             value: "users",
             label: t("users") || "Users & Roles",
             icon: Users
-        },
-        {
-            value: "monitor",
-            label: "System Monitor",
-            icon: Activity
         }
     ]
 
@@ -487,6 +503,9 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                             <h3 className="text-sm font-bold flex items-center gap-2">
                                 <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
                                 System Infrastructure & Database Metrics
+                                <Badge variant="outline" className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 border-emerald-500/20 gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Live (Realtime)
+                                </Badge>
                             </h3>
                             <p className="text-xs text-muted-foreground mt-0.5">
                                 Real-time connection status, latency, and Supabase data breakdown.
@@ -495,7 +514,7 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={fetchMonitorStats}
+                            onClick={() => fetchMonitorStats(true)}
                             disabled={isLoadingStats}
                             className="h-8 gap-1.5 text-xs font-medium"
                         >
@@ -619,34 +638,75 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                         </CardContent>
                     </Card>
 
-                    {/* Supabase Studio Direct Embed / Full View */}
+                    {/* System Activity & Logs */}
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div>
                                 <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
                                     <Zap className="h-4 w-4 text-amber-500" />
-                                    Deep Diagnostics & Supabase Studio
+                                    System Activity & Logs
                                 </CardTitle>
-                                <CardDescription className="text-xs mt-1">
-                                    Open local Supabase Studio console for SQL query performance, API logs, and authentication details.
+                                <CardDescription className="text-xs">
+                                    Live system activity, registration events, and visitor logs fetched from Supabase.
                                 </CardDescription>
                             </div>
-                            <Button
-                                size="sm"
-                                variant="default"
-                                className="h-8 gap-1.5 text-xs font-semibold"
-                                asChild
-                            >
-                                <a
-                                    href={process.env.NEXT_PUBLIC_SUPABASE_STUDIO_URL || "http://127.0.0.1:55323"}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                    Launch Supabase Studio
-                                </a>
-                            </Button>
+                            <Tab
+                                options={[
+                                    { value: "all", label: "All Logs" },
+                                    { value: "auth", label: "Logged-in Users", icon: Shield },
+                                    { value: "guest", label: "Guests / Public", icon: Users }
+                                ]}
+                                value={logFilterTab}
+                                onChange={(val) => setLogFilterTab(val)}
+                            />
                         </CardHeader>
+                        <CardContent>
+                            {(() => {
+                                const filteredLogs = (monitorStats?.recentLogs || []).filter(log => {
+                                    if (logFilterTab === "auth") return log.isAuthenticated === true
+                                    if (logFilterTab === "guest") return log.isAuthenticated === false
+                                    return true
+                                })
+
+                                if (filteredLogs.length === 0) {
+                                    return <p className="text-xs text-muted-foreground text-center py-6">No logs available for this filter.</p>
+                                }
+
+                                return (
+                                    <div className="space-y-2">
+                                        {filteredLogs.map((log) => (
+                                            <div
+                                                key={log.id}
+                                                className="flex items-center justify-between p-2.5 rounded-md bg-muted/40 border text-xs"
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "text-[10px] font-mono uppercase px-1.5 py-0.5 whitespace-nowrap",
+                                                            log.level === "error" && "border-destructive/40 bg-destructive/10 text-destructive",
+                                                            log.level === "warning" && "border-amber-500/40 bg-amber-500/10 text-amber-600",
+                                                            log.event === "PAGE_VIEW" && "border-teal-500/40 bg-teal-500/10 text-teal-600 font-bold",
+                                                            log.event === "TOURNAMENT_CREATED" && "border-purple-500/40 bg-purple-500/10 text-purple-600",
+                                                            log.event === "TEAM_REGISTERED" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600",
+                                                            log.event === "PLAYER_ADDED" && "border-indigo-500/40 bg-indigo-500/10 text-indigo-600",
+                                                            log.event === "USER_REGISTERED" && "border-sky-500/40 bg-sky-500/10 text-sky-600",
+                                                            log.event === "PAYMENT_TRANSACTION" && log.level === "info" && "border-blue-500/40 bg-blue-500/10 text-blue-600"
+                                                        )}
+                                                    >
+                                                        {log.event}
+                                                    </Badge>
+                                                    <span className="font-medium text-foreground">{log.message}</span>
+                                                </div>
+                                                <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap ml-2">
+                                                    {new Date(log.timestamp).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            })()}
+                        </CardContent>
                     </Card>
                 </div>
             )}

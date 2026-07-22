@@ -6,6 +6,13 @@ import { NextRequest, NextResponse } from 'next/server';
 const handleI18nRouting = createMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
+    // Extract IP address from request headers
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIp = request.headers.get('x-real-ip');
+    const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || '127.0.0.1');
+
+    request.headers.set('x-client-ip', clientIp);
+
     // 1. Run Supabase session update
     let response = NextResponse.next({
         request: {
