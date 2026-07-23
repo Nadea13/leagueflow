@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CookieConsent, COOKIE_CONSENT_KEY } from "./cookie-types";
 import { CookieSettings } from "./cookie-settings";
+import { trackEvent } from "@/actions/common/analytics";
 
 
 import { usePathname } from "next/navigation";
@@ -54,9 +55,11 @@ export function CookieBanner() {
         document.cookie = `${COOKIE_CONSENT_KEY}=${value}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
 
         setShowBanner(false);
-        // Reload to apply changes (e.g. load analytics scripts) - Optional but often needed
-        // window.location.reload(); 
-        // For now, we just hide banner. A real implementation would verify analytics scripts inject here.
+        // Track cookie consent action for System Activity & Logs
+        trackEvent('COOKIE_CONSENT', 'cookie', consent.analytics ? 'analytics_accepted' : 'necessary_only', {
+            analytics: consent.analytics,
+            marketing: consent.marketing
+        });
     };
 
     if (!showBanner) return null;

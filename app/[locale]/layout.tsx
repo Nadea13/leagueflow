@@ -10,6 +10,8 @@ import { routing } from '@/i18n/routing';
 import { CookieBanner } from "@/components/cookies/cookie-banner";
 import { PageViewTracker } from "@/hooks/use-analytics";
 
+import { PresenceTracker } from "@/components/providers/presence-tracker";
+
 const notoSansThai = Noto_Sans_Thai({
   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
   subsets: ['thai'],
@@ -92,6 +94,7 @@ export default async function LocaleLayout({
             <Toaster />
             <CookieBanner />
             <PageViewTracker />
+            <PresenceTracker />
           </ThemeProvider>
         </NextIntlClientProvider>
       {/* impeccable-live-start */}

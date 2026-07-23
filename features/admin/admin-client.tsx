@@ -9,13 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, Server, RefreshCw, HardDrive, Zap } from "lucide-react"
+import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, RefreshCw, HardDrive } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/hooks/use-toast"
 import { Payment } from "@/types"
-import { AdminUser, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats } from "@/actions/common/admin"
+import { AdminUser, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats, ActiveUserInfo } from "@/actions/common/admin"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { Header } from "@/components/ui/header"
 
 interface AdminClientProps {
     initialPayments: Payment[]
@@ -38,6 +39,8 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
     const [isLoadingStats, setIsLoadingStats] = useState(false)
     const [logFilterTab, setLogFilterTab] = useState<"all" | "auth" | "guest">("all")
 
+    const [presenceUsers, setPresenceUsers] = useState<ActiveUserInfo[]>([])
+
     const fetchMonitorStats = async (showLoading = false) => {
         if (showLoading) setIsLoadingStats(true)
         const res = await getSystemMonitorStats()
@@ -53,19 +56,58 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
         // Initial fetch on tab switch
         Promise.resolve().then(() => fetchMonitorStats(true))
 
-        // Set up Supabase Realtime Subscription for zero-cost immediate updates
+        // 1. Set up Supabase Realtime Subscription for instant DB event pushes & Realtime Presence
         const supabase = createClient()
         const channel = supabase
-            .channel('admin-system-monitor')
+            .channel('online-users-room')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => fetchMonitorStats(false))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => fetchMonitorStats(false))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'tournaments' }, () => fetchMonitorStats(false))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => fetchMonitorStats(false))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tournament_teams' }, () => fetchMonitorStats(false))
             .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => fetchMonitorStats(false))
-            .subscribe()
+            .on('presence', { event: 'sync' }, () => {
+                const newState = channel.presenceState()
+                const onlineUsers: ActiveUserInfo[] = []
+                Object.keys(newState).forEach((key) => {
+                    const presences = newState[key] as Record<string, unknown>[]
+                    presences.forEach((p) => {
+                        const presence = p as { id?: string; email?: string; full_name?: string | null; ip?: string; onlineAt?: string }
+                        if (presence.email && !onlineUsers.some(u => u.id === presence.id)) {
+                            onlineUsers.push({
+                                id: presence.id || key,
+                                email: presence.email,
+                                full_name: presence.full_name || null,
+                                ip: presence.ip || '127.0.0.1',
+                                lastActive: presence.onlineAt || new Date().toISOString()
+                            })
+                        }
+                    })
+                })
+                setPresenceUsers(onlineUsers)
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (user) {
+                        await channel.track({
+                            id: user.id,
+                            email: user.email,
+                            full_name: user.user_metadata?.full_name || null,
+                            onlineAt: new Date().toISOString()
+                        })
+                    }
+                }
+            })
+
+        // 2. Add lightweight heartbeat ticker (3s)
+        const heartbeatId = setInterval(() => {
+            fetchMonitorStats(false)
+        }, 3000)
 
         return () => {
             supabase.removeChannel(channel)
+            clearInterval(heartbeatId)
         }
     }, [activeTab])
 
@@ -191,24 +233,301 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
     const pendingPayments = payments.filter(p => p.status === "pending")
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-5">
-                <div>
-                    <h1 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                        <Shield className="h-6 w-6 text-primary" />
-                        {t("title") || "Admin Dashboard"}
-                    </h1>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Global administrative console for managing plans, payments, and users.
-                    </p>
-                </div>
-                <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} />
+        <div className="space-y-2 lg:space-y-4 max-w-5xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <Header level={2}>{t("title") || "Admin Dashboard"}</Header>
+                <Tab options={tabOptions} value={activeTab} onChange={setActiveTab} className="bg-card" />
             </div>
+
+            {activeTab === "monitor" && (
+                <div className="space-y-1 lg:space-y-2">
+                    <div className="flex justify-between items-center bg-card p-2 lg:p-4 rounded-sm border">
+                        <div>
+                            <h3 className="text-sm font-bold flex items-center gap-2">
+                                System Infrastructure & Database Metrics
+                                <Badge variant="outline" className="text-[10px] text-primary bg-primary/10 border-primary/50 gap-2">
+                                    <span className="w-1 h-1 rounded-full bg-primary animate-ping" /> Live
+                                </Badge>
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                                Real-time connection status, latency, and Supabase data breakdown.
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchMonitorStats(true)}
+                            disabled={isLoadingStats}
+                            className="h-8 gap-1.5 text-xs font-medium"
+                        >
+                            <RefreshCw className={cn("h-4 w-4", isLoadingStats && "animate-spin")} />
+                            Refresh Stats
+                        </Button>
+                    </div>
+
+                    {/* Services Status Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-1 lg:gap-2">
+                        <Card className="border py-2 lg:py-4 rounded-sm bg-card space-y-1 lg:space-y-2">
+                            <CardHeader className="flex items-center justify-between">
+                                <Header level={5}>Database (PostgreSQL)</Header>
+                                <Database className="h-4 w-4 text-emerald-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-black">
+                                        {monitorStats?.services.database === 'operational' ? (
+                                            <span className="text-emerald-500 flex items-center gap-2">
+                                                <CheckCircle className="h-4 w-4" /> Operational
+                                            </span>
+                                        ) : (
+                                            <span className="text-destructive flex items-center gap-2">
+                                                <XCircle className="h-4 w-4" /> Issue Detected
+                                            </span>
+                                        )}
+                                    </span>
+                                    <Badge variant="outline" className="text-[10px]">
+                                        {monitorStats?.latencyMs ? `${monitorStats.latencyMs} ms` : '-'}
+                                    </Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border py-2 lg:py-4 rounded-sm bg-card space-y-1 lg:space-y-2">
+                            <CardHeader className="flex items-center justify-between">
+                                <Header level={5}>Auth Service (GoTrue)</Header>
+                                <Shield className="h-4 w-4 text-sky-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-black">
+                                        {monitorStats?.services.auth === 'operational' ? (
+                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
+                                                <CheckCircle className="h-4 w-4" /> Operational
+                                            </span>
+                                        ) : (
+                                            <span className="text-destructive flex items-center gap-1.5 text-base">
+                                                <XCircle className="h-4 w-4" /> Service Down
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border py-2 lg:py-4 rounded-sm bg-card space-y-1 lg:space-y-2">
+                            <CardHeader className="flex items-center justify-between">
+                                <Header level={5}>Storage Engine</Header>
+                                <HardDrive className="h-4 w-4 text-purple-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-black">
+                                        {monitorStats?.services.storage === 'operational' ? (
+                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
+                                                <CheckCircle className="h-4 w-4" /> Operational
+                                            </span>
+                                        ) : (
+                                            <span className="text-destructive flex items-center gap-1.5 text-base">
+                                                <XCircle className="h-4 w-4" /> Service Down
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Active Logged-in Users Card */}
+                    <div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <Header level={4}>Active Logged-in Sessions (USER_ACTIVE)</Header>
+                                <CardDescription>Realtime online user sessions tracked via Supabase Realtime Presence.</CardDescription>
+                            </div>
+                            {(() => {
+                                const allActiveUsers = [...(monitorStats?.activeUsers || [])]
+                                presenceUsers.forEach(pu => {
+                                    if (!allActiveUsers.some(u => u.id === pu.id || u.email === pu.email)) {
+                                        allActiveUsers.push(pu)
+                                    }
+                                })
+                                return (
+                                    <Badge variant="outline" className="text-[10px] font-mono bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                        {presenceUsers.length} Online
+                                    </Badge>
+                                )
+                            })()}
+                        </div>
+                    </div>
+                    <div>
+                        {(() => {
+                            const allActiveUsers = [...(monitorStats?.activeUsers || [])]
+                            presenceUsers.forEach(pu => {
+                                if (!allActiveUsers.some(u => u.id === pu.id || u.email === pu.email)) {
+                                    allActiveUsers.push(pu)
+                                }
+                            })
+
+                            if (allActiveUsers.length === 0) {
+                                return <p className="text-xs text-muted-foreground text-center py-4">No active user sessions.</p>
+                            }
+
+                            return (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 lg:gap-2">
+                                    {allActiveUsers.map((user) => {
+                                        const isRealtimeOnline = presenceUsers.some(pu => pu.id === user.id || pu.email === user.email)
+                                        return (
+                                            <div
+                                                key={user.id}
+                                                className={cn(
+                                                    "p-2 lg:p-4 rounded-sm border flex flex-col justify-between space-y-2 text-xs",
+                                                    isRealtimeOnline ? "bg-primary/10 border-primary/50" : "bg-card"
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="font-bold text-foreground truncate">{user.full_name || user.email}</span>
+                                                    {isRealtimeOnline ? (
+                                                        <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/50">
+                                                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" /> Online
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-[9px] bg-card">
+                                                            <span className="w-2 h-2 rounded-full bg-muted-foreground" /> Offline
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <div className="text-[10px] text-muted-foreground">
+                                                    {user.email}
+                                                </div>
+                                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                                    <span>IP: {user.ip}</span>
+                                                    <span>Last: {new Date(user.lastActive).toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )
+                        })()}
+                    </div>
+
+                    {/* Table Row Breakdown */}
+                    <div className="space-y-1 lg:space-y-2">
+                        <div>
+                            <Header level={4}>Database Table Statistics</Header>
+                            <CardDescription>Live row counts across core data tables in Supabase.</CardDescription>
+                        </div>
+                        <div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 lg:gap-2 text-center">
+                                <div className="p-3 rounded-md bg-card border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.users ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground mt-1">Users</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-card border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.tournaments ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground mt-1">Tournaments</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-card border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.teams ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground mt-1">Teams</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-card border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.matches ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground mt-1">Matches</div>
+                                </div>
+                                <div className="p-3 rounded-md bg-card border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.payments ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground mt-1">Payments</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* System Activity & Logs */}
+                    <div className="space-y-1 lg:space-y-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                            <div>
+                                <Header level={4}>System Activity & Logs</Header>
+                                <CardDescription>Live system activity, registration events, and visitor logs fetched from Supabase.</CardDescription>
+                            </div>
+                            <Tab
+                                options={[
+                                    { value: "all", label: "All Logs" },
+                                    { value: "auth", label: "Logged-in Users", icon: Shield },
+                                    { value: "guest", label: "Guests / Public", icon: Users }
+                                ]}
+                                value={logFilterTab}
+                                onChange={(val) => setLogFilterTab(val)}
+                                className="bg-card"
+                            />
+                        </div>
+                        <div>
+                            {(() => {
+                                const filteredLogs = (monitorStats?.recentLogs || []).filter(log => {
+                                    if (logFilterTab === "auth") return log.isAuthenticated === true
+                                    if (logFilterTab === "guest") return log.isAuthenticated === false
+                                    return true
+                                })
+
+                                if (filteredLogs.length === 0) {
+                                    return <p className="text-xs text-muted-foreground text-center">No logs available for this filter.</p>
+                                }
+
+                                return (
+                                    <div className="space-y-1 lg:space-y-2">
+                                        {filteredLogs.map((log) => (
+                                            <div
+                                                key={log.id}
+                                                className="flex items-center justify-between p-2.5 rounded-md bg-muted/40 border text-xs"
+                                            >
+                                                <div className="flex items-center gap-1 lg:gap-2">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "text-[10px]",
+                                                            log.level === "error" && "border-destructive/40 bg-destructive/10 text-destructive",
+                                                            log.level === "warning" && "border-amber-500/40 bg-amber-500/10 text-amber-600",
+                                                            log.event === "PAGE_VIEW" && "border-teal-500/40 bg-teal-500/10 text-teal-600 font-bold",
+                                                            log.event === "TOURNAMENT_CREATED" && "border-purple-500/40 bg-purple-500/10 text-purple-600",
+                                                            log.event === "TOURNAMENT_UPDATED" && "border-amber-500/40 bg-amber-500/10 text-amber-600 font-bold",
+                                                            log.event === "TOURNAMENT_DELETED" && "border-rose-500/40 bg-rose-500/10 text-rose-600 font-bold",
+                                                            log.event === "CATEGORY_CREATED" && "border-pink-500/40 bg-pink-500/10 text-pink-600",
+                                                            log.event === "BRACKET_NODE_UPDATED" && "border-orange-500/40 bg-orange-500/10 text-orange-600",
+                                                            log.event === "MATCH_SCORE_UPDATED" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 font-bold",
+                                                            log.event === "TEAM_CREATED" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600",
+                                                            log.event === "TEAM_UPDATED" && "border-amber-500/40 bg-amber-500/10 text-amber-600 font-bold",
+                                                            log.event === "TEAM_DELETED" && "border-rose-500/40 bg-rose-500/10 text-rose-600 font-bold",
+                                                            log.event === "TEAM_REGISTERED" && "border-cyan-500/40 bg-cyan-500/10 text-cyan-600",
+                                                            log.event === "TEAM_ACCEPTED" && "border-green-500/40 bg-green-500/10 text-green-600 font-bold",
+                                                            log.event === "TEAM_REJECTED" && "border-red-500/40 bg-red-500/10 text-red-600 font-bold",
+                                                            log.event === "PLAYER_ADDED" && "border-indigo-500/40 bg-indigo-500/10 text-indigo-600",
+                                                            log.event === "PLAYER_UPDATED" && "border-violet-500/40 bg-violet-500/10 text-violet-600 font-bold",
+                                                            log.event === "USER_REGISTERED" && "border-sky-500/40 bg-sky-500/10 text-sky-600",
+                                                            log.event === "COOKIE_CONSENT" && "border-purple-500/40 bg-purple-500/10 text-purple-600 font-bold",
+                                                            log.event === "PAYMENT_TRANSACTION" && log.level === "info" && "border-blue-500/40 bg-blue-500/10 text-blue-600"
+                                                        )}
+                                                    >
+                                                        {log.event}
+                                                    </Badge>
+                                                    <span className="font-medium text-foreground">{log.message}</span>
+                                                </div>
+                                                <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap ml-2">
+                                                    {new Date(log.timestamp).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            })()}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {activeTab === "pending" && (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">
+                        <CardTitle className="text-sm font-bold tracking-wider text-primary">
                             {t("payments_pending") || "Pending Approvals"}
                         </CardTitle>
                         <CardDescription className="text-xs">
@@ -303,7 +622,7 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                     <CardHeader className="space-y-4">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">
+                                <CardTitle className="text-sm font-bold tracking-wider text-primary">
                                     {t("payments_management") || "Payments Management"}
                                 </CardTitle>
                                 <CardDescription className="text-xs">
@@ -408,7 +727,7 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                     <CardHeader className="space-y-4">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div>
-                                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">
+                                <CardTitle className="text-sm font-bold tracking-wider text-primary">
                                     {t("users_management") || "Users & Roles"}
                                 </CardTitle>
                                 <CardDescription className="text-xs">
@@ -494,221 +813,6 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                         )}
                     </CardContent>
                 </Card>
-            )}
-
-            {activeTab === "monitor" && (
-                <div className="space-y-6">
-                    <div className="flex justify-between items-center bg-card p-4 rounded-lg border">
-                        <div>
-                            <h3 className="text-sm font-bold flex items-center gap-2">
-                                <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
-                                System Infrastructure & Database Metrics
-                                <Badge variant="outline" className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 border-emerald-500/20 gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Live (Realtime)
-                                </Badge>
-                            </h3>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Real-time connection status, latency, and Supabase data breakdown.
-                            </p>
-                        </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fetchMonitorStats(true)}
-                            disabled={isLoadingStats}
-                            className="h-8 gap-1.5 text-xs font-medium"
-                        >
-                            <RefreshCw className={cn("h-3.5 w-3.5", isLoadingStats && "animate-spin")} />
-                            Refresh Stats
-                        </Button>
-                    </div>
-
-                    {/* Services Status Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardDescription className="text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
-                                    <span>Database (PostgreSQL)</span>
-                                    <Database className="h-4 w-4 text-emerald-500" />
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xl font-black">
-                                        {monitorStats?.services.database === 'operational' ? (
-                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
-                                                <CheckCircle className="h-4 w-4" /> Operational
-                                            </span>
-                                        ) : (
-                                            <span className="text-destructive flex items-center gap-1.5 text-base">
-                                                <XCircle className="h-4 w-4" /> Issue Detected
-                                            </span>
-                                        )}
-                                    </span>
-                                    <Badge variant="outline" className="text-[10px] font-mono">
-                                        {monitorStats?.latencyMs ? `${monitorStats.latencyMs} ms` : '-'}
-                                    </Badge>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardDescription className="text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
-                                    <span>Auth Service (GoTrue)</span>
-                                    <Shield className="h-4 w-4 text-sky-500" />
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xl font-black">
-                                        {monitorStats?.services.auth === 'operational' ? (
-                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
-                                                <CheckCircle className="h-4 w-4" /> Operational
-                                            </span>
-                                        ) : (
-                                            <span className="text-destructive flex items-center gap-1.5 text-base">
-                                                <XCircle className="h-4 w-4" /> Service Down
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardDescription className="text-xs font-semibold uppercase tracking-wider flex items-center justify-between">
-                                    <span>Storage Engine</span>
-                                    <HardDrive className="h-4 w-4 text-purple-500" />
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xl font-black">
-                                        {monitorStats?.services.storage === 'operational' ? (
-                                            <span className="text-emerald-500 flex items-center gap-1.5 text-base">
-                                                <CheckCircle className="h-4 w-4" /> Operational
-                                            </span>
-                                        ) : (
-                                            <span className="text-destructive flex items-center gap-1.5 text-base">
-                                                <XCircle className="h-4 w-4" /> Service Down
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Table Row Breakdown */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                                <Server className="h-4 w-4" />
-                                Database Table Statistics
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                                Live row counts across core data tables in Supabase.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 text-center">
-                                <div className="p-3 rounded-md bg-muted/40 border">
-                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.users ?? '-'}</div>
-                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Users</div>
-                                </div>
-                                <div className="p-3 rounded-md bg-muted/40 border">
-                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.tournaments ?? '-'}</div>
-                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Tournaments</div>
-                                </div>
-                                <div className="p-3 rounded-md bg-muted/40 border">
-                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.teams ?? '-'}</div>
-                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Teams</div>
-                                </div>
-                                <div className="p-3 rounded-md bg-muted/40 border">
-                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.matches ?? '-'}</div>
-                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Matches</div>
-                                </div>
-                                <div className="p-3 rounded-md bg-muted/40 border">
-                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.payments ?? '-'}</div>
-                                    <div className="text-[11px] font-medium text-muted-foreground uppercase mt-1">Payments</div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* System Activity & Logs */}
-                    <Card>
-                        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div>
-                                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                                    <Zap className="h-4 w-4 text-amber-500" />
-                                    System Activity & Logs
-                                </CardTitle>
-                                <CardDescription className="text-xs">
-                                    Live system activity, registration events, and visitor logs fetched from Supabase.
-                                </CardDescription>
-                            </div>
-                            <Tab
-                                options={[
-                                    { value: "all", label: "All Logs" },
-                                    { value: "auth", label: "Logged-in Users", icon: Shield },
-                                    { value: "guest", label: "Guests / Public", icon: Users }
-                                ]}
-                                value={logFilterTab}
-                                onChange={(val) => setLogFilterTab(val)}
-                            />
-                        </CardHeader>
-                        <CardContent>
-                            {(() => {
-                                const filteredLogs = (monitorStats?.recentLogs || []).filter(log => {
-                                    if (logFilterTab === "auth") return log.isAuthenticated === true
-                                    if (logFilterTab === "guest") return log.isAuthenticated === false
-                                    return true
-                                })
-
-                                if (filteredLogs.length === 0) {
-                                    return <p className="text-xs text-muted-foreground text-center py-6">No logs available for this filter.</p>
-                                }
-
-                                return (
-                                    <div className="space-y-2">
-                                        {filteredLogs.map((log) => (
-                                            <div
-                                                key={log.id}
-                                                className="flex items-center justify-between p-2.5 rounded-md bg-muted/40 border text-xs"
-                                            >
-                                                <div className="flex items-center gap-2.5">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={cn(
-                                                            "text-[10px] font-mono uppercase px-1.5 py-0.5 whitespace-nowrap",
-                                                            log.level === "error" && "border-destructive/40 bg-destructive/10 text-destructive",
-                                                            log.level === "warning" && "border-amber-500/40 bg-amber-500/10 text-amber-600",
-                                                            log.event === "PAGE_VIEW" && "border-teal-500/40 bg-teal-500/10 text-teal-600 font-bold",
-                                                            log.event === "TOURNAMENT_CREATED" && "border-purple-500/40 bg-purple-500/10 text-purple-600",
-                                                            log.event === "TEAM_REGISTERED" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-600",
-                                                            log.event === "PLAYER_ADDED" && "border-indigo-500/40 bg-indigo-500/10 text-indigo-600",
-                                                            log.event === "USER_REGISTERED" && "border-sky-500/40 bg-sky-500/10 text-sky-600",
-                                                            log.event === "PAYMENT_TRANSACTION" && log.level === "info" && "border-blue-500/40 bg-blue-500/10 text-blue-600"
-                                                        )}
-                                                    >
-                                                        {log.event}
-                                                    </Badge>
-                                                    <span className="font-medium text-foreground">{log.message}</span>
-                                                </div>
-                                                <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap ml-2">
-                                                    {new Date(log.timestamp).toLocaleString()}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )
-                            })()}
-                        </CardContent>
-                    </Card>
-                </div>
             )}
         </div>
     )

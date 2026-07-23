@@ -208,6 +208,14 @@ export interface SystemLogItem {
     isAuthenticated?: boolean
 }
 
+export interface ActiveUserInfo {
+    id: string
+    email: string
+    full_name: string | null
+    ip: string
+    lastActive: string
+}
+
 export interface SystemMonitorStats {
     dbConnected: boolean
     latencyMs: number
@@ -224,6 +232,7 @@ export interface SystemMonitorStats {
         auth: 'operational' | 'degraded' | 'down'
         storage: 'operational' | 'degraded' | 'down'
     }
+    activeUsers?: ActiveUserInfo[]
     recentLogs?: SystemLogItem[]
 }
 
@@ -267,99 +276,88 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
             { data: recentPayments },
             { data: recentUsers },
             { data: recentTournaments },
+            { data: recentUpdatedTournaments },
+            { data: recentCategories },
             { data: recentTeams },
-            { data: recentPlayers }
+            { data: recentUpdatedTeams },
+            { data: recentTournamentTeams },
+            { data: recentPlayers },
+            { data: recentUpdatedPlayers },
+            { data: recentMatches },
+            { data: recentUpdatedMatches },
+            { data: recentAuditLogs }
         ] = await Promise.all([
-            supabase.from("payments").select("id, amount, payment_status, created_at, plan_name").order("created_at", { ascending: false }).limit(5),
-            supabase.from("users").select("id, email, full_name, created_at").order("created_at", { ascending: false }).limit(5),
-            supabase.from("tournaments").select("id, name, created_at").order("created_at", { ascending: false }).limit(5),
-            supabase.from("teams").select("id, name, created_at").order("created_at", { ascending: false }).limit(5),
-            supabase.from("players").select("id, name, first_name, last_name, created_at").order("created_at", { ascending: false }).limit(5)
+            supabase.from("payments").select("id, amount, payment_status, created_at, plan_name, user:users(email, full_name)").order("created_at", { ascending: false }).limit(5),
+            supabase.from("users").select("id, email, full_name, created_at, updated_at").order("updated_at", { ascending: false }).limit(10),
+            supabase.from("tournaments").select("id, name, created_at, user:users(email, full_name)").order("created_at", { ascending: false }).limit(5),
+            supabase.from("tournaments").select("id, name, updated_at, user:users(email, full_name)").order("updated_at", { ascending: false }).limit(5),
+            supabase.from("tournament_categories").select("id, name, created_at, tournament:tournaments(name, user:users(email))").order("created_at", { ascending: false }).limit(5),
+            supabase.from("teams").select("id, name, created_at, user:users(email, full_name)").order("created_at", { ascending: false }).limit(5),
+            supabase.from("teams").select("id, name, updated_at, created_at, user:users(email, full_name)").order("updated_at", { ascending: false }).limit(5),
+            supabase.from("tournament_teams").select("id, registration_status, payment_status, created_at, updated_at, team:teams(name, user:users(email)), category:tournament_categories(name, tournament:tournaments(name))").order("updated_at", { ascending: false }).limit(10),
+            supabase.from("players").select("id, name, first_name, last_name, created_at, user:users(email, full_name)").order("created_at", { ascending: false }).limit(5),
+            supabase.from("players").select("id, name, first_name, last_name, updated_at, created_at, user:users(email, full_name)").order("updated_at", { ascending: false }).limit(5),
+            supabase.from("matches").select("id, round_name, match_number, created_at, tournament:tournaments(name, user:users(email))").order("created_at", { ascending: false }).limit(5),
+            supabase.from("matches").select("id, round_name, match_number, status, team_a_score, team_b_score, updated_at, created_at, tournament:tournaments(name, user:users(email))").order("updated_at", { ascending: false }).limit(5),
+            supabase.from("audit_logs").select("id, user_id, action, target_type, target_id, details, created_at").order("created_at", { ascending: false }).limit(20)
         ])
 
         // Check current session to mark active visitor authentication state
         const { data: { user: currentUser } } = await supabase.auth.getUser()
 
-        const logs: SystemLogItem[] = [
-            {
-                id: `ip_active_${Date.now()}`,
-                event: "PAGE_VIEW",
-                level: "info",
-                message: currentUser 
-                    ? `Authenticated session active from IP: ${clientIp} (${currentUser.email})`
-                    : `Guest (Public Visitor) connected from IP: ${clientIp}`,
-                timestamp: new Date().toISOString(),
-                isAuthenticated: !!currentUser
-            }
-        ]
+        const logs: SystemLogItem[] = []
 
+        // 1. Log USER_REGISTERED when a new user signs up (using exact account creation time)
         if (recentUsers) {
             recentUsers.forEach(u => {
                 logs.push({
-                    id: `usr_${u.id}`,
+                    id: `usr_reg_${u.id}`,
                     event: "USER_REGISTERED",
                     level: "info",
-                    message: `New user registered: ${u.full_name || u.email}`,
+                    message: `New user registered: ${u.full_name ? `${u.full_name} (${u.email})` : u.email}`,
                     timestamp: u.created_at,
                     isAuthenticated: true
                 })
             })
         }
 
-        if (recentPayments) {
-            recentPayments.forEach(p => {
-                logs.push({
-                    id: `pay_${p.id}`,
-                    event: "PAYMENT_TRANSACTION",
-                    level: p.payment_status === "failed" ? "error" : p.payment_status === "pending" ? "warning" : "info",
-                    message: `Payment ${p.payment_status}: ${p.plan_name} (${Number(p.amount).toLocaleString()} THB)`,
-                    timestamp: p.created_at,
-                    isAuthenticated: true
-                })
+        // 2. Log audit_logs events (e.g. COOKIE_CONSENT)
+        if (recentAuditLogs) {
+            recentAuditLogs.forEach(al => {
+                if (al.action === "COOKIE_CONSENT") {
+                    const isAnalyticsAccepted = al.target_id === "analytics_accepted"
+                    logs.push({
+                        id: `audit_${al.id}`,
+                        event: "COOKIE_CONSENT",
+                        level: "info",
+                        message: isAnalyticsAccepted
+                            ? "Visitor accepted analysis cookies (All Cookies)"
+                            : "Visitor accepted necessary cookies only",
+                        timestamp: al.created_at,
+                        isAuthenticated: !!al.user_id
+                    })
+                }
             })
         }
 
-        if (recentTournaments) {
-            recentTournaments.forEach(t => {
-                logs.push({
-                    id: `tour_${t.id}`,
-                    event: "TOURNAMENT_CREATED",
-                    level: "info",
-                    message: `Tournament created: "${t.name}"`,
-                    timestamp: t.created_at,
-                    isAuthenticated: true
-                })
-            })
-        }
+        // Fetch auth users using Admin Supabase client to get actual last_sign_in_at timestamps
+        const adminSupabase = createAdminClient()
+        const { data: authUsersData } = await adminSupabase.auth.admin.listUsers({ page: 1, perPage: 20 })
+        const authUsersMap = new Map((authUsersData?.users || []).map(u => [u.id, u]))
 
-        if (recentTeams) {
-            recentTeams.forEach(tm => {
-                logs.push({
-                    id: `team_${tm.id}`,
-                    event: "TEAM_REGISTERED",
-                    level: "info",
-                    message: `New team registered: "${tm.name}"`,
-                    timestamp: tm.created_at,
-                    isAuthenticated: true
-                })
-            })
-        }
+        const activeUsersList: ActiveUserInfo[] = (recentUsers || []).map(u => {
+            const authUser = authUsersMap.get(u.id)
+            const lastSignIn = authUser?.last_sign_in_at || u.updated_at || u.created_at
+            return {
+                id: u.id,
+                email: u.email,
+                full_name: u.full_name,
+                ip: u.id === currentUser?.id ? clientIp : '127.0.0.1',
+                lastActive: u.id === currentUser?.id ? new Date().toISOString() : (lastSignIn || new Date().toISOString())
+            }
+        })
 
-        if (recentPlayers) {
-            recentPlayers.forEach(pl => {
-                const playerName = pl.name || `${pl.first_name || ''} ${pl.last_name || ''}`.trim() || 'Unnamed Player'
-                logs.push({
-                    id: `plr_${pl.id}`,
-                    event: "PLAYER_ADDED",
-                    level: "info",
-                    message: `Player added: ${playerName}`,
-                    timestamp: pl.created_at,
-                    isAuthenticated: true
-                })
-            })
-        }
-
-        // Sort combined logs by timestamp descending
+        // Sort logs descending by timestamp
         logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
         return {
@@ -374,13 +372,14 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
                     matches: matchesCount || 0,
                     payments: paymentsCount || 0
                 },
-                recentErrorsCount: logs.filter(l => l.level === "error").length,
+                recentErrorsCount: 0,
                 services: {
                     database: pingError ? 'down' : (latencyMs > 500 ? 'degraded' : 'operational'),
                     auth: authError ? 'down' : 'operational',
                     storage: storageError ? 'down' : 'operational'
                 },
-                recentLogs: logs.slice(0, 12)
+                activeUsers: activeUsersList,
+                recentLogs: logs
             }
         }
     } catch (e) {
