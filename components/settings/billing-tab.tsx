@@ -22,7 +22,7 @@ import { Tab } from "@/components/ui/tab";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const getPlanPrice = (plan: Plan) => {
-    const isFreeOrPro = plan.id === "starter" || plan.id === "pro";
+    const isFreeOrPro = plan.id === "starter" || plan.id === "match" || plan.id === "pro" || plan.id === "event";
     return isFreeOrPro ? 0 : (plan.discounted_price || plan.price);
 };
 
@@ -155,8 +155,8 @@ export function BillingTab() {
 
     // Helper to get plan displayName
     const getPlanName = (planId: string) => {
-        if (planId === "starter" || planId === "free") return t("plan_starter");
-        if (planId === "pro") return t("plan_pro") || "Event";
+        if (planId === "match" || planId === "starter" || planId === "free") return t("plan_starter");
+        if (planId === "event" || planId === "pro") return t("plan_pro") || "Event";
         if (planId === "pro_yearly" || planId === "yearly") return t("plan_pro_yearly");
         if (planId === "cup") return t("plan_cup") || "Cup";
         if (planId === "cup_yearly") return t("plan_cup_yearly") || "Cup Yearly";
@@ -167,7 +167,8 @@ export function BillingTab() {
 
     const getPlanFeatures = (planId: string): string[] => {
         try {
-            const rawFeatures = t.raw(`features.${planId}`);
+            const featureKey = planId === "match" ? "starter" : planId === "event" ? "pro" : planId;
+            const rawFeatures = t.raw(`features.${featureKey}`);
             if (Array.isArray(rawFeatures)) return rawFeatures;
         } catch (error) {
             console.error(`Error loading features for ${planId}:`, error);
@@ -233,9 +234,9 @@ export function BillingTab() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 items-stretch">
                         {filteredPlans.map((plan) => {
-                            const isCurrent = activePlan === plan.id || (plan.id === 'starter' && activePlan === 'free') || (plan.id === 'pro' && activePlan === 'monthly') || (plan.id === 'pro_yearly' && activePlan === 'yearly');
+                            const isCurrent = activePlan === plan.id || ((plan.id === 'starter' || plan.id === 'match') && activePlan === 'free') || ((plan.id === 'pro' || plan.id === 'event') && (activePlan === 'monthly' || activePlan === 'event' || activePlan === 'pro')) || (plan.id === 'pro_yearly' && activePlan === 'yearly');
                             const isCustoms = plan.id === 'customs';
-                            const isPro = plan.id === 'pro';
+                            const isPro = plan.id === 'pro' || plan.id === 'event';
                             const isProYearly = plan.id === 'pro_yearly';
                             const isManagerPro = plan.id === 'manager_pro';
                             const isCup = plan.id === 'cup';
@@ -269,7 +270,7 @@ export function BillingTab() {
                                         <p className="text-muted-foreground text-[10px]">
                                             {isPro
                                                 ? t("proDesc")
-                                                : plan.id === "starter"
+                                                : (plan.id === "starter" || plan.id === "match")
                                                     ? t("starterDesc")
                                                     : isProYearly
                                                         ? t("proYearlyDesc")

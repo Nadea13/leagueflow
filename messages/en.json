@@ -1581,8 +1581,8 @@
                 "Live score display for streaming (OBS Overlay)"
             ],
             "pro": [
-                "Create up to 5 tournaments",
-                "Create up to 15 tournament categories",
+                "Create up to 5 tournaments per month",
+                "Create up to 3 categories per tournament",
                 "Limit up to 32 teams per tournament",
                 "Real-time match events / scorers / fouls recording",
                 "Add co-staff to manage matches",
@@ -1591,8 +1591,8 @@
             ],
             "pro_yearly": [
                 "Save 2 months compared to monthly!",
-                "Create up to 5 tournaments",
-                "Create up to 15 tournament categories",
+                "Create up to 5 tournaments per month",
+                "Create up to 3 categories per tournament",
                 "Limit up to 32 teams per tournament",
                 "Real-time match events / scorers / fouls recording",
                 "Add co-staff to manage matches",
@@ -1600,18 +1600,18 @@
                 "Live score display for streaming (OBS Overlay)"
             ],
             "cup": [
-                "Create up to 20 tournaments",
-                "Create up to 60 tournament categories",
-                "Limit up to 128 teams per tournament",
+                "Create up to 20 tournaments per month",
+                "Create up to 5 categories per tournament",
+                "Limit up to 128 teams per category",
                 "Real-time match events / scorers / fouls recording",
                 "Add co-staff to manage matches",
                 "Registration system with PromptPay payment",
                 "Live score display for streaming (OBS Overlay)"
             ],
             "cup_yearly": [
-                "Create up to 20 tournaments",
-                "Create up to 60 tournament categories",
-                "Limit up to 128 teams per tournament",
+                "Create up to 20 tournaments per month",
+                "Create up to 5 categories per tournament",
+                "Limit up to 128 teams per category",
                 "Real-time match events / scorers / fouls recording",
                 "Add co-staff to manage matches",
                 "Registration system with PromptPay payment",

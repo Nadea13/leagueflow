@@ -17,6 +17,7 @@ import { CategorySettings } from "./category-settings";
 export function TournamentSettings({
     tournament,
     activeTab = 'general',
+    userPlan,
     activeCategoryId
 }: {
     tournament: Tournament;
@@ -67,7 +68,7 @@ export function TournamentSettings({
                 <LocationSettings tournament={tournament} />
             }
             {activeTab === 'staff' && (
-                <StaffSettings tournamentId={tournamentId} togglePayment={togglePayment} />
+                <StaffSettings tournamentId={tournamentId} userPlan={userPlan} togglePayment={togglePayment} />
             )}
             {activeTab === 'danger' && (
                 <DangerZone

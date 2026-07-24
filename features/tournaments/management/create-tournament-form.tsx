@@ -91,8 +91,8 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
             toast({
                 title: "Error",
                 description: locale === 'th'
-                    ? "ผู้ใช้ทั่วไปสามารถสร้างการแข่งขันได้สูงสุด 1 รายการเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
-                    : "Starter plan users can create only 1 tournament. Please upgrade to a Pro plan.",
+                    ? "คุณถึงขีดจำกัดการสร้างทัวร์นาเมนต์สำหรับแพ็คเกจของคุณแล้ว กรุณาอัพเกรดแพ็คเกจ"
+                    : "You have reached the tournament creation limit for your plan. Please upgrade your plan.",
                 variant: "destructive"
             });
             return;

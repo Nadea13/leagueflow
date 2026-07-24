@@ -1082,13 +1082,20 @@ function CanvasInternal({
                                 value={activeCategoryId || ""}
                                 onValueChange={(val) => {
                                     if (val === "create_new") {
-                                        const isProUser = userPlan === "monthly" || userPlan === "yearly" || userPlan === "manager_pro" || userPlan === "pro" || userPlan === "pro_yearly" || userPlan === "customs";
-                                        if (!isProUser && categories.length >= 1) {
+                                        const isUnlimitedPlan = userPlan === "yearly" || userPlan === "pro_yearly" || userPlan === "cup_yearly" || userPlan === "customs";
+                                        const isEventPlan = userPlan === "event" || userPlan === "monthly" || userPlan === "pro" || userPlan === "manager_pro" || userPlan === "cup";
+                                        const maxAllowedCategories = isUnlimitedPlan ? Infinity : (isEventPlan ? 3 : 1);
+
+                                        if (categories.length >= maxAllowedCategories) {
                                             toast({
                                                 title: "Error",
                                                 description: locale === 'th'
-                                                    ? "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
-                                                    : "Starter plan users can create only 1 tournament category. Please upgrade to a Pro plan.",
+                                                    ? isEventPlan
+                                                        ? "แพ็คเกจ Event สามารถสร้างรุ่นการแข่งขันได้สูงสุด 3 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
+                                                        : "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดแพ็คเกจ"
+                                                    : isEventPlan
+                                                        ? "Event plan allows up to 3 categories per tournament."
+                                                        : "Free plan users can create only 1 tournament category. Please upgrade your plan.",
                                                 variant: "destructive"
                                             });
                                             return;
@@ -1891,18 +1898,37 @@ function CanvasInternal({
                                             <span className="text-sm font-medium whitespace-nowrap">{tSettings("location")}</span>
                                         </button>
 
-                                        <button
-                                            onClick={() => setActiveSettingsTab('staff')}
-                                            className={cn(
-                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                                activeSettingsTab === 'staff'
-                                                    ? "bg-primary/10 text-primary"
-                                                    : "text-muted-foreground hover:text-primary"
-                                            )}
-                                        >
-                                            <Users className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
-                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("staff")}</span>
-                                        </button>
+                                        {(() => {
+                                            const possessesStaffAccess = Boolean(
+                                                userPlan && (
+                                                    userPlan === "event" ||
+                                                    userPlan === "cup" ||
+                                                    userPlan === "cup_yearly" ||
+                                                    userPlan === "monthly" ||
+                                                    userPlan === "pro" ||
+                                                    userPlan === "yearly" ||
+                                                    userPlan === "pro_yearly" ||
+                                                    userPlan === "manager_pro" ||
+                                                    userPlan === "customs"
+                                                )
+                                            );
+                                            return (
+                                                <button
+                                                    disabled={!possessesStaffAccess}
+                                                    onClick={() => setActiveSettingsTab('staff')}
+                                                    className={cn(
+                                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
+                                                        activeSettingsTab === 'staff'
+                                                            ? "bg-primary/10 text-primary"
+                                                            : "text-muted-foreground hover:text-primary",
+                                                        !possessesStaffAccess && "opacity-50 cursor-not-allowed hover:text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <Users className={cn("h-4 w-4 transition-transform", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
+                                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("staff")}</span>
+                                                </button>
+                                            );
+                                        })()}
 
                                         <button
                                             onClick={() => setActiveSettingsTab('danger')}

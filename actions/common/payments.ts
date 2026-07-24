@@ -174,7 +174,7 @@ export async function createPaymentRecord(
         // Map database model to expected Payment interface
         const createdAt = new Date(paymentData.created_at);
         let subscriptionExpiresAt = null;
-        if (paymentData.plan_name === "monthly" || paymentData.plan_name === "pro" || paymentData.plan_name === "manager_pro" || paymentData.plan_name === "cup") {
+        if (paymentData.plan_name === "monthly" || paymentData.plan_name === "pro" || paymentData.plan_name === "manager_pro" || paymentData.plan_name === "cup" || paymentData.plan_name === "event") {
             const expires = new Date(createdAt);
             expires.setDate(createdAt.getDate() + 30);
             subscriptionExpiresAt = expires.toISOString();

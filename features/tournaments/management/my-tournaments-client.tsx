@@ -111,10 +111,20 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                     <div id="tour-create-tournament-btn" className="inline-block">
                         <TournamentCreate
                             iconOnlyMobile
-                            isDisabled={
-                                !(userPlan === "monthly" || userPlan === "yearly" || userPlan === "manager_pro" || userPlan === "pro" || userPlan === "pro_yearly" || userPlan === "customs") &&
-                                initialTournaments.filter(t => t.role === 'owner').length >= 1
-                            }
+                            isDisabled={(() => {
+                                const isUnlimitedPlan = userPlan === "yearly" || userPlan === "pro_yearly" || userPlan === "cup_yearly" || userPlan === "customs";
+                                const isCupPlan = userPlan === "cup";
+                                const isEventPlan = userPlan === "event" || userPlan === "monthly" || userPlan === "pro" || userPlan === "manager_pro";
+                                const ownedTournaments = initialTournaments.filter(t => t.role === 'owner');
+                                if (isUnlimitedPlan) return false;
+                                if (isEventPlan || isCupPlan) {
+                                    const maxMonthly = isCupPlan ? 20 : 5;
+                                    const currentYearMonth = new Date().toISOString().substring(0, 7);
+                                    const thisMonthCount = ownedTournaments.filter(t => (t.created_at || '').substring(0, 7) === currentYearMonth).length;
+                                    return thisMonthCount >= maxMonthly;
+                                }
+                                return ownedTournaments.length >= 1;
+                            })()}
                         />
                     </div>
                 </div>
@@ -128,10 +138,20 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                     action={
                         <div id="tour-create-tournament-btn-empty">
                             <TournamentCreate
-                                isDisabled={
-                                    !(userPlan === "monthly" || userPlan === "yearly" || userPlan === "manager_pro" || userPlan === "pro" || userPlan === "pro_yearly" || userPlan === "customs") &&
-                                    initialTournaments.filter(t => t.role === 'owner').length >= 1
-                                }
+                                isDisabled={(() => {
+                                    const isUnlimitedPlan = userPlan === "yearly" || userPlan === "pro_yearly" || userPlan === "cup_yearly" || userPlan === "customs";
+                                    const isCupPlan = userPlan === "cup";
+                                    const isEventPlan = userPlan === "event" || userPlan === "monthly" || userPlan === "pro" || userPlan === "manager_pro";
+                                    const ownedTournaments = initialTournaments.filter(t => t.role === 'owner');
+                                    if (isUnlimitedPlan) return false;
+                                    if (isEventPlan || isCupPlan) {
+                                        const maxMonthly = isCupPlan ? 20 : 5;
+                                        const currentYearMonth = new Date().toISOString().substring(0, 7);
+                                        const thisMonthCount = ownedTournaments.filter(t => (t.created_at || '').substring(0, 7) === currentYearMonth).length;
+                                        return thisMonthCount >= maxMonthly;
+                                    }
+                                    return ownedTournaments.length >= 1;
+                                })()}
                             />
                         </div>
                     }

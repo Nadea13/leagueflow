@@ -31,7 +31,7 @@ export async function getUserSubscriptionPlan() {
         .select("plan_name, created_at")
         .eq("user_id", user.id)
         .eq("payment_status", "success")
-        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly", "cup", "cup_yearly"])
+        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly", "cup", "cup_yearly", "event"])
         .is("tournament_id", null)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -42,7 +42,7 @@ export async function getUserSubscriptionPlan() {
         const createdAt = new Date(subscription.created_at);
         const expiresAt = new Date(createdAt);
         
-        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup") {
+        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup" || subscription.plan_name === "event") {
             expiresAt.setDate(createdAt.getDate() + 30);
         } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly" || subscription.plan_name === "cup_yearly") {
             expiresAt.setDate(createdAt.getDate() + 365);
@@ -77,7 +77,7 @@ export async function getUserSubscriptionDetails() {
         .select("plan_name, created_at")
         .eq("user_id", user.id)
         .eq("payment_status", "success")
-        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly", "cup", "cup_yearly"])
+        .in("plan_name", ["monthly", "yearly", "manager_pro", "pro", "pro_yearly", "cup", "cup_yearly", "event"])
         .is("tournament_id", null)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -88,7 +88,7 @@ export async function getUserSubscriptionDetails() {
         const createdAt = new Date(subscription.created_at);
         const expiresAt = new Date(createdAt);
         
-        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup") {
+        if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup" || subscription.plan_name === "event") {
             expiresAt.setDate(createdAt.getDate() + 30);
         } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly" || subscription.plan_name === "cup_yearly") {
             expiresAt.setDate(createdAt.getDate() + 365);

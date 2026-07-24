@@ -75,12 +75,14 @@ export function CreateCategoryForm({
 
         setIsPending(true);
         try {
-            // Client-side Pro Check
+            // Client-side Subscription & Limit Check
             const { getUserSubscriptionPlan } = await import("@/actions/common/user");
             const activePlan = await getUserSubscriptionPlan();
-            const isProUser = activePlan === "monthly" || activePlan === "yearly" || activePlan === "manager_pro" || activePlan === "pro" || activePlan === "pro_yearly" || activePlan === "customs";
+            const isUnlimitedPlan = activePlan === "yearly" || activePlan === "pro_yearly" || activePlan === "cup_yearly" || activePlan === "customs";
+            const isCupPlan = activePlan === "cup";
+            const isEventPlan = activePlan === "event" || activePlan === "monthly" || activePlan === "pro" || activePlan === "manager_pro";
 
-            if (!isProUser) {
+            if (!isUnlimitedPlan) {
                 const supabase = createClient();
                 const { count: categoryCount, error: categoryCountError } = await supabase
                     .from("tournament_categories")
@@ -92,24 +94,43 @@ export function CreateCategoryForm({
                     console.error("Error counting categories:", categoryCountError);
                 }
 
-                if (categoryCount && categoryCount >= 1) {
+                const maxAllowedCategories = isCupPlan ? 5 : isEventPlan ? 3 : 1;
+
+                if (categoryCount && categoryCount >= maxAllowedCategories) {
                     toast({
                         title: "Error",
                         description: locale === 'th'
-                            ? "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
-                            : "Starter plan users can create only 1 tournament category. Please upgrade to a Pro plan.",
+                            ? isCupPlan
+                                ? "แพ็คเกจ Cup สามารถสร้างรุ่นการแข่งขันได้สูงสุด 5 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
+                                : isEventPlan
+                                    ? "แพ็คเกจ Event สามารถสร้างรุ่นการแข่งขันได้สูงสุด 3 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
+                                    : "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดแพ็คเกจ"
+                            : isCupPlan
+                                ? "Cup plan allows up to 5 categories per tournament."
+                                : isEventPlan
+                                    ? "Event plan allows up to 3 categories per tournament."
+                                    : "Free plan users can create only 1 tournament category. Please upgrade your plan.",
                         variant: "destructive"
                     });
                     setIsPending(false);
                     return;
                 }
 
-                if (parseInt(maxTeams) > 12) {
+                const maxAllowedTeams = isCupPlan ? 128 : isEventPlan ? 32 : 12;
+                if (parseInt(maxTeams) > maxAllowedTeams) {
                     toast({
                         title: "Error",
                         description: locale === 'th'
-                            ? "ผู้ใช้ทั่วไปสามารถจำกัดจำนวนทีมได้สูงสุด 12 ทีมเท่านั้น กรุณาอัพเกรดเป็นแพ็คเกจ Pro"
-                            : "Starter plan users can set a maximum limit of 12 teams. Please upgrade to a Pro plan.",
+                            ? isCupPlan
+                                ? "แพ็คเกจ Cup สามารถจำกัดจำนวนทีมได้สูงสุด 128 ทีมต่อรุ่นเท่านั้น"
+                                : isEventPlan
+                                    ? "แพ็คเกจ Event สามารถจำกัดจำนวนทีมได้สูงสุด 32 ทีมต่อรุ่นเท่านั้น"
+                                    : "ผู้ใช้ทั่วไปสามารถจำกัดจำนวนทีมได้สูงสุด 12 ทีมต่อรุ่นเท่านั้น กรุณาอัพเกรดแพ็คเกจ"
+                            : isCupPlan
+                                ? "Cup plan allows a maximum of 128 teams per category."
+                                : isEventPlan
+                                    ? "Event plan allows a maximum of 32 teams per category."
+                                    : "Free plan users can set a maximum limit of 12 teams per category. Please upgrade your plan.",
                         variant: "destructive"
                     });
                     setIsPending(false);

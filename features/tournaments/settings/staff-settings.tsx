@@ -43,12 +43,13 @@ import {
 
 interface StaffSettingsProps {
     tournamentId: string;
+    userPlan?: string;
     isPro?: boolean;
     togglePayment?: () => void;
 }
 
-export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSettingsProps, 'isPro'>) {
-    const isPro = true; // Pro locks removed for all
+export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProps) {
+    const possessesStaffAccess = true;
     const t = useTranslations("StaffSettings");
     const tCommon = useTranslations("Common");
     const { toast } = useToast();
@@ -78,7 +79,7 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
     }, [tournamentId]);
 
     const handleInvite = async () => {
-        if (!isPro) return;
+        if (!possessesStaffAccess) return;
         if (!email.trim()) return;
 
         setIsInviting(true);
@@ -96,7 +97,7 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
     };
 
     const confirmRemove = async () => {
-        if (!removeMemberId || !isPro) return;
+        if (!removeMemberId || !possessesStaffAccess) return;
         const memberId = removeMemberId;
         setRemoveMemberId(null);
 
@@ -114,17 +115,26 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
     return (
         <div className="space-y-1 md:space-y-2">
             <div className="flex justify-end gap-1 md:gap-2">
-                <Dialog open={isPro && dialogOpen} onOpenChange={setDialogOpen}>
+                <Dialog open={possessesStaffAccess && dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button
-                            disabled={!isPro}
-                            onClick={() => !isPro && togglePayment?.()}
+                            disabled={!possessesStaffAccess}
+                            onClick={() => {
+                                if (!possessesStaffAccess) {
+                                    toast({
+                                        title: "ข้อจำกัดแพ็คเกจ",
+                                        description: "แพ็คเกจ Match ไม่รองรับการเพิ่มทีมงานจัดแข่ง กรุณาอัปเกรดเป็นแพ็คเกจ Event หรือ Cup",
+                                        variant: "destructive"
+                                    });
+                                    togglePayment?.();
+                                }
+                            }}
                         >
                             <Plus className="h-4 w-4" />
                             {t("invite")}
                         </Button>
                     </DialogTrigger>
-                    {isPro && (
+                    {possessesStaffAccess && (
                         <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card overflow-hidden shadow-2xl rounded-sm">
                             <DialogHeader className="relative p-2 md:p-4 border-b pr-10">
                                 <DialogTitle>{t("invite_title")}</DialogTitle>
@@ -183,30 +193,7 @@ export function StaffSettings({ tournamentId, togglePayment }: Omit<StaffSetting
 
                 <div className="relative z-10 space-y-2 lg:space-y-4">
 
-                    {!isPro && (
-                        <div className="p-1 lg:p-2 border relative overflow-hidden group/upsell">
-                            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                <div className="space-y-1">
-                                    <h4 className="text-[10px] font-black tracking-[0.2em] text-primary/80">{t("title")} (PRO)</h4>
-                                    <p className="text-xs font-medium text-muted-foreground/60 max-w-sm">
-                                        {t("upgrade_desc") || "Collaborate with your team to manage this tournament."}
-                                    </p>
-                                </div>
-                                <Button
-                                    onClick={togglePayment}
-                                    className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 px-8 font-black tracking-tighter transition-all relative group/upbtn overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-foreground/20 translate-y-full group-hover/upbtn:translate-y-0 transition-transform duration-300" />
-                                    <span className="relative z-10 flex items-center gap-2">
-                                        <Users className="h-4 w-4" />
-                                        {tCommon("upgrade_to_pro")}
-                                    </span>
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className={cn("space-y-2 md:space-y-4", !isPro && "opacity-40 grayscale pointer-events-none")}>
+                    <div className={cn("space-y-2 md:space-y-4", !possessesStaffAccess && "opacity-40 grayscale pointer-events-none")}>
                         {isLoading ? (
                             null
                         ) : staffSettings.length === 0 ? (
