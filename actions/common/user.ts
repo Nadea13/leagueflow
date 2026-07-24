@@ -43,9 +43,9 @@ export async function getUserSubscriptionPlan() {
         const expiresAt = new Date(createdAt);
         
         if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup" || subscription.plan_name === "event") {
-            expiresAt.setDate(createdAt.getDate() + 30);
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
         } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly" || subscription.plan_name === "cup_yearly") {
-            expiresAt.setDate(createdAt.getDate() + 365);
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
         }
 
         return now > expiresAt ? 'free' : (subscription.plan_name || 'free');
@@ -89,9 +89,9 @@ export async function getUserSubscriptionDetails() {
         const expiresAt = new Date(createdAt);
         
         if (subscription.plan_name === "monthly" || subscription.plan_name === "pro" || subscription.plan_name === "manager_pro" || subscription.plan_name === "cup" || subscription.plan_name === "event") {
-            expiresAt.setDate(createdAt.getDate() + 30);
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
         } else if (subscription.plan_name === "yearly" || subscription.plan_name === "pro_yearly" || subscription.plan_name === "cup_yearly") {
-            expiresAt.setDate(createdAt.getDate() + 365);
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
         }
 
         if (now > expiresAt) {
