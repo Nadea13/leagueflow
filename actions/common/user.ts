@@ -311,6 +311,67 @@ export async function searchMasterPlayers(query: string) {
     return { success: true, data };
 }
 
+export async function claimMasterPlayer(masterPlayerId: string): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        const adminSupabase = createAdminClient();
+
+        // 1. Check if player exists and if it is already claimed
+        const { data: existingPlayer, error: checkError } = await adminSupabase
+            .from("master_players")
+            .select("id, user_id")
+            .eq("id", masterPlayerId)
+            .single();
+
+        if (checkError || !existingPlayer) {
+            return { success: false, error: "Master player profile not found" };
+        }
+
+        if (existingPlayer.user_id) {
+            return { success: false, error: "This player profile has already been claimed by another user" };
+        }
+
+        // 2. Check if current user already has a master player profile
+        const { data: userCurrentPlayer } = await adminSupabase
+            .from("master_players")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+        if (userCurrentPlayer) {
+            return { success: false, error: "Your account is already linked to a master player profile" };
+        }
+
+        // 3. Link master player to current user (unverified until admin approves)
+        const { data: updatedPlayer, error: updateError } = await adminSupabase
+            .from("master_players")
+            .update({
+                user_id: user.id,
+                verified: false,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", masterPlayerId)
+            .select()
+            .single();
+
+        if (updateError) {
+            return { success: false, error: updateError.message };
+        }
+
+        revalidatePath("/", "layout");
+        return { success: true, data: updatedPlayer };
+    } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : "Failed to claim master player profile";
+        return { success: false, error: errorMessage };
+    }
+}
+
 export async function registerAsOrganizer(): Promise<ActionResponse> {
     try {
         const supabase = await createClient();

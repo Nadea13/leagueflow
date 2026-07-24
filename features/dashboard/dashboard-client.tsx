@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useTransition, useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { createMasterPlayer, getMasterPlayerStats } from "@/actions/common/user";
+import { createMasterPlayer, getMasterPlayerStats, searchMasterPlayers, claimMasterPlayer } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
     Trophy, User, Calendar, Phone, Search, HelpCircle,
-    AlertCircle, UserCheck, Activity, Edit,
+    AlertCircle, UserCheck, Activity, Edit, Link as LinkIcon, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,8 +112,47 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
     const [birthday, setBirthday] = useState("");
     const [tel, setTel] = useState("");
 
-    // Edit profile state
+    // Edit profile & Claim profile state
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [activeFormTab, setActiveFormTab] = useState<"create" | "claim">("create");
+    const [claimSearchQuery, setClaimSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<MasterPlayer[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [claimingPlayerId, setClaimingPlayerId] = useState<string | null>(null);
+
+    const handleSearchClaimablePlayers = async (q: string) => {
+        setClaimSearchQuery(q);
+        if (!q.trim()) {
+            setSearchResults([]);
+            return;
+        }
+        setIsSearching(true);
+        const res = await searchMasterPlayers(q);
+        setIsSearching(false);
+        if (res.success && res.data) {
+            // Filter to only players without user_id (unclaimed)
+            setSearchResults((res.data as MasterPlayer[]).filter(mp => !(mp as MasterPlayer & { user_id?: string }).user_id));
+        } else {
+            setSearchResults([]);
+        }
+    };
+
+    const handleClaimPlayer = async (targetPlayer: MasterPlayer) => {
+        setError(null);
+        setSuccess(false);
+        setClaimingPlayerId(targetPlayer.id);
+
+        startTransition(async () => {
+            const res = await claimMasterPlayer(targetPlayer.id);
+            setClaimingPlayerId(null);
+            if (res.success && res.data) {
+                setSuccess(true);
+                setMasterPlayer(res.data as MasterPlayer);
+            } else {
+                setError(res.error || "Failed to claim player profile");
+            }
+        });
+    };
 
     const handleOpenEdit = () => {
         setIsEditDialogOpen(true);
@@ -475,142 +514,242 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                 </div>
                             </div>
                         ) : (
-                            /* Create Master Player Card / Form */
+                            /* Create or Claim Master Player Card / Form */
                             <div className="relative overflow-hidden">
-                                <div className="flex flex-row items-center p-2 md:p-4 border-b">
-                                    <span className="font-black leading-tight">{t("create_profile")}</span>
+                                <div className="flex border-b">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveFormTab("create")}
+                                        className={`flex-1 py-3 px-4 text-xs font-bold transition-colors text-center border-r ${
+                                            activeFormTab === "create"
+                                                ? "bg-primary/10 text-primary border-b-2 border-b-primary"
+                                                : "text-muted-foreground hover:text-foreground bg-muted/20"
+                                        }`}
+                                    >
+                                        {t("create_profile")}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveFormTab("claim")}
+                                        className={`flex-1 py-3 px-4 text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 ${
+                                            activeFormTab === "claim"
+                                                ? "bg-primary/10 text-primary border-b-2 border-b-primary"
+                                                : "text-muted-foreground hover:text-foreground bg-muted/20"
+                                        }`}
+                                    >
+                                        <LinkIcon className="h-3.5 w-3.5" />
+                                        Claim Player Profile
+                                    </button>
                                 </div>
 
                                 <div className="space-y-2 md:space-y-4">
                                     {error && (
-                                        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 mb-4 animate-shake">
+                                        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 m-4 animate-shake">
                                             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                                             <span>{error}</span>
                                         </div>
                                     )}
 
                                     {success && (
-                                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-xl text-xs flex items-start gap-2 mb-4">
+                                        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-xl text-xs flex items-start gap-2 m-4">
                                             <UserCheck className="h-4 w-4 shrink-0 mt-0.5" />
                                             <span>{t("profile_created_success")}</span>
                                         </div>
                                     )}
 
-                                    <form onSubmit={handleCreateProfile}>
-                                        <div className="space-y-1 md:space-y-2 p-2 md:p-4">
-                                            {/* Thai Name */}
-                                            <div className="space-y-1">
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label>{t("first_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
-                                                        <Input
-                                                            id="firstNameTh"
-                                                            type="text"
-                                                            value={firstNameTh}
-                                                            onChange={(e) => setFirstNameTh(e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label>{t("middle_name_th")}</Label>
-                                                        <Input
-                                                            id="middleNameTh"
-                                                            type="text"
-                                                            value={middleNameTh}
-                                                            onChange={(e) => setMiddleNameTh(e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label>{t("last_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
-                                                        <Input
-                                                            id="lastNameTh"
-                                                            type="text"
-                                                            value={lastNameTh}
-                                                            onChange={(e) => setLastNameTh(e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* English Name */}
-                                            <div className="space-y-1">
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    <div className="space-y-1">
-                                                        <Label>{t("first_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
-                                                        <Input
-                                                            id="firstNameEn"
-                                                            type="text"
-                                                            value={firstNameEn}
-                                                            onChange={(e) => setFirstNameEn(e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label>{t("middle_name_en")}</Label>
-                                                        <Input
-                                                            id="middleNameEn"
-                                                            type="text"
-                                                            value={middleNameEn}
-                                                            onChange={(e) => setMiddleNameEn(e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label>{t("last_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
-                                                        <Input
-                                                            id="lastNameEn"
-                                                            type="text"
-                                                            value={lastNameEn}
-                                                            onChange={(e) => setLastNameEn(e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-1 md:gap-2">
-                                                <div className="space-y-1 flex flex-col justify-end">
-                                                    <Label>{t("gender")} <span className="text-destructive">*</span></Label>
-                                                    <Select value={gender} onValueChange={setGender}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder={t("select_gender")} />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="male">{t("male")}</SelectItem>
-                                                            <SelectItem value="female">{t("female")}</SelectItem>
-                                                            <SelectItem value="other">{t("other")}</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                    {activeFormTab === "create" ? (
+                                        <form onSubmit={handleCreateProfile}>
+                                            <div className="space-y-1 md:space-y-2 p-2 md:p-4">
+                                                {/* Thai Name */}
                                                 <div className="space-y-1">
-                                                    <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label>{t("first_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
+                                                            <Input
+                                                                id="firstNameTh"
+                                                                type="text"
+                                                                value={firstNameTh}
+                                                                onChange={(e) => setFirstNameTh(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label>{t("middle_name_th")}</Label>
+                                                            <Input
+                                                                id="middleNameTh"
+                                                                type="text"
+                                                                value={middleNameTh}
+                                                                onChange={(e) => setMiddleNameTh(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label>{t("last_name_th")} {isThai && <span className="text-destructive">*</span>}</Label>
+                                                            <Input
+                                                                id="lastNameTh"
+                                                                type="text"
+                                                                value={lastNameTh}
+                                                                onChange={(e) => setLastNameTh(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* English Name */}
+                                                <div className="space-y-1">
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <div className="space-y-1">
+                                                            <Label>{t("first_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
+                                                            <Input
+                                                                id="firstNameEn"
+                                                                type="text"
+                                                                value={firstNameEn}
+                                                                onChange={(e) => setFirstNameEn(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label>{t("middle_name_en")}</Label>
+                                                            <Input
+                                                                id="middleNameEn"
+                                                                type="text"
+                                                                value={middleNameEn}
+                                                                onChange={(e) => setMiddleNameEn(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <Label>{t("last_name_en")} {!isThai && <span className="text-destructive">*</span>}</Label>
+                                                            <Input
+                                                                id="lastNameEn"
+                                                                type="text"
+                                                                value={lastNameEn}
+                                                                onChange={(e) => setLastNameEn(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-1 md:gap-2">
+                                                    <div className="space-y-1 flex flex-col justify-end">
+                                                        <Label>{t("gender")} <span className="text-destructive">*</span></Label>
+                                                        <Select value={gender} onValueChange={setGender}>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder={t("select_gender")} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="male">{t("male")}</SelectItem>
+                                                                <SelectItem value="female">{t("female")}</SelectItem>
+                                                                <SelectItem value="other">{t("other")}</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
+                                                        <Input
+                                                            id="birthday"
+                                                            type="date"
+                                                            required
+                                                            value={birthday}
+                                                            onChange={(e) => setBirthday(e.target.value)}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label>{t("phone_number")}</Label>
                                                     <Input
-                                                        id="birthday"
-                                                        type="date"
-                                                        required
-                                                        value={birthday}
-                                                        onChange={(e) => setBirthday(e.target.value)}
+                                                        id="tel"
+                                                        type="tel"
+                                                        value={tel}
+                                                        onChange={(e) => setTel(e.target.value)}
                                                     />
                                                 </div>
-                                            </div>
 
+                                            </div>
+                                            <div className="border-t p-2 md:p-4">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={isPending}
+                                                    className="w-full"
+                                                >
+                                                    {t("create_card")}
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        /* Claim Player Search & Form */
+                                        <div className="p-2 md:p-4 space-y-3">
                                             <div className="space-y-1">
-                                                <Label>{t("phone_number")}</Label>
-                                                <Input
-                                                    id="tel"
-                                                    type="tel"
-                                                    value={tel}
-                                                    onChange={(e) => setTel(e.target.value)}
-                                                />
+                                                <Label className="text-xs font-bold">Search Existing Player Profile</Label>
+                                                <div className="relative">
+                                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder="Type player name (Thai/English)..."
+                                                        value={claimSearchQuery}
+                                                        onChange={(e) => handleSearchClaimablePlayers(e.target.value)}
+                                                        className="pl-9 h-9 text-xs"
+                                                    />
+                                                    {isSearching && (
+                                                        <Loader2 className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    If your profile was previously created by a team manager or tournament organizer, search for your name to claim ownership.
+                                                </p>
                                             </div>
 
+                                            <div className="space-y-2 mt-2 max-h-64 overflow-y-auto pr-1">
+                                                {claimSearchQuery.trim() && searchResults.length === 0 && !isSearching && (
+                                                    <div className="text-center py-6 text-xs text-muted-foreground border border-dashed rounded-sm">
+                                                        No unclaimed player profiles found matching &quot;{claimSearchQuery}&quot;
+                                                    </div>
+                                                )}
+
+                                                {searchResults.map((player) => {
+                                                    const nameTh = `${player.first_name_th || ''} ${player.middle_name_th || ''} ${player.last_name_th || ''}`.trim()
+                                                    const nameEn = `${player.first_name_en || ''} ${player.middle_name_en || ''} ${player.last_name_en || ''}`.trim()
+                                                    const displayName = nameTh || nameEn || "Unnamed Player"
+                                                    const isClaiming = claimingPlayerId === player.id
+
+                                                    return (
+                                                        <div
+                                                            key={player.id}
+                                                            className="flex items-center justify-between p-3 rounded-sm border bg-background hover:border-primary/50 transition-all text-xs"
+                                                        >
+                                                            <div className="flex items-center gap-2.5">
+                                                                <Avatar className="h-9 w-9 border rounded-full shrink-0">
+                                                                    {player.profile_img && <AvatarImage src={player.profile_img} alt={displayName} className="object-cover" />}
+                                                                    <AvatarFallback className="font-bold text-xs">
+                                                                        {displayName.charAt(0).toUpperCase()}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-foreground">{displayName}</span>
+                                                                    {nameEn && nameTh && (
+                                                                        <span className="text-[10px] text-muted-foreground">{nameEn}</span>
+                                                                    )}
+                                                                    <span className="text-[10px] text-muted-foreground">
+                                                                        DOB: {player.birthday || '-'} | Phone: {player.tel || '-'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <Button
+                                                                size="sm"
+                                                                disabled={isPending || isClaiming}
+                                                                onClick={() => handleClaimPlayer(player)}
+                                                                className="h-8 text-xs font-bold gap-1 shrink-0"
+                                                            >
+                                                                {isClaiming ? (
+                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                                ) : (
+                                                                    <LinkIcon className="h-3.5 w-3.5" />
+                                                                )}
+                                                                Claim Player
+                                                            </Button>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
-                                        <div className="border-t p-2 md:p-4">
-                                            <Button
-                                                type="submit"
-                                                disabled={isPending}
-                                                className="w-full"
-                                            >
-                                                {t("create_card")}
-                                            </Button>
-                                        </div>
-                                    </form>
+                                    )}
                                 </div>
                             </div>
                         )}

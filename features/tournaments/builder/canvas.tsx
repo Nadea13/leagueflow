@@ -368,6 +368,47 @@ function CanvasInternal({
     const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
     const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
     const [isCategoryLoading, setIsCategoryLoading] = useState(false);
+    const [userInvitationRole, setUserInvitationRole] = useState<string | null>(null);
+
+    // Fetch user's invitation role for this tournament
+    useEffect(() => {
+        let isSubscribed = true;
+        async function checkRole() {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user || !tournamentId) return;
+
+            // Check if owner first
+            const { data: tour } = await supabase
+                .from("tournaments")
+                .select("organizer_id")
+                .eq("id", tournamentId)
+                .maybeSingle();
+
+            if (tour && tour.organizer_id === user.id) {
+                if (isSubscribed) setUserInvitationRole("organizer");
+                return;
+            }
+
+            // Check invitation role in tournament_invitations
+            const { data: invite } = await supabase
+                .from("tournament_invitations")
+                .select("role")
+                .eq("tournament_id", tournamentId)
+                .or(`user_id.eq.${user.id},email.eq.${user.email?.toLowerCase()}`)
+                .eq("status", "accepted")
+                .is("deleted_at", null)
+                .maybeSingle();
+
+            if (isSubscribed) {
+                setUserInvitationRole(invite?.role || null);
+            }
+        }
+        checkRole();
+        return () => {
+            isSubscribed = false;
+        };
+    }, [tournamentId]);
 
 
     // Sync isLocked with readonly prop or finished status if it changes
@@ -1018,20 +1059,22 @@ function CanvasInternal({
                             <HelpCircle className="h-4 w-4" />
                         </Button>
 
-                        <Button
-                            variant={isLocked ? "default" : "ghost"}
-                            size="icon"
-                            onClick={() => setIsLocked(!isLocked)}
-                            disabled={currentStatus === 'finished' || readonly}
-                            className={cn(
-                                "transition-all",
-                                isLocked
-                                    ? "bg-warning hover:bg-warning/80"
-                                    : "text-warning"
-                            )}
-                        >
-                            {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                        </Button>
+                        {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                            <Button
+                                variant={isLocked ? "default" : "ghost"}
+                                size="icon"
+                                onClick={() => setIsLocked(!isLocked)}
+                                disabled={currentStatus === 'finished' || readonly}
+                                className={cn(
+                                    "transition-all",
+                                    isLocked
+                                        ? "bg-warning hover:bg-warning/80"
+                                        : "text-warning"
+                                )}
+                            >
+                                {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                            </Button>
+                        )}
 
                         {/* Category Select Selector */}
                         <div id="tour-console-category">
@@ -1078,7 +1121,7 @@ function CanvasInternal({
                                             );
                                         })
                                     )}
-                                    {!readonly && (
+                                    {!readonly && userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
                                         <SelectItem
                                             value="create_new"
                                             className="cursor-pointer text-xs font-bold text-primary focus:text-primary focus:bg-primary/10 flex items-center gap-1.5"
@@ -1523,19 +1566,21 @@ function CanvasInternal({
                                     <Calendar className="h-4 w-4" />
                                 </Button>
 
-                                <Button
-                                    variant={activeSidebar === 'settings' ? "default" : "ghost"}
-                                    size="icon"
-                                    onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
-                                    className={cn(
-                                        "transition-all",
-                                        activeSidebar === 'settings'
-                                            ? "bg-primary"
-                                            : "text-foreground"
-                                    )}
-                                >
-                                    <Settings className="h-4 w-4" />
-                                </Button>
+                                {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                                    <Button
+                                        variant={activeSidebar === 'settings' ? "default" : "ghost"}
+                                        size="icon"
+                                        onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
+                                        className={cn(
+                                            "transition-all",
+                                            activeSidebar === 'settings'
+                                                ? "bg-primary"
+                                                : "text-foreground"
+                                        )}
+                                    >
+                                        <Settings className="h-4 w-4" />
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1802,7 +1847,7 @@ function CanvasInternal({
                             </div>
                         ) : null}
 
-                        {activeSidebar === 'settings' && tournament ? (
+                        {activeSidebar === 'settings' && tournament && userInvitationRole !== 'staff' && userInvitationRole !== 'referee' ? (
                             <div className="absolute inset-0 z-20 flex flex-col">
                                 <div className="flex flex-1 overflow-hidden">
                                     {/* Settings Sidebar */}

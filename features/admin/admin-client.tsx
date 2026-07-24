@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, RefreshCw, HardDrive } from "lucide-react"
+import { Shield, CreditCard, Users, Search, Check, X, CheckCircle, XCircle, AlertCircle, Activity, Database, RefreshCw, HardDrive, UserCheck, Link as LinkIcon, Unlink } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useToast } from "@/hooks/use-toast"
 import { Payment } from "@/types"
-import { AdminUser, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats, ActiveUserInfo } from "@/actions/common/admin"
+import { AdminUser, AdminMasterPlayer, updatePaymentStatus, updateUserFields, getSystemMonitorStats, SystemMonitorStats, ActiveUserInfo, linkMasterPlayerToUser, approveMasterPlayerRequest, rejectMasterPlayerRequest } from "@/actions/common/admin"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import { Header } from "@/components/ui/header"
@@ -21,19 +21,24 @@ import { Header } from "@/components/ui/header"
 interface AdminClientProps {
     initialPayments: Payment[]
     initialUsers: AdminUser[]
+    initialMasterPlayers: AdminMasterPlayer[]
 }
 
-type TabType = "pending" | "payments" | "users" | "monitor"
+type TabType = "pending" | "payments" | "users" | "players" | "monitor"
 
-export function AdminClient({ initialPayments, initialUsers }: AdminClientProps) {
+export function AdminClient({ initialPayments, initialUsers, initialMasterPlayers }: AdminClientProps) {
     const t = useTranslations("Admin")
     const tCommon = useTranslations("Common")
     const { toast } = useToast()
     const [activeTab, setActiveTab] = useState<TabType>("monitor")
     const [payments, setPayments] = useState<Payment[]>(initialPayments)
     const [users, setUsers] = useState<AdminUser[]>(initialUsers)
+    const [masterPlayers, setMasterPlayers] = useState<AdminMasterPlayer[]>(initialMasterPlayers)
     const [paymentSearch, setPaymentSearch] = useState("")
     const [userSearch, setUserSearch] = useState("")
+    const [playerSearch, setPlayerSearch] = useState("")
+    const [playerFilter, setPlayerFilter] = useState<"all" | "unclaimed" | "claimed">("all")
+    const [selectedUserForClaim, setSelectedUserForClaim] = useState<{ [playerId: string]: string }>({})
     const [isPending, startTransition] = useTransition()
     const [monitorStats, setMonitorStats] = useState<SystemMonitorStats | null>(null)
     const [isLoadingStats, setIsLoadingStats] = useState(false)
@@ -132,6 +137,12 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
             value: "users",
             label: t("users") || "Users & Roles",
             icon: Users
+        },
+        {
+            value: "players",
+            label: "Master Players",
+            icon: UserCheck,
+            badge: masterPlayers.filter(mp => !mp.user_id).length > 0 ? masterPlayers.filter(mp => !mp.user_id).length : undefined
         }
     ]
 
@@ -228,6 +239,95 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
             (u.full_name || "").toLowerCase().includes(query) ||
             u.id.toLowerCase().includes(query)
         )
+    })
+
+    const handleLinkPlayer = async (masterPlayerId: string, userId: string | null) => {
+        startTransition(async () => {
+            const res = await linkMasterPlayerToUser(masterPlayerId, userId)
+            if (res.success) {
+                const targetUser = users.find(u => u.id === userId)
+                setMasterPlayers(prev => prev.map(mp => mp.id === masterPlayerId ? {
+                    ...mp,
+                    user_id: userId,
+                    user: targetUser ? { email: targetUser.email, full_name: targetUser.full_name } : null
+                } : mp))
+                toast({
+                    title: tCommon("success") || "Success",
+                    description: userId ? "Successfully assigned player to user" : "Unlinked player from user",
+                })
+            } else {
+                toast({
+                    title: tCommon("error") || "Error",
+                    description: res.error || "An error occurred",
+                    variant: "destructive"
+                })
+            }
+        })
+    }
+
+    const handleApprovePlayer = async (masterPlayerId: string) => {
+        startTransition(async () => {
+            const res = await approveMasterPlayerRequest(masterPlayerId)
+            if (res.success) {
+                setMasterPlayers(prev => prev.map(mp => mp.id === masterPlayerId ? {
+                    ...mp,
+                    verified: true
+                } : mp))
+                toast({
+                    title: tCommon("success") || "Success",
+                    description: "ยืนยันข้อมูลผู้เล่นสำเร็จ (Verified)",
+                })
+            } else {
+                toast({
+                    title: tCommon("error") || "Error",
+                    description: res.error || "Failed to approve request",
+                    variant: "destructive"
+                })
+            }
+        })
+    }
+
+    const handleRejectPlayer = async (masterPlayerId: string) => {
+        startTransition(async () => {
+            const res = await rejectMasterPlayerRequest(masterPlayerId)
+            if (res.success) {
+                setMasterPlayers(prev => prev.map(mp => mp.id === masterPlayerId ? {
+                    ...mp,
+                    user_id: null,
+                    verified: false,
+                    user: null
+                } : mp))
+                toast({
+                    title: tCommon("success") || "Success",
+                    description: "ปฏิเสธคำขอและปลดการผูกบัญชีสำเร็จ",
+                })
+            } else {
+                toast({
+                    title: tCommon("error") || "Error",
+                    description: res.error || "Failed to reject request",
+                    variant: "destructive"
+                })
+            }
+        })
+    }
+
+    const filteredMasterPlayers = masterPlayers.filter(mp => {
+        const query = playerSearch.toLowerCase()
+        const fullNameTh = `${mp.first_name_th || ''} ${mp.last_name_th || ''}`.toLowerCase()
+        const fullNameEn = `${mp.first_name_en || ''} ${mp.last_name_en || ''}`.toLowerCase()
+        const matchesQuery = (
+            fullNameTh.includes(query) ||
+            fullNameEn.includes(query) ||
+            (mp.tel || "").toLowerCase().includes(query) ||
+            (mp.user?.email || "").toLowerCase().includes(query) ||
+            (mp.user?.full_name || "").toLowerCase().includes(query) ||
+            mp.id.toLowerCase().includes(query)
+        )
+
+        if (!matchesQuery) return false
+        if (playerFilter === "unclaimed") return !mp.user_id
+        if (playerFilter === "claimed") return !!mp.user_id
+        return true
     })
 
     const pendingPayments = payments.filter(p => p.status === "pending")
@@ -418,26 +518,30 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                             <CardDescription>Live row counts across core data tables in Supabase.</CardDescription>
                         </div>
                         <div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 lg:gap-2 text-center">
-                                <div className="p-3 rounded-md bg-card border">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1 lg:gap-2 text-center">
+                                <div className="p-3 rounded-sm bg-card border">
                                     <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.users ?? '-'}</div>
                                     <div className="text-[11px] font-medium text-muted-foreground mt-1">Users</div>
                                 </div>
-                                <div className="p-3 rounded-md bg-card border">
+                                <div className="p-3 rounded-sm bg-card border">
                                     <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.tournaments ?? '-'}</div>
                                     <div className="text-[11px] font-medium text-muted-foreground mt-1">Tournaments</div>
                                 </div>
-                                <div className="p-3 rounded-md bg-card border">
+                                <div className="p-3 rounded-sm bg-card border">
                                     <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.teams ?? '-'}</div>
                                     <div className="text-[11px] font-medium text-muted-foreground mt-1">Teams</div>
                                 </div>
-                                <div className="p-3 rounded-md bg-card border">
+                                <div className="p-3 rounded-sm bg-card border">
                                     <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.matches ?? '-'}</div>
                                     <div className="text-[11px] font-medium text-muted-foreground mt-1">Matches</div>
                                 </div>
-                                <div className="p-3 rounded-md bg-card border">
+                                <div className="p-3 rounded-sm bg-card border">
                                     <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.payments ?? '-'}</div>
                                     <div className="text-[11px] font-medium text-muted-foreground mt-1">Payments</div>
+                                </div>
+                                <div className="p-3 rounded-sm bg-card border">
+                                    <div className="text-2xl font-black text-foreground">{monitorStats?.tableCounts.players ?? '-'}</div>
+                                    <div className="text-[11px] font-medium text-muted-foreground mt-1">Master Players</div>
                                 </div>
                             </div>
                         </div>
@@ -478,7 +582,7 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                                         {filteredLogs.map((log) => (
                                             <div
                                                 key={log.id}
-                                                className="flex items-center justify-between p-2.5 rounded-md bg-muted/40 border text-xs"
+                                                className="flex items-center justify-between p-2.5 rounded-sm bg-muted/40 border text-xs"
                                             >
                                                 <div className="flex items-center gap-1 lg:gap-2">
                                                     <Badge
@@ -536,11 +640,11 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                     </CardHeader>
                     <CardContent>
                         {pendingPayments.length === 0 ? (
-                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-lg">
+                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-sm">
                                 No pending payment confirmations.
                             </div>
                         ) : (
-                            <div className="border rounded-md bg-card overflow-hidden">
+                            <div className="border rounded-sm bg-card overflow-hidden">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -642,11 +746,11 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                     </CardHeader>
                     <CardContent>
                         {filteredPayments.length === 0 ? (
-                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-lg">
+                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-sm">
                                 {t("no_results")}
                             </div>
                         ) : (
-                            <div className="border rounded-md bg-card overflow-hidden">
+                            <div className="border rounded-sm bg-card overflow-hidden">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -747,11 +851,11 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                     </CardHeader>
                     <CardContent>
                         {filteredUsers.length === 0 ? (
-                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-lg">
+                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-sm">
                                 {t("no_results")}
                             </div>
                         ) : (
-                            <div className="border rounded-md bg-card overflow-hidden">
+                            <div className="border rounded-sm bg-card overflow-hidden">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -807,6 +911,196 @@ export function AdminClient({ initialPayments, initialUsers }: AdminClientProps)
                                                 </TableCell>
                                             </TableRow>
                                         ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {activeTab === "players" && (
+                <Card className="border rounded-sm bg-card">
+                    <CardHeader className="py-2 lg:py-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                            <div>
+                                <CardTitle className="text-base font-bold flex items-center gap-2">
+                                    <UserCheck className="h-5 w-5 text-primary" />
+                                    Master Players Management
+                                </CardTitle>
+                                <CardDescription className="text-xs">
+                                    List of all registered master player profiles from master_players table and user account claims.
+                                </CardDescription>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                                <Tab
+                                    options={[
+                                        { value: "all", label: "All Players" },
+                                        { value: "unclaimed", label: "Unclaimed", badge: masterPlayers.filter(mp => !mp.user_id).length },
+                                        { value: "claimed", label: "Claimed" }
+                                    ]}
+                                    value={playerFilter}
+                                    onChange={(val) => setPlayerFilter(val)}
+                                    className="bg-card"
+                                />
+                                <div className="relative flex-1 sm:w-64">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by name, phone, email..."
+                                        value={playerSearch}
+                                        onChange={(e) => setPlayerSearch(e.target.value)}
+                                        className="pl-9 h-9 text-xs"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        {filteredMasterPlayers.length === 0 ? (
+                            <div className="text-center py-12 text-xs text-muted-foreground border border-dashed rounded-sm">
+                                {t("no_results")}
+                            </div>
+                        ) : (
+                            <div className="border rounded-sm bg-card overflow-hidden">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="text-xs font-black">Player</TableHead>
+                                            <TableHead className="text-xs font-black">Gender & DOB</TableHead>
+                                            <TableHead className="text-xs font-black">Phone</TableHead>
+                                            <TableHead className="text-xs font-black">Claimed User Account</TableHead>
+                                            <TableHead className="text-xs font-black">Claim Action / Link User</TableHead>
+                                            <TableHead className="text-xs font-black text-right">Created Date</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredMasterPlayers.map((mp) => {
+                                            const nameTh = `${mp.first_name_th || ''} ${mp.middle_name_th || ''} ${mp.last_name_th || ''}`.trim()
+                                            const nameEn = `${mp.first_name_en || ''} ${mp.middle_name_en || ''} ${mp.last_name_en || ''}`.trim()
+                                            const displayName = nameTh || nameEn || "Unnamed Player"
+
+                                            return (
+                                                <TableRow key={mp.id} className="text-xs">
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2.5">
+                                                            {mp.profile_img ? (
+                                                                // eslint-disable-next-line @next/next/no-img-element
+                                                                <img
+                                                                    src={mp.profile_img}
+                                                                    alt={displayName}
+                                                                    className="w-8 h-8 rounded-full object-cover border"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-[10px] text-muted-foreground border">
+                                                                    {displayName.charAt(0).toUpperCase()}
+                                                                </div>
+                                                            )}
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-foreground">{displayName}</span>
+                                                        {nameEn && nameTh && (
+                                                                    <span className="text-[10px] text-muted-foreground">{nameEn}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col text-[11px]">
+                                                            <span className="capitalize text-foreground font-medium">{mp.gender}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{mp.birthday || '-'}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-[11px]">
+                                                        {mp.tel || '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {mp.user_id ? (
+                                                            <div className="flex items-center gap-1.5">
+                                                                {mp.verified ? (
+                                                                    <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/40 gap-1 font-bold">
+                                                                        <CheckCircle className="h-3 w-3" /> Verified
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/40 gap-1 font-bold animate-pulse">
+                                                                        <AlertCircle className="h-3 w-3" /> รอยืนยันคำขอ
+                                                                    </Badge>
+                                                                )}
+                                                                <div className="flex flex-col text-[10px]">
+                                                                    <span className="font-bold text-foreground">{mp.user?.full_name || 'User'}</span>
+                                                                    <span className="text-muted-foreground font-mono">{mp.user?.email}</span>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-[10px] bg-slate-500/10 text-slate-600 border-slate-500/40 font-bold">
+                                                                Unclaimed / Master Only
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {mp.user_id && !mp.verified ? (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Button
+                                                                    size="sm"
+                                                                    disabled={isPending}
+                                                                    onClick={() => handleApprovePlayer(mp.id)}
+                                                                    className="h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white gap-1 font-bold"
+                                                                >
+                                                                    <CheckCircle className="h-3 w-3" /> ยืนยัน (Accept)
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    disabled={isPending}
+                                                                    onClick={() => handleRejectPlayer(mp.id)}
+                                                                    className="h-7 text-[11px] text-destructive hover:bg-destructive/10 border-destructive/30 gap-1"
+                                                                >
+                                                                    <XCircle className="h-3 w-3" /> ปฏิเสธ (Reject)
+                                                                </Button>
+                                                            </div>
+                                                        ) : mp.user_id && mp.verified ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                disabled={isPending}
+                                                                onClick={() => handleLinkPlayer(mp.id, null)}
+                                                                className="h-7 text-[11px] text-muted-foreground hover:bg-muted gap-1"
+                                                            >
+                                                                <Unlink className="h-3 w-3" /> Unlink User
+                                                            </Button>
+                                                        ) : (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Select
+                                                                    disabled={isPending}
+                                                                    value={selectedUserForClaim[mp.id] || ""}
+                                                                    onValueChange={(val) => setSelectedUserForClaim(prev => ({ ...prev, [mp.id]: val }))}
+                                                                >
+                                                                    <SelectTrigger className="w-[180px] h-7 text-[11px]">
+                                                                        <SelectValue placeholder="Select user account..." />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {users.map((u) => (
+                                                                            <SelectItem key={u.id} value={u.id} className="text-xs">
+                                                                                {u.full_name ? `${u.full_name} (${u.email})` : u.email}
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <Button
+                                                                    size="sm"
+                                                                    disabled={isPending || !selectedUserForClaim[mp.id]}
+                                                                    onClick={() => handleLinkPlayer(mp.id, selectedUserForClaim[mp.id])}
+                                                                    className="h-7 text-[11px] gap-1 font-bold"
+                                                                >
+                                                                    <LinkIcon className="h-3 w-3" /> Assign User
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-muted-foreground text-[10px]">
+                                                        {new Date(mp.created_at).toLocaleDateString()}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
                                     </TableBody>
                                 </Table>
                             </div>

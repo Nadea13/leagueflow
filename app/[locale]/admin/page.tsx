@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardSidebar } from "@/features/dashboard/dashboard-sidebar"
 import { DashboardNavbar } from "@/features/dashboard/dashboard-navbar"
-import { getAdminPayments, getAdminUsers } from "@/actions/common/admin"
+import { getAdminPayments, getAdminUsers, getAdminMasterPlayers } from "@/actions/common/admin"
 import { AdminClient } from "@/features/admin/admin-client"
 
 export default async function AdminPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -26,10 +26,13 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
     }
 
     // Fetch admin details
-    const paymentsRes = await getAdminPayments()
-    const usersRes = await getAdminUsers()
+    const [paymentsRes, usersRes, masterPlayersRes] = await Promise.all([
+        getAdminPayments(),
+        getAdminUsers(),
+        getAdminMasterPlayers()
+    ])
 
-    if (!paymentsRes.success || !usersRes.success) {
+    if (!paymentsRes.success || !usersRes.success || !masterPlayersRes.success) {
         return (
             <div className="flex h-screen w-full items-center justify-center text-xs font-bold text-destructive">
                 Error loading admin dashboard data. Please try again.
@@ -72,6 +75,7 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
                     <AdminClient 
                         initialPayments={paymentsRes.data || []} 
                         initialUsers={usersRes.data || []} 
+                        initialMasterPlayers={masterPlayersRes.data || []}
                     />
                 </main>
             </div>

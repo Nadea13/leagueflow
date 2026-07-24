@@ -198,6 +198,132 @@ export async function updateUserFields(
         return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
     }
 }
+export interface AdminMasterPlayer {
+    id: string
+    user_id: string | null
+    first_name_th: string | null
+    middle_name_th: string | null
+    last_name_th: string | null
+    first_name_en: string | null
+    middle_name_en: string | null
+    last_name_en: string | null
+    gender: string
+    birthday: string
+    tel: string | null
+    profile_img: string | null
+    status: string
+    verified: boolean
+    created_at: string
+    user?: {
+        email: string
+        full_name: string | null
+    } | null
+}
+
+export async function getAdminMasterPlayers(): Promise<ActionResponse<AdminMasterPlayer[]>> {
+    try {
+        const { isAdmin, error } = await verifyAdmin()
+        if (!isAdmin) return { success: false, error }
+
+        const adminSupabase = createAdminClient()
+        const { data, error: dbError } = await adminSupabase
+            .from("master_players")
+            .select(`
+                *,
+                user:users (
+                    email,
+                    full_name
+                )
+            `)
+            .order("created_at", { ascending: false })
+
+        if (dbError) throw dbError
+
+        return { success: true, data: data as AdminMasterPlayer[] }
+    } catch (e) {
+        console.error("Error fetching admin master players:", e)
+        return { success: false, error: e instanceof Error ? e.message : "An unknown error occurred" }
+    }
+}
+
+export async function linkMasterPlayerToUser(
+    masterPlayerId: string,
+    userId: string | null
+): Promise<ActionResponse<void>> {
+    try {
+        const { isAdmin, error } = await verifyAdmin()
+        if (!isAdmin) return { success: false, error }
+
+        const adminSupabase = createAdminClient()
+        const { error: dbError } = await adminSupabase
+            .from("master_players")
+            .update({
+                user_id: userId,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", masterPlayerId)
+
+        if (dbError) throw dbError
+
+        return { success: true }
+    } catch (e) {
+        console.error("Error linking master player to user:", e)
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
+    }
+}
+
+export async function approveMasterPlayerRequest(
+    masterPlayerId: string
+): Promise<ActionResponse<void>> {
+    try {
+        const { isAdmin, error } = await verifyAdmin()
+        if (!isAdmin) return { success: false, error }
+
+        const adminSupabase = createAdminClient()
+        const { error: dbError } = await adminSupabase
+            .from("master_players")
+            .update({
+                verified: true,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", masterPlayerId)
+
+        if (dbError) throw dbError
+
+        return { success: true }
+    } catch (e) {
+        console.error("Error approving master player request:", e)
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
+    }
+}
+
+export async function rejectMasterPlayerRequest(
+    masterPlayerId: string
+): Promise<ActionResponse<void>> {
+    try {
+        const { isAdmin, error } = await verifyAdmin()
+        if (!isAdmin) return { success: false, error }
+
+        const adminSupabase = createAdminClient()
+        const { error: dbError } = await adminSupabase
+            .from("master_players")
+            .update({
+                user_id: null,
+                verified: false,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", masterPlayerId)
+
+        if (dbError) throw dbError
+
+        return { success: true }
+    } catch (e) {
+        console.error("Error rejecting master player request:", e)
+        return { success: false, error: e instanceof Error ? e.message : "Unknown error" }
+    }
+}
+
+
 
 export interface SystemLogItem {
     id: string
@@ -225,6 +351,7 @@ export interface SystemMonitorStats {
         teams: number
         matches: number
         payments: number
+        players: number
     }
     recentErrorsCount: number
     services: {
@@ -256,13 +383,15 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
             { count: tournamentsCount },
             { count: teamsCount },
             { count: matchesCount },
-            { count: paymentsCount }
+            { count: paymentsCount },
+            { count: playersCount }
         ] = await Promise.all([
             supabase.from("users").select("*", { count: "exact", head: true }),
             supabase.from("tournaments").select("*", { count: "exact", head: true }),
             supabase.from("teams").select("*", { count: "exact", head: true }),
             supabase.from("matches").select("*", { count: "exact", head: true }),
-            supabase.from("payments").select("*", { count: "exact", head: true })
+            supabase.from("payments").select("*", { count: "exact", head: true }),
+            supabase.from("master_players").select("*", { count: "exact", head: true })
         ])
 
         // 3. Check auth & storage status
@@ -370,7 +499,8 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
                     tournaments: tournamentsCount || 0,
                     teams: teamsCount || 0,
                     matches: matchesCount || 0,
-                    payments: paymentsCount || 0
+                    payments: paymentsCount || 0,
+                    players: playersCount || 0
                 },
                 recentErrorsCount: 0,
                 services: {
