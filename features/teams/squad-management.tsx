@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Player, Team, Registration, Tournament } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { getPlayers, deletePlayer, importRoster, toggleRosterLock } from "@/actions/manager/team";
@@ -176,9 +176,15 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
     const [isLocked, setIsLocked] = useState(team.is_roster_locked || false);
     const [isLocking, setIsLocking] = useState(false);
 
-    // Deadline check
-    const documentDeadline = team.tournament?.document_deadline;
-    const isDeadlinePassed = documentDeadline ? new Date() > new Date(documentDeadline) : false;
+    // Deadline check (23:59:59 / เที่ยงคืน สิ้นสุดวันที่กำหนด)
+    const documentDeadlineDate = useMemo(() => {
+        if (!team.tournament?.document_deadline) return null;
+        const d = new Date(team.tournament.document_deadline);
+        d.setHours(23, 59, 59, 999);
+        return d;
+    }, [team.tournament?.document_deadline]);
+
+    const isDeadlinePassed = documentDeadlineDate ? new Date() > documentDeadlineDate : false;
     const effectivelyLocked = isLocked || isDeadlinePassed;
 
     // Delete confirmation state
@@ -211,14 +217,18 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
     const handleToggleLock = async () => {
         setIsLocking(true);
-        const result = await toggleRosterLock(team.id, !isLocked);
+        const nextLockState = unlockRequested ? true : !isLocked;
+        const result = await toggleRosterLock(team.id, nextLockState);
         setIsLocking(false);
 
         if (result.success) {
-            setIsLocked(!isLocked);
+            setIsLocked(nextLockState);
+            if (nextLockState) {
+                setUnlockRequested(false);
+            }
             toast({
                 title: tCommon("success"),
-                description: !isLocked ? "Roster locked. Only Organizer can unlock now." : "Roster unlocked."
+                description: nextLockState ? "Roster locked. Only Organizer can unlock now." : "Roster unlocked."
             });
         } else {
             toast({ title: tCommon("error"), description: result.error, variant: "destructive" });
@@ -306,7 +316,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     </div>
                 </div>
                 <div className="flex items-start gap-2" id="tour-lock-roster-btn">
-                    {team.isParticipation && team.roster_status !== 'rejected' && (
+                    {team.isParticipation && team.roster_status !== 'rejected' && !isDeadlinePassed && (
                         <Button
                             variant="destructive"
                             onClick={() => setShowWithdrawDialog(true)}
@@ -319,56 +329,56 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     <AddPlayersDialog 
                         teamId={team.id} 
                         onSuccess={refreshPlayers} 
-                        effectivelyLocked={effectivelyLocked} 
+                        effectivelyLocked={unlockRequested ? false : effectivelyLocked} 
                     />
-                    <Button
-                        variant={effectivelyLocked ? "outline" : "warning"}
-                        onClick={effectivelyLocked ? (isDeadlinePassed ? handleRequestUnlock : handleToggleLock) : handleToggleLock}
-                        disabled={isLocking || isRequestingUnlock || (effectivelyLocked && isDeadlinePassed && unlockRequested)}
-                        title={effectivelyLocked ? (isDeadlinePassed && unlockRequested ? "กำลังรอการปลดล็อก" : t("unlock_roster")) : t("submit_lock")}
-                    >
-                        {isLocking || isRequestingUnlock ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : effectivelyLocked ? (
-                            <Unlock className="h-4 w-4" />
-                        ) : (
-                            <Lock className="h-4 w-4" />
-                        )}
-                        <span className="hidden md:inline">
-                            {effectivelyLocked ? (isDeadlinePassed && unlockRequested ? "รออนุมัติปลดล็อก" : t("unlock_roster")) : t("submit_lock")}
-                        </span>
-                    </Button>
+                    {(!effectivelyLocked || unlockRequested || !isDeadlinePassed) && (
+                        <Button
+                            variant={(effectivelyLocked && !unlockRequested) ? "outline" : "warning"}
+                            onClick={(effectivelyLocked && !unlockRequested) ? (isDeadlinePassed ? handleRequestUnlock : handleToggleLock) : handleToggleLock}
+                            disabled={isLocking || isRequestingUnlock}
+                            title={(effectivelyLocked && !unlockRequested) ? t("unlock_roster") : t("submit_lock")}
+                        >
+                            {isLocking || isRequestingUnlock ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (effectivelyLocked && !unlockRequested) ? (
+                                <Unlock className="h-4 w-4" />
+                            ) : (
+                                <Lock className="h-4 w-4" />
+                            )}
+                            <span className="hidden md:inline">
+                                {(effectivelyLocked && !unlockRequested) ? t("unlock_roster") : t("submit_lock")}
+                            </span>
+                        </Button>
+                    )}
                 </div>
             </div>
 
             {isDeadlinePassed && (
-                <div className="bg-destructive/10 border border-destructive p-4 flex items-start gap-3 text-destructive animate-in fade-in slide-in-from-top-2">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <Badge variant="outline" className="bg-destructive/10 border-destructive/50 flex items-center gap-1 lg:gap-2 text-destructive animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="h-4 w-4" />
                     <div className="space-y-1">
-                        <h4 className="font-bold text-sm tracking-tight">{t("deadline_passed")}</h4>
+                        <Header level={5} className="text-destructive">{t("deadline_passed")}</Header>
                         <p className="text-xs opacity-90">
-                            {t("deadline_locked_desc", { date: new Date(documentDeadline!).toLocaleString() })}
+                            {t("deadline_locked_desc", { date: documentDeadlineDate!.toLocaleString() })}
                         </p>
                     </div>
-                </div>
+                </Badge>
             )}
 
-            {unlockRequested && (
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-600 rounded-lg animate-in fade-in">
+            {unlockRequested ? (
+                <Badge variant="outline" className="bg-warning/10 border border-warning/50 flex items-center gap-1 lg:gap-2 text-warning animate-in fade-in">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <div className="flex-1">
-                        <p className="text-xs font-bold">ส่งคำขอปลดล็อกข้อมูลและรายชื่อแล้ว กำลังรอการอนุมัติจาก Organizer</p>
+                        <p className="text-xs opacity-90">ส่งคำขอปลดล็อกข้อมูลและรายชื่อแล้ว กำลังรอการอนุมัติจาก Organizer</p>
                     </div>
-                </div>
-            )}
-
-            {rosterStatus === 'pending' && (
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 flex items-center gap-3 text-amber-600 rounded-lg animate-in fade-in">
+                </Badge>
+            ) : (!isDeadlinePassed && rosterStatus === 'pending') && (
+                <Badge variant="outline" className="bg-warning/10 border border-warning/50 flex items-center gap-1 lg:gap-2 text-warning animate-in fade-in">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     <div className="flex-1">
-                        <p className="text-xs font-bold">ส่งรายชื่อนักกีฬาแล้วและกำลังรอการตรวจสอบ/อนุมัติจาก Organizer</p>
+                        <p className="text-xs opacity-90">ส่งรายชื่อนักกีฬาแล้วและกำลังรอการตรวจสอบ/อนุมัติจาก Organizer</p>
                     </div>
-                </div>
+                </Badge>
             )}
 
             {rosterStatus === 'approved' && (
@@ -436,14 +446,14 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         <AddPlayerForm
                             teamId={team.id}
                             onSuccess={refreshPlayers}
-                            effectivelyLocked={effectivelyLocked}
+                            effectivelyLocked={unlockRequested ? false : effectivelyLocked}
                         />
                     </div>
                     <div id="tour-squad-list">
                         <SquadList
                             players={players}
                             team={team}
-                            effectivelyLocked={effectivelyLocked}
+                            effectivelyLocked={unlockRequested ? false : effectivelyLocked}
                             refreshPlayers={refreshPlayers}
                             onDeletePlayer={setPlayerToDelete}
                             t={t}

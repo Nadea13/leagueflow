@@ -645,9 +645,14 @@ export async function toggleRosterLock(teamId: string, isLocked: boolean): Promi
     }
 
     const tableToAdd = globalTeam ? "teams" : "tournament_teams";
+    const updateData: Record<string, boolean> = { is_roster_locked: isLocked };
+    if (!globalTeam && isLocked) {
+        updateData.unlock_requested = false;
+    }
+
     const { error } = await adminSupabase
         .from(tableToAdd)
-        .update({ is_roster_locked: isLocked })
+        .update(updateData)
         .eq("id", teamId);
 
     if (error) {
