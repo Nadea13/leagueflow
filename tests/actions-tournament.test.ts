@@ -17,6 +17,10 @@ vi.mock('next/navigation', () => ({
     redirect: vi.fn(),
 }));
 
+vi.mock('next-intl/server', () => ({
+    getLocale: vi.fn(() => Promise.resolve('en')),
+}));
+
 // Mock Supabase Server client
 const mockSupabase = {
     auth: {
@@ -129,7 +133,15 @@ describe('createTournament Action', () => {
         const mockInsert = vi.fn(() => ({ select: mockSelect }));
         mockSupabase.from.mockImplementation((table) => {
             if (table === 'tournaments') {
-                return { insert: mockInsert };
+                return {
+                    insert: mockInsert,
+                    select: vi.fn(() => ({
+                        eq: vi.fn(() => ({
+                            gte: vi.fn().mockResolvedValue({ count: 0, error: null }),
+                            then: (onfulfilled?: (value: unknown) => unknown) => Promise.resolve({ count: 0, error: null }).then(onfulfilled),
+                        })),
+                    })),
+                };
             }
             if (table === 'tournament_invitations') {
                 return { insert: vi.fn().mockResolvedValue({ error: null }) };
