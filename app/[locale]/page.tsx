@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Workflow, QrCode, Users2, Activity, Tv, BarChart3, MoreVertical } from "lucide-react";
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { createClient } from "@/lib/supabase/server";
@@ -128,135 +129,135 @@ export default async function Home() {
                     {/* Bracket Layout container */}
                     <div className="flex items-center gap-16 relative z-10 w-[544px] shrink-0 h-[320px] scale-90 sm:scale-100 origin-left lg:origin-center">
 
-                  {/* Connection Lines (SVG) */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
-                    <g fill="none" strokeWidth="2">
-                      {/* Match 1 Winner -> Finals Left Center */}
-                      <path d="M 240 64 C 272 64, 272 160, 304 160" stroke="var(--color-node-2)" />
-                      {/* Match 2 Winner -> Finals Left Center */}
-                      <path d="M 240 256 C 272 256, 272 160, 304 160" stroke="var(--color-node-2)" />
-                    </g>
-                  </svg>
+                      {/* Connection Lines (SVG) */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+                        <g fill="none" strokeWidth="2">
+                          {/* Match 1 Winner -> Finals Left Center */}
+                          <path d="M 240 64 C 272 64, 272 160, 304 160" stroke="var(--color-node-2)" />
+                          {/* Match 2 Winner -> Finals Left Center */}
+                          <path d="M 240 256 C 272 256, 272 160, 304 160" stroke="var(--color-node-2)" />
+                        </g>
+                      </svg>
 
-                  {/* Left Column (Semifinals) */}
-                  <div className="flex flex-col gap-24 w-[240px] z-10">
+                      {/* Left Column (Semifinals) */}
+                      <div className="flex flex-col gap-24 w-[240px] z-10">
 
-                    {/* Match 1 */}
-                    <div className="w-full h-[96px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
-                      {/* Single Output Handle on Right Center (Straddling Border) */}
-                      <div className="absolute w-2 h-2 bg-card border border-border rounded-full -right-1 top-[50%] -translate-y-1/2 z-20" />
+                        {/* Match 1 */}
+                        <div className="w-full h-[96px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
+                          {/* Single Output Handle on Right Center (Straddling Border) */}
+                          <div className="absolute w-2 h-2 bg-card border border-border rounded-full -right-1 top-[50%] -translate-y-1/2 z-20" />
 
-                      <div className="flex items-center p-2 border-b justify-between bg-muted/20 rounded-t-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
-                            <span className="text-background text-[10px] font-bold">VS</span>
+                          <div className="flex items-center p-2 border-b justify-between bg-muted/20 rounded-t-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
+                                <span className="text-background text-[10px] font-bold">VS</span>
+                              </div>
+                              <span className="text-[10px] font-black tracking-wide text-node-2">
+                                Match
+                              </span>
+                              <span className="text-[10px] font-black tracking-wide text-muted-foreground">
+                                SEMIFINALS #1
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] font-black tracking-wide text-node-2">
-                            Match
-                          </span>
-                          <span className="text-[10px] font-black tracking-wide text-muted-foreground">
-                            SEMIFINALS #1
-                          </span>
+                          <div className="p-2 space-y-2 text-sm">
+                            <div className="flex justify-between items-center font-bold">
+                              <span className="flex items-center gap-1.5">
+                                Alpha FC
+                              </span>
+                              <span>2</span>
+                            </div>
+                            <div className="flex justify-between items-center text-muted-foreground">
+                              <span className="flex items-center gap-1.5">
+                                Beta United
+                              </span>
+                              <span>1</span>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* Match 2 */}
+                        <div className="w-full h-[96px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
+                          {/* Single Output Handle on Right Center (Straddling Border) */}
+                          <div className="absolute w-2 h-2 bg-card border border-border rounded-full -right-1 top-[50%] -translate-y-1/2 z-20" />
+
+                          <div className="flex items-center p-2 border-b justify-between bg-muted/20 rounded-t-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
+                                <span className="text-background text-[10px] font-bold">VS</span>
+                              </div>
+                              <span className="text-[10px] font-black tracking-wide text-node-2">
+                                Match
+                              </span>
+                              <span className="text-[10px] font-black tracking-wide text-muted-foreground">
+                                SEMIFINALS #2
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-2 space-y-2 text-sm">
+                            <div className="flex justify-between items-center text-muted-foreground">
+                              <span className="flex items-center">
+                                Gamma CF
+                              </span>
+                              <span>0</span>
+                            </div>
+                            <div className="flex justify-between items-center font-bold">
+                              <span className="flex items-center">
+                                Delta SC
+                              </span>
+                              <span>2</span>
+                            </div>
+                          </div>
+                        </div>
+
                       </div>
-                      <div className="p-2 space-y-2 text-sm">
-                        <div className="flex justify-between items-center font-bold">
-                          <span className="flex items-center gap-1.5">
-                            Alpha FC
-                          </span>
-                          <span>2</span>
+
+                      {/* Right Column (Finals) */}
+                      <div className="flex items-center w-[240px] z-10">
+
+                        {/* Match 3 (Finals) */}
+                        <div className="w-full h-[96px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
+                          {/* Single Input Handle on Left Center (Straddling Border) */}
+                          <div className="absolute w-2 h-2 bg-card border border-border rounded-full -left-1 top-[50%] -translate-y-1/2 z-20" />
+                          <div className="flex items-center p-2 border-b justify-between bg-muted/20 rounded-t-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
+                                <span className="text-background text-[10px] font-bold">VS</span>
+                              </div>
+                              <span className="text-[10px] font-black tracking-wide text-node-2">
+                                Match
+                              </span>
+                              <span className="text-[10px] font-black tracking-wide text-muted-foreground">
+                                GRAND FINALS
+                              </span>
+                            </div>
+                            <span className="flex items-center gap-1.5 text-red-500 px-1.5 py-0.5 rounded font-black text-[9px] animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            </span>
+                          </div>
+                          <div className="p-2 space-y-2 text-sm font-semibold relative z-10">
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-2">
+                                Alpha FC
+                              </span>
+                              <span className="font-extrabold">0</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="flex items-center gap-2">
+                                Delta SC
+                              </span>
+                              <span className="font-extrabold">0</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-center text-muted-foreground">
-                          <span className="flex items-center gap-1.5">
-                            Beta United
-                          </span>
-                          <span>1</span>
-                        </div>
+
                       </div>
                     </div>
-
-                    {/* Match 2 */}
-                    <div className="w-full h-[96px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
-                      {/* Single Output Handle on Right Center (Straddling Border) */}
-                      <div className="absolute w-2 h-2 bg-card border border-border rounded-full -right-1 top-[50%] -translate-y-1/2 z-20" />
-
-                      <div className="flex items-center p-2 border-b justify-between bg-muted/20 rounded-t-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
-                            <span className="text-background text-[10px] font-bold">VS</span>
-                          </div>
-                          <span className="text-[10px] font-black tracking-wide text-node-2">
-                            Match
-                          </span>
-                          <span className="text-[10px] font-black tracking-wide text-muted-foreground">
-                            SEMIFINALS #2
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-2 space-y-2 text-sm">
-                        <div className="flex justify-between items-center text-muted-foreground">
-                          <span className="flex items-center">
-                            Gamma CF
-                          </span>
-                          <span>0</span>
-                        </div>
-                        <div className="flex justify-between items-center font-bold">
-                          <span className="flex items-center">
-                            Delta SC
-                          </span>
-                          <span>2</span>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Right Column (Finals) */}
-                  <div className="flex items-center w-[240px] z-10">
-
-                    {/* Match 3 (Finals) */}
-                    <div className="w-full h-[96px] bg-card border rounded-sm shadow-md hover:shadow-lg transition-all duration-300 hover:border-primary/50 relative">
-                      {/* Single Input Handle on Left Center (Straddling Border) */}
-                      <div className="absolute w-2 h-2 bg-card border border-border rounded-full -left-1 top-[50%] -translate-y-1/2 z-20" />
-                      <div className="flex items-center p-2 border-b justify-between bg-muted/20 rounded-t-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-5 h-5 bg-node-2 rounded flex items-center justify-center">
-                            <span className="text-background text-[10px] font-bold">VS</span>
-                          </div>
-                          <span className="text-[10px] font-black tracking-wide text-node-2">
-                            Match
-                          </span>
-                          <span className="text-[10px] font-black tracking-wide text-muted-foreground">
-                            GRAND FINALS
-                          </span>
-                        </div>
-                        <span className="flex items-center gap-1.5 text-red-500 px-1.5 py-0.5 rounded font-black text-[9px] animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        </span>
-                      </div>
-                      <div className="p-2 space-y-2 text-sm font-semibold relative z-10">
-                        <div className="flex justify-between items-center">
-                          <span className="flex items-center gap-2">
-                            Alpha FC
-                          </span>
-                          <span className="font-extrabold">0</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="flex items-center gap-2">
-                            Delta SC
-                          </span>
-                          <span className="font-extrabold">0</span>
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
                 </div>
+                {/* Right fade-out indicator for horizontal scroll */}
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none z-20 lg:hidden" />
               </div>
-            </div>
-            {/* Right fade-out indicator for horizontal scroll */}
-            <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background via-background/60 to-transparent pointer-events-none z-20 lg:hidden" />
-          </div>
 
             </div>
           </div>
@@ -548,15 +549,29 @@ export default async function Home() {
                 <div className="h-36 w-full border rounded-lg bg-background/50 relative overflow-hidden flex flex-col justify-between p-2">
                   <div className="text-[7px] text-muted-foreground flex items-center justify-between">
                   </div>
-                  <div className="mx-auto my-auto w-40 bg-zinc-900 border border-zinc-700/50 rounded flex items-center justify-between px-3 py-1.5 shadow-2xl">
-                    <div className="text-[10px] font-bold text-zinc-100 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded bg-red-500" /> AES
+                  <div className="mx-auto my-auto relative w-48 h-16 flex items-center justify-center">
+                    {/* Home Team Block (AFC) */}
+                    <div className="absolute flex items-center bg-card border rounded overflow-hidden shadow-2xl transition-all duration-500 ease-in-out -translate-x-12 translate-y-0 group-hover:translate-x-0 group-hover:-translate-y-4 z-10 w-[93px] h-[34px]">
+                      <div className="flex items-center justify-center w-[58px] text-xs font-bold text-card-foreground py-1.5">
+                        AFC
+                      </div>
+                      <div className="text-sm font-black bg-red-500 text-white w-[35px] py-1.5 border-l flex items-center justify-center h-full">
+                        2
+                      </div>
                     </div>
-                    <div className="text-[11px] font-black text-amber-400 bg-black/60 px-2 rounded-sm border border-zinc-800">
-                      3 - 2
-                    </div>
-                    <div className="text-[10px] font-bold text-zinc-100 flex items-center gap-1">
-                      DEF <span className="w-1.5 h-1.5 rounded bg-blue-500" />
+
+                    {/* Away Team Block (BU) */}
+                    <div className="absolute flex items-center bg-card border rounded overflow-hidden shadow-2xl transition-all duration-500 ease-in-out translate-x-12 translate-y-0 group-hover:translate-x-0 group-hover:translate-y-4 z-0 w-[93px] h-[34px]">
+                      <div className="relative flex items-center w-[93px] h-[34px] overflow-hidden">
+                        {/* Team Name BU */}
+                        <div className="absolute top-0 bottom-0 left-[35px] group-hover:left-0 flex items-center justify-center w-[58px] text-xs font-bold text-card-foreground transition-all duration-500 ease-in-out">
+                          BU
+                        </div>
+                        {/* Score 1 */}
+                        <div className="absolute top-0 bottom-0 left-0 group-hover:left-[56.5px] flex items-center justify-center text-sm font-black bg-blue-500 text-white w-[35px] border-r group-hover:border-r-0 group-hover:border-l transition-all duration-500 ease-in-out">
+                          1
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -577,27 +592,43 @@ export default async function Home() {
                     รวบรวมสถิติรายบุคคลของนักกีฬาอย่างละเอียด ตารางผู้ทำประตูสูงสุด (Top Score) และผลงานการแข่งขันสะสมเพื่อพัฒนาทีม
                   </p>
                 </div>
-                {/* Graphic 6: Stats Leaders Leaderboard */}
-                <div className="h-36 w-full border rounded-lg bg-background/50 p-2 flex flex-col justify-center space-y-1.5 overflow-hidden">
-                  <div className="text-[9px] font-bold text-muted-foreground border-b pb-1">TOP GOAL SCORERS</div>
-                  <div className="space-y-1">
-                    <div>
-                      <div className="flex justify-between text-[9px] font-semibold">
-                        <span>1. John Miller (A_ESP)</span>
-                        <span>8 Goals</span>
+                {/* Graphic 6: Stats Leaders Leaderboard (Single Player + 4 Stat Cards) */}
+                <div className="h-36 w-full border rounded-lg bg-background/50 p-2 flex flex-col justify-between overflow-hidden select-none gap-1.5">
+                  {/* Player Name Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-4 h-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-black">
+                        10
                       </div>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
-                        <div className="h-full bg-primary rounded-full" style={{ width: '80%' }} />
-                      </div>
+                      <span className="text-[11px] font-extrabold text-foreground tracking-wide">John Miller</span>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-[9px] font-semibold">
-                        <span>2. David Finch (D_FOR)</span>
-                        <span>6 Goals</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-0.5">
-                        <div className="h-full bg-[#00C49A] rounded-full" style={{ width: '60%' }} />
-                      </div>
+                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Forward • Alpha FC</span>
+                  </div>
+
+                  {/* 4 Stat Cards */}
+                  <div className="grid grid-cols-2 gap-1.5 h-full">
+                    {/* Card 1: Goals */}
+                    <div className="border rounded bg-card p-1 flex flex-col justify-between items-center hover:border-primary/50 transition-colors">
+                      <span className="text-[10px] font-bold tracking-wider">ประตู</span>
+                      <span className="text-xs">8</span>
+                    </div>
+
+                    {/* Card 2: Assists */}
+                    <div className="border rounded bg-card p-1 flex flex-col justify-between items-center hover:border-primary/50 transition-colors">
+                      <span className="text-[10px] font-bold tracking-wider">แอสซิสต์</span>
+                      <span className="text-xs">5</span>
+                    </div>
+
+                    {/* Card 3: Yellow Cards */}
+                    <div className="border rounded bg-card p-1 flex flex-col justify-between items-center hover:border-primary/50 transition-colors">
+                      <span className="text-[10px] font-bold tracking-wider text-warning">ใบเหลือง</span>
+                      <span className="text-xs">2</span>
+                    </div>
+
+                    {/* Card 4: Red Cards */}
+                    <div className="border rounded bg-card p-1 flex flex-col justify-between items-center hover:border-primary/50 transition-colors">
+                      <span className="text-[10px] font-bold tracking-wider text-destructive">ใบแดง</span>
+                      <span className="text-xs">0</span>
                     </div>
                   </div>
                 </div>
@@ -741,12 +772,17 @@ export default async function Home() {
                   ยอดนิยม
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1 md:mb-2">Event</h3>
+                  <div className="flex justify-between mb-1 md:mb-2">
+                    <h3 className="text-xl font-bold">Event</h3>
+                    <Badge variant="default" className="text-[10px] font-bold ml-1">
+                      -80% โปรเปิดตัว
+                    </Badge>
+                  </div>
                   <p className="text-muted-foreground text-xs mb-2 md:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
                   <div className="flex flex-col mb-2 md:mb-4">
-                    <div className="flex items-baseline gap-1 md:gap-2">
+                    <div className="flex items-baseline gap-1 md:gap-2 flex-wrap">
                       <span className="text-3xl md:text-4xl font-black line-through text-muted-foreground/60">฿790</span>
-                      <span className="text-3xl md:text-4xl font-black ml-2">฿0</span>
+                      <span className="text-3xl md:text-4xl font-black ml-2">฿158</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
                     <span className="text-xs text-primary font-black">หรือรายปี ฿7,900/ปี</span>

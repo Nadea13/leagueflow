@@ -22,8 +22,9 @@ import { Tab } from "@/components/ui/tab";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const getPlanPrice = (plan: Plan) => {
-    const isFreeOrPro = plan.id === "starter" || plan.id === "match" || plan.id === "pro" || plan.id === "event";
-    return isFreeOrPro ? 0 : (plan.discounted_price || plan.price);
+    if (plan.id === "starter" || plan.id === "match") return 0;
+    if (plan.id === "pro" || plan.id === "event") return 158;
+    return (plan.discounted_price || plan.price);
 };
 
 export function BillingTab() {
@@ -287,10 +288,13 @@ export function BillingTab() {
                                         <div className="flex flex-col min-h-[48px] justify-center">
                                             {isPro ? (
                                                 <>
-                                                    <div className="flex items-baseline gap-2">
+                                                    <div className="flex items-baseline gap-1 flex-wrap">
                                                         <span className="text-2xl font-black line-through text-muted-foreground/60">฿790</span>
-                                                        <span className="text-2xl font-black">฿0</span>
+                                                        <span className="text-2xl font-black">฿158</span>
                                                         <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
+                                                        <Badge variant="default">
+                                                            -80% โปรเปิดตัว
+                                                        </Badge>
                                                     </div>
                                                 </>
                                             ) : isProYearly ? (
@@ -358,8 +362,8 @@ export function BillingTab() {
                                             >
                                                 {isCurrent
                                                     ? t("currentPlan")
-                                                    : plan.id === "pro"
-                                                        ? t("subscribePro")
+                                                    : (plan.id === "pro" || plan.id === "event")
+                                                        ? t("subscribePro") || "สมัคร Event"
                                                         : plan.id === "pro_yearly"
                                                             ? t("subscribeProYearly")
                                                             : plan.id === "cup"
