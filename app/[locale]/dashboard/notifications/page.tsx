@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import {Header} from "@/components/ui/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import { formatDate } from "@/lib/date";
 
 type NotificationItem =
     | {
@@ -291,7 +292,7 @@ export default function NotificationsPage() {
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
                                                 <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
                                                 </span>
                                             </div>
                                         </div>
@@ -370,7 +371,7 @@ export default function NotificationsPage() {
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
                                                 <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
                                                 </span>
                                             </div>
                                         </div>
@@ -425,7 +426,7 @@ export default function NotificationsPage() {
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
                                                 <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
                                                 </span>
                                             </div>
                                         </div>
@@ -497,7 +498,7 @@ export default function NotificationsPage() {
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground/30 font-bold">•</span>
                                                 <span className="text-[10px] text-muted-foreground/50 font-medium">
-                                                    {new Date(item.created_at).toLocaleString(isTh ? 'th-TH' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    {formatDate(item.created_at, "MMM d, yyyy · HH:mm", locale)}
                                                 </span>
                                             </div>
                                         </div>

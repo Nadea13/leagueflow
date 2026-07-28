@@ -24,6 +24,7 @@ import {
     AlertCircle,
     ArrowLeft
 } from "lucide-react";
+import { formatDate } from "@/lib/date";
 import { Header } from "@/components/ui/header";
 
 interface RegisterPageProps {
@@ -256,7 +257,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                 <div className="space-y-1">
                                                     <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("dates")}</p>
                                                     <p className="text-foreground">
-                                                        {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US") : "-"} - {tournament.end_date ? new Date(tournament.end_date).toLocaleDateString(locale === "th" ? "th-TH" : "en-US") : "-"}
+                                                        {tournament.start_date ? formatDate(tournament.start_date, "d MMMM yyyy", locale) : "-"} - {tournament.end_date ? formatDate(tournament.end_date, "d MMMM yyyy", locale) : "-"}
                                                     </p>
                                                 </div>
                                             </div>
@@ -297,7 +298,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                                         <div className="space-y-1">
                                                             <p className="font-bold text-xs text-muted-foreground/80 tracking-wider">{t("deadline")}</p>
                                                             <p className="text-foreground">
-                                                                {new Date(tournament.document_deadline).toLocaleDateString(locale === "th" ? "th-TH" : "en-US")}
+                                                                {formatDate(tournament.document_deadline, "d MMMM yyyy", locale)}
                                                             </p>
                                                         </div>
                                                     </div>
