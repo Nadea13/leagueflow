@@ -196,6 +196,9 @@ export interface Standing {
     ga: number;
     gd: number;
     pts: number;
+    sw?: number;
+    sl?: number;
+    sd?: number;
     // Join
     team?: { name: string; logo_url?: string | null };
 }

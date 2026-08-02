@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Table,
     TableBody,
@@ -9,21 +11,17 @@ import {
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
-import { Standing } from "@/types/index";
+import { Standing, SportType } from "@/types/index";
 import { List } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 
 interface StandingsProps {
     standings: Standing[];
+    sport?: SportType;
 }
 
-export function Standings({ standings }: StandingsProps) {
+export function Standings({ standings, sport = 'football' }: StandingsProps) {
     const t = useTranslations("Standings");
-
-    // Standings are already sorted by the SQL View query in page.tsx:
-    // .order("pts", { ascending: false })
-    // .order("gd", { ascending: false })
-    // .order("gf", { ascending: false });
 
     if (standings.length === 0) {
         return (
@@ -35,6 +33,8 @@ export function Standings({ standings }: StandingsProps) {
             />
         );
     }
+
+    const isVolleyball = sport === 'volleyball';
 
     return (
         <div className="w-full overflow-x-auto">
@@ -49,55 +49,88 @@ export function Standings({ standings }: StandingsProps) {
                         </TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("played")}</TableHead>
                         <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("won")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("drawn")}</TableHead>
+                        {!isVolleyball && (
+                            <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("drawn")}</TableHead>
+                        )}
                         <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("lost")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gf")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("ga")}</TableHead>
-                        <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gd")}</TableHead>
+
+                        {isVolleyball ? (
+                            <>
+                                <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">SW</TableHead>
+                                <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">SL</TableHead>
+                                <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">SD</TableHead>
+                            </>
+                        ) : (
+                            <>
+                                <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gf")}</TableHead>
+                                <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("ga")}</TableHead>
+                                <TableHead className="text-center px-4 text-[10px] font-black tracking-widest text-muted-foreground/40 border-b border-border/10 whitespace-nowrap">{t("gd")}</TableHead>
+                            </>
+                        )}
+
                         <TableHead className="text-center px-6 sticky right-0 z-20 bg-card backdrop-blur-sm text-[10px] font-black tracking-widest text-primary border-b border-border/10 border-l border-border/5 whitespace-nowrap">
                             {t("pts")}
                         </TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {standings.map((team, index) => (
-                        <TableRow key={team.team_id} className="h-12 border-b border-border/5 hover:bg-muted/5 transition-colors group">
-                            <TableCell className="text-center px-0 sticky left-0 z-10 bg-card group-hover:bg-muted/10 transition-colors font-black tracking-tighter text-muted-foreground/40 text-sm tabular-nums border-b border-border/5">
-                                {index + 1}
-                            </TableCell>
-                            <TableCell className="px-6 sticky left-10 z-10 bg-card group-hover:bg-muted/10 transition-colors border-b border-border/5 border-r border-border/5">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-8 h-8 bg-muted/10 border border-border/10 p-1 shrink-0 relative overflow-hidden flex items-center justify-center">
-                                        {team.team?.logo_url ? (
-                                            <Image src={team.team.logo_url} alt={team.team.name} width={32} height={32} className="w-full h-full object-contain relative z-10" unoptimized />
-                                        ) : (
-                                            <span className="text-[10px] font-black text-muted-foreground/40">
-                                                {team.team?.name.charAt(0)}
-                                            </span>
-                                        )}
+                    {standings.map((team, index) => {
+                        const sd = team.sd ?? 0;
+
+                        return (
+                            <TableRow key={team.team_id} className="h-12 border-b border-border/5 hover:bg-muted/5 transition-colors group">
+                                <TableCell className="text-center px-0 sticky left-0 z-10 bg-card group-hover:bg-muted/10 transition-colors font-black tracking-tighter text-muted-foreground/40 text-sm tabular-nums border-b border-border/5">
+                                    {index + 1}
+                                </TableCell>
+                                <TableCell className="px-6 sticky left-10 z-10 bg-card group-hover:bg-muted/10 transition-colors border-b border-border/5 border-r border-border/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-8 h-8 bg-muted/10 border border-border/10 p-1 shrink-0 relative overflow-hidden flex items-center justify-center">
+                                            {team.team?.logo_url ? (
+                                                <Image src={team.team.logo_url} alt={team.team.name} width={32} height={32} className="w-full h-full object-contain relative z-10" unoptimized />
+                                            ) : (
+                                                <span className="text-[10px] font-black text-muted-foreground/40">
+                                                    {team.team?.name.charAt(0)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="font-black tracking-tighter text-foreground text-sm truncate max-w-[120px] md:max-w-none group-hover:text-primary transition-colors" title={team.team?.name}>
+                                            {team.team?.name}
+                                        </span>
                                     </div>
-                                    <span className="font-black tracking-tighter text-foreground text-sm truncate max-w-[120px] md:max-w-none group-hover:text-primary transition-colors" title={team.team?.name}>
-                                        {team.team?.name}
-                                    </span>
-                                </div>
-                            </TableCell>
-                            <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.played}</TableCell>
-                            <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.won}</TableCell>
-                            <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.drawn}</TableCell>
-                            <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.lost}</TableCell>
-                            <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.gf}</TableCell>
-                            <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.ga}</TableCell>
-                            <TableCell className={`text-center px-4 font-black text-sm tabular-nums border-b border-border/5 ${team.gd > 0 ? "text-primary" : team.gd < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>
-                                {team.gd > 0 ? `+${team.gd}` : team.gd}
-                            </TableCell>
-                            <TableCell className="text-center px-6 sticky right-0 z-10 bg-card group-hover:bg-card transition-colors font-black text-lg text-foreground border-b border-border/5 border-l border-border/5 tabular-nums">
-                                {team.pts}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                                </TableCell>
+                                <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.played}</TableCell>
+                                <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.won}</TableCell>
+                                {!isVolleyball && (
+                                    <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.drawn}</TableCell>
+                                )}
+                                <TableCell className="text-center px-4 font-bold text-muted-foreground/60 tabular-nums border-b border-border/5">{team.lost}</TableCell>
+
+                                {isVolleyball ? (
+                                    <>
+                                        <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.sw ?? 0}</TableCell>
+                                        <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.sl ?? 0}</TableCell>
+                                        <TableCell className={`text-center px-4 font-black text-sm tabular-nums border-b border-border/5 ${sd > 0 ? "text-primary" : sd < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>
+                                            {sd > 0 ? `+${sd}` : sd}
+                                        </TableCell>
+                                    </>
+                                ) : (
+                                    <>
+                                        <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.gf}</TableCell>
+                                        <TableCell className="text-center px-4 font-bold text-muted-foreground/30 tabular-nums border-b border-border/5">{team.ga}</TableCell>
+                                        <TableCell className={`text-center px-4 font-black text-sm tabular-nums border-b border-border/5 ${team.gd > 0 ? "text-primary" : team.gd < 0 ? "text-destructive" : "text-muted-foreground/40"}`}>
+                                            {team.gd > 0 ? `+${team.gd}` : team.gd}
+                                        </TableCell>
+                                    </>
+                                )}
+
+                                <TableCell className="text-center px-6 sticky right-0 z-10 bg-card group-hover:bg-card transition-colors font-black text-lg text-foreground border-b border-border/5 border-l border-border/5 tabular-nums">
+                                    {team.pts}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </div>
     );
 }
-

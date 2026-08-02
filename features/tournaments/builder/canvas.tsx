@@ -303,6 +303,12 @@ function CanvasInternal({
 
     const [activeMatches, setActiveMatches] = useState<Match[]>([]);
 
+    useEffect(() => {
+        if (tournament?.sport) {
+            useBracketStore.getState().setSport(tournament.sport);
+        }
+    }, [tournament?.sport]);
+
     const fetchMatches = useCallback(async (categoryId: string) => {
         if (!categoryId) return;
         console.log("[Canvas Internal] fetchMatches called for category:", categoryId);

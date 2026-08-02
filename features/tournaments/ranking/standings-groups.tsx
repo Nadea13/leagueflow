@@ -1,6 +1,6 @@
 "use client";
 
-import { Match, Team } from "@/types/index";
+import { Match, Team, SportType } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Standings as StandingsTable } from "./standings";
 import { calculateStandings } from "@/lib/standings";
@@ -11,11 +11,12 @@ import { EmptyState } from "@/components/shared/empty-state";
 interface StandingsGroupsProps {
     teams: Team[];
     matches: Match[];
+    sport?: SportType;
     isPublic?: boolean;
     columns?: 1 | 2;
 }
 
-export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, columns = 2 }: StandingsGroupsProps) {
+export function StandingsGroups({ teams, matches, sport = 'football', isPublic: _isPublic = false, columns = 2 }: StandingsGroupsProps) {
     // 1. Group teams by group_name
     const teamsByGroup = teams.reduce((acc, team) => {
         const group = team.group_name || "Unassigned";
@@ -54,8 +55,8 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, c
                         return m.stage === 'group' && (groupTeamIds.has(m.home_team_id || "") || groupTeamIds.has(m.away_team_id || ""));
                     });
 
-                    // Calculate standings
-                    const groupStandings = calculateStandings(groupTeams, groupMatches);
+                    // Calculate standings based on sport
+                    const groupStandings = calculateStandings(groupTeams, groupMatches, sport);
 
                     return (
                         <div key={group} className="space-y-2 md:space-y-3">
@@ -68,7 +69,7 @@ export function StandingsGroups({ teams, matches, isPublic: _isPublic = false, c
 
                             <div className="bg-card border relative overflow-hidden transition-colors">
                                 <div className="p-0">
-                                    <StandingsTable standings={groupStandings} />
+                                    <StandingsTable standings={groupStandings} sport={sport} />
                                 </div>
                             </div>
                         </div>

@@ -1,4 +1,4 @@
-import { Match, Standing, Team } from "@/types/index";
+import { Match, Standing, Team, SportType } from "@/types/index";
 
 function getScore(score: number | { total?: number } | null | undefined): number {
     if (score === null || score === undefined) return 0;
@@ -6,7 +6,7 @@ function getScore(score: number | { total?: number } | null | undefined): number
     return score;
 }
 
-export function calculateStandings(teams: Team[], matches: Match[]): Standing[] {
+export function calculateStandings(teams: Team[], matches: Match[], sport: SportType = 'football'): Standing[] {
     const standingsMap = new Map<string, Standing>();
 
     // Initialize standings for all teams
@@ -25,6 +25,9 @@ export function calculateStandings(teams: Team[], matches: Match[]): Standing[] 
             gf: 0,
             ga: 0,
             gd: 0,
+            sw: 0,
+            sl: 0,
+            sd: 0,
             pts: 0,
         });
     });
@@ -47,27 +50,61 @@ export function calculateStandings(teams: Team[], matches: Match[]): Standing[] 
             const homeScore = getScore(match.home_score);
             const awayScore = getScore(match.away_score);
 
-            homeStats.gf += homeScore;
-            homeStats.ga += awayScore;
-            homeStats.gd = homeStats.gf - homeStats.ga;
+            if (sport === 'volleyball') {
+                // Volleyball Rules (Sets won / lost)
+                homeStats.sw = (homeStats.sw || 0) + homeScore;
+                homeStats.sl = (homeStats.sl || 0) + awayScore;
+                homeStats.sd = homeStats.sw - homeStats.sl;
 
-            awayStats.gf += awayScore;
-            awayStats.ga += homeScore;
-            awayStats.gd = awayStats.gf - awayStats.ga;
+                awayStats.sw = (awayStats.sw || 0) + awayScore;
+                awayStats.sl = (awayStats.sl || 0) + homeScore;
+                awayStats.sd = awayStats.sw - awayStats.sl;
 
-            if (homeScore > awayScore) {
-                homeStats.won += 1;
-                homeStats.pts += 3;
-                awayStats.lost += 1;
-            } else if (homeScore < awayScore) {
-                awayStats.won += 1;
-                homeStats.lost += 1;
-                awayStats.pts += 3;
+                if (homeScore > awayScore) {
+                    homeStats.won += 1;
+                    awayStats.lost += 1;
+                    const diff = homeScore - awayScore;
+                    if (diff >= 2) {
+                        homeStats.pts += 3;
+                    } else {
+                        homeStats.pts += 2;
+                        awayStats.pts += 1;
+                    }
+                } else if (awayScore > homeScore) {
+                    awayStats.won += 1;
+                    homeStats.lost += 1;
+                    const diff = awayScore - homeScore;
+                    if (diff >= 2) {
+                        awayStats.pts += 3;
+                    } else {
+                        awayStats.pts += 2;
+                        homeStats.pts += 1;
+                    }
+                }
             } else {
-                homeStats.drawn += 1;
-                homeStats.pts += 1;
-                awayStats.drawn += 1;
-                awayStats.pts += 1;
+                // Football Rules (Goals)
+                homeStats.gf += homeScore;
+                homeStats.ga += awayScore;
+                homeStats.gd = homeStats.gf - homeStats.ga;
+
+                awayStats.gf += awayScore;
+                awayStats.ga += homeScore;
+                awayStats.gd = awayStats.gf - awayStats.ga;
+
+                if (homeScore > awayScore) {
+                    homeStats.won += 1;
+                    homeStats.pts += 3;
+                    awayStats.lost += 1;
+                } else if (homeScore < awayScore) {
+                    awayStats.won += 1;
+                    homeStats.lost += 1;
+                    awayStats.pts += 3;
+                } else {
+                    homeStats.drawn += 1;
+                    homeStats.pts += 1;
+                    awayStats.drawn += 1;
+                    awayStats.pts += 1;
+                }
             }
         }
     });
@@ -76,11 +113,22 @@ export function calculateStandings(teams: Team[], matches: Match[]): Standing[] 
     return Array.from(standingsMap.values()).sort((a, b) => {
         // 1. Points
         if (b.pts !== a.pts) return b.pts - a.pts;
-        // 2. Goal Difference
-        if (b.gd !== a.gd) return b.gd - a.gd;
-        // 3. Goals For
-        if (b.gf !== a.gf) return b.gf - a.gf;
-        // 4. Team Name (Fall back to name comparison, safe navigation)
+
+        if (sport === 'volleyball') {
+            // 2. Wins
+            if (b.won !== a.won) return b.won - a.won;
+            // 3. Set Difference
+            const sdA = a.sd || 0;
+            const sdB = b.sd || 0;
+            if (sdB !== sdA) return sdB - sdA;
+        } else {
+            // 2. Goal Difference
+            if (b.gd !== a.gd) return b.gd - a.gd;
+            // 3. Goals For
+            if (b.gf !== a.gf) return b.gf - a.gf;
+        }
+
+        // 4. Team Name
         return (a.team?.name || "").localeCompare(b.team?.name || "");
     });
 }

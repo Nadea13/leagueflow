@@ -9,7 +9,7 @@ import {
     NodeChange,
     EdgeChange,
 } from "@xyflow/react";
-import { BracketCanvasData, Match, TournamentTeam } from "@/types";
+import { BracketCanvasData, Match, TournamentTeam, SportType } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 
 export interface MatchNodeData {
@@ -61,6 +61,8 @@ interface BracketState {
     setActiveNodeId: (id: string | null) => void;
     activeCategoryId: string | null;
     setActiveCategoryId: (id: string | null) => void;
+    sport: SportType | null;
+    setSport: (sport: SportType | null) => void;
 
     // History and Clipboard
     past: { nodes: Node[]; edges: Edge[] }[];
@@ -86,6 +88,8 @@ export const useBracketStore = create<BracketState>((set, get) => ({
     setActiveNodeId: (id) => set({ activeNodeId: id }),
     activeCategoryId: null,
     setActiveCategoryId: (id) => set({ activeCategoryId: id }),
+    sport: null,
+    setSport: (sport) => set({ sport }),
 
     past: [],
     future: [],
