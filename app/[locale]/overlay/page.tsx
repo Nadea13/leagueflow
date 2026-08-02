@@ -691,7 +691,7 @@ export default function OverlayPlayground() {
             </Button>
             <div className="flex items-center gap-2">
               <span className="font-black text-lg tracking-tight">LeagueFlow Live Broadcast Scoreboard Editor</span>
-              <span className="bg-primary/10 text-primary font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest">PRO BUILDER</span>
+              <span className="bg-primary/10 text-primary font-black px-1.5 py-0.5 rounded-full tracking-widest">PRO BUILDER</span>
             </div>
           </div>
 
@@ -714,7 +714,7 @@ export default function OverlayPlayground() {
         <section className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between border-b pb-3">
             <div className="flex items-center gap-2">
-              <h2 className="font-black text-sm tracking-widest uppercase">กระดานออกแบบตำแหน่ง (Scoreboard Canvas)</h2>
+              <h2 className="font-black text-sm tracking-widest">กระดานออกแบบตำแหน่ง (Scoreboard Canvas)</h2>
             </div>
             
             {/* Background selection */}
@@ -905,7 +905,7 @@ export default function OverlayPlayground() {
           {/* OBS Link Generator section */}
           <div className="border rounded-lg p-2 md:p-4 space-y-2 md:space-y-4 bg-card">
             <div className="flex items-center gap-2 text-primary">
-              <span className="font-black text-xs tracking-wider uppercase">OBS Browser Source URL</span>
+              <span className="font-black text-xs tracking-wider">OBS Browser Source URL</span>
             </div>
             <p className="text-xs text-muted-foreground font-medium">
               คัดลอกลิงก์ปรับแต่งตามตำแหน่ง (Canvas) นำไปใส่เป็นแหล่งข้อมูล OBS เพื่อขึ้นจอถ่ายทอดสดจริง

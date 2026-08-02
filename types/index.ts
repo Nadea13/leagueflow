@@ -2,7 +2,7 @@ import type { Edge, Node } from "@xyflow/react";
 
 export type TournamentStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished';
 export type MatchStatus = 'scheduled' | 'live' | 'finished' | 'canceled';
-export type SportType = 'football';
+export type SportType = 'football' | 'volleyball';
 
 export interface BracketCanvasData {
     nodes: Node[];
@@ -160,7 +160,7 @@ export interface GlobalPlayer {
     profile_img?: string | null;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover';
+export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win';
 
 export interface MatchEvent {
     id: string;

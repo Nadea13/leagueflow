@@ -131,7 +131,7 @@ function CustomOverlayRenderer() {
     switch (f) {
       case "inter": return "font-sans";
       case "montserrat": return "font-sans tracking-wide";
-      case "bebas-neue": return "font-serif tracking-widest uppercase font-black";
+      case "bebas-neue": return "font-serif tracking-widest font-black";
       case "orbitron": return "font-mono tracking-widest";
       case "outfit": return "font-sans";
       default: return "font-sans";

@@ -1,17 +1,21 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect, useRef, useMemo } from "react";
 import { updateTournament } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
-import { Upload } from "lucide-react";
+import { Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
 import { ActionResponse, Tournament } from "@/types/index";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { LogoUploader } from "@/components/shared/logo-uploader";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date";
 import {
     Select,
     SelectContent,
@@ -43,6 +47,27 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
     const updateTournamentWithId = updateTournament.bind(null, tournament.id);
     const [state, formAction, isPending] = useActionState(updateTournamentWithId, initialState);
     const [description, setDescription] = useState(tournament.description || "");
+
+    const [startDate, setStartDate] = useState<string>(
+        tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""
+    );
+    const [endDate, setEndDate] = useState<string>(
+        tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""
+    );
+    const [viewDate, setViewDate] = useState<Date>(
+        tournament.start_date ? new Date(tournament.start_date) : new Date()
+    );
+
+    // Compute calendar grid days for current month view
+    const calendarDays = useMemo(() => {
+        const monthStart = startOfMonth(viewDate);
+        const monthEnd = endOfMonth(monthStart);
+        const start = startOfWeek(monthStart);
+        const end = endOfWeek(monthEnd);
+
+        const days = eachDayOfInterval({ start, end });
+        return days.map(day => day.getMonth() === viewDate.getMonth() ? day : null);
+    }, [viewDate]);
 
     const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(tournament.logo_img || null);
     const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(tournament.cover_img || null);
@@ -249,25 +274,126 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <Label>{tDialog("start_date")}</Label>
-                                <Input
-                                    type="date"
-                                    id="start_date"
-                                    name="start_date"
-                                    defaultValue={tournament.start_date ? new Date(tournament.start_date).toISOString().split('T')[0] : ""}
-                                />
-                            </div>
+                            {/* Date Range Picker Component */}
+                            <div className="col-span-2 space-y-1">
+                                <Label>{isThai ? "ระยะเวลาการแข่งขัน" : "Tournament Period (Start - End)"} <span className="text-destructive">*</span></Label>
 
-                            <div className="space-y-1">
-                                <Label>{tDialog("end_date")}</Label>
-                                <Input
-                                    type="date"
-                                    id="end_date"
-                                    name="end_date"
-                                    defaultValue={tournament.end_date ? new Date(tournament.end_date).toISOString().split('T')[0] : ""}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 [color-scheme:dark]"
-                                />
+                                {/* Hidden inputs to pass data seamlessly to server action */}
+                                <input type="hidden" name="start_date" value={startDate} required />
+                                <input type="hidden" name="end_date" value={endDate} required />
+
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            className={cn(
+                                                "w-full justify-start border px-3",
+                                                !startDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            {startDate && endDate ? (
+                                                <span className="font-semibold text-sm">
+                                                    {formatDate(startDate, "d MMM yyyy", locale)} – {formatDate(endDate, "d MMM yyyy", locale)}
+                                                </span>
+                                            ) : startDate ? (
+                                                <span className="font-semibold text-sm">
+                                                    {formatDate(startDate, "d MMM yyyy", locale)} – {isThai ? "เลือกวันสิ้นสุด..." : "Select end date..."}
+                                                </span>
+                                            ) : (
+                                                <span className="text-sm lg:text-base text-muted-foreground">
+                                                    {isThai ? "เลือกช่วงวันที่แข่งขัน" : "Select date range"}
+                                                </span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="p-1 lg:p-2 bg-card border shadow-2xl rounded-sm" align="start">
+                                        <div className="space-y-1 lg:space-y-2 select-none">
+                                            {/* Calendar Header: Month & Navigation */}
+                                            <div className="flex items-center justify-between">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setViewDate(subMonths(viewDate, 1))}
+                                                    className="flex items-center justify-center h-6 w-6 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                                >
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                </button>
+                                                <span className="text-xs font-bold tracking-tight">
+                                                    {viewDate.toLocaleString(isThai ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setViewDate(addMonths(viewDate, 1))}
+                                                    className="flex items-center justify-center h-6 w-6 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                                >
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </button>
+                                            </div>
+
+                                            {/* Days of week header */}
+                                            <div className="grid grid-cols-7 text-center">
+                                                {(isThai ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, i) => (
+                                                    <div key={i} className="text-[10px] font-bold text-muted-foreground/60">{d}</div>
+                                                ))}
+                                            </div>
+
+                                            {/* Month Days Grid */}
+                                            <div className="grid grid-cols-7">
+                                                {calendarDays.map((day, idx) => {
+                                                    if (!day) return <div key={`empty-${idx}`} />;
+                                                    const dateStr = format(day, 'yyyy-MM-dd');
+                                                    const isStart = startDate === dateStr;
+                                                    const isEnd = endDate === dateStr;
+                                                    const isInRange = startDate && endDate && dateStr > startDate && dateStr < endDate;
+                                                    const isSelected = isStart || isEnd;
+                                                    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+
+                                                    return (
+                                                        <button
+                                                            key={dateStr}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (!startDate || (startDate && endDate)) {
+                                                                    setStartDate(dateStr);
+                                                                    setEndDate("");
+                                                                } else if (startDate && !endDate) {
+                                                                    if (dateStr < startDate) {
+                                                                        setStartDate(dateStr);
+                                                                    } else {
+                                                                        setEndDate(dateStr);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className={cn(
+                                                                "h-8 w-full flex items-center justify-center text-xs rounded transition-all relative font-medium",
+                                                                isSelected && "bg-primary text-primary-foreground font-black z-10",
+                                                                isInRange && "bg-primary/20 text-primary font-bold rounded-none",
+                                                                !isSelected && !isInRange && "hover:bg-muted text-foreground",
+                                                                isToday && !isSelected && "border border-primary text-primary font-bold"
+                                                            )}
+                                                        >
+                                                            {format(day, 'd')}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {/* Instruction & Clear button */}
+                                            <div className="flex items-center justify-between text-[11px]">
+                                                <span className="text-muted-foreground">{isThai ? "คำแนะนำ: คลิกวันเริ่มและวันสิ้นสุด" : "Click start and end dates"}</span>
+                                                {(startDate || endDate) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setStartDate(""); setEndDate(""); }}
+                                                        className="text-destructive text-[10px] font-bold hover:underline"
+                                                    >
+                                                        {isThai ? "ล้างค่า" : "Clear"}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <div className="col-span-2 space-y-1">

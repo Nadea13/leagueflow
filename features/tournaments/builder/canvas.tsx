@@ -15,13 +15,17 @@ import {
     useReactFlow,
     Connection,
     Edge,
+    BaseEdge,
+    EdgeLabelRenderer,
+    getBezierPath,
+    EdgeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-    Loader2, Plus, Users, X, Save,
+    Loader2, Plus, Users, X,
     Settings, MapPin, ShieldAlert,
-    Calendar, ChevronLeft, ChevronRight, Link2, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, RotateCw, Inbox
+    Calendar, ChevronLeft, ChevronRight, ExternalLink, Megaphone,
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical
 } from "lucide-react";
 import {
     Popover,
@@ -62,6 +66,7 @@ import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus,
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { MatchManager } from "@/features/tournaments/matches/match-manager";
 import { TournamentSettings } from "@/features/tournaments/settings/tournament-settings";
+import { Tab, TabOption } from "@/components/ui/tab";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { GroupNode } from "./group-node";
@@ -102,6 +107,64 @@ const nodeTypes = {
     announcementNode: AnnouncementNode,
     sponsorNode: SponsorNode,
     registrationNode: RegistrationNode,
+};
+
+function DeletableEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerEnd,
+    selected,
+}: EdgeProps) {
+    const [edgePath, labelX, labelY] = getBezierPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+    });
+    const { deleteElements } = useReactFlow();
+
+    return (
+        <>
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+            {selected && (
+                <EdgeLabelRenderer>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                            pointerEvents: 'all',
+                        }}
+                        className="nodrag nopan z-50"
+                    >
+                        <button
+                            type="button"
+                            className="w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                deleteElements({ edges: [{ id }] });
+                            }}
+                            title="Delete connection"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </EdgeLabelRenderer>
+            )}
+        </>
+    );
+}
+
+const edgeTypes = {
+    default: DeletableEdge,
+    bezier: DeletableEdge,
 };
 
 interface CanvasProps {
@@ -334,6 +397,7 @@ function CanvasInternal({
         onNodesChange,
         onEdgesChange,
         onConnect,
+        onReconnect,
         addMatchNode,
         addGroupNode,
         addStandingNode,
@@ -359,7 +423,38 @@ function CanvasInternal({
         }
     }, [initialTeamsData, setStoreTeams]);
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
-    const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'categories' | 'registration' | 'location' | 'staff' | 'danger'>('general');
+    type SettingsTab = 'general' | 'categories' | 'location' | 'staff' | 'danger';
+    const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('general');
+
+    const settingsTabOptions = useMemo<TabOption<SettingsTab>[]>(() => {
+        const options: TabOption<SettingsTab>[] = [
+            { value: 'general', label: tSettings("general_info"), icon: Settings },
+            { value: 'categories', label: tSettings("categories"), icon: Trophy },
+            { value: 'location', label: tSettings("location"), icon: MapPin },
+        ];
+
+        const possessesStaffAccess = Boolean(
+            userPlan && (
+                userPlan === "event" ||
+                userPlan === "cup" ||
+                userPlan === "cup_yearly" ||
+                userPlan === "monthly" ||
+                userPlan === "pro" ||
+                userPlan === "yearly" ||
+                userPlan === "pro_yearly" ||
+                userPlan === "manager_pro" ||
+                userPlan === "customs"
+            )
+        );
+
+        if (possessesStaffAccess) {
+            options.push({ value: 'staff', label: tSettings("staff"), icon: Users });
+        }
+
+        options.push({ value: 'danger', label: tSettings("danger_zone"), icon: ShieldAlert });
+
+        return options;
+    }, [tSettings, userPlan]);
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(tournamentName);
     const [tempName, setTempName] = useState(tournamentName);
@@ -695,7 +790,8 @@ function CanvasInternal({
 
     useEffect(() => {
         loadCategories();
-    }, [loadCategories]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         const urlCategoryId = searchParams.get("category");
@@ -768,6 +864,7 @@ function CanvasInternal({
 
 
     const [isSaving, setIsSaving] = useState(false);
+    const [_lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
     // initialCanvasData is intentionally NOT used to hydrate here.
     // Each category's canvas_data is loaded independently via loadCategories.
@@ -781,9 +878,9 @@ function CanvasInternal({
             const result = await saveBracketCanvas(tournamentId, canvasData, activeCategoryId || undefined);
             if (result.success) {
                 markClean();
+                setLastSavedAt(new Date());
                 if (result.data) {
-                    hydrate(result.data);
-                    // Update local categories list
+                    // Update local categories list cache without re-hydrating react-flow nodes (which destroys active input focus)
                     setCategories(prev => prev.map(c =>
                         c.id === activeCategoryId
                             ? { ...c, canvas_data: result.data ?? null }
@@ -792,28 +889,62 @@ function CanvasInternal({
                 }
                 if (showToast) {
                     toast({
-                        title: "Saved",
-                        description: "Bracket canvas and matches saved successfully.",
+                        title: locale === 'th' ? "บันทึกเรียบร้อย" : "Saved",
+                        description: locale === 'th' ? "บันทึกข้อมูล Canvas เรียบร้อยแล้ว" : "Bracket canvas and matches saved successfully.",
                     });
                 }
                 return;
             }
 
-            toast({
-                title: "Error",
-                description: result.error || "Failed to save bracket canvas.",
-                variant: "destructive",
-            });
+            if (showToast) {
+                toast({
+                    title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error",
+                    description: result.error || "Failed to save bracket canvas.",
+                    variant: "destructive",
+                });
+            }
         } catch {
-            toast({
-                title: "Error",
-                description: "An unexpected error occurred.",
-                variant: "destructive",
-            });
+            if (showToast) {
+                toast({
+                    title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error",
+                    description: "An unexpected error occurred.",
+                    variant: "destructive",
+                });
+            }
         } finally {
             setIsSaving(false);
         }
-    }, [getCanvasData, hydrate, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId]);
+    }, [getCanvasData, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId, locale]);
+
+    // Auto-save effect: save seamlessly in background like Figma/Canva
+    // 1. Debounce timer is set to a snappy 800ms after user stops typing/dragging.
+    // 2. Triggers INSTANT auto-save as soon as user blurs (clicks out of) an input field.
+    useEffect(() => {
+        if (!isDirty || isSaving || readonly) return;
+
+        const timer = setTimeout(() => {
+            handleSave(false);
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, [isDirty, isSaving, readonly, handleSave, nodes, edges]);
+
+    // Save immediately on focusout (when user finishes typing and clicks outside or presses Tab/Enter)
+    useEffect(() => {
+        if (readonly) return;
+
+        const handleFocusOut = (e: FocusEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.getAttribute('contenteditable') === 'true')) {
+                if (isDirty && !isSaving) {
+                    handleSave(false);
+                }
+            }
+        };
+
+        window.addEventListener('focusout', handleFocusOut);
+        return () => window.removeEventListener('focusout', handleFocusOut);
+    }, [isDirty, isSaving, readonly, handleSave]);
 
     const handleCategorySwitch = useCallback(async (newCategoryId: string) => {
         const normalizedCategoryId = toCategoryId(newCategoryId);
@@ -918,50 +1049,33 @@ function CanvasInternal({
     }, []);
 
     const isValidConnection = useCallback((connection: Edge | Connection) => {
-        const sourceConnected = edges.some(
-            (edge) =>
-                edge.source === connection.source &&
-                edge.sourceHandle === (connection.sourceHandle ?? null)
-        );
-        const targetConnected = edges.some(
-            (edge) =>
-                edge.target === connection.target &&
-                edge.targetHandle === (connection.targetHandle ?? null)
-        );
-        return !sourceConnected && !targetConnected;
-    }, [edges]);
+        return connection.source !== connection.target;
+    }, []);
 
     const onConnectWithSave = useCallback((params: Connection) => {
         onConnect(params);
     }, [onConnect]);
 
+    const onReconnectWithSave = useCallback((oldEdge: Edge, newConnection: Connection) => {
+        onReconnect(oldEdge, newConnection);
+    }, [onReconnect]);
+
+    const onReconnectEnd = useCallback((event: MouseEvent | TouchEvent, edge: Edge) => {
+        const targetIsHandle = (event.target as HTMLElement)?.classList?.contains('react-flow__handle');
+        if (!targetIsHandle) {
+            useBracketStore.getState().takeSnapshot();
+            onEdgesChange([{ id: edge.id, type: 'remove' }]);
+        }
+    }, [onEdgesChange]);
 
 
 
-    const handleCopyLinkRegister = useCallback(() => {
-        const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
-        const url = `${window.location.origin}/${locale}/registration/${tournamentId}${categoryQuery}`;
-        navigator.clipboard.writeText(url);
-        toast({
-            title: locale === 'th' ? "คัดลอกลิงก์แล้ว" : "Link Copied",
-            description: locale === 'th' ? "คัดลอกลิงก์ทัวร์นาเมนต์ไปยังคลิปบอร์ดแล้ว" : "Tournament link copied to clipboard.",
-        });
-    }, [tournamentId, locale, toast, activeCategoryId]);
 
     const handleOpenLinkRegister = useCallback(() => {
         const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
         const url = `${window.location.origin}/${locale}/registration/${tournamentId}${categoryQuery}`;
         window.open(url, '_blank');
     }, [tournamentId, locale, activeCategoryId]);
-
-    const handleCopyLink = useCallback(() => {
-        const url = `${window.location.origin}/${locale}/${tournamentId}`;
-        navigator.clipboard.writeText(url);
-        toast({
-            title: locale === 'th' ? "คัดลอกลิงก์แล้ว" : "Link Copied",
-            description: locale === 'th' ? "คัดลอกลิงก์ทัวร์นาเมนต์ไปยังคลิปบอร์ดแล้ว" : "Tournament link copied to clipboard.",
-        });
-    }, [tournamentId, locale, toast]);
 
     const handleOpenLink = useCallback(() => {
         const url = `${window.location.origin}/${locale}/${tournamentId}`;
@@ -1005,22 +1119,7 @@ function CanvasInternal({
 
     return (
         <div className={cn("flex flex-col h-full w-full border bg-card rounded-sm")}>
-            {/* Mobile Portrait Orientation Warning */}
-            <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center p-6 text-center lg:hidden portrait:flex landscape:hidden">
-                <div className="space-y-4">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary animate-bounce">
-                        <RotateCw className="h-8 w-8" />
-                    </div>
-                    <h2 className="text-xl font-black tracking-tight text-foreground">
-                        {locale === 'th' ? 'กรุณาหมุนหน้าจอเป็นแนวนอน' : 'Please rotate your device'}
-                    </h2>
-                    <p className="text-xs text-muted-foreground/80 max-w-xs mx-auto leading-relaxed">
-                        {locale === 'th'
-                            ? 'ระบบบอร์ดจัดการแข่งขันออกแบบมาสำหรับใช้งานในแนวนอนบนอุปกรณ์มือถือเพื่อความสะดวกในการจัดการ'
-                            : 'The bracket manager is designed for landscape mode on mobile devices for the best editing experience.'}
-                    </p>
-                </div>
-            </div>
+            {/* Mobile Portrait Orientation Warning removed - full portrait mobile layout enabled */}
 
             <div className="flex items-center justify-between p-2 lg:p-4 border-b gap-1" id="tour-console-header">
                 <div className="flex items-center gap-2 lg:gap-4">
@@ -1150,21 +1249,9 @@ function CanvasInternal({
                     )}
                     <div className="flex items-center">
                         {!readonly && (
-                            <Button
-                                onClick={() => handleSave(true)}
-                                disabled={!isDirty || isSaving}
-                                variant={isDirty ? "default" : "ghost"}
-                            >
-                                {isSaving ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Save className="h-4 w-4" />
-                                )}
-                                <span>{locale === 'th' ? "บันทึก" : "Save"}</span>
-                            </Button>
-                        )}
-                        {!readonly && (
-                            <div className="flex items-center" id="tour-console-sidebar-buttons">
+                            <>
+                                {/* Desktop Sidebar & Tool Buttons */}
+                                <div className="hidden md:flex items-center" id="tour-console-sidebar-buttons">
 
                                 <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
                                     <DialogTrigger asChild>
@@ -1517,45 +1604,20 @@ function CanvasInternal({
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm">
-                                        <div>
-                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
-                                                {locale === 'th' ? "หน้าทัวร์นาเมนต์ (สาธารณะ)" : "Tournament View (Public)"}
-                                            </div>
-                                            <DropdownMenuItem
-                                                onClick={handleCopyLink}
-                                                className="cursor-pointer text-xs rounded focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                            >
-                                                <Link2 className="h-3.5 w-3.5" />
-                                                <span>{locale === 'th' ? "คัดลอกลิงก์" : "Copy Link"}</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={handleOpenLink}
-                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                            >
-                                                <ExternalLink className="h-3.5 w-3.5" />
-                                                <span>{locale === 'th' ? "เปิดลิงก์" : "Open Link"}</span>
-                                            </DropdownMenuItem>
-                                        </div>
-
-                                        <div>
-                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
-                                                {locale === 'th' ? "หน้าลงทะเบียนทีม" : "Team Registration"}
-                                            </div>
-                                            <DropdownMenuItem
-                                                onClick={handleCopyLinkRegister}
-                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                            >
-                                                <Link2 className="h-3.5 w-3.5" />
-                                                <span>{locale === 'th' ? "คัดลอกลิงก์ลงทะเบียน" : "Copy Reg. Link"}</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={handleOpenLinkRegister}
-                                                className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                            >
-                                                <ExternalLink className="h-3.5 w-3.5" />
-                                                <span>{locale === 'th' ? "เปิดลิงก์ลงทะเบียน" : "Open Reg. Link"}</span>
-                                            </DropdownMenuItem>
-                                        </div>
+                                        <DropdownMenuItem
+                                            onClick={handleOpenLink}
+                                            className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
+                                        >
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={handleOpenLinkRegister}
+                                            className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
+                                        >
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
+                                        </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
 
@@ -1589,7 +1651,110 @@ function CanvasInternal({
                                     </Button>
                                 )}
                             </div>
-                        )}
+
+                            {/* Mobile Menu (...) Dropdown or Close (X) button */}
+                            <div className="flex md:hidden items-center" id="tour-console-mobile-menu">
+                                {(activeSidebar === 'schedule' || activeSidebar === 'settings') ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => setActiveSidebar('teams')}
+                                        className="text-foreground transition-all"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                ) : (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="relative text-foreground"
+                                            >
+                                                <MoreVertical className="h-4 w-4" />
+                                                {filteredInboxItems.some(item => 
+                                                    item.registration_status === 'pending' || 
+                                                    item.unlock_requested || 
+                                                    (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
+                                                ) && (
+                                                    <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
+                                                )}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
+                                            <DropdownMenuItem
+                                                onClick={() => setIsAnnouncementOpen(true)}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                            >
+                                                <Megaphone className="h-4 w-4 text-node-4" />
+                                                <span>{locale === 'th' ? "สร้างประกาศ" : "Announcement"}</span>
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={() => {
+                                                    setInboxOpen(true);
+                                                    fetchInboxItems();
+                                                }}
+                                                className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Inbox className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "กล่องข้อความ" : "Inbox"}</span>
+                                                </div>
+                                                {filteredInboxItems.some(item => 
+                                                    item.registration_status === 'pending' || 
+                                                    item.unlock_requested || 
+                                                    (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
+                                                ) && (
+                                                    <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
+                                                )}
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={() => setActiveSidebar('schedule')}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                            >
+                                                <Calendar className="h-4 w-4" />
+                                                <span>{locale === 'th' ? "ตารางการแข่งขัน" : "Schedule"}</span>
+                                            </DropdownMenuItem>
+
+                                            {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
+                                                <DropdownMenuItem
+                                                    onClick={() => setActiveSidebar('settings')}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                                >
+                                                    <Settings className="h-4 w-4" />
+                                                    <span>{locale === 'th' ? "ตั้งค่าทัวร์นาเมนต์" : "Settings"}</span>
+                                                </DropdownMenuItem>
+                                            )}
+
+                                            <div className="border-t my-1" />
+
+                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground/60">
+                                                {locale === 'th' ? "ลิงก์และการแชร์" : "Links & Share"}
+                                            </div>
+
+                                            <DropdownMenuItem
+                                                onClick={handleOpenLink}
+                                                className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
+                                            >
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={handleOpenLinkRegister}
+                                                className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
+                                            >
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
+                        </>
+                    )}
                     </div>
                 </div>
             </div>
@@ -1652,9 +1817,162 @@ function CanvasInternal({
                     <>
                         {activeSidebar === 'schedule' && tournament ? (
                             <div className="absolute inset-0 z-20 flex flex-col">
-                                <div className="flex flex-1 overflow-hidden bg-card">
-                                    {/* Left Controls Sidebar (w-64 like settings) */}
-                                    <div className="w-64 border-r flex flex-col p-2 lg:p-3 gap-2 shrink-0 z-10">
+                                <div className="flex flex-col md:flex-row flex-1 overflow-hidden bg-card">
+                                    {/* Mobile Schedule Controls Bar */}
+                                    <div className="flex md:hidden flex-row overflow-x-auto border-b p-2 gap-2 bg-card shrink-0 custom-scrollbar items-center whitespace-nowrap z-10">
+                                        {/* Date Filter */}
+                                        <div className="flex items-center border bg-muted/5 rounded-sm shrink-0">
+                                            <button
+                                                onClick={() => setSelectedDate(null)}
+                                                className={cn(
+                                                    "px-2 py-1.5 text-[10px] font-black tracking-tighter transition-all border-r rounded-l-sm",
+                                                    selectedDate === null
+                                                        ? "bg-primary text-black"
+                                                        : "text-muted-foreground hover:text-foreground"
+                                                )}
+                                            >
+                                                {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                            </button>
+                                            <div className="flex items-center justify-between px-1 gap-1">
+                                                <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
+                                                    <ChevronLeft className="h-3.5 w-3.5" />
+                                                </button>
+                                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="ghost" size="sm" className="h-7 gap-1 px-1.5 hover:bg-muted transition-all">
+                                                            <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+                                                            <span className="text-[10px] font-black tracking-tight truncate">
+                                                                {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
+                                                            </span>
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="bottom" sideOffset={5}>
+                                                        <div className="p-3 border-b flex items-center justify-between bg-muted/20">
+                                                            <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
+                                                                <ChevronLeft className="h-4 w-4" />
+                                                            </button>
+                                                            <span className="text-xs font-black tracking-widest">
+                                                                {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
+                                                            </span>
+                                                            <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
+                                                                <ChevronRight className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="p-4 space-y-4">
+                                                            <div className="grid grid-cols-7 gap-1">
+                                                                {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
+                                                                    <div key={`${d}-${idx}`} className="text-[9px] text-center font-black opacity-30">{d}</div>
+                                                                ))}
+                                                            </div>
+                                                            <div className="grid grid-cols-7 gap-1">
+                                                                {calendarDays.map((day, i) => {
+                                                                    if (!day) return <div key={`empty-${i}`} />;
+                                                                    const dateStr = format(day, 'yyyy-MM-dd');
+                                                                    const isSel = selectedDate === dateStr;
+                                                                    const hasMatch = datesWithMatches.has(dateStr);
+                                                                    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+                                                                    const isOutsideRange = !!((tournament?.start_date && dateStr < tournament.start_date) || (tournament?.end_date && dateStr > tournament.end_date));
+
+                                                                    return (
+                                                                        <button
+                                                                            key={dateStr}
+                                                                            disabled={isOutsideRange}
+                                                                            onClick={() => {
+                                                                                setSelectedDate(dateStr);
+                                                                                setIsCalendarOpen(false);
+                                                                            }}
+                                                                            className={cn(
+                                                                                "h-9 flex flex-col items-center justify-center relative transition-all",
+                                                                                isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                                                                                isToday && !isSel && "border border-primary text-primary",
+                                                                                isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
+                                                                            )}
+                                                                        >
+                                                                            <span className="text-[11px]">{format(day, 'd')}</span>
+                                                                            {hasMatch && (
+                                                                                <div className={cn(
+                                                                                    "absolute bottom-1.5 h-1 w-1 rounded-full",
+                                                                                    isSel ? "bg-black" : "bg-primary"
+                                                                                )} />
+                                                                            )}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+                                                                    setViewDate(new Date());
+                                                                    setIsCalendarOpen(false);
+                                                                }}
+                                                                className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                            >
+                                                                {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
+                                                            </Button>
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
+                                                    <ChevronRight className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Stage Filter */}
+                                        <Select value={filterStage} onValueChange={setFilterStage}>
+                                            <SelectTrigger className="w-[130px] h-8 text-xs shrink-0">
+                                                <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-card shadow-2xl">
+                                                <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                    {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                                </SelectItem>
+                                                <SelectItem value="group" className="font-black text-[10px] tracking-widest">
+                                                    {locale === 'th' ? "รอบแบ่งกลุ่ม (ทั้งหมด)" : "GROUP STAGE (ALL)"}
+                                                </SelectItem>
+                                                {nodes
+                                                    .filter(n => n.type === 'groupNode')
+                                                    .map(node => {
+                                                        const label = (node.data as { label?: string })?.label || "Group";
+                                                        return (
+                                                            <SelectItem 
+                                                                key={node.id} 
+                                                                value={label} 
+                                                                className="font-black text-[10px] tracking-widest pl-4"
+                                                            >
+                                                                - {label}
+                                                            </SelectItem>
+                                                        );
+                                                    })
+                                                }
+                                                <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
+                                                    {locale === 'th' ? "รอบน็อคเอาท์" : "KNOCKOUT STAGE"}
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        {/* Team Filter */}
+                                        <Select value={filterTeam} onValueChange={setFilterTeam}>
+                                            <SelectTrigger className="w-[130px] h-8 text-xs shrink-0">
+                                                <SelectValue placeholder={locale === 'th' ? "เลือกทีม" : "Select Team"} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-card shadow-2xl">
+                                                <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                    {locale === 'th' ? "แสดงทั้งหมด" : "SHOW ALL"}
+                                                </SelectItem>
+                                                {teams.map(team => (
+                                                    <SelectItem key={team.id} value={team.id} className="font-black text-[10px] tracking-widest">
+                                                        {team.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Desktop Controls Sidebar */}
+                                    <div className="hidden md:flex w-64 border-r flex-col p-2 lg:p-3 gap-2 shrink-0 z-10">
                                         <div>
                                             <div className="space-y-4">
                                                 {/* Date Filter */}
@@ -1856,92 +2174,28 @@ function CanvasInternal({
 
                         {activeSidebar === 'settings' && tournament && userInvitationRole !== 'staff' && userInvitationRole !== 'referee' ? (
                             <div className="absolute inset-0 z-20 flex flex-col">
-                                <div className="flex flex-1 overflow-hidden">
-                                    {/* Settings Sidebar */}
-                                    <aside className="w-64 border-r flex flex-col shrink-0 py-4 px-2 lg:px-4 space-y-1">
-                                        <button
-                                            onClick={() => setActiveSettingsTab('general')}
-                                            className={cn(
-                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                                activeSettingsTab === 'general'
-                                                    ? "bg-primary/10 text-primary"
-                                                    : "text-muted-foreground hover:text-primary"
-                                            )}
-                                        >
-                                            <Settings className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'general' ? "text-primary" : "text-muted-foreground")} />
-                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("general_info")}</span>
-                                        </button>
+                                <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                                    {/* Mobile Settings Tabs Bar using Tab component */}
+                                    <div className="md:hidden border-b p-2 bg-card shrink-0 overflow-x-auto custom-scrollbar">
+                                        <Tab
+                                            options={settingsTabOptions}
+                                            value={activeSettingsTab}
+                                            onChange={(val) => setActiveSettingsTab(val)}
+                                            orientation="horizontal"
+                                            className="border-none p-0 flex-nowrap min-w-max"
+                                        />
+                                    </div>
 
-                                        <button
-                                            onClick={() => setActiveSettingsTab('categories')}
-                                            className={cn(
-                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                                activeSettingsTab === 'categories'
-                                                    ? "bg-primary/10 text-primary"
-                                                    : "text-muted-foreground hover:text-primary"
-                                            )}
-                                        >
-                                            <Trophy className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'categories' ? "text-primary" : "text-muted-foreground")} />
-                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("categories")}</span>
-                                        </button>
-
-                                        <button
-                                            onClick={() => setActiveSettingsTab('location')}
-                                            className={cn(
-                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                                activeSettingsTab === 'location'
-                                                    ? "bg-primary/10 text-primary"
-                                                    : "text-muted-foreground hover:text-primary"
-                                            )}
-                                        >
-                                            <MapPin className={cn("h-4 w-4 transition-transform group-hover:text-primary", activeSettingsTab === 'location' ? "text-primary" : "text-muted-foreground")} />
-                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("location")}</span>
-                                        </button>
-
-                                        {(() => {
-                                            const possessesStaffAccess = Boolean(
-                                                userPlan && (
-                                                    userPlan === "event" ||
-                                                    userPlan === "cup" ||
-                                                    userPlan === "cup_yearly" ||
-                                                    userPlan === "monthly" ||
-                                                    userPlan === "pro" ||
-                                                    userPlan === "yearly" ||
-                                                    userPlan === "pro_yearly" ||
-                                                    userPlan === "manager_pro" ||
-                                                    userPlan === "customs"
-                                                )
-                                            );
-                                            return (
-                                                <button
-                                                    disabled={!possessesStaffAccess}
-                                                    onClick={() => setActiveSettingsTab('staff')}
-                                                    className={cn(
-                                                        "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                                        activeSettingsTab === 'staff'
-                                                            ? "bg-primary/10 text-primary"
-                                                            : "text-muted-foreground hover:text-primary",
-                                                        !possessesStaffAccess && "opacity-50 cursor-not-allowed hover:text-muted-foreground"
-                                                    )}
-                                                >
-                                                    <Users className={cn("h-4 w-4 transition-transform", activeSettingsTab === 'staff' ? "text-primary" : "text-muted-foreground")} />
-                                                    <span className="text-sm font-medium whitespace-nowrap">{tSettings("staff")}</span>
-                                                </button>
-                                            );
-                                        })()}
-
-                                        <button
-                                            onClick={() => setActiveSettingsTab('danger')}
-                                            className={cn(
-                                                "flex items-center gap-2 p-2 rounded-sm transition-all relative group tracking-wide w-full text-left font-medium text-sm",
-                                                activeSettingsTab === 'danger'
-                                                    ? "bg-destructive/10 text-destructive"
-                                                    : "text-destructive/60 hover:text-destructive"
-                                            )}
-                                        >
-                                            <ShieldAlert className={cn("h-4 w-4 transition-transform group-hover:text-destructive", activeSettingsTab === 'danger' ? "text-destructive" : "text-destructive/60")} />
-                                            <span className="text-sm font-medium whitespace-nowrap">{tSettings("danger_zone")}</span>
-                                        </button>
+                                    {/* Desktop Settings Sidebar using Tab component */}
+                                    <aside className="hidden md:flex w-64 border-r flex-col shrink-0 p-3 bg-card">
+                                        <Tab
+                                            options={settingsTabOptions}
+                                            value={activeSettingsTab}
+                                            onChange={(val) => setActiveSettingsTab(val)}
+                                            orientation="vertical"
+                                            className="w-full border-none p-0 gap-1.5"
+                                            itemClassName="justify-start py-2.5 px-3 text-xs rounded-sm"
+                                        />
                                     </aside>
 
                                     {/* Settings Content Area */}
@@ -2010,6 +2264,7 @@ function CanvasInternal({
                                             onNodesChange={readonly ? undefined : onNodesChange}
                                             onEdgesChange={readonly ? undefined : onEdgesChange}
                                             onConnect={readonly ? undefined : onConnectWithSave}
+                                            onReconnect={readonly || isLocked ? undefined : onReconnectWithSave}
                                             isValidConnection={isValidConnection}
                                             onNodeDragStart={readonly ? undefined : onNodeDragStart}
                                             onNodeDragStop={readonly ? undefined : onDragStop}
@@ -2030,6 +2285,8 @@ function CanvasInternal({
                                                 selectNode(null);
                                             }}
                                             nodeTypes={nodeTypes}
+                                            edgeTypes={edgeTypes}
+                                            onReconnectEnd={readonly || isLocked ? undefined : onReconnectEnd}
                                             fitView={false}
                                             defaultViewport={{ x: 0, y: 0, zoom: 1 }}
                                             minZoom={0.1}

@@ -602,7 +602,7 @@ export default async function Home() {
                       </div>
                       <span className="text-[11px] font-extrabold text-foreground tracking-wide">John Miller</span>
                     </div>
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase">Forward • Alpha FC</span>
+                    <span className="text-[8px] font-bold text-muted-foreground">Forward • Alpha FC</span>
                   </div>
 
                   {/* 4 Stat Cards */}

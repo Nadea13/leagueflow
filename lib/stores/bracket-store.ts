@@ -36,6 +36,7 @@ interface BracketState {
     onNodesChange: (changes: NodeChange[]) => void;
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
+    onReconnect: (oldEdge: Edge, newConnection: Connection) => void;
     addMatchNode: (position?: { x: number; y: number }) => void;
 
     addGroupNode: (position?: { x: number; y: number }) => void;
@@ -456,23 +457,40 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
         const isStandingToMatchBottom = sourceNode.type === 'standingNode' && targetNode.type === 'matchNode' && connection.targetHandle === 'group-in';
 
-        set((state) => ({
-            edges: addEdge(
-                {
-                    ...connection,
-                    type: "bezier",
-                    animated: false,
-                    style: {
-                        stroke: "var(--muted-foreground)",
-                        strokeWidth: 2,
-                        strokeDasharray: isStandingToMatchBottom ? "5,5" : "none",
-                        opacity: 1,
+        set((state) => {
+            // Remove any existing edge connected to the same source handle or target handle
+            const filteredEdges = state.edges.filter(
+                (edge) =>
+                    !(edge.source === connection.source && (edge.sourceHandle ?? null) === (connection.sourceHandle ?? null)) &&
+                    !(edge.target === connection.target && (edge.targetHandle ?? null) === (connection.targetHandle ?? null))
+            );
+
+            return {
+                edges: addEdge(
+                    {
+                        ...connection,
+                        type: "bezier",
+                        animated: false,
+                        style: {
+                            stroke: "var(--muted-foreground)",
+                            strokeWidth: 2,
+                            strokeDasharray: isStandingToMatchBottom ? "5,5" : "none",
+                            opacity: 1,
+                        },
                     },
-                },
-                state.edges
-            ),
-            isDirty: true,
+                    filteredEdges
+                ),
+                isDirty: true,
+            };
+        });
+    },
+
+    onReconnect: (oldEdge: Edge, newConnection: Connection) => {
+        get().takeSnapshot();
+        set((state) => ({
+            edges: state.edges.filter((e) => e.id !== oldEdge.id),
         }));
+        get().onConnect(newConnection);
     },
 
     addMatchNode: (position) => {

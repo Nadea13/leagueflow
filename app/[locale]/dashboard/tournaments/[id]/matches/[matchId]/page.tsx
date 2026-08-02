@@ -1,6 +1,7 @@
 
 import { createAdminClient } from "@/lib/supabase/server";
-import { ConsolePage } from "@/features/sports/football/console-page";
+import { ConsolePage as FootballConsolePage } from "@/features/sports/football/console-page";
+import { VolleyballConsolePage } from "@/features/sports/volleyball/console-page";
 import { MatchEvent } from "@/types";
 
 export default async function AdminMatchConsole(props: {
@@ -65,12 +66,14 @@ export default async function AdminMatchConsole(props: {
         away_team
     };
 
-    // Fetch the tournament
+    // Fetch the tournament and sport
     const { data: tournament } = await supabase
         .from('tournaments')
-        .select('name')
+        .select('name, sports(sport_name)')
         .eq('id', id)
         .single();
+
+    const sportName = (tournament?.sports as unknown as { sport_name: string } | null)?.sport_name?.toLowerCase();
 
     // Fetch initial events
     const { data: events } = await supabase
@@ -94,8 +97,21 @@ export default async function AdminMatchConsole(props: {
         ? `/dashboard/tournaments/${id}?category=${categoryId}`
         : `/dashboard/tournaments/${id}?tab=${fromTab}`;
 
+    if (sportName === 'volleyball') {
+        return (
+            <VolleyballConsolePage
+                match={match}
+                tournamentId={id}
+                tournamentName={tournament?.name || undefined}
+                readOnly={false}
+                initialEvents={formattedEvents as MatchEvent[]}
+                backUrl={backUrl}
+            />
+        );
+    }
+
     return (
-        <ConsolePage
+        <FootballConsolePage
             match={match}
             tournamentId={id}
             tournamentName={tournament?.name || undefined}

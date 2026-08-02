@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import { ConsolePage } from "@/features/sports/football/console-page";
+import { ConsolePage as FootballConsolePage } from "@/features/sports/football/console-page";
+import { VolleyballConsolePage } from "@/features/sports/volleyball/console-page";
 import { MatchEvent } from "@/types";
 import { PublicFooter } from "@/components/layout/public-footer";
 
@@ -44,17 +45,20 @@ export default async function PublicMatchConsole(props: {
         } : null,
     };
 
-    // Fetch tournament and checking payments for Pro plan
+    // Fetch tournament and sports
     const { data: tournament } = await supabase
         .from('tournaments')
         .select(`
             name,
             plan, 
             user_id,
+            sports(sport_name),
             payments(plan, status)
         `)
         .eq('id', id)
         .single();
+
+    const sportName = (tournament?.sports as unknown as { sport_name: string } | null)?.sport_name?.toLowerCase();
 
     // Fetch initial events
     const { data: events } = await supabase
@@ -76,14 +80,25 @@ export default async function PublicMatchConsole(props: {
     return (
         <div className="flex flex-col min-h-screen">
             <div className="flex-1">
-                <ConsolePage
-                    match={match}
-                    tournamentId={id}
-                    tournamentName={tournament?.name}
-                    readOnly={true}
-                    initialEvents={formattedEvents as MatchEvent[]}
-                    backUrl={`/${id}?tab=${fromTab}`}
-                />
+                {sportName === 'volleyball' ? (
+                    <VolleyballConsolePage
+                        match={match}
+                        tournamentId={id}
+                        tournamentName={tournament?.name}
+                        readOnly={true}
+                        initialEvents={formattedEvents as MatchEvent[]}
+                        backUrl={`/${id}?tab=${fromTab}`}
+                    />
+                ) : (
+                    <FootballConsolePage
+                        match={match}
+                        tournamentId={id}
+                        tournamentName={tournament?.name}
+                        readOnly={true}
+                        initialEvents={formattedEvents as MatchEvent[]}
+                        backUrl={`/${id}?tab=${fromTab}`}
+                    />
+                )}
             </div>
             <PublicFooter />
         </div>
