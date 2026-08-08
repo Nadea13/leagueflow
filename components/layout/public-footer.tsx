@@ -26,7 +26,10 @@ export function PublicFooter() {
                         </svg>
                         <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-4">
+                        <Link href="/tournaments" className="hover:text-foreground transition-colors font-medium">
+                            {tLanding('nav_tournaments')}
+                        </Link>
                         <Button asChild>
                             <Link href="/signup">
                                 {tPricing('get_started')} <ArrowRight className="ml-2 h-4 w-4" />

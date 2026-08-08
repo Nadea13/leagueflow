@@ -160,7 +160,7 @@ export interface GlobalPlayer {
     profile_img?: string | null;
 }
 
-export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win';
+export type EventType = 'goal' | 'assist' | 'yellow_card' | 'red_card' | 'foul' | 'penalty' | 'substitution' | 'var' | 'add_time' | 'kick_off' | 'half_time' | 'full_time' | 'match_paused' | 'match_resumed' | 'penalty_shot' | 'save' | 'corner' | 'injury' | 'walkover' | 'point' | 'ace' | 'spike' | 'block' | 'timeout' | 'set_win' | 'possession' | 'pass' | 'missed_shot' | 'bad_pass' | 'offside' | 'cross' | 'miss_cross';
 
 export interface MatchEvent {
     id: string;
@@ -416,6 +416,7 @@ export interface TournamentCategory {
     gender_type: string;
     max_teams: number;
     registration_fee?: number | null;
+    rules_config?: Record<string, unknown> | null;
     canvas_data: BracketCanvasData | null;
     deleted_at?: string | null;
     created_at?: string;

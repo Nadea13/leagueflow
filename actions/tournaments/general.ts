@@ -448,6 +448,8 @@ export async function createTournament(_prevState: ActionResponse, formData: For
         const name = formData.get("name") as string;
         const sport_id = formData.get("sport_id") as string;
         const description = formData.get("description") as string;
+        const location_name = formData.get("location_name") as string || null;
+        const google_map_url = formData.get("google_map_url") as string || null;
         const start_date = formData.get("start_date") as string;
         const end_date = formData.get("end_date") as string;
         const document_deadline = formData.get("document_deadline") as string;
@@ -540,6 +542,8 @@ export async function createTournament(_prevState: ActionResponse, formData: For
             sport_id,
             name,
             description: description || null,
+            location_name: location_name || null,
+            google_map_url: google_map_url || null,
             start_date,
             end_date,
             document_deadline,
@@ -745,7 +749,8 @@ export async function createTournamentCategory(
     ageCategoryId: number,
     genderType: string,
     maxTeams: number,
-    registrationFee: number
+    registrationFee: number,
+    rulesConfig?: Record<string, unknown> | null
 ): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
@@ -852,16 +857,22 @@ export async function createTournamentCategory(
         }
 
         const formattedFee = Math.round(registrationFee * 100) / 100;
+        const insertPayload: Record<string, unknown> = {
+            tournament_id: tournamentId,
+            age_category_id: ageCategoryId,
+            gender_type: genderType,
+            max_teams: maxTeams,
+            registration_fee: formattedFee
+        };
+
+        if (rulesConfig !== undefined) {
+            insertPayload.rules_config = rulesConfig;
+        }
+
         // Insert category
         const { data: newCategory, error } = await supabase
             .from("tournament_categories")
-            .insert({
-                tournament_id: tournamentId,
-                age_category_id: ageCategoryId,
-                gender_type: genderType,
-                max_teams: maxTeams,
-                registration_fee: formattedFee
-            })
+            .insert(insertPayload)
             .select()
             .single();
 
@@ -1595,7 +1606,8 @@ export async function updateTournamentCategory(
     ageCategoryId: number,
     genderType: string,
     maxTeams: number,
-    registrationFee: number
+    registrationFee: number,
+    rulesConfig?: Record<string, unknown> | null
 ): Promise<ActionResponse> {
     try {
         const supabase = await createClient();
@@ -1640,14 +1652,20 @@ export async function updateTournamentCategory(
         }
 
         const formattedFee = Math.round(registrationFee * 100) / 100;
+        const updatePayload: Record<string, unknown> = {
+            age_category_id: ageCategoryId,
+            gender_type: genderType,
+            max_teams: maxTeams,
+            registration_fee: formattedFee,
+        };
+
+        if (rulesConfig !== undefined) {
+            updatePayload.rules_config = rulesConfig;
+        }
+
         const { data: _updatedCategory, error } = await supabase
             .from("tournament_categories")
-            .update({
-                age_category_id: ageCategoryId,
-                gender_type: genderType,
-                max_teams: maxTeams,
-                registration_fee: formattedFee
-            })
+            .update(updatePayload)
             .eq("id", categoryId)
             .eq("tournament_id", tournamentId)
             .select()
@@ -1663,7 +1681,8 @@ export async function updateTournamentCategory(
             age_category_id: ageCategoryId,
             gender_type: genderType,
             max_teams: maxTeams,
-            registration_fee: registrationFee
+            registration_fee: registrationFee,
+            rules_config: rulesConfig
         });
 
         revalidatePath(`/dashboard/tournaments/${tournamentId}`);

@@ -140,7 +140,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 asChild
                                 className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                             >
-                                <Link href="/">
+                                <Link href="/registrations">
                                     <ArrowLeft className="h-4 w-4" />
                                 </Link>
                             </Button>
@@ -171,7 +171,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
                                 asChild
                                 className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
                             >
-                                <Link href="/">
+                                <Link href="/registrations">
                                     <ArrowLeft className="h-4 w-4" />
                                 </Link>
                             </Button>

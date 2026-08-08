@@ -324,9 +324,15 @@ export function PublicTournamentShell({
         return { scorers, assists, yellowCards, redCards, saves, injuries };
     }, [events, initialPlayers, resolveTeam]);
 
+    const hasStandings = useMemo(() => {
+        if (canvasStandings && canvasStandings.length > 0) return true;
+        const hasGroups = initialTeams.some(t => t.group_name && t.group_name !== "Unassigned");
+        return hasGroups;
+    }, [canvasStandings, initialTeams]);
+
     const currentTab = searchParams.get('tab') || 'overview';
 
-    const handleTabChange = (value: string) => {
+    const handleTabChange = useCallback((value: string) => {
         const params = new URLSearchParams(searchParams.toString());
         if (value === 'overview') {
             params.delete('tab');
@@ -334,7 +340,14 @@ export function PublicTournamentShell({
             params.set('tab', value);
         }
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    };
+    }, [searchParams, pathname, router]);
+
+    // Fallback if current active tab is standings but hasStandings is false
+    useEffect(() => {
+        if (!hasStandings && currentTab === 'standings') {
+            handleTabChange('overview');
+        }
+    }, [hasStandings, currentTab, handleTabChange]);
 
     const handleCategoryChange = (value: string) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -411,6 +424,20 @@ export function PublicTournamentShell({
         return name.slice(0, 2).toUpperCase();
     };
 
+    const tabOptions = useMemo(() => {
+        const options = [
+            { value: 'overview', label: t("overview"), icon: Trophy },
+        ];
+        if (hasStandings) {
+            options.push({ value: 'standings', label: t("league_table"), icon: Award });
+        }
+        options.push(
+            { value: 'matches', label: t("matches"), icon: Calendar },
+            { value: 'stats', label: t("player_stats"), icon: Users }
+        );
+        return options;
+    }, [hasStandings, t]);
+
     return (
         <main className="container mx-auto px-2 md:px-0 py-2 md:py-4 max-w-7xl">
             {/* Unified Header Block - Styled like squad-management */}
@@ -429,10 +456,12 @@ export function PublicTournamentShell({
                     <div className="flex flex-col gap-1">
                         <div className="flex flex-wrap items-center gap-1 md:gap-2">
                             <Header level={2}>{tournament?.name}</Header>
-                            {tournament?.status !== 'ongoing' && tournament?.status !== 'upcoming' && (
+                            {tournament?.status && (
                                 <div className="flex flex-wrap items-center gap-1 md:gap-2">
                                     <Badge className={cn(
-                                        tournament?.status === 'finished' && "bg-gray-500 hover:bg-gray-600 shadow-gray-900/20",
+                                        tournament?.status === 'ongoing' && "bg-primary hover:bg-primary/80",
+                                        tournament?.status === 'upcoming' && "bg-warning hover:bg-warning/80",
+                                        tournament?.status === 'finished' && "bg-muted-foreground hover:bg-muted-foreground/80",
                                         (!tournament?.status || tournament?.status === 'draft') && "bg-yellow-500 hover:bg-yellow-600 text-black shadow-yellow-900/10"
                                     )}>
                                         {tTournament(tournament?.status || 'draft')}
@@ -448,9 +477,9 @@ export function PublicTournamentShell({
                         <div className="flex items-center gap-2 w-fit md:w-auto max-w-[280px]">
                             <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
                                 <SelectTrigger className="bg-card border h-9 text-xs">
-                                    <SelectValue placeholder="เลือกหมวดหมู่" />
+                                    <SelectValue placeholder={tTournament("select_category")} />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-card">
                                     {categories.map((c) => (
                                         <SelectItem key={c.id} value={c.id} className="text-xs">
                                             {c.name}
@@ -530,12 +559,7 @@ export function PublicTournamentShell({
                 onChange={handleTabChange}
                 className="w-full md:w-max mb-2 md:mb-4 bg-card"
                 itemClassName="flex-1 md:flex-none"
-                options={[
-                    { value: 'overview', label: t("overview"), icon: Trophy },
-                    { value: 'standings', label: t("league_table"), icon: Award },
-                    { value: 'matches', label: t("matches"), icon: Calendar },
-                    { value: 'stats', label: t("player_stats"), icon: Users },
-                ]}
+                options={tabOptions}
             />
 
             {currentTab === 'overview' && (

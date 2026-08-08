@@ -616,58 +616,73 @@ export function NodeSettings() {
                         </>
                     )}
 
-                    {type === "standingNode" && (
-                        <div className="space-y-1 md:space-y-2">
-                            <div className="space-y-1" id="node-settings-standing-advancing">
-                                <Label>Advancing Teams</Label>
-                                <Input
-                                    type="text"
-                                    inputMode="numeric"
-                                    value={data.advancingCount as number || 0}
-                                    onChange={(e) => {
-                                        const val = e.target.value.replace(/[^0-9]/g, "");
-                                        const num = parseInt(val, 10) || 0;
-                                        updateNodeData(id, { advancingCount: Math.min(16, num) });
-                                    }}
-                                 />
-                                <p className="text-[10px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
-                            </div>
+                    {type === "standingNode" && (() => {
+                        const sport = useBracketStore.getState().sport || (selectedNode?.data?.sport as string) || 'football';
+                        const isVolleyball = sport === 'volleyball';
 
-                            <div className="grid gap-1 md:gap-2" id="node-settings-standing-columns">
-                                {[
-                                    { label: "Matches Played", key: "showPlayed" },
-                                    { label: "Win / Draw / Loss", key: "showWDL", composite: ["showWin", "showDraw", "showLoss"] },
-                                    { label: "GF / GA", key: "showG", composite: ["showGF", "showGA"], defaultOff: true },
-                                    { label: "Goal Difference", key: "showGD" },
-                                    { label: "Points", key: "showPts" },
-                                    { label: "Form (Last 5)", key: "showForm", defaultOff: true },
-                                    { label: "Next Match", key: "showNextMatch", defaultOff: true },
-                                ].map((item) => (
-                                    <div key={item.key} className="flex items-center justify-between">
-                                        <Label className="text-[11px] font-bold text-foreground leading-none cursor-pointer" htmlFor={item.key}>
-                                            {item.label}
-                                        </Label>
-                                        <Switch
-                                            id={item.key}
-                                            checked={item.composite
-                                                ? item.composite.every(k => item.defaultOff ? !!data[k] : data[k] !== false)
-                                                : item.defaultOff ? !!data[item.key] : data[item.key] !== false
-                                            }
-                                            onCheckedChange={(checked) => {
-                                                if (item.composite) {
-                                                    const updates: Record<string, boolean> = {};
-                                                    item.composite.forEach(k => updates[k] = checked);
-                                                    updateNodeData(id, updates);
-                                                } else {
-                                                    updateNodeData(id, { [item.key]: checked });
+                        const columnOptions = isVolleyball ? [
+                            { label: "Matches Played", key: "showPlayed" },
+                            { label: "Win / Loss", key: "showWL", composite: ["showWin", "showLoss"] },
+                            { label: "SW / SL (Sets)", key: "showS", composite: ["showSW", "showSL"], defaultOff: true },
+                            { label: "Set Difference (SD)", key: "showSD" },
+                            { label: "Points", key: "showPts" },
+                            { label: "Form (Last 5)", key: "showForm", defaultOff: true },
+                            { label: "Next Match", key: "showNextMatch", defaultOff: true },
+                        ] : [
+                            { label: "Matches Played", key: "showPlayed" },
+                            { label: "Win / Draw / Loss", key: "showWDL", composite: ["showWin", "showDraw", "showLoss"] },
+                            { label: "GF / GA (Goals)", key: "showG", composite: ["showGF", "showGA"], defaultOff: true },
+                            { label: "Goal Difference (GD)", key: "showGD" },
+                            { label: "Points", key: "showPts" },
+                            { label: "Form (Last 5)", key: "showForm", defaultOff: true },
+                            { label: "Next Match", key: "showNextMatch", defaultOff: true },
+                        ];
+
+                        return (
+                            <div className="space-y-1 md:space-y-2">
+                                <div className="space-y-1" id="node-settings-standing-advancing">
+                                    <Label>Advancing Teams</Label>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={data.advancingCount as number || 0}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^0-9]/g, "");
+                                            const num = parseInt(val, 10) || 0;
+                                            updateNodeData(id, { advancingCount: Math.min(16, num) });
+                                        }}
+                                     />
+                                    <p className="text-[10px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
+                                </div>
+
+                                <div className="grid gap-1 md:gap-2" id="node-settings-standing-columns">
+                                    {columnOptions.map((item) => (
+                                        <div key={item.key} className="flex items-center justify-between">
+                                            <Label className="text-[11px] font-bold text-foreground leading-none cursor-pointer" htmlFor={item.key}>
+                                                {item.label}
+                                            </Label>
+                                            <Switch
+                                                id={item.key}
+                                                checked={item.composite
+                                                    ? item.composite.every(k => item.defaultOff ? !!data[k] : data[k] !== false)
+                                                    : item.defaultOff ? !!data[item.key] : data[item.key] !== false
                                                 }
-                                            }}
-                                        />
-                                    </div>
-                                ))}
+                                                onCheckedChange={(checked) => {
+                                                    if (item.composite) {
+                                                        const updates: Record<string, boolean> = {};
+                                                        item.composite.forEach(k => updates[k] = checked);
+                                                        updateNodeData(id, updates);
+                                                    } else {
+                                                        updateNodeData(id, { [item.key]: checked });
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
 
                     {type === "matchNode" && (() => {
                         const groupEdge = edges.find(e => e.target === id && e.targetHandle === 'group-in');

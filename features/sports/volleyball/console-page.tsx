@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Match, MatchEvent, Player } from "@/types";
+import { Match, MatchEvent, Player, EventType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,6 @@ import { Header } from "@/components/ui/header";
 import { cn } from "@/lib/utils";
 import { updateMatch } from "@/actions/tournaments/general";
 import { getPlayers } from "@/actions/tournaments/player";
-import { createClient } from "@/lib/supabase/client";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { BroadcastDialog } from "../football/console/broadcast-dialog";
 import { WalkoverDialog } from "../football/console/walkover-dialog";
@@ -43,7 +42,15 @@ interface VolleyballConsolePageProps {
     initialEvents?: MatchEvent[];
     backUrl: string;
     tournamentName?: string;
+    maxSets?: number;
 }
+
+const pointTypes = ['point', 'ace', 'spike', 'block'];
+
+const getSetNumber = (e: MatchEvent) => {
+    const extraSet = (e.extra_info as Record<string, unknown> | null)?.set;
+    return typeof extraSet === 'number' ? extraSet : (e.minute || 1);
+};
 
 export function VolleyballConsolePage({
     match: initialMatch,
@@ -51,18 +58,17 @@ export function VolleyballConsolePage({
     readOnly = false,
     initialEvents = [],
     backUrl,
-    tournamentName: _tournamentName
+    tournamentName: _tournamentName,
+    maxSets = 3
 }: VolleyballConsolePageProps) {
     const locale = useLocale();
     const tPublic = useTranslations("PublicView");
     const { toast } = useToast();
-    const supabase = createClient();
 
     // State for Volleyball Match
     const [match, setMatch] = useState<Match>(initialMatch);
-    const { events, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
+    const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
 
-    // Derived team helpers & real-time point counts from match_events
     const isHomeEvent = useCallback((e: MatchEvent) => {
         const extra = e.extra_info as Record<string, unknown> | null;
         if (extra?.team_side === 'home') return true;
@@ -97,24 +103,58 @@ export function VolleyballConsolePage({
         return false;
     }, [match.home_team_id, match.home_team?.id, match.away_team_id, match.away_team?.id]);
 
-    const pointTypes = useMemo(() => ['point', 'ace', 'spike', 'block'], []);
+    // Roster & Lineup state
+    const [homePlayers, setHomePlayers] = useState<Player[]>([]);
+    const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
+    const [homeLineup, setHomeLineup] = useState<string[]>([]);
+    const [awayLineup, setAwayLineup] = useState<string[]>([]);
 
-    const getSetNumber = useCallback((e: MatchEvent) => {
-        const extraSet = (e.extra_info as Record<string, unknown> | null)?.set;
-        return typeof extraSet === 'number' ? extraSet : (e.minute || 1);
-    }, []);
+    // Dialog state
+    const [rosterDialogOpen, setRosterDialogOpen] = useState(false);
+    const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
+    const [woDialogOpen, setWoDialogOpen] = useState(false);
+    const [actionDialogOpen, setActionDialogOpen] = useState(false);
+    const [actionConfig, setActionConfig] = useState<{ teamSide: 'home' | 'away'; eventType: 'ace' | 'spike' | 'block' | 'point' }>({
+        teamSide: 'home',
+        eventType: 'point'
+    });
+    const [confirmConfig, setConfirmConfig] = useState<{
+        open: boolean;
+        title: string;
+        description?: string;
+        actionLabel?: string;
+        cancelLabel?: string;
+        onConfirm?: () => void;
+    }>({ open: false, title: "" });
 
-    // Calculate sets, points, and history dynamically from match_events with Deuce rule
-    const { setHistory, homeSets, awaySets, currentSet, homePoints, awayPoints } = useMemo(() => {
+    // Fetch Players
+    useEffect(() => {
+        const fetchPlayersData = async () => {
+            if (match.home_team_id) {
+                const res = await getPlayers(match.home_team_id);
+                if (res.success && res.data) setHomePlayers(res.data);
+            }
+            if (match.away_team_id) {
+                const res = await getPlayers(match.away_team_id);
+                if (res.success && res.data) setAwayPlayers(res.data);
+            }
+        };
+        fetchPlayersData();
+    }, [match.home_team_id, match.away_team_id]);
+
+    // Derive set score state from events
+    const { homeSets, awaySets, homePoints, awayPoints, setHistory, servingTeam, currentSet } = useMemo(() => {
         const setPointsMap = new Map<number, { home: number; away: number }>();
-        events.forEach(e => {
-            if (!pointTypes.includes(e.event_type)) return;
-            const setNum = getSetNumber(e);
-            const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
-            if (isHomeEvent(e)) current.home += 1;
-            if (isAwayEvent(e)) current.away += 1;
-            setPointsMap.set(setNum, current);
-        });
+        if (events && events.length > 0) {
+            events.forEach(e => {
+                if (!pointTypes.includes(e.event_type)) return;
+                const setNum = getSetNumber(e);
+                const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
+                if (isHomeEvent(e)) current.home += 1;
+                if (isAwayEvent(e)) current.away += 1;
+                setPointsMap.set(setNum, current);
+            });
+        }
 
         const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
         const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
@@ -125,8 +165,7 @@ export function VolleyballConsolePage({
 
         for (let s = 1; s <= maxLoggedSet; s++) {
             const pts = setPointsMap.get(s) || { home: 0, away: 0 };
-            const targetPts = s === 5 ? 15 : 25;
-            // Deuce Rule: Must reach targetPts (25 for sets 1-4, 15 for set 5) AND lead by at least 2 points
+            const targetPts = s === maxSets ? 15 : 25;
             const isSetFinishedByScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
             const isPastSet = s < maxLoggedSet;
 
@@ -137,121 +176,30 @@ export function VolleyballConsolePage({
             }
         }
 
-        const activeSet = Math.min(5, hSets + aSets + 1);
-        const activePts = setPointsMap.get(activeSet) || { home: 0, away: 0 };
+        const currSet = hSets + aSets + 1;
+        const currHomePts = setPointsMap.get(currSet)?.home || 0;
+        const currAwayPts = setPointsMap.get(currSet)?.away || 0;
+
+        const latestPointEvent = events ? events.find(e => pointTypes.includes(e.event_type)) : null;
+        const sTeam: 'home' | 'away' = latestPointEvent
+            ? (isHomeEvent(latestPointEvent) ? 'home' : 'away')
+            : 'home';
 
         return {
-            setHistory: history,
             homeSets: hSets,
             awaySets: aSets,
-            currentSet: activeSet,
-            homePoints: activePts.home,
-            awayPoints: activePts.away
+            homePoints: currHomePts,
+            awayPoints: currAwayPts,
+            setHistory: history,
+            servingTeam: sTeam,
+            currentSet: currSet
         };
-    }, [events, pointTypes, getSetNumber, isHomeEvent, isAwayEvent]);
+    }, [events, isHomeEvent, isAwayEvent, maxSets]);
 
-    const latestPointEvent = events.find(e => pointTypes.includes(e.event_type));
-    const servingTeam: 'home' | 'away' | null = latestPointEvent
-        ? (isHomeEvent(latestPointEvent) ? 'home' : 'away')
-        : 'home';
-
-    // Lineup & Roster States
-    const [rosterDialogOpen, setRosterDialogOpen] = useState(false);
-    const [homePlayers, setHomePlayers] = useState<Player[]>([]);
-    const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
-    const [homeLineup, setHomeLineup] = useState<string[]>([]);
-    const [awayLineup, setAwayLineup] = useState<string[]>([]);
-
-    // Fetch players for home & away teams
-    useEffect(() => {
-        const loadPlayers = async () => {
-            const fetchTeam = async (teamId: string, setter: (players: Player[]) => void) => {
-                const { data: ttData } = await supabase
-                    .from("tournament_teams")
-                    .select("id")
-                    .eq("team_id", teamId)
-                    .eq("tournament_category_id", match.tournament_category_id)
-                    .is("deleted_at", null)
-                    .maybeSingle();
-
-                const targetId = ttData?.id || teamId;
-                const res = await getPlayers(targetId);
-                if (res.success && res.data) setter(res.data);
-            };
-
-            const promises = [];
-            if (match.home_team_id) promises.push(fetchTeam(match.home_team_id, setHomePlayers));
-            if (match.away_team_id) promises.push(fetchTeam(match.away_team_id, setAwayPlayers));
-
-            await Promise.all(promises);
-        };
-
-        loadPlayers();
-    }, [match.home_team_id, match.away_team_id, match.tournament_category_id, supabase]);
-
-    // Load saved lineup from localStorage
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const saved = localStorage.getItem(`match-lineup-${match.id}`);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    queueMicrotask(() => {
-                        if (parsed.home) setHomeLineup(parsed.home);
-                        if (parsed.away) setAwayLineup(parsed.away);
-                    });
-                } catch (e) {
-                    console.error("Failed to parse saved lineup:", e);
-                }
-            }
-        }
-    }, [match.id]);
-
-    const handleSaveLineup = (homeActive: string[], awayActive: string[]) => {
-        setHomeLineup(homeActive);
-        setAwayLineup(awayActive);
-        if (typeof window !== "undefined") {
-            localStorage.setItem(
-                `match-lineup-${match.id}`,
-                JSON.stringify({ home: homeActive, away: awayActive })
-            );
-        }
-        toast({ title: locale === "th" ? "บันทึกรายชื่อผู้เล่นเรียบร้อย" : "Roster saved successfully" });
-    };
-
-    // Dialog states
-    const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
-    const [woDialogOpen, setWoDialogOpen] = useState(false);
-    const [confirmConfig, setConfirmConfig] = useState<{
-        open: boolean;
-        title: string;
-        description?: string;
-        actionLabel?: string;
-        cancelLabel?: string;
-        onConfirm?: () => void;
-    }>({ open: false, title: "" });
-
-    const [actionDialogOpen, setActionDialogOpen] = useState(false);
-    const [actionConfig, setActionConfig] = useState<{
-        teamSide: 'home' | 'away';
-        eventType: 'ace' | 'spike' | 'block';
-    }>({ teamSide: 'home', eventType: 'ace' });
-
-    const handleTriggerActionEvent = (teamSide: 'home' | 'away', eventType: 'ace' | 'spike' | 'block') => {
-        setActionConfig({ teamSide, eventType });
-        setActionDialogOpen(true);
-    };
-
-    const addPoint = useCallback(async (
-        team: 'home' | 'away',
-        eventType: 'point' | 'ace' | 'spike' | 'block' = 'point',
-        playerId?: string,
-        playerName?: string
-    ) => {
+    const addPoint = useCallback(async (teamSide: 'home' | 'away', eventType: EventType = 'point', playerId?: string, playerName?: string) => {
         if (readOnly) return;
-
-        const teamId = team === 'home' ? match.home_team_id : match.away_team_id;
-        const teamName = team === 'home' ? match.home_team?.name : match.away_team?.name;
+        const teamId = teamSide === 'home' ? match.home_team_id : match.away_team_id;
+        const teamName = teamSide === 'home' ? match.home_team?.name : match.away_team?.name;
         const playerText = playerName ? ` (${playerName})` : "";
 
         await addEvent(
@@ -260,40 +208,130 @@ export function VolleyballConsolePage({
             currentSet,
             playerId || null,
             {
-                text: `Set ${currentSet} - Point for ${teamName || team} (${eventType.toUpperCase()})${playerText}`,
+                text: `Set ${currentSet} - Point for ${teamName || teamSide} (${eventType.toUpperCase()})${playerText}`,
                 set: currentSet,
-                team_side: team,
+                team_side: teamSide,
                 player_name: playerName
             },
             playerName || teamName || "Team"
         );
-    }, [readOnly, match, currentSet, addEvent]);
+    }, [readOnly, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, currentSet, addEvent]);
 
-    // Auto-finish match when a team reaches 3 set wins (Best of 5)
+    const handleTriggerActionEvent = (teamSide: 'home' | 'away', eventType: 'ace' | 'spike' | 'block' | 'point') => {
+        setActionConfig({ teamSide, eventType });
+        setActionDialogOpen(true);
+    };
+
+    const handleSaveLineup = (homeActive: string[], awayActive: string[]) => {
+        setHomeLineup(homeActive);
+        setAwayLineup(awayActive);
+        toast({ title: locale === "th" ? "บันทึกรายชื่อผู้เล่นเรียบร้อย" : "Lineup saved successfully" });
+    };
+
+    // Match updates queue state (Optimistic updates for fast UI & background DB sync)
+    const [matchQueue, setMatchQueue] = useState<{
+        id: string;
+        data: Parameters<typeof updateMatch>[1];
+        status: "pending" | "syncing" | "failed";
+    }[]>([]);
+    const [isMatchSyncing, setIsMatchSyncing] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(`leagueflow-pending-match-${match.id}`);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    setTimeout(() => {
+                        setMatchQueue(parsed);
+                    }, 0);
+                } catch (_) { }
+            }
+        }
+    }, [match.id]);
+
+    const saveMatchQueue = useCallback((newQueue: typeof matchQueue) => {
+        setMatchQueue(newQueue);
+        if (typeof window !== "undefined") {
+            localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(newQueue));
+        }
+    }, [match.id]);
+
+    const syncMatchQueue = useCallback(async () => {
+        if (isMatchSyncing || readOnly) return;
+        const currentQueue = [...matchQueue];
+        if (currentQueue.length === 0) return;
+
+        setIsMatchSyncing(true);
+        const updated = [...currentQueue];
+
+        for (let i = 0; i < updated.length; i++) {
+            const item = updated[i];
+            if (item.status === 'syncing') continue;
+
+            item.status = 'syncing';
+            saveMatchQueue([...updated]);
+
+            try {
+                const res = await updateMatch(match.id, item.data, tournamentId);
+                if (res.success) {
+                    updated.splice(i, 1);
+                    i--;
+                } else {
+                    item.status = 'failed';
+                }
+            } catch (_) {
+                item.status = 'failed';
+            }
+            saveMatchQueue([...updated]);
+        }
+        setIsMatchSyncing(false);
+    }, [match.id, tournamentId, matchQueue, isMatchSyncing, readOnly, saveMatchQueue]);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const handleOnline = () => {
+                syncMatchQueue();
+            };
+            window.addEventListener("online", handleOnline);
+            return () => window.removeEventListener("online", handleOnline);
+        }
+    }, [syncMatchQueue]);
+
+    useEffect(() => {
+        if (matchQueue.some(item => item.status === 'pending')) {
+            queueMicrotask(() => {
+                syncMatchQueue();
+            });
+        }
+    }, [matchQueue, syncMatchQueue]);
+
+    const queueMatchUpdate = useCallback(async (data: Parameters<typeof updateMatch>[1]) => {
+        const newItem = { id: `match-${Date.now()}`, data, status: 'pending' as const };
+        saveMatchQueue([...matchQueue, newItem]);
+        setMatch(prev => ({ ...prev, ...data }));
+    }, [matchQueue, saveMatchQueue]);
+
+    // Auto-finish match when a team reaches setsToWin (Best of 3 -> 2 wins, Best of 5 -> 3 wins)
     useEffect(() => {
         if (readOnly || match.status === 'finished') return;
-        if (homeSets >= 3 || awaySets >= 3) {
-            const winnerId = homeSets >= 3 ? match.home_team_id : match.away_team_id;
-            updateMatch(
-                match.id,
-                {
+        const setsToWin = Math.ceil(maxSets / 2);
+        if (homeSets >= setsToWin || awaySets >= setsToWin) {
+            queueMicrotask(() => {
+                const winnerId = homeSets >= setsToWin ? match.home_team_id : match.away_team_id;
+                queueMatchUpdate({
                     status: 'finished',
                     home_score: homeSets,
                     away_score: awaySets,
                     winner_id: winnerId
-                },
-                tournamentId
-            ).then(res => {
-                if (res.success) {
-                    setMatch(prev => ({ ...prev, status: 'finished', home_score: homeSets, away_score: awaySets, winner_id: winnerId }));
-                    toast({
-                        title: locale === "th" ? "จบการแข่งขันเรียบร้อย!" : "Match Completed!",
-                        description: `Winner: ${homeSets >= 3 ? match.home_team?.name : match.away_team?.name}`
-                    });
-                }
+                });
+                toast({
+                    title: locale === "th" ? "จบการแข่งขันเรียบร้อย!" : "Match Completed!",
+                    description: `Winner: ${homeSets >= setsToWin ? match.home_team?.name : match.away_team?.name}`
+                });
             });
         }
-    }, [homeSets, awaySets, match.status, match.id, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, tournamentId, readOnly, locale, toast]);
+    }, [homeSets, awaySets, match.status, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, readOnly, locale, toast, maxSets, queueMatchUpdate]);
 
     const handleUndo = async () => {
         if (readOnly) return;
@@ -304,6 +342,46 @@ export function VolleyballConsolePage({
         const lastEvent = events[0];
         if (lastEvent) {
             await deleteEvent(lastEvent.id);
+
+            // Calculate new set scores after deleting last event
+            const remainingEvents = events.slice(1);
+            let hSets = 0;
+            let aSets = 0;
+            const setPointsMap = new Map<number, { home: number; away: number }>();
+            remainingEvents.forEach(e => {
+                if (!pointTypes.includes(e.event_type)) return;
+                const setNum = getSetNumber(e);
+                const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
+                if (isHomeEvent(e)) current.home += 1;
+                if (isAwayEvent(e)) current.away += 1;
+                setPointsMap.set(setNum, current);
+            });
+
+            const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
+            const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
+
+            for (let s = 1; s <= maxLoggedSet; s++) {
+                const pts = setPointsMap.get(s) || { home: 0, away: 0 };
+                const targetPts = s === maxSets ? 15 : 25;
+                const isSetFinishedByScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
+                const isPastSet = s < maxLoggedSet;
+
+                if (isPastSet || isSetFinishedByScore) {
+                    if (pts.home > pts.away) hSets += 1;
+                    else if (pts.away > pts.home) aSets += 1;
+                }
+            }
+
+            const setsToWin = Math.ceil(maxSets / 2);
+            if (match.status === 'finished' && hSets < setsToWin && aSets < setsToWin) {
+                queueMatchUpdate({
+                    status: 'live',
+                    home_score: hSets,
+                    away_score: aSets,
+                    winner_id: null
+                });
+            }
+
             toast({ title: locale === "th" ? "ยกเลิกเหตุการณ์ล่าสุดแล้ว" : "Undid last event" });
         }
     };
@@ -486,8 +564,7 @@ export function VolleyballConsolePage({
         </div>
     ) : null;
 
-    const [isSyncing, setIsSyncing] = useState(false);
-    const [pendingCount, setPendingCount] = useState(0);
+    const [_pendingCount, setPendingCount] = useState(0);
 
     const startConsoleTutorial = () => {
         const steps = [
@@ -528,13 +605,10 @@ export function VolleyballConsolePage({
         driverObj.drive();
     };
 
-    const handleManualSync = async () => {
-        setIsSyncing(true);
-        setTimeout(() => {
-            setIsSyncing(false);
-            setPendingCount(0);
-            toast({ title: locale === "th" ? "ซิงค์ข้อมูลเรียบร้อย" : "Data synced successfully" });
-        }, 600);
+    const _handleManualSync = async () => {
+        await syncQueue();
+        setPendingCount(0);
+        toast({ title: locale === "th" ? "ซิงค์ข้อมูลเรียบร้อย" : "Data synced successfully" });
     };
 
     return (
@@ -598,15 +672,19 @@ export function VolleyballConsolePage({
                         </Button>
 
                         {/* Sync Icon */}
-                        {pendingCount > 0 ? (
-                            <div className="flex items-center gap-1 text-amber-500 animate-pulse">
-                                <CloudOff className="w-4 h-4" />
+                        {(queue.filter(q => q.matchId === match.id).length + matchQueue.length) > 0 ? (
+                            <div className="flex items-center gap-1 text-warning animate-pulse">
+                                <CloudOff className="w-4 h-4 text-amber-500" />
                                 <button
-                                    onClick={handleManualSync}
-                                    disabled={isSyncing}
-                                    className="hover:text-white transition-colors"
+                                    onClick={() => {
+                                        syncQueue();
+                                        syncMatchQueue();
+                                    }}
+                                    disabled={isSyncing || isMatchSyncing}
+                                    className="ml-1 hover:text-white transition-colors"
+                                    title={locale === "th" ? "กดเพื่อซิงค์ข้อมูลลงฐานข้อมูล" : "Click to sync data"}
                                 >
-                                    <RefreshCw className={cn("w-4 h-4", isSyncing && "animate-spin")} />
+                                    <RefreshCw className={cn("w-4 h-4", (isSyncing || isMatchSyncing) && "animate-spin")} />
                                 </button>
                             </div>
                         ) : (
@@ -669,6 +747,7 @@ export function VolleyballConsolePage({
                             setScoresHistory={setHistory}
                             servingTeam={servingTeam}
                             currentSetNumber={currentSet}
+                            maxSets={maxSets}
                         />
 
                         {/* Quick Actions (Mobile only) */}
@@ -676,75 +755,86 @@ export function VolleyballConsolePage({
                             {quickActionsBox}
                         </div>
 
-                        {/* Point Controls Section */}
                         {/* Point Controls Section (Split into Home & Away Cards) */}
-                        {!readOnly && match.status !== 'finished' && (
+                        {!readOnly && (
                             <div className="flex flex-col gap-2 lg:gap-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 lg:gap-4" id="vball-point-controls">
-                                    {/* Home Team Control Card */}
-                                    <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm lg:text-base font-black tracking-tight truncate">
-                                                {match.home_team?.name || "Home"}
-                                            </h3>
+                                {match.status !== 'finished' ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 lg:gap-4" id="vball-point-controls">
+                                        {/* Home Team Control Card */}
+                                        <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-sm lg:text-base font-black tracking-tight truncate">
+                                                    {match.home_team?.name || "Home"}
+                                                </h3>
+                                            </div>
+
+                                            <Button
+                                                size="lg"
+                                                onClick={() => addPoint('home', 'point')}
+                                                className="w-full bg-primary flex items-center justify-center"
+                                            >
+                                                <span>+1 Point ({match.home_team?.name || 'Home'})</span>
+                                            </Button>
+
+                                            <div className="grid grid-cols-3 gap-1 lg:gap-2">
+                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'ace')}>
+                                                    <Zap className="h-4 w-4 text-yellow-500" />
+                                                    <span>Ace</span>
+                                                </Button>
+                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'spike')}>
+                                                    <Flame className="h-4 w-4 text-red-500" />
+                                                    <span>Spike</span>
+                                                </Button>
+                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'block')}>
+                                                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                    <span>Block</span>
+                                                </Button>
+                                            </div>
                                         </div>
 
-                                        <Button
-                                            size="lg"
-                                            onClick={() => addPoint('home', 'point')}
-                                            className="w-full bg-primary flex items-center justify-center"
-                                        >
-                                            <span>+1 Point ({match.home_team?.name || 'Home'})</span>
-                                        </Button>
+                                        {/* Away Team Control Card */}
+                                        <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-sm lg:text-base font-black tracking-tight truncate">
+                                                    {match.away_team?.name || "Away"}
+                                                </h3>
+                                            </div>
 
-                                        <div className="grid grid-cols-3 gap-1 lg:gap-2">
-                                            <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'ace')}>
-                                                <Zap className="h-4 w-4 text-yellow-500" />
-                                                <span>Ace</span>
+                                            <Button
+                                                size="lg"
+                                                onClick={() => addPoint('away', 'point')}
+                                                className="w-full bg-primary flex items-center justify-center"
+                                            >
+                                                <span>+1 Point ({match.away_team?.name || 'Away'})</span>
                                             </Button>
-                                            <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'spike')}>
-                                                <Flame className="h-4 w-4 text-red-500" />
-                                                <span>Spike</span>
-                                            </Button>
-                                            <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'block')}>
-                                                <ShieldCheck className="h-4 w-4 text-blue-500" />
-                                                <span>Block</span>
-                                            </Button>
+
+                                            <div className="grid grid-cols-3 gap-1 lg:gap-2">
+                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'ace')}>
+                                                    <Zap className="h-4 w-4 text-yellow-500" />
+                                                    <span>Ace</span>
+                                                </Button>
+                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'spike')}>
+                                                    <Flame className="h-4 w-4 text-red-500" />
+                                                    <span>Spike</span>
+                                                </Button>
+                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'block')}>
+                                                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                    <span>Block</span>
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    {/* Away Team Control Card */}
-                                    <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm lg:text-base font-black tracking-tight truncate">
-                                                {match.away_team?.name || "Away"}
-                                            </h3>
-                                        </div>
-
-                                        <Button
-                                            size="lg"
-                                            onClick={() => addPoint('away', 'point')}
-                                            className="w-full bg-primary flex items-center justify-center"
-                                        >
-                                            <span>+1 Point ({match.away_team?.name || 'Away'})</span>
+                                ) : (
+                                    <div className="p-4 bg-muted/50 border rounded-sm flex items-center justify-between">
+                                        <span className="text-sm font-bold text-muted-foreground">
+                                            {locale === "th" ? "การแข่งขันจบลงแล้ว (หากต้องการแก้ไขแต้มย้อนหลัง สามารถกด Undo บนเมนูด้านข้างได้)" : "Match finished (Click Undo on the left menu to revert last point)"}
+                                        </span>
+                                        <Button variant="outline" size="sm" onClick={handleUndo} className="gap-2">
+                                            <Undo className="h-4 w-4" />
+                                            <span>{locale === "th" ? "ยกเลิกแต้มล่าสุด (Undo)" : "Undo Last Point"}</span>
                                         </Button>
-
-                                        <div className="grid grid-cols-3 gap-1 lg:gap-2">
-                                            <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'ace')}>
-                                                <Zap className="h-4 w-4 text-yellow-500" />
-                                                <span>Ace</span>
-                                            </Button>
-                                            <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'spike')}>
-                                                <Flame className="h-4 w-4 text-red-500" />
-                                                <span>Spike</span>
-                                            </Button>
-                                            <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'block')}>
-                                                <ShieldCheck className="h-4 w-4 text-blue-500" />
-                                                <span>Block</span>
-                                            </Button>
-                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         )}
                     </section>

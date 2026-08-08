@@ -1,83 +1,83 @@
 import { Link } from "@/i18n/routing";
-import { cn } from "@/lib/utils";
-
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, Trophy } from "lucide-react";
-import { formatDate } from "@/lib/date";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Calendar } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Tournament } from "@/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface PublicTournamentCardProps {
     tournament: Tournament & { tournament_teams?: { count: number }[] };
+    href?: string;
 }
 
-export function PublicTournamentCard({ tournament }: PublicTournamentCardProps) {
-    const t = useTranslations("Common");
+export function PublicTournamentCard({ tournament, href }: PublicTournamentCardProps) {
     const locale = useLocale();
-    const tSettings = useTranslations("Settings");
     const tDashboard = useTranslations("Dashboard");
-
-    // Assuming we want to show a PRO badge if the tournament is on a paid plan
-    const _isPro = tournament.plan && tournament.plan !== 'free';
+    const tSettings = useTranslations("Settings");
 
     const currentTeams = tournament.tournament_teams?.[0]?.count || 0;
-    const isFull = tournament.max_teams && currentTeams >= tournament.max_teams;
-    const isPastDeadline = tournament.document_deadline && new Date(tournament.document_deadline) < new Date();
-    const isClosed = isFull || isPastDeadline;
+    const isFull = tournament.max_teams ? currentTeams >= tournament.max_teams : false;
+    const isPastDeadline = tournament.document_deadline ? new Date(tournament.document_deadline) < new Date() : false;
+    const isNotOpenYet = tournament.is_registration_open === false;
+    const isClosed = isFull || isPastDeadline || isNotOpenYet;
+
+    const cardHref = href || `/tournaments/${tournament.id}`;
 
     return (
-        <Link href={`/${tournament.id}`} className="block h-full group">
-            <Card className="flex flex-col h-full bg-card pt-4 md:pt-6 pb-4 md:pb-6 border transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rotate-12 transition-transform group-hover:scale-110" />
-                <Trophy className="absolute right-4 md:right-6 z-20 h-4 w-4 text-primary" />
-                <CardHeader className="relative z-10 pb-2">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between gap-2">
+        <Link href={cardHref} className="block group">
+            <Card className="flex flex-col h-full bg-card border rounded-sm transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer">
+                <CardContent className="flex justify-between py-2 md:py-4 relative z-10">
+                    <div className="flex items-center gap-1 md:gap-2 overflow-hidden">
+                        <Avatar className="h-12 w-12 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
+                            <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
+                            <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">
+                                {tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col gap-1 min-w-0">
                             <div className="flex items-center gap-2">
-                                {tournament.status && (
-                                    <div className={cn(
-                                        "text-[9px] font-black tracking-widest px-2 py-0.5",
-                                        tournament.status === 'finished' ? "bg-muted text-muted-foreground/40" : "bg-primary/10 text-primary border border-primary/20"
-                                    )}>
-                                        {tSettings(tournament.status as Parameters<typeof tSettings>[0])}
-                                    </div>
-                                )}
+                                <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
+                                    {tournament.name}
+                                </CardTitle>
                                 {isClosed && (
-                                    <div className="text-[9px] font-black tracking-widest px-2 py-0.5 bg-red-500/10 text-red-600 border border-red-500/20">
-                                        {isFull ? (tSettings("full") || "FULL") : (tSettings("closed") || "CLOSED")}
-                                    </div>
+                                    <Badge
+                                        variant="outline"
+                                        className={`w-fit text-[9px] ${isNotOpenYet
+                                            ? "text-warning border-warning/50 bg-warning/10"
+                                            : "text-destructive border-destructive/50 bg-destructive/10"
+                                            }`}
+                                    >
+                                        {isNotOpenYet
+                                            ? "ยังไม่เปิดรับสมัคร"
+                                            : isFull
+                                            ? (tSettings("full") || "เต็มแล้ว")
+                                            : (tSettings("closed") || "ปิดรับสมัคร")}
+                                    </Badge>
                                 )}
                             </div>
                         </div>
-                        <CardTitle className="text-lg md:text-xl font-black leading-tight tracking-tighter group-hover:text-primary transition-colors truncate">
-                            {tournament.name}
-                        </CardTitle>
                     </div>
-                </CardHeader>
-
-                <CardContent className="relative z-10 px-6">
-                    <div className="flex flex-col gap-4">
-                        <div className="grid grid-cols-2 gap-4 border-t group-hover:border-primary/40 pt-4">
-                            <div className="flex flex-col">
-                                <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{t("kick_off")}</span>
-                                <div className="flex items-center gap-2">
-                                    <CalendarDays className="h-3.5 w-3.5 text-primary/40 shrink-0" />
-                                    <span className="text-[11px] font-black tabular-nums tracking-tight">
-                                        {tournament.start_date
-                                            ? formatDate(tournament.start_date, "MMM d, yyyy", locale)
-                                            : tDashboard("card_not_scheduled")}
-                                    </span>
-                                </div>
+                    <div className="flex items-center gap-2 md:gap-4">
+                        <div className="flex gap-2">
+                            <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary">
+                                <Calendar className="h-4 w-4" />
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-[8px] font-black text-muted-foreground/40 tracking-[0.2em] mb-1">{t("team_limit")}</span>
-                                <div className="flex items-center gap-2">
-                                    <Users className="h-3.5 w-3.5 text-primary/40 shrink-0" />
-                                    <span className="text-[11px] font-black tabular-nums tracking-tight">
-                                        {tournament.max_teams ? `${currentTeams}/${tournament.max_teams} ${t("teams")}` : t("open")}
-                                    </span>
-                                </div>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">
+                                    {tDashboard("schedule")}
+                                </p>
+                                <p className="text-xs font-bold truncate">
+                                    {tournament.start_date && tournament.end_date ? (
+                                        tournament.start_date === tournament.end_date
+                                            ? new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+                                            : `${new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })}`
+                                    ) : tournament.start_date ? (
+                                        new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+                                    ) : (
+                                        tDashboard("not_specified")
+                                    )}
+                                </p>
                             </div>
                         </div>
                     </div>

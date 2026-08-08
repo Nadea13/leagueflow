@@ -46,7 +46,7 @@ export function MatchEventDialog({
     const tCommon = useTranslations("Common");
 
     const [minute, setMinute] = useState<string>("");
-    const [playerId, setPlayerId] = useState<string>("");
+    const [playerId, setPlayerId] = useState<string>("unknown");
     const [assistPlayerId, setAssistPlayerId] = useState<string>("");
     const [subInPlayerId, setSubInPlayerId] = useState<string>("");
     const [showConfirm, setShowConfirm] = useState(false);
@@ -55,7 +55,7 @@ export function MatchEventDialog({
         if (open) {
             const timer = setTimeout(() => {
                 setMinute(initialMinute.toString());
-                setPlayerId("");
+                setPlayerId("unknown");
                 setAssistPlayerId("");
                 setSubInPlayerId("");
                 setShowConfirm(false);
@@ -126,6 +126,7 @@ export function MatchEventDialog({
 
     if (!eventType) return null;
 
+    const isNoPlayerRequired = eventType === 'missed_shot' || eventType === 'offside' || eventType === 'save';
     const eventConfig = EVENT_TYPES.find(t => t.type === eventType);
 
     return (
@@ -158,24 +159,26 @@ export function MatchEventDialog({
                     </div>
 
                     {/* Player Selection */}
-                    <div className="space-y-1">
-                        <Label>{eventType === 'substitution' ? t("player_out") : t("player")}</Label>
-                        <Select value={playerId} onValueChange={setPlayerId}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder={t("player_name")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {startingPlayers.map((player) => (
-                                    <SelectItem key={player.id} value={player.id}>
-                                        {getPlayerLabel(player)}
+                    {!isNoPlayerRequired && (
+                        <div className="space-y-1">
+                            <Label>{eventType === 'substitution' ? t("player_out") : t("player")}</Label>
+                            <Select value={playerId} onValueChange={setPlayerId}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder={t("player_name")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {startingPlayers.map((player) => (
+                                        <SelectItem key={player.id} value={player.id}>
+                                            {getPlayerLabel(player)}
+                                        </SelectItem>
+                                    ))}
+                                    <SelectItem value="unknown">
+                                        {t("unknown_player")}
                                     </SelectItem>
-                                ))}
-                                <SelectItem value="unknown">
-                                    {t("unknown_player")}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     {/* Goal: Assist */}
                     {eventType === 'goal' && (
@@ -221,7 +224,7 @@ export function MatchEventDialog({
                     <Button
                         type="button"
                         onClick={() => handleSave(false)}
-                        disabled={!playerId}
+                        disabled={!isNoPlayerRequired && !playerId}
                         className="w-full"
                     >
                         {tCommon("save")}

@@ -76,6 +76,7 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                     <MapPicker
                         value={googleMapUrl}
                         onChange={(url) => setGoogleMapUrl(url)}
+                        onLocationNameSelect={(name) => setLocationName(name)}
                     />
                     <input type="hidden" name="google_map_url" value={googleMapUrl} />
                 </div>

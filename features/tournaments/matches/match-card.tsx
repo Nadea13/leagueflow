@@ -285,6 +285,42 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                             {getScore(match.away_score)}
                                         </span>
                                     </div>
+                                    {/* Volleyball Set Scores History */}
+                                    {events && events.length > 0 && (() => {
+                                        const pointTypes = ['point', 'ace', 'spike', 'block'];
+                                        const setPointsMap = new Map<number, { home: number; away: number }>();
+                                        events.forEach(e => {
+                                            if (!pointTypes.includes(e.event_type)) return;
+                                            const extraSet = (e.extra_info as Record<string, unknown> | null)?.set;
+                                            const setNum = typeof extraSet === 'number' ? extraSet : (e.minute || 1);
+                                            const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
+                                            
+                                            const extra = e.extra_info as Record<string, unknown> | null;
+                                            const isHome = extra?.team_side === 'home' || 
+                                                (e.team_id && (e.team_id === match.home_team_id || e.team_id === match.home_team?.id)) ||
+                                                ((extra?.text as string) || "").includes("Point for home");
+
+                                            if (isHome) current.home += 1;
+                                            else current.away += 1;
+                                            setPointsMap.set(setNum, current);
+                                        });
+
+                                        const setNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
+                                        if (setNumbers.length === 0) return null;
+
+                                        return (
+                                            <div className="flex items-center gap-1 flex-wrap justify-center">
+                                                {setNumbers.map(s => {
+                                                    const pts = setPointsMap.get(s)!;
+                                                    return (
+                                                        <span key={s} className="text-[10px] text-muted-foreground">
+                                                            {pts.home}-{pts.away}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })()}
                                     {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (
                                         <span className="text-[10px] font-black tracking-tighter">
                                             ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PK)

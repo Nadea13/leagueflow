@@ -25,6 +25,7 @@ interface ScoreboardProps {
     servingTeam?: 'home' | 'away' | null;
     currentSetNumber?: number;
     onTeamClick?: (teamId: string) => void;
+    maxSets?: number;
 }
 
 export function VolleyballScoreboard({
@@ -37,7 +38,8 @@ export function VolleyballScoreboard({
     setScoresHistory = [],
     servingTeam = null,
     currentSetNumber = 1,
-    onTeamClick
+    onTeamClick,
+    maxSets = 3
 }: ScoreboardProps) {
     const formatTeamName = (name: string | undefined) => {
         return name || "";
@@ -105,7 +107,7 @@ export function VolleyballScoreboard({
 
     for (let s = 1; s <= maxLoggedSet; s++) {
         const pts = setPointsMap.get(s) || { home: 0, away: 0 };
-        const targetPts = s === 5 ? 15 : 25;
+        const targetPts = s === maxSets ? 15 : 25;
         const isSetFinishedByScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
         const isPastSet = s < maxLoggedSet;
 

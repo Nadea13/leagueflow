@@ -26,6 +26,14 @@ import {
 import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+const MapPicker = dynamic(() => import("./map-picker"), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-80 rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
+            <span className="text-xs text-muted-foreground">Loading interactive map...</span>
+        </div>
+    )
+});
 
 const initialState: ActionResponse = {
     success: false,
@@ -46,6 +54,8 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
 
     const updateTournamentWithId = updateTournament.bind(null, tournament.id);
     const [state, formAction, isPending] = useActionState(updateTournamentWithId, initialState);
+    const [locationName, setLocationName] = useState(tournament.location_name || "");
+    const [googleMapUrl, setGoogleMapUrl] = useState(tournament.google_map_url || "");
     const [description, setDescription] = useState(tournament.description || "");
 
     const [startDate, setStartDate] = useState<string>(
@@ -396,57 +406,28 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                 </Popover>
                             </div>
 
+                            {/* Location Section */}
                             <div className="col-span-2 space-y-1">
-                                <Label>{isThai ? "ธนาคาร" : "Bank Name"}</Label>
-                                <Select
-                                    name="bank_name"
-                                    defaultValue={tournament.bank_name || ""}
-                                >
-                                    <SelectTrigger className="w-full bg-transparent text-foreground">
-                                        <SelectValue placeholder={isThai ? "เลือกธนาคาร" : "Select Bank"} />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-card">
-                                        {(() => {
-                                            const defaultBanks = [
-                                                { value: "PromptPay", label: "พร้อมเพย์ (PromptPay)" },
-                                            ];
-                                            const currentBank = tournament.bank_name || "";
-                                            const isCustom = currentBank && !defaultBanks.some(b => b.value === currentBank);
-                                            const options = isCustom 
-                                                ? [...defaultBanks, { value: currentBank, label: currentBank }]
-                                                : defaultBanks;
-                                            return options.map((bank) => (
-                                                <SelectItem key={bank.value} value={bank.value} className="font-bold text-xs cursor-pointer">
-                                                    {bank.label}
-                                                </SelectItem>
-                                            ));
-                                        })()}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>{isThai ? "ชื่อบัญชี" : "Bank Account Name"}</Label>
+                                <Label htmlFor="location_name">{isThai ? "สถานที่แข่งขัน" : "Venue Name"}</Label>
                                 <Input
                                     type="text"
-                                    id="bank_account_name"
-                                    name="bank_account_name"
-                                    defaultValue={tournament.bank_account_name || ""}
+                                    id="location_name"
+                                    name="location_name"
+                                    value={locationName}
+                                    onChange={(e) => setLocationName(e.target.value)}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <Label>{isThai ? "เลขบัญชี / เบอร์พร้อมเพย์" : "Account Number / PromptPay"}</Label>
-                                <Input
-                                    type="text"
-                                    id="bank_account_number"
-                                    name="bank_account_number"
-                                    defaultValue={tournament.bank_account_number || ""}
-                                    className="bg-transparent text-foreground focus-visible:ring-0"
+                            <div className="col-span-2 space-y-1">
+                                <Label>{isThai ? "ตำแหน่งแผนที่" : "Location Map"}</Label>
+                                <MapPicker
+                                    value={googleMapUrl}
+                                    onChange={(url) => setGoogleMapUrl(url)}
+                                    onLocationNameSelect={(name) => setLocationName(name)}
                                 />
-                            </div>
-                        </div>
+                                <input type="hidden" name="google_map_url" value={googleMapUrl} />
+                            </div>                        </div>
 
                         <div className="flex justify-end">
                             <Button

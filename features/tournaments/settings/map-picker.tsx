@@ -1,15 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 
 interface MapPickerProps {
     value: string;
     onChange: (url: string) => void;
+    onLocationNameSelect?: (name: string) => void;
 }
 
 function parseLatLng(input: string): [number, number] | null {
@@ -38,23 +36,52 @@ function parseLatLng(input: string): [number, number] | null {
     return null;
 }
 
-export default function MapPicker({ value, onChange }: MapPickerProps) {
+async function fetchPlaceName(lat: number, lng: number): Promise<string | null> {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+            headers: {
+                "Accept-Language": "th,en"
+            }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            // Specific place name or POI
+            const name = data.name || addr.stadium || addr.sports_centre || addr.building || addr.amenity || addr.leisure || addr.school || addr.university || addr.tourism || addr.attraction || addr.hospital;
+            if (name) return name;
+
+            // Road / Suburb + City fallback
+            const parts = [addr.road, addr.suburb || addr.neighbourhood, addr.city || addr.town || addr.province].filter(Boolean);
+            if (parts.length > 0) return parts.join(", ");
+
+            if (data.display_name) {
+                const segments = data.display_name.split(",").map((s: string) => s.trim());
+                return segments.slice(0, 3).join(", ");
+            }
+        }
+    } catch (e) {
+        console.error("Reverse geocoding error:", e);
+    }
+    return null;
+}
+
+export default function MapPicker({ value, onChange, onLocationNameSelect }: MapPickerProps) {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<L.Map | null>(null);
     const markerRef = useRef<L.Marker | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [isSearching, setIsSearching] = useState(false);
 
     // Initial Coordinates
     const defaultCoords: [number, number] = [13.7563, 100.5018]; // Bangkok
     const initialCoords = parseLatLng(value) || defaultCoords;
     const initialCoordsRef = useRef(initialCoords);
 
-    // Keep onChange in a ref to avoid effect dependency re-runs
+    // Keep callbacks in refs to avoid effect dependency re-runs
     const onChangeRef = useRef(onChange);
+    const onLocationNameSelectRef = useRef(onLocationNameSelect);
     useEffect(() => {
         onChangeRef.current = onChange;
-    }, [onChange]);
+        onLocationNameSelectRef.current = onLocationNameSelect;
+    }, [onChange, onLocationNameSelect]);
 
     useEffect(() => {
         if (!mapContainerRef.current) return;
@@ -93,9 +120,16 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
         markerRef.current = marker;
 
         // Callback helper
-        const updateCoords = (lat: number, lng: number) => {
+        const updateCoords = async (lat: number, lng: number) => {
             const formattedUrl = `https://maps.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
             onChangeRef.current(formattedUrl);
+
+            if (onLocationNameSelectRef.current) {
+                const placeName = await fetchPlaceName(lat, lng);
+                if (placeName && onLocationNameSelectRef.current) {
+                    onLocationNameSelectRef.current(placeName);
+                }
+            }
         };
 
         // Event: Marker Drag
@@ -127,63 +161,8 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
         }
     }, [value]);
 
-    // Simple search using Nominatim (free OpenStreetMap search)
-    const executeSearch = async () => {
-        if (!searchQuery.trim()) return;
-
-        setIsSearching(true);
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
-            );
-            const data = await response.json();
-            if (data && data.length > 0) {
-                const lat = parseFloat(data[0].lat);
-                const lng = parseFloat(data[0].lon);
-                const coords: [number, number] = [lat, lng];
-
-                if (mapRef.current && markerRef.current) {
-                    markerRef.current.setLatLng(coords);
-                    mapRef.current.setView(coords, 16);
-                    const formattedUrl = `https://maps.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
-                    onChangeRef.current(formattedUrl);
-                }
-            }
-        } catch (error) {
-            console.error("Geocoding failed:", error);
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
     return (
         <div className="space-y-1 md:space-y-2">
-            <div className="flex flex-col md:flex-row gap-1 md:gap-2 items-center justify-between">
-                <div className="relative flex-1 w-full md:w-auto">
-                    <Input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                executeSearch();
-                            }
-                        }}
-                        className="pl-8 bg-transparent text-foreground focus-visible:ring-0 rounded-sm"
-                    />
-                </div>
-                <Button
-                    type="button"
-                    onClick={executeSearch}
-                    disabled={isSearching}
-                    variant="outline"
-                    className="w-8 md:w-10"
-                >
-                    <Search />
-                </Button>
-            </div>
             <div className="relative w-full h-120 rounded-sm overflow-hidden border border-foreground/10 z-10">
                 <div ref={mapContainerRef} className="w-full h-full" />
             </div>

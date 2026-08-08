@@ -335,7 +335,7 @@ export function PublicMatchesHome() {
                                 {allTournaments.map((tournament) => (
                                     <Link
                                         key={tournament.id}
-                                        href={`/${tournament.id}`}
+                                        href={`/tournaments/${tournament.id}`}
                                         className="w-full text-left px-4 py-4 text-sm font-black tracking-tight transition-all relative group border-l-2 block border-transparent text-muted-foreground/40 hover:text-foreground hover:bg-muted/5"
                                     >
                                         <div className="flex items-center justify-between">

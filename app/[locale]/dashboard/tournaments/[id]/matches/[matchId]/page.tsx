@@ -97,6 +97,23 @@ export default async function AdminMatchConsole(props: {
         ? `/dashboard/tournaments/${id}?category=${categoryId}`
         : `/dashboard/tournaments/${id}?tab=${fromTab}`;
 
+    // Fetch category rules_config if available
+    let maxSets = 3;
+    if (rawMatch.tournament_category_id) {
+        const { data: categoryData } = await supabase
+            .from('tournament_categories')
+            .select('rules_config')
+            .eq('id', rawMatch.tournament_category_id)
+            .maybeSingle();
+
+        if (categoryData?.rules_config && typeof categoryData.rules_config === 'object') {
+            const rules = categoryData.rules_config as { max_sets?: number };
+            if (rules.max_sets) {
+                maxSets = Number(rules.max_sets);
+            }
+        }
+    }
+
     if (sportName === 'volleyball') {
         return (
             <VolleyballConsolePage
@@ -106,6 +123,7 @@ export default async function AdminMatchConsole(props: {
                 readOnly={false}
                 initialEvents={formattedEvents as MatchEvent[]}
                 backUrl={backUrl}
+                maxSets={maxSets}
             />
         );
     }

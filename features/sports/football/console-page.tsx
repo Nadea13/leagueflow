@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -38,6 +39,7 @@ import {
     Stethoscope,
     Shield,
     Tv,
+    BarChart2,
     Users,
     Volleyball,
     XCircle,
@@ -45,7 +47,14 @@ import {
     Cloud,
     CloudOff,
     RefreshCw,
-    HelpCircle
+    HelpCircle,
+    PieChart,
+    MoveRight,
+    Crosshair,
+    Shuffle,
+    FlagTriangleRight,
+    CornerUpRight,
+    CornerRightDown
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -63,6 +72,7 @@ import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
 import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
 import { BroadcastDialog } from "./console/broadcast-dialog";
 import { RosterSelectionDialog } from "./console/roster-selection-dialog";
+import { MatchStatisticsBox } from "./console/statistics-box";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
@@ -204,6 +214,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const [addTimeDialogOpen, setAddTimeDialogOpen] = useState(false);
     const [setTimeDialogOpen, setSetTimeDialogOpen] = useState(false);
     const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
+    const [statsDialogOpen, setStatsDialogOpen] = useState(false);
     const [_penaltyShots, setPenaltyShots] = useState<PenaltyShot[]>([]);
 
     // Event Selection State
@@ -576,13 +587,16 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     };
 
     const handleQuickAction = async (teamId: string, type: EventType) => {
-        if (readOnly) return;
-        if (type === 'corner') {
+        if (readOnly || match.status !== 'live') return;
+        const quickActionTypes: EventType[] = ['corner', 'missed_shot', 'offside', 'possession', 'pass', 'bad_pass', 'cross', 'miss_cross', 'save'];
+        if (quickActionTypes.includes(type)) {
             const minute = Math.floor(time / 60) + 1;
-            const res = await addEvent(teamId, 'corner', minute, null, {}, "Corner");
+            const evtConfig = EVENT_TYPES.find(e => e.type === type);
+            const label = evtConfig ? t(evtConfig.label) : type;
+            const res = await addEvent(teamId, type, minute, null, {}, label);
             if (res && !res.success) {
                 toast({
-                    title: "Error saving corner event",
+                    title: `Error saving ${type} event`,
                     description: res.error || "Unknown error occurred",
                     variant: "destructive"
                 });
@@ -652,6 +666,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     // --- Team Action Grid Component ---
     const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
+        const isActionDisabled = readOnly || match.status !== 'live';
         const actions = [
             { type: 'goal', label: t("goal"), icon: Volleyball },
             { type: 'yellow_card', label: t("yellow_card"), icon: Square, iconColor: 'text-yellow-500 fill-yellow-500' },
@@ -662,6 +677,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             { type: 'save', label: t("save") || "Save", icon: Shield },
             { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope },
             { type: 'corner', label: t("corner") || "Corner", icon: Flag },
+            { type: 'possession', label: t("possession") || "การครองบอล", icon: PieChart },
+            { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight },
+            { type: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight },
+            { type: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", icon: Crosshair },
+            { type: 'bad_pass', label: t("bad_pass") || "ส่งพลาด", icon: Shuffle },
+            { type: 'miss_cross', label: t("miss_cross") || "ครอสบอลพลาด", icon: CornerRightDown },
+            { type: 'offside', label: t("offside") || "ล้ำหน้า", icon: FlagTriangleRight },
         ];
 
         return (
@@ -671,15 +693,16 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         <h3 className="text-xl lg:text-2xl font-black tracking-tighter">{name}</h3>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1 lg:gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 lg:gap-2">
                         {actions.map((action) => (
                             <Button
                                 variant="outline"
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
+                                disabled={isActionDisabled}
                             >
-                                <action.icon className={cn("h-5 w-5 transition-transform", action.iconColor)} />
-                                <Label className="hidden lg:inline">{action.label}</Label>
+                                <action.icon className={cn("h-5 w-5 transition-transform shrink-0", action.iconColor)} />
+                                <Label className="hidden lg:inline text-xs font-semibold truncate cursor-pointer">{action.label}</Label>
                             </Button>
                         ))}
                     </div>
@@ -741,7 +764,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     <Button
                         variant="outline"
                         onClick={() => setOverlayDialogOpen(true)}
-                        className="w-full flex justify-center lg:justify-start items-center"
+                        className="hidden lg:flex w-full justify-start items-center"
                     >
                         <Tv className="h-4 w-4 text-primary" />
                         <span className="hidden lg:inline">{t("broadcast_overlay")}</span>
@@ -753,6 +776,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     >
                         <Users className="h-4 w-4 text-primary" />
                         <span className="hidden lg:inline">{t("select_starting_lineup") || "Lineups"}</span>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setStatsDialogOpen(true)}
+                        className="w-full flex justify-center lg:justify-start items-center"
+                    >
+                        <BarChart2 className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{t("match_statistics") || "สถิติการแข่งขัน"}</span>
                     </Button>
                     {match.status === 'finished' && (
                         <PenaltyShootoutDialog
@@ -1087,6 +1118,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             awayScore={awayScore}
                             events={events}
                             onTeamClick={(teamId) => {
+                                if (readOnly || match.status !== 'live') return;
                                 setSelectedTeamId(teamId);
                                 setEventDialogOpen(true);
                             }}
@@ -1102,7 +1134,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         </div>
 
                         {!readOnly && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
+                            <div className="grid grid-cols-2 gap-2 lg:gap-4">
                                 <TeamActionGrid teamId={match.home_team_id!} name={match.home_team?.name || 'Home'} type="home" />
                                 <TeamActionGrid teamId={match.away_team_id!} name={match.away_team?.name || 'Away'} type="away" />
                             </div>
@@ -1135,6 +1167,17 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 addEvent(resolvedTeamId!, 'add_time', minute, null, { added_minutes: mins }, `+${mins} min`);
                 setAddTimeDialogOpen(false);
             }} />
+            <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
+                <DialogContent showCloseButton={false} className="sm:max-w-md bg-card rounded-sm overflow-hidden p-0">
+                    <MatchStatisticsBox
+                        match={match}
+                        events={events}
+                        homeScore={homeScore}
+                        awayScore={awayScore}
+                        onClose={() => setStatsDialogOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
                 <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">

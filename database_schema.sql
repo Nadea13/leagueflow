@@ -331,7 +331,8 @@ CREATE TABLE IF NOT EXISTS "public"."tournament_categories" (
     "created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone,
-    "registration_fee" numeric(10,2) DEFAULT 0
+    "registration_fee" numeric(10,2) DEFAULT 0,
+    "rules_config" "jsonb" DEFAULT '{}'::"jsonb"
 );
 
 CREATE TABLE IF NOT EXISTS "public"."tournament_invitations" (

@@ -23,9 +23,9 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
     Loader2, Plus, Users, X,
-    Settings, MapPin, ShieldAlert,
+    Settings, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, Building2
 } from "lucide-react";
 import {
     Popover,
@@ -429,14 +429,14 @@ function CanvasInternal({
         }
     }, [initialTeamsData, setStoreTeams]);
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
-    type SettingsTab = 'general' | 'categories' | 'location' | 'staff' | 'danger';
+    type SettingsTab = 'general' | 'categories' | 'location' | 'bank' | 'staff' | 'danger';
     const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('general');
 
     const settingsTabOptions = useMemo<TabOption<SettingsTab>[]>(() => {
         const options: TabOption<SettingsTab>[] = [
             { value: 'general', label: tSettings("general_info"), icon: Settings },
             { value: 'categories', label: tSettings("categories"), icon: Trophy },
-            { value: 'location', label: tSettings("location"), icon: MapPin },
+            { value: 'bank', label: tSettings("bank_info"), icon: Building2 },
         ];
 
         const possessesStaffAccess = Boolean(
@@ -1079,12 +1079,12 @@ function CanvasInternal({
 
     const handleOpenLinkRegister = useCallback(() => {
         const categoryQuery = activeCategoryId ? `?category=${activeCategoryId}` : "";
-        const url = `${window.location.origin}/${locale}/registration/${tournamentId}${categoryQuery}`;
+        const url = `${window.location.origin}/${locale}/registrations/${tournamentId}${categoryQuery}`;
         window.open(url, '_blank');
     }, [tournamentId, locale, activeCategoryId]);
 
     const handleOpenLink = useCallback(() => {
-        const url = `${window.location.origin}/${locale}/${tournamentId}`;
+        const url = `${window.location.origin}/${locale}/tournaments/${tournamentId}`;
         window.open(url, '_blank');
     }, [tournamentId, locale]);
 
@@ -2344,6 +2344,7 @@ function CanvasInternal({
                 open={isCreateOpen}
                 onOpenChange={setIsCreateOpen}
                 tournamentId={tournamentId}
+                sport={tournament?.sport}
                 ageCategories={ageCategories}
                 onSuccess={async (newCatId) => {
                     setIsCreateOpen(false);

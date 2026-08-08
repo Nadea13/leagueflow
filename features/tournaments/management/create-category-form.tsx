@@ -25,12 +25,15 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 
+import { useBracketStore } from "@/lib/stores/bracket-store";
+
 interface CreateCategoryFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     tournamentId: string;
     ageCategories: { id: number; category_name: string }[];
     onSuccess: (id: string) => void;
+    sport?: string;
 }
 
 export function CreateCategoryForm({
@@ -38,15 +41,44 @@ export function CreateCategoryForm({
     onOpenChange,
     tournamentId,
     ageCategories,
-    onSuccess
+    onSuccess,
+    sport: initialSport
 }: CreateCategoryFormProps) {
     const locale = useLocale();
     const { toast } = useToast();
+    const storeSport = useBracketStore((state) => state.sport);
     const [ageCategoryId, setAgeCategoryId] = useState<string>("");
     const [genderType, setGenderType] = useState<string>("open");
     const [maxTeams, setMaxTeams] = useState<string>("8");
     const [registrationFee, setRegistrationFee] = useState<string>("0");
+    const [maxSets, setMaxSets] = useState<string>("3");
+    const [sport, setSport] = useState<string>(initialSport || storeSport || "football");
     const [isPending, setIsPending] = useState(false);
+
+    useEffect(() => {
+        if (initialSport || storeSport) {
+            setSport((initialSport || storeSport || "").toLowerCase());
+            return;
+        }
+        if (!tournamentId) return;
+        const supabase = createClient();
+        async function fetchSport() {
+            const { data } = await supabase
+                .from("tournaments")
+                .select("name, sport, sports(sport_name)")
+                .eq("id", tournamentId)
+                .maybeSingle();
+
+            const rawSport = (data as unknown as { sport?: string; sports?: { sport_name?: string } })?.sport ||
+                             (data as unknown as { sports?: { sport_name?: string } })?.sports?.sport_name ||
+                             (data?.name?.toLowerCase().includes("volleyball") || data?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
+
+            if (rawSport) {
+                setSport(rawSport.toLowerCase());
+            }
+        }
+        fetchSport();
+    }, [tournamentId, initialSport, storeSport]);
 
     useEffect(() => {
         if (ageCategories && ageCategories.length > 0 && !ageCategoryId) {
@@ -137,12 +169,17 @@ export function CreateCategoryForm({
                     return;
                 }
             }
+            const rulesConfig = (sport === 'volleyball' || sport.includes('volleyball') || sport.includes('วอลเลย์บอล'))
+                ? { max_sets: parseInt(maxSets) || 3 }
+                : null;
+
             const res = await createTournamentCategory(
                 tournamentId,
                 parseInt(ageCategoryId),
                 genderType,
                 parseInt(maxTeams),
-                parseFloat(registrationFee) || 0
+                parseFloat(registrationFee) || 0,
+                rulesConfig
             );
             if (res.success) {
                 toast({
@@ -269,6 +306,23 @@ export function CreateCategoryForm({
                                 placeholder="0.00 (Free)"
                             />
                         </div>
+
+                        {(sport === "volleyball" || sport.includes("volleyball") || sport.includes("วอลเลย์บอล")) && (
+                            <div className="space-y-1">
+                                <Label>
+                                    {locale === 'th' ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}
+                                </Label>
+                                <Select value={maxSets} onValueChange={setMaxSets}>
+                                    <SelectTrigger className="w-full h-10">
+                                        <SelectValue placeholder={locale === 'th' ? "เลือกจำนวนเซ็ต" : "Select Sets"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="3">{locale === 'th' ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
+                                        <SelectItem value="5">{locale === 'th' ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter className="border-t p-2 md:p-4">

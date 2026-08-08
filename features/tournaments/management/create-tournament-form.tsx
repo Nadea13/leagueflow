@@ -32,9 +32,21 @@ import {
 } from "@/components/ui/select";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionResponse, Sport } from "@/types/index";
-
 import { getSports } from "@/actions/manager/team";
 import { LogoUploader } from "@/components/shared/logo-uploader";
+
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+const MapPicker = dynamic(() => import("../settings/map-picker"), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-80 rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
+            <span className="text-xs text-muted-foreground">Loading interactive map...</span>
+        </div>
+    )
+});
 
 const initialState: ActionResponse = {
     success: false,
@@ -72,6 +84,9 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
     const [selectedSport, setSelectedSport] = useState<string>("");
     const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
     const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+    const [description, setDescription] = useState<string>("");
+    const [locationName, setLocationName] = useState<string>("");
+    const [googleMapUrl, setGoogleMapUrl] = useState<string>("");
     const coverInputRef = useRef<HTMLInputElement>(null);
 
     // Load sports dynamically from database
@@ -98,6 +113,9 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                 setCoverPreviewUrl(null);
                 setStartDate("");
                 setEndDate("");
+                setDescription("");
+                setLocationName("");
+                setGoogleMapUrl("");
                 setOpen(false);
             }, 0);
             return () => clearTimeout(timer);
@@ -158,7 +176,7 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                                     id="logo_img"
                                     name="logo_img"
                                     initialUrl={logoPreviewUrl}
-                                    onFileChange={(file) => {
+                                    onFileChange={(file: File | null) => {
                                         if (file) {
                                             setLogoPreviewUrl(URL.createObjectURL(file));
                                         } else {
@@ -280,6 +298,49 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                                 name="document_deadline"
                                 type="date" required
                             />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label>{isThai ? "รายละเอียดเพิ่มเติม" : "Description / Details"}</Label>
+                            <div className="pro-editor-wrapper relative">
+                                <ReactQuill
+                                    theme="snow"
+                                    value={description}
+                                    onChange={setDescription}
+                                    className="pro-editor h-auto text-foreground"
+                                    placeholder={isThai ? "กรอกรายละเอียดเพิ่มเติมของการแข่งขัน..." : "Enter tournament details..."}
+                                    modules={{
+                                        toolbar: [
+                                            [{ 'header': [1, 2, false] }],
+                                            ['bold', 'underline'],
+                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                            ['clean']
+                                        ]
+                                    }}
+                                />
+                            </div>
+                            <input type="hidden" name="description" value={description} />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label>{isThai ? "สถานที่จัดการแข่งขัน" : "Location / Venue Name"}</Label>
+                            <Input
+                                id="location_name"
+                                name="location_name"
+                                value={locationName}
+                                onChange={(e) => setLocationName(e.target.value)}
+                                placeholder={isThai ? "เช่น สนามกีฬาเฉลิมพระเกียรติ" : "e.g. National Stadium"}
+                            />
+                        </div>
+
+                        <div className="space-y-1">
+                            <Label>{isThai ? "ตำแหน่งแผนที่" : "Location Map"}</Label>
+                            <MapPicker
+                                value={googleMapUrl}
+                                onChange={(url) => setGoogleMapUrl(url)}
+                                onLocationNameSelect={(name) => setLocationName(name)}
+                            />
+                            <input type="hidden" name="google_map_url" value={googleMapUrl} />
                         </div>
 
                         {/* Date Range Picker Component */}

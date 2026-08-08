@@ -24,18 +24,23 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+import { useBracketStore } from "@/lib/stores/bracket-store";
+
 interface CategorySettingsProps {
     tournamentId: string;
+    sport?: string;
 }
 
-export function CategorySettings({ tournamentId }: CategorySettingsProps) {
+export function CategorySettings({ tournamentId, sport: initialSport }: CategorySettingsProps) {
     const locale = useLocale();
     const isThai = locale === "th";
     const { toast } = useToast();
+    const storeSport = useBracketStore((state) => state.sport);
 
     const [categories, setCategories] = useState<TournamentCategory[]>([]);
     const [ageCategories, setAgeCategories] = useState<{ id: number; category_name: string }[]>([]);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [sport, setSport] = useState<string>(initialSport || storeSport || "football");
     const [isLoading, setIsLoading] = useState(true);
 
     // Form states
@@ -43,6 +48,7 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
     const [genderType, setGenderType] = useState<string>("open");
     const [maxTeams, setMaxTeams] = useState<string>("8");
     const [registrationFee, setRegistrationFee] = useState<string>("0");
+    const [maxSets, setMaxSets] = useState<string>("3");
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -51,6 +57,21 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
         setIsLoading(true);
         try {
             const supabase = createClient();
+
+            // Fetch tournament details
+            const { data: tournamentData } = await supabase
+                .from("tournaments")
+                .select("name, sport, sports(sport_name)")
+                .eq("id", tournamentId)
+                .maybeSingle();
+
+            const rawSport = (tournamentData as unknown as { sport?: string; sports?: { sport_name?: string } })?.sport || 
+                             (tournamentData as unknown as { sports?: { sport_name?: string } })?.sports?.sport_name ||
+                             (tournamentData?.name?.toLowerCase().includes("volleyball") || tournamentData?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
+
+            if (rawSport) {
+                setSport(rawSport.toLowerCase());
+            }
 
             // Fetch age categories
             const { data: ageData } = await supabase
@@ -99,12 +120,14 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
     // Update form fields when selected category changes
     useEffect(() => {
         if (selectedCategoryId) {
-            const cat = categories.find(c => c.id === selectedCategoryId);
+            const cat = categories.find(c => c.id.toString() === selectedCategoryId.toString());
             if (cat) {
                 setAgeCategoryId(cat.age_category_id.toString());
                 setGenderType(cat.gender_type);
                 setMaxTeams(cat.max_teams.toString());
                 setRegistrationFee(Number(cat.registration_fee ?? 0).toFixed(2));
+                const currentMaxSets = cat.rules_config?.max_sets ? String(cat.rules_config.max_sets) : "3";
+                setMaxSets(currentMaxSets);
             }
         }
     }, [selectedCategoryId, categories]);
@@ -133,13 +156,20 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
 
         setIsSaving(true);
         try {
+            const cat = categories.find(c => c.id.toString() === selectedCategoryId.toString());
+            const currentRulesConfig = cat?.rules_config || {};
+            const rulesConfig = sport === 'volleyball' 
+                ? { ...currentRulesConfig, max_sets: parseInt(maxSets) || 3 }
+                : currentRulesConfig;
+
             const res = await updateTournamentCategory(
                 tournamentId,
                 selectedCategoryId,
                 parseInt(ageCategoryId),
                 genderType,
                 parseInt(maxTeams),
-                parseFloat(registrationFee) || 0
+                parseFloat(registrationFee) || 0,
+                rulesConfig
             );
 
             if (res.success) {
@@ -327,6 +357,21 @@ export function CategorySettings({ tournamentId }: CategorySettingsProps) {
                                             placeholder="0.00 (Free)"
                                         />
                                     </div>
+
+                                    {(sport === "volleyball" || sport.includes("volleyball") || sport.includes("วอลเลย์บอล")) && (
+                                        <div className="space-y-1">
+                                            <Label>{isThai ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}</Label>
+                                            <Select value={maxSets} onValueChange={setMaxSets}>
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue placeholder={isThai ? "เลือกจำนวนเซ็ต" : "Select Sets"} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="3">{isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
+                                                    <SelectItem value="5">{isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-between">

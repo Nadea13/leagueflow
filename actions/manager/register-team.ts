@@ -296,7 +296,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             return { success: false, error: `Failed to save registration: ${regError.message}` };
         }
 
-        revalidatePath(`/registration/${tournamentId}`);
+        revalidatePath(`/registrations/${tournamentId}`);
         revalidatePath(`/organizer/tournaments/${tournamentId}`);
 
         console.log("[registerTeam] Registration successful!");

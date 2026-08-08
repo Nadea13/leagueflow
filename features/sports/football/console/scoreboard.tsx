@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Match, MatchEvent } from "@/types";
 import Image from "next/image";
 
@@ -26,11 +27,95 @@ interface ScoreboardProps {
 }
 
 export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamClick, timerTime, timerReadOnly, timerCustomText, addedTime }: ScoreboardProps) {
+    const [now, setNow] = useState(() => Date.now());
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(Date.now());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const formatTeamName = (name: string | undefined) => {
         return name || "";
     };
+
+    const calculatePossession = () => {
+        if (!events || events.length === 0) return { home: 50, away: 50, total: 0 };
+
+        const homeTeamId = match.home_team_id;
+        const awayTeamId = match.away_team_id;
+
+        // Sort events chronologically by created_at
+        const sortedEvents = [...events].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+        let homeTimeMs = 0;
+        let awayTimeMs = 0;
+        let currentPossessor: 'home' | 'away' | null = null;
+        let lastTimestamp: number | null = null;
+
+        sortedEvents.forEach((evt) => {
+            const evtTime = new Date(evt.created_at).getTime();
+
+            if (currentPossessor && lastTimestamp !== null && evtTime > lastTimestamp) {
+                const duration = evtTime - lastTimestamp;
+                if (currentPossessor === 'home') homeTimeMs += duration;
+                if (currentPossessor === 'away') awayTimeMs += duration;
+            }
+
+            const isHome = evt.team_id === homeTeamId;
+            const isAway = evt.team_id === awayTeamId;
+
+            // Direct possession actions
+            if (evt.event_type === 'possession' || evt.event_type === 'pass' || evt.event_type === 'cross') {
+                if (isHome) currentPossessor = 'home';
+                else if (isAway) currentPossessor = 'away';
+            }
+            // Turnover actions transfer possession to opposite team
+            else if (evt.event_type === 'bad_pass' || evt.event_type === 'miss_cross') {
+                if (isHome) currentPossessor = 'away';
+                else if (isAway) currentPossessor = 'home';
+            }
+            // Stoppage events pause possession accumulation
+            else if (
+                evt.event_type === 'goal' ||
+                evt.event_type === 'yellow_card' ||
+                evt.event_type === 'red_card' ||
+                evt.event_type === 'substitution' ||
+                evt.event_type === 'injury' ||
+                evt.event_type === 'corner' ||
+                evt.event_type === 'offside' ||
+                evt.event_type === 'half_time' ||
+                evt.event_type === 'full_time' ||
+                evt.event_type === 'match_paused' ||
+                evt.event_type === 'walkover'
+            ) {
+                currentPossessor = null;
+            }
+
+            lastTimestamp = evtTime;
+        });
+
+        // Accumulate live duration up to now if match timer is playing and match is live
+        if (currentPossessor && lastTimestamp !== null && match.status === 'live' && match.timer_status === 'playing') {
+            const currentMs = now;
+            if (currentMs > lastTimestamp) {
+                const liveDuration = currentMs - lastTimestamp;
+                if (currentPossessor === 'home') homeTimeMs += liveDuration;
+                if (currentPossessor === 'away') awayTimeMs += liveDuration;
+            }
+        }
+
+        const totalTimeMs = homeTimeMs + awayTimeMs;
+        if (totalTimeMs <= 0) return { home: 50, away: 50, total: 0 };
+
+        const homePct = Math.round((homeTimeMs / totalTimeMs) * 100);
+        const awayPct = 100 - homePct;
+
+        return { home: homePct, away: awayPct, total: totalTimeMs };
+    };
+
+    const possession = calculatePossession();
 
     return (
         <div className="bg-card border rounded-sm relative overflow-hidden w-full group">
@@ -111,6 +196,27 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                                 {formatTeamName(match.away_team?.name)}
                             </h2>
                         </div>
+                    </div>
+                </div>
+
+                {/* Possession Gauge Bar */}
+                <div className="w-full max-w-xs sm:max-w-md flex flex-col">
+                    <div className="flex justify-between items-center text-xs lg:text-sm font-black tabular-nums">
+                        <span className="text-primary">{possession.home}%</span>
+                        <span className="text-[10px] lg:text-xs font-bold tracking-widest text-muted-foreground">
+                            Possession / การครองบอล
+                        </span>
+                        <span className="text-muted-foreground">{possession.away}%</span>
+                    </div>
+                    <div className="w-full h-2 rounded-full overflow-hidden flex">
+                        <div
+                            className="h-full bg-primary rounded-l-full transition-all duration-500 ease-out"
+                            style={{ width: `${possession.home}%` }}
+                        />
+                        <div
+                            className="h-full bg-muted-foreground rounded-r-full transition-all duration-500 ease-out"
+                            style={{ width: `${possession.away}%` }}
+                        />
                     </div>
                 </div>
             </div>

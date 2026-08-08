@@ -18,7 +18,7 @@ export default async function DemoRedirectPage({
     .single();
 
   if (tournament) {
-    redirect(`/${locale}/${tournament.id}`);
+    redirect(`/${locale}/tournaments/${tournament.id}`);
   }
 
   // Fallback to home if no tournament found

@@ -402,18 +402,18 @@ export async function getSystemMonitorStats(): Promise<ActionResponse<SystemMoni
         const clientIp = headerList.get("x-client-ip") || headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip") || "127.0.0.1"
 
         const [
-            { data: recentPayments },
+            { data: _recentPayments },
             { data: recentUsers },
-            { data: recentTournaments },
-            { data: recentUpdatedTournaments },
-            { data: recentCategories },
-            { data: recentTeams },
-            { data: recentUpdatedTeams },
-            { data: recentTournamentTeams },
-            { data: recentPlayers },
-            { data: recentUpdatedPlayers },
-            { data: recentMatches },
-            { data: recentUpdatedMatches },
+            { data: _recentTournaments },
+            { data: _recentUpdatedTournaments },
+            { data: _recentCategories },
+            { data: _recentTeams },
+            { data: _recentUpdatedTeams },
+            { data: _recentTournamentTeams },
+            { data: _recentPlayers },
+            { data: _recentUpdatedPlayers },
+            { data: _recentMatches },
+            { data: _recentUpdatedMatches },
             { data: recentAuditLogs }
         ] = await Promise.all([
             supabase.from("payments").select("id, amount, payment_status, created_at, plan_name, user:users(email, full_name)").order("created_at", { ascending: false }).limit(5),

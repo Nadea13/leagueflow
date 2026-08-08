@@ -1,48 +1,42 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { MatchEvent } from "@/types/index";
 import { ConsolePage as FootballConsolePage } from "@/features/sports/football/console-page";
 import { VolleyballConsolePage } from "@/features/sports/volleyball/console-page";
-import { MatchEvent } from "@/types";
 import { PublicFooter } from "@/components/layout/public-footer";
 
-export default async function PublicMatchConsole(props: {
-    params: Promise<{ locale: string, id: string, matchId: string }>,
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+export default async function MatchConsoleReadOnlyPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id: string; matchId: string }>;
+    searchParams: Promise<{ fromTab?: string }>;
 }) {
-    const { id, matchId } = await props.params;
-    const resolvedParams = await props.searchParams;
-    const fromTab = typeof resolvedParams.from === 'string' ? resolvedParams.from : 'fixtures';
+    const { id, matchId } = await params;
+    const { fromTab = 'matches' } = await searchParams;
+    const supabase = await createClient();
 
-    // We use admin client to bypass RLS for public view, standard practice in this repo
-    const supabase = createAdminClient();
-
-    // Fetch the match
-    const { data: rawMatch, error: matchError } = await supabase
-        .from('matches')
+    // Fetch match
+    const { data: matchData, error: matchError } = await supabase
+        .from("matches")
         .select(`
             *,
-            home_team:teams!matches_home_team_id_fkey(id, name, logo_img),
-            away_team:teams!matches_away_team_id_fkey(id, name, logo_img)
+            team1:team1_id ( id, name, logo_url ),
+            team2:team2_id ( id, name, logo_url )
         `)
-        .eq('id', matchId)
-        .eq('tournament_id', id)
+        .eq("id", matchId)
         .single();
 
-    if (matchError || !rawMatch) {
-        return <div className="p-8 text-red-500">Error fetching match: {JSON.stringify(matchError, null, 2)}</div>;
+    if (matchError || !matchData) {
+        notFound();
     }
 
     const match = {
-        ...rawMatch,
-        home_team: rawMatch.home_team ? {
-            id: rawMatch.home_team.id,
-            name: String(rawMatch.home_team.name || 'Unknown Team'),
-            logo_url: rawMatch.home_team.logo_img ? String(rawMatch.home_team.logo_img) : null
-        } : null,
-        away_team: rawMatch.away_team ? {
-            id: rawMatch.away_team.id,
-            name: String(rawMatch.away_team.name || 'Unknown Team'),
-            logo_url: rawMatch.away_team.logo_img ? String(rawMatch.away_team.logo_img) : null
-        } : null,
+        ...matchData,
+        team1_name: matchData.team1?.name || matchData.placeholder_team1 || 'TBD',
+        team2_name: matchData.team2?.name || matchData.placeholder_team2 || 'TBD',
+        team1_logo: matchData.team1?.logo_url,
+        team2_logo: matchData.team2?.logo_url,
     };
 
     // Fetch tournament and sports
@@ -50,22 +44,19 @@ export default async function PublicMatchConsole(props: {
         .from('tournaments')
         .select(`
             name,
-            plan, 
-            user_id,
-            sports(sport_name),
-            payments(plan, status)
+            sports(sport_name)
         `)
         .eq('id', id)
         .single();
 
     const sportName = (tournament?.sports as unknown as { sport_name: string } | null)?.sport_name?.toLowerCase();
 
-    // Fetch initial events
+    // Fetch events
     const { data: events } = await supabase
         .from('match_events')
         .select(`
-            id, match_id, team_id, player_id, event_type, minute, extra_info, created_at,
-            player:players(name)
+            *,
+            player:player_id ( name )
         `)
         .eq('match_id', matchId)
         .order('created_at', { ascending: true });
@@ -87,7 +78,7 @@ export default async function PublicMatchConsole(props: {
                         tournamentName={tournament?.name}
                         readOnly={true}
                         initialEvents={formattedEvents as MatchEvent[]}
-                        backUrl={`/${id}?tab=${fromTab}`}
+                        backUrl={`/tournaments/${id}?tab=${fromTab}`}
                     />
                 ) : (
                     <FootballConsolePage
@@ -96,7 +87,7 @@ export default async function PublicMatchConsole(props: {
                         tournamentName={tournament?.name}
                         readOnly={true}
                         initialEvents={formattedEvents as MatchEvent[]}
-                        backUrl={`/${id}?tab=${fromTab}`}
+                        backUrl={`/tournaments/${id}?tab=${fromTab}`}
                     />
                 )}
             </div>
