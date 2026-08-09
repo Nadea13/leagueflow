@@ -18,7 +18,15 @@ interface BlockItem {
   rBR: number;
   opacity: number;
   bg?: string;
+  strokeWidth?: number;
+  strokeColor?: string;
+  strokePos?: "inside" | "center" | "outside";
   color?: string;
+  shapeType?: string;
+  text?: string;
+  bindTo?: string;
+  skewX?: number;
+  skewY?: number;
 }
 
 interface OverlayConfig {
@@ -112,18 +120,29 @@ function CustomOverlayRenderer() {
     return () => clearInterval(interval);
   }, [config?.timerIsRunning]);
 
-  const getLabelContent = (id: string) => {
-    switch (id) {
+  const getLabelContent = (b: BlockItem) => {
+    const target = b.bindTo && b.bindTo !== "none" ? b.bindTo : b.id;
+    switch (target) {
       case "header-text": return headerText;
-      case "logo-home": return "🛡️"; // default logo placeholder
-      case "logo-away": return "🛡️"; // default logo placeholder
+      case "logo-home": return "🛡️";
+      case "logo-away": return "🛡️";
       case "name-home": return nameHome;
       case "name-away": return nameAway;
       case "score-home": return scoreHome;
       case "score-away": return scoreAway;
       case "timer": return liveTimerText;
       case "add-time": return addTimeText;
-      default: return "";
+      case "home-scorer": {
+        const text = (config as any)?.homeScorer || "";
+        return text.split(",").slice(0, 2).join(",").trim();
+      }
+      case "away-scorer": {
+        const text = (config as any)?.awayScorer || "";
+        return text.split(",").slice(0, 2).join(",").trim();
+      }
+      default:
+        if (b.shapeType === "text") return b.text || "";
+        return "";
     }
   };
 
@@ -189,9 +208,17 @@ function CustomOverlayRenderer() {
 
       {/* Render absolute positioned blocks */}
       <div className="relative w-full h-full flex items-center justify-center">
-        {blocks.map((b) => {
+        {blocks.map((b, idx) => {
           if (!b.active) return null;
           if (b.id === "add-time" && (addTimeText === "+0" || addTimeText === "0" || !addTimeText)) return null;
+          const isCircle = b.shapeType === "circle";
+          const isPolygon = b.shapeType === "polygon";
+          const isStar = b.shapeType === "star";
+          const strokePos = b.strokePos || "inside";
+          const strokeWidth = b.strokeWidth ?? 0;
+          const strokeInset = strokeWidth > 0
+            ? (strokePos === "outside" ? `-${strokeWidth}px` : strokePos === "center" ? `-${strokeWidth / 2}px` : "0px")
+            : "0px";
           const isScoreBlock = b.id === "score-home" || b.id === "score-away";
           const blockBg = b.bg || (isScoreBlock ? (scoreBg || "#ef4444") : "#000000");
 
@@ -203,21 +230,48 @@ function CustomOverlayRenderer() {
                 transform: `translate(calc(-50% + ${b.x}px), calc(-50% + ${b.y}px))`,
                 left: "50%",
                 top: "50%",
-                width: `${b.w}px`,
-                height: `${b.h}px`,
+                width: b.shapeType === "text" ? "max-content" : `${b.w}px`,
+                height: b.shapeType === "text" ? "max-content" : `${b.h}px`,
                 fontSize: `${b.fontSize}px`,
-                borderTopLeftRadius: `${b.rTL}px`,
-                borderTopRightRadius: `${b.rTR}px`,
-                borderBottomLeftRadius: `${b.rBL}px`,
-                borderBottomRightRadius: `${b.rBR}px`,
                 color: b.color ?? "#ffffff",
-                backgroundColor: blockBg.includes("gradient") ? undefined : blockBg,
-                background: blockBg.includes("gradient") ? blockBg : undefined,
-                overflow: "hidden",
-                opacity: typeof b.opacity === "number" ? b.opacity / 100 : (b.opacity ? parseInt(String(b.opacity)) / 100 : 1),
+                background: "transparent",
+                backgroundColor: "transparent",
+                isolation: "isolate",
+                zIndex: 10 + idx,
               }}
-              className="flex items-center justify-center font-black tracking-tight select-none z-10"
+              className="flex items-center justify-center font-black tracking-tight select-none relative"
             >
+              {/* Background Shape Container (Skews independently without warping logo images) */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: strokeInset,
+                  transform: `skewX(${b.skewX || 0}deg) skewY(${b.skewY || 0}deg)`,
+                  zIndex: -1,
+                  borderRadius: isCircle ? "50%" : undefined,
+                  borderTopLeftRadius: isCircle ? "50%" : `${b.rTL}px`,
+                  borderTopRightRadius: isCircle ? "50%" : `${b.rTR}px`,
+                  borderBottomLeftRadius: isCircle ? "50%" : `${b.rBL}px`,
+                  borderBottomRightRadius: isCircle ? "50%" : `${b.rBR}px`,
+                  clipPath: isPolygon
+                    ? "polygon(50% 0%, 100% 100%, 0% 100%)"
+                    : isStar
+                      ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
+                      : undefined,
+                  pointerEvents: "none",
+                  borderStyle: strokeWidth > 0 ? "solid" : "none",
+                  borderWidth: strokeWidth > 0 ? `${strokeWidth}px` : "0px",
+                  borderColor: b.strokeColor ?? "#ffffff",
+                  boxSizing: "border-box",
+                  opacity: typeof b.opacity === "number" ? b.opacity / 100 : (b.opacity ? parseInt(String(b.opacity)) / 100 : 1),
+                  ...(blockBg.includes("gradient") ? {
+                    background: blockBg,
+                  } : {
+                    backgroundColor: blockBg,
+                  })
+                }}
+              />
+
               {b.id === "logo-tournament" ? (
                 logoTournament ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -240,8 +294,8 @@ function CustomOverlayRenderer() {
                   <span className="text-[10px] opacity-60">🛡️</span>
                 )
               ) : (
-                <span className="truncate px-1">
-                  {getLabelContent(b.id)}
+                <span className={`${b.shapeType === "text" ? "whitespace-nowrap px-2 py-1" : "truncate px-1"}`}>
+                  {getLabelContent(b)}
                 </span>
               )}
 

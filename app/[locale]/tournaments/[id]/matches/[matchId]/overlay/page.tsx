@@ -157,6 +157,17 @@ function BroadcastOverlayContent() {
         opacity: number;
         bg: string;
         color?: string;
+        shapeType?: string;
+        text?: string;
+        bindTo?: string;
+        strokeWidth?: number;
+        strokeColor?: string;
+        strokePos?: "inside" | "center" | "outside";
+        skewX?: number;
+        skewY?: number;
+        fontWeight?: string;
+        fontStyle?: string;
+        textDecoration?: string;
     }> = {};
     if (positionsParam) {
         positionsParam.split(";").forEach((item) => {
@@ -169,14 +180,14 @@ function BroadcastOverlayContent() {
                     w: Number(parts[3]) || 0,
                     h: Number(parts[4]) || 0,
                     fontSize: Number(parts[5]) || 0,
-                    rTL: parts[6] !== undefined ? Number(parts[6]) : 8,
-                    rTR: parts[7] !== undefined ? Number(parts[7]) : 8,
-                    rBL: parts[8] !== undefined ? Number(parts[8]) : 8,
-                    rBR: parts[9] !== undefined ? Number(parts[9]) : 8,
+                    rTL: parts[6] !== undefined ? Number(parts[6]) : 0,
+                    rTR: parts[7] !== undefined ? Number(parts[7]) : 0,
+                    rBL: parts[8] !== undefined ? Number(parts[8]) : 0,
+                    rBR: parts[9] !== undefined ? Number(parts[9]) : 0,
                     opacity: parts[10] !== undefined ? Number(parts[10]) : 100,
                     bg: (() => {
                         if (parts[11] === undefined) {
-                            return blockId.startsWith("score") ? scoreBg : "#000000";
+                            return blockId.startsWith("score") ? scoreBg : "#737373";
                         }
                         const decoded = decodeURIComponent(parts[11]);
                         if (!decoded.startsWith("#") && !decoded.includes("gradient") && decoded !== "transparent" && decoded !== "chromakey") {
@@ -185,6 +196,17 @@ function BroadcastOverlayContent() {
                         return decoded;
                     })(),
                     color: parts[12] !== undefined ? `#${parts[12]}` : "#ffffff",
+                    shapeType: parts[13] || undefined,
+                    text: parts[14] ? decodeURIComponent(parts[14]) : undefined,
+                    bindTo: parts[15] || "none",
+                    strokeWidth: parts[16] !== undefined ? Number(parts[16]) : 0,
+                    strokeColor: parts[17] ? `#${parts[17]}` : "#ffffff",
+                    strokePos: (parts[18] as any) || "inside",
+                    skewX: parts[19] !== undefined ? Number(parts[19]) : 0,
+                    skewY: parts[20] !== undefined ? Number(parts[20]) : 0,
+                    fontWeight: parts[21] || "400",
+                    fontStyle: parts[22] || "normal",
+                    textDecoration: parts[23] || "none",
                 };
             }
         });
@@ -450,12 +472,8 @@ function BroadcastOverlayContent() {
             ` }} />
 
             {/* Scoreboard positioning wrapper */}
-            {!isBlank && (
-                <div className={cn(
-                    "fixed inset-0 p-8 pointer-events-none flex flex-col gap-3",
-                    posY === "top" ? "justify-start" : "justify-end",
-                    posX === "left" ? "items-start" : posX === "right" ? "items-end" : "items-center"
-                )}>
+            {(!isBlank || searchParams.get("blocks") !== null || searchParams.get("positions") !== null) && (
+                <div className="fixed inset-0 p-8 pointer-events-none flex flex-col items-center justify-center gap-3">
                     {/* Scoreboard Content Group */}
                     <div className={cn("pointer-events-auto flex flex-col items-center", sizeClasses[size as keyof typeof sizeClasses])}>
                         
@@ -782,6 +800,101 @@ function BroadcastOverlayContent() {
                                                 </div>
                                             );
                                         }
+                                        // 10. Custom Shapes, Text & Data Bound Blocks
+                                        if (blockId.startsWith("shape-") || cfg.shapeType) {
+                                            const isCircle = cfg.shapeType === "circle";
+                                            const isPolygon = cfg.shapeType === "polygon";
+                                            const isStar = cfg.shapeType === "star";
+                                            const getBoundText = () => {
+                                                if (cfg.bindTo && cfg.bindTo !== "none") {
+                                                    switch (cfg.bindTo) {
+                                                        case "name-home": return teamNameMode === "abbr" ? getInitials(match.home_team?.name || '') : match.home_team?.name || 'HOME';
+                                                        case "name-away": return teamNameMode === "abbr" ? getInitials(match.away_team?.name || '') : match.away_team?.name || 'AWAY';
+                                                        case "score-home": return String(homeScore);
+                                                        case "score-away": return String(awayScore);
+                                                        case "header-text": return displayHeaderText || 'LEAGUEFLOW';
+                                                        case "timer": return timeString;
+                                                        case "add-time": return addedTime ? `+${addedTime}` : '+0';
+                                                        case "home-scorer": {
+                                                            const homeGoalEvents = goalEvents.filter((e) => e.team_id && isHomeTeam(e.team_id));
+                                                            if (homeGoalEvents.length === 0) return '';
+                                                            return homeGoalEvents.slice(0, 2).map((e) => `${e.player_name} (${e.minute}')`).join(", ");
+                                                        }
+                                                        case "away-scorer": {
+                                                            const awayGoalEvents = goalEvents.filter((e) => e.team_id && isAwayTeam(e.team_id));
+                                                            if (awayGoalEvents.length === 0) return '';
+                                                            return awayGoalEvents.slice(0, 2).map((e) => `${e.player_name} (${e.minute}')`).join(", ");
+                                                        }
+                                                        default: break;
+                                                    }
+                                                }
+                                                return cfg.text || '';
+                                            };
+
+                                            const isLogoBinding = cfg.bindTo === "logo-home" || cfg.bindTo === "logo-away" || cfg.bindTo === "logo-tournament";
+                                            const logoUrl = cfg.bindTo === "logo-home" ? match.home_team?.logo_url : cfg.bindTo === "logo-away" ? match.away_team?.logo_url : tournamentLogo;
+
+                                            const clipPathStyle = isPolygon
+                                                ? "polygon(50% 0%, 100% 100%, 0% 100%)"
+                                                : isStar
+                                                    ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
+                                                    : undefined;
+
+                                            const strokePos = cfg.strokePos || "inside";
+                                            const strokeWidth = cfg.strokeWidth ?? 0;
+                                            const strokeInset = strokeWidth > 0
+                                                ? (strokePos === "outside" ? `-${strokeWidth}px` : strokePos === "center" ? `-${strokeWidth / 2}px` : "0px")
+                                                : "0px";
+
+                                            return (
+                                                <div
+                                                    key={blockId}
+                                                    style={{
+                                                        ...absoluteStyle,
+                                                        fontWeight: cfg.fontWeight || "bold",
+                                                        fontStyle: (cfg.fontStyle as any) || "normal",
+                                                        textDecoration: cfg.textDecoration || "none",
+                                                    }}
+                                                    className="flex items-center justify-center font-black tracking-tight select-none relative overflow-hidden"
+                                                >
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            inset: strokeInset,
+                                                            transform: `skewX(${cfg.skewX || 0}deg) skewY(${cfg.skewY || 0}deg)`,
+                                                            zIndex: -1,
+                                                            borderRadius: isCircle ? "50%" : undefined,
+                                                            borderTopLeftRadius: isCircle ? "50%" : `${cfg.rTL}px`,
+                                                            borderTopRightRadius: isCircle ? "50%" : `${cfg.rTR}px`,
+                                                            borderBottomLeftRadius: isCircle ? "50%" : `${cfg.rBL}px`,
+                                                            borderBottomRightRadius: isCircle ? "50%" : `${cfg.rBR}px`,
+                                                            clipPath: clipPathStyle,
+                                                            pointerEvents: "none",
+                                                            borderStyle: strokeWidth > 0 ? "solid" : "none",
+                                                            borderWidth: strokeWidth > 0 ? `${strokeWidth}px` : "0px",
+                                                            borderColor: cfg.strokeColor ?? "#ffffff",
+                                                            boxSizing: "border-box",
+                                                            ...(cfg.bg?.includes("gradient") ? {
+                                                                background: cfg.bg,
+                                                                opacity: (cfg.opacity ?? 100) / 100,
+                                                            } : {
+                                                                backgroundColor: `color-mix(in srgb, ${cfg.bg} ${cfg.opacity ?? 100}%, transparent)`,
+                                                            })
+                                                        }}
+                                                    />
+                                                    {isLogoBinding && logoUrl ? (
+                                                        <div className="relative w-full h-full">
+                                                            <Image src={logoUrl} alt="" fill className="object-cover" unoptimized />
+                                                        </div>
+                                                    ) : (
+                                                        <span className="truncate px-1">
+                                                            {getBoundText()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+
                                         return null;
                                     })();
 

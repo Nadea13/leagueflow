@@ -1,0 +1,481 @@
+import React, { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Check, Plus, Shapes, Square, Circle, Triangle, Star, Type, ChevronDown } from "lucide-react";
+import { CanvasBlock, getSnappedCoords } from "./types";
+import { isLightColor } from "./helpers";
+
+interface CanvasPreviewProps {
+    bg: string;
+    blocks: CanvasBlock[];
+    setBlocks?: React.Dispatch<React.SetStateAction<CanvasBlock[]>>;
+    selectedBlockId: string;
+    setSelectedBlockId: (id: string) => void;
+    scoreBg: string;
+    homeBarDir: string;
+    homeBarColor: string;
+    awayBarDir: string;
+    awayBarColor: string;
+    headerText: string;
+    blockGap: number;
+    locale: string;
+    toggleBlock: (index: number) => void;
+    getBlockName: (id: string, name: string) => string;
+    getShortPreviewLabel: (id: string) => string;
+    onUpdateBlockPosition: (id: string, x: number, y: number) => void;
+}
+
+export function CanvasPreview({
+    bg,
+    blocks,
+    setBlocks,
+    selectedBlockId,
+    setSelectedBlockId,
+    scoreBg,
+    homeBarDir,
+    homeBarColor,
+    awayBarDir,
+    awayBarColor,
+    headerText,
+    blockGap,
+    locale,
+    toggleBlock,
+    getBlockName,
+    getShortPreviewLabel,
+    onUpdateBlockPosition,
+}: CanvasPreviewProps) {
+    const [selectionBox, setSelectionBox] = useState<{ startX: number; startY: number; currentX: number; currentY: number; active: boolean } | null>(null);
+    const [dragStart, setDragStart] = useState<{ pointerX: number; pointerY: number; initialBlocks: { id: string; x: number; y: number }[] } | null>(null);
+    const [activeGuideLines, setActiveGuideLines] = useState<{ vLines: number[]; hLines: number[] } | null>(null);
+
+    const selectedIds = (selectedBlockId || "").split(",").filter(Boolean);
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>, id: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const clickedBlock = blocks.find(b => b.id === id);
+        let idsToSelect: string[] = [id];
+
+        if (clickedBlock?.groupId) {
+            const groupMembers = blocks.filter(b => b.active && b.groupId === clickedBlock.groupId).map(b => b.id);
+            if (groupMembers.length > 0) {
+                idsToSelect = groupMembers;
+            }
+        }
+
+        let currentSelectedIds = selectedIds;
+        const isAllAlreadySelected = idsToSelect.every(bId => currentSelectedIds.includes(bId));
+
+        if (!isAllAlreadySelected) {
+            currentSelectedIds = idsToSelect;
+            setSelectedBlockId(idsToSelect.join(","));
+        }
+
+        const initialBlocks = currentSelectedIds.map(bId => {
+            const b = blocks.find(item => item.id === bId);
+            return { id: bId, x: b?.x || 0, y: b?.y || 0 };
+        });
+        setDragStart({
+            pointerX: e.clientX,
+            pointerY: e.clientY,
+            initialBlocks,
+        });
+        try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+        } catch (_err) { }
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>, _id: string) => {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId) || !dragStart) return;
+        const deltaX = e.clientX - dragStart.pointerX;
+        const deltaY = e.clientY - dragStart.pointerY;
+
+        const primaryInit = dragStart.initialBlocks[0];
+        if (primaryInit) {
+            const rawX = primaryInit.x + deltaX;
+            const rawY = primaryInit.y + deltaY;
+            const snapResult = getSnappedCoords(primaryInit.id, rawX, rawY, blocks, blockGap);
+            const moveDeltaX = snapResult.x - primaryInit.x;
+            const moveDeltaY = snapResult.y - primaryInit.y;
+
+            setActiveGuideLines({
+                vLines: snapResult.vLines,
+                hLines: snapResult.hLines,
+            });
+
+            if (setBlocks) {
+                setBlocks(prev => prev.map(b => {
+                    const init = dragStart.initialBlocks.find(item => item.id === b.id);
+                    if (init) {
+                        return {
+                            ...b,
+                            x: Math.round((init.x + moveDeltaX) * 10) / 10,
+                            y: Math.round((init.y + moveDeltaY) * 10) / 10,
+                        };
+                    }
+                    return b;
+                }));
+            } else {
+                dragStart.initialBlocks.forEach((item: { id: string; x: number; y: number }) => {
+                    const newX = Math.round((item.x + moveDeltaX) * 10) / 10;
+                    const newY = Math.round((item.y + moveDeltaY) * 10) / 10;
+                    onUpdateBlockPosition(item.id, newX, newY);
+                });
+            }
+        }
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>, _id: string) => {
+        setDragStart(null);
+        setActiveGuideLines(null);
+        try {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch (_err) { }
+    };
+
+    const handleAddShape = (shapeType: "rectangle" | "circle" | "polygon" | "star" | "text") => {
+        const timestamp = Date.now();
+        const names: Record<string, string> = {
+            rectangle: locale === 'th' ? "สี่เหลี่ยม" : "Rectangle",
+            circle: locale === 'th' ? "วงกลม" : "Circle",
+            polygon: locale === 'th' ? "Polygon" : "Polygon",
+            star: locale === 'th' ? "ดาว" : "Star",
+            text: locale === 'th' ? "ข้อความ" : "Text",
+        };
+
+        const newShape: CanvasBlock = {
+            id: `shape-${shapeType}-${timestamp}`,
+            name: names[shapeType] || shapeType,
+            active: true,
+            x: 0,
+            y: 0,
+            w: shapeType === "text" ? 140 : 100,
+            h: shapeType === "text" ? 40 : 100,
+            fontSize: 16,
+            rTL: shapeType === "circle" ? 50 : 0,
+            rTR: shapeType === "circle" ? 50 : 0,
+            rBL: shapeType === "circle" ? 50 : 0,
+            rBR: shapeType === "circle" ? 50 : 0,
+            opacity: 100,
+            bg: shapeType === "text" ? "transparent" : "#737373",
+            color: "#ffffff",
+            shapeType: shapeType,
+            text: shapeType === "text" ? (locale === 'th' ? "ข้อความใหม่" : "New Text") : undefined,
+        };
+
+        if (setBlocks) {
+            setBlocks(prev => [...prev, newShape]);
+        }
+        setSelectedBlockId(newShape.id);
+    };
+
+    const getBlockDisplayContent = (b: CanvasBlock): string => {
+        if (b.bindTo && b.bindTo !== "none") {
+            switch (b.bindTo) {
+                case "name-home": return locale === 'th' ? "ทีมเหย้า" : "HOME";
+                case "name-away": return locale === 'th' ? "ทีมเยือน" : "AWAY";
+                case "score-home": return "0";
+                case "score-away": return "0";
+                case "header-text": return headerText || "LEAGUEFLOW";
+                case "timer": return "00:00";
+                case "add-time": return "+0";
+                case "logo-home": return "🛡️ Home";
+                case "logo-away": return "🛡️ Away";
+                case "logo-tournament": return "🛡️ Tour";
+                case "home-scorer": return locale === 'th' ? "👟 A. Player (12'), B. Player (45')" : "👟 A. Player (12'), B. Player (45')";
+                case "away-scorer": return locale === 'th' ? "👟 X. Player (30'), Y. Player (75')" : "👟 X. Player (30'), Y. Player (75')";
+                default: break;
+            }
+        }
+        if (b.shapeType === "text") return b.text || (locale === 'th' ? "ข้อความ" : "Text");
+        return b.shapeType ? "" : getShortPreviewLabel(b.id);
+    };
+
+    return (
+        <div className="md:col-span-6 lg:col-span-6.5 h-full flex flex-col min-h-0 relative">
+            {/* Visual Dotted Grid Board */}
+            <div
+                onPointerDown={(e) => {
+                    const activeEl = document.activeElement;
+                    if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")) {
+                        (activeEl as HTMLElement).blur();
+                    }
+                    if (e.target === e.currentTarget) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const relX = e.clientX - rect.left;
+                        const relY = e.clientY - rect.top;
+                        setSelectionBox({ startX: relX, startY: relY, currentX: relX, currentY: relY, active: true });
+                        setSelectedBlockId("");
+                        try {
+                            e.currentTarget.setPointerCapture(e.pointerId);
+                        } catch (_err) { }
+                    }
+                }}
+                onPointerMove={(e) => {
+                    if (selectionBox?.active) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const currentX = e.clientX - rect.left;
+                        const currentY = e.clientY - rect.top;
+                        setSelectionBox(prev => prev ? { ...prev, currentX, currentY } : null);
+
+                        const boxMinX = Math.min(selectionBox.startX, currentX) - rect.width / 2;
+                        const boxMaxX = Math.max(selectionBox.startX, currentX) - rect.width / 2;
+                        const boxMinY = Math.min(selectionBox.startY, currentY) - rect.height / 2;
+                        const boxMaxY = Math.max(selectionBox.startY, currentY) - rect.height / 2;
+
+                        const matchedIds = blocks.filter(b => b.active).filter(b => {
+                            const bw = b.w || 100;
+                            const bh = b.h || 40;
+                            const bLeft = b.x - bw / 2;
+                            const bRight = b.x + bw / 2;
+                            const bTop = b.y - bh / 2;
+                            const bBottom = b.y + bh / 2;
+                            return !(bRight < boxMinX || bLeft > boxMaxX || bBottom < boxMinY || bTop > boxMaxY);
+                        }).map(b => b.id);
+
+                        setSelectedBlockId(matchedIds.join(","));
+                    }
+                }}
+                onPointerUp={(e) => {
+                    if (selectionBox?.active) {
+                        try {
+                            e.currentTarget.releasePointerCapture(e.pointerId);
+                        } catch (_err) { }
+                        setSelectionBox(null);
+                    }
+                }}
+                className="w-full flex-1 h-full min-h-[500px] max-h-[82vh] border rounded-sm relative overflow-hidden flex items-center justify-center transition-colors duration-300 focus:outline-none"
+                style={{
+                    backgroundColor: bg === "transparent"
+                        ? undefined
+                        : bg === "chromakey"
+                            ? "#00ff00"
+                            : bg,
+                    backgroundImage: `radial-gradient(${isLightColor(bg) ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.08)"} 1px, transparent 1px)`,
+                    backgroundSize: "16px 16px"
+                }}
+            >
+                {/* Rubber-band Selection Box */}
+                {selectionBox?.active && Math.abs(selectionBox.currentX - selectionBox.startX) > 2 && (
+                    <div
+                        className="absolute border border-primary bg-primary/20 backdrop-blur-[0.5px] pointer-events-none z-50 rounded-none"
+                        style={{
+                            left: `${Math.min(selectionBox.startX, selectionBox.currentX)}px`,
+                            top: `${Math.min(selectionBox.startY, selectionBox.currentY)}px`,
+                            width: `${Math.abs(selectionBox.currentX - selectionBox.startX)}px`,
+                            height: `${Math.abs(selectionBox.currentY - selectionBox.startY)}px`,
+                        }}
+                    />
+                )}
+
+                {/* Active Alignment Guide Lines (Cyan Smart Snapping Guides) */}
+                {activeGuideLines?.vLines.map((vX, i) => (
+                    <div
+                        key={`v-guide-${i}`}
+                        className="absolute top-0 bottom-0 border-l-2 border-primary z-50 pointer-events-none"
+                        style={{
+                            left: `calc(50% + ${vX}px)`,
+                        }}
+                    />
+                ))}
+                {activeGuideLines?.hLines.map((hY, i) => (
+                    <div
+                        key={`h-guide-${i}`}
+                        className="absolute left-0 right-0 border-t-2 border-primary z-50 pointer-events-none"
+                        style={{
+                            top: `calc(50% + ${hY}px)`,
+                        }}
+                    />
+                ))}
+
+                {/* Center Crosshair Reference */}
+                <div className={`absolute top-1/2 left-0 right-0 border-b ${isLightColor(bg) ? "border-black/10" : "border-white/5"} pointer-events-none`} />
+                <div className={`absolute left-1/2 top-0 bottom-0 border-l ${isLightColor(bg) ? "border-black/10" : "border-white/5"} pointer-events-none`} />
+
+                {/* Bottom Center Floating Toolbar Menu */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 bg-card border shadow-xl rounded-sm p-1 flex items-center">
+                    {/* Dropdown Shapes */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="rounded h-8 px-2 text-xs font-bold gap-1.5 hover:bg-muted text-foreground"
+                            >
+                                <Shapes className="h-4 w-4" />
+                                <span>{locale === 'th' ? "รูปทรง" : "Shapes"}</span>
+                                <ChevronDown className="h-3 w-3 opacity-50" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" side="top" sideOffset={8} className="bg-card border shadow-xl rounded-sm w-44">
+                            <DropdownMenuItem onClick={() => handleAddShape("rectangle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                <Square className="h-4 w-4" />
+                                <span>{locale === 'th' ? "สี่เหลี่ยม" : "Rectangle"}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAddShape("circle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                <Circle className="h-4 w-4" />
+                                <span>{locale === 'th' ? "วงกลม" : "Circle"}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAddShape("polygon")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                <Triangle className="h-4 w-4" />
+                                <span>{locale === 'th' ? "Polygon (สามเหลี่ยม)" : "Polygon"}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAddShape("star")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                <Star className="h-4 w-4" />
+                                <span>{locale === 'th' ? "ดาว" : "Star"}</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Text Tool */}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAddShape("text")}
+                        className="rounded h-8 px-2 text-xs font-bold gap-1.5 hover:bg-muted text-foreground"
+                    >
+                        <Type className="h-4 w-4" />
+                        <span>{locale === 'th' ? "ข้อความ" : "Text"}</span>
+                    </Button>
+                </div>
+
+                {/* Render positioned Blocks */}
+                {blocks.map((b, idx) => {
+                    if (!b.active) return null;
+                    const isSelected = selectedIds.includes(b.id);
+                    const isScoreBlock = b.id === "score" || b.id === "score-home" || b.id === "score-away";
+                    const blockBg = b.bg ?? (isScoreBlock ? scoreBg : "#000000");
+
+                    const isCircle = b.shapeType === "circle";
+                    const isPolygon = b.shapeType === "polygon";
+                    const isStar = b.shapeType === "star";
+                    const isText = b.shapeType === "text";
+                    const strokePos = b.strokePos || "inside";
+                    const strokeWidth = b.strokeWidth ?? 0;
+                    const strokeInset = strokeWidth > 0
+                        ? (strokePos === "outside" ? `-${strokeWidth}px` : strokePos === "center" ? `-${strokeWidth / 2}px` : "0px")
+                        : "0px";
+
+                    return (
+                        <div
+                            key={b.id}
+                            onPointerDown={(e) => handlePointerDown(e, b.id)}
+                            onPointerMove={(e) => handlePointerMove(e, b.id)}
+                            onPointerUp={(e) => handlePointerUp(e, b.id)}
+                            style={{
+                                transform: `translate(calc(-50% + ${b.x}px), calc(-50% + ${b.y}px)) rotate(${b.rotation || 0}deg) scaleX(${b.flipX ? -1 : 1}) scaleY(${b.flipY ? -1 : 1})`,
+                                left: "50%",
+                                top: "50%",
+                                width: isText ? "max-content" : `${b.w}px`,
+                                height: isText ? "max-content" : `${b.h}px`,
+                                fontSize: `${b.fontSize}px`,
+                                borderTopLeftRadius: isCircle ? "50%" : `${b.rTL}px`,
+                                borderTopRightRadius: isCircle ? "50%" : `${b.rTR}px`,
+                                borderBottomLeftRadius: isCircle ? "50%" : `${b.rBL}px`,
+                                borderBottomRightRadius: isCircle ? "50%" : `${b.rBR}px`,
+                                color: b.color ?? "#ffffff",
+                                touchAction: "none",
+                                background: "transparent",
+                                backgroundColor: "transparent",
+                                isolation: "isolate",
+                                zIndex: 10 + idx,
+                                clipPath: isPolygon
+                                    ? "polygon(50% 0%, 100% 100%, 0% 100%)"
+                                    : isStar
+                                        ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
+                                        : undefined,
+                            }}
+                            className={`absolute flex items-center justify-center font-black tracking-tight cursor-grab active:cursor-grabbing select-none transition-all duration-75 ${isSelected ? "z-20" : ""}`}
+                        >
+                            {/* Background container that supports opacity for gradient without fading text */}
+                            <div
+                                style={{
+                                    position: "absolute",
+                                    inset: strokeInset,
+                                    transform: `skewX(${b.skewX || 0}deg) skewY(${b.skewY || 0}deg)`,
+                                    zIndex: -1,
+                                    borderRadius: isCircle ? "50%" : undefined,
+                                    borderTopLeftRadius: isCircle ? "50%" : `${b.rTL}px`,
+                                    borderTopRightRadius: isCircle ? "50%" : `${b.rTR}px`,
+                                    borderBottomLeftRadius: isCircle ? "50%" : `${b.rBL}px`,
+                                    borderBottomRightRadius: isCircle ? "50%" : `${b.rBR}px`,
+                                    clipPath: isPolygon
+                                        ? "polygon(50% 0%, 100% 100%, 0% 100%)"
+                                        : isStar
+                                            ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
+                                            : undefined,
+                                    pointerEvents: "none",
+                                    borderStyle: (b.strokeWidth ?? 0) > 0 ? "solid" : "none",
+                                    borderWidth: (b.strokeWidth ?? 0) > 0 ? `${b.strokeWidth}px` : "0px",
+                                    borderColor: b.strokeColor ?? "#ffffff",
+                                    boxSizing: "border-box",
+                                    ...(blockBg.includes("gradient") ? {
+                                        background: blockBg,
+                                        opacity: (b.opacity ?? 100) / 100,
+                                    } : {
+                                        backgroundColor: `color-mix(in srgb, ${blockBg} ${b.opacity ?? 100}%, transparent)`,
+                                    })
+                                }}
+                            />
+                            {/* Selection / Hover Outline frame that skews along with shape background */}
+                            <div
+                                className={`absolute inset-0 border pointer-events-none z-30 transition-all ${isSelected ? "border-2 border-primary" : "border-transparent hover:border-primary/60"}`}
+                                style={{
+                                    transform: `skewX(${b.skewX || 0}deg) skewY(${b.skewY || 0}deg)`,
+                                    borderRadius: isCircle ? "50%" : undefined,
+                                    borderTopLeftRadius: isCircle ? "50%" : `${b.rTL}px`,
+                                    borderTopRightRadius: isCircle ? "50%" : `${b.rTR}px`,
+                                    borderBottomLeftRadius: isCircle ? "50%" : `${b.rBL}px`,
+                                    borderBottomRightRadius: isCircle ? "50%" : `${b.rBR}px`,
+                                }}
+                            />
+                            <span
+                                className={`${isText ? "whitespace-nowrap px-2 py-1" : "truncate px-1"} flex items-center gap-0.5`}
+                                style={{
+                                    fontWeight: b.fontWeight ?? undefined,
+                                    fontStyle: b.fontStyle ?? "normal",
+                                    textDecoration: b.textDecoration ?? "none",
+                                }}
+                            >
+                                {getBlockDisplayContent(b)}
+                            </span>
+                            {b.id === "name-home" && homeBarDir !== "none" && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        [homeBarColor.includes("gradient") ? "background" : "backgroundColor"]: homeBarColor,
+                                        ...(homeBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${b.rTL}px`, borderTopRightRadius: `${b.rTR}px` }),
+                                        ...(homeBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${b.rTR}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                        ...(homeBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${b.rBL}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                        ...(homeBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${b.rTL}px`, borderBottomLeftRadius: `${b.rBL}px` }),
+                                    }}
+                                />
+                            )}
+                            {b.id === "name-away" && awayBarDir !== "none" && (
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        [awayBarColor.includes("gradient") ? "background" : "backgroundColor"]: awayBarColor,
+                                        ...(awayBarDir === "top" && { top: 0, left: 0, right: 0, height: "4px", borderTopLeftRadius: `${b.rTL}px`, borderTopRightRadius: `${b.rTR}px` }),
+                                        ...(awayBarDir === "right" && { top: 0, bottom: 0, right: 0, width: "4px", borderTopRightRadius: `${b.rTR}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                        ...(awayBarDir === "bottom" && { bottom: 0, left: 0, right: 0, height: "4px", borderBottomLeftRadius: `${b.rBL}px`, borderBottomRightRadius: `${b.rBR}px` }),
+                                        ...(awayBarDir === "left" && { top: 0, bottom: 0, left: 0, width: "4px", borderTopLeftRadius: `${b.rTL}px`, borderBottomLeftRadius: `${b.rBL}px` }),
+                                    }}
+                                />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
