@@ -6,7 +6,7 @@ import { getAnnouncements, addAnnouncement, deleteAnnouncement, toggleAnnounceme
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical, Check } from "lucide-react";
+import { Loader2, Plus, Trash2, Megaphone, Pin, PinOff, MoreVertical, Check, X } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -132,7 +132,7 @@ export function Announcements({
         return (
             <div className="bg-card">
                 <form onSubmit={handleAdd}>
-                    <div className="p-2 md:p-4 space-y-1 md:space-y-2">
+                    <div className="p-2 lg:p-4 space-y-1 lg:space-y-2">
                         <div className="space-y-1">
                             <Label>{t("title_placeholder")}</Label>
                             <Input
@@ -150,7 +150,7 @@ export function Announcements({
                             />
                         </div>
                     </div>
-                    <div className="p-2 md:p-4 border-t">
+                    <div className="p-2 lg:p-4 border-t">
                         <Button
                             type="submit"
                             className="bg-node-4 w-full"
@@ -226,71 +226,68 @@ export function Announcements({
 
     return (
         <div className={cn(
-            "bg-card space-y-2 md:space-y-4",
-            !isCompact && mode === 'both' && "border p-2 md:p-4"
+            "bg-card space-y-1 lg:space-y-2",
+            !isCompact && mode === 'both' && "border p-1 lg:p-2"
         )}>
-            {!isCompact && mode === 'both' && (
-                <div className="flex items-center justify-between relative z-10">
-                    <div className="space-y-1">
-                        <h3 className="text-xl font-black tracking-tighter text-foreground flex items-center gap-1 md:gap-2">
-                            <Megaphone className="h-5 w-5 text-node-4" />
-                            {t("title")}
-                        </h3>
-                    </div>
+            {mode === 'both' && (
+                <div className="flex items-center justify-end relative z-10">
                     {isEditable && (
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button
                                     variant="default"
-                                    className="h-8 bg-node-4 text-background hover:bg-node-4/90"
+                                    size={isCompact ? "sm" : "default"}
+                                    className={cn("bg-node-4 text-background hover:bg-node-4/90", isCompact && "h-7 text-xs px-2.5")}
                                 >
                                     <Plus className="h-4 w-4" />
                                     {t("news")}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-                                <DialogHeader className="p-2 md:p-4 pb-0 md:pb-0">
-                                    <DialogTitle className="text-2xl font-black tracking-tighter text-foreground flex items-center gap-3">
-                                        <Megaphone className="h-6 w-6 text-node-4" />
+                            <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
+                                <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                                    <DialogTitle className="text-base font-bold flex items-center gap-2">
                                         {t("news")}
                                     </DialogTitle>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="absolute right-2 top-2"
+                                        onClick={() => setIsDialogOpen(false)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
                                 </DialogHeader>
-                                <form onSubmit={handleAdd} className="p-4 md:p-6 space-y-2 md:space-y-3">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black  tracking-widest text-muted-foreground/60 px-1">{t("title_placeholder")}</label>
-                                        <Input
-                                            value={title}
-                                            onChange={e => setTitle(e.target.value)}
-                                            placeholder={t("title_placeholder")}
-                                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 h-11 font-bold"
-                                            required
-                                        />
+                                <form onSubmit={handleAdd}>
+                                    <div className="p-2 lg:p-4 space-y-3">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">{t("title_placeholder")}</Label>
+                                            <Input
+                                                value={title}
+                                                onChange={e => setTitle(e.target.value)}
+                                                placeholder={t("title_placeholder")}
+                                                className="h-9 text-xs"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">{t("content_placeholder")}</Label>
+                                            <Textarea
+                                                value={content}
+                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
+                                                placeholder={t("content_placeholder")}
+                                                rows={5}
+                                                className="resize-none text-xs min-h-[120px]"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black tracking-widest text-muted-foreground/60 px-1">{t("content_placeholder")}</label>
-                                        <Textarea
-                                            value={content}
-                                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
-                                            placeholder={t("content_placeholder")}
-                                            rows={5}
-                                            className="bg-background/50 border-border/20 focus-visible:ring-node-4/30 font-medium text-sm min-h-[120px]"
-                                        />
-                                    </div>
-                                    <div className="flex justify-end gap-2 md:gap-3 border-t border-border/10 pt-4">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setIsDialogOpen(false)}
-                                        >
-                                            {tCommon("cancel")}
-                                        </Button>
+                                    <div className="p-2 lg:p-4 border-t flex gap-2">
                                         <Button
                                             type="submit"
-                                            size="sm"
+                                            className="bg-node-4 hover:bg-node-4/90 w-full"
                                             disabled={isSaving || !title.trim()}
                                         >
-                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                             {t("post")}
                                         </Button>
                                     </div>
@@ -310,30 +307,30 @@ export function Announcements({
                     className="py-12"
                 />
             ) : (
-                <div className="grid grid-cols-1 gap-2 md:gap-4">
+                <div className="grid grid-cols-1 gap-1 lg:gap-2">
                     {announcements.map(ann => (
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-2 md:p-3 border transition-all relative overflow-hidden group/item",
-                                ann.is_pinned ? "bg-node-4 border-node-4/20" : "bg-card hover:bg-foreground hover:border-border/40"
+                                "p-1 lg:p-2 border transition-all relative overflow-hidden group/item rounded-sm",
+                                ann.is_pinned ? "border-node-4/50" : "bg-card"
                             )}
                         >
-                            <div className="flex items-start justify-between gap-2 md:gap-3 relative z-10">
-                                <div className="flex-1 space-y-2 md:space-y-3">
-                                    <div className="flex items-center gap-3">
+                            <div className="flex items-start justify-between gap-1 lg:gap-2 relative z-10">
+                                <div className="flex-1 space-y-1 lg:space-y-2">
+                                    <div className="flex items-center gap-1 lg:gap-2">
                                         {ann.is_pinned && (
                                             <span className="rotate-315">
                                                 <Pin className="h-4 w-4 text-node-4" />
                                             </span>
                                         )}
-                                        <h4 className="font-black tracking-tighter text-sm md:text-base text-foreground group-hover/item:text-node-4 transition-colors line-clamp-1">
+                                        <h4 className="font-black tracking-tighter text-sm lg:text-base text-foreground group-hover/item:text-node-4 transition-colors line-clamp-1">
                                             {ann.title}
                                         </h4>
                                     </div>
 
                                     {ann.content && (
-                                        <p className="text-muted-foreground/80 text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                                        <p className="text-muted-foreground/80 text-xs lg:text-sm leading-relaxed whitespace-pre-wrap font-medium">
                                             {ann.content}
                                         </p>
                                     )}
@@ -348,11 +345,11 @@ export function Announcements({
                                 {isEditable && (
                                     <div className="flex items-center gap-2 shrink-0">
                                         {/* Desktop Actions */}
-                                        <div className="hidden md:flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                        <div className="hidden lg:flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 border border-border/20 hover:bg-node-4/10 hover:text-node-4 hover:border-node-4/30 transition-all"
+                                                className="hover:text-node-4"
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
                                                 title={ann.is_pinned ? t("unpin") : t("pin")}
                                             >
@@ -361,7 +358,7 @@ export function Announcements({
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 border border-border/20 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
+                                                className="hover:text-destructive"
                                                 onClick={() => setDeleteId(ann.id)}
                                                 title={tCommon("delete")}
                                             >
@@ -370,7 +367,7 @@ export function Announcements({
                                         </div>
 
                                         {/* Mobile Actions (3 dots) */}
-                                        <div className="md:hidden">
+                                        <div className="lg:hidden">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 border border-border/20">

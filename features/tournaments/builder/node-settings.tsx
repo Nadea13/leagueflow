@@ -6,7 +6,7 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check, HelpCircle } from "lucide-react";
+import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check, HelpCircle, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Link } from "@/i18n/routing";
@@ -35,6 +35,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Registrations } from "@/features/tournaments/management/registrations";
+import { Announcements } from "@/features/tournaments/management/announcements";
 import { TeamForm } from "@/features/tournaments/teams/team-form";
 import { Plus } from "lucide-react";
 import {
@@ -50,7 +51,7 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
 export function NodeSettings() {
-    const { nodes, edges, updateNodeData, deleteNode, teams, fetchTeams, activeNodeId, activeCategoryId } = useBracketStore();
+    const { nodes, edges, updateNodeData, deleteNode, selectNode, setActiveNodeId, teams, fetchTeams, activeNodeId, activeCategoryId } = useBracketStore();
     const params = useParams();
     const tournamentId = params.id as string;
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
@@ -80,8 +81,10 @@ export function NodeSettings() {
     const [isRegLoading, setIsRegLoading] = React.useState(false);
     const [tournamentRecord, setTournamentRecord] = React.useState<Tournament | null>(null);
 
+    const isRegistrationMode = activeNodeId === "registration-setting-node";
+
     useEffect(() => {
-        if (selectedNode?.type === "registrationNode") {
+        if (isRegistrationMode) {
             setIsRegLoading(true);
             const fetchRegDetails = async () => {
                 const { data, error } = await supabase
@@ -115,7 +118,7 @@ export function NodeSettings() {
             };
             fetchRegDetails();
         }
-    }, [selectedNode?.type, tournamentId, supabase, activeCategoryId]);
+    }, [isRegistrationMode, tournamentId, supabase, activeCategoryId]);
 
     const handleRegSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -206,10 +209,10 @@ export function NodeSettings() {
     }, [tournamentId]);
 
     useEffect(() => {
-        if (selectedNode?.type === "sponsorNode") {
+        if (selectedNode?.type === "sponsorNode" || activeNodeId === "sponsor-setting-node") {
             loadSponsors();
         }
-    }, [selectedNode?.type, loadSponsors]);
+    }, [selectedNode?.type, activeNodeId, loadSponsors]);
 
     // DnD handlers
     const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -472,11 +475,26 @@ export function NodeSettings() {
         }
     }, [activeNodeId, nodeType, startNodeTutorial]);
 
-    if (!selectedNode || !activeNodeId) {
+    if ((!selectedNode && activeNodeId !== "registration-setting-node" && activeNodeId !== "announcement-setting-node" && activeNodeId !== "sponsor-setting-node" && activeNodeId !== "inbox-setting-node") || !activeNodeId) {
         return null;
     }
 
-    const { id, type, data } = selectedNode;
+    const isPseudoRegistration = activeNodeId === "registration-setting-node" && !selectedNode;
+    const isPseudoAnnouncement = activeNodeId === "announcement-setting-node" && !selectedNode;
+    const isPseudoSponsor = activeNodeId === "sponsor-setting-node" && !selectedNode;
+    const isPseudoInbox = activeNodeId === "inbox-setting-node" && !selectedNode;
+    const isPseudoNode = isPseudoRegistration || isPseudoAnnouncement || isPseudoSponsor || isPseudoInbox;
+    const id = selectedNode?.id || (isPseudoAnnouncement ? "announcement-setting-node" : isPseudoSponsor ? "sponsor-setting-node" : isPseudoInbox ? "inbox-setting-node" : "registration-setting-node");
+    const type = selectedNode?.type || (isPseudoAnnouncement ? "announcementNode" : isPseudoSponsor ? "sponsorNode" : isPseudoInbox ? "inboxNode" : "registrationNode");
+    const data = selectedNode?.data || {
+        label: isPseudoAnnouncement
+            ? (locale === "th" ? "ประกาศ" : "Announcements")
+            : isPseudoSponsor
+                ? (locale === "th" ? "ผู้สนับสนุน" : "Sponsors")
+                : isPseudoInbox
+                    ? (locale === "th" ? "กล่องข้อความ" : "Inbox")
+                    : (locale === "th" ? "ตั้งค่าการลงทะเบียน" : "Registration Settings")
+    };
 
     // Resolve live teams from edges or database assignments
     const getResolvedTeam = (targetId: string, handleId: string, dbMatch: Match | undefined, slot: 'a' | 'b') => {
@@ -537,7 +555,7 @@ export function NodeSettings() {
     };
 
     return (
-        <aside className="w-[512px] border-l bg-card flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
+        <aside className="w-full md:w-[512px] absolute inset-0 md:relative md:inset-auto z-40 md:z-auto border-l bg-card flex flex-col overflow-y-auto shrink-0 animate-in slide-in-from-right">
             <div className="p-2 md:p-4 border-b flex items-center justify-between">
                 <Button
                     variant="ghost"
@@ -548,55 +566,77 @@ export function NodeSettings() {
                 >
                     <HelpCircle className="h-4 w-4 text-primary" />
                 </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteNode(id)}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                {!isRegistrationMode && !isPseudoNode && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                            setActiveNodeId(null);
+                            selectNode(null);
+                        }}
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        title={locale === "th" ? "ปิด" : "Close"}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
             </div>
 
             <div className="p-2 md:p-4 space-y-2 md:space-y-4">
                 {/* ── Header based on type ── */}
-                <div className="flex items-center gap-2 md:gap-4">
-                    <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5' :
-                        type === 'matchNode' ? 'bg-node-2' :
-                            type === 'standingNode' ? 'bg-node-1' :
-                                type === 'teamListNode' ? 'bg-node-3' :
-                                    type === 'sponsorNode' ? 'bg-red-500/10' :
-                                        type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4'
-                        }`}>
-                        {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
-                            type === 'matchNode' ? <span className="text-sm font-bold text-foreground select-none">VS</span> :
-                                type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-foreground" /> :
-                                    type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
-                                        type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500 fill-red-500" /> :
-                                            type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
-                                                <Megaphone className="h-4 w-4 text-foreground" />}
+                <div className="flex items-center justify-between gap-2 md:gap-4">
+                    <div className="flex items-center gap-2 md:gap-4">
+                        <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5' :
+                            type === 'matchNode' ? 'bg-node-2' :
+                                type === 'standingNode' ? 'bg-node-1' :
+                                    type === 'teamListNode' ? 'bg-node-3' :
+                                        type === 'sponsorNode' ? 'bg-red-500/10' :
+                                            type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4'
+                            }`}>
+                            {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
+                                type === 'matchNode' ? <span className="text-sm font-bold text-foreground select-none">VS</span> :
+                                    type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-foreground" /> :
+                                        type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
+                                            type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500 fill-red-500" /> :
+                                                type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
+                                                type === 'inboxNode' ? <Inbox className="h-4 w-4 text-foreground" /> :
+                                                    <Megaphone className="h-4 w-4 text-foreground" />}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
+                                {type?.replace('Node', '')}
+                            </span>
+                            <span className="text-xs font-bold truncate max-w-[140px]">
+                                {data.label as string}
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
-                            {type?.replace('Node', '')}
-                        </span>
-                        <span className="text-xs font-bold truncate max-w-[140px]">
-                            {data.label as string}
-                        </span>
-                    </div>
+                    {!isRegistrationMode && !isPseudoNode && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteNode(id)}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                            title={locale === "th" ? "ลบโหนด" : "Delete node"}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
                 </div>
 
                 {/* ── Common Settings ── */}
                 <div className="space-y-1 md:space-y-2">
-                    <div className="space-y-1" id="node-settings-label-wrapper">
-                        <Label>
-                            Label
-                        </Label>
-                        <Input
-                            value={data.label as string}
-                            onChange={(e) => updateNodeData(id, { label: e.target.value })}
-                        />
-                    </div>
+                    {!isPseudoNode && (
+                        <div className="space-y-1" id="node-settings-label-wrapper">
+                            <Label>
+                                Label
+                            </Label>
+                            <Input
+                                value={data.label as string}
+                                onChange={(e) => updateNodeData(id, { label: e.target.value })}
+                            />
+                        </div>
+                    )}
 
                     {/* ── Type Specific Settings ── */}
                     {type === "groupNode" && (
@@ -917,6 +957,14 @@ export function NodeSettings() {
                         </div>
                     )}
 
+                    {type === "inboxNode" && (
+                        <div className="space-y-1 md:space-y-2">
+                            <div className="custom-scrollbar">
+                                <Registrations tournamentId={tournamentId} categoryId={activeCategoryId || undefined} />
+                            </div>
+                        </div>
+                    )}
+
                     {type === "sponsorNode" && (
                         <div className="space-y-1 md:space-y-2" id="node-settings-sponsor-list">
                             <div className="flex items-center justify-end">
@@ -1050,6 +1098,19 @@ export function NodeSettings() {
                                     ))}
                                 </div>
                             )}
+                        </div>
+                    )}
+
+
+
+                    {type === "announcementNode" && (
+                        <div className="space-y-2">
+                            <Announcements
+                                tournamentId={tournamentId}
+                                isEditable={true}
+                                isCompact={true}
+                                mode="both"
+                            />
                         </div>
                     )}
 

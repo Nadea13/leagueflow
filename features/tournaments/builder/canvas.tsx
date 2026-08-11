@@ -1,8 +1,6 @@
 "use client";
 
 import { NodeTools } from "./node-tools";
-import Image from "next/image";
-
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
     Background,
@@ -25,7 +23,7 @@ import {
     Loader2, Plus, Users, X,
     Settings, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, Building2
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, Building2, ClipboardEdit, Heart
 } from "lucide-react";
 import {
     Popover,
@@ -52,15 +50,13 @@ import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMont
 import { formatDate } from "@/lib/date";
 import { saveBracketCanvas } from "@/actions/tournaments/bracket";
 import { updateTournament } from "@/actions/tournaments/general";
-import { approveRegistration, rejectRegistration, approveRoster, rejectRoster, withdrawTournamentTeam } from "@/actions/tournaments/registration";
-import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
+import { withdrawTournamentTeam } from "@/actions/tournaments/registration";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
-import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BracketCanvasData, Match, Tournament, TournamentTeam, TournamentStatus, TournamentCategory, Team } from "@/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -73,11 +69,7 @@ import { GroupNode } from "./group-node";
 import { MatchNode } from "./match-node";
 import { StandingNode } from "./standing-node";
 import { TeamListNode } from "./team-list-node";
-import { AnnouncementNode } from "./announcement-node";
-import { SponsorNode } from "./sponsor-node";
-import { RegistrationNode } from "./registration-node";
 import { NodeSettings } from "./node-settings";
-import { Announcements } from "@/features/tournaments/management/announcements";
 import { CreateCategoryForm } from "@/features/tournaments/management/create-category-form";
 import {
     Dialog,
@@ -85,7 +77,6 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
     AlertDialog,
@@ -97,16 +88,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 
 const nodeTypes = {
     matchNode: MatchNode,
     groupNode: GroupNode,
     standingNode: StandingNode,
     teamListNode: TeamListNode,
-    announcementNode: AnnouncementNode,
-    sponsorNode: SponsorNode,
-    registrationNode: RegistrationNode,
 };
 
 function DeletableEdge({
@@ -214,6 +201,7 @@ function CanvasInternal({
     const { toast } = useToast();
     const t = useTranslations("Tournament");
     const tSettings = useTranslations("Settings");
+    const { screenToFlowPosition } = useReactFlow();
 
     const startTour = useCallback(() => {
         const driverObj = driver({
@@ -408,11 +396,9 @@ function CanvasInternal({
         addGroupNode,
         addStandingNode,
         addTeamListNode,
-        addAnnouncementNode,
-        addSponsorNode,
-        addRegistrationNode,
         hydrate,
         selectNode,
+        activeNodeId,
         setActiveNodeId,
         markClean,
         getCanvasData,
@@ -428,9 +414,119 @@ function CanvasInternal({
             setStoreTeams(initialTeamsData);
         }
     }, [initialTeamsData, setStoreTeams]);
-    const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule'>('teams');
+    const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule' | 'registration'>('teams');
     type SettingsTab = 'general' | 'categories' | 'location' | 'bank' | 'staff' | 'danger';
     const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('general');
+
+    const handleOpenRegistrationSettings = useCallback(() => {
+        const currentActiveId = useBracketStore.getState().activeNodeId;
+        if (currentActiveId === 'registration-setting-node') {
+            setActiveNodeId(null);
+            selectNode(null);
+        } else {
+            setActiveNodeId('registration-setting-node');
+            selectNode('registration-setting-node');
+        }
+    }, [setActiveNodeId, selectNode]);
+
+    const handleOpenAnnouncementSettings = useCallback(() => {
+        const currentActiveId = useBracketStore.getState().activeNodeId;
+        if (currentActiveId === 'announcement-setting-node') {
+            setActiveNodeId(null);
+            selectNode(null);
+        } else {
+            setActiveNodeId('announcement-setting-node');
+            selectNode('announcement-setting-node');
+        }
+    }, [setActiveNodeId, selectNode]);
+
+    const handleOpenSponsorSettings = useCallback(() => {
+        const currentActiveId = useBracketStore.getState().activeNodeId;
+        if (currentActiveId === 'sponsor-setting-node') {
+            setActiveNodeId(null);
+            selectNode(null);
+        } else {
+            setActiveNodeId('sponsor-setting-node');
+            selectNode('sponsor-setting-node');
+        }
+    }, [setActiveNodeId, selectNode]);
+
+    const [categories, setCategories] = useState<TournamentCategory[]>([]);
+    const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
+    const [_isInboxLoading, setIsInboxLoading] = useState(false);
+    const [withdrawingItem, setWithdrawingItem] = useState<InboxItem | null>(null);
+    const [withdrawConfirmText, setWithdrawConfirmText] = useState("");
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+    const fetchInboxItems = useCallback(async () => {
+        if (categories.length === 0) return;
+        setIsInboxLoading(true);
+        try {
+            const supabase = createClient();
+            const { data, error } = await supabase
+                .from("tournament_teams")
+                .select(`
+                    id,
+                    registration_status,
+                    payment_status,
+                    roster_status,
+                    contact_name,
+                    contact_phone,
+                    created_at,
+                    tournament_category_id,
+                    unlock_requested,
+                    slip_img,
+                    team:teams (
+                        id,
+                        name,
+                        logo_img
+                    )
+                `)
+                .in("tournament_category_id", categories.map(c => c.id))
+                .is("deleted_at", null)
+                .order("created_at", { ascending: false });
+
+            if (!error && data) {
+                const formattedItems: InboxItem[] = data.map((item) => {
+                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
+                    return {
+                        id: item.id,
+                        registration_status: item.registration_status,
+                        payment_status: item.payment_status,
+                        roster_status: (item as { roster_status: string | null }).roster_status || null,
+                        contact_name: item.contact_name,
+                        contact_phone: item.contact_phone,
+                        created_at: item.created_at,
+                        tournament_category_id: item.tournament_category_id,
+                        unlock_requested: (item as { unlock_requested?: boolean | null }).unlock_requested || false,
+                        slip_img: (item as { slip_img?: string | null }).slip_img || null,
+                        team: teamData ? {
+                            id: teamData.id,
+                            name: teamData.name,
+                            logo_img: teamData.logo_img
+                        } : null
+                    };
+                });
+                setInboxItems(formattedItems);
+            }
+        } catch (err) {
+            console.error("Error fetching inbox items:", err);
+        } finally {
+            setIsInboxLoading(false);
+        }
+    }, [categories]);
+
+    const handleOpenInboxSettings = useCallback(() => {
+        const currentActiveId = useBracketStore.getState().activeNodeId;
+        if (currentActiveId === 'inbox-setting-node') {
+            setActiveNodeId(null);
+            selectNode(null);
+        } else {
+            setActiveNodeId('inbox-setting-node');
+            selectNode('inbox-setting-node');
+            fetchInboxItems();
+        }
+    }, [setActiveNodeId, selectNode, fetchInboxItems]);
 
     const settingsTabOptions = useMemo<TabOption<SettingsTab>[]>(() => {
         const options: TabOption<SettingsTab>[] = [
@@ -464,8 +560,6 @@ function CanvasInternal({
     const [isEditingName, setIsEditingName] = useState(false);
     const [currentName, setCurrentName] = useState(tournamentName);
     const [tempName, setTempName] = useState(tournamentName);
-    const { screenToFlowPosition } = useReactFlow();
-    const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
     const [currentStatus, setCurrentStatus] = useState<TournamentStatus>(tournament?.status || 'draft');
     const [isLocked, setIsLocked] = useState(readonly || tournament?.status === 'finished');
     const [isCategoryLoading, setIsCategoryLoading] = useState(false);
@@ -592,72 +686,6 @@ function CanvasInternal({
     };
 
     const router = useRouter();
-
-    const [categories, setCategories] = useState<TournamentCategory[]>([]);
-    const [inboxOpen, setInboxOpen] = useState(false);
-    const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
-    const [isInboxLoading, setIsInboxLoading] = useState(false);
-    const [withdrawingItem, setWithdrawingItem] = useState<InboxItem | null>(null);
-    const [withdrawConfirmText, setWithdrawConfirmText] = useState("");
-    const [isWithdrawing, setIsWithdrawing] = useState(false);
-
-    const fetchInboxItems = useCallback(async () => {
-        if (categories.length === 0) return;
-        setIsInboxLoading(true);
-        try {
-            const supabase = createClient();
-            const { data, error } = await supabase
-                .from("tournament_teams")
-                .select(`
-                    id,
-                    registration_status,
-                    payment_status,
-                    roster_status,
-                    contact_name,
-                    contact_phone,
-                    created_at,
-                    tournament_category_id,
-                    unlock_requested,
-                    slip_img,
-                    team:teams (
-                        id,
-                        name,
-                        logo_img
-                    )
-                `)
-                .in("tournament_category_id", categories.map(c => c.id))
-                .is("deleted_at", null)
-                .order("created_at", { ascending: false });
-
-            if (!error && data) {
-                const formattedItems: InboxItem[] = data.map((item) => {
-                    const teamData = Array.isArray(item.team) ? item.team[0] : item.team;
-                    return {
-                        id: item.id,
-                        registration_status: item.registration_status,
-                        payment_status: item.payment_status,
-                        roster_status: (item as { roster_status: string | null }).roster_status || null,
-                        contact_name: item.contact_name,
-                        contact_phone: item.contact_phone,
-                        created_at: item.created_at,
-                        tournament_category_id: item.tournament_category_id,
-                        unlock_requested: (item as { unlock_requested?: boolean | null }).unlock_requested || false,
-                        slip_img: (item as { slip_img?: string | null }).slip_img || null,
-                        team: teamData ? {
-                            id: teamData.id,
-                            name: teamData.name,
-                            logo_img: teamData.logo_img
-                        } : null
-                    };
-                });
-                setInboxItems(formattedItems);
-            }
-        } catch (err) {
-            console.error("Error fetching inbox items:", err);
-        } finally {
-            setIsInboxLoading(false);
-        }
-    }, [categories]);
 
     const handleWithdrawTeam = async () => {
         if (!withdrawingItem || !withdrawingItem.team) return;
@@ -1259,346 +1287,6 @@ function CanvasInternal({
                                 {/* Desktop Sidebar & Tool Buttons */}
                                 <div className="hidden md:flex items-center" id="tour-console-sidebar-buttons">
 
-                                <Dialog open={isAnnouncementOpen} onOpenChange={setIsAnnouncementOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="text-node-4 transition-all"
-                                        >
-                                            <Megaphone className="h-4 w-4" />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent showCloseButton={false} className="bg-card rounded-sm sm:max-w-[500px] p-0 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                                        <DialogHeader className="p-4 border-b relative pr-10">
-                                            <DialogTitle>
-                                                {locale === 'th' ? "ประกาศใหม่" : "New Announcement"}
-                                            </DialogTitle>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                className="absolute right-2 top-2"
-                                                onClick={() => setIsAnnouncementOpen(false)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </DialogHeader>
-                                        <Announcements
-                                            tournamentId={tournamentId}
-                                            isEditable={!readonly}
-                                            mode="form"
-                                            onSuccess={() => setIsAnnouncementOpen(false)}
-                                        />
-                                    </DialogContent>
-                                </Dialog>
-
-                                <Dialog open={inboxOpen} onOpenChange={(val) => {
-                                    setInboxOpen(val);
-                                    if (val) fetchInboxItems();
-                                }}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="relative text-foreground transition-all"
-                                        >
-                                            <Inbox className="h-4 w-4" />
-                                            {filteredInboxItems.some(item => 
-                                                item.registration_status === 'pending' || 
-                                                item.unlock_requested || 
-                                                (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
-                                            ) && (
-                                                <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
-                                            )}
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent showCloseButton={false} className="bg-card rounded-sm sm:max-w-[640px] p-0 max-h-[90vh] flex flex-col overflow-hidden">
-                                        <DialogHeader className="p-4 border-b relative pr-10">
-                                            <DialogTitle>กล่องข้อความ</DialogTitle>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                className="absolute right-2 top-2"
-                                                onClick={() => setInboxOpen(false)}
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </DialogHeader>
-
-                                        <div className="flex-1 overflow-y-auto p-4 space-y-1 lg:space-y-2 custom-scrollbar">
-                                            {isInboxLoading ? (
-                                                <div className="space-y-3 animate-pulse">
-                                                    {[...Array(3)].map((_, idx) => (
-                                                        <div key={idx} className="border rounded-lg p-3 space-y-3 bg-card/50">
-                                                            <div className="flex items-start justify-between gap-3">
-                                                                <div className="flex items-center gap-2.5 w-full">
-                                                                    <Skeleton className="h-9 w-9 rounded-full shrink-0" />
-                                                                    <div className="space-y-1.5 flex-1">
-                                                                        <Skeleton className="h-4 w-1/3 rounded-sm" />
-                                                                        <Skeleton className="h-3 w-1/2 rounded-sm" />
-                                                                    </div>
-                                                                </div>
-                                                                <Skeleton className="h-4 w-12 rounded-full shrink-0" />
-                                                            </div>
-                                                            <div className="bg-muted/30 p-2.5 rounded-md space-y-2">
-                                                                <Skeleton className="h-3 w-3/4 rounded-sm" />
-                                                                <Skeleton className="h-3 w-1/2 rounded-sm" />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : filteredInboxItems.length === 0 ? (
-                                                <EmptyState
-                                                    icon={Inbox}
-                                                    title="ไม่มีข้อความใหม่"
-                                                    description="ยังไม่มีทีมลงสมัครหรือทำรายการใด ๆ ในรุ่นการแข่งขันนี้"
-                                                    action={<div />}
-                                                />
-                                            ) : (
-                                                filteredInboxItems.map((item) => {
-                                                    const isPendingReg = item.registration_status === 'pending';
-                                                    const hasRoster = item.contact_name || item.contact_phone;
-                                                    const category = categories.find(c => String(c.id) === String(item.tournament_category_id));
-                                                    const categoryName = category?.age_categories?.category_name || "ทั่วไป";
-
-                                                    return (
-                                                        <div key={item.id} className="border rounded-sm p-2 space-y-2">
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="h-10 w-10 rounded-full border overflow-hidden flex items-center justify-center">
-                                                                        {item.team?.logo_img ? (
-                                                                            <Image
-                                                                                src={item.team.logo_img}
-                                                                                alt={item.team.name}
-                                                                                width={40}
-                                                                                height={40}
-                                                                                className="h-full w-full object-cover"
-                                                                            />
-                                                                        ) : (
-                                                                            <Users className="h-4 w-4" />
-                                                                        )}
-                                                                    </div>
-                                                                    <div>
-                                                                        <h4 className="font-bold text-sm text-foreground">{item.team?.name || "ไม่ทราบชื่อทีม"}</h4>
-                                                                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                                                                            รุ่นการแข่งขัน: {categoryName} • {new Date(item.created_at).toLocaleString(locale === 'th' ? 'th-TH' : 'en-US')}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-
-                                                                <Badge className={cn(
-                                                                    "text-[10px]",
-                                                                    isPendingReg
-                                                                        ? "bg-warning/10 text-warning border-warning/50"
-                                                                        : item.registration_status === 'approved'
-                                                                            ? "bg-primary/10 text-primary border-primary/50"
-                                                                            : "bg-destructive/10 text-destructive border-destructive/50"
-                                                                )}>
-                                                                    {isPendingReg ? "รอดำเนินการ" : item.registration_status === 'approved' ? "อนุมัติแล้ว" : "ปฏิเสธ"}
-                                                                </Badge>
-                                                            </div>
-
-                                                            {/* Notification Details & Actions */}
-                                                            <div className="rounded-sm text-xs space-y-2">
-                                                                {isPendingReg ? (
-                                                                    <p className="text-foreground">
-                                                                        <strong>ยื่นใบสมัครใหม่</strong> ต้องการขอเข้าร่วมการแข่งขันในรุ่นนี้
-                                                                    </p>
-                                                                ) : item.unlock_requested ? (
-                                                                    <p className="text-foreground">
-                                                                        <strong>ขอปลดล็อกรายชื่อ/ข้อมูลทีม</strong> ต้องการแก้ไขข้อมูลและนักกีฬา
-                                                                    </p>
-                                                                ) : hasRoster ? (
-                                                                    <p className="text-foreground">
-                                                                        {item.roster_status === 'pending' ? (
-                                                                            <><strong>ส่งรายชื่อนักกีฬาแล้ว (รออนุมัติ)</strong></>
-                                                                        ) : item.roster_status === 'approved' ? (
-                                                                            <><strong>อนุมัติรายชื่อแล้ว</strong></>
-                                                                        ) : item.roster_status === 'rejected' ? (
-                                                                            <><strong>ปฏิเสธรายชื่อแล้ว (รอแก้ไข)</strong></>
-                                                                        ) : (
-                                                                            <><strong>ส่งรายชื่อนักกีฬาแล้ว</strong></>
-                                                                        )} ผู้ติดต่อ: {item.contact_name} ({item.contact_phone})
-                                                                    </p>
-                                                                ) : (
-                                                                    <p className="text-muted-foreground">
-                                                                        ทีมนี้ได้ลงทะเบียนสำเร็จแล้ว แต่ยังไม่ได้ส่งรายชื่อนักกีฬา
-                                                                    </p>
-                                                                )}
-
-                                                                {/* Action Buttons */}
-                                                                <div className="flex gap-2 justify-end">
-                                                                    <div className="flex gap-1 md:gap-2 mr-auto">
-                                                                        {item.slip_img && (
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="outline"
-                                                                                type="button"
-                                                                                onClick={() => window.open(item.slip_img!, '_blank')}
-                                                                            >
-                                                                                {locale === 'th' ? "ดูสลิปการโอน" : "View Slip"}
-                                                                            </Button>
-                                                                        )}
-                                                                        {item.registration_status !== 'rejected' && (
-                                                                            <RosterDialog
-                                                                                team={{
-                                                                                    id: item.id,
-                                                                                    name: item.team?.name || "",
-                                                                                    logo_url: item.team?.logo_img,
-                                                                                    contact_name: item.contact_name,
-                                                                                    contact_phone: item.contact_phone,
-                                                                                    sport: 'football'
-                                                                                } as unknown as TournamentTeam}
-                                                                                tournamentId={tournamentId}
-                                                                                readOnly={item.roster_status === 'approved' || isPendingReg}
-                                                                                trigger={
-                                                                                    <Button size="sm" variant="outline" type="button">
-                                                                                        {locale === 'th' ? "ดูรายชื่อนักกีฬา" : "View Roster"}
-                                                                                    </Button>
-                                                                                }
-                                                                            />
-                                                                        )}
-                                                                    </div>
-                                                                    {isPendingReg && (
-                                                                        <>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="outline"
-                                                                                type="button"
-                                                                                onClick={async () => {
-                                                                                    const res = await rejectRegistration(item.id, tournamentId);
-                                                                                    if (res.success) {
-                                                                                        toast({ title: "ปฏิเสธการลงทะเบียนเรียบร้อยแล้ว" });
-                                                                                        fetchInboxItems();
-                                                                                    } else {
-                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                ปฏิเสธ
-                                                                            </Button>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="default"
-                                                                                type="button"
-                                                                                onClick={async () => {
-                                                                                    const res = await approveRegistration(item.id, tournamentId);
-                                                                                    if (res.success) {
-                                                                                        toast({ title: "อนุมัติการลงทะเบียนเรียบร้อยแล้ว" });
-                                                                                        fetchInboxItems();
-                                                                                    } else {
-                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                อนุมัติใบสมัคร
-                                                                            </Button>
-                                                                        </>
-                                                                    )}
-                                                                    {item.registration_status === 'approved' && (
-                                                                        <Button
-                                                                            size="sm"
-                                                                            variant="outline"
-                                                                            type="button"
-                                                                            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
-                                                                            onClick={() => setWithdrawingItem(item)}
-                                                                        >
-                                                                            {locale === 'th' ? "ถอนทีม" : "Withdraw"}
-                                                                        </Button>
-                                                                    )}
-                                                                    {item.unlock_requested ? (
-                                                                        <>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="outline"
-                                                                                type="button"
-                                                                                className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
-                                                                                onClick={async () => {
-                                                                                    const { rejectRosterUnlock } = await import("@/actions/tournaments/registration");
-                                                                                    const res = await rejectRosterUnlock(item.id, tournamentId);
-                                                                                    if (res.success) {
-                                                                                        toast({ title: "ปฏิเสธคำขอปลดล็อกเรียบร้อยแล้ว" });
-                                                                                        fetchInboxItems();
-                                                                                    } else {
-                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                ปฏิเสธคำขอ
-                                                                            </Button>
-                                                                            <Button
-                                                                                size="sm"
-                                                                                variant="default"
-                                                                                type="button"
-                                                                                className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                                                onClick={async () => {
-                                                                                    const { approveRosterUnlock } = await import("@/actions/tournaments/registration");
-                                                                                    const res = await approveRosterUnlock(item.id, tournamentId);
-                                                                                    if (res.success) {
-                                                                                        toast({ title: "อนุมัติคำขอปลดล็อกเรียบร้อยแล้ว" });
-                                                                                        fetchInboxItems();
-                                                                                    } else {
-                                                                                        toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                อนุมัติปลดล็อก
-                                                                            </Button>
-                                                                        </>
-                                                                    ) : hasRoster && (
-                                                                        <>
-                                                                            {item.roster_status === 'pending' && (
-                                                                                <>
-                                                                                    <Button
-                                                                                        size="sm"
-                                                                                        variant="outline"
-                                                                                        type="button"
-                                                                                        className="h-8 text-xs border-destructive hover:bg-destructive/10 hover:text-destructive"
-                                                                                        onClick={async () => {
-                                                                                            const res = await rejectRoster(item.id, tournamentId);
-                                                                                            if (res.success) {
-                                                                                                toast({ title: "ปฏิเสธรายชื่อเรียบร้อยแล้ว" });
-                                                                                                fetchInboxItems();
-                                                                                            } else {
-                                                                                                toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                            }
-                                                                                        }}
-                                                                                    >
-                                                                                        ปฏิเสธรายชื่อ
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        size="sm"
-                                                                                        variant="default"
-                                                                                        type="button"
-                                                                                        className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                                                        onClick={async () => {
-                                                                                            const res = await approveRoster(item.id, tournamentId);
-                                                                                            if (res.success) {
-                                                                                                toast({ title: "อนุมัติรายชื่อเรียบร้อยแล้ว" });
-                                                                                                fetchInboxItems();
-                                                                                            } else {
-                                                                                                toast({ title: "เกิดข้อผิดพลาด", description: res.error, variant: "destructive" });
-                                                                                            }
-                                                                                        }}
-                                                                                    >
-                                                                                        อนุมัติรายชื่อ
-                                                                                    </Button>
-                                                                                </>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
-
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
@@ -1626,6 +1314,73 @@ function CanvasInternal({
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
+
+                                <Button
+                                    variant={activeNodeId === 'inbox-setting-node' ? "default" : "ghost"}
+                                    size="icon"
+                                    onClick={handleOpenInboxSettings}
+                                    title={locale === 'th' ? "กล่องข้อความ" : "Inbox"}
+                                    className={cn(
+                                        "relative transition-all",
+                                        activeNodeId === 'inbox-setting-node'
+                                            ? "bg-primary"
+                                            : "text-foreground"
+                                    )}
+                                >
+                                    <Inbox className="h-4 w-4" />
+                                    {filteredInboxItems.some(item => 
+                                        item.registration_status === 'pending' || 
+                                        item.unlock_requested || 
+                                        (item.roster_status === 'pending' && (item.contact_name || item.contact_phone))
+                                    ) && (
+                                        <span className="absolute top-2 right-2 bg-destructive rounded-full h-2 w-2" />
+                                    )}
+                                </Button>
+
+                                <Button
+                                    variant={activeNodeId === 'announcement-setting-node' ? "default" : "ghost"}
+                                    size="icon"
+                                    onClick={handleOpenAnnouncementSettings}
+                                    title={locale === 'th' ? "ประกาศ" : "Announcements"}
+                                    className={cn(
+                                        "transition-all",
+                                        activeNodeId === 'announcement-setting-node'
+                                            ? "bg-primary"
+                                            : "text-foreground"
+                                    )}
+                                >
+                                    <Megaphone className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    variant={activeNodeId === 'registration-setting-node' ? "default" : "ghost"}
+                                    size="icon"
+                                    onClick={handleOpenRegistrationSettings}
+                                    title={locale === 'th' ? "ตั้งค่าการลงทะเบียน" : "Registration Settings"}
+                                    className={cn(
+                                        "transition-all",
+                                        activeNodeId === 'registration-setting-node'
+                                            ? "bg-primary"
+                                            : "text-foreground"
+                                    )}
+                                >
+                                    <ClipboardEdit className="h-4 w-4" />
+                                </Button>
+
+                                <Button
+                                    variant={activeNodeId === 'sponsor-setting-node' ? "default" : "ghost"}
+                                    size="icon"
+                                    onClick={handleOpenSponsorSettings}
+                                    title={locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}
+                                    className={cn(
+                                        "transition-all",
+                                        activeNodeId === 'sponsor-setting-node'
+                                            ? "bg-primary"
+                                            : "text-foreground"
+                                    )}
+                                >
+                                    <Heart className="h-4 w-4" />
+                                </Button>
 
                                 <Button
                                     variant={activeSidebar === 'schedule' ? "default" : "ghost"}
@@ -1660,11 +1415,15 @@ function CanvasInternal({
 
                             {/* Mobile Menu (...) Dropdown or Close (X) button */}
                             <div className="flex md:hidden items-center" id="tour-console-mobile-menu">
-                                {(activeSidebar === 'schedule' || activeSidebar === 'settings') ? (
+                                {(activeSidebar === 'schedule' || activeSidebar === 'settings' || Boolean(activeNodeId)) ? (
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => setActiveSidebar('teams')}
+                                        onClick={() => {
+                                            setActiveSidebar('teams');
+                                            setActiveNodeId(null);
+                                            selectNode(null);
+                                        }}
                                         className="text-foreground transition-all"
                                     >
                                         <X className="h-4 w-4" />
@@ -1689,18 +1448,15 @@ function CanvasInternal({
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
                                             <DropdownMenuItem
-                                                onClick={() => setIsAnnouncementOpen(true)}
+                                                onClick={handleOpenAnnouncementSettings}
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
-                                                <Megaphone className="h-4 w-4 text-node-4" />
-                                                <span>{locale === 'th' ? "สร้างประกาศ" : "Announcement"}</span>
+                                                <Megaphone className="h-4 w-4" />
+                                                <span>{locale === 'th' ? "ประกาศ" : "Announcement"}</span>
                                             </DropdownMenuItem>
 
                                             <DropdownMenuItem
-                                                onClick={() => {
-                                                    setInboxOpen(true);
-                                                    fetchInboxItems();
-                                                }}
+                                                onClick={handleOpenInboxSettings}
                                                 className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
                                             >
                                                 <div className="flex items-center gap-2">
@@ -1714,6 +1470,22 @@ function CanvasInternal({
                                                 ) && (
                                                     <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
                                                 )}
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={handleOpenRegistrationSettings}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                            >
+                                                <ClipboardEdit className="h-4 w-4" />
+                                                <span>{locale === 'th' ? "ตั้งค่าการลงทะเบียน" : "Registration Settings"}</span>
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={handleOpenSponsorSettings}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                            >
+                                                <Heart className="h-4 w-4" />
+                                                <span>{locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}</span>
                                             </DropdownMenuItem>
 
                                             <DropdownMenuItem
@@ -2220,8 +1992,8 @@ function CanvasInternal({
                             </div>
                         ) : (
                             <>
-                                <div className="flex-1 relative">
-                                    {!readonly && !isLocked && activeSidebar !== 'schedule' && (
+                                <div className="flex-1 relative flex overflow-hidden">
+                                    {!readonly && !isLocked && activeSidebar !== 'schedule' && !activeNodeId && (
                                         <div className="absolute top-4 right-4 z-50" id="tour-console-add-components">
                                             <Popover>
                                                 <PopoverTrigger asChild>
@@ -2244,9 +2016,6 @@ function CanvasInternal({
                                                         onAddGroup={() => addGroupNode(getCenterPos())}
                                                         onAddStanding={() => addStandingNode(getCenterPos())}
                                                         onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
-                                                        onAddAnnouncement={() => addAnnouncementNode(tournamentId, readonly, getCenterPos())}
-                                                        onAddSponsor={() => addSponsorNode(tournamentId, readonly, getCenterPos())}
-                                                        onAddRegistration={() => addRegistrationNode(tournamentId, getCenterPos())}
                                                     />
                                                     <div className="p-2 border-t mt-1 flex items-center justify-between">
                                                         <div className="flex flex-col">
