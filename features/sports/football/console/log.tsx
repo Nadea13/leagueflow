@@ -49,7 +49,7 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                     className={cn(
                                         "relative flex items-center gap-1 lg:gap-2 group/item w-full p-2 lg:p-4 transition-all duration-300",
                                         isNeutral ? "flex-row justify-center" : (isHome ? "flex-row" : "flex-row-reverse"),
-                                        event.isPending && "opacity-50 select-none animate-pulse"
+                                        event.isPending && "opacity-75 select-none"
                                     )}
                                 >
                                     {/* Minute Indicator (Hidden for neutral events) */}

@@ -81,6 +81,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning className="scroll-smooth">
       <body
+        suppressHydrationWarning
         className={`${notoSansThai.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>

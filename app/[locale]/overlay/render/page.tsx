@@ -133,11 +133,11 @@ function CustomOverlayRenderer() {
       case "timer": return liveTimerText;
       case "add-time": return addTimeText;
       case "home-scorer": {
-        const text = (config as any)?.homeScorer || "";
+        const text = ((config as Record<string, unknown>)?.homeScorer as string) || "";
         return text.split(",").slice(0, 2).join(",").trim();
       }
       case "away-scorer": {
-        const text = (config as any)?.awayScorer || "";
+        const text = ((config as Record<string, unknown>)?.awayScorer as string) || "";
         return text.split(",").slice(0, 2).join(",").trim();
       }
       default:

@@ -1,13 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, Plus, Shapes, Square, Circle, Triangle, Star, Type, ChevronDown } from "lucide-react";
+import { Shapes, Square, Circle, Triangle, Star, Type, ChevronDown } from "lucide-react";
 import { CanvasBlock, getSnappedCoords } from "./types";
 import { isLightColor } from "./helpers";
 
@@ -18,6 +17,7 @@ interface CanvasPreviewProps {
     selectedBlockId: string;
     setSelectedBlockId: (id: string) => void;
     scoreBg: string;
+    font?: string;
     homeBarDir: string;
     homeBarColor: string;
     awayBarDir: string;
@@ -38,6 +38,7 @@ export function CanvasPreview({
     selectedBlockId,
     setSelectedBlockId,
     scoreBg,
+    font = "inter",
     homeBarDir,
     homeBarColor,
     awayBarDir,
@@ -45,8 +46,8 @@ export function CanvasPreview({
     headerText,
     blockGap,
     locale,
-    toggleBlock,
-    getBlockName,
+    toggleBlock: _toggleBlock,
+    getBlockName: _getBlockName,
     getShortPreviewLabel,
     onUpdateBlockPosition,
 }: CanvasPreviewProps) {
@@ -167,6 +168,7 @@ export function CanvasPreview({
             bg: shapeType === "text" ? "transparent" : "#737373",
             color: "#ffffff",
             shapeType: shapeType,
+            fontWeight: shapeType === "text" ? "400" : undefined,
             text: shapeType === "text" ? (locale === 'th' ? "ข้อความใหม่" : "New Text") : undefined,
         };
 
@@ -200,6 +202,20 @@ export function CanvasPreview({
 
     return (
         <div className="md:col-span-6 lg:col-span-6.5 h-full flex flex-col min-h-0 relative">
+            <style dangerouslySetInnerHTML={{ __html: `
+                ${font === 'orbitron' ? "@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');" :
+                  font === 'montserrat' ? "@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&display=swap');" :
+                  font === 'bebas-neue' ? "@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');" :
+                  font === 'outfit' ? "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');" :
+                  "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');"}
+                .custom-font-style {
+                    font-family: ${font === 'orbitron' ? "'Orbitron', sans-serif" :
+                                 font === 'montserrat' ? "'Montserrat', sans-serif" :
+                                 font === 'bebas-neue' ? "'Bebas Neue', sans-serif" :
+                                 font === 'outfit' ? "'Outfit', sans-serif" :
+                                 "'Inter', sans-serif"};
+                }
+            ` }} />
             {/* Visual Dotted Grid Board */}
             <div
                 onPointerDown={(e) => {
@@ -251,7 +267,7 @@ export function CanvasPreview({
                         setSelectionBox(null);
                     }
                 }}
-                className="w-full flex-1 h-full min-h-[500px] max-h-[82vh] border rounded-sm relative overflow-hidden flex items-center justify-center transition-colors duration-300 focus:outline-none"
+                className="w-full flex-1 h-full min-h-[500px] max-h-[82vh] border rounded-sm relative overflow-hidden flex items-center justify-center transition-colors duration-300 focus:outline-none custom-font-style"
                 style={{
                     backgroundColor: bg === "transparent"
                         ? undefined
@@ -394,7 +410,7 @@ export function CanvasPreview({
                                         ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
                                         : undefined,
                             }}
-                            className={`absolute flex items-center justify-center font-black tracking-tight cursor-grab active:cursor-grabbing select-none transition-all duration-75 ${isSelected ? "z-20" : ""}`}
+                            className={`absolute flex items-center justify-center ${isText ? "font-normal" : "font-black"} tracking-tight cursor-grab active:cursor-grabbing select-none transition-all duration-75 ${isSelected ? "z-20" : ""}`}
                         >
                             {/* Background container that supports opacity for gradient without fading text */}
                             <div

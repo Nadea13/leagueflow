@@ -43,11 +43,14 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
     }, [matchId]);
 
     // Save queue to localStorage when changed
-    const saveQueue = useCallback((newQueue: QueuedAction[]) => {
-        setQueue(newQueue);
-        if (typeof window !== "undefined") {
-            localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(newQueue));
-        }
+    const saveQueue = useCallback((newQueueOrUpdater: QueuedAction[] | ((prev: QueuedAction[]) => QueuedAction[])) => {
+        setQueue(prev => {
+            const next = typeof newQueueOrUpdater === "function" ? newQueueOrUpdater(prev) : newQueueOrUpdater;
+            if (typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
+            }
+            return next;
+        });
     }, [matchId]);
 
     // Load events on mount
@@ -98,20 +101,19 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                 if (!isMounted) return;
 
                 if (payload.eventType === 'INSERT') {
+                    const newEvt = payload.new as MatchEvent;
+                    setEvents((prev) => {
+                        if (prev.some(e => e.id === newEvt.id)) return prev;
+                        return [newEvt, ...prev];
+                    });
                     if (isReadOnly) {
-                        await fetchEventsClient();
-                    } else {
-                        const res = await getMatchEvents(matchId);
-                        if (isMounted && res.success && res.data) setEvents(res.data);
+                        fetchEventsClient();
                     }
                 } else if (payload.eventType === 'DELETE') {
                     setEvents((prev: MatchEvent[]) => prev.filter((e: MatchEvent) => e.id !== payload.old.id));
                 } else if (payload.eventType === 'UPDATE') {
-                    if (isReadOnly) {
-                        await fetchEventsClient();
-                    } else {
-                        loadEvents();
-                    }
+                    const updatedEvt = payload.new as MatchEvent;
+                    setEvents((prev) => prev.map(e => e.id === updatedEvt.id ? { ...e, ...updatedEvt } : e));
                 }
             })
             .subscribe();
@@ -134,48 +136,53 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
     const syncQueue = useCallback(async () => {
         if (isSyncing || isReadOnly) return;
         
-        const currentQueue = [...queue];
-        if (currentQueue.length === 0) return;
+        let pendingItems: QueuedAction[] = [];
+        setQueue(prev => {
+            pendingItems = prev.filter(a => a.status === 'pending' || a.status === 'failed');
+            return prev;
+        });
+
+        if (pendingItems.length === 0) return;
 
         setIsSyncing(true);
-        const updatedQueue = [...currentQueue];
 
-        for (let i = 0; i < updatedQueue.length; i++) {
-            const action = updatedQueue[i];
-            if (action.status === 'syncing') continue;
-            
-            action.status = 'syncing';
-            saveQueue([...updatedQueue]);
+        for (const action of pendingItems) {
+            saveQueue((prev) => prev.map(q => q.id === action.id ? { ...q, status: 'syncing' as const } : q));
 
             try {
+                let isSuccess = false;
+                let errorMsg = "";
+
                 if (action.type === 'add_event') {
                     const res = await addMatchEvent(matchId, action.teamId, action.eventType!, action.minute!, action.playerId ?? null, action.extraInfo!, tournamentId);
-                    if (res.success) {
-                        updatedQueue.splice(i, 1);
-                        i--;
-                    } else {
-                        action.status = 'failed';
-                        action.error = res.error || "Unknown error";
-                    }
+                    isSuccess = !!res.success;
+                    if (!isSuccess) errorMsg = res.error || "Unknown error";
                 } else if (action.type === 'delete_event') {
                     const res = await deleteMatchEvent(action.eventId!, tournamentId);
-                    if (res.success) {
-                        updatedQueue.splice(i, 1);
-                        i--;
-                    } else {
-                        action.status = 'failed';
-                        action.error = res.error || "Unknown error";
-                    }
+                    isSuccess = !!res.success;
+                    if (!isSuccess) errorMsg = res.error || "Unknown error";
+                }
+
+                if (isSuccess) {
+                    saveQueue((prev) => {
+                        const next = prev.filter(q => q.id !== action.id);
+                        console.log(`[Queue Sync Success] Event ${action.id} synced & removed from queue. Remaining:`, next.length);
+                        return next;
+                    });
+                } else {
+                    saveQueue((prev) => {
+                        const next = prev.map(q => q.id === action.id ? { ...q, status: 'failed' as const, error: errorMsg } : q);
+                        console.error(`[Queue Sync Failed] Event ${action.id} failed:`, errorMsg);
+                        return next;
+                    });
                 }
             } catch (err) {
-                action.status = 'failed';
-                action.error = err instanceof Error ? err.message : String(err);
+                const errorMsg = err instanceof Error ? err.message : String(err);
+                saveQueue((prev) => prev.map(q => q.id === action.id ? { ...q, status: 'failed' as const, error: errorMsg } : q));
             }
-
-            saveQueue([...updatedQueue]);
         }
         setIsSyncing(false);
-    }, [matchId, tournamentId, queue, isSyncing, isReadOnly, saveQueue]);
+    }, [matchId, tournamentId, isSyncing, isReadOnly, saveQueue]);
 
     // Auto-sync when window becomes online
     useEffect(() => {
@@ -221,13 +228,30 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             status: "pending"
         };
 
-        saveQueue([...queue, newAction]);
+        setQueue(prev => {
+            const next = [...prev, newAction];
+            if (typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
+            }
+            return next;
+        });
+
+        setTimeout(() => {
+            syncQueue();
+        }, 50);
+
         return { success: true };
     };
 
     const deleteEvent = async (eventId: string): Promise<{ success: boolean; error?: string }> => {
         if (eventId.startsWith("temp-")) {
-            saveQueue(queue.filter(a => a.id !== eventId));
+            setQueue(prev => {
+                const next = prev.filter(a => a.id !== eventId);
+                if (typeof window !== "undefined") {
+                    localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
+                }
+                return next;
+            });
             return { success: true };
         }
 
@@ -241,7 +265,18 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
             status: "pending"
         };
 
-        saveQueue([...queue, newAction]);
+        setQueue(prev => {
+            const next = [...prev, newAction];
+            if (typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-pending-events-${matchId}`, JSON.stringify(next));
+            }
+            return next;
+        });
+
+        setTimeout(() => {
+            syncQueue();
+        }, 50);
+
         return { success: true };
     };
 
@@ -249,7 +284,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
     queue.forEach(action => {
         if (action.type === 'add_event') {
             const exists = events.some(e => e.id === action.id || 
-                (e.event_type === action.eventType && e.minute === action.minute && e.player_id === action.playerId && e.team_id === action.teamId));
+                (e.event_type === action.eventType && e.minute === action.minute && (e.player_id ?? null) === (action.playerId ?? null) && e.team_id === action.teamId));
             if (!exists) {
                 combinedEvents.push({
                     id: action.id,

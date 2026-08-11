@@ -26,6 +26,33 @@ const fontFamilies: Record<string, string> = {
     outfit: "font-family: 'Outfit', sans-serif;"
 };
 
+interface CustomBlockConfig {
+    active: boolean;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    fontSize: number;
+    rTL: number;
+    rTR: number;
+    rBL: number;
+    rBR: number;
+    opacity: number;
+    bg?: string;
+    color?: string;
+    shapeType?: string;
+    text?: string;
+    bindTo?: string;
+    strokeWidth?: number;
+    strokeColor?: string;
+    strokePos?: "inside" | "center" | "outside";
+    skewX?: number;
+    skewY?: number;
+    fontWeight?: string;
+    fontStyle?: "normal" | "italic";
+    textDecoration?: "none" | "underline" | "line-through";
+}
+
 interface OverlayNotification {
     id: string;
     type: "goal" | "yellow_card" | "red_card" | "substitution";
@@ -129,7 +156,7 @@ function BroadcastOverlayContent() {
     const teamNameMode = searchParams.get("teamNameMode") || "abbr";
     const showLogos = searchParams.get("showLogos") !== "false";
     const headerText = searchParams.get("headerText") || "";
-    const posX = searchParams.get("posX") || "center"; // left | center | right
+    const _posX = searchParams.get("posX") || "center"; // left | center | right
     const posY = searchParams.get("posY") || "top"; // top | bottom
     const alertDuration = Number(searchParams.get("alertDuration")) || 6;
     const rounded = searchParams.get("rounded") || "md";
@@ -138,43 +165,21 @@ function BroadcastOverlayContent() {
     const homeBarColor = searchParams.get("homeBarColor") || "#10b981";
     const awayBarDir = searchParams.get("awayBarDir") || "none";
     const awayBarColor = searchParams.get("awayBarColor") || "#3b82f6";
+    const _blockGap = searchParams.get("blockGap") ? Number(searchParams.get("blockGap")) : 8;
 
-    const delay = Number(searchParams.get("delay")) || 0;
-    const isBlank = searchParams.get("blank") === "true";
-
-    // Canvas Block Positioning Coordinates Parsing
+    // Parse custom block configurations from URL if present
+    // Format: id:x:y:w:h:fontSize:rTL:rTR:rBL:rBR:opacity:bg:color:shapeType:text:bindTo:strokeWidth:strokeColor:strokePos:skewX:skewY:fontWeight:fontStyle:textDecoration;
     const positionsParam = searchParams.get("positions");
-    const blockConfigs: Record<string, { 
-        x: number; 
-        y: number; 
-        w: number; 
-        h: number; 
-        fontSize: number; 
-        rTL: number; 
-        rTR: number; 
-        rBL: number; 
-        rBR: number; 
-        opacity: number;
-        bg: string;
-        color?: string;
-        shapeType?: string;
-        text?: string;
-        bindTo?: string;
-        strokeWidth?: number;
-        strokeColor?: string;
-        strokePos?: "inside" | "center" | "outside";
-        skewX?: number;
-        skewY?: number;
-        fontWeight?: string;
-        fontStyle?: string;
-        textDecoration?: string;
-    }> = {};
+    const customBlockConfigs: Record<string, CustomBlockConfig> = {};
     if (positionsParam) {
-        positionsParam.split(";").forEach((item) => {
-            const parts = item.split(":");
-            const blockId = parts[0];
-            if (blockId) {
-                blockConfigs[blockId] = {
+        const blockEntries = positionsParam.split(";");
+        blockEntries.forEach(entry => {
+            if (!entry) return;
+            const parts = entry.split(":");
+            if (parts.length >= 5) {
+                const blockId = parts[0];
+                customBlockConfigs[blockId] = {
+                    active: true,
                     x: Number(parts[1]) || 0,
                     y: Number(parts[2]) || 0,
                     w: Number(parts[3]) || 0,
@@ -186,31 +191,33 @@ function BroadcastOverlayContent() {
                     rBR: parts[9] !== undefined ? Number(parts[9]) : 0,
                     opacity: parts[10] !== undefined ? Number(parts[10]) : 100,
                     bg: (() => {
-                        if (parts[11] === undefined) {
-                            return blockId.startsWith("score") ? scoreBg : "#737373";
-                        }
+                        if (!parts[11]) return undefined;
                         const decoded = decodeURIComponent(parts[11]);
-                        if (!decoded.startsWith("#") && !decoded.includes("gradient") && decoded !== "transparent" && decoded !== "chromakey") {
+                        if (decoded.startsWith("#") || decoded.includes("gradient") || decoded === "transparent") return decoded;
+                        if (/^[0-9a-fA-F]{3,8}$/.test(decoded)) {
                             return `#${decoded}`;
                         }
                         return decoded;
                     })(),
-                    color: parts[12] !== undefined ? `#${parts[12]}` : "#ffffff",
+                    color: parts[12] ? (parts[12].startsWith("#") ? parts[12] : `#${parts[12]}`) : "#ffffff",
                     shapeType: parts[13] || undefined,
                     text: parts[14] ? decodeURIComponent(parts[14]) : undefined,
                     bindTo: parts[15] || "none",
                     strokeWidth: parts[16] !== undefined ? Number(parts[16]) : 0,
-                    strokeColor: parts[17] ? `#${parts[17]}` : "#ffffff",
-                    strokePos: (parts[18] as any) || "inside",
+                    strokeColor: parts[17] ? (parts[17].startsWith("#") ? parts[17] : `#${parts[17]}`) : "#ffffff",
+                    strokePos: (parts[18] as "inside" | "center" | "outside") || "inside",
                     skewX: parts[19] !== undefined ? Number(parts[19]) : 0,
                     skewY: parts[20] !== undefined ? Number(parts[20]) : 0,
                     fontWeight: parts[21] || "400",
-                    fontStyle: parts[22] || "normal",
-                    textDecoration: parts[23] || "none",
+                    fontStyle: (parts[22] as "normal" | "italic") || "normal",
+                    textDecoration: (parts[23] as "none" | "underline" | "line-through") || "none",
                 };
             }
         });
     }
+
+    const delay = Number(searchParams.get("delay")) || 0;
+    const isBlank = searchParams.get("blank") === "true";
 
     // Match State
     const [realMatch, setRealMatch] = useState<Match | null>(null);
@@ -478,11 +485,12 @@ function BroadcastOverlayContent() {
                     <div className={cn("pointer-events-auto flex flex-col items-center", sizeClasses[size as keyof typeof sizeClasses])}>
                         
                         {searchParams.get("blocks") !== null ? (
-                            searchParams.get("positions") !== null ? (
+                            (Object.keys(customBlockConfigs).length > 0 || searchParams.get("positions") !== null) ? (
                                 /* Canvas Layout Builder (Absolute coordinates positioning) */
                                 <div className="relative w-[400px] h-[180px] bg-transparent">
                                     {(searchParams.get("blocks") || "").split(",").filter(Boolean).map((blockId) => {
-                                        const cfg = blockConfigs[blockId] || { x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
+                                        const cfg = customBlockConfigs[blockId] || { active: true, x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
+                                        if (cfg.active === false) return null;
                                         const absoluteStyle: React.CSSProperties = {
                                             position: "absolute",
                                             left: "50%",
@@ -818,12 +826,44 @@ function BroadcastOverlayContent() {
                                                         case "home-scorer": {
                                                             const homeGoalEvents = goalEvents.filter((e) => e.team_id && isHomeTeam(e.team_id));
                                                             if (homeGoalEvents.length === 0) return '';
-                                                            return homeGoalEvents.slice(0, 2).map((e) => `${e.player_name} (${e.minute}')`).join(", ");
+                                                            const grouped: Record<string, number[]> = {};
+                                                            homeGoalEvents.forEach((e) => {
+                                                                const name = e.player_name || 'Player';
+                                                                if (!grouped[name]) grouped[name] = [];
+                                                                grouped[name].push(e.minute);
+                                                            });
+                                                            const entries = Object.entries(grouped).map(([name, minutes]) => `${name} (${minutes.join("', ")}')`);
+                                                            if (entries.length > 1) {
+                                                                return (
+                                                                    <span className="flex flex-col text-center leading-tight">
+                                                                        {entries.map((item, idx) => (
+                                                                            <span key={idx} className="truncate">{item}</span>
+                                                                        ))}
+                                                                    </span>
+                                                                );
+                                                            }
+                                                            return entries[0] || '';
                                                         }
                                                         case "away-scorer": {
                                                             const awayGoalEvents = goalEvents.filter((e) => e.team_id && isAwayTeam(e.team_id));
                                                             if (awayGoalEvents.length === 0) return '';
-                                                            return awayGoalEvents.slice(0, 2).map((e) => `${e.player_name} (${e.minute}')`).join(", ");
+                                                            const grouped: Record<string, number[]> = {};
+                                                            awayGoalEvents.forEach((e) => {
+                                                                const name = e.player_name || 'Player';
+                                                                if (!grouped[name]) grouped[name] = [];
+                                                                grouped[name].push(e.minute);
+                                                            });
+                                                            const entries = Object.entries(grouped).map(([name, minutes]) => `${name} (${minutes.join("', ")}')`);
+                                                            if (entries.length > 1) {
+                                                                return (
+                                                                    <span className="flex flex-col text-center leading-tight">
+                                                                        {entries.map((item, idx) => (
+                                                                            <span key={idx} className="truncate">{item}</span>
+                                                                        ))}
+                                                                    </span>
+                                                                );
+                                                            }
+                                                            return entries[0] || '';
                                                         }
                                                         default: break;
                                                     }
@@ -852,7 +892,7 @@ function BroadcastOverlayContent() {
                                                     style={{
                                                         ...absoluteStyle,
                                                         fontWeight: cfg.fontWeight || "bold",
-                                                        fontStyle: (cfg.fontStyle as any) || "normal",
+                                                        fontStyle: (cfg.fontStyle as "normal" | "italic") || "normal",
                                                         textDecoration: cfg.textDecoration || "none",
                                                     }}
                                                     className="flex items-center justify-center font-black tracking-tight select-none relative overflow-hidden"
@@ -887,9 +927,9 @@ function BroadcastOverlayContent() {
                                                             <Image src={logoUrl} alt="" fill className="object-cover" unoptimized />
                                                         </div>
                                                     ) : (
-                                                        <span className="truncate px-1">
+                                                        <div className="px-1 overflow-hidden flex items-center justify-center">
                                                             {getBoundText()}
-                                                        </span>
+                                                        </div>
                                                     )}
                                                 </div>
                                             );
@@ -951,7 +991,7 @@ function BroadcastOverlayContent() {
                                     {(searchParams.get("blocks") || "").split(",").filter(Boolean).map((blockId) => {
                                         const activeRoundedClass = rounded === "none" ? "rounded-none" : rounded === "full" ? "rounded-full" : "rounded-xl";
                                         const isSpaced = searchParams.get("blockBg") !== "docked";
-                                        const cfg = blockConfigs[blockId] || { x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
+                                        const cfg = customBlockConfigs[blockId] || { x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
                                         
                                         const blockElement = (() => {
                                             // 1. Home Name

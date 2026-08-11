@@ -118,7 +118,11 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const saved = localStorage.getItem(`leagueflow-pending-match-${match.id}`);
+            const savedEventsKey = `leagueflow-pending-events-${match.id}`;
+            const savedMatchKey = `leagueflow-pending-match-${match.id}`;
+            console.log(`[LocalStorage Monitor] Events Queue Key (${savedEventsKey}):`, localStorage.getItem(savedEventsKey));
+            console.log(`[LocalStorage Monitor] Match Queue Key (${savedMatchKey}):`, localStorage.getItem(savedMatchKey));
+            const saved = localStorage.getItem(savedMatchKey);
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -130,43 +134,53 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         }
     }, [match.id]);
 
-    const saveMatchQueue = useCallback((newQueue: typeof matchQueue) => {
-        setMatchQueue(newQueue);
-        if (typeof window !== "undefined") {
-            localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(newQueue));
-        }
+    const saveMatchQueue = useCallback((newQueueOrUpdater: typeof matchQueue | ((prev: typeof matchQueue) => typeof matchQueue)) => {
+        setMatchQueue(prev => {
+            const next = typeof newQueueOrUpdater === "function" ? newQueueOrUpdater(prev) : newQueueOrUpdater;
+            if (typeof window !== "undefined") {
+                localStorage.setItem(`leagueflow-pending-match-${match.id}`, JSON.stringify(next));
+            }
+            return next;
+        });
     }, [match.id]);
 
     const syncMatchQueue = useCallback(async () => {
         if (isMatchSyncing || readOnly) return;
-        const currentQueue = [...matchQueue];
-        if (currentQueue.length === 0) return;
+
+        let itemsToProcess: typeof matchQueue = [];
+        setMatchQueue(prev => {
+            itemsToProcess = prev.filter(item => item.status === 'pending' || item.status === 'failed');
+            return prev;
+        });
+
+        if (itemsToProcess.length === 0) return;
 
         setIsMatchSyncing(true);
-        const updated = [...currentQueue];
 
-        for (let i = 0; i < updated.length; i++) {
-            const item = updated[i];
-            if (item.status === 'syncing') continue;
-
-            item.status = 'syncing';
-            saveMatchQueue([...updated]);
+        for (const item of itemsToProcess) {
+            saveMatchQueue(prev => prev.map(m => m.id === item.id ? { ...m, status: 'syncing' as const } : m));
 
             try {
                 const res = await updateMatch(match.id, item.data, tournamentId);
                 if (res.success) {
-                    updated.splice(i, 1);
-                    i--;
+                    saveMatchQueue(prev => {
+                        const next = prev.filter(m => m.id !== item.id);
+                        console.log(`[MatchQueue Sync Success] Item ${item.id} synced & removed. Remaining:`, next.length);
+                        return next;
+                    });
                 } else {
-                    item.status = 'failed';
+                    saveMatchQueue(prev => {
+                        const next = prev.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m);
+                        console.error(`[MatchQueue Sync Failed] Item ${item.id} failed:`, res.error);
+                        return next;
+                    });
                 }
-            } catch (_) {
-                item.status = 'failed';
+            } catch (_err) {
+                saveMatchQueue(prev => prev.map(m => m.id === item.id ? { ...m, status: 'failed' as const } : m));
             }
-            saveMatchQueue([...updated]);
         }
         setIsMatchSyncing(false);
-    }, [match.id, tournamentId, matchQueue, isMatchSyncing, readOnly, saveMatchQueue]);
+    }, [match.id, tournamentId, isMatchSyncing, readOnly, saveMatchQueue]);
 
     // Auto-sync match queue on online event
     useEffect(() => {
@@ -188,9 +202,12 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     const queueMatchUpdate = useCallback(async (data: Parameters<typeof updateMatch>[1]) => {
         const newItem = { id: `match-${Date.now()}`, data, status: 'pending' as const };
-        saveMatchQueue([...matchQueue, newItem]);
+        saveMatchQueue(prev => [...prev, newItem]);
         setMatch(prev => ({ ...prev, ...data }));
-    }, [matchQueue, saveMatchQueue]);
+        setTimeout(() => {
+            syncMatchQueue();
+        }, 50);
+    }, [saveMatchQueue, syncMatchQueue]);
 
     const isHalfTime = !isRunning && events.length > 0 && (() => {
         const lastTimerEvent = events.find(e =>
@@ -301,9 +318,8 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         const res = await getPenaltyShootout(match.id);
         if (res.success && res.data) {
             setPenaltyShots(res.data);
-            router.refresh();
         }
-    }, [match.id, router]);
+    }, [match.id]);
 
     useEffect(() => {
         fetchShots();
@@ -314,8 +330,18 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         const channel = supabase
             .channel(`match-${match.id}`)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${match.id}` }, (payload) => {
-                const _newData = payload.new as Match;
-                setMatch(prev => ({ ...prev, ..._newData }));
+                const newData = payload.new as Match;
+                setMatch(prev => {
+                    // Avoid unnecessary state re-creation if data hasn't changed
+                    if (prev.home_score === newData.home_score &&
+                        prev.away_score === newData.away_score &&
+                        prev.status === newData.status &&
+                        prev.timer_status === newData.timer_status &&
+                        prev.current_minute === newData.current_minute) {
+                        return prev;
+                    }
+                    return { ...prev, ...newData };
+                });
             })
             .subscribe();
 
@@ -350,11 +376,11 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         // Only sync if scores differ from DB values
         if (homeScore !== dbHomeScore || awayScore !== dbAwayScore) {
             const syncScore = setTimeout(() => {
-                updateMatch(match.id, { home_score: homeScore, away_score: awayScore }, tournamentId);
+                queueMatchUpdate({ home_score: homeScore, away_score: awayScore });
             }, 500);
             return () => clearTimeout(syncScore);
         }
-    }, [homeScore, awayScore, dbHomeScore, dbAwayScore, match.id, tournamentId, readOnly, match.status]);
+    }, [homeScore, awayScore, dbHomeScore, dbAwayScore, match.id, readOnly, match.status, queueMatchUpdate]);
 
     // --- Timer Sync to DB (for MatchCard) ---
     useEffect(() => {
@@ -1051,25 +1077,34 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         >
                             <HelpCircle className="h-4 w-4" />
                         </Button>
-                        {(queue.length + matchQueue.length) > 0 ? (
-                            <div className="flex items-center gap-1 text-warning animate-pulse">
-                                <CloudOff className="w-4 h-4" />
-                                <button
-                                    onClick={() => {
-                                        syncQueue();
-                                        syncMatchQueue();
-                                    }}
-                                    disabled={isSyncing || isMatchSyncing}
-                                    className="ml-1 hover:text-white transition-colors"
-                                >
-                                    <RefreshCw className={cn("w-4 h-4", (isSyncing || isMatchSyncing) && "animate-spin")} />
-                                </button>
+                        {(isSyncing || isMatchSyncing) ? (
+                            <div className="flex items-center justify-center text-primary h-8 w-8" title={locale === "th" ? "กำลังบันทึกลง Database..." : "Syncing to Database..."}>
+                                <RefreshCw className="w-4 h-4 animate-spin" />
                             </div>
-                        ) : (
-                            <div className="flex items-center justify-center text-primary h-8 w-8" title={t("synced")}>
-                                <Cloud className="w-4 h-4" />
-                            </div>
-                        )}
+                        ) : (() => {
+                            const pendingEvents = queue.filter(q => q.status === 'pending' || q.status === 'failed');
+                            const pendingMatch = matchQueue.filter(m => m.status === 'pending' || m.status === 'failed');
+                            const hasPending = (pendingEvents.length + pendingMatch.length) > 0;
+                            return hasPending ? (
+                                <div className="flex items-center gap-1 text-amber-500" title={locale === "th" ? `ยังไม่ได้บันทึกลง Database (${pendingEvents.length + pendingMatch.length})` : `Not synced (${pendingEvents.length + pendingMatch.length})`}>
+                                    <CloudOff className="w-4 h-4" />
+                                    <button
+                                        onClick={() => {
+                                            syncQueue();
+                                            syncMatchQueue();
+                                        }}
+                                        className="ml-1 hover:text-white transition-colors"
+                                        title={locale === "th" ? "กดเพื่อบันทึกทันที" : "Click to sync now"}
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center text-emerald-500 h-8 w-8" title={locale === "th" ? "บันทึกลง Database เรียบร้อยแล้ว" : "Synced to Database"}>
+                                    <Cloud className="w-4 h-4" />
+                                </div>
+                            );
+                        })()}
 
                         <div className="flex items-center gap-1 lg:gap-2 px-2 relative group overflow-hidden">
                             <span className="relative flex h-2 w-2">

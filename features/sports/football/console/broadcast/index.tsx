@@ -934,7 +934,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
     const activeBlankCanvas = blankCanvases.find(c => `blank-${c.id}` === selectedCanvasId) || blankCanvases[0];
     const activeBlankDelay = activeBlankCanvas?.delay ?? 0;
 
-    const hasActiveBlocks = blocks.some(b => b.active);
+    const _hasActiveBlocks = blocks.some(b => b.active);
 
     const blankParamsObj: Record<string, string> = {
         bg,
@@ -1038,6 +1038,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             selectedBlockId={selectedBlockId}
                             setSelectedBlockId={setSelectedBlockId}
                             scoreBg={scoreBg}
+                            font={font}
                             homeBarDir={homeBarDir}
                             homeBarColor={homeBarColor}
                             awayBarDir={awayBarDir}
