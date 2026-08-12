@@ -17,10 +17,10 @@ import {
 import { EventType } from "@/types";
 
 export const VOLLEYBALL_EVENT_TYPES: { type: EventType; label: string; icon: React.ElementType; color: string }[] = [
-    { type: 'point', label: 'point', icon: Volleyball, color: 'text-amber-500' },
-    { type: 'ace', label: 'ace', icon: Zap, color: 'text-yellow-400' },
-    { type: 'spike', label: 'spike', icon: Flame, color: 'text-red-500' },
-    { type: 'block', label: 'block', icon: ShieldCheck, color: 'text-blue-500' },
+    { type: 'point', label: 'Point', icon: Volleyball, color: 'text-amber-500' },
+    { type: 'ace', label: 'Serve', icon: Zap, color: 'text-yellow-400' },
+    { type: 'spike', label: 'Attack', icon: Flame, color: 'text-red-500' },
+    { type: 'block', label: 'Block', icon: ShieldCheck, color: 'text-blue-500' },
     { type: 'substitution', label: 'substitution', icon: RotateCw, color: 'text-emerald-500' },
     { type: 'timeout', label: 'timeout', icon: Clock, color: 'text-purple-500' },
     { type: 'foul', label: 'foul', icon: Hand, color: 'text-orange-500' },

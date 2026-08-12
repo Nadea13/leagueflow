@@ -13,17 +13,21 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import {
     ArrowLeft, Zap, Flame, ShieldCheck, HelpCircle, Cloud, CloudOff, RefreshCw,
-    Undo, Tv, CalendarRange, Ban, XCircle, Users, Play, Square
+    Undo, Tv, CalendarRange, Ban, XCircle, Users, Play, Square, BarChart2, Timer, Info
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Header } from "@/components/ui/header";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import { updateMatch } from "@/actions/tournaments/general";
 import { getPlayers } from "@/actions/tournaments/player";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { BroadcastDialog } from "../football/console/broadcast-dialog";
 import { WalkoverDialog } from "../football/console/walkover-dialog";
 import { RosterSelectionDialog } from "../football/console/roster-selection-dialog";
+import { VolleyballMatchStatisticsBox } from "./console/statistics-box";
+import { VolleyballTeamInfoDialog } from "./console/team-info-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -113,6 +117,8 @@ export function VolleyballConsolePage({
     const [rosterDialogOpen, setRosterDialogOpen] = useState(false);
     const [overlayDialogOpen, setOverlayDialogOpen] = useState(false);
     const [woDialogOpen, setWoDialogOpen] = useState(false);
+    const [statsDialogOpen, setStatsDialogOpen] = useState(false);
+    const [teamInfoTarget, setTeamInfoTarget] = useState<'home' | 'away' | null>(null);
     const [actionDialogOpen, setActionDialogOpen] = useState(false);
     const [actionConfig, setActionConfig] = useState<{ teamSide: 'home' | 'away'; eventType: 'ace' | 'spike' | 'block' | 'point' }>({
         teamSide: 'home',
@@ -127,20 +133,36 @@ export function VolleyballConsolePage({
         onConfirm?: () => void;
     }>({ open: false, title: "" });
 
+    const supabase = useMemo(() => createClient(), []);
+
     // Fetch Players
     useEffect(() => {
-        const fetchPlayersData = async () => {
-            if (match.home_team_id) {
-                const res = await getPlayers(match.home_team_id);
-                if (res.success && res.data) setHomePlayers(res.data);
-            }
-            if (match.away_team_id) {
-                const res = await getPlayers(match.away_team_id);
-                if (res.success && res.data) setAwayPlayers(res.data);
-            }
+        const loadPlayers = async () => {
+            const fetchTeam = async (teamId: string, setter: (players: Player[]) => void) => {
+                let query = supabase
+                    .from("tournament_teams")
+                    .select("id")
+                    .eq("team_id", teamId)
+                    .is("deleted_at", null);
+
+                if (match.tournament_category_id) {
+                    query = query.eq("tournament_category_id", match.tournament_category_id);
+                }
+
+                const { data: ttData } = await query.maybeSingle();
+
+                const targetId = ttData?.id || teamId;
+                const res = await getPlayers(targetId);
+                if (res.success && res.data) setter(res.data);
+            };
+            const promises = [];
+            if (match.home_team_id) promises.push(fetchTeam(match.home_team_id, setHomePlayers));
+            if (match.away_team_id) promises.push(fetchTeam(match.away_team_id, setAwayPlayers));
+
+            await Promise.all(promises);
         };
-        fetchPlayersData();
-    }, [match.home_team_id, match.away_team_id]);
+        loadPlayers();
+    }, [match.home_team_id, match.away_team_id, match.tournament_category_id, supabase]);
 
     // Derive set score state from events
     const { homeSets, awaySets, homePoints, awayPoints, setHistory, servingTeam, currentSet } = useMemo(() => {
@@ -197,7 +219,7 @@ export function VolleyballConsolePage({
     }, [events, isHomeEvent, isAwayEvent, maxSets]);
 
     const addPoint = useCallback(async (teamSide: 'home' | 'away', eventType: EventType = 'point', playerId?: string, playerName?: string) => {
-        if (readOnly) return;
+        if (readOnly || match.status !== 'live') return;
         const teamId = teamSide === 'home' ? match.home_team_id : match.away_team_id;
         const teamName = teamSide === 'home' ? match.home_team?.name : match.away_team?.name;
         const playerText = playerName ? ` (${playerName})` : "";
@@ -215,9 +237,10 @@ export function VolleyballConsolePage({
             },
             playerName || teamName || "Team"
         );
-    }, [readOnly, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, currentSet, addEvent]);
+    }, [readOnly, match.status, match.home_team_id, match.away_team_id, match.home_team?.name, match.away_team?.name, currentSet, addEvent]);
 
     const handleTriggerActionEvent = (teamSide: 'home' | 'away', eventType: 'ace' | 'spike' | 'block' | 'point') => {
+        if (readOnly || match.status !== 'live') return;
         setActionConfig({ teamSide, eventType });
         setActionDialogOpen(true);
     };
@@ -448,7 +471,24 @@ export function VolleyballConsolePage({
     const matchControlsBox = (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="vball-status-control">
             <div className="relative z-10 space-y-2 lg:space-y-4">
-                {!readOnly && (
+                {readOnly ? (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{locale === "th" ? "รายการแข่งขัน" : "TOURNAMENT"}</span>
+                            <span className="text-[10px] font-black text-foreground truncate max-w-[120px]">{_tournamentName}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black tracking-widest text-foreground/40">{locale === "th" ? "รอบการแข่งขัน" : "STAGE"}</span>
+                            <span className="text-[10px] font-black text-primary">{match.stage || "Regular"}</span>
+                        </div>
+                        <div className="pt-4 border-t">
+                            <div className="flex flex-col items-center gap-2 py-4 bg-primary/5 border border-primary/10">
+                                <Timer className="w-6 h-6 text-primary animate-pulse" />
+                                <span className="text-[8px] font-black tracking-[0.3em] text-primary/60">{locale === "th" ? "อัปเดตผลสดเรียลไทม์" : "LIVE UPDATES ACTIVE"}</span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
                     <div className="grid grid-cols-2 lg:grid-cols-1 gap-1 lg:gap-2 w-full">
                         <Button
                             variant="outline"
@@ -459,6 +499,7 @@ export function VolleyballConsolePage({
                                     toast({ title: locale === "th" ? "เริ่มต้นการแข่งขันเรียบร้อย" : "Match started" });
                                 }
                             }}
+                            disabled={match.status === 'finished' || match.status === 'canceled'}
                             className="w-full justify-center lg:justify-start px-2 bg-foreground/5 border-foreground/5 hover:bg-foreground/10 hover:border-foreground/20 transition-all group"
                         >
                             <div className="flex items-center gap-1 lg:gap-2">
@@ -506,60 +547,74 @@ export function VolleyballConsolePage({
 
     const quickActionsBox = !readOnly ? (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="vball-action-panel">
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-1 lg:gap-2">
-                <Button
-                    variant="outline"
-                    onClick={handleUndo}
-                    className="w-full flex justify-start items-center gap-2"
-                >
-                    <Undo className="h-4 w-4 text-muted-foreground" />
-                    <span>{locale === "th" ? "ยกเลิก (Undo)" : "Undo"}</span>
-                </Button>
+            <div className="relative z-10 space-y-2 lg:space-y-4">
+                <div className="grid grid-cols-4 lg:grid-cols-1 gap-1 lg:gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleUndo}
+                        className="w-full flex justify-center lg:justify-start items-center"
+                    >
+                        <Undo className="h-4 w-4 text-muted-foreground" />
+                        <span className="hidden lg:inline">{locale === "th" ? "ยกเลิก" : "Undo"}</span>
+                    </Button>
 
-                <Button
-                    variant="outline"
-                    onClick={() => setOverlayDialogOpen(true)}
-                    className="w-full flex justify-start items-center gap-2"
-                >
-                    <Tv className="h-4 w-4 text-primary" />
-                    <span>{locale === "th" ? "กราฟิกถ่ายทอดสด (Broadcast)" : "Broadcast Overlay"}</span>
-                </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setOverlayDialogOpen(true)}
+                        className="hidden lg:flex w-full justify-start items-center"
+                    >
+                        <Tv className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{locale === "th" ? "กราฟิกถ่ายทอดสด" : "Broadcast Overlay"}</span>
+                    </Button>
 
-                <Button
-                    variant="outline"
-                    onClick={() => setRosterDialogOpen(true)}
-                    className="w-full flex justify-start items-center gap-2"
-                >
-                    <Users className="h-4 w-4 text-primary" />
-                    <span>{locale === "th" ? "จัดตัวผู้เล่น (Roster)" : "Select Lineup"}</span>
-                </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setRosterDialogOpen(true)}
+                        className="w-full flex justify-center lg:justify-start items-center"
+                    >
+                        <Users className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{locale === "th" ? "จัดตัวผู้เล่น" : "Lineups"}</span>
+                    </Button>
 
-                <Button
-                    variant="outline"
-                    onClick={handlePostponeMatch}
-                    className="w-full flex justify-start items-center gap-2"
-                >
-                    <CalendarRange className="h-4 w-4 text-primary" />
-                    <span>{locale === "th" ? "เลื่อนการแข่งขัน" : "Postpone Match"}</span>
-                </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setStatsDialogOpen(true)}
+                        className="w-full flex justify-center lg:justify-start items-center"
+                    >
+                        <BarChart2 className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{locale === "th" ? "สถิติการแข่งขัน" : "Statistics"}</span>
+                    </Button>
 
-                <Button
-                    variant="outline"
-                    onClick={() => setWoDialogOpen(true)}
-                    className="w-full flex justify-start items-center gap-2"
-                >
-                    <Ban className="h-4 w-4 text-destructive" />
-                    <span>{locale === "th" ? "ชนะบาย (Walkover)" : "Walkover"}</span>
-                </Button>
+                    <Button
+                        variant="outline"
+                        onClick={handlePostponeMatch}
+                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
+                    >
+                        <CalendarRange className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{locale === "th" ? "เลื่อนแข่ง" : "Postponed"}</span>
+                    </Button>
 
-                <Button
-                    variant="outline"
-                    onClick={handleAbandonMatch}
-                    className="w-full flex justify-start items-center gap-2"
-                >
-                    <XCircle className="h-4 w-4 text-destructive" />
-                    <span>{locale === "th" ? "ยกเลิกการแข่งขัน" : "Abandon Match"}</span>
-                </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setWoDialogOpen(true)}
+                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                    >
+                        <Ban className="h-4 w-4 text-destructive" />
+                        <span className="hidden lg:inline">{locale === "th" ? "ชนะบาย" : "Walkover"}</span>
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        onClick={handleAbandonMatch}
+                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
+                    >
+                        <XCircle className="h-4 w-4 text-destructive" />
+                        <span className="hidden lg:inline">{locale === "th" ? "ยกเลิกแข่ง" : "Abandoned"}</span>
+                    </Button>
+                </div>
             </div>
         </div>
     ) : null;
@@ -613,7 +668,7 @@ export function VolleyballConsolePage({
 
     return (
         <div className={cn(
-            "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 lg:space-y-4 bg-background text-foreground",
+            "min-h-screen flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4 bg-background text-foreground",
             readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : ""
         )}>
             {/* Top Navigation Bar (Public View) */}
@@ -660,7 +715,7 @@ export function VolleyballConsolePage({
                 </div>
 
                 {!readOnly && (
-                    <div className="flex items-center gap-1 lg:gap-2 shrink-0">
+                    <div className="flex items-center">
                         {/* Help Tutorial Button */}
                         <Button
                             variant="ghost"
@@ -672,41 +727,53 @@ export function VolleyballConsolePage({
                         </Button>
 
                         {/* Sync Icon */}
-                        {(queue.filter(q => q.matchId === match.id).length + matchQueue.length) > 0 ? (
-                            <div className="flex items-center gap-1 text-warning animate-pulse">
-                                <CloudOff className="w-4 h-4 text-amber-500" />
-                                <button
-                                    onClick={() => {
-                                        syncQueue();
-                                        syncMatchQueue();
-                                    }}
-                                    disabled={isSyncing || isMatchSyncing}
-                                    className="ml-1 hover:text-white transition-colors"
-                                    title={locale === "th" ? "กดเพื่อซิงค์ข้อมูลลงฐานข้อมูล" : "Click to sync data"}
-                                >
-                                    <RefreshCw className={cn("w-4 h-4", (isSyncing || isMatchSyncing) && "animate-spin")} />
-                                </button>
+                        {(isSyncing || isMatchSyncing) ? (
+                            <div className="flex items-center justify-center text-primary h-8 w-8" title={locale === "th" ? "กำลังบันทึกลง Database..." : "Syncing to Database..."}>
+                                <RefreshCw className="w-4 h-4 animate-spin" />
                             </div>
-                        ) : (
-                            <div className="flex items-center justify-center text-primary h-8 w-8" title={locale === "th" ? "ซิงค์ข้อมูลแล้ว" : "Synced"}>
-                                <Cloud className="w-4 h-4" />
-                            </div>
-                        )}
+                        ) : (() => {
+                            const pendingEvents = queue.filter(q => q.status === 'pending' || q.status === 'failed');
+                            const pendingMatch = matchQueue.filter(m => m.status === 'pending' || m.status === 'failed');
+                            const hasPending = (pendingEvents.length + pendingMatch.length) > 0;
+                            return hasPending ? (
+                                <div className="flex items-center gap-1 text-amber-500" title={locale === "th" ? `ยังไม่ได้บันทึกลง Database (${pendingEvents.length + pendingMatch.length})` : `Not synced (${pendingEvents.length + pendingMatch.length})`}>
+                                    <CloudOff className="w-4 h-4" />
+                                    <button
+                                        onClick={() => {
+                                            syncQueue();
+                                            syncMatchQueue();
+                                        }}
+                                        className="ml-1 hover:text-white transition-colors"
+                                        title={locale === "th" ? "กดเพื่อบันทึกทันที" : "Click to sync now"}
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center text-emerald-500 h-8 w-8" title={locale === "th" ? "บันทึกลง Database เรียบร้อยแล้ว" : "Synced to Database"}>
+                                    <Cloud className="w-4 h-4" />
+                                </div>
+                            );
+                        })()}
 
                         {/* Status Badge */}
-                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/40 border">
+                        <div className="flex items-center gap-1 lg:gap-2 px-2 relative group overflow-hidden">
                             <span className="relative flex h-2 w-2">
                                 <span className={cn(
                                     "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                    match.status === 'finished' ? "bg-emerald-500" : "bg-primary"
+                                    match.status === 'live' ? "bg-primary" : (match.status === 'finished' ? "bg-emerald-500" : "bg-warning")
                                 )}></span>
                                 <span className={cn(
                                     "relative inline-flex rounded-full h-2 w-2",
-                                    match.status === 'finished' ? "bg-emerald-500" : "bg-primary"
+                                    match.status === 'live' ? "bg-primary" : (match.status === 'finished' ? "bg-emerald-500" : "bg-warning")
                                 )}></span>
                             </span>
-                            <span className="text-[10px] font-black tracking-widest">
-                                {match.status === 'finished' ? (locale === 'th' ? 'จบการแข่งขัน' : 'FINISHED') : (locale === 'th' ? 'กำลังแข่งขัน' : 'LIVE')}
+                            <span className="text-[10px] font-black tracking-widest uppercase">
+                                {match.status === 'finished'
+                                    ? (locale === 'th' ? 'จบการแข่งขัน' : 'FINISHED')
+                                    : (match.status === 'live'
+                                        ? (locale === 'th' ? 'กำลังแข่งขัน' : 'LIVE')
+                                        : (locale === 'th' ? 'ยังไม่เริ่มการแข่งขัน' : 'SCHEDULED'))}
                             </span>
                         </div>
                     </div>
@@ -748,6 +815,13 @@ export function VolleyballConsolePage({
                             servingTeam={servingTeam}
                             currentSetNumber={currentSet}
                             maxSets={maxSets}
+                            onTeamClick={(tId) => {
+                                if (tId === match.home_team_id || tId === match.home_team?.id) {
+                                    setTeamInfoTarget('home');
+                                } else if (tId === match.away_team_id || tId === match.away_team?.id) {
+                                    setTeamInfoTarget('away');
+                                }
+                            }}
                         />
 
                         {/* Quick Actions (Mobile only) */}
@@ -756,87 +830,84 @@ export function VolleyballConsolePage({
                         </div>
 
                         {/* Point Controls Section (Split into Home & Away Cards) */}
-                        {!readOnly && (
-                            <div className="flex flex-col gap-2 lg:gap-4">
-                                {match.status !== 'finished' ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 lg:gap-4" id="vball-point-controls">
-                                        {/* Home Team Control Card */}
-                                        <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-sm lg:text-base font-black tracking-tight truncate">
-                                                    {match.home_team?.name || "Home"}
-                                                </h3>
+                        {!readOnly && (() => {
+                            const isActionDisabled = readOnly || match.status !== 'live';
+                            return (
+                                <div className="flex flex-col gap-2 lg:gap-4">
+                                    {match.status !== 'finished' ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 lg:gap-4" id="vball-point-controls">
+                                            {/* Home Team Control Card */}
+                                            <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
+                                                <div className="space-y-1">
+                                                    <h3
+                                                        className="text-xl lg:text-2xl font-black tracking-tighter truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group/title"
+                                                        onClick={() => setTeamInfoTarget('home')}
+                                                        title={locale === "th" ? "ดูข้อมูลทีมและผู้เล่น" : "View team & roster info"}
+                                                    >
+                                                        <span>{match.home_team?.name || "Home"}</span>
+                                                        <Info className="h-4 w-4 text-muted-foreground group-hover/title:text-primary transition-colors shrink-0" />
+                                                    </h3>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-1 lg:gap-2">
+                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'ace')}>
+                                                        <Zap className="h-4 w-4 text-yellow-500" />
+                                                        <span>Serve</span>
+                                                    </Button>
+                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'spike')}>
+                                                        <Flame className="h-4 w-4 text-red-500" />
+                                                        <span>Attack</span>
+                                                    </Button>
+                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'block')}>
+                                                        <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                        <span>Block</span>
+                                                    </Button>
+                                                </div>
                                             </div>
 
-                                            <Button
-                                                size="lg"
-                                                onClick={() => addPoint('home', 'point')}
-                                                className="w-full bg-primary flex items-center justify-center"
-                                            >
-                                                <span>+1 Point ({match.home_team?.name || 'Home'})</span>
-                                            </Button>
+                                            {/* Away Team Control Card */}
+                                            <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
+                                                <div className="space-y-1">
+                                                    <h3
+                                                        className="text-xl lg:text-2xl font-black tracking-tighter truncate cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group/title"
+                                                        onClick={() => setTeamInfoTarget('away')}
+                                                        title={locale === "th" ? "ดูข้อมูลทีมและผู้เล่น" : "View team & roster info"}
+                                                    >
+                                                        <span>{match.away_team?.name || "Away"}</span>
+                                                        <Info className="h-4 w-4 text-muted-foreground group-hover/title:text-primary transition-colors shrink-0" />
+                                                    </h3>
+                                                </div>
 
-                                            <div className="grid grid-cols-3 gap-1 lg:gap-2">
-                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'ace')}>
-                                                    <Zap className="h-4 w-4 text-yellow-500" />
-                                                    <span>Ace</span>
-                                                </Button>
-                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'spike')}>
-                                                    <Flame className="h-4 w-4 text-red-500" />
-                                                    <span>Spike</span>
-                                                </Button>
-                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('home', 'block')}>
-                                                    <ShieldCheck className="h-4 w-4 text-blue-500" />
-                                                    <span>Block</span>
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        {/* Away Team Control Card */}
-                                        <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-sm lg:text-base font-black tracking-tight truncate">
-                                                    {match.away_team?.name || "Away"}
-                                                </h3>
-                                            </div>
-
-                                            <Button
-                                                size="lg"
-                                                onClick={() => addPoint('away', 'point')}
-                                                className="w-full bg-primary flex items-center justify-center"
-                                            >
-                                                <span>+1 Point ({match.away_team?.name || 'Away'})</span>
-                                            </Button>
-
-                                            <div className="grid grid-cols-3 gap-1 lg:gap-2">
-                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'ace')}>
-                                                    <Zap className="h-4 w-4 text-yellow-500" />
-                                                    <span>Ace</span>
-                                                </Button>
-                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'spike')}>
-                                                    <Flame className="h-4 w-4 text-red-500" />
-                                                    <span>Spike</span>
-                                                </Button>
-                                                <Button variant="outline" onClick={() => handleTriggerActionEvent('away', 'block')}>
-                                                    <ShieldCheck className="h-4 w-4 text-blue-500" />
-                                                    <span>Block</span>
-                                                </Button>
+                                                <div className="grid grid-cols-3 gap-1 lg:gap-2">
+                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'ace')}>
+                                                        <Zap className="h-4 w-4 text-yellow-500" />
+                                                        <span>Serve</span>
+                                                    </Button>
+                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'spike')}>
+                                                        <Flame className="h-4 w-4 text-red-500" />
+                                                        <span>Attack</span>
+                                                    </Button>
+                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'block')}>
+                                                        <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                        <span>Block</span>
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-4 bg-muted/50 border rounded-sm flex items-center justify-between">
-                                        <span className="text-sm font-bold text-muted-foreground">
-                                            {locale === "th" ? "การแข่งขันจบลงแล้ว (หากต้องการแก้ไขแต้มย้อนหลัง สามารถกด Undo บนเมนูด้านข้างได้)" : "Match finished (Click Undo on the left menu to revert last point)"}
-                                        </span>
-                                        <Button variant="outline" size="sm" onClick={handleUndo} className="gap-2">
-                                            <Undo className="h-4 w-4" />
-                                            <span>{locale === "th" ? "ยกเลิกแต้มล่าสุด (Undo)" : "Undo Last Point"}</span>
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                    ) : (
+                                        <div className="p-4 bg-muted/50 border rounded-sm flex items-center justify-between">
+                                            <span className="text-sm font-bold text-muted-foreground">
+                                                {locale === "th" ? "การแข่งขันจบลงแล้ว (หากต้องการแก้ไขแต้มย้อนหลัง สามารถกด Undo บนเมนูด้านข้างได้)" : "Match finished (Click Undo on the left menu to revert last point)"}
+                                            </span>
+                                            <Button variant="outline" size="sm" onClick={handleUndo} className="gap-2">
+                                                <Undo className="h-4 w-4" />
+                                                <span>{locale === "th" ? "ยกเลิกแต้มล่าสุด (Undo)" : "Undo Last Point"}</span>
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
                     </section>
 
                     {/* Log Section */}
@@ -879,6 +950,34 @@ export function VolleyballConsolePage({
             />
             <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
+            <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
+                <DialogContent showCloseButton={false} className="sm:max-w-[500px] bg-card p-0 rounded-sm shadow-2xl border-none">
+                    <VolleyballMatchStatisticsBox
+                        match={match}
+                        events={events}
+                        homeSetsWon={homeSets}
+                        awaySetsWon={awaySets}
+                        homePoints={homePoints}
+                        awayPoints={awayPoints}
+                        onClose={() => setStatsDialogOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+            <VolleyballTeamInfoDialog
+                open={teamInfoTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open) setTeamInfoTarget(null);
+                }}
+                teamName={teamInfoTarget === 'home' ? (match.home_team?.name || 'Home') : (match.away_team?.name || 'Away')}
+                teamLogo={teamInfoTarget === 'home' ? match.home_team?.logo_url : match.away_team?.logo_url}
+                description={(teamInfoTarget === 'home' ? match.home_team?.description : match.away_team?.description) || null}
+                contactName={(teamInfoTarget === 'home' ? match.home_team?.contact_name : match.away_team?.contact_name) || null}
+                contactPhone={(teamInfoTarget === 'home' ? match.home_team?.contact_phone : match.away_team?.contact_phone) || null}
+                players={teamInfoTarget === 'home' ? homePlayers : awayPlayers}
+                activeLineupIds={teamInfoTarget === 'home' ? homeLineup : awayLineup}
+                events={events}
+                teamId={teamInfoTarget === 'home' ? match.home_team_id : match.away_team_id}
+            />
 
             <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
                 <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">

@@ -37,6 +37,7 @@ import {
 import { Registrations } from "@/features/tournaments/management/registrations";
 import { Announcements } from "@/features/tournaments/management/announcements";
 import { TeamForm } from "@/features/tournaments/teams/team-form";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Plus } from "lucide-react";
 import {
     Dialog,
@@ -599,8 +600,8 @@ export function NodeSettings() {
                                         type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
                                             type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500 fill-red-500" /> :
                                                 type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
-                                                type === 'inboxNode' ? <Inbox className="h-4 w-4 text-foreground" /> :
-                                                    <Megaphone className="h-4 w-4 text-foreground" />}
+                                                    type === 'inboxNode' ? <Inbox className="h-4 w-4 text-foreground" /> :
+                                                        <Megaphone className="h-4 w-4 text-foreground" />}
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -691,7 +692,7 @@ export function NodeSettings() {
                                             const num = parseInt(val, 10) || 0;
                                             updateNodeData(id, { advancingCount: Math.min(16, num) });
                                         }}
-                                     />
+                                    />
                                     <p className="text-[10px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
                                 </div>
 
@@ -930,9 +931,18 @@ export function NodeSettings() {
                                             {t("add_team_button") || "Add Team"}
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="bg-card sm:max-w-[500px] rounded-lg p-0">
-                                        <DialogHeader className="p-2 md:p-4 border-b ">
+                                    <DialogContent showCloseButton={false} className="bg-card sm:max-w-[500px] rounded-sm shadow-2xl p-0">
+                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10">
                                             <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                className="absolute right-2 top-2"
+                                                onClick={() => setIsAddDialogOpen(false)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </DialogHeader>
                                         <TeamForm
                                             tournamentId={tournamentId}
@@ -978,9 +988,18 @@ export function NodeSettings() {
                                             New Sponsor
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[450px] bg-card rounded-lg p-0">
-                                        <DialogHeader className="p-2 md:p-4 border-b">
+                                    <DialogContent showCloseButton={false} className="sm:max-w-[450px] bg-card rounded-sm shadow-2xl p-0">
+                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10">
                                             <DialogTitle className="text-lg font-black tracking-tighter">Add New Sponsor</DialogTitle>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                className="absolute right-2 top-2"
+                                                onClick={() => setIsAddSponsorOpen(false)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
                                         </DialogHeader>
                                         <form onSubmit={handleAddSponsorSubmit}>
                                             <div className="p-2 md:p-4 space-y-1 md:space-y-2">
@@ -1030,20 +1049,23 @@ export function NodeSettings() {
                                 </Dialog>
                             </div>
 
-                            <p className="text-[10px] text-muted-foreground/60 italic">
-                                Drag handles to reorder sponsors. Reordering updates order_index automatically.
-                            </p>
+
 
                             {isSponsorLoading ? (
                                 <div className="flex justify-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin text-red-500" />
                                 </div>
                             ) : sponsorsList.length === 0 ? (
-                                <div className="text-center py-10 border-2 border-dashed rounded-md">
-                                    <p className="text-xs text-muted-foreground italic">No sponsors added yet</p>
-                                </div>
+                                <EmptyState
+                                    icon={Heart}
+                                    title={locale === "th" ? "ยังไม่มีผู้สนับสนุน" : "No sponsors added yet"}
+                                    description={locale === "th" ? "คลิก 'New Sponsor' เพื่อเพิ่มผู้สนับสนุน" : "Click 'New Sponsor' to add a sponsor"}
+                                />
                             ) : (
                                 <div className="space-y-1 md:space-y-2">
+                                    <p className="text-[10px] text-muted-foreground/60 italic">
+                                        Drag handles to reorder sponsors. Reordering updates order_index automatically.
+                                    </p>
                                     {sponsorsList.map((sponsor, idx) => (
                                         <div
                                             key={sponsor.id}

@@ -7,12 +7,13 @@ import { Registration, TournamentTeam } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink, Phone, User, Users, Check, X } from "lucide-react";
+import { Loader2, ExternalLink, Phone, User, Users, Check, X, Inbox } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations, useLocale } from "next-intl";
 import { approveRegistration, rejectRegistration, withdrawTournamentTeam } from "@/actions/tournaments/registration";
 import { useBracketStore } from "@/lib/stores/bracket-store";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/shared/empty-state";
 import { RosterDialog } from "@/features/tournaments/teams/roster-manager";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -196,9 +197,14 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
         );
     }
 
-    // Hide entire section if no registrations
     if (registrations.length === 0) {
-        return null;
+        return (
+            <EmptyState
+                icon={Inbox}
+                title={locale === 'th' ? "ยังไม่มีรายการสมัครเข้าทีม" : "No registrations received yet"}
+                description={locale === 'th' ? "เมื่อมีทีมสมัครเข้ามารายชื่อจะแสดงที่นี่" : "Submitted team registrations will appear here"}
+            />
+        );
     }
 
     return (

@@ -32,7 +32,7 @@ export function VolleyballEventDialog({
 }: VolleyballEventDialogProps) {
     const tCommon = useTranslations("Common");
 
-    const [playerId, setPlayerId] = useState<string>("");
+    const [playerId, setPlayerId] = useState<string>("unknown");
 
     if (!eventType) return null;
 
@@ -85,6 +85,9 @@ export function VolleyballEventDialog({
                                 <SelectValue placeholder="เลือกผู้เล่นทำคะแนน" />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="unknown">
+                                    ไม่ระบุชื่อ (Unknown Player)
+                                </SelectItem>
                                 {startingPlayers.length > 0 && (
                                     <>
                                         <div className="px-2 py-1 text-[10px] font-black text-muted-foreground tracking-widest bg-muted/40">
@@ -110,10 +113,6 @@ export function VolleyballEventDialog({
                                         ))}
                                     </>
                                 )}
-
-                                <SelectItem value="unknown">
-                                    ไม่ระบุชื่อ (Unknown Player)
-                                </SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

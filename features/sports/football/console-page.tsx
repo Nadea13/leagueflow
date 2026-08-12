@@ -834,6 +834,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     <Button
                         variant="outline"
                         onClick={handlePostponeMatch}
+                        disabled={match.status === 'finished' || match.status === 'canceled'}
                         className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
                     >
                         <CalendarRange className="h-4 w-4 text-primary" />
@@ -842,6 +843,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     <Button
                         variant="outline"
                         onClick={() => setWoDialogOpen(true)}
+                        disabled={match.status === 'finished' || match.status === 'canceled'}
                         className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
                     >
                         <Ban className="h-4 w-4 text-destructive" />
@@ -850,6 +852,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     <Button
                         variant="outline"
                         onClick={handleAbandonMatch}
+                        disabled={match.status === 'finished' || match.status === 'canceled'}
                         className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
                     >
                         <XCircle className="h-4 w-4 text-destructive" />
@@ -911,7 +914,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     if (playersLoading) {
         return (
             <div className={cn(
-                "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 lg:space-y-4 animate-pulse",
+                "min-h-screen flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4 animate-pulse",
                 readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : "pt-0"
             )}>
                 {/* Header Skeleton */}
@@ -1021,7 +1024,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     return (
         <div className={cn(
-            "min-h-screen flex flex-col font-display selection:bg-primary/30 space-y-2 lg:space-y-4",
+            "min-h-screen flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4",
             readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : "pt-0"
         )}>
             {/* Top Navigation Bar */}

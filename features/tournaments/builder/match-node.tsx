@@ -10,16 +10,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useMemo } from "react";
 import { Match, TournamentTeam, MatchEvent } from "@/types";
 
-const getScoreValue = (score: unknown): number => {
-    if (score === undefined || score === null) return 0;
-    if (typeof score === 'object') {
-        if ('total' in score) {
-            return Number((score as { total?: unknown }).total) || 0;
-        }
-    }
-    return Number(score) || 0;
-};
-
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
 
 export const MatchNode = memo(function MatchNode({
@@ -31,14 +21,21 @@ export const MatchNode = memo(function MatchNode({
     const edges = useBracketStore((s) => s.edges);
     const nodes = useBracketStore((s) => s.nodes);
     const storeTeams = useBracketStore((s) => s.teams);
+    const storeSport = useBracketStore((s) => s.sport);
     const params = useParams();
     const tournamentId = params.id as string;
     const supabase = createClient();
 
     const [dbMatches, setDbMatches] = useState<Match[]>([]);
     const [dbEvents, setDbEvents] = useState<MatchEvent[]>([]);
+    const [fetchedSport, setFetchedSport] = useState<string | null>(null);
     const [_tick, setTick] = useState(0);
     const matches = useMemo(() => Array.isArray(data.matches) ? data.matches : [], [data.matches]);
+
+    const sport = useMemo(() => {
+        const s = storeSport || (data as { sport?: string })?.sport || fetchedSport || 'football';
+        return String(s).toLowerCase();
+    }, [storeSport, data, fetchedSport]);
 
     // Local ticker to update the live timer every second
     useEffect(() => {
@@ -50,6 +47,19 @@ export const MatchNode = memo(function MatchNode({
 
     useEffect(() => {
         async function fetchScores() {
+            if (tournamentId && !storeSport && !(data as { sport?: string })?.sport) {
+                const { data: tourData } = await supabase
+                    .from('tournaments')
+                    .select('sport, sports(sport_name)')
+                    .eq('id', tournamentId)
+                    .maybeSingle();
+
+                if (tourData) {
+                    const sName = tourData.sport || (tourData.sports as unknown as { sport_name?: string })?.sport_name;
+                    if (sName) setFetchedSport(sName.toLowerCase());
+                }
+            }
+
             const matchDbIds = matches.map(m => m.dbId).filter(Boolean) as string[];
             if (matchDbIds.length === 0) return;
 
@@ -66,8 +76,7 @@ export const MatchNode = memo(function MatchNode({
             const { data: evs } = await supabase
                 .from('match_events')
                 .select('*')
-                .in('match_id', matchDbIds)
-                .in('event_type', ['kick_off', 'match_resumed', 'half_time', 'match_paused']);
+                .in('match_id', matchDbIds);
             
             if (evs) {
                 setDbEvents(evs as MatchEvent[]);
@@ -75,10 +84,19 @@ export const MatchNode = memo(function MatchNode({
         }
 
         fetchScores();
-        // Set up a small interval or subscription for "realtime" feel
-        const interval = setInterval(fetchScores, 10000); // 10s refresh
-        return () => clearInterval(interval);
-    }, [id, tournamentId, supabase, matches]);
+        const interval = setInterval(fetchScores, 2000);
+
+        const channel = supabase
+            .channel(`match-node-${id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, fetchScores)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'match_events' }, fetchScores)
+            .subscribe();
+
+        return () => {
+            clearInterval(interval);
+            supabase.removeChannel(channel);
+        };
+    }, [id, tournamentId, supabase, matches, storeSport, data]);
 
     return (
         <div
@@ -315,16 +333,76 @@ export const MatchNode = memo(function MatchNode({
 
                                     <div>
                                         {(() => {
+                                            const vballEvents = dbMatch ? dbEvents.filter(e => e.match_id === dbMatch.id && ['point', 'ace', 'spike', 'block'].includes(e.event_type)) : [];
+                                            const setPointsMap = new Map<number, { home: number; away: number }>();
+                                            if (vballEvents.length > 0) {
+                                                vballEvents.forEach(e => {
+                                                    const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
+                                                    const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
+                                                    const isHome = dbMatch?.home_team_id ? e.team_id === dbMatch.home_team_id : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
+                                                    if (isHome) current.home += 1;
+                                                    else current.away += 1;
+                                                    setPointsMap.set(setNum, current);
+                                                });
+                                            }
+
+                                            const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
+                                            const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
+
+                                            let derivedHomeSets = 0;
+                                            let derivedAwaySets = 0;
+
+                                            for (let s = 1; s <= maxLoggedSet; s++) {
+                                                const pts = setPointsMap.get(s) || { home: 0, away: 0 };
+                                                const targetPts = (s === 3 || s === 5) ? 15 : 25;
+                                                const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
+                                                const isPastSet = s < maxLoggedSet;
+                                                if (isPastSet || isFinishedScore) {
+                                                    if (pts.home > pts.away) derivedHomeSets += 1;
+                                                    else if (pts.away > pts.home) derivedAwaySets += 1;
+                                                }
+                                            }
+                                            const currentSetNumber = vballEvents.length > 0 ? (derivedHomeSets + derivedAwaySets + 1) : 1;
+                                            const isEnded = dbMatch?.status === 'finished' || dbMatch?.status === 'canceled';
+
+                                            const latestSetPts = setPointsMap.get(maxLoggedSet) || { home: 0, away: 0 };
+                                            const currentSetPts = setPointsMap.get(currentSetNumber) || (isEnded ? latestSetPts : { home: 0, away: 0 });
+
+                                            const getScoreValue = (score: unknown) => (typeof score === 'object' && score !== null && 'total' in score ? (score as Record<string, unknown>).total : score);
+
+                                            const homeSetsWon = vballEvents.length > 0
+                                                ? derivedHomeSets
+                                                : (dbMatch?.home_score !== null && dbMatch?.home_score !== undefined ? Number(getScoreValue(dbMatch.home_score)) || 0 : 0);
+
+                                            const awaySetsWon = vballEvents.length > 0
+                                                ? derivedAwaySets
+                                                : (dbMatch?.away_score !== null && dbMatch?.away_score !== undefined ? Number(getScoreValue(dbMatch.away_score)) || 0 : 0);
+
+                                            const isHomeWinner = isEnded && (
+                                                dbMatch?.winner_id
+                                                    ? dbMatch.winner_id === dbMatch?.home_team_id
+                                                    : (homeSetsWon > awaySetsWon || (homeSetsWon === awaySetsWon && (currentSetPts.home > currentSetPts.away || Number(dbMatch?.home_score ?? 0) > Number(dbMatch?.away_score ?? 0))))
+                                            );
+                                            const isAwayWinner = isEnded && (
+                                                dbMatch?.winner_id
+                                                    ? dbMatch.winner_id === dbMatch?.away_team_id
+                                                    : (awaySetsWon > homeSetsWon || (homeSetsWon === awaySetsWon && (currentSetPts.away > currentSetPts.home || Number(dbMatch?.away_score ?? 0) > Number(dbMatch?.home_score ?? 0))))
+                                            );
+                                            const isHomeLoser = isEnded && !isHomeWinner && (isAwayWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.away_team_id : true));
+                                            const isAwayLoser = isEnded && !isAwayWinner && (isHomeWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.home_team_id : true));
+
                                             return (
                                                 <>
                                                     <SlotRow
                                                         label={liveTeamA || match.placeholderA}
                                                         isResolved={!!liveTeamA}
-                                                        score={dbMatch?.home_score}
-                                                        isWinner={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.home_score) > getScoreValue(dbMatch?.away_score)}
-                                                        isLoser={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.away_score) > getScoreValue(dbMatch?.home_score)}
+                                                        score={sport === 'volleyball' ? homeSetsWon : dbMatch?.home_score}
+                                                        setPoints={currentSetPts.home}
+                                                        isWinner={isHomeWinner}
+                                                        isLoser={isHomeLoser}
                                                         status={dbMatch?.status}
                                                         position="top"
+                                                        sport={sport}
                                                         onDropTeam={(teamName) => {
                                                             const nextMatches = [...matches];
                                                             nextMatches[index] = { ...nextMatches[index], placeholderA: teamName };
@@ -339,11 +417,13 @@ export const MatchNode = memo(function MatchNode({
                                                     <SlotRow
                                                         label={liveTeamB || match.placeholderB}
                                                         isResolved={!!liveTeamB}
-                                                        score={dbMatch?.away_score}
-                                                        isWinner={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.away_score) > getScoreValue(dbMatch?.home_score)}
-                                                        isLoser={dbMatch?.status === 'finished' && getScoreValue(dbMatch?.home_score) > getScoreValue(dbMatch?.away_score)}
+                                                        score={sport === 'volleyball' ? awaySetsWon : dbMatch?.away_score}
+                                                        setPoints={currentSetPts.away}
+                                                        isWinner={isAwayWinner}
+                                                        isLoser={isAwayLoser}
                                                         status={dbMatch?.status}
                                                         position="bottom"
+                                                        sport={sport}
                                                         onDropTeam={(teamName) => {
                                                             const nextMatches = [...matches];
                                                             nextMatches[index] = { ...nextMatches[index], placeholderB: teamName };
@@ -372,20 +452,24 @@ export const MatchNode = memo(function MatchNode({
 function SlotRow({
     label,
     score,
+    setPoints,
     isWinner,
     isLoser,
     status,
-    isResolved,
+    isResolved: _isResolved,
     position,
+    sport = 'football',
     onDropTeam,
 }: {
     label: string;
     score?: unknown;
+    setPoints?: number;
     isWinner?: boolean;
     isLoser?: boolean;
     status?: string;
     isResolved?: boolean;
     position: "top" | "bottom";
+    sport?: string;
     onDropTeam?: (teamName: string) => void;
     onClear?: () => void;
 }) {
@@ -413,7 +497,7 @@ function SlotRow({
         <div 
             className={cn(
                 "flex items-center gap-2 p-2 transition-all hover:bg-node-2/5 group/slot cursor-default",
-                isLoser && "text-muted-foreground/50"
+                isLoser && "text-muted-foreground/50 opacity-60"
             )}
             onDragOver={(e) => {
                 e.preventDefault();
@@ -427,7 +511,10 @@ function SlotRow({
                 }
             }}
         >
-            <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-2/50 group-hover/slot:bg-node-2/10 transition-colors overflow-hidden">
+            <div className={cn(
+                "w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-2/50 group-hover/slot:bg-node-2/10 transition-colors overflow-hidden shrink-0",
+                isLoser && "opacity-50"
+            )}>
                 {team?.logo_url ? (
                     <Image
                                 src={team.logo_url}
@@ -444,18 +531,36 @@ function SlotRow({
             </div>
             <span className={cn(
                 "text-[10px] font-bold tracking-tight truncate flex-1 transition-all",
-                label === "TBD" ? "text-muted-foreground" : 
-                isWinner ? "" : 
-                isResolved ? "" : ""
+                label === "TBD" ? "text-muted-foreground" : "",
+                isWinner && "text-foreground font-black",
+                isLoser && "text-muted-foreground/50"
             )}>
                 {label}
             </span>
             {hasScore && (
                 <div className={cn(
-                    "w-6 h-6 flex items-center justify-center font-black text-xs transition-colors",
-                    isWinner && ""
+                    "flex items-center gap-1.5 font-black text-xs transition-colors shrink-0",
+                    isWinner && "text-foreground font-black",
+                    isLoser && "text-muted-foreground/50"
                 )}>
-                    {displayScore}
+                    {sport === 'volleyball' ? (
+                        <>
+                            <span className={cn(
+                                (status === 'finished' || status === 'canceled')
+                                    ? "w-6 h-6 flex items-center justify-center font-black text-xs"
+                                    : "text-[10px] font-extrabold tracking-tight"
+                            )}>
+                                {displayScore}
+                            </span>
+                            {status !== 'finished' && status !== 'canceled' && (
+                                <span className="text-xs font-black text-center">
+                                    {setPoints !== undefined ? setPoints : 0}
+                                </span>
+                            )}
+                        </>
+                    ) : (
+                        <span className="w-6 h-6 flex items-center justify-center font-black text-xs">{displayScore}</span>
+                    )}
                 </div>
             )}
         </div>

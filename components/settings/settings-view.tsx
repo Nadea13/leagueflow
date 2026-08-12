@@ -178,7 +178,7 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
             {/* Version Info */}
             <div className="flex justify-center items-center gap-2 mt-6">
                 <span className="text-xs font-black tracking-widest text-muted-foreground">
-                    {t("version")} 1.0.1
+                    {t("version")} 1.0.2
                 </span>
             </div>
         </div>

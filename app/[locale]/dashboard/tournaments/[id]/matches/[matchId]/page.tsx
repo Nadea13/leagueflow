@@ -33,30 +33,68 @@ export default async function AdminMatchConsole(props: {
     if (rawMatch.home_team_id) {
         const { data: ht } = await supabase
             .from('teams')
-            .select('id, name, logo_img')
+            .select('id, name, logo_img, description, contact_name, contact_phone')
             .eq('id', rawMatch.home_team_id)
             .maybeSingle();
         if (ht) {
             home_team = {
                 id: ht.id,
                 name: String(ht.name || 'Unknown Team'),
-                logo_url: ht.logo_img ? String(ht.logo_img) : null
+                logo_url: ht.logo_img ? String(ht.logo_img) : null,
+                description: ht.description || null,
+                contact_name: ht.contact_name || null,
+                contact_phone: ht.contact_phone || null
             };
+        } else {
+            const { data: tt } = await supabase
+                .from('tournament_teams')
+                .select('id, name, logo_url, description, contact_name, contact_phone')
+                .eq('id', rawMatch.home_team_id)
+                .maybeSingle();
+            if (tt) {
+                home_team = {
+                    id: tt.id,
+                    name: String(tt.name || 'Unknown Team'),
+                    logo_url: tt.logo_url ? String(tt.logo_url) : null,
+                    description: tt.description || null,
+                    contact_name: tt.contact_name || null,
+                    contact_phone: tt.contact_phone || null
+                };
+            }
         }
     }
 
     if (rawMatch.away_team_id) {
         const { data: at } = await supabase
             .from('teams')
-            .select('id, name, logo_img')
+            .select('id, name, logo_img, description, contact_name, contact_phone')
             .eq('id', rawMatch.away_team_id)
             .maybeSingle();
         if (at) {
             away_team = {
                 id: at.id,
                 name: String(at.name || 'Unknown Team'),
-                logo_url: at.logo_img ? String(at.logo_img) : null
+                logo_url: at.logo_img ? String(at.logo_img) : null,
+                description: at.description || null,
+                contact_name: at.contact_name || null,
+                contact_phone: at.contact_phone || null
             };
+        } else {
+            const { data: tt } = await supabase
+                .from('tournament_teams')
+                .select('id, name, logo_url, description, contact_name, contact_phone')
+                .eq('id', rawMatch.away_team_id)
+                .maybeSingle();
+            if (tt) {
+                away_team = {
+                    id: tt.id,
+                    name: String(tt.name || 'Unknown Team'),
+                    logo_url: tt.logo_url ? String(tt.logo_url) : null,
+                    description: tt.description || null,
+                    contact_name: tt.contact_name || null,
+                    contact_phone: tt.contact_phone || null
+                };
+            }
         }
     }
 

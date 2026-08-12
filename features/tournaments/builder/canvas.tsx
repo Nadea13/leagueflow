@@ -451,6 +451,8 @@ function CanvasInternal({
         }
     }, [setActiveNodeId, selectNode]);
 
+
+
     const [categories, setCategories] = useState<TournamentCategory[]>([]);
     const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
     const [_isInboxLoading, setIsInboxLoading] = useState(false);

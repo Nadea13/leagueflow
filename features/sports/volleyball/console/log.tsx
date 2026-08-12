@@ -82,7 +82,6 @@ export function VolleyballEventLog({
                     ) : (
                         events.map((event: MatchEvent) => {
                             const evtConfig = VOLLEYBALL_EVENT_TYPES.find(e => e.type === event.event_type);
-                            const Icon = evtConfig?.icon || Clock;
 
                             const isHome = isHomeEvent(event);
                             const isAway = isAwayEvent(event);
@@ -90,8 +89,12 @@ export function VolleyballEventLog({
 
                             const setNum = getSetNumber(event);
                             const extra = event.extra_info as Record<string, unknown> | null;
-                            const textDesc = typeof extra?.text === 'string' ? extra.text : null;
+                            let textDesc = typeof extra?.text === 'string' ? extra.text : null;
+                            if (textDesc) {
+                                textDesc = textDesc.replace(/\s*\((unknown|unknown player|ไม่ระบุ|team)\)/gi, '').trim();
+                            }
                             const playerName = event.player_name || (extra?.player_name as string | undefined);
+                            const isUnknownName = !playerName || ['team', 'unknown', 'unknown player', 'ไม่ระบุ'].includes(playerName.trim().toLowerCase());
 
                             return (
                                 <div
@@ -105,7 +108,7 @@ export function VolleyballEventLog({
                                     {/* Set Indicator */}
                                     {!isNeutral && (
                                         <div className="w-12 flex flex-col items-center shrink-0">
-                                            <span className="text-[10px] font-black tracking-tighter text-muted-foreground group-hover/item:text-foreground">
+                                            <span className="text-xs font-black tracking-tighter text-muted-foreground group-hover/item:text-foreground">
                                                 SET {setNum}
                                             </span>
                                         </div>
@@ -113,20 +116,19 @@ export function VolleyballEventLog({
 
                                     {/* Event Card Content */}
                                     <div className={cn(
-                                        "flex-1 min-w-0 transition-all relative rounded-sm p-2 border bg-muted/10",
-                                        isNeutral ? "py-2" : "border-foreground/10",
+                                        "flex-1 min-w-0 transition-all relative rounded-sm",
+                                        isNeutral ? "py-2" : "p-1 lg:p-2 border",
                                         !isNeutral && (isHome ? "text-left" : "text-right")
                                     )}>
                                         <div className={cn(
-                                            "flex items-center justify-between gap-2",
+                                            "flex items-center justify-between gap-1 lg:gap-2",
                                             isNeutral ? "flex-row" : (isHome ? "flex-row" : "flex-row-reverse")
                                         )}>
                                             {isNeutral ? (
                                                 <div className="flex items-center gap-4 w-full">
                                                     <div className="flex-1 h-[1px] bg-primary/40" />
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-[10px] font-black tracking-wider text-primary flex items-center gap-1">
-                                                            <Icon className={cn("h-3.5 w-3.5", evtConfig?.color || "text-primary")} />
+                                                        <span className="text-[10px] font-black tracking-wider text-primary">
                                                             {evtConfig?.label?.toUpperCase() || event.event_type.toUpperCase()}
                                                             {event.isPending && ` (${t("pending")})`}
                                                         </span>
@@ -137,35 +139,27 @@ export function VolleyballEventLog({
                                                     <div className="flex-1 h-[1px] bg-primary/40" />
                                                 </div>
                                             ) : (
-                                                <div className="min-w-0 flex-1">
+                                                <div className="min-w-0">
                                                     <div className={cn(
                                                         "flex items-center gap-2",
-                                                        isHome ? "justify-start" : "justify-end"
+                                                        isHome ? "flex-row" : "flex-row-reverse"
                                                     )}>
-                                                        <div className="p-1 rounded bg-background border shrink-0">
-                                                            <Icon className={cn("h-3.5 w-3.5", evtConfig?.color || "text-primary")} />
-                                                        </div>
                                                         <span className={cn(
                                                             "text-xs font-black tracking-widest capitalize",
-                                                            evtConfig?.color || "text-foreground"
+                                                            evtConfig?.color || "text-muted-foreground"
                                                         )}>
                                                             {evtConfig?.label || event.event_type.replace('_', ' ')}
                                                             {event.isPending && ` (${t("pending")})`}
                                                         </span>
-                                                        <span className="text-xs text-muted-foreground">•</span>
-                                                        <span className="text-xs font-bold truncate max-w-[140px]">
+                                                        <span className="text-xs">•</span>
+                                                        <span className="text-xs font-bold truncate max-w-[120px]">
                                                             {isHome ? (match?.home_team?.name || 'Home') : (match?.away_team?.name || 'Away')}
                                                         </span>
                                                     </div>
 
-                                                    {playerName && playerName !== 'Team' && (
-                                                        <p className="text-xs font-bold text-foreground tracking-wide truncate">
+                                                    {!isUnknownName && playerName && (
+                                                        <p className="text-xs font-black tracking-widest truncate text-foreground">
                                                             {playerName}
-                                                        </p>
-                                                    )}
-                                                    {textDesc && (
-                                                        <p className="text-[11px] font-medium text-muted-foreground mt-0.5 truncate">
-                                                            {textDesc}
                                                         </p>
                                                     )}
                                                 </div>
@@ -174,11 +168,11 @@ export function VolleyballEventLog({
                                             {!readOnly && onDeleteEvent && (
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    className="h-7 w-7 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-all shrink-0"
+                                                    size="icon-sm"
+                                                    className="h-8 w-8 text-foreground/20 hover:text-destructive hover:bg-destructive/10 opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-all shrink-0"
                                                     onClick={() => onDeleteEvent(event.id)}
                                                 >
-                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    <Trash2 className="h-3 w-3" />
                                                 </Button>
                                             )}
                                         </div>

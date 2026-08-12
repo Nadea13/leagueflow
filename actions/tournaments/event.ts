@@ -170,7 +170,7 @@ export async function deleteMatchEvent(eventId: string, tournamentId: string): P
         .single();
 
     if (fetchError || !event) {
-        return { success: false, error: "Event not found" };
+        return { success: true };
     }
 
     const isGoal = event.event_type === 'goal';

@@ -70,8 +70,8 @@ export interface Match {
     timer_status?: 'playing' | 'paused' | 'stopped';
     elapsed_before_pause?: number; // Seconds calculated before pause
     current_minute?: number | string | null;
-    home_team?: { id: string; name: string; logo_url?: string | null };
-    away_team?: { id: string; name: string; logo_url?: string | null };
+    home_team?: { id: string; name: string; logo_url?: string | null; description?: string | null; contact_name?: string | null; contact_phone?: string | null };
+    away_team?: { id: string; name: string; logo_url?: string | null; description?: string | null; contact_name?: string | null; contact_phone?: string | null };
     // Penalty Shootout (joined)
     penalty_home_score?: number | null;
     penalty_away_score?: number | null;

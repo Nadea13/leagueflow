@@ -125,7 +125,7 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                         className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/home min-w-0"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-1 lg:p-2 relative group/logo shrink-0">
+                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full border border-foreground/10 p-1 lg:p-2 relative group/logo shrink-0">
                             {match.home_team?.logo_url ? (
                                 <Image src={match.home_team.logo_url} width={64} height={64} className="w-full h-full object-contain relative z-10 rounded-full" alt="" />
                             ) : (

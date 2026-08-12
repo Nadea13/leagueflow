@@ -2,7 +2,6 @@
 
 import { Match, MatchEvent } from "@/types";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
 import { Volleyball } from "lucide-react";
 
 const getInitials = (name: string) => {
@@ -148,14 +147,14 @@ export function VolleyballScoreboard({
                         className="flex-1 flex flex-row-reverse items-center justify-start gap-2 lg:flex-col lg:items-center lg:gap-4 cursor-pointer group/home min-w-0"
                         onClick={() => onTeamClick?.(match.home_team_id || "")}
                     >
-                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 bg-foreground/5 rounded-full border border-foreground/10 p-1 lg:p-2 relative group/logo shrink-0">
+                        <div className="inline-flex items-center justify-center w-12 h-12 lg:w-24 lg:h-24 rounded-full border border-foreground/10 p-1 lg:p-2 relative group/logo shrink-0">
                             {match.home_team?.logo_url ? (
                                 <Image src={match.home_team.logo_url} width={64} height={64} className="w-full h-full object-contain relative z-10 rounded-full" alt="" />
                             ) : (
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{getInitials(match.home_team?.name || '')}</span>
                             )}
                             {computedServingTeam === 'home' && (
-                                <div className="absolute -bottom-0 -right-0 bg-amber-500 text-black rounded-full p-1 shadow z-20">
+                                <div className="absolute -bottom-0 -right-0 bg-primary rounded-full p-1 shadow z-20">
                                     <Volleyball className="h-4 w-4" />
                                 </div>
                             )}
@@ -169,26 +168,34 @@ export function VolleyballScoreboard({
 
                     {/* Central Score Area */}
                     <div className="flex flex-col items-center">
-                        {/* Set Indicator */}
+                        {/* Set Indicator / Match Status */}
                         <div className="flex flex-col items-center mb-1 lg:mb-2">
-                            <span className="text-[10px] lg:text-xs font-black tracking-[0.2em] text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1.5">
-                                <Volleyball className="h-3.5 w-3.5 text-amber-500" />
-                                SET {computedCurrentSetNumber}
+                            <span className="text-2xl lg:text-6xl font-black tracking-tighter text-primary tabular-nums uppercase">
+                                {match.status === 'finished' ? "FINISHED" : `SET ${computedCurrentSetNumber}`}
                             </span>
                         </div>
 
-                        {/* Points Score */}
-                        <div className="flex items-center gap-4 lg:gap-8 tabular-nums">
+                        {/* Points & Sets Won Score */}
+                        <div className="flex items-center gap-3 lg:gap-6 tabular-nums">
+                            {/* Home Sets Won */}
+                            <span className="text-2xl lg:text-5xl font-black text-primary">
+                                {computedHomeSetsWon}
+                            </span>
+
+                            {/* Home Points */}
                             <span className="text-5xl lg:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{computedHomePoints}</span>
+
                             <div className="flex flex-col items-center gap-2">
                                 <span className="text-primary text-2xl lg:text-4xl font-black">-</span>
                             </div>
-                            <span className="text-5xl lg:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{computedAwayPoints}</span>
-                        </div>
 
-                        {/* Sets Won Summary */}
-                        <div className="px-2 py-0.5 rounded text-xs lg:text-base font-black tracking-widest text-primary">
-                            (SETS {computedHomeSetsWon} - {computedAwaySetsWon})
+                            {/* Away Points */}
+                            <span className="text-5xl lg:text-7xl lg:text-9xl font-black tracking-tighter text-foreground">{computedAwayPoints}</span>
+
+                            {/* Away Sets Won */}
+                            <span className="text-2xl lg:text-5xl font-black text-primary">
+                                {computedAwaySetsWon}
+                            </span>
                         </div>
                     </div>
 
@@ -204,7 +211,7 @@ export function VolleyballScoreboard({
                                 <span className="text-2xl font-black text-foreground/20 relative z-10">{getInitials(match.away_team?.name || '')}</span>
                             )}
                             {computedServingTeam === 'away' && (
-                                <div className="absolute -bottom-0 -right-0 bg-amber-500 text-black rounded-full p-1 shadow z-20">
+                                <div className="absolute -bottom-0 -right-0 bg-primary rounded-full p-1 shadow z-20">
                                     <Volleyball className="h-4 w-4" />
                                 </div>
                             )}
@@ -219,12 +226,11 @@ export function VolleyballScoreboard({
 
                 {/* Set Scores History Bar */}
                 {computedSetScoresHistory.length > 0 && (
-                    <div className="mt-2 lg:mt-4 pt-2 lg:pt-3 border-t flex items-center justify-center gap-2 overflow-x-auto w-full">
-                        <span className="text-[11px] font-bold text-muted-foreground mr-1">Sets History:</span>
+                    <div className="mt-1 lg:mt-2 flex items-center justify-center gap-2 overflow-hidden w-full">
                         {computedSetScoresHistory.map((s) => (
-                            <Badge key={s.set} variant="outline" className="text-[11px] font-mono px-2 py-0.5">
-                                Set {s.set}: {s.home}-{s.away}
-                            </Badge>
+                            <span key={s.set} className="text-xs font-bold">
+                                {s.home}-{s.away}
+                            </span>
                         ))}
                     </div>
                 )}

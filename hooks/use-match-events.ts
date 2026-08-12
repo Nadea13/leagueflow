@@ -159,7 +159,7 @@ export function useMatchEvents(matchId: string, tournamentId: string, initialDat
                     if (!isSuccess) errorMsg = res.error || "Unknown error";
                 } else if (action.type === 'delete_event') {
                     const res = await deleteMatchEvent(action.eventId!, tournamentId);
-                    isSuccess = !!res.success;
+                    isSuccess = !!res.success || (!!res.error && res.error.toLowerCase().includes("not found"));
                     if (!isSuccess) errorMsg = res.error || "Unknown error";
                 }
 
