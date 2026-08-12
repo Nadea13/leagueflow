@@ -19,9 +19,10 @@ interface BroadcastDialogProps {
     onOpenChange: (open: boolean) => void;
     matchId: string;
     tournamentId: string;
+    sport?: string;
 }
 
-export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: BroadcastDialogProps) {
+export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, sport = "football" }: BroadcastDialogProps) {
     const t = useTranslations("Console");
     const locale = useLocale();
     const { toast } = useToast();
@@ -480,8 +481,6 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
         return () => window.removeEventListener("keydown", handleGlobalKeyDown);
     }, [open]);
 
-
-
     // Listen for state changes to mark canvas dirty for auto-save
     useEffect(() => {
         if (!isInitialLoadedRef.current || !open) return;
@@ -558,7 +557,6 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
     }, [tournamentId, selectedCanvasId, bg, posX, posY, alertDuration, font, layout, size, showTimeline, scoreBg, teamNameMode, showLogos, headerText, homeBarDir, homeBarColor, awayBarDir, awayBarColor, blockGap, blockBg, rounded, blocks, blankCanvases, selectedBlockId, orientation, delay, locale, toast]);
 
     // Auto-save effect: save seamlessly in background like builder/canvas.tsx
-    // 1. Debounce timer is set to a snappy 800ms after user stops typing/dragging.
     useEffect(() => {
         if (!isDirty || saving || !open) return;
 
@@ -569,7 +567,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
         return () => clearTimeout(timer);
     }, [isDirty, saving, open, saveTemplate]);
 
-    // 2. Save immediately on focusout (when user finishes typing and clicks outside or presses Tab/Enter)
+    // Save immediately on focusout
     useEffect(() => {
         if (!open) return;
 
@@ -1100,6 +1098,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId }: B
                             handleCopy={handleCopy}
                             saveTemplate={saveTemplate}
                             saving={saving}
+                            sport={sport}
                         />
                     </div>
                 </div>

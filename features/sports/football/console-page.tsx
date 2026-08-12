@@ -70,7 +70,7 @@ import { MatchEventDialog } from "./console/event-dialog";
 import { WalkoverDialog } from "./console/walkover-dialog";
 import { PenaltyShootoutDialog } from "./console/penalty-shootout-dialog";
 import { AddTimeDialog, SetTimeDialog } from "./console/time-dialogs";
-import { BroadcastDialog } from "./console/broadcast-dialog";
+import { BroadcastDialog } from "@/features/broadcast";
 import { RosterSelectionDialog } from "./console/roster-selection-dialog";
 import { MatchStatisticsBox } from "./console/statistics-box";
 import { useMatchTimer } from "@/hooks/use-match-timer";

@@ -429,6 +429,52 @@ function BroadcastOverlayContent() {
     const homeScore = match.status === 'finished' ? dbHomeScore : Math.max(dbHomeScore, events.filter((e: MatchEvent) => e.team_id && isHomeTeam(e.team_id) && e.event_type === 'goal').length);
     const awayScore = match.status === 'finished' ? dbAwayScore : Math.max(dbAwayScore, events.filter((e: MatchEvent) => e.team_id && isAwayTeam(e.team_id) && e.event_type === 'goal').length);
 
+    // Volleyball Score & Sets Computation
+    const vballPointTypes = ['point', 'ace', 'spike', 'block'];
+    const vballEvents = events.filter((e: MatchEvent) => vballPointTypes.includes(e.event_type));
+
+    const vballSetPointsMap = new Map<number, { home: number; away: number }>();
+    if (vballEvents.length > 0) {
+        const sorted = [...vballEvents].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        sorted.forEach((e) => {
+            const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
+            const current = vballSetPointsMap.get(setNum) || { home: 0, away: 0 };
+            const isHome = e.team_id ? isHomeTeam(e.team_id) : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
+            if (isHome) current.home += 1;
+            else current.away += 1;
+            vballSetPointsMap.set(setNum, current);
+        });
+    }
+
+    const vballAllSetNumbers = Array.from(vballSetPointsMap.keys()).sort((a, b) => a - b);
+    const vballMaxLoggedSet = vballAllSetNumbers.length > 0 ? Math.max(...vballAllSetNumbers) : 1;
+
+    let vballDerivedHomeSets = 0;
+    let vballDerivedAwaySets = 0;
+    for (let s = 1; s <= vballMaxLoggedSet; s++) {
+        const pts = vballSetPointsMap.get(s) || { home: 0, away: 0 };
+        const targetPts = (s === 3 || s === 5) ? 15 : 25;
+        const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
+        if (s < vballMaxLoggedSet || isFinishedScore) {
+            if (pts.home > pts.away) vballDerivedHomeSets += 1;
+            else if (pts.away > pts.home) vballDerivedAwaySets += 1;
+        }
+    }
+
+    const vballCurrentSetNumber = vballEvents.length > 0 ? (vballDerivedHomeSets + vballDerivedAwaySets + 1) : 1;
+    const vballCurrentSetPts = vballSetPointsMap.get(vballCurrentSetNumber) || { home: 0, away: 0 };
+
+    const homeVolleyballPoints = vballEvents.length > 0 ? vballCurrentSetPts.home : dbHomeScore;
+    const awayVolleyballPoints = vballEvents.length > 0 ? vballCurrentSetPts.away : dbAwayScore;
+
+    const homeSetsWon = vballEvents.length > 0 ? vballDerivedHomeSets : dbHomeScore;
+    const awaySetsWon = vballEvents.length > 0 ? vballDerivedAwaySets : dbAwayScore;
+
+    const sortedVballEvents = [...vballEvents].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const latestVballEvent = sortedVballEvents.length > 0 ? sortedVballEvents[0] : null;
+    const isHomePointWon = latestVballEvent ? (latestVballEvent.team_id ? isHomeTeam(latestVballEvent.team_id) : (latestVballEvent.extra_info as { team_side?: string } | null)?.team_side === 'home') : false;
+    const isAwayPointWon = latestVballEvent ? !isHomePointWon : false;
+
     const homeRedCards = events.filter((e: MatchEvent) => e.event_type === "red_card" && e.team_id && isHomeTeam(e.team_id)).length;
     const awayRedCards = events.filter((e: MatchEvent) => e.event_type === "red_card" && e.team_id && isAwayTeam(e.team_id)).length;
 
@@ -491,6 +537,8 @@ function BroadcastOverlayContent() {
                                     {(searchParams.get("blocks") || "").split(",").filter(Boolean).map((blockId) => {
                                         const cfg = customBlockConfigs[blockId] || { active: true, x: 0, y: 0, w: 80, h: 40, fontSize: 14, rTL: 8, rTR: 8, rBL: 8, rBR: 8, opacity: 100, bg: blockId.startsWith("score") ? scoreBg : "#000000", color: "#ffffff" };
                                         if (cfg.active === false) return null;
+                                        if (cfg.bindTo === "point-won-home" && !isHomePointWon) return null;
+                                        if (cfg.bindTo === "point-won-away" && !isAwayPointWon) return null;
                                         const absoluteStyle: React.CSSProperties = {
                                             position: "absolute",
                                             left: "50%",
@@ -810,6 +858,9 @@ function BroadcastOverlayContent() {
                                         }
                                         // 10. Custom Shapes, Text & Data Bound Blocks
                                         if (blockId.startsWith("shape-") || cfg.shapeType) {
+                                            if (cfg.bindTo === "point-won-home" && !isHomePointWon) return null;
+                                            if (cfg.bindTo === "point-won-away" && !isAwayPointWon) return null;
+
                                             const isCircle = cfg.shapeType === "circle";
                                             const isPolygon = cfg.shapeType === "polygon";
                                             const isStar = cfg.shapeType === "star";
@@ -818,8 +869,12 @@ function BroadcastOverlayContent() {
                                                     switch (cfg.bindTo) {
                                                         case "name-home": return teamNameMode === "abbr" ? getInitials(match.home_team?.name || '') : match.home_team?.name || 'HOME';
                                                         case "name-away": return teamNameMode === "abbr" ? getInitials(match.away_team?.name || '') : match.away_team?.name || 'AWAY';
-                                                        case "score-home": return String(homeScore);
-                                                        case "score-away": return String(awayScore);
+                                                        case "score-home": return vballEvents.length > 0 ? String(homeVolleyballPoints) : String(homeScore);
+                                                        case "score-away": return vballEvents.length > 0 ? String(awayVolleyballPoints) : String(awayScore);
+                                                        case "set-home": return String(homeSetsWon);
+                                                        case "set-away": return String(awaySetsWon);
+                                                        case "point-won-home": return isHomePointWon ? (cfg.text || "🏐") : "";
+                                                        case "point-won-away": return isAwayPointWon ? (cfg.text || "🏐") : "";
                                                         case "header-text": return displayHeaderText || 'LEAGUEFLOW';
                                                         case "timer": return timeString;
                                                         case "add-time": return addedTime ? `+${addedTime}` : '+0';
@@ -880,6 +935,44 @@ function BroadcastOverlayContent() {
                                                     ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
                                                     : undefined;
 
+                                            const isScoreBarBinding = cfg.bindTo === "score-bar-home" || cfg.bindTo === "score-bar-away";
+                                            const renderScoreBar = (isHomeBar: boolean) => {
+                                                const vballCurrentSetEvents = vballEvents.filter((e: MatchEvent) => {
+                                                    const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
+                                                    return setNum === vballCurrentSetNumber;
+                                                });
+
+                                                const sortedCurrentSetEvents = [...vballCurrentSetEvents].sort(
+                                                    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                                                );
+
+                                                const slotCount = Math.max(5, sortedCurrentSetEvents.length);
+                                                const slots = [];
+
+                                                for (let i = 0; i < slotCount; i++) {
+                                                    const evt = sortedCurrentSetEvents[i];
+                                                    if (!evt) {
+                                                        slots.push({ active: false, empty: true });
+                                                    } else {
+                                                        const isHomeEvt = evt.team_id ? isHomeTeam(evt.team_id) : (evt.extra_info as { team_side?: string } | null)?.team_side === 'home';
+                                                        const isActive = isHomeBar ? isHomeEvt : !isHomeEvt;
+                                                        slots.push({ active: isActive, empty: false });
+                                                    }
+                                                }
+
+                                                return (
+                                                    <div className="w-full h-full flex items-center justify-between gap-0.5 px-1 overflow-hidden">
+                                                        {slots.map((s, idx) => (
+                                                            <div key={idx} className="flex-1 h-full min-w-0 flex items-center justify-center text-xs">
+                                                                <span className={cn("transition-all flex items-center justify-center", s.active ? "text-amber-400 scale-110 drop-shadow" : "text-white/30")}>
+                                                                    {s.active ? "🏐" : "○"}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            };
+
                                             const strokePos = cfg.strokePos || "inside";
                                             const strokeWidth = cfg.strokeWidth ?? 0;
                                             const strokeInset = strokeWidth > 0
@@ -926,6 +1019,8 @@ function BroadcastOverlayContent() {
                                                         <div className="relative w-full h-full">
                                                             <Image src={logoUrl} alt="" fill className="object-cover" unoptimized />
                                                         </div>
+                                                    ) : isScoreBarBinding ? (
+                                                        renderScoreBar(cfg.bindTo === "score-bar-home")
                                                     ) : (
                                                         <div className="px-1 overflow-hidden flex items-center justify-center">
                                                             {getBoundText()}

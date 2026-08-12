@@ -64,6 +64,7 @@ interface EditorSidebarProps {
     handleCopy: (url: string, type: "scoreboard" | "blank") => void;
     saveTemplate?: (showToast?: boolean) => void;
     saving?: boolean;
+    sport?: string;
 }
 
 export function EditorSidebar({
@@ -113,6 +114,7 @@ export function EditorSidebar({
     handleCopy,
     saveTemplate: _saveTemplate,
     saving: _saving,
+    sport = "football",
 }: EditorSidebarProps) {
     const [activeTab, setActiveTab] = useState<"editor" | "config">("editor");
 
@@ -627,59 +629,59 @@ export function EditorSidebar({
                                                 />
                                             </div>
                                             {/* Font Weight Selector (Thin to Black) */}
-                                             <div className="flex items-center justify-between gap-2">
-                                                 <Label className="shrink-0">{locale === 'th' ? "ความหนาตัวหนังสือ" : "Font Weight"}</Label>
-                                                 <Select
-                                                     value={String(selectedBlock.fontWeight || "400")}
-                                                     onValueChange={(val) => updateBlockProperty(selectedBlockId, { fontWeight: val })}
-                                                 >
-                                                     <SelectTrigger className="w-24 h-8 text-xs">
-                                                         <SelectValue />
-                                                     </SelectTrigger>
-                                                     <SelectContent className="bg-card">
-                                                         <SelectItem value="100" className="font-thin">Thin</SelectItem>
-                                                         <SelectItem value="200" className="font-extralight">Extra Light</SelectItem>
-                                                         <SelectItem value="300" className="font-light">Light</SelectItem>
-                                                         <SelectItem value="400" className="font-normal">Normal</SelectItem>
-                                                         <SelectItem value="500" className="font-medium">Medium</SelectItem>
-                                                         <SelectItem value="600" className="font-semibold">Semi Bold</SelectItem>
-                                                         <SelectItem value="700" className="font-bold">Bold</SelectItem>
-                                                         <SelectItem value="800" className="font-extrabold">Extra Bold</SelectItem>
-                                                         <SelectItem value="900" className="font-black">Black</SelectItem>
-                                                     </SelectContent>
-                                                 </Select>
-                                             </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <Label className="shrink-0">{locale === 'th' ? "ความหนาตัวหนังสือ" : "Font Weight"}</Label>
+                                                <Select
+                                                    value={String(selectedBlock.fontWeight || "400")}
+                                                    onValueChange={(val) => updateBlockProperty(selectedBlockId, { fontWeight: val })}
+                                                >
+                                                    <SelectTrigger className="w-24 h-8 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-card">
+                                                        <SelectItem value="100" className="font-thin">Thin</SelectItem>
+                                                        <SelectItem value="200" className="font-extralight">Extra Light</SelectItem>
+                                                        <SelectItem value="300" className="font-light">Light</SelectItem>
+                                                        <SelectItem value="400" className="font-normal">Normal</SelectItem>
+                                                        <SelectItem value="500" className="font-medium">Medium</SelectItem>
+                                                        <SelectItem value="600" className="font-semibold">Semi Bold</SelectItem>
+                                                        <SelectItem value="700" className="font-bold">Bold</SelectItem>
+                                                        <SelectItem value="800" className="font-extrabold">Extra Bold</SelectItem>
+                                                        <SelectItem value="900" className="font-black">Black</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
 
-                                             {/* Font Style & Formatting (Italic & Underline) */}
-                                             <div className="flex items-center justify-between gap-2">
-                                                 <Label className="shrink-0">{locale === 'th' ? "รูปแบบตัวอักษร" : "Style"}</Label>
-                                                 <div className="flex items-center gap-1">
-                                                     <Button
-                                                         type="button"
-                                                         variant={selectedBlock.fontStyle === "italic" ? "default" : "ghost"}
-                                                         size="icon"
-                                                         onClick={() => updateBlockProperty(selectedBlockId, {
-                                                             fontStyle: selectedBlock.fontStyle === "italic" ? "normal" : "italic"
-                                                         })}
-                                                         title={locale === 'th' ? "ตัวเอียง (Italic)" : "Italic"}
-                                                         className="h-8 w-8"
-                                                     >
-                                                         <Italic className="h-4 w-4" />
-                                                     </Button>
-                                                     <Button
-                                                         type="button"
-                                                         variant={selectedBlock.textDecoration === "underline" ? "default" : "ghost"}
-                                                         size="icon"
-                                                         onClick={() => updateBlockProperty(selectedBlockId, {
-                                                             textDecoration: selectedBlock.textDecoration === "underline" ? "none" : "underline"
-                                                         })}
-                                                         title={locale === 'th' ? "ขีดเส้นใต้ (Underline)" : "Underline"}
-                                                         className="h-8 w-8"
-                                                     >
-                                                         <Underline className="h-4 w-4" />
-                                                     </Button>
-                                                 </div>
-                                             </div>
+                                            {/* Font Style & Formatting (Italic & Underline) */}
+                                            <div className="flex items-center justify-between gap-2">
+                                                <Label className="shrink-0">{locale === 'th' ? "รูปแบบตัวอักษร" : "Style"}</Label>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        type="button"
+                                                        variant={selectedBlock.fontStyle === "italic" ? "default" : "ghost"}
+                                                        size="icon"
+                                                        onClick={() => updateBlockProperty(selectedBlockId, {
+                                                            fontStyle: selectedBlock.fontStyle === "italic" ? "normal" : "italic"
+                                                        })}
+                                                        title={locale === 'th' ? "ตัวเอียง (Italic)" : "Italic"}
+                                                        className="h-8 w-8"
+                                                    >
+                                                        <Italic className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant={selectedBlock.textDecoration === "underline" ? "default" : "ghost"}
+                                                        size="icon"
+                                                        onClick={() => updateBlockProperty(selectedBlockId, {
+                                                            textDecoration: selectedBlock.textDecoration === "underline" ? "none" : "underline"
+                                                        })}
+                                                        title={locale === 'th' ? "ขีดเส้นใต้ (Underline)" : "Underline"}
+                                                        className="h-8 w-8"
+                                                    >
+                                                        <Underline className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
 
                                             {/* Font Color Selector */}
                                             <div className="flex items-center justify-between gap-2">
@@ -748,8 +750,8 @@ export function EditorSidebar({
                             </Select>
                         </div>
 
-                        {/* Match Data Link Binding (Shown only when polygon or text block is selected) */}
-                        {selectedBlock && (selectedBlock.shapeType === "polygon" || selectedBlock.shapeType === "text" || !selectedBlock.shapeType) && (
+                        {/* Match Data Link Binding (Shown for all selectable blocks) */}
+                        {selectedBlock && (
                             <div className="space-y-2 border-t pt-4">
                                 <div className="flex items-center gap-1.5">
                                     <Header level={5}>{locale === 'th' ? "การเชื่อมโยงข้อมูลแมตช์ (Data Link)" : "Match Data Link"}</Header>
@@ -780,11 +782,29 @@ export function EditorSidebar({
                                                             <SelectItem value="logo-home">{locale === 'th' ? "🛡️ โลโก้ทีมเหย้า" : "Home Logo"}</SelectItem>
                                                             <SelectItem value="logo-away">{locale === 'th' ? "🛡️ โลโก้ทีมเยือน" : "Away Logo"}</SelectItem>
                                                             <SelectItem value="logo-tournament">{locale === 'th' ? "🛡️ โลโก้รายการแข่งขัน" : "Tournament Logo"}</SelectItem>
+                                                            {sport === 'volleyball' && (
+                                                                <>
+                                                                    <SelectItem value="point-won-home">{locale === 'th' ? "🏐 ตัวแสดงเสิร์ฟ/ได้แต้ม (ทีมเหย้า)" : "Home Point Won / Serve"}</SelectItem>
+                                                                    <SelectItem value="point-won-away">{locale === 'th' ? "🏐 ตัวแสดงเสิร์ฟ/ได้แต้ม (ทีมเยือน)" : "Away Point Won / Serve"}</SelectItem>
+                                                                    <SelectItem value="score-bar-home">{locale === 'th' ? "🏐 แถบประวัติแต้ม/Score Bar (ทีมเหย้า)" : "Home Score Bar"}</SelectItem>
+                                                                    <SelectItem value="score-bar-away">{locale === 'th' ? "🏐 แถบประวัติแต้ม/Score Bar (ทีมเยือน)" : "Away Score Bar"}</SelectItem>
+                                                                </>
+                                                            )}
+                                                        </>
+                                                    ) : sport === 'volleyball' ? (
+                                                        <>
+                                                            <SelectItem value="name-home">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเหย้า" : "Home Team Name"}</SelectItem>
+                                                            <SelectItem value="name-away">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเยือน" : "Away Team Name"}</SelectItem>
+                                                            <SelectItem value="score-home">{locale === 'th' ? "🔢 คะแนนแต้มทีมเหย้า" : "Home Points Score"}</SelectItem>
+                                                            <SelectItem value="score-away">{locale === 'th' ? "🔢 คะแนนแต้มทีมเยือน" : "Away Points Score"}</SelectItem>
+                                                            <SelectItem value="set-home">{locale === 'th' ? "🏐 จำนวนเซตที่ชนะทีมเหย้า" : "Home Sets Won"}</SelectItem>
+                                                            <SelectItem value="set-away">{locale === 'th' ? "🏐 จำนวนเซตที่ชนะทีมเยือน" : "Away Sets Won"}</SelectItem>
+                                                            <SelectItem value="header-text">{locale === 'th' ? "🏆 ชื่อรายการแข่งขัน" : "Tournament Name"}</SelectItem>
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <SelectItem value="name-home">{locale === 'th' ? "⚽ ชื่อ/ตัวย่อทีมเหย้า" : "Home Team Name"}</SelectItem>
-                                                            <SelectItem value="name-away">{locale === 'th' ? "⚽ ชื่อ/ตัวย่อทีมเยือน" : "Away Team Name"}</SelectItem>
+                                                            <SelectItem value="name-home">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเหย้า" : "Home Team Name"}</SelectItem>
+                                                            <SelectItem value="name-away">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเยือน" : "Away Team Name"}</SelectItem>
                                                             <SelectItem value="score-home">{locale === 'th' ? "🔢 สกอร์ทีมเหย้า" : "Home Score"}</SelectItem>
                                                             <SelectItem value="score-away">{locale === 'th' ? "🔢 สกอร์ทีมเยือน" : "Away Score"}</SelectItem>
                                                             <SelectItem value="header-text">{locale === 'th' ? "🏆 ชื่อรายการแข่งขัน" : "Tournament Name"}</SelectItem>
@@ -828,8 +848,6 @@ export function EditorSidebar({
                                 </button>
                             </div>
                         </div>
-
-
 
                         {/* OBS Overlay Links */}
                         <div className="space-y-2 border-t pt-3">

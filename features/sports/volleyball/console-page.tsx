@@ -22,7 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import { updateMatch } from "@/actions/tournaments/general";
 import { getPlayers } from "@/actions/tournaments/player";
 import { useMatchEvents } from "@/hooks/use-match-events";
-import { BroadcastDialog } from "../football/console/broadcast-dialog";
+import { BroadcastDialog } from "@/features/broadcast";
 import { WalkoverDialog } from "../football/console/walkover-dialog";
 import { RosterSelectionDialog } from "../football/console/roster-selection-dialog";
 import { VolleyballMatchStatisticsBox } from "./console/statistics-box";
@@ -948,7 +948,7 @@ export function VolleyballConsolePage({
                 awayActiveIds={awayLineup}
                 onSave={handleSaveLineup}
             />
-            <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
+            <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} sport="volleyball" />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
             <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
                 <DialogContent showCloseButton={false} className="sm:max-w-[500px] bg-card p-0 rounded-sm shadow-2xl border-none">

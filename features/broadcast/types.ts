@@ -4,6 +4,12 @@ export type DataBindType =
     | "name-away"
     | "score-home"
     | "score-away"
+    | "set-home"
+    | "set-away"
+    | "point-won-home"
+    | "point-won-away"
+    | "score-bar-home"
+    | "score-bar-away"
     | "header-text"
     | "timer"
     | "add-time"
@@ -185,7 +191,7 @@ export const getSnappedCoords = (
         const yTargets = [
             { snappedY: other.y, guideY: other.y }, // Center
             { snappedY: other.y - sizeB.h / 2 + sizeA.h / 2, guideY: other.y - sizeB.h / 2 }, // Top edge / corner
-            { snappedY: other.y + sizeB.h / 2 - sizeA.h / 2, guideY: other.y + sizeB.h / 2 }, // Bottom edge / corner
+            { snappedY: other.y + sizeB.h / 2 - sizeA.h / 2, guideY: other.y - sizeB.h / 2 }, // Bottom edge / corner
             { snappedY: other.y - sizeB.h / 2 - sizeA.h / 2 - gap, guideY: other.y - sizeB.h / 2 }, // Dock Top
             { snappedY: other.y + sizeB.h / 2 + sizeA.h / 2 + gap, guideY: other.y + sizeB.h / 2 }, // Dock Bottom
         ];

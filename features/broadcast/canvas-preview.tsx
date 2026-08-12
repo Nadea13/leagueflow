@@ -185,6 +185,12 @@ export function CanvasPreview({
                 case "name-away": return locale === 'th' ? "ทีมเยือน" : "AWAY";
                 case "score-home": return "0";
                 case "score-away": return "0";
+                case "set-home": return "0";
+                case "set-away": return "0";
+                case "point-won-home": return "🏐";
+                case "point-won-away": return "🏐";
+                case "score-bar-home": return "🏐 ○ 🏐 🏐 ○";
+                case "score-bar-away": return "○ 🏐 ○ ○ 🏐";
                 case "header-text": return headerText || "LEAGUEFLOW";
                 case "timer": return "00:00";
                 case "add-time": return "+0";
