@@ -169,6 +169,8 @@ describe('createTournament Action', () => {
             sport_id: 'sport-123',
             name: 'Test Tournament',
             description: 'A fun tournament',
+            location_name: null,
+            google_map_url: null,
             start_date: '2026-07-10',
             end_date: '2026-07-20',
             document_deadline: '2026-07-08',
