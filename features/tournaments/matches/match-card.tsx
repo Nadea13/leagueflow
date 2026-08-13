@@ -16,6 +16,7 @@ import { Link } from "@/i18n/routing";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { createClient } from "@/lib/supabase/client";
+import { MatchScoreBox } from "./score-boxes";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -33,7 +34,7 @@ const getScore = (score: number | { total?: number } | null | undefined): number
     return score;
 };
 
-export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [], canvasData = null }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; canvasData?: BracketCanvasData | null }) {
+export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [], canvasData = null, sport: propSport }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; canvasData?: BracketCanvasData | null; sport?: string }) {
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
@@ -99,6 +100,14 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const status = match.status?.toLowerCase() || 'scheduled';
     const isLive = status === 'live';
     const isFinished = status === 'finished';
+
+    const storeSport = useBracketStore((state) => state.sport);
+    const resolvedSport = propSport ||
+        (match as unknown as { sport?: string })?.sport ||
+        (match as unknown as { tournaments?: { sport?: string } })?.tournaments?.sport ||
+        teams[0]?.sport ||
+        storeSport ||
+        "football";
 
     // Format Date Helper
     // Use global formatDate helper
@@ -267,89 +276,22 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                         </div>
                     </div>
 
-                    {/* Score Box */}
-                    <div className="flex items-center justify-center shrink-0">
-                        <div className={cn(
-                            "flex flex-col items-center justify-center transition-all duration-300",
-                            isLive ? " text-primary-foreground scale-110" :
-                                isFinished ? " text-foreground" : " text-muted-foreground/40"
-                        )}>
-                            {isLive || isFinished ? (
-                                <div className="flex flex-col w-[5rem] items-center leading-none">
-                                    <div className="flex items-center gap-1 md:gap-3">
-                                        <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
-                                            {getScore(match.home_score)}
-                                        </span>
-                                        <span className="text-muted-foreground font-black">-</span>
-                                        <span className="text-xl md:text-3xl font-black text-foreground tracking-tighter">
-                                            {getScore(match.away_score)}
-                                        </span>
-                                    </div>
-                                    {/* Volleyball Set Scores History */}
-                                    {events && events.length > 0 && (() => {
-                                        const pointTypes = ['point', 'ace', 'spike', 'block'];
-                                        const setPointsMap = new Map<number, { home: number; away: number }>();
-                                        events.forEach(e => {
-                                            if (!pointTypes.includes(e.event_type)) return;
-                                            const extraSet = (e.extra_info as Record<string, unknown> | null)?.set;
-                                            const setNum = typeof extraSet === 'number' ? extraSet : (e.minute || 1);
-                                            const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
-                                            
-                                            const extra = e.extra_info as Record<string, unknown> | null;
-                                            const isHome = extra?.team_side === 'home' || 
-                                                (e.team_id && (e.team_id === match.home_team_id || e.team_id === match.home_team?.id)) ||
-                                                ((extra?.text as string) || "").includes("Point for home");
-
-                                            if (isHome) current.home += 1;
-                                            else current.away += 1;
-                                            setPointsMap.set(setNum, current);
-                                        });
-
-                                        const setNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
-                                        if (setNumbers.length === 0) return null;
-
-                                        return (
-                                            <div className="flex items-center gap-1 flex-wrap justify-center">
-                                                {setNumbers.map(s => {
-                                                    const pts = setPointsMap.get(s)!;
-                                                    return (
-                                                        <span key={s} className="text-[10px] text-muted-foreground">
-                                                            {pts.home}-{pts.away}
-                                                        </span>
-                                                    );
-                                                })}
-                                            </div>
-                                        );
-                                    })()}
-                                    {((match.penalty_home_score ?? 0) > 0 || (match.penalty_away_score ?? 0) > 0) && (
-                                        <span className="text-[10px] font-black tracking-tighter">
-                                            ({match.penalty_home_score ?? 0}-{match.penalty_away_score ?? 0} PK)
-                                        </span>
-                                    )}
-                                    {isLiveStatus && (
-                                        <span className="text-[10px] font-black text-primary tabular-nums">
-                                            {formatSeconds(liveTime)}
-                                        </span>
-                                    )}
-                                </div>
-                            ) : isEditMode ? (
-                                <div className="flex flex-col items-center justify-center transition-transform duration-300">
-                                    <Input
-                                        type="time"
-                                        value={formatTime(matchTime) || ""}
-                                        className="bg-card text-foreground"
-                                        onChange={(e) => handleTimeUpdate(e.target.value)}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center min-w-[5rem] transition-transform duration-300">
-                                    <span className="text-lg md:text-xl font-black text-foreground tracking-tighter leading-none hover:text-primary transition-colors">
-                                        {formatTime(match.match_time) || "--:--"}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    {/* Score Box Component (Divided by Sport: Football / Volleyball) */}
+                    <MatchScoreBox
+                        match={match}
+                        sport={resolvedSport}
+                        events={events}
+                        isLive={isLive}
+                        isFinished={isFinished}
+                        isEditMode={isEditMode}
+                        isLiveStatus={isLiveStatus}
+                        liveTime={liveTime}
+                        matchTime={matchTime}
+                        formatTime={formatTime}
+                        formatSeconds={formatSeconds}
+                        handleTimeUpdate={handleTimeUpdate}
+                        getScore={getScore}
+                    />
 
                     {/* Away Team */}
                     <div className="flex-1 flex items-center justify-start gap-3 md:gap-6 text-left w-[40%]">

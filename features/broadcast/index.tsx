@@ -3,18 +3,23 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { X, Shield, ArrowRight, Settings, Plus, Minus, RotateCcw, LayoutGrid, Play, Pause, Copy, ExternalLink, ChevronRight, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { updateBroadcastSettings } from "@/actions/tournaments/general";
 
 import { CanvasBlock, CanvasSettings, BlankCanvas, DEFAULT_BLOCKS } from "./types";
 import { CanvasPreview } from "./canvas-preview";
 import { EditorSidebar } from "./editor-sidebar";
 import { LayerSidebar } from "./layer-sidebar";
+import { Header } from "@/components/ui/header";
+import { LogoUploader } from "@/components/shared/logo-uploader";
 
-interface BroadcastDialogProps {
+export interface BroadcastDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     matchId: string;
@@ -22,13 +27,47 @@ interface BroadcastDialogProps {
     sport?: string;
 }
 
-export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, sport = "football" }: BroadcastDialogProps) {
-    const t = useTranslations("Console");
+export interface BroadcastEditorProps {
+    matchId?: string;
+    tournamentId?: string;
+    sport?: string;
+    active?: boolean;
+    standalone?: boolean;
+}
+
+const SPORTS_OPTIONS = [
+    { id: "football", name: "ฟุตบอล (Football)", icon: "⚽" },
+    { id: "volleyball", name: "วอลเลย์บอล (Volleyball)", icon: "🏐" },
+];
+
+export function BroadcastEditor({ matchId, tournamentId, sport = "football", active = true, standalone = !tournamentId }: BroadcastEditorProps) {
     const locale = useLocale();
     const { toast } = useToast();
     const [copiedScoreboard, setCopiedScoreboard] = useState(false);
     const [copiedBlank, setCopiedBlank] = useState(false);
     const [delay, setDelay] = useState<number>(0);
+
+    // Step state: "setup" (Form for sport, teams, logos), "editor" (Canvas grid), "console" (Live Score Keeper)
+    const [step, setStep] = useState<"setup" | "editor" | "console">(standalone ? "setup" : "editor");
+
+    // Match & Team Details
+    const [selectedSport, setSelectedSport] = useState<string>(sport || "football");
+    const [nameHome, setNameHome] = useState<string>("TEAM ALPHA");
+    const [nameAway, setNameAway] = useState<string>("TEAM BETA");
+    const [logoHome, setLogoHome] = useState<string>("");
+    const [logoAway, setLogoAway] = useState<string>("");
+    const [logoTournament, setLogoTournament] = useState<string>("");
+
+    // Live Score Keeping States
+    const [scoreHome, setScoreHome] = useState<string>("0");
+    const [scoreAway, setScoreAway] = useState<string>("0");
+    const [timerText, setTimerText] = useState<string>("00:00");
+    const [timerIsRunning, setTimerIsRunning] = useState<boolean>(false);
+    const [addTimeText, setAddTimeText] = useState<string>("+0");
+    const [homeScorer, setHomeScorer] = useState<string>("");
+    const [awayScorer, setAwayScorer] = useState<string>("");
+    const [homeScorerInput, setHomeScorerInput] = useState<string>("");
+    const [awayScorerInput, setAwayScorerInput] = useState<string>("");
 
     // Configuration states
     const [layout, setLayout] = useState<"top-bar" | "minimal-left" | "minimal-right">("top-bar");
@@ -54,8 +93,8 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
     const [awayBarColor, setAwayBarColor] = useState<string>("#3b82f6");
 
     // Canvas Block Editor States
-    const [blocks, setBlocks] = useState<CanvasBlock[]>(DEFAULT_BLOCKS);
-    const [selectedBlockId, setSelectedBlockId] = useState<string>("score-home");
+    const [blocks, setBlocks] = useState<CanvasBlock[]>([]);
+    const [selectedBlockId, setSelectedBlockId] = useState<string>("");
     const [orientation, setOrientation] = useState<"horizontal" | "vertical">("horizontal");
     const [blockGap, setBlockGap] = useState<number>(0);
     const [blockBg, setBlockBg] = useState<"spaced" | "docked">("spaced");
@@ -119,133 +158,240 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
     const isInitialLoadedRef = useRef(false);
     const supabase = createClient();
 
-    // Load template on mount / open
+    // Timer Ticking Effect
     useEffect(() => {
-        if (!open) return;
+        if (!timerIsRunning) return;
+        const interval = setInterval(() => {
+            setTimerText((prev) => {
+                const parts = prev.split(":");
+                if (parts.length === 2) {
+                    const m = parseInt(parts[0]) || 0;
+                    const s = parseInt(parts[1]) || 0;
+                    const totalSeconds = m * 60 + s + 1;
+                    const nextM = Math.floor(totalSeconds / 60);
+                    const nextS = totalSeconds % 60;
+                    return `${String(nextM).padStart(2, "0")}:${String(nextS).padStart(2, "0")}`;
+                }
+                return "00:00";
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [timerIsRunning]);
+
+    const handleLogoUpload = (file: File, callback: (url: string) => void) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, 128, 128);
+                    const compressed = canvas.toDataURL("image/webp", 0.85);
+                    callback(compressed);
+                }
+            };
+            img.src = event.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // Load template on mount / active
+    useEffect(() => {
+        if (!active) return;
         const loadTemplate = async () => {
             try {
-                const { data, error } = await supabase
-                    .from("tournaments")
-                    .select("broadcast_settings")
-                    .eq("id", tournamentId)
-                    .single();
+                if (tournamentId) {
+                    const { data, error } = await supabase
+                        .from("tournaments")
+                        .select("broadcast_settings")
+                        .eq("id", tournamentId)
+                        .single();
 
-                if (!error && data?.broadcast_settings) {
-                    const settings = data.broadcast_settings as Partial<CanvasSettings> & {
-                        blankCanvases?: BlankCanvas[];
-                        blankDelay?: number;
-                        selectedCanvasId?: string;
-                        delay?: number;
-                    };
+                    if (!error && data?.broadcast_settings) {
+                        const settings = data.broadcast_settings as Partial<CanvasSettings> & {
+                            blankCanvases?: BlankCanvas[];
+                            blankDelay?: number;
+                            selectedCanvasId?: string;
+                            delay?: number;
+                            nameHome?: string;
+                            nameAway?: string;
+                            logoHome?: string;
+                            logoAway?: string;
+                            logoTournament?: string;
+                            selectedSport?: string;
+                            scoreHome?: string;
+                            scoreAway?: string;
+                            timerText?: string;
+                            addTimeText?: string;
+                            homeScorer?: string;
+                            awayScorer?: string;
+                        };
 
-                    const mergedMainBlocks = (settings.blocks && Array.isArray(settings.blocks))
-                        ? settings.blocks
-                        : DEFAULT_BLOCKS;
+                        const mergedMainBlocks = (settings.blocks && Array.isArray(settings.blocks))
+                            ? settings.blocks
+                            : DEFAULT_BLOCKS;
 
-                    mainCanvasSettingsRef.current = {
-                        bg: settings.bg || "transparent",
-                        posX: settings.posX || "center",
-                        posY: settings.posY || "top",
-                        alertDuration: settings.alertDuration || 6,
-                        font: settings.font || "inter",
-                        layout: settings.layout || "top-bar",
-                        size: settings.size || "medium",
-                        showTimeline: settings.showTimeline ?? false,
-                        scoreBg: settings.scoreBg || "#ef4444",
-                        teamNameMode: settings.teamNameMode || "abbr",
-                        showLogos: settings.showLogos ?? true,
-                        headerText: settings.headerText || "",
-                        homeBarDir: settings.homeBarDir || "none",
-                        homeBarColor: settings.homeBarColor || "#10b981",
-                        awayBarDir: settings.awayBarDir || "none",
-                        awayBarColor: settings.awayBarColor || "#3b82f6",
-                        blockGap: settings.blockGap ?? 8,
-                        blockBg: settings.blockBg || "spaced",
-                        rounded: settings.rounded || "md",
-                        blocks: mergedMainBlocks
-                    };
+                        mainCanvasSettingsRef.current = {
+                            bg: settings.bg || "transparent",
+                            posX: settings.posX || "center",
+                            posY: settings.posY || "top",
+                            alertDuration: settings.alertDuration || 6,
+                            font: settings.font || "inter",
+                            layout: settings.layout || "top-bar",
+                            size: settings.size || "medium",
+                            showTimeline: settings.showTimeline ?? false,
+                            scoreBg: settings.scoreBg || "#ef4444",
+                            teamNameMode: settings.teamNameMode || "abbr",
+                            showLogos: settings.showLogos ?? true,
+                            headerText: settings.headerText || "",
+                            homeBarDir: settings.homeBarDir || "none",
+                            homeBarColor: settings.homeBarColor || "#10b981",
+                            awayBarDir: settings.awayBarDir || "none",
+                            awayBarColor: settings.awayBarColor || "#3b82f6",
+                            blockGap: settings.blockGap ?? 8,
+                            blockBg: settings.blockBg || "spaced",
+                            rounded: settings.rounded || "md",
+                            blocks: mergedMainBlocks
+                        };
 
-                    if (settings.layout) setLayout(settings.layout);
-                    if (settings.bg) setBg(settings.bg);
-                    if (settings.size) setSize(settings.size);
-                    if (settings.showTimeline !== undefined) setShowTimeline(settings.showTimeline);
-                    if (settings.font) setFont(settings.font);
-                    if (settings.scoreBg) setScoreBg(settings.scoreBg);
-                    if (settings.teamNameMode) setTeamNameMode(settings.teamNameMode);
-                    if (settings.showLogos !== undefined) setShowLogos(settings.showLogos);
-                    if (settings.headerText !== undefined) setHeaderText(settings.headerText);
-                    if (settings.posX) setPosX(settings.posX);
-                    if (settings.posY) setPosY(settings.posY);
-                    if (settings.alertDuration) setAlertDuration(settings.alertDuration);
-                    if (settings.homeBarDir) setHomeBarDir(settings.homeBarDir);
-                    if (settings.homeBarColor) setHomeBarColor(settings.homeBarColor);
-                    if (settings.awayBarDir) setAwayBarDir(settings.awayBarDir);
-                    if (settings.awayBarColor) setAwayBarColor(settings.awayBarColor);
-                    setBlocks(mergedMainBlocks);
-                    if (settings.selectedBlockId) setSelectedBlockId(settings.selectedBlockId);
-                    if (settings.orientation) setOrientation(settings.orientation);
-                    if (settings.blockGap !== undefined) setBlockGap(settings.blockGap);
-                    if (settings.blockBg) setBlockBg(settings.blockBg);
-                    if (settings.rounded) setRounded(settings.rounded);
-                    if (settings.delay !== undefined) setDelay(settings.delay);
+                        if (settings.layout) setLayout(settings.layout);
+                        if (settings.bg) setBg(settings.bg);
+                        if (settings.size) setSize(settings.size);
+                        if (settings.showTimeline !== undefined) setShowTimeline(settings.showTimeline);
+                        if (settings.font) setFont(settings.font);
+                        if (settings.scoreBg) setScoreBg(settings.scoreBg);
+                        if (settings.teamNameMode) setTeamNameMode(settings.teamNameMode);
+                        if (settings.showLogos !== undefined) setShowLogos(settings.showLogos);
+                        if (settings.headerText !== undefined) setHeaderText(settings.headerText);
+                        if (settings.posX) setPosX(settings.posX);
+                        if (settings.posY) setPosY(settings.posY);
+                        if (settings.alertDuration) setAlertDuration(settings.alertDuration);
+                        if (settings.homeBarDir) setHomeBarDir(settings.homeBarDir);
+                        if (settings.homeBarColor) setHomeBarColor(settings.homeBarColor);
+                        if (settings.awayBarDir) setAwayBarDir(settings.awayBarDir);
+                        if (settings.awayBarColor) setAwayBarColor(settings.awayBarColor);
+                        if (settings.nameHome) setNameHome(settings.nameHome);
+                        if (settings.nameAway) setNameAway(settings.nameAway);
+                        if (settings.logoHome) setLogoHome(settings.logoHome);
+                        if (settings.logoAway) setLogoAway(settings.logoAway);
+                        if (settings.logoTournament) setLogoTournament(settings.logoTournament);
+                        if (settings.selectedSport) setSelectedSport(settings.selectedSport);
+                        if (settings.scoreHome) setScoreHome(settings.scoreHome);
+                        if (settings.scoreAway) setScoreAway(settings.scoreAway);
+                        if (settings.timerText) setTimerText(settings.timerText);
+                        if (settings.addTimeText) setAddTimeText(settings.addTimeText);
+                        if (settings.homeScorer) setHomeScorer(settings.homeScorer);
+                        if (settings.awayScorer) setAwayScorer(settings.awayScorer);
 
-                    if (settings.blankCanvases) {
-                        setBlankCanvases(settings.blankCanvases.map(c => ({
-                            id: c.id,
-                            name: c.name,
-                            delay: c.delay ?? 0,
-                            bg: c.bg ?? "transparent",
-                            posX: c.posX ?? "center",
-                            posY: c.posY ?? "top",
-                            alertDuration: c.alertDuration ?? 6,
-                            font: c.font ?? "inter",
-                            layout: c.layout ?? "top-bar",
-                            size: c.size ?? "medium",
-                            showTimeline: c.showTimeline ?? false,
-                            scoreBg: c.scoreBg ?? "#ef4444",
-                            teamNameMode: c.teamNameMode ?? "abbr",
-                            showLogos: c.showLogos ?? true,
-                            headerText: c.headerText ?? "",
-                            homeBarDir: c.homeBarDir ?? "none",
-                            homeBarColor: c.homeBarColor ?? "#10b981",
-                            awayBarDir: c.awayBarDir ?? "none",
-                            awayBarColor: c.awayBarColor ?? "#3b82f6",
-                            blockGap: c.blockGap ?? 8,
-                            blockBg: c.blockBg ?? "spaced",
-                            rounded: c.rounded ?? "md",
-                            blocks: (c.blocks && Array.isArray(c.blocks)) ? c.blocks : []
-                        })));
-                    }
+                        setBlocks(mergedMainBlocks);
+                        if (settings.selectedBlockId) setSelectedBlockId(settings.selectedBlockId);
+                        if (settings.orientation) setOrientation(settings.orientation);
+                        if (settings.blockGap !== undefined) setBlockGap(settings.blockGap);
+                        if (settings.blockBg) setBlockBg(settings.blockBg);
+                        if (settings.rounded) setRounded(settings.rounded);
+                        if (settings.delay !== undefined) setDelay(settings.delay);
 
-                    if (settings.selectedCanvasId) {
-                        const targetId = settings.selectedCanvasId;
-                        setSelectedCanvasId(targetId);
-                        if (targetId !== "scoreboard" && settings.blankCanvases) {
-                            const active = settings.blankCanvases.find(c => `blank-${c.id}` === targetId);
-                            if (active) {
-                                setBg(active.bg || "transparent");
-                                setPosX(active.posX || "center");
-                                setPosY(active.posY || "top");
-                                setAlertDuration(active.alertDuration || 6);
-                                setFont(active.font || "inter");
-                                setLayout(active.layout || "top-bar");
-                                setSize(active.size || "medium");
-                                setShowTimeline(active.showTimeline ?? false);
-                                setScoreBg(active.scoreBg || "#ef4444");
-                                setTeamNameMode(active.teamNameMode || "abbr");
-                                setShowLogos(active.showLogos ?? true);
-                                setHeaderText(active.headerText || "");
-                                setHomeBarDir(active.homeBarDir || "none");
-                                setHomeBarColor(active.homeBarColor || "#10b981");
-                                setAwayBarDir(active.awayBarDir || "none");
-                                setAwayBarColor(active.awayBarColor || "#3b82f6");
-                                setBlockGap(active.blockGap ?? 8);
-                                setBlockBg(active.blockBg || "spaced");
-                                setRounded(active.rounded || "md");
-                                if (active.blocks && active.blocks.length > 0) {
-                                    setBlocks(active.blocks);
+                        if (settings.blankCanvases) {
+                            setBlankCanvases(settings.blankCanvases.map(c => ({
+                                id: c.id,
+                                name: c.name,
+                                delay: c.delay ?? 0,
+                                bg: c.bg ?? "transparent",
+                                posX: c.posX ?? "center",
+                                posY: c.posY ?? "top",
+                                alertDuration: c.alertDuration ?? 6,
+                                font: c.font ?? "inter",
+                                layout: c.layout ?? "top-bar",
+                                size: c.size ?? "medium",
+                                showTimeline: c.showTimeline ?? false,
+                                scoreBg: c.scoreBg ?? "#ef4444",
+                                teamNameMode: c.teamNameMode ?? "abbr",
+                                showLogos: c.showLogos ?? true,
+                                headerText: c.headerText ?? "",
+                                homeBarDir: c.homeBarDir ?? "none",
+                                homeBarColor: c.homeBarColor ?? "#10b981",
+                                awayBarDir: c.awayBarDir ?? "none",
+                                awayBarColor: c.awayBarColor ?? "#3b82f6",
+                                blockGap: c.blockGap ?? 8,
+                                blockBg: c.blockBg ?? "spaced",
+                                rounded: c.rounded ?? "md",
+                                blocks: (c.blocks && Array.isArray(c.blocks)) ? c.blocks : []
+                            })));
+                        }
+
+                        if (settings.selectedCanvasId) {
+                            const targetId = settings.selectedCanvasId;
+                            setSelectedCanvasId(targetId);
+                            if (targetId !== "scoreboard" && settings.blankCanvases) {
+                                const activeCanvas = settings.blankCanvases.find(c => `blank-${c.id}` === targetId);
+                                if (activeCanvas) {
+                                    setBg(activeCanvas.bg || "transparent");
+                                    setPosX(activeCanvas.posX || "center");
+                                    setPosY(activeCanvas.posY || "top");
+                                    setAlertDuration(activeCanvas.alertDuration || 6);
+                                    setFont(activeCanvas.font || "inter");
+                                    setLayout(activeCanvas.layout || "top-bar");
+                                    setSize(activeCanvas.size || "medium");
+                                    setShowTimeline(activeCanvas.showTimeline ?? false);
+                                    setScoreBg(activeCanvas.scoreBg || "#ef4444");
+                                    setTeamNameMode(activeCanvas.teamNameMode || "abbr");
+                                    setShowLogos(activeCanvas.showLogos ?? true);
+                                    setHeaderText(activeCanvas.headerText || "");
+                                    setHomeBarDir(activeCanvas.homeBarDir || "none");
+                                    setHomeBarColor(activeCanvas.homeBarColor || "#10b981");
+                                    setAwayBarDir(activeCanvas.awayBarDir || "none");
+                                    setAwayBarColor(activeCanvas.awayBarColor || "#3b82f6");
+                                    setBlockGap(activeCanvas.blockGap ?? 8);
+                                    setBlockBg(activeCanvas.blockBg || "spaced");
+                                    setRounded(activeCanvas.rounded || "md");
+                                    if (activeCanvas.blocks && activeCanvas.blocks.length > 0) {
+                                        setBlocks(activeCanvas.blocks);
+                                    }
                                 }
                             }
+                        }
+                    }
+                } else {
+                    // Standalone mode: load from localStorage
+                    const saved = localStorage.getItem("overlay_playground_setup");
+                    if (saved) {
+                        try {
+                            const data = JSON.parse(saved);
+                            if (data.bg) setBg(data.bg);
+                            if (data.scoreBg) setScoreBg(data.scoreBg);
+                            if (data.blockGap !== undefined) setBlockGap(data.blockGap);
+                            if (data.headerText !== undefined) setHeaderText(data.headerText);
+                            if (data.nameHome) setNameHome(data.nameHome);
+                            if (data.nameAway) setNameAway(data.nameAway);
+                            if (data.logoHome) setLogoHome(data.logoHome);
+                            if (data.logoAway) setLogoAway(data.logoAway);
+                            if (data.logoTournament) setLogoTournament(data.logoTournament);
+                            if (data.selectedSport) setSelectedSport(data.selectedSport);
+                            if (data.homeBarDir) setHomeBarDir(data.homeBarDir);
+                            if (data.homeBarColor) setHomeBarColor(data.homeBarColor);
+                            if (data.awayBarDir) setAwayBarDir(data.awayBarDir);
+                            if (data.awayBarColor) setAwayBarColor(data.awayBarColor);
+                            if (data.blocks && Array.isArray(data.blocks)) setBlocks(data.blocks);
+                            if (data.font) setFont(data.font);
+                            if (data.posX) setPosX(data.posX);
+                            if (data.posY) setPosY(data.posY);
+                            if (data.blankCanvases) setBlankCanvases(data.blankCanvases);
+                            if (data.selectedCanvasId) setSelectedCanvasId(data.selectedCanvasId);
+                            if (data.orientation) setOrientation(data.orientation);
+                            if (data.rounded) setRounded(data.rounded);
+                            if (data.blockBg) setBlockBg(data.blockBg);
+                            if (data.delay !== undefined) setDelay(data.delay);
+                            if (data.scoreHome !== undefined) setScoreHome(data.scoreHome);
+                            if (data.scoreAway !== undefined) setScoreAway(data.scoreAway);
+                            if (data.timerText !== undefined) setTimerText(data.timerText);
+                            if (data.addTimeText !== undefined) setAddTimeText(data.addTimeText);
+                            if (data.homeScorer !== undefined) setHomeScorer(data.homeScorer);
+                            if (data.awayScorer !== undefined) setAwayScorer(data.awayScorer);
+                        } catch (e) {
+                            console.error("Failed to parse standalone broadcast setup", e);
                         }
                     }
                 }
@@ -259,7 +405,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
             }
         };
         loadTemplate();
-    }, [open, tournamentId, supabase]);
+    }, [active, tournamentId, supabase]);
 
     // Undo / Redo History Stacks
     const historyPastRef = useRef<CanvasBlock[][]>([]);
@@ -275,7 +421,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
 
     // Track blocks state changes into history stack
     useEffect(() => {
-        if (!isInitialLoadedRef.current || !open) return;
+        if (!isInitialLoadedRef.current || !active) return;
         if (isUndoRedoActionRef.current) {
             isUndoRedoActionRef.current = false;
             return;
@@ -289,11 +435,11 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
             }
             historyFutureRef.current = [];
         }
-    }, [blocks, open]);
+    }, [blocks, active]);
 
-    // Global keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A, Ctrl+D, Delete, Arrows, Undo/Redo)
+    // Global keyboard shortcuts
     useEffect(() => {
-        if (!open) return;
+        if (!active || step !== "editor") return;
 
         const handleGlobalKeyDown = (e: KeyboardEvent) => {
             const activeEl = document.activeElement;
@@ -317,7 +463,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
             const isZ = key === "z" || code === "KeyZ";
             const isY = key === "y" || code === "KeyY";
 
-            // Ctrl + Shift + Z or Ctrl + Y: Redo
+            // Redo
             if (isCtrl && ((isZ && e.shiftKey) || isY)) {
                 if (historyFutureRef.current.length > 0) {
                     e.preventDefault();
@@ -331,7 +477,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + Z: Undo
+            // Undo
             if (isCtrl && isZ && !e.shiftKey) {
                 if (historyPastRef.current.length > 1) {
                     e.preventDefault();
@@ -346,7 +492,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + C: Copy
+            // Copy
             if (isCtrl && isC) {
                 if (selectedIds.length > 0) {
                     const targets = currentBlocks.filter(b => selectedIds.includes(b.id) && b.active);
@@ -358,7 +504,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + V: Paste
+            // Paste
             if (isCtrl && isV) {
                 if (copiedBlocksRef.current.length > 0) {
                     e.preventDefault();
@@ -375,7 +521,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + X: Cut
+            // Cut
             if (isCtrl && isX) {
                 if (selectedIds.length > 0) {
                     const targets = currentBlocks.filter(b => selectedIds.includes(b.id) && b.active);
@@ -389,7 +535,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + A: Select All
+            // Select All
             if (isCtrl && isA) {
                 e.preventDefault();
                 const allActiveIds = currentBlocks.filter(b => b.active).map(b => b.id);
@@ -399,7 +545,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + D: Duplicate
+            // Duplicate
             if (isCtrl && isD) {
                 if (selectedIds.length > 0) {
                     const targets = currentBlocks.filter(b => selectedIds.includes(b.id) && b.active);
@@ -421,7 +567,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
 
             const isG = key === "g" || code === "KeyG";
 
-            // Ctrl + Shift + G: Ungroup selected blocks
+            // Ungroup
             if (isCtrl && isG && e.shiftKey) {
                 if (selectedIds.length > 0) {
                     e.preventDefault();
@@ -430,7 +576,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Ctrl + G: Group selected blocks
+            // Group
             if (isCtrl && isG && !e.shiftKey) {
                 if (selectedIds.length > 1) {
                     e.preventDefault();
@@ -440,7 +586,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Backspace / Delete: Delete selected blocks (removes from array)
+            // Delete
             if (e.key === "Backspace" || e.key === "Delete") {
                 if (selectedIds.length > 0) {
                     e.preventDefault();
@@ -450,17 +596,17 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 return;
             }
 
-            // Arrow keys: Move selected blocks
+            // Arrow keys
             if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
                 if (selectedIds.length > 0) {
                     e.preventDefault();
-                    const step = e.shiftKey ? 5 : 0.5;
+                    const stepVal = e.shiftKey ? 5 : 0.5;
                     let deltaX = 0;
                     let deltaY = 0;
-                    if (e.key === "ArrowLeft") deltaX = -step;
-                    if (e.key === "ArrowRight") deltaX = step;
-                    if (e.key === "ArrowUp") deltaY = -step;
-                    if (e.key === "ArrowDown") deltaY = step;
+                    if (e.key === "ArrowLeft") deltaX = -stepVal;
+                    if (e.key === "ArrowRight") deltaX = stepVal;
+                    if (e.key === "ArrowUp") deltaY = -stepVal;
+                    if (e.key === "ArrowDown") deltaY = stepVal;
 
                     setBlocks(prev => prev.map(b => {
                         if (selectedIds.includes(b.id) && b.active) {
@@ -479,17 +625,18 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
 
         window.addEventListener("keydown", handleGlobalKeyDown);
         return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-    }, [open]);
+    }, [active, step]);
 
-    // Listen for state changes to mark canvas dirty for auto-save
+    // Mark dirty
     useEffect(() => {
-        if (!isInitialLoadedRef.current || !open) return;
+        if (!isInitialLoadedRef.current || !active) return;
         setIsDirty(true);
     }, [
-        open, blocks, bg, posX, posY, alertDuration, font, layout, size, showTimeline,
-        scoreBg, teamNameMode, showLogos, headerText, homeBarDir, homeBarColor,
-        awayBarDir, awayBarColor, blockGap, blockBg, rounded, delay, blankCanvases,
-        selectedCanvasId, orientation, selectedBlockId
+        active, blocks, bg, posX, posY, alertDuration, font, layout, size, showTimeline,
+        scoreBg, teamNameMode, showLogos, headerText, nameHome, nameAway, logoHome, logoAway,
+        logoTournament, selectedSport, homeBarDir, homeBarColor, awayBarDir, awayBarColor,
+        blockGap, blockBg, rounded, delay, blankCanvases, selectedCanvasId, orientation, selectedBlockId,
+        scoreHome, scoreAway, addTimeText, homeScorer, awayScorer
     ]);
 
     const saveTemplate = useCallback(async (showToast: boolean = false) => {
@@ -518,30 +665,50 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
 
             const currentBlankDelay = finalBlanks.find(c => `blank-${c.id}` === selectedCanvasId)?.delay ?? 0;
 
-            const res = await updateBroadcastSettings(tournamentId, {
-                ...finalMain,
-                selectedBlockId,
-                orientation,
-                delay,
-                blankDelay: currentBlankDelay,
-                blankCanvases: finalBlanks,
-                selectedCanvasId,
-            });
+            if (tournamentId) {
+                const res = await updateBroadcastSettings(tournamentId, {
+                    ...finalMain,
+                    selectedBlockId,
+                    orientation,
+                    delay,
+                    blankDelay: currentBlankDelay,
+                    blankCanvases: finalBlanks,
+                    selectedCanvasId,
+                });
 
-            if (res.success) {
+                if (res.success) {
+                    setIsDirty(false);
+                    if (showToast) {
+                        toast({
+                            title: locale === 'th' ? "บันทึกเรียบร้อย!" : "Settings Saved!",
+                            description: locale === 'th' ? "การตั้งค่าทั้งหมดถูกบันทึกสำเร็จ" : "Broadcast settings have been saved successfully.",
+                        });
+                    }
+                } else if (showToast) {
+                    toast({
+                        variant: "destructive",
+                        title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error saving",
+                        description: res.error,
+                    });
+                }
+            } else {
+                // Standalone mode: save to localStorage
+                const standaloneData = {
+                    bg, posX, posY, alertDuration, font, layout, size, showTimeline,
+                    scoreBg, teamNameMode, showLogos, headerText, nameHome, nameAway,
+                    logoHome, logoAway, logoTournament, selectedSport, homeBarDir, homeBarColor,
+                    awayBarDir, awayBarColor, blockGap, blockBg, rounded, blocks,
+                    selectedBlockId, orientation, delay, blankCanvases, selectedCanvasId,
+                    scoreHome, scoreAway, timerText, addTimeText, homeScorer, awayScorer
+                };
+                localStorage.setItem("overlay_playground_setup", JSON.stringify(standaloneData));
                 setIsDirty(false);
                 if (showToast) {
                     toast({
                         title: locale === 'th' ? "บันทึกเรียบร้อย!" : "Settings Saved!",
-                        description: locale === 'th' ? "การตั้งค่าทั้งหมดถูกบันทึกสำเร็จ" : "Broadcast settings have been saved successfully.",
+                        description: locale === 'th' ? "บันทึกการตั้งค่าลงเบราว์เซอร์สำเร็จ" : "Settings saved to local storage.",
                     });
                 }
-            } else if (showToast) {
-                toast({
-                    variant: "destructive",
-                    title: locale === 'th' ? "เกิดข้อผิดพลาด" : "Error saving",
-                    description: res.error,
-                });
             }
         } catch (err: unknown) {
             if (showToast) {
@@ -554,22 +721,48 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
         } finally {
             setSaving(false);
         }
-    }, [tournamentId, selectedCanvasId, bg, posX, posY, alertDuration, font, layout, size, showTimeline, scoreBg, teamNameMode, showLogos, headerText, homeBarDir, homeBarColor, awayBarDir, awayBarColor, blockGap, blockBg, rounded, blocks, blankCanvases, selectedBlockId, orientation, delay, locale, toast]);
+    }, [tournamentId, selectedCanvasId, bg, posX, posY, alertDuration, font, layout, size, showTimeline, scoreBg, teamNameMode, showLogos, headerText, nameHome, nameAway, logoHome, logoAway, logoTournament, selectedSport, homeBarDir, homeBarColor, awayBarDir, awayBarColor, blockGap, blockBg, rounded, blocks, blankCanvases, selectedBlockId, orientation, delay, scoreHome, scoreAway, timerText, addTimeText, homeScorer, awayScorer, locale, toast]);
 
-    // Auto-save effect: save seamlessly in background like builder/canvas.tsx
+    // Auto-save effect
     useEffect(() => {
-        if (!isDirty || saving || !open) return;
+        if (!isDirty || saving || !active) return;
 
         const timer = setTimeout(() => {
             saveTemplate(false);
         }, 800);
 
         return () => clearTimeout(timer);
-    }, [isDirty, saving, open, saveTemplate]);
+    }, [isDirty, saving, active, saveTemplate]);
 
-    // Save immediately on focusout
+    // Real-time broadcast sync effect for OBS renderer
     useEffect(() => {
-        if (!open) return;
+        try {
+            const saved = localStorage.getItem("overlay_playground_setup");
+            const existing = saved ? JSON.parse(saved) : {};
+            const updated = {
+                ...existing,
+                timerText,
+                timerIsRunning,
+                scoreHome,
+                scoreAway,
+                nameHome,
+                nameAway,
+                headerText,
+                logoHome,
+                logoAway,
+                logoTournament,
+                addTimeText,
+                homeScorer,
+                awayScorer,
+                blocks
+            };
+            localStorage.setItem("overlay_playground_setup", JSON.stringify(updated));
+        } catch (_e) { }
+    }, [timerText, timerIsRunning, scoreHome, scoreAway, nameHome, nameAway, headerText, logoHome, logoAway, logoTournament, addTimeText, homeScorer, awayScorer, blocks]);
+
+    // Save on focusout
+    useEffect(() => {
+        if (!active) return;
 
         const handleFocusOut = (e: FocusEvent) => {
             const target = e.target as HTMLElement | null;
@@ -582,7 +775,7 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
 
         window.addEventListener('focusout', handleFocusOut);
         return () => window.removeEventListener('focusout', handleFocusOut);
-    }, [open, isDirty, saving, saveTemplate]);
+    }, [active, isDirty, saving, saveTemplate]);
 
     const toggleBlock = (index: number) => {
         const updated = [...blocks];
@@ -733,10 +926,37 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                 case "add-time": return "ทดเวลาบาดเจ็บ";
                 case "timeline-home": return "ไทม์ไลน์ผู้ทำประตู (ทีมเหย้า)";
                 case "timeline-away": return "ไทม์ไลน์ผู้ทำประตู (ทีมเยือน)";
-                default: return name;
+                default:
+                    if (name === "Rectangle" || name === "สี่เหลี่ยม") return "สี่เหลี่ยม";
+                    if (name === "Circle" || name === "วงกลม") return "วงกลม";
+                    if (name === "Triangle" || name === "สามเหลี่ยม") return "สามเหลี่ยม";
+                    if (name === "Star" || name === "ดาว") return "ดาว";
+                    if (name === "Text" || name === "ข้อความ") return "ข้อความ";
+                    return name;
+            }
+        } else {
+            switch (id) {
+                case "header-text": return "Tournament Name";
+                case "logo-tournament": return "Tournament Logo";
+                case "logo-home": return "Home Logo";
+                case "name-home": return "Home Team Name";
+                case "score-home": return "Home Score Box";
+                case "score-away": return "Away Score Box";
+                case "name-away": return "Away Team Name";
+                case "logo-away": return "Away Logo";
+                case "timer": return "Match Clock / Timer";
+                case "add-time": return "Added Time";
+                case "timeline-home": return "Home Scorers Timeline";
+                case "timeline-away": return "Away Scorers Timeline";
+                default:
+                    if (name === "Rectangle" || name === "สี่เหลี่ยม") return "Rectangle";
+                    if (name === "Circle" || name === "วงกลม") return "Circle";
+                    if (name === "Triangle" || name === "สามเหลี่ยม") return "Triangle";
+                    if (name === "Star" || name === "ดาว") return "Star";
+                    if (name === "Text" || name === "ข้อความ") return "Text";
+                    return name;
             }
         }
-        return name;
     };
 
     const handleCanvasSwitch = (targetId: string) => {
@@ -838,28 +1058,28 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
             setRounded(s.rounded);
             setBlocks(s.blocks || DEFAULT_BLOCKS);
         } else {
-            const active = blankCanvases.find(c => `blank-${c.id}` === targetId);
-            if (active) {
-                setBg(active.bg || "transparent");
-                setPosX(active.posX || "center");
-                setPosY(active.posY || "top");
-                setAlertDuration(active.alertDuration || 6);
-                setFont(active.font || "inter");
-                setLayout(active.layout || "top-bar");
-                setSize(active.size || "medium");
-                setShowTimeline(active.showTimeline ?? false);
-                setScoreBg(active.scoreBg || "#ef4444");
-                setTeamNameMode(active.teamNameMode || "abbr");
-                setShowLogos(active.showLogos ?? true);
-                setHeaderText(active.headerText || "");
-                setHomeBarDir(active.homeBarDir || "none");
-                setHomeBarColor(active.homeBarColor || "#10b981");
-                setAwayBarDir(active.awayBarDir || "none");
-                setAwayBarColor(active.awayBarColor || "#3b82f6");
-                setBlockGap(active.blockGap ?? 8);
-                setBlockBg(active.blockBg || "spaced");
-                setRounded(active.rounded || "md");
-                setBlocks(active.blocks || []);
+            const activeCanvas = blankCanvases.find(c => `blank-${c.id}` === targetId);
+            if (activeCanvas) {
+                setBg(activeCanvas.bg || "transparent");
+                setPosX(activeCanvas.posX || "center");
+                setPosY(activeCanvas.posY || "top");
+                setAlertDuration(activeCanvas.alertDuration || 6);
+                setFont(activeCanvas.font || "inter");
+                setLayout(activeCanvas.layout || "top-bar");
+                setSize(activeCanvas.size || "medium");
+                setShowTimeline(activeCanvas.showTimeline ?? false);
+                setScoreBg(activeCanvas.scoreBg || "#ef4444");
+                setTeamNameMode(activeCanvas.teamNameMode || "abbr");
+                setShowLogos(activeCanvas.showLogos ?? true);
+                setHeaderText(activeCanvas.headerText || "");
+                setHomeBarDir(activeCanvas.homeBarDir || "none");
+                setHomeBarColor(activeCanvas.homeBarColor || "#10b981");
+                setAwayBarDir(activeCanvas.awayBarDir || "none");
+                setAwayBarColor(activeCanvas.awayBarColor || "#3b82f6");
+                setBlockGap(activeCanvas.blockGap ?? 8);
+                setBlockBg(activeCanvas.blockBg || "spaced");
+                setRounded(activeCanvas.rounded || "md");
+                setBlocks(activeCanvas.blocks || []);
             }
         }
     };
@@ -927,12 +1147,12 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
     });
 
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const scoreboardUrl = `${origin}/${locale}/tournaments/${tournamentId}/matches/${matchId}/overlay?${scoreboardParams.toString()}`;
+
+    let scoreboardUrl = "";
+    let blankUrl = "";
 
     const activeBlankCanvas = blankCanvases.find(c => `blank-${c.id}` === selectedCanvasId) || blankCanvases[0];
     const activeBlankDelay = activeBlankCanvas?.delay ?? 0;
-
-    const _hasActiveBlocks = blocks.some(b => b.active);
 
     const blankParamsObj: Record<string, string> = {
         bg,
@@ -962,7 +1182,21 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
     blankParamsObj.awayBarColor = awayBarColor;
 
     const blankParams = new URLSearchParams(blankParamsObj);
-    const blankUrl = `${origin}/${locale}/tournaments/${tournamentId}/matches/${matchId}/overlay?${blankParams.toString()}`;
+
+    if (tournamentId && matchId) {
+        scoreboardUrl = `${origin}/${locale}/tournaments/${tournamentId}/matches/${matchId}/overlay?${scoreboardParams.toString()}`;
+        blankUrl = `${origin}/${locale}/tournaments/${tournamentId}/matches/${matchId}/overlay?${blankParams.toString()}`;
+    } else {
+        const standaloneConfig = {
+            blocks, scoreBg, headerText, nameHome, nameAway,
+            homeBarDir, homeBarColor, awayBarDir, awayBarColor,
+            font, posX, posY, bg, blockGap, selectedBlockId, orientation, delay, rounded, sport: selectedSport,
+            scoreHome, scoreAway, timerText, timerIsRunning, addTimeText, homeScorer, awayScorer
+        };
+        const configJson = encodeURIComponent(JSON.stringify(standaloneConfig));
+        scoreboardUrl = `${origin}/${locale}/overlay/render?config=${configJson}&${scoreboardParams.toString()}`;
+        blankUrl = `${origin}/${locale}/overlay/render?config=${configJson}&${blankParams.toString()}`;
+    }
 
     const handleCopy = (url: string, type: "scoreboard" | "blank") => {
         navigator.clipboard.writeText(url);
@@ -985,12 +1219,12 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
             case "logo-tournament": return "Tour. Logo";
             case "logo-home": return "Home logo";
             case "logo-away": return "Away logo";
-            case "name-home": return "Home name";
-            case "name-away": return "Away name";
-            case "score-home": return "0";
-            case "score-away": return "0";
-            case "timer": return "00:00";
-            case "add-time": return "+0";
+            case "name-home": return nameHome || "Home name";
+            case "name-away": return nameAway || "Away name";
+            case "score-home": return scoreHome || "0";
+            case "score-away": return scoreAway || "0";
+            case "timer": return timerText || "00:00";
+            case "add-time": return addTimeText || "+0";
             case "timeline-home": return "Home Goals";
             case "timeline-away": return "Away Goals";
             case "substitution": return "Sub: In ⇄ Out";
@@ -998,12 +1232,871 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
         }
     };
 
+    // Goal Scorer Handlers for Football / Futsal
+    const addHomeGoal = () => {
+        const current = parseInt(scoreHome) || 0;
+        setScoreHome(String(current + 1));
+        if (homeScorerInput.trim()) {
+            setHomeScorer(prev => prev ? `${prev}, ${homeScorerInput.trim()}` : homeScorerInput.trim());
+            setHomeScorerInput("");
+        }
+    };
+
+    const addAwayGoal = () => {
+        const current = parseInt(scoreAway) || 0;
+        setScoreAway(String(current + 1));
+        if (awayScorerInput.trim()) {
+            setAwayScorer(prev => prev ? `${prev}, ${awayScorerInput.trim()}` : awayScorerInput.trim());
+            setAwayScorerInput("");
+        }
+    };
+
+    const renderStandaloneNavbar = () => {
+        if (!standalone) return null;
+
+        return (
+            <header className="w-full h-14 border-b backdrop-blur supports-[backdrop-filter]:bg-background/60 bg-background/80 px-4 flex items-center justify-between shrink-0 sticky top-0 z-50 print:hidden">
+                {/* Left: Previous / Home Button & Title */}
+                <div className="flex items-center gap-1 lg:gap-2">
+                    {step === "setup" ? (
+                        <Button variant="ghost" asChild className="w-8 lg:w-10">
+                            <Link href="/">
+                                <ArrowLeft className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => {
+                                if (step === "editor") setStep("setup");
+                                if (step === "console") setStep("editor");
+                            }}
+                            className="w-8 lg:w-10"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                        <span className="font-black text-sm lg:text-base tracking-tight hidden lg:inline-block">
+                            LeagueFlow Broadcast
+                        </span>
+                    </div>
+                </div>
+
+                {/* Center: Step Progress Navigation Badges */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setStep("setup")}
+                        className={`flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-sm text-xs font-bold transition-all ${step === "setup"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-muted/80"
+                            }`}
+                    >
+                        <span className="w-5 h-5 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">1</span>
+                        <span className="hidden sm:inline">{locale === 'th' ? "ตั้งค่าทีม" : "Setup"}</span>
+                    </button>
+
+                    <span className="text-muted-foreground text-xs font-bold"><ChevronRight className="h-4 w-4 sm:h-4 sm:w-4" /></span>
+
+                    <button
+                        type="button"
+                        onClick={() => setStep("editor")}
+                        className={`flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-sm text-xs font-bold transition-all ${step === "editor"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-muted/80"
+                            }`}
+                    >
+                        <span className="w-5 h-5 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">2</span>
+                        <span className="hidden sm:inline">{locale === 'th' ? "ออกแบบ" : "Design"}</span>
+                    </button>
+
+                    <span className="text-muted-foreground text-xs font-bold"><ChevronRight className="h-4 w-4 sm:h-4 sm:w-4" /></span>
+
+                    <button
+                        type="button"
+                        onClick={() => setStep("console")}
+                        className={`flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-sm text-xs font-bold transition-all ${step === "console"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-muted/80"
+                            }`}
+                    >
+                        <span className="w-5 h-5 rounded-full bg-background/20 flex items-center justify-center text-xs font-black">3</span>
+                        <span className="hidden sm:inline">{locale === 'th' ? "จดคะแนนสด" : "Live Score"}</span>
+                    </button>
+                </div>
+
+                {/* Right: Next / Open OBS Action Button */}
+                <div className="flex items-center gap-2">
+                    {step === "setup" && (
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                saveTemplate(false);
+                                setStep("editor");
+                            }}
+                        >
+                            <span className="hidden sm:inline">{locale === 'th' ? "ถัดไป" : "Next"}</span>
+                            <ArrowRight className="h-4 w-4" />
+                        </Button>
+                    )}
+
+                    {step === "editor" && (
+                        <Button
+                            type="button"
+                            onClick={() => {
+                                saveTemplate(false);
+                                setStep("console");
+                            }}
+                        >
+                            <span className="hidden sm:inline">{locale === 'th' ? "ถัดไป" : "Next"}</span>
+                            <ArrowRight className="h-4 w-4" />
+                        </Button>
+                    )}
+
+                    {step === "console" && (
+                        <Button
+                            asChild
+                            variant="outline"
+                            className="text-primary hover:bg-primary/10"
+                        >
+                            <a href={scoreboardUrl} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-4 w-4" />
+                                <span className="hidden sm:inline">{locale === 'th' ? "เปิดดู OBS" : "Open OBS"}</span>
+                            </a>
+                        </Button>
+                    )}
+                </div>
+            </header>
+        );
+    };
+
+    // Step 1: Initial Setup Form Wizard
+    if (standalone && step === "setup") {
+        return (
+            <div className="flex flex-col h-full w-full min-h-0 overflow-hidden">
+                {renderStandaloneNavbar()}
+                <div className="flex-1 flex flex-col p-2 lg:p-4 overflow-hidden min-h-0">
+                    <div className="w-full h-full bg-card border rounded-sm shadow-sm flex flex-col min-h-0 overflow-hidden">
+                        {/* Setup Title Header */}
+                        <div className="p-4 border-b shrink-0 flex flex-col gap-1">
+                            <Header level={2}>
+                                {locale === 'th' ? "ตั้งค่าข้อมูลแมตช์ & ทีม" : "Broadcast & Match Setup"}
+                            </Header>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {locale === 'th' ? "กรอกชื่อทีม อัปโหลดโลโก้ และเลือกประเภทกีฬาก่อนเข้าสู่กระดานออกแบบป้ายคะแนน" : "Enter team names, upload logos, and select a sport before entering the broadcast editor."}
+                            </p>
+                        </div>
+
+                        {/* Scrollable Form Body */}
+                        <div className="flex-1 p-2 lg:p-4 overflow-y-auto min-h-0">
+                            <div className="max-w-6xl mx-auto space-y-2 lg:space-y-4">
+
+                                {/* Section 1: Sport Selection */}
+                                <div className="space-y-1 lg:space-y-2 border rounded-sm p-2 lg:p-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-black">1</span>
+                                        <Header level={5} >
+                                            {locale === 'th' ? "เลือกประเภทกีฬา" : "Select Sport"}
+                                        </Header>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-1 lg:gap-2 max-w-sm">
+                                        {SPORTS_OPTIONS.map((item) => (
+                                            <button
+                                                key={item.id}
+                                                type="button"
+                                                onClick={() => setSelectedSport(item.id)}
+                                                className={`flex items-center justify-center p-4 rounded-sm border text-xs font-bold transition-all gap-2.5 ${selectedSport === item.id
+                                                    ? "border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30"
+                                                    : "border-border hover:bg-muted/60 text-foreground bg-card"
+                                                    }`}
+                                            >
+                                                <span className="text-xl">{item.icon}</span>
+                                                <span className="truncate font-black">{item.name.split(" ")[0]}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section 2: Tournament Info */}
+                                <div className="space-y-1 lg:space-y-2 border rounded-sm p-2 lg:p-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-black">2</span>
+                                        <Header level={5}>
+                                            {locale === 'th' ? "ข้อมูลรายการแข่งขัน" : "Tournament Info"}
+                                        </Header>
+                                    </div>
+
+                                    <div className="grid lg:grid-cols-12 gap-1 lg:gap-2 items-start">
+                                        <div className="lg:col-span-8 space-y-1">
+                                            <Label>{locale === 'th' ? "ชื่อรายการแข่งขัน / ข้อความส่วนหัว" : "Tournament Name / Header Text"}</Label>
+                                            <Input
+                                                value={headerText}
+                                                onChange={(e) => setHeaderText(e.target.value)}
+                                                placeholder="e.g. LEAGUEFLOW CHAMPIONSHIP 2026"
+                                                className="h-10 text-xs font-bold"
+                                            />
+                                            <p className="text-[11px] text-muted-foreground">
+                                                {locale === 'th' ? "ข้อความนี้จะแสดงบนแถบ Tournament Banner หรือส่วนหัวของป้ายคะแนน" : "Displayed on tournament banners and header blocks."}
+                                            </p>
+                                        </div>
+
+                                        <div className="lg:col-span-4 space-y-1">
+                                            <Label>{locale === 'th' ? "โลโก้รายการแข่งขัน" : "Tournament Logo"}</Label>
+                                            <LogoUploader
+                                                id="logo-tournament"
+                                                initialUrl={logoTournament || null}
+                                                onFileChange={(file) => {
+                                                    if (file) handleLogoUpload(file, setLogoTournament);
+                                                    else setLogoTournament("");
+                                                }}
+                                                onRemove={() => setLogoTournament("")}
+                                                uploadLabel={locale === 'th' ? "อัปโหลดโลโก้รายการ" : "Upload Tournament Logo"}
+                                                clickToUploadLabel={locale === 'th' ? "คลิกอัปโหลด" : "Click to upload"}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Section 3: Home & Away Teams */}
+                                <div className="space-y-1 lg:space-y-2 border rounded-sm p-2 lg:p-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-black">3</span>
+                                        <Header level={5}>
+                                            {locale === 'th' ? "รายละเอียดทีมเหย้า & ทีมเยือน" : "Home & Away Teams"}
+                                        </Header>
+                                    </div>
+
+                                    <div className="grid lg:grid-cols-2 gap-1 lg:gap-2">
+                                        {/* Home Team Card */}
+                                        <div className="border rounded-sm p-1 lg:p-2 space-y-1 lg:space-y-2">
+                                            <div className="flex items-center justify-between border-b pb-2">
+                                                <h3 className="font-black text-xs lg:text-sm text-primary flex items-center gap-2">
+                                                    <Shield className="h-4 w-4" />
+                                                    {locale === 'th' ? "ทีมเหย้า" : "Home Team"}
+                                                </h3>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{locale === 'th' ? "ชื่อทีมเหย้า / ชื่อย่อ" : "Team Name / Abbr"}</Label>
+                                                <Input
+                                                    value={nameHome}
+                                                    onChange={(e) => setNameHome(e.target.value)}
+                                                    placeholder="e.g. TEAM ALPHA"
+                                                    className="h-10 text-xs font-bold"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{locale === 'th' ? "โลโก้ทีมเหย้า" : "Home Team Logo"}</Label>
+                                                <LogoUploader
+                                                    id="logo-home"
+                                                    initialUrl={logoHome || null}
+                                                    onFileChange={(file) => {
+                                                        if (file) handleLogoUpload(file, setLogoHome);
+                                                        else setLogoHome("");
+                                                    }}
+                                                    onRemove={() => setLogoHome("")}
+                                                    uploadLabel={locale === 'th' ? "อัปโหลดโลโก้ทีมเหย้า" : "Upload Home Logo"}
+                                                    clickToUploadLabel={locale === 'th' ? "คลิกอัปโหลด" : "Click to upload"}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{locale === 'th' ? "สีประจำทีมเหย้า" : "Home Team Color"}</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="color"
+                                                        value={homeBarColor}
+                                                        onChange={(e) => setHomeBarColor(e.target.value)}
+                                                        className="w-10 h-10 cursor-pointer shrink-0 rounded-md border"
+                                                    />
+                                                    <Input
+                                                        type="text"
+                                                        value={homeBarColor}
+                                                        onChange={(e) => setHomeBarColor(e.target.value)}
+                                                        className="h-10 text-xs font-mono font-bold"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Away Team Card */}
+                                        <div className="border rounded-sm p-1 lg:p-2 space-y-1 lg:space-y-2">
+                                            <div className="flex items-center justify-between border-b pb-2.5">
+                                                <h3 className="font-black text-xs lg:text-sm text-destructive flex items-center gap-2">
+                                                    <Shield className="h-4 w-4" />
+                                                    {locale === 'th' ? "ทีมเยือน" : "Away Team"}
+                                                </h3>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{locale === 'th' ? "ชื่อทีมเยือน / ชื่อย่อ" : "Team Name / Abbr"}</Label>
+                                                <Input
+                                                    value={nameAway}
+                                                    onChange={(e) => setNameAway(e.target.value)}
+                                                    placeholder="e.g. TEAM BETA"
+                                                    className="h-10 text-xs font-bold"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{locale === 'th' ? "โลโก้ทีมเยือน" : "Away Team Logo"}</Label>
+                                                <LogoUploader
+                                                    id="logo-away"
+                                                    initialUrl={logoAway || null}
+                                                    onFileChange={(file) => {
+                                                        if (file) handleLogoUpload(file, setLogoAway);
+                                                        else setLogoAway("");
+                                                    }}
+                                                    onRemove={() => setLogoAway("")}
+                                                    uploadLabel={locale === 'th' ? "อัปโหลดโลโก้ทีมเยือน" : "Upload Away Logo"}
+                                                    clickToUploadLabel={locale === 'th' ? "คลิกอัปโหลด" : "Click to upload"}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <Label>{locale === 'th' ? "สีประจำทีมเยือน" : "Away Team Color"}</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="color"
+                                                        value={awayBarColor}
+                                                        onChange={(e) => setAwayBarColor(e.target.value)}
+                                                        className="w-10 h-10 cursor-pointer shrink-0 rounded-md border"
+                                                    />
+                                                    <Input
+                                                        type="text"
+                                                        value={awayBarColor}
+                                                        onChange={(e) => setAwayBarColor(e.target.value)}
+                                                        className="h-10 text-xs font-mono font-bold"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* Action Button Footer */}
+                        <div className="p-4 border-t shrink-0 flex items-center justify-end gap-3">
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    saveTemplate(false);
+                                    setStep("editor");
+                                }}
+                            >
+                                <span>{locale === 'th' ? "เข้าสู่กระดานปรับแต่ง Scoreboard" : "Enter Broadcast Editor"}</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Step 3: Live Score Keeping Console
+    if (standalone && step === "console") {
+        return (
+            <div className="flex flex-col h-full w-full min-h-0 bg-background overflow-hidden">
+                {renderStandaloneNavbar()}
+                <div className="flex-1 flex flex-col gap-4 p-2 lg:p-4 overflow-y-auto min-h-0">
+                    {/* Header Bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-card border rounded-sm p-3 shadow-sm shrink-0">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">{SPORTS_OPTIONS.find(s => s.id === selectedSport)?.icon}</span>
+                            <div>
+                                <div className="font-black text-sm lg:text-base flex items-center gap-2">
+                                    <span>{nameHome || "HOME"}</span>
+                                    <span className="text-primary font-black">
+                                        {scoreHome} - {scoreAway}
+                                    </span>
+                                    <span>{nameAway || "AWAY"}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground font-semibold">
+                                    {headerText || "LEAGUEFLOW MATCH"} • {selectedSport.toUpperCase()}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setStep("setup")}
+                            >
+                                <Settings className="h-4 w-4 text-primary" />
+                                <span>{locale === 'th' ? "ตั้งค่าทีม" : "Setup"}</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setStep("editor")}
+                            >
+                                <LayoutGrid className="h-4 w-4 text-primary" />
+                                <span>{locale === 'th' ? "แก้ไขดีไซน์" : "Design Editor"}</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => handleCopy(scoreboardUrl, "scoreboard")}
+                            >
+                                <Copy className="h-4 w-4" />
+                                <span>{copiedScoreboard ? (locale === 'th' ? "คัดลอกแล้ว!" : "Copied!") : (locale === 'th' ? "คัดลอกลิงก์ OBS" : "Copy OBS Link")}</span>
+                            </Button>
+                            <Button
+                                asChild
+                                variant="outline"
+                            >
+                                <a href={scoreboardUrl} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4" />
+                                    <span>{locale === 'th' ? "เปิดดู OBS" : "Open OBS"}</span>
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+                        {/* Left Column: Controls (Match Clock & Live Score Keeping) */}
+                        <div className="lg:col-span-7 space-y-4">
+                            {/* Match Timer Card (Dialog Style) */}
+                            <div className="bg-card border rounded-sm shadow-sm overflow-hidden flex flex-col">
+                                {/* Dialog Header Style */}
+                                <div className="p-2 lg:p-4 border-b flex items-center justify-between bg-card/80">
+                                    <Header level={5} className="font-black text-sm tracking-tight">
+                                        {locale === 'th' ? "นาฬิกาและเวลาแข่งขัน (Match Clock)" : "Match Clock"}
+                                    </Header>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${timerIsRunning ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 animate-pulse" : "bg-muted text-muted-foreground"}`}>
+                                        {timerIsRunning ? (locale === 'th' ? "● กำลังเดินเวลา" : "● RUNNING") : (locale === 'th' ? "หยุดเวลา" : "STOPPED")}
+                                    </span>
+                                </div>
+
+                                {/* Dialog Content Style */}
+                                <div className="p-4 flex items-center justify-between gap-4">
+                                    <div className="font-mono font-black text-4xl lg:text-5xl tracking-widest text-primary bg-muted/20 px-4 py-2 rounded-sm border">
+                                        {timerText}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Button
+                                            type="button"
+                                            size="lg"
+                                            onClick={() => setTimerIsRunning(!timerIsRunning)}
+                                            className={`${timerIsRunning ? "bg-warning hover:bg-warning/90" : "bg-primary hover:bg-primary/90"}`}
+                                        >
+                                            {timerIsRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                                            <span>{timerIsRunning ? (locale === 'th' ? "หยุดเวลา" : "Pause") : (locale === 'th' ? "เริ่มเดินเวลา" : "Start")}</span>
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            onClick={() => {
+                                                setTimerIsRunning(false);
+                                                setTimerText("00:00");
+                                            }}
+                                        >
+                                            <RotateCcw className="h-4 w-4" />
+                                            <span>Reset</span>
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Dialog Footer Style */}
+                                <div className="p-2 lg:p-4 border-t flex items-center gap-2 text-xs">
+                                    <Header level={5}>{locale === 'th' ? "เพิ่มนาฬิกาด่วน:" : "Quick Add:"}</Header>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            const [m, s] = timerText.split(":").map(n => parseInt(n) || 0);
+                                            setTimerText(`${String(m + 1).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+                                        }}
+                                        className="h-7 text-xs font-bold border"
+                                    >
+                                        +1 Min
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            const [m, s] = timerText.split(":").map(n => parseInt(n) || 0);
+                                            setTimerText(`${String(m + 5).padStart(2, "0")}:${String(s).padStart(2, "0")}`);
+                                        }}
+                                        className="h-7 text-xs font-bold border"
+                                    >
+                                        +5 Min
+                                    </Button>
+                                    <div className="ml-auto flex items-center gap-1.5">
+                                        <Header level={5}>{locale === 'th' ? "ทดเวลา:" : "Injury Time:"}</Header>
+                                        <Input
+                                            value={addTimeText}
+                                            onChange={(e) => setAddTimeText(e.target.value)}
+                                            className="w-16 h-7 text-xs font-bold text-center"
+                                            placeholder="+0"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Live Score Keeping Cards */}
+                            <div className="grid lg:grid-cols-2 gap-2 lg:gap-4">
+                                {/* Home Team Live Score Control */}
+                                <div className="bg-card border rounded-sm p-2 lg:p-4 space-y-1 lg:space-y-2 shadow-sm">
+                                    <div className="flex items-center justify-between border-b pb-2">
+                                        <div className="flex items-center gap-2">
+                                            {logoHome && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img src={logoHome} alt="" className="w-5 h-5 object-contain" />
+                                            )}
+                                            <span className="font-black text-sm text-primary truncate max-w-[140px]">
+                                                {nameHome || "HOME"}
+                                            </span>
+                                        </div>
+                                        <Header level={2} className="text-primary">
+                                            {scoreHome}
+                                        </Header>
+                                    </div>
+
+                                    {/* Main Score Buttons */}
+                                    <div className="flex items-center gap-1 lg:gap-2">
+                                        <Button
+                                            type="button"
+                                            size="lg"
+                                            onClick={addHomeGoal}
+                                            className="flex-1"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            <span>{locale === 'th' ? "+1 ได้ประตู / แต้ม" : "+1 Goal / Point"}</span>
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            onClick={() => {
+                                                const current = parseInt(scoreHome) || 0;
+                                                setScoreHome(String(Math.max(0, current - 1)));
+                                            }}
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Football Scorer Input (Optional) */}
+                                    {(selectedSport === "football" || selectedSport === "futsal") && (
+                                        <div className="space-y-1 pt-2 border-t">
+                                            <Label>
+                                                {locale === 'th' ? "ระบุชื่อคนทำประตู (Optional Scorer):" : "Goal Scorer (Optional):"}
+                                            </Label>
+                                            <div className="flex items-center gap-1.5">
+                                                <Input
+                                                    value={homeScorerInput}
+                                                    onChange={(e) => setHomeScorerInput(e.target.value)}
+                                                    placeholder="e.g. Somchai (12')"
+                                                    className="h-8 text-xs font-semibold"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    onClick={addHomeGoal}
+                                                    className="shrink-0 bg-primary/10 text-primary hover:bg-primary/30"
+                                                >
+                                                    + ยิงประตู
+                                                </Button>
+                                            </div>
+
+                                            {homeScorer && (
+                                                <div className="text-xs font-semibold text-muted-foreground p-1 lg:p-2 rounded-sm border flex items-center justify-between gap-1">
+                                                    <span className="truncate">👟 {homeScorer}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setHomeScorer("")}
+                                                        className="text-destructive hover:underline text-[10px] shrink-0 font-bold"
+                                                    >
+                                                        ล้าง
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Away Team Live Score Control */}
+                                <div className="bg-card border rounded-sm p-2 lg:p-4 space-y-1 lg:space-y-2 shadow-sm">
+                                    <div className="flex items-center justify-between border-b pb-2">
+                                        <div className="flex items-center gap-2">
+                                            {logoAway && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img src={logoAway} alt="" className="w-5 h-5 object-contain" />
+                                            )}
+                                            <span className="font-black text-sm text-destructive truncate max-w-[140px]">
+                                                {nameAway || "AWAY"}
+                                            </span>
+                                        </div>
+                                        <Header level={2} className="text-destructive">
+                                            {scoreAway}
+                                        </Header>
+                                    </div>
+
+                                    {/* Main Score Buttons */}
+                                    <div className="flex items-center gap-1 lg:gap-2">
+                                        <Button
+                                            type="button"
+                                            size="lg"
+                                            variant="destructive"
+                                            onClick={addAwayGoal}
+                                            className="flex-1"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            <span>{locale === 'th' ? "+1 ได้ประตู / แต้ม" : "+1 Goal / Point"}</span>
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            onClick={() => {
+                                                const current = parseInt(scoreAway) || 0;
+                                                setScoreAway(String(Math.max(0, current - 1)));
+                                            }}
+                                        >
+                                            <Minus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Football Scorer Input (Optional) */}
+                                    {(selectedSport === "football" || selectedSport === "futsal") && (
+                                        <div className="space-y-1 pt-2 border-t">
+                                            <Label>
+                                                {locale === 'th' ? "ระบุชื่อคนทำประตู (Optional Scorer):" : "Goal Scorer (Optional):"}
+                                            </Label>
+                                            <div className="flex items-center gap-1.5">
+                                                <Input
+                                                    value={awayScorerInput}
+                                                    onChange={(e) => setAwayScorerInput(e.target.value)}
+                                                    placeholder="e.g. John (45')"
+                                                    className="h-8 text-xs font-semibold"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    onClick={addAwayGoal}
+                                                    className="shrink-0 bg-destructive/10 text-destructive hover:bg-destructive/30"
+                                                >
+                                                    + ยิงประตู
+                                                </Button>
+                                            </div>
+
+                                            {awayScorer && (
+                                                <div className="text-xs font-semibold text-muted-foreground p-1 lg:p-2 rounded-sm border flex items-center justify-between gap-1">
+                                                    <span className="truncate">👟 {awayScorer}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setAwayScorer("")}
+                                                        className="text-destructive hover:underline text-[10px] shrink-0 font-bold"
+                                                    >
+                                                        ล้าง
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column: Live Mini Canvas Preview (Dialog Style & 2-Language) */}
+                        <div className="lg:col-span-5 flex flex-col min-h-0">
+                            <div className="bg-card border rounded-sm shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
+                                {/* Dialog Header Style */}
+                                <div className="p-2 lg:p-4 border-b flex items-center justify-between bg-card/80 shrink-0">
+                                    <Header level={5} className="font-black text-xs lg:text-sm tracking-tight">
+                                        {locale === 'th' ? "ตัวอย่างป้ายคะแนนสด (Live Canvas Preview)" : "Live Canvas Preview"}
+                                    </Header>
+                                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-sm border border-emerald-500/20">
+                                        {locale === 'th' ? "● ถ่ายทอดสด" : "● LIVE BROADCAST"}
+                                    </span>
+                                </div>
+
+                                {/* Dialog Content Body Style */}
+                                <div className="p-2 lg:p-4 flex-1 flex flex-col items-center justify-center min-h-[220px] bg-card/60 relative overflow-hidden">
+                                    <CanvasPreview
+                                        readOnly={true}
+                                        bg={bg}
+                                        blocks={blocks}
+                                        selectedBlockId={selectedBlockId}
+                                        setSelectedBlockId={setSelectedBlockId}
+                                        scoreBg={scoreBg}
+                                        font={font}
+                                        homeBarDir={homeBarDir}
+                                        homeBarColor={homeBarColor}
+                                        awayBarDir={awayBarDir}
+                                        awayBarColor={awayBarColor}
+                                        headerText={headerText}
+                                        nameHome={nameHome}
+                                        nameAway={nameAway}
+                                        logoHome={logoHome}
+                                        logoAway={logoAway}
+                                        logoTournament={logoTournament}
+                                        scoreHome={scoreHome}
+                                        scoreAway={scoreAway}
+                                        timerText={timerText}
+                                        addTimeText={addTimeText}
+                                        homeScorer={homeScorer}
+                                        awayScorer={awayScorer}
+                                        blockGap={blockGap}
+                                        locale={locale}
+                                        toggleBlock={toggleBlock}
+                                        getBlockName={getBlockName}
+                                        getShortPreviewLabel={getShortPreviewLabel}
+                                        onUpdateBlockPosition={updateCoordinates}
+                                    />
+                                </div>
+
+                                {/* Dialog Footer Style */}
+                                <div className="p-2 lg:p-4 border-t flex items-center justify-between text-xs text-muted-foreground shrink-0">
+                                    <span className="font-semibold text-[11px]">
+                                        {locale === 'th' ? "แสดงผลลัพธ์บนหน้าจอ OBS แบบเรียลไทม์" : "Real-time OBS output display"}
+                                    </span>
+                                    <span className="font-mono text-[10px] bg-muted px-2 py-0.5 rounded-sm border font-bold">
+                                        1920 x 1080 Full HD
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Step 2: Scoreboard Canvas Editor
+    return (
+        <div className="flex flex-col h-full w-full min-h-0 bg-background overflow-hidden">
+            {standalone && renderStandaloneNavbar()}
+            <div className="flex-1 flex flex-col gap-2 p-2 lg:p-4 overflow-hidden min-h-0">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 flex-1 min-h-0">
+                    {/* Left Column: Layer Sidebar */}
+                    <LayerSidebar
+                        blocks={blocks}
+                        setBlocks={setBlocks}
+                        selectedBlockId={selectedBlockId}
+                        setSelectedBlockId={setSelectedBlockId}
+                        toggleBlock={toggleBlock}
+                        getBlockName={getBlockName}
+                        locale={locale}
+                    />
+
+                    {/* Center Column: Canvas Preview */}
+                    <CanvasPreview
+                        bg={bg}
+                        blocks={blocks}
+                        setBlocks={setBlocks}
+                        selectedBlockId={selectedBlockId}
+                        setSelectedBlockId={setSelectedBlockId}
+                        scoreBg={scoreBg}
+                        font={font}
+                        homeBarDir={homeBarDir}
+                        homeBarColor={homeBarColor}
+                        awayBarDir={awayBarDir}
+                        awayBarColor={awayBarColor}
+                        headerText={headerText}
+                        nameHome={nameHome}
+                        nameAway={nameAway}
+                        logoHome={logoHome}
+                        logoAway={logoAway}
+                        logoTournament={logoTournament}
+                        scoreHome={scoreHome}
+                        scoreAway={scoreAway}
+                        timerText={timerText}
+                        addTimeText={addTimeText}
+                        homeScorer={homeScorer}
+                        awayScorer={awayScorer}
+                        blockGap={blockGap}
+                        locale={locale}
+                        toggleBlock={toggleBlock}
+                        getBlockName={getBlockName}
+                        getShortPreviewLabel={getShortPreviewLabel}
+                        onUpdateBlockPosition={updateCoordinates}
+                    />
+
+                    {/* Right Column: Editor Sidebar */}
+                    <EditorSidebar
+                        blocks={blocks}
+                        setBlocks={setBlocks}
+                        selectedBlockId={selectedBlockId}
+                        setSelectedBlockId={setSelectedBlockId}
+                        selectedBlock={selectedBlock}
+                        updateCoordinates={updateCoordinates}
+                        updateBlockProperty={updateBlockProperty}
+                        blockGap={blockGap}
+                        setBlockGap={setBlockGap}
+                        scoreBg={scoreBg}
+                        applyRadiiToAll={applyRadiiToAll}
+                        linkCorners={linkCorners}
+                        setLinkCorners={setLinkCorners}
+                        font={font}
+                        setFont={setFont}
+                        teamNameMode={teamNameMode}
+                        setTeamNameMode={setTeamNameMode}
+                        homeBarDir={homeBarDir}
+                        setHomeBarDir={setHomeBarDir}
+                        homeBarColor={homeBarColor}
+                        setHomeBarColor={setHomeBarColor}
+                        awayBarDir={awayBarDir}
+                        setAwayBarDir={setAwayBarDir}
+                        awayBarColor={awayBarColor}
+                        setAwayBarColor={setAwayBarColor}
+                        posX={posX}
+                        setPosX={setPosX}
+                        posY={posY}
+                        setPosY={setPosY}
+                        bg={bg}
+                        setBg={setBg}
+                        locale={locale}
+                        dict={dict}
+                        selectedCanvasId={selectedCanvasId}
+                        activeBlankCanvas={activeBlankCanvas}
+                        blankCanvases={blankCanvases}
+                        setBlankCanvases={setBlankCanvases}
+                        setSelectedCanvasId={setSelectedCanvasId}
+                        handleCanvasSwitch={handleCanvasSwitch}
+                        scoreboardUrl={scoreboardUrl}
+                        blankUrl={blankUrl}
+                        copiedScoreboard={copiedScoreboard}
+                        copiedBlank={copiedBlank}
+                        handleCopy={handleCopy}
+                        saveTemplate={saveTemplate}
+                        saving={saving}
+                        sport={selectedSport}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, sport = "football" }: BroadcastDialogProps) {
+    const t = useTranslations("Console");
+    const locale = useLocale();
+
+    const desc = locale === 'th'
+        ? "คลิกเลือกและวางบล็อกส่วนประกอบในตำแหน่งที่ต้องการบนตารางกริดจำลองได้อย่างอิสระ"
+        : "Select a block and place it anywhere on the virtual grid. Build complex stacked layouts freely.";
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent showCloseButton={false} className="bg-card rounded-sm border overflow-hidden min-w-[80vw] max-w-[96vw] h-[92vh] max-h-[96vh] flex flex-col p-0">
-                <DialogHeader className="relative pr-10 p-2 md:p-4 border-b shrink-0">
+                <DialogHeader className="relative pr-10 p-2 lg:p-4 border-b shrink-0">
                     <DialogTitle>{t("board_editor")}</DialogTitle>
-                    <DialogDescription>{dict.desc}</DialogDescription>
+                    <DialogDescription>{desc}</DialogDescription>
                     <Button
                         type="button"
                         variant="ghost"
@@ -1015,92 +2108,14 @@ export function BroadcastDialog({ open, onOpenChange, matchId, tournamentId, spo
                     </Button>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-hidden min-h-0 p-2 md:p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2 h-full min-h-0">
-                        {/* Left Column: Layer Sidebar */}
-                        <LayerSidebar
-                            blocks={blocks}
-                            setBlocks={setBlocks}
-                            selectedBlockId={selectedBlockId}
-                            setSelectedBlockId={setSelectedBlockId}
-                            toggleBlock={toggleBlock}
-                            getBlockName={getBlockName}
-                            locale={locale}
-                        />
-
-                        {/* Center Column: Canvas Preview */}
-                        <CanvasPreview
-                            bg={bg}
-                            blocks={blocks}
-                            setBlocks={setBlocks}
-                            selectedBlockId={selectedBlockId}
-                            setSelectedBlockId={setSelectedBlockId}
-                            scoreBg={scoreBg}
-                            font={font}
-                            homeBarDir={homeBarDir}
-                            homeBarColor={homeBarColor}
-                            awayBarDir={awayBarDir}
-                            awayBarColor={awayBarColor}
-                            headerText={headerText}
-                            blockGap={blockGap}
-                            locale={locale}
-                            toggleBlock={toggleBlock}
-                            getBlockName={getBlockName}
-                            getShortPreviewLabel={getShortPreviewLabel}
-                            onUpdateBlockPosition={updateCoordinates}
-                        />
-
-                        {/* Right Column: Editor Sidebar */}
-                        <EditorSidebar
-                            blocks={blocks}
-                            setBlocks={setBlocks}
-                            selectedBlockId={selectedBlockId}
-                            setSelectedBlockId={setSelectedBlockId}
-                            selectedBlock={selectedBlock}
-                            updateCoordinates={updateCoordinates}
-                            updateBlockProperty={updateBlockProperty}
-                            blockGap={blockGap}
-                            setBlockGap={setBlockGap}
-                            scoreBg={scoreBg}
-                            applyRadiiToAll={applyRadiiToAll}
-                            linkCorners={linkCorners}
-                            setLinkCorners={setLinkCorners}
-                            font={font}
-                            setFont={setFont}
-                            teamNameMode={teamNameMode}
-                            setTeamNameMode={setTeamNameMode}
-                            homeBarDir={homeBarDir}
-                            setHomeBarDir={setHomeBarDir}
-                            homeBarColor={homeBarColor}
-                            setHomeBarColor={setHomeBarColor}
-                            awayBarDir={awayBarDir}
-                            setAwayBarDir={setAwayBarDir}
-                            awayBarColor={awayBarColor}
-                            setAwayBarColor={setAwayBarColor}
-                            posX={posX}
-                            setPosX={setPosX}
-                            posY={posY}
-                            setPosY={setPosY}
-                            bg={bg}
-                            setBg={setBg}
-                            locale={locale}
-                            dict={dict}
-                            selectedCanvasId={selectedCanvasId}
-                            activeBlankCanvas={activeBlankCanvas}
-                            blankCanvases={blankCanvases}
-                            setBlankCanvases={setBlankCanvases}
-                            setSelectedCanvasId={setSelectedCanvasId}
-                            handleCanvasSwitch={handleCanvasSwitch}
-                            scoreboardUrl={scoreboardUrl}
-                            blankUrl={blankUrl}
-                            copiedScoreboard={copiedScoreboard}
-                            copiedBlank={copiedBlank}
-                            handleCopy={handleCopy}
-                            saveTemplate={saveTemplate}
-                            saving={saving}
-                            sport={sport}
-                        />
-                    </div>
+                <div className="flex-1 overflow-hidden min-h-0 p-2 lg:p-4">
+                    <BroadcastEditor
+                        matchId={matchId}
+                        tournamentId={tournamentId}
+                        sport={sport}
+                        active={open}
+                        standalone={false}
+                    />
                 </div>
             </DialogContent>
         </Dialog>

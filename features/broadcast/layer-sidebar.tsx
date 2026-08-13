@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { Label } from "@/components/ui/label";
 import {
-    Layers,
     Eye,
     EyeOff,
     GripVertical,
@@ -15,6 +13,7 @@ import {
     Ungroup,
 } from "lucide-react";
 import { CanvasBlock } from "./types";
+import { Header } from "@/components/ui/header";
 
 interface LayerSidebarProps {
     blocks: CanvasBlock[];
@@ -97,19 +96,16 @@ export function LayerSidebar({
     };
 
     return (
-        <div className="md:col-span-3 lg:col-span-2.5 flex flex-col gap-2 h-full max-h-[82vh] min-h-0 border rounded-sm p-2 md:p-3 bg-card/50">
+        <div className="md:col-span-3 lg:col-span-2.5 flex flex-col h-full max-h-[82vh] min-h-0 border rounded-sm bg-card">
             {/* Header with Layer Title */}
-            <div className="flex items-center justify-between border-b pb-2 shrink-0">
-                <div className="flex items-center gap-1.5">
-                    <Layers className="h-4 w-4 text-primary" />
-                    <Label className="text-xs font-black tracking-wider">
-                        {locale === 'th' ? "เลเยอร์ (Layers)" : "Layers"}
-                    </Label>
-                </div>
+            <div className="flex items-center justify-between border-b p-2 md:p-4 shrink-0">
+                <Header level={5}>
+                    {locale === 'th' ? "เลเยอร์" : "Layers"}
+                </Header>
             </div>
 
             {/* Layer Items Stack (Drag-and-Drop) */}
-            <div className="flex-1 overflow-y-auto space-y-1 pr-0.5 min-h-0">
+            <div className="flex-1 overflow-y-auto space-y-1 min-h-0 p-2 md:p-4">
                 {visibleBlocks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-32 text-muted-foreground text-xs font-medium text-center p-2">
                         <span>{locale === 'th' ? "ยังไม่มีเลเยอร์" : "No active layers"}</span>
@@ -163,13 +159,12 @@ export function LayerSidebar({
                                 return (
                                     <div
                                         key={`group-${unit.groupId}`}
-                                        className={`border rounded-sm p-1.5 space-y-1 transition-all ${
-                                            isGroupSelected
+                                        className={`border rounded-sm p-1 lg:p-2 space-y-1 transition-all ${isGroupSelected
                                                 ? "border-primary ring-1 ring-primary/30 bg-primary/5"
                                                 : isGroupPartiallySelected
                                                     ? "border-primary/50 bg-primary/5"
-                                                    : "border-border/60"
-                                        }`}
+                                                    : "border-border"
+                                            }`}
                                     >
                                         {/* Group Card Header */}
                                         <div
@@ -188,7 +183,7 @@ export function LayerSidebar({
                                                 type="button"
                                                 onClick={handleUngroup}
                                                 className="p-1 rounded-sm hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                                                title={locale === 'th' ? "ยกเลิกการรวมกลุ่ม (Ungroup)" : "Ungroup"}
+                                                title={locale === 'th' ? "ยกเลิกการรวมกลุ่ม" : "Ungroup"}
                                             >
                                                 <Ungroup className="h-4 w-4" />
                                             </button>

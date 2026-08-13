@@ -27,6 +27,9 @@ interface BlockItem {
   bindTo?: string;
   skewX?: number;
   skewY?: number;
+  fontWeight?: string;
+  fontStyle?: string;
+  textDecoration?: string;
 }
 
 interface OverlayConfig {
@@ -60,6 +63,7 @@ function CustomOverlayRenderer() {
 
   const searchParams = useSearchParams();
   const configString = searchParams.get("config");
+  const positionsString = searchParams.get("positions");
 
   // Load configuration safely from query params
   let config: OverlayConfig | null = null;
@@ -71,38 +75,130 @@ function CustomOverlayRenderer() {
     }
   }
 
+  const [localData, setLocalData] = useState<{
+    logoHome?: string;
+    logoAway?: string;
+    logoTournament?: string;
+    blocks?: BlockItem[];
+    timerText?: string;
+    timerIsRunning?: boolean;
+    scoreHome?: string;
+    scoreAway?: string;
+    nameHome?: string;
+    nameAway?: string;
+    headerText?: string;
+    addTimeText?: string;
+    homeScorer?: string;
+    awayScorer?: string;
+  }>({});
+
+  useEffect(() => {
+    const updateLocalData = () => {
+      try {
+        const saved = localStorage.getItem("overlay_playground_setup");
+        if (saved) {
+          const data = JSON.parse(saved);
+          setLocalData({
+            logoHome: data.logoHome,
+            logoAway: data.logoAway,
+            logoTournament: data.logoTournament,
+            blocks: data.blocks,
+            timerText: data.timerText,
+            timerIsRunning: data.timerIsRunning,
+            scoreHome: data.scoreHome,
+            scoreAway: data.scoreAway,
+            nameHome: data.nameHome,
+            nameAway: data.nameAway,
+            headerText: data.headerText,
+            addTimeText: data.addTimeText,
+            homeScorer: data.homeScorer,
+            awayScorer: data.awayScorer,
+          });
+        }
+      } catch (_e) {}
+    };
+    updateLocalData();
+    const interval = setInterval(updateLocalData, 200);
+    window.addEventListener("storage", updateLocalData);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", updateLocalData);
+    };
+  }, []);
+
+  // Parse blocks from positions string fallback if config blocks is empty
+  let parsedBlocksFromPositions: BlockItem[] = [];
+  if (positionsString) {
+    try {
+      parsedBlocksFromPositions = positionsString.split(";").map(part => {
+        const f = part.split(":");
+        return {
+          id: f[0] || "",
+          name: f[0] || "",
+          active: true,
+          x: parseFloat(f[1]) || 0,
+          y: parseFloat(f[2]) || 0,
+          w: parseFloat(f[3]) || 100,
+          h: parseFloat(f[4]) || 40,
+          fontSize: parseFloat(f[5]) || 16,
+          rTL: parseFloat(f[6]) || 0,
+          rTR: parseFloat(f[7]) || 0,
+          rBL: parseFloat(f[8]) || 0,
+          rBR: parseFloat(f[9]) || 0,
+          opacity: parseFloat(f[10]) ?? 100,
+          bg: f[11] ? decodeURIComponent(f[11]) : undefined,
+          color: f[12] ? `#${f[12]}` : "#ffffff",
+          shapeType: f[13] || "rectangle",
+          text: f[14] ? decodeURIComponent(f[14]) : undefined,
+          bindTo: f[15] || "none",
+          strokeWidth: parseFloat(f[16]) || 0,
+          strokeColor: f[17] ? `#${f[17]}` : "#ffffff",
+          strokePos: (f[18] as "inside" | "center" | "outside") || "inside",
+          skewX: parseFloat(f[19]) || 0,
+          skewY: parseFloat(f[20]) || 0,
+          fontWeight: f[21] || "400",
+          fontStyle: f[22] || "normal",
+          textDecoration: f[23] || "none",
+        };
+      }).filter(b => b.id);
+    } catch (_e) {}
+  }
+
   // Fallbacks if no config is parsed
-  const blocks: BlockItem[] = config?.blocks || [];
+  const blocks: BlockItem[] = (config?.blocks && config.blocks.length > 0)
+    ? config.blocks
+    : (parsedBlocksFromPositions.length > 0 ? parsedBlocksFromPositions : (localData.blocks || []));
   const scoreBg = config?.scoreBg || "#ef4444";
-  const headerText = config?.headerText || "LEAGUEFLOW LEAGUE";
-  const nameHome = config?.nameHome || "TEAM ALPHA";
-  const nameAway = config?.nameAway || "TEAM BETA";
-  const scoreHome = config?.scoreHome || "0";
-  const scoreAway = config?.scoreAway || "0";
-  const timerText = config?.timerText || "00:00";
-  const logoHome = config?.logoHome || "";
-  const logoAway = config?.logoAway || "";
-  const logoTournament = config?.logoTournament || "";
-  const addTimeText = config?.addTimeText || "+0";
+  const headerText = localData.headerText || config?.headerText || "LEAGUEFLOW LEAGUE";
+  const nameHome = localData.nameHome || config?.nameHome || "TEAM ALPHA";
+  const nameAway = localData.nameAway || config?.nameAway || "TEAM BETA";
+  const scoreHome = localData.scoreHome ?? config?.scoreHome ?? "0";
+  const scoreAway = localData.scoreAway ?? config?.scoreAway ?? "0";
+  const baseTimerText = localData.timerText || config?.timerText || "00:00";
+  const logoHome = config?.logoHome || localData.logoHome || "";
+  const logoAway = config?.logoAway || localData.logoAway || "";
+  const logoTournament = config?.logoTournament || localData.logoTournament || "";
+  const addTimeText = localData.addTimeText || config?.addTimeText || "+0";
   const homeBarDir = config?.homeBarDir || "none";
   const homeBarColor = config?.homeBarColor || "#3b82f6";
   const awayBarDir = config?.awayBarDir || "none";
   const awayBarColor = config?.awayBarColor || "#ef4444";
-  const font = config?.font || "orbitron";
+  const font = searchParams.get("font") || config?.font || "orbitron";
+  const isTimerRunning = localData.timerIsRunning ?? config?.timerIsRunning ?? false;
   
   // Placement
   const posX = config?.posX || "center";
-  const posY = config?.posY || "top";
+  const posY = config?.posY || "center";
 
-  // Live timer ticking state
-  const [liveTimerText, setLiveTimerText] = React.useState(timerText);
-
-  React.useEffect(() => {
-    setLiveTimerText(timerText);
-  }, [timerText]);
+  // Live timer ticking state synced with Live Console
+  const [liveTimerText, setLiveTimerText] = React.useState(baseTimerText);
 
   React.useEffect(() => {
-    if (!config?.timerIsRunning) return;
+    setLiveTimerText(baseTimerText);
+  }, [baseTimerText]);
+
+  React.useEffect(() => {
+    if (!isTimerRunning) return;
     const interval = setInterval(() => {
       setLiveTimerText(prev => {
         const parts = prev.split(":");
@@ -118,7 +214,7 @@ function CustomOverlayRenderer() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [config?.timerIsRunning]);
+  }, [isTimerRunning]);
 
   const getLabelContent = (b: BlockItem) => {
     const target = b.bindTo && b.bindTo !== "none" ? b.bindTo : b.id;
@@ -183,21 +279,19 @@ function CustomOverlayRenderer() {
 
   // PosY mapping
   const getVerticalClass = (y: string) => {
-    if (y === "top") return "items-start pt-16 px-8 pb-8";
+    if (y === "top") return "items-start pt-8 px-8 pb-8";
     if (y === "bottom") return "items-end p-8";
-    return "items-center";
+    return "items-center justify-center";
   };
 
   if (!mounted) return null;
 
   return (
     <div 
-      className={`min-h-screen w-full bg-transparent flex relative overflow-hidden ${getHorizontalClass(posX)} ${getVerticalClass(posY)} ${getFontFamilyClass(font)}`}
+      className={`h-screen w-screen bg-transparent flex items-center justify-center relative overflow-hidden ${getHorizontalClass(posX)} ${getVerticalClass(posY)} ${getFontFamilyClass(font)}`}
       style={getFontFamilyStyle(font)}
     >
-      {/* Import external fonts */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Orbitron:wght@400;700;900&family=Outfit:wght@400;700;900&display=swap');
         body {
           background-color: transparent !important;
           margin: 0;
@@ -238,6 +332,7 @@ function CustomOverlayRenderer() {
                 backgroundColor: "transparent",
                 isolation: "isolate",
                 zIndex: 10 + idx,
+                ...getFontFamilyStyle(font),
               }}
               className="flex items-center justify-center font-black tracking-tight select-none relative"
             >
@@ -272,29 +367,37 @@ function CustomOverlayRenderer() {
                 }}
               />
 
-              {b.id === "logo-tournament" ? (
+              {b.id === "logo-tournament" || b.bindTo === "logo-tournament" ? (
                 logoTournament ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={logoTournament} className="w-full h-full object-cover pointer-events-none" alt="Tournament Logo" />
+                  <img src={logoTournament} className="w-full h-full object-contain pointer-events-none p-1" alt="Tournament Logo" />
                 ) : (
                   <span className="text-[10px] opacity-60">🛡️</span>
                 )
-              ) : b.id === "logo-home" ? (
+              ) : b.id === "logo-home" || b.bindTo === "logo-home" ? (
                 logoHome ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={logoHome} className="w-full h-full object-cover pointer-events-none" alt="Home Logo" />
+                  <img src={logoHome} className="w-full h-full object-contain pointer-events-none p-1" alt="Home Logo" />
                 ) : (
                   <span className="text-[10px] opacity-60">🛡️</span>
                 )
-              ) : b.id === "logo-away" ? (
+              ) : b.id === "logo-away" || b.bindTo === "logo-away" ? (
                 logoAway ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={logoAway} className="w-full h-full object-cover pointer-events-none" alt="Away Logo" />
+                  <img src={logoAway} className="w-full h-full object-contain pointer-events-none p-1" alt="Away Logo" />
                 ) : (
                   <span className="text-[10px] opacity-60">🛡️</span>
                 )
               ) : (
-                <span className={`${b.shapeType === "text" ? "whitespace-nowrap px-2 py-1" : "truncate px-1"}`}>
+                <span
+                  className={`${b.shapeType === "text" ? "whitespace-nowrap px-2 py-1" : "truncate px-1"}`}
+                  style={{
+                    fontSize: `${b.fontSize || 16}px`,
+                    fontWeight: b.fontWeight || undefined,
+                    fontStyle: b.fontStyle || "normal",
+                    textDecoration: b.textDecoration || "none",
+                  }}
+                >
                   {getLabelContent(b)}
                 </span>
               )}

@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tab } from "@/components/ui/tab";
 import {
-    Sliders, Settings, Check, Copy, Eye, Trash2,
+    Sliders, Settings, Check, Copy, Trash2,
     MoveHorizontal, MoveVertical, RotateCw, FlipHorizontal2,
     FlipVertical2, SquareDashedBottom, CornerUpLeft, SquareRoundCorner,
     CornerUpRight, CornerDownLeft, CornerDownRight, Square, Circle, Group, Ungroup,
-    Italic, Underline
+    Italic, Underline, ExternalLink
 } from "lucide-react";
 import { CanvasBlock, BlankCanvas, DataBindType } from "./types";
 import { DraggableLabel, GradientColorPicker } from "./helpers";
@@ -139,11 +139,12 @@ export function EditorSidebar({
                 value={activeTab}
                 onChange={setActiveTab}
                 fullWidth
+                className="bg-card"
             />
 
             <div className="flex-1 overflow-y-auto min-h-0 pr-0.5 flex flex-col">
                 {activeTab === "editor" ? (
-                    <div className="flex-1 h-full flex flex-col border rounded-sm p-2 md:p-4 space-y-1 md:space-y-2 overflow-y-auto">
+                    <div className="flex-1 h-full flex flex-col border rounded-sm p-2 md:p-4 space-y-1 md:space-y-2 overflow-y-auto bg-card">
                         <div className="flex items-center justify-between">
                             <Header level={5}>{dict.pos_spacing}</Header>
 
@@ -709,7 +710,7 @@ export function EditorSidebar({
                     </div>
                 ) : (
                     /* Config Tab */
-                    <div className="flex-1 h-full flex flex-col border rounded-sm p-2 md:p-4 space-y-2 md:space-y-4 overflow-y-auto">
+                    <div className="flex-1 h-full flex flex-col border rounded-sm p-2 md:p-4 space-y-2 md:space-y-4 overflow-y-auto bg-card">
                         {/* Canvas Management */}
                         <div className="space-y-1">
                             <div className="flex items-center justify-between gap-2">
@@ -872,10 +873,12 @@ export function EditorSidebar({
                                     <Button
                                         asChild
                                         variant="outline"
-                                        className="h-10 w-10 shrink-0"
+                                        title={locale === 'th' ? "เปิดดู OBS Overlay ในแท็บใหม่" : "Open OBS Overlay in New Tab"}
+                                        className="h-10 px-2.5 text-xs font-bold gap-1 shrink-0 border-primary/40 text-primary hover:bg-primary/10"
                                     >
                                         <a href={scoreboardUrl} target="_blank" rel="noopener noreferrer">
-                                            <Eye className="h-4 w-4" />
+                                            <ExternalLink className="h-4 w-4" />
+                                            <span>{locale === 'th' ? "เปิด ↗" : "Open ↗"}</span>
                                         </a>
                                     </Button>
                                 </div>
@@ -897,10 +900,12 @@ export function EditorSidebar({
                                     <Button
                                         asChild
                                         variant="outline"
-                                        className="h-10 w-10 shrink-0"
+                                        title={locale === 'th' ? "เปิดดู Blank Canvas ในแท็บใหม่" : "Open Blank Canvas in New Tab"}
+                                        className="h-10 px-2.5 text-xs font-bold gap-1 shrink-0 border-primary/40 text-primary hover:bg-primary/10"
                                     >
                                         <a href={blankUrl} target="_blank" rel="noopener noreferrer">
-                                            <Eye className="h-4 w-4" />
+                                            <ExternalLink className="h-4 w-4" />
+                                            <span>{locale === 'th' ? "เปิด ↗" : "Open ↗"}</span>
                                         </a>
                                     </Button>
                                 </div>
