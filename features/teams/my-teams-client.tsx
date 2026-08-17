@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DashboardCard } from "@/features/dashboard/dashboard-card";
 import { CreateTeamForm } from "@/features/teams/create-team-form";
-import { VerifyTeamForm } from "@/features/teams/verify-team-form";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Team } from "@/types/index";
 import { Header } from "@/components/ui/header";
@@ -42,15 +41,6 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                         title: t("tour_my_teams_search_title"),
                         description: t("tour_my_teams_search_desc"),
                         side: "bottom" as const,
-                        align: "start" as const
-                    }
-                },
-                {
-                    element: "#tour-verify-team-btn",
-                    popover: {
-                        title: t("tour_my_teams_verify_title"),
-                        description: t("tour_my_teams_verify_desc"),
-                        side: "left" as const,
                         align: "start" as const
                     }
                 },
@@ -117,9 +107,9 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             className="bg-card"
                         />
                     </div>
-                    <div id="tour-verify-team-btn" className="inline-block">
+                    {/* <div id="tour-verify-team-btn" className="inline-block">
                         <VerifyTeamForm iconOnlyMobile />
-                    </div>
+                    </div> */}
                     <div id="tour-create-team-btn" className="inline-block">
                         <CreateTeamForm iconOnlyMobile />
                     </div>

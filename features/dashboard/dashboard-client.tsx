@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { createMasterPlayer, getMasterPlayerStats, searchMasterPlayers, claimMasterPlayer } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
-    Trophy, User, Calendar, Phone, Search, HelpCircle,
+    Trophy, Calendar, Search, HelpCircle,
     AlertCircle, UserCheck, Activity, Edit, Link as LinkIcon, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -476,41 +476,86 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                 ? `${masterPlayer.first_name_th || masterPlayer.first_name_en || ""} ${masterPlayer.last_name_th || masterPlayer.last_name_en || ""}`
                                                 : `${masterPlayer.first_name_en || masterPlayer.first_name_th || ""} ${masterPlayer.last_name_en || masterPlayer.last_name_th || ""}`}
                                         </Header>
-                                        <Badge variant="outline">
-                                            {masterPlayer.status}
-                                        </Badge>
                                     </div>
                                 </div>
 
-                                {/* Details list */}
-                                <div className="border-t relative z-10">
-                                    <div className="flex items-center justify-between text-xs border-b p-2 md:p-4">
-                                        <Label className="gap-1 md:gap-2">
-                                            <User className="h-4 w-4 text-primary" />
-                                            {t("gender")}
-                                        </Label>
-                                        <Label>
-                                            {t(masterPlayer.gender || 'other')}
-                                        </Label>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs border-b border-border p-2 md:p-4">
-                                        <Label className="gap-1 md:gap-2">
-                                            <Calendar className="h-4 w-4 text-primary" />
-                                            {t("birthday")}
-                                        </Label>
-                                        <Label>
-                                            {masterPlayer.birthday ? new Date(masterPlayer.birthday).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "-"}
-                                        </Label>
-                                    </div>
-                                    <div className="flex items-center justify-between text-xs p-2 md:p-4">
-                                        <Label className="gap-1 md:gap-2">
-                                            <Phone className="h-4 w-4 text-primary" />
-                                            {t("phone")}
-                                        </Label>
-                                        <Label>
-                                            {masterPlayer.tel || "-"}
-                                        </Label>
-                                    </div>
+                                {/* Details / Stats section */}
+                                <div className="border-t relative z-10 p-2 md:p-4 space-y-1 md:space-y-2">
+                                    {/* Stats Grid */}
+                                    {stats ? (
+                                        <>
+                                            <div className="grid grid-cols-3 gap-1 md:gap-2 text-center">
+                                                <div className="p-2 rounded-sm border transition-all">
+                                                    <Label className="block text-[10px] md:text-xs text-muted-foreground">{t("goals")}</Label>
+                                                    <span className="text-base md:text-lg font-bold">{stats.goals}</span>
+                                                </div>
+                                                <div className="p-2 rounded-sm border transition-all">
+                                                    <Label className="block text-[10px] md:text-xs text-muted-foreground">{t("assists")}</Label>
+                                                    <span className="text-base md:text-lg font-bold">{stats.assists}</span>
+                                                </div>
+                                                <div className="p-2 rounded-sm border transition-all">
+                                                    <Label className="block text-[10px] md:text-xs text-muted-foreground">{t("saves")}</Label>
+                                                    <span className="text-base md:text-lg font-bold">{stats.saves}</span>
+                                                </div>
+                                                <div className="p-2 rounded-sm border transition-all">
+                                                    <Label className="block text-[10px] md:text-xs text-warning">{t("yellow")}</Label>
+                                                    <span className="text-base md:text-lg font-bold">{stats.yellowCards}</span>
+                                                </div>
+                                                <div className="p-2 rounded-sm border transition-all">
+                                                    <Label className="block text-[10px] md:text-xs text-destructive">{t("red")}</Label>
+                                                    <span className="text-base md:text-lg font-bold">{stats.redCards}</span>
+                                                </div>
+                                                <div className="p-2 rounded-sm border transition-all">
+                                                    <Label className="block text-[10px] md:text-xs text-muted-foreground">{t("injuries")}</Label>
+                                                    <span className="text-base md:text-lg font-bold">{stats.injuries}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Tournament History Table */}
+                                            <div className="space-y-2 pt-2">
+                                                {stats.history.length === 0 ? (
+                                                    <EmptyState
+                                                        description={t("no_history")}
+                                                        className="bg-card rounded-sm border min-h-[80px]"
+                                                    />
+                                                ) : (
+                                                    <div className="border rounded-lg overflow-hidden">
+                                                        <table className="w-full text-[10px] text-left border-collapse">
+                                                            <thead>
+                                                                <tr className="border-b bg-muted/10">
+                                                                    <th className="p-2 font-bold text-muted-foreground">{t("tournament_team")}</th>
+                                                                    <th className="p-2 font-bold text-muted-foreground text-center" title="Goals">G</th>
+                                                                    <th className="p-2 font-bold text-muted-foreground text-center" title="Assists">A</th>
+                                                                    <th className="p-2 font-bold text-muted-foreground text-center" title="Saves">SV</th>
+                                                                    <th className="p-2 font-bold text-muted-foreground text-center" title="Yellow Cards">Y</th>
+                                                                    <th className="p-2 font-bold text-muted-foreground text-center" title="Red Cards">R</th>
+                                                                    <th className="p-2 font-bold text-muted-foreground text-center" title="Injuries">INJ</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y">
+                                                                {stats.history.map((h, idx) => (
+                                                                    <tr key={idx} className="hover:bg-muted/5 transition-colors">
+                                                                        <td className="p-2 font-medium">
+                                                                            <div className="font-bold line-clamp-1">{h.tournamentName}</div>
+                                                                            <div className="text-muted-foreground text-[9px]">{h.teamName}</div>
+                                                                        </td>
+                                                                        <td className="p-2 text-center">{h.goals}</td>
+                                                                        <td className="p-2 text-center">{h.assists}</td>
+                                                                        <td className="p-2 text-center">{h.saves}</td>
+                                                                        <td className="p-2 text-center text-amber-500">{h.yellowCards}</td>
+                                                                        <td className="p-2 text-center text-rose-500">{h.redCards}</td>
+                                                                        <td className="p-2 text-center">{h.injuries}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-4 text-center text-xs text-muted-foreground">{t("unable_load_stats")}</div>
+                                    )}
                                 </div>
                             </div>
                         ) : (
@@ -745,7 +790,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 Claim Player
                                                             </Button>
                                                         </div>
-                                                    )
+                                                    );
                                                 })}
                                             </div>
                                         </div>
@@ -754,128 +799,6 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             </div>
                         )}
                     </div>
-
-                    {masterPlayer && (
-                        <div className="bg-card border rounded-sm overflow-hidden shadow-sm flex flex-col animate-in fade-in duration-200">
-                            <div className="p-2 md:p-4 border-b flex items-center justify-between">
-                                <Header level={3}>{t("player_statistics")}</Header>
-                            </div>
-
-                            {loadingStats ? (
-                                <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-                                    {/* Stats Grid Skeleton */}
-                                    <div className="grid grid-cols-3 gap-1 md:gap-2">
-                                        {[...Array(6)].map((_, i) => (
-                                            <div key={i} className="p-2 rounded-sm border flex flex-col items-center justify-center space-y-2 h-[58px]">
-                                                <Skeleton className="h-3 w-12 rounded-sm" />
-                                                <Skeleton className="h-4 w-6 rounded-sm" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {/* Tournament History Table Skeleton */}
-                                    <div className="space-y-2">
-                                        <div className="border rounded-sm overflow-hidden p-2 space-y-3">
-                                            <div className="flex justify-between items-center pb-2 border-b">
-                                                <Skeleton className="h-3 w-24 rounded-sm" />
-                                                <div className="flex gap-4">
-                                                    <Skeleton className="h-3 w-4 rounded-sm" />
-                                                    <Skeleton className="h-3 w-4 rounded-sm" />
-                                                    <Skeleton className="h-3 w-4 rounded-sm" />
-                                                </div>
-                                            </div>
-                                            {[...Array(2)].map((_, i) => (
-                                                <div key={i} className="flex justify-between items-center py-1">
-                                                    <div className="space-y-1">
-                                                        <Skeleton className="h-3.5 w-32 rounded-sm" />
-                                                        <Skeleton className="h-2.5 w-16 rounded-sm" />
-                                                    </div>
-                                                    <div className="flex gap-4">
-                                                        <Skeleton className="h-3.5 w-4 rounded-sm" />
-                                                        <Skeleton className="h-3.5 w-4 rounded-sm" />
-                                                        <Skeleton className="h-3.5 w-4 rounded-sm" />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : stats ? (
-                                <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-                                    {/* Stats Grid */}
-                                    <div className="grid grid-cols-3 gap-1 md:gap-2 text-center">
-                                        <div className="p-2 rounded-sm border transition-all">
-                                            <Label className="block">{t("goals")}</Label>
-                                            <span className="text-base md:text-lg">{stats.goals}</span>
-                                        </div>
-                                        <div className="p-2 rounded-sm border transition-all">
-                                            <Label className="block">{t("assists")}</Label>
-                                            <span className="text-base md:text-lg">{stats.assists}</span>
-                                        </div>
-                                        <div className="p-2 rounded-sm border transition-all">
-                                            <Label className="block">{t("saves")}</Label>
-                                            <span className="text-base md:text-lg">{stats.saves}</span>
-                                        </div>
-                                        <div className="p-2 rounded-sm border transition-all">
-                                            <Label className="block text-warning">{t("yellow")}</Label>
-                                            <span className="text-base md:text-lg">{stats.yellowCards}</span>
-                                        </div>
-                                        <div className="p-2 rounded-sm border transition-all">
-                                            <Label className="block text-destructive">{t("red")}</Label>
-                                            <span className="text-base md:text-lg">{stats.redCards}</span>
-                                        </div>
-                                        <div className="p-2 rounded-sm border transition-all">
-                                            <Label className="block">{t("injuries")}</Label>
-                                            <span className="text-base md:text-lg">{stats.injuries}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Tournament History Table */}
-                                    <div className="space-y-2">
-                                        {stats.history.length === 0 ? (
-                                            <EmptyState
-                                                description={t("no_history")}
-                                                className="bg-card rounded-sm border min-h-[80px]"
-                                            />
-                                        ) : (
-                                            <div className="border rounded-lg overflow-hidden">
-                                                <table className="w-full text-[10px] text-left border-collapse">
-                                                    <thead>
-                                                        <tr className="border-b bg-muted/10">
-                                                            <th className="p-2 font-bold text-muted-foreground">{t("tournament_team")}</th>
-                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Goals">G</th>
-                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Assists">A</th>
-                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Saves">SV</th>
-                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Yellow Cards">Y</th>
-                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Red Cards">R</th>
-                                                            <th className="p-2 font-bold text-muted-foreground text-center" title="Injuries">INJ</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y">
-                                                        {stats.history.map((h, idx) => (
-                                                            <tr key={idx} className="hover:bg-muted/5 transition-colors">
-                                                                <td className="p-2 font-medium">
-                                                                    <div className="font-bold line-clamp-1">{h.tournamentName}</div>
-                                                                    <div className="text-muted-foreground text-[9px]">{h.teamName}</div>
-                                                                </td>
-                                                                <td className="p-2 text-center">{h.goals}</td>
-                                                                <td className="p-2 text-center">{h.assists}</td>
-                                                                <td className="p-2 text-center">{h.saves}</td>
-                                                                <td className="p-2 text-center text-amber-500">{h.yellowCards}</td>
-                                                                <td className="p-2 text-center text-rose-500">{h.redCards}</td>
-                                                                <td className="p-2 text-center">{h.injuries}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-4 text-center text-xs text-muted-foreground">{t("unable_load_stats")}</div>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
 

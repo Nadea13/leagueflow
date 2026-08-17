@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { ActionResponse, Sport } from "@/types/index";
 import { LogoUploader } from "@/components/shared/logo-uploader";
+import { cn } from "@/lib/utils";
+import { getSportIcon } from "@/components/shared/sport-icons";
 
 const initialState: ActionResponse = {
     success: false,
@@ -47,9 +48,6 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
             const res = await getSports();
             if (res.success && res.data) {
                 setSportsList(res.data);
-                if (res.data.length > 0) {
-                    setSelectedSport(res.data[0].id);
-                }
             }
         }
         if (open) {
@@ -61,6 +59,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
     if (state?.success && open) {
         setOpen(false);
         setPreviewUrl(null);
+        setSelectedSport("");
     }
 
     return (
@@ -71,8 +70,8 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                     <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("add_team")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card border-border p-0 overflow-hidden shadow-2xl rounded-sm">
-                <form action={formAction}>
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
+                <form action={formAction} className="flex flex-col h-full max-h-[100vh] sm:max-h-[90vh] overflow-hidden">
                     <DialogHeader className="relative pr-10">
                         <DialogTitle>
                             {t("add_team")}
@@ -91,9 +90,8 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         </Button>
                     </DialogHeader>
 
-                    <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-                        <div className="space-y-1">
-                            <Label>{t("upload_logo")}</Label>
+                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4">
+                        <div className="flex flex-col items-center justify-center space-y-1">
                             <LogoUploader
                                 id="logo"
                                 name="logo"
@@ -118,25 +116,41 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                             <Input
                                 id="name"
                                 name="name"
+                                placeholder={t("team_name_placeholder")}
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                                 required
                             />
                         </div>
 
                         <div className="space-y-1">
-                            <Label>{tCommon("sport")}</Label>
-                            <Select name="sport_id" value={selectedSport} onValueChange={setSelectedSport}>
-                                <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
-                                    <SelectValue placeholder={t("select_sport")} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {sportsList.map((sport) => (
-                                        <SelectItem key={sport.id} value={sport.id} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
-                                            {sport.sport_name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
+                            <input type="hidden" name="sport_id" value={selectedSport} required />
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 lg:gap-2">
+                                {sportsList.map((sport) => {
+                                    const isSelected = selectedSport === sport.id;
+                                    return (
+                                        <button
+                                            key={sport.id}
+                                            type="button"
+                                            onClick={() => setSelectedSport(sport.id)}
+                                            className={cn(
+                                                "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                isSelected
+                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "p-2 rounded-full transition-colors",
+                                                isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                            )}>
+                                                {getSportIcon(sport.sport_name, "h-4 w-4")}
+                                            </div>
+                                            <span className="text-xs font-bold truncate w-full transition-colors">{sport.sport_name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         <div className="space-y-1">
@@ -144,16 +158,18 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                             <Textarea
                                 id="description"
                                 name="description"
+                                placeholder={t("team_description_placeholder")}
                                 className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-1 lg:gap-2">
                             <div className="space-y-1">
                                 <Label>{t("contact_name")} <span className="text-destructive">*</span></Label>
                                 <Input
                                     id="contact_name"
                                     name="contact_name"
+                                    placeholder={t("contact_name_placeholder")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required
                                 />
@@ -163,6 +179,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 <Input
                                     id="contact_phone"
                                     name="contact_phone"
+                                    placeholder={t("contact_phone_placeholder")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required
                                 />
@@ -176,7 +193,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         )}
                     </div>
 
-                    <DialogFooter className="border-t p-2 md:p-4">
+                    <DialogFooter className="border-t p-2 md:p-4 mt-auto">
                         <SubmitButton className="w-full">{tCommon("create_btn")}</SubmitButton>
                     </DialogFooter>
                 </form>

@@ -147,8 +147,8 @@ export function EditVerifyProfileDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card p-0 overflow-hidden shadow-2xl rounded-sm">
-                <form key={open ? `open-${masterPlayer?.id}` : 'closed'} onSubmit={handleSaveEdit}>
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
+                <form key={open ? `open-${masterPlayer?.id}` : 'closed'} onSubmit={handleSaveEdit} className="flex flex-col h-full max-h-[100vh] sm:max-h-[90vh] overflow-hidden">
                     <DialogHeader className="relative pr-10">
                         <DialogTitle>
                             {isThai ? "แก้ไขข้อมูลทะเบียนนักกีฬา" : "Edit Athlete Registration Profile"}
@@ -167,7 +167,7 @@ export function EditVerifyProfileDialog({
                         </Button>
                     </DialogHeader>
 
-                    <div className="p-2 space-y-2 md:p-4 md:space-y-4">
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2 md:p-4 md:space-y-4">
                         {editError && (
                             <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-xl text-xs flex items-start gap-2 mb-4 animate-shake">
                                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -175,8 +175,7 @@ export function EditVerifyProfileDialog({
                             </div>
                         )}
 
-                        <div className="space-y-1">
-                            <Label>{isThai ? "รูปโปรไฟล์" : "Profile Picture"}</Label>
+                        <div className="flex flex-col items-center justify-center space-y-1">
                             <LogoUploader
                                 id="edit-profile-photo"
                                 initialUrl={editPreviewUrl}
@@ -311,7 +310,7 @@ export function EditVerifyProfileDialog({
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="border-t p-2 md:p-4 mt-auto">
                         <Button
                             type="submit"
                             disabled={isPending}

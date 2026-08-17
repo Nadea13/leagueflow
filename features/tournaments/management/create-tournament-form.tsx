@@ -155,8 +155,8 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                     <span className={iconOnlyMobile ? "hidden lg:inline" : ""}>{t("create_button")}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-sm shadow-2xl">
-                <form action={formAction} className="flex flex-col h-full max-h-[96vh] overflow-hidden">
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
+                <form action={formAction} className="flex flex-col h-full max-h-[100vh] sm:max-h-[90vh] overflow-hidden">
                     {/* Premium Header */}
                     <DialogHeader className="relative pr-10">
                         <DialogTitle>{t("create_title")}</DialogTitle>
@@ -537,7 +537,7 @@ export function TournamentCreate({ iconOnlyMobile = false, isDisabled = false }:
                         )}
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="border-t p-2 md:p-4 mt-auto">
                         <SubmitButton className="w-full">
                             {isPending ? t("creating") : t("create_button")}
                         </SubmitButton>
