@@ -269,7 +269,6 @@
 }
 
 .pro-editor-wrapper:focus-within {
-  @apply border-foreground/20;
   background-size: 100% 2px;
 }
 

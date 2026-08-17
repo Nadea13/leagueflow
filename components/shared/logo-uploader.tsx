@@ -2,10 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Upload, Trash2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { compressAndConvertToAvif } from "@/lib/image-compression";
 
 interface LogoUploaderProps {
@@ -30,8 +28,6 @@ export function LogoUploader({
     onFileChange,
     onRemove,
     disabled = false,
-    uploadLabel = "Upload Logo",
-    clickToUploadLabel = "Click to Upload",
     previewLabel = "Preview",
     imageFit = "contain",
     maxWidth = 512,
@@ -65,7 +61,9 @@ export function LogoUploader({
         }
     };
 
-    const handleRemoveLogo = () => {
+    const handleRemoveLogo = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
         setPreviewUrl(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -75,62 +73,58 @@ export function LogoUploader({
     };
 
     return (
-        <div className="flex items-start gap-2 md:gap-4 p-2 md:p-4 border rounded-sm">
-            <div className="relative group">
-                <div className="h-16 w-16 flex items-center justify-center border-2 border-dashed overflow-hidden rounded-sm border-border">
+        <div className="relative inline-block">
+            <div className="relative group w-20 h-20">
+                <label
+                    htmlFor={id}
+                    className={`w-20 h-20 rounded-full border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer transition-colors hover:border-primary/50 ${disabled || isCompressing ? "pointer-events-none opacity-50" : ""
+                        }`}
+                >
                     {isCompressing ? (
                         <Loader2 className="h-4 w-4 text-primary animate-spin" />
                     ) : previewUrl ? (
-                        <Image
-                            src={previewUrl}
-                            alt={previewLabel}
-                            width={80}
-                            height={80}
-                            className={`h-full w-full p-1 rounded-sm ${
-                                imageFit === "cover" ? "object-cover" : "object-contain"
-                            }`}
-                        />
+                        <div className="relative w-full h-full">
+                            <Image
+                                src={previewUrl}
+                                alt={previewLabel}
+                                fill
+                                className={`rounded-full p-1 ${imageFit === "cover" ? "object-cover" : "object-contain"
+                                    }`}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                                <ImageIcon className="h-4 w-4 text-white" />
+                            </div>
+                        </div>
                     ) : (
-                        <Upload className="h-4 w-4 text-primary" />
+                        <div className="group bg-muted p-2 rounded-full transition-colors group-hover:bg-primary/10">
+                            <ImageIcon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                        </div>
                     )}
-                </div>
+                </label>
+
+                {previewUrl && !disabled && !isCompressing && (
+                    <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground p-1 rounded-full shadow-sm hover:scale-110 transition-transform"
+                        title="Remove image"
+                    >
+                        <Trash2 className="h-3 w-3" />
+                    </button>
+                )}
             </div>
 
-            <div className="flex-1">
-                <div className="flex gap-2">
-                    <Label
-                        htmlFor={id}
-                        className={`cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 rounded-sm hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all ${
-                            disabled || isCompressing ? "pointer-events-none opacity-50" : ""
-                        }`}
-                    >
-                        {previewUrl ? clickToUploadLabel : uploadLabel}
-                    </Label>
-                    {previewUrl && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0 border"
-                            onClick={handleRemoveLogo}
-                            disabled={disabled || isCompressing}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
-                <Input
-                    id={id}
-                    name={name}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                    ref={fileInputRef}
-                    disabled={disabled || isCompressing}
-                />
-                <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG</p>
-            </div>
+            <Input
+                id={id}
+                name={name}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                disabled={disabled || isCompressing}
+            />
         </div>
     );
 }
+

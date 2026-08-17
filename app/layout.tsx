@@ -1,18 +1,47 @@
+import { Bebas_Neue, Inter, Montserrat, Orbitron, Outfit } from "next/font/google";
+
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bebas-neue",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  variable: "--font-orbitron",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="th" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;800;900&family=Montserrat:wght@400;700;800;900&family=Orbitron:wght@400;700;900&family=Outfit:wght@400;700;800;900&display=swap"
-        />
-      </head>
+    <html
+      lang="th"
+      suppressHydrationWarning
+      className={`${bebasNeue.variable} ${inter.variable} ${montserrat.variable} ${orbitron.variable} ${outfit.variable}`}
+    >
       <body suppressHydrationWarning>{children}</body>
     </html>
   );
