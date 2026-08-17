@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Plus, X, Loader2, ArrowRight, Camera } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,11 +11,13 @@ import { addPlayersBatchForm } from "@/actions/manager/team";
 import { searchMasterPlayers } from "@/actions/common/user";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getPositionOptions } from "@/lib/positions";
 
 interface AddPlayersDialogProps {
     teamId: string;
     onSuccess: () => Promise<void>;
     effectivelyLocked: boolean;
+    sport?: string;
 }
 
 interface BulkPlayerInput {
@@ -49,10 +51,12 @@ interface MasterPlayerRow {
     tel: string | null;
 }
 
-export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPlayersDialogProps) {
-    const t = useTranslations("Roster");
+export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }: AddPlayersDialogProps) {
     const tCommon = useTranslations("Common");
+    const locale = useLocale();
+    const isThai = locale === "th";
     const { toast } = useToast();
+    const positionOptions = getPositionOptions(sport);
 
     const [isBulkOpen, setIsBulkOpen] = useState(false);
     const [isSubmittingBulk, setIsSubmittingBulk] = useState(false);
@@ -159,8 +163,8 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
         const activePlayers = bulkPlayers.filter(p => p.name.trim().length > 0);
         if (activePlayers.length === 0) {
             toast({
-                title: "กรุณากรอกข้อมูล",
-                description: "อย่างน้อยต้องกรอกชื่อนักกีฬา 1 คน",
+                title: isThai ? "กรุณากรอกข้อมูล" : "Input Required",
+                description: isThai ? "อย่างน้อยต้องกรอกชื่อนักกีฬา 1 คน" : "At least 1 player name is required.",
                 variant: "destructive"
             });
             return;
@@ -185,8 +189,8 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
             const res = await addPlayersBatchForm(formData);
             if (res.success) {
                 toast({
-                    title: "บันทึกข้อมูลเรียบร้อยแล้ว",
-                    description: `เพิ่มนักกีฬา ${activePlayers.length} คนสำเร็จ`,
+                    title: isThai ? "บันทึกข้อมูลเรียบร้อยแล้ว" : "Saved Successfully",
+                    description: isThai ? `เพิ่มนักกีฬา ${activePlayers.length} คนสำเร็จ` : `Successfully added ${activePlayers.length} players`,
                 });
                 setBulkPlayers(initialBulkPlayers);
                 setIsBulkOpen(false);
@@ -194,14 +198,14 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
             } else {
                 toast({
                     title: tCommon("error"),
-                    description: res.error || "บันทึกข้อมูลไม่สำเร็จ",
+                    description: res.error || (isThai ? "บันทึกข้อมูลไม่สำเร็จ" : "Failed to save players"),
                     variant: "destructive"
                 });
             }
         } catch (_err) {
             toast({
                 title: tCommon("error"),
-                description: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+                description: isThai ? "เกิดข้อผิดพลาดในการบันทึกข้อมูล" : "An error occurred while saving",
                 variant: "destructive"
             });
         } finally {
@@ -218,25 +222,28 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                     variant="outline" 
                 >
                     <Plus className="h-4 w-4" />
-                    <span className="hidden lg:block">เพิ่มหลายคน</span>
+                    <span className="hidden lg:block">{isThai ? "เพิ่มหลายคน" : "Add Multiple"}</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-5xl md:max-w-6xl bg-card border rounded-xl max-h-[95vh] md:max-h-[90vh] flex flex-col">
+            <DialogContent showCloseButton={false} className="max-w-5xl md:max-w-6xl bg-card border rounded-xl max-h-[95vh] md:max-h-[90vh] flex flex-col">
                 <DialogHeader className="relative">
                     <DialogTitle>
-                        เพิ่มรายชื่อนักกีฬาหลายคน
+                        {isThai ? "เพิ่มรายชื่อนักกีฬาหลายคน" : "Add Multiple Players"}
                     </DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                        กรอกข้อมูลนักกีฬาลงในช่องด้านล่าง (อย่างน้อยต้องกรอกช่องชื่อที่มีเครื่องหมาย *) จากนั้นกดปุ่มบันทึกด้านล่างเพื่อเพิ่มนักกีฬาทั้งหมดเข้าสู่ทีมพร้อมกัน
+                        {isThai 
+                            ? "กรอกข้อมูลนักกีฬาลงในช่องด้านล่าง (อย่างน้อยต้องกรอกช่องชื่อที่มีเครื่องหมาย *) จากนั้นกดปุ่มบันทึกด้านล่างเพื่อเพิ่มนักกีฬาทั้งหมดเข้าสู่ทีมพร้อมกัน" 
+                            : "Fill in player details below (at least player name marked with *). Then click Save to add all players to the team at once."}
                     </DialogDescription>
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="absolute right-2 top-2"
                         onClick={() => setIsBulkOpen(false)}
-                        className="absolute right-2 top-2 md:right-4 md:top-4 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
                     >
                         <X className="h-4 w-4" />
-                        <span className="sr-only">Close</span>
-                    </button>
+                    </Button>
                 </DialogHeader>
                 
                 <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 p-2 md:p-4">
@@ -290,6 +297,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                                             type="text"
                                             value={player.name}
                                             onChange={(e) => handleBulkNameChange(idx, e.target.value)}
+                                            placeholder={isThai ? "ชื่อนักกีฬา *" : "Player Name *"}
                                             onFocus={() => {
                                                 if (player.name.trim().length > 0) {
                                                     setFocusedBulkIndex(idx);
@@ -307,7 +315,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                                                 {isBulkSearching ? (
                                                     <div className="flex flex-col items-center justify-center py-4 gap-1">
                                                         <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                                                        <span className="text-[8px] font-black tracking-widest text-muted-foreground/40">Searching...</span>
+                                                        <span className="text-[8px] font-black tracking-widest text-muted-foreground/40">{isThai ? "กำลังค้นหา..." : "Searching..."}</span>
                                                     </div>
                                                 ) : (
                                                     <div className="py-0.5">
@@ -339,20 +347,21 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                                             type="text"
                                             value={player.number}
                                             onChange={(e) => updateBulkPlayer(idx, "number", e.target.value)}
-                                            placeholder="เบอร์เสื้อ"
+                                            placeholder={isThai ? "เบอร์เสื้อ" : "Shirt No."}
                                         />
                                         <Select
                                             value={player.position}
                                             onValueChange={(val) => updateBulkPlayer(idx, "position", val)}
                                         >
                                             <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="ตำแหน่ง" />
+                                                <SelectValue placeholder={isThai ? "ตำแหน่ง" : "Position"} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="GK">{t("goalkeeper")}</SelectItem>
-                                                <SelectItem value="DF">{t("defender")}</SelectItem>
-                                                <SelectItem value="MF">{t("midfielder")}</SelectItem>
-                                                <SelectItem value="FW">{t("forward")}</SelectItem>
+                                                {positionOptions.map((pos) => (
+                                                    <SelectItem key={pos.value} value={pos.value}>
+                                                        {isThai ? pos.labelTh : pos.labelEn}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -360,7 +369,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                                         type="tel"
                                         value={player.tel}
                                         onChange={(e) => updateBulkPlayer(idx, "tel", e.target.value)}
-                                        placeholder="เบอร์โทรศัพท์"
+                                        placeholder={isThai ? "เบอร์โทรศัพท์" : "Phone Number"}
                                     />
                                 </div>
                             </div>
@@ -373,7 +382,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                             variant="outline"
                             onClick={addBulkRow}
                         >
-                            เพิ่มช่องแถวใหม่
+                            {isThai ? "เพิ่มช่องแถวใหม่" : "Add More Rows"}
                         </Button>
                     </div>
                 </div>
@@ -386,10 +395,10 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked }: AddPl
                         {isSubmittingBulk ? (
                             <>
                                 <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                                กำลังบันทึก...
+                                {isThai ? "กำลังบันทึก..." : "Saving..."}
                             </>
                         ) : (
-                            "บันทึกรายชื่อทั้งหมด"
+                            isThai ? "บันทึกรายชื่อทั้งหมด" : "Save All Players"
                         )}
                     </Button>
                 </DialogFooter>

@@ -27,11 +27,13 @@ import {
     Trash2,
     Camera
 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { PlayerDetailsView } from "./player-details-view";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/shared/empty-state";
+import { getPositionOptions } from "@/lib/positions";
 
 interface SquadListProps {
     players: Player[];
@@ -52,7 +54,10 @@ export function SquadList({
     t,
     tCommon
 }: SquadListProps) {
+    const locale = useLocale();
+    const isThai = locale === "th";
     const { toast } = useToast();
+    const positionOptions = getPositionOptions(team.sport || team.sport_name);
     const [openProfileId, setOpenProfileId] = useState<string | null>(null);
     const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
     const [editName, setEditName] = useState("");
@@ -199,7 +204,8 @@ export function SquadList({
                                                         <Input
                                                             value={editNumber}
                                                             onChange={(e) => setEditNumber(e.target.value)}
-                                                            className="w-full text-left md:text-center bg-transparent font-black text-sm focus-visible:ring-0 p-0"
+                                                            placeholder={isThai ? "10" : "10"}
+                                                            className="w-full focus-visible:ring-0"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
@@ -209,28 +215,30 @@ export function SquadList({
                                                         <Input
                                                             value={editName}
                                                             onChange={(e) => setEditName(e.target.value)}
-                                                            className="text-sm font-black bg-transparent focus-visible:ring-0 p-0 w-full"
+                                                            placeholder={isThai ? "ชื่อนักกีฬา..." : "Player name..."}
+                                                            className="focus-visible:ring-0"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>
  
-                                                    <div className="space-y-1 w-full md:w-[100px] shrink-0">
-                                                        <Label>{t("position")}</Label>
-                                                        <Select value={editPosition} onValueChange={setEditPosition}>
-                                                            <SelectTrigger 
-                                                                className="w-full"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            >
-                                                                <SelectValue placeholder="POS" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="GK" className="text-[10px] font-black">{t("goalkeeper") || "GK"}</SelectItem>
-                                                                <SelectItem value="DF" className="text-[10px] font-black">{t("defender") || "DF"}</SelectItem>
-                                                                <SelectItem value="MF" className="text-[10px] font-black">{t("midfielder") || "MF"}</SelectItem>
-                                                                <SelectItem value="FW" className="text-[10px] font-black">{t("forward") || "FW"}</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
+                                                    <div className="space-y-1 w-full md:w-[120px] shrink-0">
+                                                         <Label>{t("position")}</Label>
+                                                         <Select value={editPosition} onValueChange={setEditPosition}>
+                                                             <SelectTrigger 
+                                                                 className="w-full"
+                                                                 onClick={(e) => e.stopPropagation()}
+                                                             >
+                                                                 <SelectValue placeholder={isThai ? "ตำแหน่ง" : "POS"} />
+                                                             </SelectTrigger>
+                                                             <SelectContent>
+                                                                 {positionOptions.map((pos) => (
+                                                                     <SelectItem key={pos.value} value={pos.value} className="text-[10px] font-black">
+                                                                         {isThai ? pos.labelTh : pos.labelEn}
+                                                                     </SelectItem>
+                                                                 ))}
+                                                             </SelectContent>
+                                                         </Select>
+                                                     </div>
  
                                                     <div className="space-y-1 w-full md:w-[130px] shrink-0">
                                                         <Label>{t("tel") || "Telephone"}</Label>
@@ -238,6 +246,7 @@ export function SquadList({
                                                             value={editTel}
                                                             onChange={(e) => setEditTel(e.target.value)}
                                                             type="tel"
+                                                            placeholder={isThai ? "เบอร์โทร..." : "Phone number..."}
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
                                                     </div>

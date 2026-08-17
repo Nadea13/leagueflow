@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import {
     AlertDialog,
@@ -26,6 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, Lock, RotateCcw, X } from "lucide-react";
 import { LogoUploader } from "@/components/shared/logo-uploader";
+import { getSportIcon } from "@/components/shared/sport-icons";
+import { cn } from "@/lib/utils";
 
 interface EditTeamFormProps {
     team: (Team | TournamentTeam) & {
@@ -192,8 +193,7 @@ export function EditTeamForm({
         <div className="bg-card border rounded-sm relative overflow-hidden">
             <div className="p-2 md:p-4">
                 <form onSubmit={handleUpdateTeam} className="space-y-1 md:space-y-2">
-                    <div className="space-y-1">
-                        <Label>{tTeam("upload_logo")}</Label>
+                    <div className="flex flex-col items-center justify-center space-y-1">
                         <LogoUploader
                             id="edit-logo-right"
                             initialUrl={previewUrl}
@@ -213,38 +213,54 @@ export function EditTeamForm({
                             uploadLabel={tTeam("upload_logo")}
                             clickToUploadLabel={tTeam("click_to_upload")}
                             previewLabel={tCommon("preview")}
-                            imageFit="contain"
+                            imageFit="cover"
                         />
                     </div>
 
                     <div className="space-y-1">
                         <Label>
-                            {tTeam("team_name")}
+                            {tTeam("team_name")} <span className="text-destructive">*</span>
                         </Label>
                         <Input
                             value={teamName}
                             onChange={e => setTeamName(e.target.value)}
+                            placeholder={tTeam("team_name_placeholder")}
+                            className="bg-transparent text-foreground focus-visible:ring-0"
                             required
                             readOnly={isLocked}
                         />
                     </div>
 
                     <div className="space-y-1">
-                        <Label>
-                            {tCommon("sport") || "Sport"}
-                        </Label>
-                        <Select value={teamSport} onValueChange={(v) => setTeamSport(v)} disabled={isLocked}>
-                            <SelectTrigger className="bg-transparent text-foreground focus-visible:ring-0 w-full">
-                                <SelectValue placeholder={tCommon("sport") || "Sport"} />
-                            </SelectTrigger>
-                            <SelectContent className="border-border">
-                                {sportsList.map((sport) => (
-                                    <SelectItem key={sport.id} value={sport.id} className="focus:bg-primary/10 focus:text-primary font-bold text-xs tracking-tighter">
-                                        {sport.sport_name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 lg:gap-2">
+                            {sportsList.map((sport) => {
+                                const isSelected = teamSport === sport.id;
+                                return (
+                                    <button
+                                        key={sport.id}
+                                        type="button"
+                                        disabled={isLocked}
+                                        onClick={() => setTeamSport(sport.id)}
+                                        className={cn(
+                                            "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                            isSelected
+                                                ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30",
+                                            isLocked && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "p-2 rounded-full transition-colors",
+                                            isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                        )}>
+                                            {getSportIcon(sport.sport_name, "h-4 w-4")}
+                                        </div>
+                                        <span className="text-xs font-bold truncate w-full transition-colors">{sport.sport_name}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     <div className="space-y-1">
@@ -254,29 +270,36 @@ export function EditTeamForm({
                         <Textarea
                             value={teamDescription}
                             onChange={e => setTeamDescription(e.target.value)}
+                            placeholder={tTeam("team_description_placeholder")}
                             readOnly={isLocked}
-                            className="resize-none min-h-[80px]"
+                            className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-1 lg:gap-2">
                         <div className="space-y-1">
                             <Label>
-                                {tTeam("contact_name") || "Contact Name"}
+                                {tTeam("contact_name") || "Contact Name"} <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 value={contactName}
                                 onChange={e => setContactName(e.target.value)}
+                                placeholder={tTeam("contact_name_placeholder")}
+                                className="bg-transparent text-foreground focus-visible:ring-0"
+                                required
                                 readOnly={isLocked}
                             />
                         </div>
                         <div className="space-y-1">
                             <Label>
-                                {tTeam("contact_phone") || "Phone Number"}
+                                {tTeam("contact_phone") || "Phone Number"} <span className="text-destructive">*</span>
                             </Label>
                             <Input
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
+                                placeholder={tTeam("contact_phone_placeholder")}
+                                className="bg-transparent text-foreground focus-visible:ring-0"
+                                required
                                 readOnly={isLocked}
                             />
                         </div>

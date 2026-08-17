@@ -88,6 +88,7 @@ export interface Team {
     tournament_id?: string | null;
     group_name?: string | null;
     sport: SportType;
+    sport_name?: string | null;
     created_at: string;
 }
 

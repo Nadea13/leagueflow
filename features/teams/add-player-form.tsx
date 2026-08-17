@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import Image from "next/image";
 import { Loader2, ArrowRight, Camera } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +13,13 @@ import { addPlayer } from "@/actions/manager/team";
 import { searchMasterPlayers } from "@/actions/common/user";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { compressAndConvertToAvif } from "@/lib/image-compression";
+import { getPositionOptions } from "@/lib/positions";
 
 interface AddPlayerFormProps {
     teamId: string;
     onSuccess: () => Promise<void>;
     effectivelyLocked: boolean;
+    sport?: string;
 }
 
 interface MasterPlayerSearchResult {
@@ -42,10 +44,13 @@ interface MasterPlayerRow {
     tel: string | null;
 }
 
-export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlayerFormProps) {
+export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked, sport }: AddPlayerFormProps) {
     const t = useTranslations("Roster");
     const tCommon = useTranslations("Common");
+    const locale = useLocale();
+    const isThai = locale === "th";
     const { toast } = useToast();
+    const positionOptions = getPositionOptions(sport);
 
     const [newName, setNewName] = useState("");
     const [newNumber, setNewNumber] = useState("");
@@ -206,16 +211,13 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="h-10 w-10 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group"
+                            className="h-10 w-10 rounded-full border-2 border-dashed transition-all flex items-center justify-center overflow-hidden relative group hover:border-primary/50"
                         >
                             {photoPreview ? (
                                 <Image src={photoPreview} alt="Preview" width={40} height={40} className="h-full w-full object-cover" />
                             ) : (
-                                <Camera className="h-4 w-4 text-primary" />
+                                <Camera className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:border-primary/50 transition-all" />
                             )}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <Camera className="h-4 w-4 text-foreground" />
-                            </div>
                         </button>
                     </div>
 
@@ -225,7 +227,8 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             value={newNumber}
                             onChange={e => setNewNumber(e.target.value)}
                             type="text"
-                            className="bg-transparent text-foreground focus-visible:ring-0"
+                            placeholder={isThai ? "เช่น 10" : "e.g. 10"}
+                            className="focus-visible:ring-0"
                         />
                     </div>
 
@@ -235,6 +238,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                             <Input
                                 value={newName}
                                 onChange={e => handleNameChange(e.target.value)}
+                                placeholder={isThai ? "พิมพ์ชื่อนักกีฬา..." : "Type player name..."}
                                 onFocus={() => {
                                     if (newName.trim().length > 0) {
                                         setIsPopoverOpen(true);
@@ -248,7 +252,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                     }, 200);
                                 }}
                                 required
-                                className="bg-transparent text-foreground focus-visible:ring-0 w-full"
+                                className="focus-visible:ring-0 w-full"
                             />
                             {isPopoverOpen && (isSearching || searchResults.length > 0) && (
                                 <div className="absolute left-0 right-0 top-full mt-1 z-[100] rounded-md border border-border bg-card text-foreground shadow-2xl max-h-[250px] overflow-y-auto custom-scrollbar">
@@ -274,7 +278,7 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <ArrowRight className="h-3 w-3 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                                    <ArrowRight className="h-4 w-4 text-muted-foreground/20 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                                                 </button>
                                             ))}
                                         </div>
@@ -288,14 +292,15 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                         <div className="space-y-1 shrink-0 w-[120px]">
                             <Label>{t("position")}</Label>
                             <Select value={newPosition} onValueChange={setNewPosition}>
-                                <SelectTrigger className="bg-transparent w-full text-foreground focus-visible:ring-0">
-                                    <SelectValue placeholder={t("position")} />
+                                <SelectTrigger className="w-full focus-visible:ring-0">
+                                    <SelectValue placeholder={isThai ? "เลือกตำแหน่ง" : "Select position"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="GK">{t("goalkeeper")}</SelectItem>
-                                    <SelectItem value="DF">{t("defender")}</SelectItem>
-                                    <SelectItem value="MF">{t("midfielder")}</SelectItem>
-                                    <SelectItem value="FW">{t("forward")}</SelectItem>
+                                    {positionOptions.map((pos) => (
+                                        <SelectItem key={pos.value} value={pos.value}>
+                                            {isThai ? pos.labelTh : pos.labelEn}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -305,7 +310,8 @@ export function AddPlayerForm({ teamId, onSuccess, effectivelyLocked }: AddPlaye
                                 value={newTel}
                                 onChange={e => setNewTel(e.target.value)}
                                 type="tel"
-                                className="bg-transparent text-foreground focus-visible:ring-0"
+                                placeholder={isThai ? "เบอร์โทรศัพท์..." : "Phone number..."}
+                                className="focus-visible:ring-0"
                             />
                         </div>
                     </div>

@@ -41,6 +41,7 @@ interface SquadManagementProps {
         team_id?: string | null;
         roster_status?: string | null;
         unlock_requested?: boolean;
+        sport_name?: string | null;
     };
     initialPlayers: Player[];
 }
@@ -311,7 +312,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             size="icon-sm" 
                             onClick={startTour} 
                         >
-                            <HelpCircle className="h-3.5 w-3.5" />
+                            <HelpCircle className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
@@ -330,6 +331,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                         teamId={team.id} 
                         onSuccess={refreshPlayers} 
                         effectivelyLocked={unlockRequested ? false : effectivelyLocked} 
+                        sport={team.sport || team.sport_name}
                     />
                     {(!effectivelyLocked || unlockRequested || !isDeadlinePassed) && (
                         <Button
@@ -437,9 +439,9 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 />
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <div className={cn(
-                    "flex-1 w-full min-w-0 space-y-2 md:space-y-4",
+                    "lg:col-span-2 w-full min-w-0 space-y-2 md:space-y-4",
                     mobileTab !== 'roster' && "hidden lg:block"
                 )}>
                     <div id="tour-add-player-form">
@@ -447,6 +449,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                             teamId={team.id}
                             onSuccess={refreshPlayers}
                             effectivelyLocked={unlockRequested ? false : effectivelyLocked}
+                            sport={team.sport || team.sport_name}
                         />
                     </div>
                     <div id="tour-squad-list">
@@ -463,7 +466,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                 </div>
 
                 <div className={cn(
-                    "w-full lg:w-[380px] shrink-0 space-y-6 lg:sticky lg:top-6",
+                    "lg:col-span-1 w-full min-w-0 space-y-6 lg:sticky lg:top-6",
                     mobileTab !== 'team' && "hidden lg:block"
                 )}>
                     <div id="tour-edit-team-form">
