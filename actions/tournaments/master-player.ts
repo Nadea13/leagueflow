@@ -262,6 +262,9 @@ export async function updateGlobalPlayerInfo(
         gender?: string;
         tel?: string | null;
         profile_img?: string | null;
+        favorite_sport_id?: string | null;
+        preferred_hand?: string | null;
+        preferred_foot?: string | null;
     }
 ): Promise<ActionResponse> {
     const supabase = await createClient();
@@ -308,6 +311,15 @@ export async function updateGlobalPlayerInfo(
     }
     if (data.tel !== undefined) {
         updateData.tel = data.tel;
+    }
+    if (data.favorite_sport_id !== undefined) {
+        updateData.favorite_sport_id = data.favorite_sport_id;
+    }
+    if (data.preferred_hand !== undefined) {
+        updateData.preferred_hand = data.preferred_hand;
+    }
+    if (data.preferred_foot !== undefined) {
+        updateData.preferred_foot = data.preferred_foot;
     }
     if (data.profile_img !== undefined) {
         updateData.profile_img = data.profile_img;

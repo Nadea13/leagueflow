@@ -231,11 +231,11 @@ export default function NotificationsPage() {
             </div>
 
             {isLoading ? (
-                <Card className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
+                <div className="flex flex-col gap-2 md:gap-3">
                     {[...Array(4)].map((_, idx) => (
-                        <div
+                        <Card
                             key={idx}
-                            className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4"
+                            className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm"
                         >
                             <div className="flex items-start gap-4 w-full">
                                 <Skeleton className="h-10 w-10 rounded-full shrink-0" />
@@ -252,9 +252,9 @@ export default function NotificationsPage() {
                                 <Skeleton className="h-8 w-10 rounded-sm" />
                                 <Skeleton className="h-8 w-20 rounded-sm" />
                             </div>
-                        </div>
+                        </Card>
                     ))}
-                </Card>
+                </div>
             ) : notifications.length === 0 ? (
                 <EmptyState
                     title={t("no_pending_invites") || (isTh ? "ไม่มีข้อความใหม่" : "No new messages")}
@@ -264,15 +264,15 @@ export default function NotificationsPage() {
                     className="bg-card rounded-sm border"
                 />
             ) : (
-                <Card className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
+                <div className="flex flex-col gap-2 md:gap-3">
                     {notifications.map((item) => {
                         if (item.type === 'invite') {
                             const currentStatus = actionState[item.id] || item.status;
 
                             return (
-                                <div
+                                <Card
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors"
+                                    className="p-2 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -300,15 +300,15 @@ export default function NotificationsPage() {
 
                                     <div className="flex items-center gap-1 md:gap-2 shrink-0">
                                         {currentStatus === 'accepted' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
                                                 <span>Accepted</span>
                                             </Badge>
                                         ) : currentStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
                                                 <span>Declined</span>
                                             </Badge>
                                         ) : currentStatus === 'error' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
                                                 <span>Error occurred</span>
                                             </Badge>
                                         ) : (
@@ -330,15 +330,15 @@ export default function NotificationsPage() {
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                </Card>
                             );
                         } else if (item.type === 'registration') {
                             // Registration Notification
                             const regStatus = item.registration_status;
                             return (
-                                <div
+                                <Card
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors cursor-pointer"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all cursor-pointer"
                                     onClick={() => router.push(`/${locale}/dashboard/tournament-teams/${item.id}`)}
                                 >
                                     <div className="flex items-start gap-4">
@@ -379,28 +379,28 @@ export default function NotificationsPage() {
 
                                     <div className="flex items-center gap-1 md:gap-2 shrink-0">
                                         {regStatus === 'approved' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
                                                 {getStatusText(regStatus)}
                                             </Badge>
                                         ) : regStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
                                                 {getStatusText(regStatus)}
                                             </Badge>
                                         ) : (
-                                            <Badge className="bg-warning/10 text-warning hover:bg-warning/10 border-warning/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-warning/10 text-warning hover:bg-warning/10 border-warning/20">
                                                 {getStatusText(regStatus)}
                                             </Badge>
                                         )}
                                     </div>
-                                </div>
+                                </Card>
                             );
                         } else if (item.type === 'team_request') {
                             // Team Management Request Notification (Own Claims)
                             const reqStatus = item.status;
                             return (
-                                <div
+                                <Card
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -434,28 +434,28 @@ export default function NotificationsPage() {
 
                                     <div className="flex items-center gap-1 md:gap-2 shrink-0">
                                         {reqStatus === 'approved' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
                                                 {getStatusText(reqStatus)}
                                             </Badge>
                                         ) : reqStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
                                                 {getStatusText(reqStatus)}
                                             </Badge>
                                         ) : (
-                                            <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border-amber-500/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border-amber-500/20">
                                                 {getStatusText(reqStatus)}
                                             </Badge>
                                         )}
                                     </div>
-                                </div>
+                                </Card>
                             );
                         } else {
                             // Incoming Team Management Request Notification (For Organizer/Collaborator)
                             const currentStatus = actionState[item.id] || item.status;
                             return (
-                                <div
+                                <Card
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/10 transition-colors"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -506,15 +506,15 @@ export default function NotificationsPage() {
 
                                     <div className="flex items-center gap-1 md:gap-2 shrink-0">
                                         {currentStatus === 'approved' || currentStatus === 'accepted' ? (
-                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20">
                                                 {isTh ? "อนุมัติแล้ว" : "Approved"}
                                             </Badge>
                                         ) : currentStatus === 'rejected' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
                                                 {isTh ? "ปฏิเสธแล้ว" : "Rejected"}
                                             </Badge>
                                         ) : currentStatus === 'error' ? (
-                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20 font-bold px-2 py-0.5 rounded text-[10px]">
+                                            <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10 border-destructive/20">
                                                 <span>Error occurred</span>
                                             </Badge>
                                         ) : (
@@ -536,11 +536,11 @@ export default function NotificationsPage() {
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                </Card>
                             );
                         }
                     })}
-                </Card>
+                </div>
             )}
         </div>
     );

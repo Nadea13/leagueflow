@@ -223,6 +223,9 @@ export async function createMasterPlayer(formData: FormData): Promise<ActionResp
         const gender = formData.get("gender") as string;
         const birthday = formData.get("birthday") as string;
         const tel = formData.get("tel") as string;
+        const favoriteSportId = formData.get("favoriteSportId") as string || null;
+        const preferredHand = formData.get("preferredHand") as string || null;
+        const preferredFoot = formData.get("preferredFoot") as string || null;
 
         if ((!firstNameTh && !firstNameEn) || (!lastNameTh && !lastNameEn) || !gender || !birthday) {
             return { success: false, error: "First name, last name, gender, and birthday are required" };
@@ -242,6 +245,9 @@ export async function createMasterPlayer(formData: FormData): Promise<ActionResp
                 gender,
                 birthday,
                 tel,
+                favorite_sport_id: favoriteSportId,
+                preferred_hand: preferredHand,
+                preferred_foot: preferredFoot,
                 status: 'active',
                 verified: true
             })

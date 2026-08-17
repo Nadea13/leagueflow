@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Users, Search, HelpCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ interface MyTeamsClientProps {
 
 export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
     const t = useTranslations("Team");
+    const locale = useLocale();
+    const isThai = locale === "th";
     const [searchQuery, setSearchQuery] = useState("");
 
     const startTour = useCallback(() => {
@@ -105,6 +107,7 @@ export function MyTeamsClient({ initialTeams }: MyTeamsClientProps) {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-card"
+                            placeholder={isThai ? "พิมพ์ชื่อทีม..." : "Search teams..."}
                         />
                     </div>
                     {/* <div id="tour-verify-team-btn" className="inline-block">

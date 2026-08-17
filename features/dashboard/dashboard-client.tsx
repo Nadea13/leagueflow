@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useEffect, useTransition, useCallback } from "react";
+import { useState, useEffect, useTransition, useCallback, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createMasterPlayer, getMasterPlayerStats, searchMasterPlayers, claimMasterPlayer } from "@/actions/common/user";
 import { Link } from "@/i18n/routing";
 import {
     Trophy, Calendar, Search, HelpCircle,
     AlertCircle, UserCheck, Activity, Edit, Link as LinkIcon, Loader2,
+    ChevronLeft, ChevronRight,
+    Venus, Mars,
 } from "lucide-react";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, setYear } from "date-fns";
+import { formatDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,10 +19,15 @@ import { Header } from "@/components/ui/header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tournament } from "@/types";
+import { getSports } from "@/actions/manager/team";
+import { Sport, Tournament } from "@/types";
+import { getSportIcon } from "@/components/shared/sport-icons";
+import { cn } from "@/lib/utils";
+import { Tab } from "@/components/ui/tab";
+import { LogoUploader } from "@/components/shared/logo-uploader";
+import { updateGlobalPlayerPhoto } from "@/actions/tournaments/master-player";
 import { EditVerifyProfileDialog } from "@/features/teams/edit-verify-profile-dialog";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -40,6 +49,9 @@ export interface MasterPlayer {
     profile_img?: string | null;
     verified?: boolean;
     status?: string;
+    favorite_sport_id?: string | null;
+    preferred_hand?: string | null;
+    preferred_foot?: string | null;
 }
 
 interface PlayerStats {
@@ -62,7 +74,7 @@ interface PlayerStats {
 }
 
 interface DashboardClientProps {
-    initialTournaments: Partial<Tournament>[];
+    initialTournaments: Tournament[];
     initialMasterPlayer: MasterPlayer | null;
 }
 
@@ -73,10 +85,10 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
     const tCommon = useTranslations("Common");
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [masterPlayer, setMasterPlayer] = useState(initialMasterPlayer);
-    const [isPending, startTransition] = useTransition();
+    const [masterPlayer, setMasterPlayer] = useState<MasterPlayer | null>(initialMasterPlayer);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     const [stats, setStats] = useState<PlayerStats | null>(null);
     const [statsPlayerId, setStatsPlayerId] = useState<string | null>(null);
@@ -108,9 +120,80 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
     const [firstNameEn, setFirstNameEn] = useState("");
     const [middleNameEn, setMiddleNameEn] = useState("");
     const [lastNameEn, setLastNameEn] = useState("");
+    const [createPhotoFile, setCreatePhotoFile] = useState<File | null>(null);
+    const [createPreviewUrl, setCreatePreviewUrl] = useState<string | null>(null);
     const [gender, setGender] = useState("male");
     const [birthday, setBirthday] = useState("");
+    const [dobViewDate, setDobViewDate] = useState<Date>(() => new Date(2000, 0, 1));
+
+    const dobCalendarDays = useMemo(() => {
+        const monthStart = startOfMonth(dobViewDate);
+        const monthEnd = endOfMonth(monthStart);
+        const startDate = startOfWeek(monthStart);
+        const endDate = endOfWeek(monthEnd);
+        return eachDayOfInterval({ start: startDate, end: endDate });
+    }, [dobViewDate]);
+
+    const birthYears = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        const list = [];
+        for (let y = currentYear; y >= 1940; y--) list.push(y);
+        return list;
+    }, []);
     const [tel, setTel] = useState("");
+    const [favoriteSportId, setFavoriteSportId] = useState("");
+    const [preferredHand, setPreferredHand] = useState("right");
+    const [preferredFoot, setPreferredFoot] = useState("right");
+
+    const isCreateHandRightSelected = preferredHand === "right" || preferredHand === "both";
+    const isCreateHandLeftSelected = preferredHand === "left" || preferredHand === "both";
+
+    const toggleCreateHand = (side: "right" | "left") => {
+        if (side === "right") {
+            if (isCreateHandRightSelected) {
+                setPreferredHand(isCreateHandLeftSelected ? "left" : "");
+            } else {
+                setPreferredHand(isCreateHandLeftSelected ? "both" : "right");
+            }
+        } else {
+            if (isCreateHandLeftSelected) {
+                setPreferredHand(isCreateHandRightSelected ? "right" : "");
+            } else {
+                setPreferredHand(isCreateHandRightSelected ? "both" : "left");
+            }
+        }
+    };
+
+    const isCreateFootRightSelected = preferredFoot === "right" || preferredFoot === "both";
+    const isCreateFootLeftSelected = preferredFoot === "left" || preferredFoot === "both";
+
+    const toggleCreateFoot = (side: "right" | "left") => {
+        if (side === "right") {
+            if (isCreateFootRightSelected) {
+                setPreferredFoot(isCreateFootLeftSelected ? "left" : "");
+            } else {
+                setPreferredFoot(isCreateFootLeftSelected ? "both" : "right");
+            }
+        } else {
+            if (isCreateFootLeftSelected) {
+                setPreferredFoot(isCreateFootRightSelected ? "right" : "");
+            } else {
+                setPreferredFoot(isCreateFootRightSelected ? "both" : "left");
+            }
+        }
+    };
+
+    const [sportsList, setSportsList] = useState<Sport[]>([]);
+
+    useEffect(() => {
+        async function loadSports() {
+            const res = await getSports();
+            if (res.success && res.data) {
+                setSportsList(res.data);
+            }
+        }
+        loadSports();
+    }, []);
 
     // Edit profile & Claim profile state
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -263,12 +346,30 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
         formData.append("gender", gender);
         formData.append("birthday", birthday);
         formData.append("tel", tel);
+        formData.append("favoriteSportId", favoriteSportId);
+        formData.append("preferredHand", preferredHand);
+        formData.append("preferredFoot", preferredFoot);
 
         startTransition(async () => {
             const res = await createMasterPlayer(formData);
-            if (res.success) {
+            if (res.success && res.data) {
+                let updatedMasterPlayer = res.data as MasterPlayer;
+                if (createPhotoFile && updatedMasterPlayer.id) {
+                    const photoFormData = new FormData();
+                    photoFormData.append("photo", createPhotoFile);
+                    const photoRes = await updateGlobalPlayerPhoto(updatedMasterPlayer.id, photoFormData);
+                    if (photoRes.success && photoRes.data) {
+                        const photoData = photoRes.data as unknown as { profile_img?: string };
+                        if (photoData.profile_img) {
+                            updatedMasterPlayer = {
+                                ...updatedMasterPlayer,
+                                profile_img: photoData.profile_img
+                            };
+                        }
+                    }
+                }
                 setSuccess(true);
-                setMasterPlayer(res.data as MasterPlayer);
+                setMasterPlayer(updatedMasterPlayer);
             } else {
                 setError(res.error || t("registration_error"));
             }
@@ -304,6 +405,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 id="tour-search-input"
                                 className="bg-card"
+                                placeholder={isThai ? "พิมพ์ชื่อการแข่งขัน..." : "Search tournaments..."}
                             />
                         </div>
                     </div>
@@ -476,6 +578,23 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                 ? `${masterPlayer.first_name_th || masterPlayer.first_name_en || ""} ${masterPlayer.last_name_th || masterPlayer.last_name_en || ""}`
                                                 : `${masterPlayer.first_name_en || masterPlayer.first_name_th || ""} ${masterPlayer.last_name_en || masterPlayer.last_name_th || ""}`}
                                         </Header>
+                                        <div className="flex flex-wrap items-center justify-center gap-1 lg:gap-2">
+                                            {masterPlayer.preferred_hand && (
+                                                <Badge variant="outline" className="text-[10px]">
+                                                    {isThai ? "มือ" : "Hand"}: {masterPlayer.preferred_hand === 'right' ? (isThai ? 'ขวา' : 'Right') : masterPlayer.preferred_hand === 'left' ? (isThai ? 'ซ้าย' : 'Left') : (isThai ? 'สองข้าง' : 'Both')}
+                                                </Badge>
+                                            )}
+                                            {masterPlayer.preferred_foot && (
+                                                <Badge variant="outline" className="text-[10px]">
+                                                    {isThai ? "เท้า" : "Foot"}: {masterPlayer.preferred_foot === 'right' ? (isThai ? 'ขวา' : 'Right') : masterPlayer.preferred_foot === 'left' ? (isThai ? 'ซ้าย' : 'Left') : (isThai ? 'สองข้าง' : 'Both')}
+                                                </Badge>
+                                            )}
+                                            {masterPlayer.favorite_sport_id && (
+                                                <Badge variant="outline" className="text-[10px]">
+                                                    {sportsList.find(s => s.id === masterPlayer.favorite_sport_id)?.sport_name || (isThai ? "กีฬาที่ชอบ" : "Favorite Sport")}
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -561,30 +680,16 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                         ) : (
                             /* Create or Claim Master Player Card / Form */
                             <div className="relative overflow-hidden">
-                                <div className="flex border-b">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveFormTab("create")}
-                                        className={`flex-1 py-3 px-4 text-xs font-bold transition-colors text-center border-r ${
-                                            activeFormTab === "create"
-                                                ? "bg-primary/10 text-primary border-b-2 border-b-primary"
-                                                : "text-muted-foreground hover:text-foreground bg-muted/20"
-                                        }`}
-                                    >
-                                        {t("create_profile")}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveFormTab("claim")}
-                                        className={`flex-1 py-3 px-4 text-xs font-bold transition-colors text-center flex items-center justify-center gap-1.5 ${
-                                            activeFormTab === "claim"
-                                                ? "bg-primary/10 text-primary border-b-2 border-b-primary"
-                                                : "text-muted-foreground hover:text-foreground bg-muted/20"
-                                        }`}
-                                    >
-                                        <LinkIcon className="h-3.5 w-3.5" />
-                                        Claim Player Profile
-                                    </button>
+                                <div className="p-2 border-b bg-muted/10">
+                                    <Tab
+                                        options={[
+                                            { value: "create", label: t("create_profile"), icon: UserCheck },
+                                            { value: "claim", label: isThai ? "เชื่อมโยงโปรไฟล์นักกีฬา" : "Claim Player Profile", icon: LinkIcon },
+                                        ]}
+                                        value={activeFormTab}
+                                        onChange={setActiveFormTab}
+                                        fullWidth
+                                    />
                                 </div>
 
                                 <div className="space-y-2 md:space-y-4">
@@ -605,6 +710,26 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                     {activeFormTab === "create" ? (
                                         <form onSubmit={handleCreateProfile}>
                                             <div className="space-y-1 md:space-y-2 p-2 md:p-4">
+                                                {/* Photo Uploader */}
+                                                <div className="flex flex-col items-center justify-center space-y-1 pb-2">
+                                                    <LogoUploader
+                                                        id="create-profile-photo"
+                                                        initialUrl={createPreviewUrl}
+                                                        onFileChange={(file) => {
+                                                            setCreatePhotoFile(file);
+                                                            if (file) {
+                                                                setCreatePreviewUrl(URL.createObjectURL(file));
+                                                            } else {
+                                                                setCreatePreviewUrl(null);
+                                                            }
+                                                        }}
+                                                        onRemove={() => {
+                                                            setCreatePhotoFile(null);
+                                                            setCreatePreviewUrl(null);
+                                                        }}
+                                                        disabled={isPending}
+                                                    />
+                                                </div>
                                                 {/* Thai Name */}
                                                 <div className="space-y-1">
                                                     <div className="grid grid-cols-3 gap-2">
@@ -615,6 +740,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 type="text"
                                                                 value={firstNameTh}
                                                                 onChange={(e) => setFirstNameTh(e.target.value)}
+                                                                placeholder={isThai ? "เช่น สมชาย" : "e.g. Somchai"}
                                                             />
                                                         </div>
                                                         <div className="space-y-1">
@@ -624,6 +750,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 type="text"
                                                                 value={middleNameTh}
                                                                 onChange={(e) => setMiddleNameTh(e.target.value)}
+                                                                placeholder={isThai ? "ชื่อกลาง (ถ้ามี)" : "Middle name (optional)"}
                                                             />
                                                         </div>
                                                         <div className="space-y-1">
@@ -633,6 +760,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 type="text"
                                                                 value={lastNameTh}
                                                                 onChange={(e) => setLastNameTh(e.target.value)}
+                                                                placeholder={isThai ? "เช่น ใจดี" : "e.g. Jaidee"}
                                                             />
                                                         </div>
                                                     </div>
@@ -648,6 +776,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 type="text"
                                                                 value={firstNameEn}
                                                                 onChange={(e) => setFirstNameEn(e.target.value)}
+                                                                placeholder={isThai ? "เช่น Somchai" : "e.g. Somchai"}
                                                             />
                                                         </div>
                                                         <div className="space-y-1">
@@ -657,6 +786,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 type="text"
                                                                 value={middleNameEn}
                                                                 onChange={(e) => setMiddleNameEn(e.target.value)}
+                                                                placeholder={isThai ? "Middle name (optional)" : "Middle name (optional)"}
                                                             />
                                                         </div>
                                                         <div className="space-y-1">
@@ -666,34 +796,9 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 type="text"
                                                                 value={lastNameEn}
                                                                 onChange={(e) => setLastNameEn(e.target.value)}
+                                                                placeholder={isThai ? "เช่น Jaidee" : "e.g. Jaidee"}
                                                             />
                                                         </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-1 md:gap-2">
-                                                    <div className="space-y-1 flex flex-col justify-end">
-                                                        <Label>{t("gender")} <span className="text-destructive">*</span></Label>
-                                                        <Select value={gender} onValueChange={setGender}>
-                                                            <SelectTrigger className="w-full">
-                                                                <SelectValue placeholder={t("select_gender")} />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="male">{t("male")}</SelectItem>
-                                                                <SelectItem value="female">{t("female")}</SelectItem>
-                                                                <SelectItem value="other">{t("other")}</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
-                                                        <Input
-                                                            id="birthday"
-                                                            type="date"
-                                                            required
-                                                            value={birthday}
-                                                            onChange={(e) => setBirthday(e.target.value)}
-                                                        />
                                                     </div>
                                                 </div>
 
@@ -704,7 +809,254 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                         type="tel"
                                                         value={tel}
                                                         onChange={(e) => setTel(e.target.value)}
+                                                        placeholder={isThai ? "เช่น 081-234-5678" : "e.g. 081-234-5678"}
                                                     />
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label>{t("gender")} <span className="text-destructive">*</span></Label>
+                                                    <div className="grid grid-cols-2 gap-1 lg:gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setGender("male")}
+                                                            className={cn(
+                                                                "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                gender === "male"
+                                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                            )}
+                                                        >
+                                                            <div className={cn(
+                                                                "p-2 rounded-full transition-colors leading-none flex items-center justify-center w-8 h-8",
+                                                                gender === "male" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                            )}>
+                                                                <Mars className="h-4 w-4" />
+                                                            </div>
+                                                            <span className="text-xs font-bold truncate w-full transition-colors">{isThai ? "ชาย" : "Male"}</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setGender("female")}
+                                                            className={cn(
+                                                                "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                gender === "female"
+                                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                            )}
+                                                        >
+                                                            <div className={cn(
+                                                                "p-2 rounded-full transition-colors leading-none flex items-center justify-center w-8 h-8",
+                                                                gender === "female" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                            )}>
+                                                                <Venus className="h-4 w-4" />
+                                                            </div>
+                                                            <span className="text-xs font-bold truncate w-full transition-colors">{isThai ? "หญิง" : "Female"}</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label>{t("date_of_birth")} <span className="text-destructive">*</span></Label>
+                                                    <div className="p-1 lg:p-2 border rounded-sm">
+                                                        <div className="space-y-1 lg:space-y-2 select-none">
+                                                            <div className="flex items-center justify-between gap-1">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setDobViewDate(subMonths(dobViewDate, 1))}
+                                                                    className="flex items-center justify-center p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                                                                >
+                                                                    <ChevronLeft className="h-4 w-4" />
+                                                                </button>
+                                                                <div className="flex items-center gap-1">
+                                                                    <span className="text-xs font-bold tracking-tight">
+                                                                        {dobViewDate.toLocaleString(isThai ? 'th-TH' : 'en-US', { month: 'long' })}
+                                                                    </span>
+                                                                    <select
+                                                                        value={dobViewDate.getFullYear()}
+                                                                        onChange={(e) => setDobViewDate(setYear(dobViewDate, parseInt(e.target.value)))}
+                                                                        className="text-xs font-bold bg-transparent border-none focus:outline-none cursor-pointer"
+                                                                    >
+                                                                        {birthYears.map((y: number) => (
+                                                                            <option key={y} value={y} className="bg-card text-foreground">
+                                                                                {isThai ? y + 543 : y}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setDobViewDate(addMonths(dobViewDate, 1))}
+                                                                    className="flex items-center justify-center p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                                                                >
+                                                                    <ChevronRight className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-7 text-center">
+                                                                {(isThai ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, i) => (
+                                                                    <div key={i} className="text-xs font-bold text-muted-foreground">{d}</div>
+                                                                ))}
+                                                            </div>
+
+                                                            <div className="grid grid-cols-7">
+                                                                {dobCalendarDays.map((day: Date, idx: number) => {
+                                                                    if (!day) return <div key={`empty-${idx}`} />;
+                                                                    const dateStr = format(day, 'yyyy-MM-dd');
+                                                                    const isSelected = birthday === dateStr;
+                                                                    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+
+                                                                    return (
+                                                                        <button
+                                                                            key={dateStr}
+                                                                            type="button"
+                                                                            onClick={() => setBirthday(dateStr)}
+                                                                            className={cn(
+                                                                                "h-8 w-full flex items-center justify-center text-xs rounded-sm transition-all relative",
+                                                                                isSelected && "bg-primary/10 text-primary border border-primary/50 font-bold z-10",
+                                                                                !isSelected && "hover:bg-muted text-foreground",
+                                                                                isToday && !isSelected && "border text-muted-foreground"
+                                                                            )}
+                                                                        >
+                                                                            {format(day, 'd')}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+
+                                                            <div className="flex items-center justify-between text-[11px] pt-1 lg:pt-2 border-t">
+                                                                <span className="text-muted-foreground font-medium">
+                                                                    {birthday
+                                                                        ? (isThai ? `วันที่เลือก: ${formatDate(birthday, "d MMM yyyy", locale)}` : `Selected: ${formatDate(birthday, "d MMM yyyy", locale)}`)
+                                                                        : (isThai ? "คลิกเพื่อเลือกวันเกิด" : "Click date to select")}
+                                                                </span>
+                                                                {birthday && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setBirthday("")}
+                                                                        className="text-destructive font-bold hover:underline"
+                                                                    >
+                                                                        {isThai ? "ล้างค่า" : "Clear"}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Label>{isThai ? "กีฬาที่ชอบ" : "Favorite Sport"}</Label>
+                                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 lg:gap-2">
+                                                        {sportsList.map((sport) => {
+                                                            const isSelected = favoriteSportId === sport.id;
+                                                            return (
+                                                                <button
+                                                                    key={sport.id}
+                                                                    type="button"
+                                                                    onClick={() => setFavoriteSportId(isSelected ? "" : sport.id)}
+                                                                    className={cn(
+                                                                        "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                        isSelected
+                                                                            ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                            : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                    )}
+                                                                >
+                                                                    <div className={cn(
+                                                                        "p-2 rounded-full transition-colors",
+                                                                        isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                                    )}>
+                                                                        {getSportIcon(sport.sport_name, "h-4 w-4")}
+                                                                    </div>
+                                                                    <span className="text-xs font-bold truncate w-full transition-colors">{sport.sport_name}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-1">
+                                                        <Label>{isThai ? "มือที่ถนัด" : "Preferred Hand"}</Label>
+                                                        <div className="grid grid-cols-2 gap-1 lg:gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleCreateHand("left")}
+                                                                className={cn(
+                                                                    "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                    isCreateHandLeftSelected
+                                                                        ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                )}
+                                                            >
+                                                                <div className={cn(
+                                                                    "p-2 rounded-full transition-colors leading-none flex items-center justify-center w-8 h-8",
+                                                                    isCreateHandLeftSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                                )}>
+                                                                    <span className="text-sm">✋</span>
+                                                                </div>
+                                                                <span className="text-xs font-bold truncate w-full transition-colors">{isThai ? "ข้างซ้าย" : "Left"}</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleCreateHand("right")}
+                                                                className={cn(
+                                                                    "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                    isCreateHandRightSelected
+                                                                        ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                )}
+                                                            >
+                                                                <div className={cn(
+                                                                    "p-2 rounded-full transition-colors leading-none flex items-center justify-center w-8 h-8",
+                                                                    isCreateHandRightSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                                )}>
+                                                                    <span className="text-sm">✋</span>
+                                                                </div>
+                                                                <span className="text-xs font-bold truncate w-full transition-colors">{isThai ? "ข้างขวา" : "Right"}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <Label>{isThai ? "เท้าที่ถนัด" : "Preferred Foot"}</Label>
+                                                        <div className="grid grid-cols-2 gap-1 lg:gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleCreateFoot("left")}
+                                                                className={cn(
+                                                                    "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                    isCreateFootLeftSelected
+                                                                        ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                )}
+                                                            >
+                                                                <div className={cn(
+                                                                    "p-2 rounded-full transition-colors leading-none flex items-center justify-center w-8 h-8",
+                                                                    isCreateFootLeftSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                                )}>
+                                                                    <span className="text-sm">🦶</span>
+                                                                </div>
+                                                                <span className="text-xs font-bold truncate w-full transition-colors">{isThai ? "ข้างซ้าย" : "Left"}</span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleCreateFoot("right")}
+                                                                className={cn(
+                                                                    "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                                    isCreateFootRightSelected
+                                                                        ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                                        : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                )}
+                                                            >
+                                                                <div className={cn(
+                                                                    "p-2 rounded-full transition-colors leading-none flex items-center justify-center w-8 h-8",
+                                                                    isCreateFootRightSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                                )}>
+                                                                    <span className="text-sm">🦶</span>
+                                                                </div>
+                                                                <span className="text-xs font-bold truncate w-full transition-colors">{isThai ? "ข้างขวา" : "Right"}</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                             </div>
@@ -722,11 +1074,10 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                         /* Claim Player Search & Form */
                                         <div className="p-2 md:p-4 space-y-3">
                                             <div className="space-y-1">
-                                                <Label className="text-xs font-bold">Search Existing Player Profile</Label>
+                                                <Label className="text-xs font-bold">{isThai ? "ค้นหาโปรไฟล์นักกีฬาที่มีอยู่ในระบบ" : "Search Existing Player Profile"}</Label>
                                                 <div className="relative">
-                                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                                     <Input
-                                                        placeholder="Type player name (Thai/English)..."
+                                                        placeholder={isThai ? "พิมพ์ชื่อนักกีฬา (ภาษาไทย/อังกฤษ)..." : "Type player name (Thai/English)..."}
                                                         value={claimSearchQuery}
                                                         onChange={(e) => handleSearchClaimablePlayers(e.target.value)}
                                                         className="pl-9 h-9 text-xs"
@@ -736,21 +1087,25 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                     )}
                                                 </div>
                                                 <p className="text-[11px] text-muted-foreground">
-                                                    If your profile was previously created by a team manager or tournament organizer, search for your name to claim ownership.
+                                                    {isThai
+                                                        ? "หากเคยมีผู้จัดการทีมหรือผู้จัดแข่งขันสร้างโปรไฟล์นักกีฬาของคุณไว้ก่อนหน้านี้ สามารถค้นหาชื่อเพื่อเชื่อมโยงกับบัญชีของคุณได้ที่นี่"
+                                                        : "If your profile was previously created by a team manager or tournament organizer, search for your name to claim ownership."}
                                                 </p>
                                             </div>
 
                                             <div className="space-y-2 mt-2 max-h-64 overflow-y-auto pr-1">
                                                 {claimSearchQuery.trim() && searchResults.length === 0 && !isSearching && (
                                                     <div className="text-center py-6 text-xs text-muted-foreground border border-dashed rounded-sm">
-                                                        No unclaimed player profiles found matching &quot;{claimSearchQuery}&quot;
+                                                        {isThai
+                                                            ? `ไม่พบโปรไฟล์นักกีฬาที่ยังไม่มีผู้ครอบครองสำหรับ "${claimSearchQuery}"`
+                                                            : `No unclaimed player profiles found matching "${claimSearchQuery}"`}
                                                     </div>
                                                 )}
 
                                                 {searchResults.map((player) => {
                                                     const nameTh = `${player.first_name_th || ''} ${player.middle_name_th || ''} ${player.last_name_th || ''}`.trim()
                                                     const nameEn = `${player.first_name_en || ''} ${player.middle_name_en || ''} ${player.last_name_en || ''}`.trim()
-                                                    const displayName = nameTh || nameEn || "Unnamed Player"
+                                                    const displayName = nameTh || nameEn || (isThai ? "ไม่มีชื่อนักกีฬา" : "Unnamed Player")
                                                     const isClaiming = claimingPlayerId === player.id
 
                                                     return (
@@ -771,7 +1126,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                         <span className="text-[10px] text-muted-foreground">{nameEn}</span>
                                                                     )}
                                                                     <span className="text-[10px] text-muted-foreground">
-                                                                        DOB: {player.birthday || '-'} | Phone: {player.tel || '-'}
+                                                                        {isThai ? "วันเกิด:" : "DOB:"} {player.birthday || '-'} | {isThai ? "โทร:" : "Phone:"} {player.tel || '-'}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -787,7 +1142,7 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                                                                 ) : (
                                                                     <LinkIcon className="h-3.5 w-3.5" />
                                                                 )}
-                                                                Claim Player
+                                                                {isClaiming ? (isThai ? "กำลังเชื่อมโยง..." : "Claiming...") : (isThai ? "เชื่อมโยงโปรไฟล์" : "Claim Profile")}
                                                             </Button>
                                                         </div>
                                                     );

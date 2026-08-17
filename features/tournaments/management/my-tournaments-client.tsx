@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Search, HelpCircle, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ interface MyTournamentsClientProps {
 
 export function MyTournamentsClient({ initialTournaments, userPlan }: MyTournamentsClientProps) {
     const t = useTranslations("Dashboard");
+    const locale = useLocale();
+    const isThai = locale === "th";
     const [searchQuery, setSearchQuery] = useState("");
 
     const startTour = useCallback(() => {
@@ -106,6 +108,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-card"
+                            placeholder={isThai ? "พิมพ์ชื่อการแข่งขัน..." : "Search tournaments..."}
                         />
                     </div>
                     <div id="tour-create-tournament-btn" className="inline-block">
