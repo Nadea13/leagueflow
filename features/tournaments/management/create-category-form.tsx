@@ -396,6 +396,7 @@ export function CreateCategoryForm({
                                         const val = e.target.value.replace(/[^0-9]/g, "");
                                         setMaxTeams(val);
                                     }}
+                                    placeholder={isThai ? "เช่น 8, 16, 32" : "e.g. 8, 16, 32"}
                                 />
                             </div>
 
@@ -412,7 +413,7 @@ export function CreateCategoryForm({
                                             setRegistrationFee(val);
                                         }
                                     }}
-                                    placeholder="0.00 (Free)"
+                                    placeholder={isThai ? "เช่น 500 (หรือ 0 สำหรับฟรี)" : "e.g. 500 (or 0 for free)"}
                                 />
                             </div>
                         </div>

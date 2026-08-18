@@ -23,6 +23,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -130,27 +131,31 @@ export function Announcements({
 
     if (mode === 'form') {
         return (
-            <div className="bg-card">
-                <form onSubmit={handleAdd}>
-                    <div className="p-2 lg:p-4 space-y-1 lg:space-y-2">
+            <div className="bg-card flex flex-col h-full overflow-hidden">
+                <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
+                    <div className="p-2 md:p-4 space-y-3 md:space-y-4 flex-1 overflow-y-auto">
                         <div className="space-y-1">
-                            <Label>{t("title_placeholder")}</Label>
+                            <Label htmlFor="announcement-title-mode">{t("title_placeholder")}</Label>
                             <Input
+                                id="announcement-title-mode"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
+                                placeholder={t("title_placeholder")}
                                 required
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label>{t("content_placeholder")}</Label>
+                        <div className="space-y-1">
+                            <Label htmlFor="announcement-content-mode">{t("content_placeholder")}</Label>
                             <Textarea
+                                id="announcement-content-mode"
                                 value={content}
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
+                                placeholder={t("content_placeholder")}
                                 className="resize-none min-h-[160px]"
                             />
                         </div>
                     </div>
-                    <div className="p-2 lg:p-4 border-t">
+                    <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                         <Button
                             type="submit"
                             className="bg-node-4 w-full"
@@ -159,7 +164,7 @@ export function Announcements({
                             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             {t("post")}
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </form>
             </div>
         );
@@ -179,11 +184,11 @@ export function Announcements({
                         <div
                             key={ann.id}
                             className={cn(
-                                "p-2 transition-all relative overflow-hidden group/item rounded",
+                                "p-2 transition-all relative overflow-hidden group/item rounded-sm",
                                 ann.is_pinned ? "bg-node-4/5 border-node-4/20 border border-node-4/60" : "border hover:border-node-4/60"
                             )}
                         >
-                            <div className="space-y-1">
+                            <div className="space-y-1 pr-6">
                                 <div className="flex items-center gap-2">
                                     {ann.is_pinned && <Pin className="h-3 w-3 text-node-4 shrink-0" />}
                                     <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
@@ -199,24 +204,47 @@ export function Announcements({
                                     <span className="text-[8px] font-black tracking-widest text-muted-foreground/30">
                                         {formatDate(ann.created_at, "MMM d, HH:mm", locale)}
                                     </span>
-                                    {isEditable && (
-                                        <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                                className="hover:text-node-4 transition-colors"
-                                            >
-                                                {ann.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                                            </button>
-                                            <button
-                                                onClick={() => setDeleteId(ann.id)}
-                                                className="hover:text-destructive transition-colors"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
+                            {isEditable && (
+                                <div className="absolute top-1.5 right-1.5 z-10">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <button
+                                                type="button"
+                                                className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-sm hover:bg-muted"
+                                            >
+                                                <MoreVertical className="h-3.5 w-3.5" />
+                                            </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-36 bg-card border shadow-xl p-1">
+                                            <DropdownMenuItem
+                                                onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
+                                            >
+                                                {ann.is_pinned ? (
+                                                    <>
+                                                        <PinOff className="h-3.5 w-3.5" />
+                                                        <span>{t("unpin")}</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Pin className="h-3.5 w-3.5" />
+                                                        <span>{t("pin")}</span>
+                                                    </>
+                                                )}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={() => setDeleteId(ann.id)}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 text-destructive focus:text-destructive"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                                <span>{tCommon("delete")}</span>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            )}
                         </div>
                     ))
                 )}
@@ -243,11 +271,9 @@ export function Announcements({
                                     {t("news")}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
-                                <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
-                                    <DialogTitle className="text-base font-bold flex items-center gap-2">
-                                        {t("news")}
-                                    </DialogTitle>
+                            <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
+                                <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
+                                    <DialogTitle className="text-lg font-black tracking-tighter">{t("news")}</DialogTitle>
                                     <Button
                                         type="button"
                                         variant="ghost"
@@ -258,39 +284,40 @@ export function Announcements({
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </DialogHeader>
-                                <form onSubmit={handleAdd}>
-                                    <div className="p-2 lg:p-4 space-y-3">
+                                <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
+                                    <div className="p-2 md:p-4 space-y-3 md:space-y-4 flex-1 overflow-y-auto">
                                         <div className="space-y-1">
-                                            <Label className="text-xs">{t("title_placeholder")}</Label>
+                                            <Label htmlFor="announcement-title">{t("title_placeholder")}</Label>
                                             <Input
+                                                id="announcement-title"
                                                 value={title}
                                                 onChange={e => setTitle(e.target.value)}
                                                 placeholder={t("title_placeholder")}
-                                                className="h-9 text-xs"
                                                 required
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-xs">{t("content_placeholder")}</Label>
+                                            <Label htmlFor="announcement-content">{t("content_placeholder")}</Label>
                                             <Textarea
+                                                id="announcement-content"
                                                 value={content}
                                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                                                 placeholder={t("content_placeholder")}
                                                 rows={5}
-                                                className="resize-none text-xs min-h-[120px]"
+                                                className="resize-none min-h-[120px]"
                                             />
                                         </div>
                                     </div>
-                                    <div className="p-2 lg:p-4 border-t flex gap-2">
+                                    <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                                         <Button
                                             type="submit"
-                                            className="bg-node-4 hover:bg-node-4/90 w-full"
+                                            className="w-full"
                                             disabled={isSaving || !title.trim()}
                                         >
-                                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
                                             {t("post")}
                                         </Button>
-                                    </div>
+                                    </DialogFooter>
                                 </form>
                             </DialogContent>
                         </Dialog>
@@ -343,64 +370,39 @@ export function Announcements({
                                 </div>
 
                                 {isEditable && (
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        {/* Desktop Actions */}
-                                        <div className="hidden lg:flex gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="hover:text-node-4"
-                                                onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                                title={ann.is_pinned ? t("unpin") : t("pin")}
-                                            >
-                                                {ann.is_pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="hover:text-destructive"
-                                                onClick={() => setDeleteId(ann.id)}
-                                                title={tCommon("delete")}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-
-                                        {/* Mobile Actions (3 dots) */}
-                                        <div className="lg:hidden">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 border border-border/20">
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="border-border/40">
-                                                    <DropdownMenuItem
-                                                        onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
-                                                        className="font-bold  text-[10px] tracking-widest"
-                                                    >
-                                                        {ann.is_pinned ? (
-                                                            <>
-                                                                <PinOff className="h-4 w-4 mr-2" />
-                                                                {t("unpin")}
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Pin className="h-4 w-4 mr-2" />
-                                                                {t("pin")}
-                                                            </>
-                                                        )}
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => setDeleteId(ann.id)}
-                                                        className="font-bold text-[10px] tracking-widest text-destructive focus:text-destructive"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5 mr-2" />
-                                                        {tCommon("delete")}
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
+                                    <div className="shrink-0">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                    onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
+                                                    className="font-bold text-[10px] tracking-widest cursor-pointer"
+                                                >
+                                                    {ann.is_pinned ? (
+                                                        <>
+                                                            <PinOff className="h-4 w-4" />
+                                                            {t("unpin")}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Pin className="h-4 w-4" />
+                                                            {t("pin")}
+                                                        </>
+                                                    )}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => setDeleteId(ann.id)}
+                                                    className="font-bold text-[10px] tracking-widest text-destructive focus:text-destructive cursor-pointer"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    {tCommon("delete")}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 )}
                             </div>

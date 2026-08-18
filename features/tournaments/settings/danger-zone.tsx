@@ -39,6 +39,7 @@ interface DangerZoneProps {
 export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: DangerZoneProps) {
     const t = useTranslations("Settings");
     const tCommon = useTranslations("Common");
+    const tTournament = useTranslations("Tournament");
     const { toast } = useToast();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -125,8 +126,8 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                     {t("delete_tournament")}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent showCloseButton={false} className="bg-card rounded-sm shadow-2xl p-0">
-                                <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                            <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
+                                <DialogHeader className="border-b p-2 md:p-4 relative pr-10 shrink-0">
                                     <DialogTitle>{t("delete_tournament")}</DialogTitle>
                                     <Button
                                         type="button"
@@ -138,7 +139,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </DialogHeader>
-                                <div className="p-2 md:p-4">
+                                <div className="p-2 md:p-4 flex-1 overflow-y-auto">
                                     <DialogDescription className="mb-1">{t("delete_desc")}</DialogDescription>
                                     <DialogDescription className="font-bold">
                                         {t("type_to_confirm", { text: tournamentName })}
@@ -147,10 +148,11 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                         <Input
                                             value={deleteConfirmText}
                                             onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                            placeholder={tTournament("delete_confirm_placeholder", { text: tournamentName })}
                                         />
                                     </div>
                                 </div>
-                                <DialogFooter className="p-2 md:p-4 border-t">
+                                <DialogFooter className="p-2 md:p-4 border-t shrink-0">
                                     <Button
                                         variant="destructive"
                                         disabled={deleteConfirmText !== tournamentName || isPending}
@@ -166,7 +168,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                 </div>
 
                 {/* Reset Bracket Flow */}
-                <div className="border relative overflow-hidden transition-colors p-2 md:p-4 rounded-sm">
+                <div className="border relative overflow-hidden transition-colors p-2 md:p-4">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
                         <div className="space-y-1">
                             <Header level={4} className="text-destructive">{t("reset_flow_title")}</Header>
@@ -184,7 +186,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
             </div>
 
             <AlertDialog open={resetFlowDialogOpen} onOpenChange={setResetFlowDialogOpen}>
-                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">
+                <AlertDialogContent className="sm:h-auto sm:max-w-md max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card border rounded-none sm:rounded-sm shadow-2xl p-0">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="p-2 md:p-4 border-b">
                             {t("reset_flow_title")}

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Loader2, UserCheck, Clock, Check, X } from "lucide-react";
+import { Users, Plus, Loader2, UserCheck, Clock, Check, X, ShieldCheck, UserCog, Award } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TournamentMember } from "@/types";
 import {
@@ -15,13 +15,6 @@ import {
     getStaffs,
     removeStaff
 } from "@/actions/tournaments/staff";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
@@ -135,8 +128,8 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                         </Button>
                     </DialogTrigger>
                     {possessesStaffAccess && (
-                        <DialogContent showCloseButton={false} className="sm:max-w-[640px] bg-card overflow-hidden shadow-2xl rounded-sm">
-                            <DialogHeader className="relative p-2 md:p-4 border-b pr-10">
+                        <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
+                            <DialogHeader className="relative p-2 md:p-4 border-b pr-10 shrink-0">
                                 <DialogTitle>{t("invite_title")}</DialogTitle>
                                 <Button
                                     type="button"
@@ -148,31 +141,54 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                                     <X className="h-4 w-4" />
                                 </Button>
                             </DialogHeader>
-                            <div className="p-2 space-y-1 md:p-4 md:space-y-2">
+                            <div className="p-2 space-y-1 md:p-4 md:space-y-2 flex-1 overflow-y-auto">
                                 <div className="space-y-1">
                                     <Label>{t("email_placeholder")}</Label>
                                     <Input
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        placeholder={t("email_input_placeholder")}
                                         onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
                                     />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>{t("role")}</Label>
-                                    <Select value={role} onValueChange={(val: 'co_organizer' | 'staff' | 'referee') => setRole(val)}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder={t("select_role")} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="co_organizer">{t("role_co_organizer")}</SelectItem>
-                                            <SelectItem value="staff">{t("role_staff")}</SelectItem>
-                                            <SelectItem value="referee">{t("role_referee")}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="grid grid-cols-3 gap-1 md:gap-2">
+                                        {[
+                                            { id: 'co_organizer', label: t("role_co_organizer"), icon: <ShieldCheck className="h-4 w-4" /> },
+                                            { id: 'staff', label: t("role_staff"), icon: <UserCog className="h-4 w-4" /> },
+                                            { id: 'referee', label: t("role_referee"), icon: <Award className="h-4 w-4" /> },
+                                        ].map((item) => {
+                                            const isSelected = role === item.id;
+                                            return (
+                                                <button
+                                                    key={item.id}
+                                                    type="button"
+                                                    onClick={() => setRole(item.id as 'co_organizer' | 'staff' | 'referee')}
+                                                    className={cn(
+                                                        "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                        isSelected
+                                                            ? "border-primary/50 bg-primary/10 text-primary font-bold ring-1 ring-primary/50"
+                                                            : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                    )}
+                                                >
+                                                    <div className={cn(
+                                                        "p-1.5 rounded-full transition-colors",
+                                                        isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                    )}>
+                                                        {item.icon}
+                                                    </div>
+                                                    <span className="text-xs font-bold truncate w-full transition-colors">
+                                                        {item.label}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="border-t p-2 md:p-4">
+                            <div className="border-t p-2 md:p-4 shrink-0">
                                 <Button
                                     onClick={handleInvite}
                                     disabled={isInviting || !email.trim()}

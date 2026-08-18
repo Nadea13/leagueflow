@@ -57,7 +57,9 @@ export function NodeSettings() {
     const tournamentId = params.id as string;
     const selectedNode = nodes.find((node) => node.id === activeNodeId);
     const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+    const [isAddAnnouncementOpen, setIsAddAnnouncementOpen] = React.useState(false);
     const t = useTranslations("Team");
+    const tSponsors = useTranslations("Sponsors");
     const locale = useLocale();
     const { toast } = useToast();
     const supabase = React.useMemo(() => createClient(), []);
@@ -587,21 +589,22 @@ export function NodeSettings() {
                 {/* ── Header based on type ── */}
                 <div className="flex items-center justify-between gap-2 md:gap-4">
                     <div className="flex items-center gap-2 md:gap-4">
-                        <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5' :
-                            type === 'matchNode' ? 'bg-node-2' :
-                                type === 'standingNode' ? 'bg-node-1' :
-                                    type === 'teamListNode' ? 'bg-node-3' :
+                        <div className={`w-8 h-8 rounded flex items-center justify-center ${type === 'groupNode' ? 'bg-node-5/10' :
+                            type === 'matchNode' ? 'bg-node-2/10' :
+                                type === 'standingNode' ? 'bg-node-1/10' :
+                                    type === 'teamListNode' ? 'bg-node-3/10' :
                                         type === 'sponsorNode' ? 'bg-red-500/10' :
-                                            type === 'registrationNode' ? 'bg-violet-500/10' : 'bg-node-4'
+                                            type === 'registrationNode' ? 'bg-violet-500/10' :
+                                                type === 'inboxNode' ? 'bg-node-2/10' : 'bg-node-4/10'
                             }`}>
-                            {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-foreground" /> :
-                                type === 'matchNode' ? <span className="text-sm font-bold text-foreground select-none">VS</span> :
-                                    type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-foreground" /> :
-                                        type === 'teamListNode' ? <Users className="h-4 w-4 text-foreground" /> :
-                                            type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500 fill-red-500" /> :
+                            {type === 'groupNode' ? <LayoutGrid className="h-4 w-4 text-node-5" /> :
+                                type === 'matchNode' ? <span className="text-sm font-bold text-node-2 select-none">VS</span> :
+                                    type === 'standingNode' ? <ListOrdered className="h-4 w-4 text-node-1" /> :
+                                        type === 'teamListNode' ? <Users className="h-4 w-4 text-node-3" /> :
+                                            type === 'sponsorNode' ? <Heart className="h-4 w-4 text-red-500" /> :
                                                 type === 'registrationNode' ? <ClipboardEdit className="h-4 w-4 text-violet-500" /> :
-                                                    type === 'inboxNode' ? <Inbox className="h-4 w-4 text-foreground" /> :
-                                                        <Megaphone className="h-4 w-4 text-foreground" />}
+                                                    type === 'inboxNode' ? <Inbox className="h-4 w-4 text-node-2" /> :
+                                                        <Megaphone className="h-4 w-4 text-node-4" />}
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black tracking-widest text-muted-foreground leading-none mb-1">
@@ -612,6 +615,38 @@ export function NodeSettings() {
                             </span>
                         </div>
                     </div>
+                    {isRegistrationMode && (
+                        <div className="flex items-center gap-2" id="node-settings-reg-status">
+                            <Switch
+                                id="is_reg_open"
+                                checked={regOpen}
+                                onCheckedChange={setRegOpen}
+                                className="data-[state=checked]:bg-violet-500"
+                            />
+                        </div>
+                    )}
+                    {type === "announcementNode" && (
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => setIsAddAnnouncementOpen(true)}
+                            className="bg-node-4 text-background hover:bg-node-4/90 h-8 text-xs px-2.5 gap-1 shrink-0"
+                        >
+                            <Plus className="h-4 w-4" />
+                            {locale === "th" ? "เพิ่มใหม่" : "New"}
+                        </Button>
+                    )}
+                    {type === "sponsorNode" && (
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => setIsAddSponsorOpen(true)}
+                            className="bg-red-500 text-white hover:bg-red-600 h-8 text-xs px-2.5 gap-1 shrink-0"
+                        >
+                            <Plus className="h-4 w-4" />
+                            {locale === "th" ? "เพิ่มใหม่" : "New"}
+                        </Button>
+                    )}
                     {!isRegistrationMode && !isPseudoNode && (
                         <Button
                             variant="ghost"
@@ -630,11 +665,12 @@ export function NodeSettings() {
                     {!isPseudoNode && (
                         <div className="space-y-1" id="node-settings-label-wrapper">
                             <Label>
-                                Label
+                                {locale === "th" ? "ชื่อหัวข้อ" : "Label"}
                             </Label>
                             <Input
                                 value={data.label as string}
                                 onChange={(e) => updateNodeData(id, { label: e.target.value })}
+                                placeholder={locale === "th" ? "เช่น สาย A, รอบ 8 ทีมสุดท้าย, ผู้สนับสนุน..." : "e.g. Group A, Quarter Finals, Sponsors..."}
                             />
                         </div>
                     )}
@@ -643,16 +679,46 @@ export function NodeSettings() {
                     {type === "groupNode" && (
                         <>
                             <div className="space-y-1" id="node-settings-group-team-count">
-                                <Label>Team Count</Label>
-                                <Input
-                                    type="text"
-                                    inputMode="numeric"
-                                    value={data.teamCount as number}
-                                    onChange={(e) => {
-                                        const val = e.target.value.replace(/[^0-9]/g, "");
-                                        updateNodeData(id, { teamCount: parseInt(val, 10) || 0 });
-                                    }}
-                                />
+                                <Label>{locale === "th" ? "จำนวนทีม" : "Team Count"}</Label>
+                                <div className="flex items-center gap-1 lg:gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const current = Number(data.teamCount) || 0;
+                                            const nextVal = Math.max(0, current - 1);
+                                            updateNodeData(id, { teamCount: nextVal });
+                                        }}
+                                        disabled={(Number(data.teamCount) || 0) <= 0}
+                                    >
+                                        -
+                                    </Button>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={data.teamCount !== undefined && data.teamCount !== null ? String(data.teamCount) : "0"}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^0-9]/g, "");
+                                            const num = parseInt(val, 10) || 0;
+                                            updateNodeData(id, { teamCount: Math.min(64, num) });
+                                        }}
+                                        className="text-center font-bold"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const current = Number(data.teamCount) || 0;
+                                            const nextVal = Math.min(64, current + 1);
+                                            updateNodeData(id, { teamCount: nextVal });
+                                        }}
+                                        disabled={(Number(data.teamCount) || 0) >= 64}
+                                    >
+                                        +
+                                    </Button>
+                                </div>
                             </div>
                         </>
                     )}
@@ -664,7 +730,7 @@ export function NodeSettings() {
                         const columnOptions = isVolleyball ? [
                             { label: "Matches Played", key: "showPlayed" },
                             { label: "Win / Loss", key: "showWL", composite: ["showWin", "showLoss"] },
-                            { label: "SW / SL (Sets)", key: "showS", composite: ["showSW", "showSL"], defaultOff: true },
+                            { label: "SW / SL (Sets)", key: "showS", composite: ["showSW", "showSL"] },
                             { label: "Set Difference (SD)", key: "showSD" },
                             { label: "Points", key: "showPts" },
                             { label: "Form (Last 5)", key: "showForm", defaultOff: true },
@@ -682,18 +748,49 @@ export function NodeSettings() {
                         return (
                             <div className="space-y-1 md:space-y-2">
                                 <div className="space-y-1" id="node-settings-standing-advancing">
-                                    <Label>Advancing Teams</Label>
-                                    <Input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={data.advancingCount as number || 0}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/[^0-9]/g, "");
-                                            const num = parseInt(val, 10) || 0;
-                                            updateNodeData(id, { advancingCount: Math.min(16, num) });
-                                        }}
-                                    />
-                                    <p className="text-[10px] text-muted-foreground font-medium">Number of teams that move to the next stage.</p>
+                                    <Label>{locale === "th" ? "จำนวนทีมที่เข้ารอบ" : "Advancing Teams"}</Label>
+                                    <div className="flex items-center gap-1 lg:gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => {
+                                                const current = Number(data.advancingCount) || 0;
+                                                const nextVal = Math.max(0, current - 1);
+                                                updateNodeData(id, { advancingCount: nextVal });
+                                            }}
+                                            disabled={(Number(data.advancingCount) || 0) <= 0}
+                                        >
+                                            -
+                                        </Button>
+                                        <Input
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={data.advancingCount !== undefined && data.advancingCount !== null ? String(data.advancingCount) : "0"}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^0-9]/g, "");
+                                                const num = parseInt(val, 10) || 0;
+                                                updateNodeData(id, { advancingCount: Math.min(16, num) });
+                                            }}
+                                            className="text-center font-bold"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => {
+                                                const current = Number(data.advancingCount) || 0;
+                                                const nextVal = Math.min(16, current + 1);
+                                                updateNodeData(id, { advancingCount: nextVal });
+                                            }}
+                                            disabled={(Number(data.advancingCount) || 0) >= 16}
+                                        >
+                                            +
+                                        </Button>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground font-medium">
+                                        {locale === "th" ? "จำนวนทีมที่ผ่านเข้าสู่รอบถัดไป" : "Number of teams that move to the next stage."}
+                                    </p>
                                 </div>
 
                                 <div className="grid gap-1 md:gap-2" id="node-settings-standing-columns">
@@ -769,7 +866,7 @@ export function NodeSettings() {
 
                         return (
                             <div className="space-y-1 md:space-y-2" id="node-settings-match-schedule">
-                                <Label>Matches in Node</Label>
+                                <Label>{locale === "th" ? "รายการแมตช์ในโหนด" : "Matches in Node"}</Label>
                                 <div className="space-y-1 md:space-y-2">
                                     {((data.matches as MatchItem[]) || [])
                                         .slice()
@@ -807,29 +904,30 @@ export function NodeSettings() {
                                             return (
                                                 <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-xs font-black">Match #{idx + 1}</span>
-                                                        {((data.matches as MatchItem[]).length > 1) && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    const originalMatches = [...((data.matches as MatchItem[]) || [])];
-                                                                    const filtered = originalMatches.filter(m => m.id !== match.id);
-                                                                    updateNodeData(id, { matches: filtered });
-                                                                }}
-                                                                className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </button>
-                                                        )}
+                                                        <span className="text-xs font-black">
+                                                            {locale === "th" ? `แมตช์ที่ #${idx + 1}` : `Match #${idx + 1}`}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                const originalMatches = [...((data.matches as MatchItem[]) || [])];
+                                                                const filtered = originalMatches.filter(m => m.id !== match.id);
+                                                                updateNodeData(id, { matches: filtered });
+                                                            }}
+                                                            className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                                            title={locale === "th" ? "ลบแมตช์นี้" : "Delete match"}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <div className="space-y-1">
-                                                            <Label className="text-[10px]">Home Team</Label>
+                                                            <Label className="text-[10px]">{locale === "th" ? "ทีมเหย้า" : "Home Team"}</Label>
                                                             <Select
                                                                 value={liveTeamA || match.placeholderA}
                                                                 onValueChange={(val) => updateMatch({ placeholderA: val })}
                                                             >
                                                                 <SelectTrigger className={`bg-card w-full ${liveTeamA ? "text-violet-600 font-black" : ""}`}>
-                                                                    <SelectValue placeholder="Select Team" />
+                                                                    <SelectValue placeholder={locale === "th" ? "เลือกทีม" : "Select Team"} />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     <SelectItem value="TBD">TBD</SelectItem>
@@ -843,13 +941,13 @@ export function NodeSettings() {
                                                             </Select>
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <Label className="text-[10px]">Away Team</Label>
+                                                            <Label className="text-[10px]">{locale === "th" ? "ทีมเยือน" : "Away Team"}</Label>
                                                             <Select
                                                                 value={liveTeamB || match.placeholderB}
                                                                 onValueChange={(val) => updateMatch({ placeholderB: val })}
                                                             >
                                                                 <SelectTrigger className={`bg-card w-full ${liveTeamB ? "text-violet-600 font-black" : ""}`}>
-                                                                    <SelectValue placeholder="Select Team" />
+                                                                    <SelectValue placeholder={locale === "th" ? "เลือกทีม" : "Select Team"} />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     <SelectItem value="TBD">TBD</SelectItem>
@@ -864,7 +962,7 @@ export function NodeSettings() {
                                                         </div>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px]">Date & Time</Label>
+                                                        <Label className="text-[10px]">{locale === "th" ? "วันและเวลาแข่ง" : "Date & Time"}</Label>
                                                         <Input
                                                             type="datetime-local"
                                                             value={
@@ -893,7 +991,9 @@ export function NodeSettings() {
                                                             className="w-full"
                                                         >
                                                             <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
-                                                                {dbMatch?.status === 'finished' ? "VIEW MATCH" : "MATCH CONSOLE"}
+                                                                {dbMatch?.status === 'finished'
+                                                                    ? (locale === "th" ? "ดูผลการแข่งขัน" : "VIEW MATCH")
+                                                                    : (locale === "th" ? "จัดการการแข่งขัน" : "MATCH CONSOLE")}
                                                             </Link>
                                                         </Button>
                                                     )}
@@ -911,7 +1011,7 @@ export function NodeSettings() {
                                         }}
                                     >
                                         <Plus />
-                                        Add Match to Node
+                                        {locale === "th" ? "เพิ่มแมตช์ใหม่ในโหนด" : "Add Match to Node"}
                                     </Button>
                                 </div>
                             </div>
@@ -931,8 +1031,8 @@ export function NodeSettings() {
                                             {t("add_team_button") || "Add Team"}
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent showCloseButton={false} className="bg-card sm:max-w-[500px] rounded-sm shadow-2xl p-0">
-                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10">
+                                    <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none">
+                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
                                             <DialogTitle className="text-xl font-black tracking-tighter">{t("add_team")}</DialogTitle>
                                             <Button
                                                 type="button"
@@ -977,20 +1077,10 @@ export function NodeSettings() {
 
                     {type === "sponsorNode" && (
                         <div className="space-y-1 md:space-y-2" id="node-settings-sponsor-list">
-                            <div className="flex items-center justify-end">
-                                <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                            New Sponsor
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent showCloseButton={false} className="sm:max-w-[450px] bg-card rounded-sm shadow-2xl p-0">
-                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10">
-                                            <DialogTitle className="text-lg font-black tracking-tighter">Add New Sponsor</DialogTitle>
+                            <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
+                                <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
+                                        <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
+                                            <DialogTitle className="text-lg font-black tracking-tighter">{tSponsors("title")}</DialogTitle>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
@@ -1001,53 +1091,55 @@ export function NodeSettings() {
                                                 <X className="h-4 w-4" />
                                             </Button>
                                         </DialogHeader>
-                                        <form onSubmit={handleAddSponsorSubmit}>
-                                            <div className="p-2 md:p-4 space-y-1 md:space-y-2">
-                                                <div className="space-y-1">
-                                                    <Label>Sponsor Logo</Label>
-                                                    <LogoUploader
-                                                        id="sponsor-logo-upload"
-                                                        uploadLabel="Upload Logo"
-                                                        clickToUploadLabel="Click to Upload"
-                                                        onFileChange={file => setNewSponsorLogoFile(file)}
-                                                    />
+                                        <form onSubmit={handleAddSponsorSubmit} className="flex flex-col h-full overflow-hidden">
+                                            <div className="p-2 md:p-4 space-y-1 md:space-y-2 flex-1 overflow-y-auto">
+                                                <div className="flex flex-col items-center justify-center space-y-1">
+                                                    <div className="w-full flex justify-center py-1">
+                                                        <LogoUploader
+                                                            id="sponsor-logo-upload"
+                                                            uploadLabel="Upload Logo"
+                                                            clickToUploadLabel="Click to Upload"
+                                                            onFileChange={file => setNewSponsorLogoFile(file)}
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <Label htmlFor="sponsor-name">Sponsor Name</Label>
+                                                    <Label htmlFor="sponsor-name">{tSponsors("name_label")}</Label>
                                                     <Input
                                                         id="sponsor-name"
                                                         value={newSponsorName}
                                                         onChange={e => setNewSponsorName(e.target.value)}
+                                                        placeholder={tSponsors("name_placeholder")}
                                                         required
                                                     />
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <Label htmlFor="sponsor-link">Link URL (Optional)</Label>
+                                                    <Label htmlFor="sponsor-link">{tSponsors("link_label")}</Label>
                                                     <Input
                                                         id="sponsor-link"
                                                         value={newSponsorLink}
                                                         onChange={e => setNewSponsorLink(e.target.value)}
+                                                        placeholder={tSponsors("link_placeholder")}
                                                         type="url"
                                                     />
                                                 </div>
                                             </div>
 
-                                            <DialogFooter className="border-t p-2 md:p-4">
+                                            <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                                                 <Button
                                                     type="submit"
                                                     className="w-full"
                                                     disabled={isSubmittingSponsor || !newSponsorName}
                                                 >
                                                     {isSubmittingSponsor && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                                                    Add Sponsor
+                                                    {tSponsors("add_button")}
                                                 </Button>
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
                                 </Dialog>
-                            </div>
 
 
 
@@ -1131,8 +1223,32 @@ export function NodeSettings() {
                                 tournamentId={tournamentId}
                                 isEditable={true}
                                 isCompact={true}
-                                mode="both"
+                                mode="list"
                             />
+                            <Dialog open={isAddAnnouncementOpen} onOpenChange={setIsAddAnnouncementOpen}>
+                                <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
+                                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                                        <DialogTitle className="text-base font-bold flex items-center gap-2">
+                                            {locale === "th" ? "เพิ่มใหม่" : "New"}
+                                        </DialogTitle>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            className="absolute right-2 top-2"
+                                            onClick={() => setIsAddAnnouncementOpen(false)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </DialogHeader>
+                                    <Announcements
+                                        tournamentId={tournamentId}
+                                        isEditable={true}
+                                        mode="form"
+                                        onSuccess={() => setIsAddAnnouncementOpen(false)}
+                                    />
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     )}
 
@@ -1144,46 +1260,39 @@ export function NodeSettings() {
                                 </div>
                             ) : (
                                 <form onSubmit={handleRegSave} className="space-y-1 md:space-y-2">
-                                    <div className="flex items-center justify-between" id="node-settings-reg-status">
-                                        <Label>Allow Registration</Label>
-                                        <Switch
-                                            id="is_reg_open"
-                                            checked={regOpen}
-                                            onCheckedChange={setRegOpen}
-                                            className="data-[state=checked]:bg-violet-500"
-                                        />
-                                    </div>
-
                                     <div className="space-y-1 md:space-y-2" id="node-settings-reg-fee">
-                                        <div className="space-y-1">
-                                            <Label>Registration Fee (THB)</Label>
-                                            <Input
-                                                type="number"
-                                                id="reg_fee"
-                                                value={regFee}
-                                                onChange={(e) => setRegFee(e.target.value === "" ? "" : Number(e.target.value))}
-                                                placeholder="0.00 (Free)"
-                                                min="0"
-                                                step="0.01"
-                                            />
-                                        </div>
+                                        <div className="grid grid-cols-2 gap-1 md:gap-2">
+                                            <div className="space-y-1">
+                                                <Label>{locale === "th" ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}</Label>
+                                                <Input
+                                                    type="number"
+                                                    id="reg_fee"
+                                                    value={regFee}
+                                                    onChange={(e) => setRegFee(e.target.value === "" ? "" : Number(e.target.value))}
+                                                    placeholder={locale === "th" ? "เช่น 500 (หรือ 0 สำหรับฟรี)" : "e.g. 500 (or 0 for free)"}
+                                                    min="0"
+                                                    step="0.01"
+                                                />
+                                            </div>
 
-                                        <div className="space-y-1">
-                                            <Label>PromptPay ID</Label>
-                                            <Input
-                                                type="text"
-                                                id="reg_promptpay"
-                                                value={bankNumber}
-                                                onChange={(e) => setBankNumber(e.target.value)}
-                                            />
+                                            <div className="space-y-1">
+                                                <Label>{locale === "th" ? "หมายเลขพร้อมเพย์" : "PromptPay ID"}</Label>
+                                                <Input
+                                                    type="text"
+                                                    id="reg_promptpay"
+                                                    value={bankNumber}
+                                                    onChange={(e) => setBankNumber(e.target.value)}
+                                                    placeholder={locale === "th" ? "เช่น 081-234-5678 หรือ 1234567890123" : "e.g. 081-234-5678 or ID card / TAX ID"}
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-1 md:gap-2">
                                             <div className="space-y-1">
-                                                <Label>Bank Name</Label>
+                                                <Label>{locale === "th" ? "ชื่อธนาคาร" : "Bank Name"}</Label>
                                                 <Select value={bankName} onValueChange={setBankName}>
                                                     <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Select Bank" />
+                                                        <SelectValue placeholder={locale === "th" ? "เลือกธนาคาร" : "Select Bank"} />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="PromptPay">PromptPay</SelectItem>
@@ -1191,12 +1300,13 @@ export function NodeSettings() {
                                                 </Select>
                                             </div>
                                             <div className="space-y-1">
-                                                <Label>Account Name</Label>
+                                                <Label>{locale === "th" ? "ชื่อบัญชี" : "Account Name"}</Label>
                                                 <Input
                                                     type="text"
                                                     id="reg_acc_name"
                                                     value={accountName}
                                                     onChange={(e) => setAccountName(e.target.value)}
+                                                    placeholder={locale === "th" ? "เช่น นายสมชาย ใจดี" : "e.g. John Doe"}
                                                 />
                                             </div>
                                         </div>
@@ -1213,11 +1323,18 @@ export function NodeSettings() {
                                             ) : (
                                                 <Check className="h-4 w-4" />
                                             )}
-                                            Save Settings
+                                            {locale === "th" ? "บันทึกการตั้งค่า" : "Save Settings"}
                                         </Button>
                                     </div>
                                 </form>
                             )}
+
+                            <div>
+                                <Registrations
+                                    tournamentId={tournamentId}
+                                    categoryId={activeCategoryId || undefined}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>

@@ -1,14 +1,12 @@
 "use client";
 
 import { useActionState, useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { Upload, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { addTeam } from "@/actions/tournaments/general";
 
+import { LogoUploader } from "@/components/shared/logo-uploader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { ActionResponse } from "@/types/index";
@@ -33,116 +31,55 @@ export function TeamForm({
     const addTeamWithId = addTeam.bind(null, tournamentId);
     const [state, formAction] = useActionState(addTeamWithId, initialState);
     const formRef = useRef<HTMLFormElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [preview, setPreview] = useState("");
+    const [_logoFile, setLogoFile] = useState<File | null>(null);
 
     useEffect(() => {
         if (state.success) {
             formRef.current?.reset();
-            const timer = setTimeout(() => setPreview(""), 0);
+            const timer = setTimeout(() => setLogoFile(null), 0);
             onSuccess?.();
             return () => clearTimeout(timer);
         }
     }, [state.success, onSuccess]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
-        } else {
-            setPreview("");
-        }
-    };
-
-    const handleRemoveLogo = () => {
-        setPreview("");
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-    };
-
     return (
-        <div>
+        <div className="flex flex-col h-full overflow-hidden">
             <form
                 ref={formRef}
                 action={formAction}
+                className="flex flex-col h-full overflow-hidden"
             >
                 {tournamentCategoryId && (
                     <input type="hidden" name="tournament_category_id" value={tournamentCategoryId} />
                 )}
-                <div className="p-2 md:p-4 space-y-2 md:space-y-4">
+                <div className="p-2 md:p-4 space-y-2 md:space-y-4 flex-1 overflow-y-auto">
                     {/* Logo Upload */}
-                    <div className="space-y-1">
-                        <Label>
-                            {t("team_logo")}
-                        </Label>
-                        <div className="flex items-start gap-2 md:gap-3 p-2 md:p-3 rounded-lg border">
-                            <div className="relative group">
-                                <div className="h-20 w-20 flex items-center justify-center rounded-sm border-2 border-dashed border-border overflow-hidden">
-                                    {preview ? (
-                                        <Image
-                                            src={preview}
-                                            alt="Preview"
-                                            width={80}
-                                            height={80}
-                                            className="h-full w-full object-cover p-1 rounded-sm"
-                                        />
-                                    ) : (
-                                        <Upload className="h-8 w-8 text-primary" />
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex-1">
-                                <div className="flex gap-2">
-                                    <Label
-                                        htmlFor="add-logo-upload"
-                                        className="cursor-pointer flex-1 inline-flex items-center justify-center h-10 px-6 rounded-sm hover:bg-muted/30 border whitespace-nowrap text-[10px] font-black tracking-widest transition-all"
-                                    >
-                                        {preview ? t("click_to_upload") : t("upload_logo")}
-                                    </Label>
-                                    {preview && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
-                                            onClick={handleRemoveLogo}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                                <Input
-                                    id="add-logo-upload"
-                                    type="file"
-                                    name="logo"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                    ref={fileInputRef}
-                                    disabled={isLimitReached}
-                                />
-                                <p className="text-[10px] text-muted-foreground/50 mt-1">PNG, JPG, max 2MB</p>
-                            </div>
+                    <div className="flex flex-col items-center justify-center space-y-1">
+                        <div className="w-full flex justify-center py-1">
+                            <LogoUploader
+                                id="team-logo-upload"
+                                name="logo"
+                                disabled={isLimitReached}
+                                onFileChange={(file) => setLogoFile(file)}
+                            />
                         </div>
                     </div>
 
                     {/* Team Details */}
-                    <div className="space-y-2 md:space-y-3">
+                    <div className="space-y-1 md:space-y-2">
                         <div className="space-y-1">
                             <Label>{t("team_name")}</Label>
                             <Input
                                 type="text"
                                 name="name"
+                                placeholder={t("team_name_placeholder")}
                                 required
                                 disabled={isLimitReached}
                                 className="bg-transparent"
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-1 lg:gap-2">
                             <div className="space-y-1">
                                 <Label>
                                     {t("contact_name") || "Contact Name"}
@@ -150,6 +87,7 @@ export function TeamForm({
                                 <Input
                                     type="text"
                                     name="contact_name"
+                                    placeholder={t("contact_name_placeholder")}
                                     disabled={isLimitReached}
                                     className="bg-transparent"
                                 />
@@ -159,6 +97,7 @@ export function TeamForm({
                                 <Input
                                     type="text"
                                     name="contact_phone"
+                                    placeholder={t("contact_phone_placeholder")}
                                     disabled={isLimitReached}
                                     className="bg-transparent"
                                 />
@@ -170,6 +109,7 @@ export function TeamForm({
                             <Input
                                 type="email"
                                 name="contact_email"
+                                placeholder={t("contact_email_placeholder")}
                                 disabled={isLimitReached}
                                 className="bg-transparent"
                             />
@@ -179,7 +119,7 @@ export function TeamForm({
 
                     </div>
                 </div>
-                <DialogFooter className="border-t p-2 md:p-4">
+                <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                     <SubmitButton disabled={isLimitReached} className="w-full">{t("add_team_button")}</SubmitButton>
                 </DialogFooter>
             </form>

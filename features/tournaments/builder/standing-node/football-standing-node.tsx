@@ -242,9 +242,9 @@ export const FootballStandingNode = memo(({
     return (
         <div
             className={cn(
-                "relative border bg-card text-card-foreground transition-all cursor-pointer min-w-[320px] rounded-sm",
+                "relative border bg-card text-card-foreground transition-all cursor-pointer min-w-[320px] rounded-sm shadow-md",
                 selected
-                    ? "border-node-1 ring-2 ring-node-1/30"
+                    ? "border-node-1"
                     : "border-border hover:border-node-1/50"
             )}
         >
@@ -258,8 +258,8 @@ export const FootballStandingNode = memo(({
 
             <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-node-1 rounded flex items-center justify-center">
-                        <ListOrdered className="h-4 w-4 text-background" />
+                    <div className="w-6 h-6 bg-node-1/10 rounded flex items-center justify-center">
+                        <ListOrdered className="h-4 w-4 text-node-1" />
                     </div>
                     <span className="text-xs font-black tracking-wide text-node-1">
                         {data.label}

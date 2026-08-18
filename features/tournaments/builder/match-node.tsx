@@ -101,9 +101,9 @@ export const MatchNode = memo(function MatchNode({
     return (
         <div
             className={cn(
-                "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
+                "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm shadow-md",
                 selected
-                    ? "border-node-2 ring-2 ring-node-2/30"
+                    ? "border-node-2"
                     : "border-border hover:border-node-2/50"
             )}
         >
@@ -119,8 +119,8 @@ export const MatchNode = memo(function MatchNode({
             {/* ── Header ── */}
             <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-node-2 rounded flex items-center justify-center">
-                        <span className="text-background text-xs font-bold">VS</span>
+                    <div className="w-6 h-6 bg-node-2/10 rounded flex items-center justify-center">
+                        <span className="text-node-2 text-xs font-bold">VS</span>
                     </div>
                     <span className="text-xs font-black tracking-wide text-node-2">
                         {matches.length > 1 ? "Round" : "Match"}

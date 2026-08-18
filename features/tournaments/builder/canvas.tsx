@@ -23,7 +23,7 @@ import {
     Loader2, Plus, Users, X,
     Settings, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, Building2, ClipboardEdit, Heart
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, ClipboardEdit, Heart
 } from "lucide-react";
 import {
     Popover,
@@ -538,7 +538,6 @@ function CanvasInternal({
         const options: TabOption<SettingsTab>[] = [
             { value: 'general', label: tSettings("general_info"), icon: Settings },
             { value: 'categories', label: tSettings("categories"), icon: Trophy },
-            { value: 'bank', label: tSettings("bank_info"), icon: Building2 },
         ];
 
         const possessesStaffAccess = Boolean(
@@ -1207,7 +1206,7 @@ function CanvasInternal({
                                 className={cn(
                                     "transition-all",
                                     isLocked
-                                        ? "bg-warning hover:bg-warning/80"
+                                        ? "bg-warning"
                                         : "text-warning"
                                 )}
                             >
@@ -1469,15 +1468,7 @@ function CanvasInternal({
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm p-1">
-                                            <DropdownMenuItem
-                                                onClick={handleOpenAnnouncementSettings}
-                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
-                                            >
-                                                <Megaphone className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "ประกาศ" : "Announcement"}</span>
-                                            </DropdownMenuItem>
-
-                                            <DropdownMenuItem
+                                             <DropdownMenuItem
                                                 onClick={handleOpenInboxSettings}
                                                 className="cursor-pointer text-xs font-semibold flex items-center justify-between py-2"
                                             >
@@ -1492,6 +1483,14 @@ function CanvasInternal({
                                                 ) && (
                                                     <span className="bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded-full font-bold">New</span>
                                                 )}
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={handleOpenAnnouncementSettings}
+                                                className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
+                                            >
+                                                <Megaphone className="h-4 w-4" />
+                                                <span>{locale === 'th' ? "ประกาศ" : "Announcement"}</span>
                                             </DropdownMenuItem>
 
                                             <DropdownMenuItem

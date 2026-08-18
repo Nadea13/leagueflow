@@ -11,7 +11,6 @@ import { StaffSettings } from "@/features/tournaments/settings/staff-settings";
 import { LocationSettings } from "@/features/tournaments/settings/location-settings";
 import { GeneralSettings } from "./general-settings";
 import { CategorySettings } from "./category-settings";
-import { BankSettings } from "./bank-settings";
 
 
 
@@ -63,10 +62,6 @@ export function TournamentSettings({
 
             {activeTab === 'categories' &&
                 <CategorySettings tournamentId={tournamentId} sport={tournament.sport} />
-            }
-
-            {activeTab === 'bank' &&
-                <BankSettings tournament={tournament} />
             }
 
             {activeTab === 'location' &&

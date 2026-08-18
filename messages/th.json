@@ -360,6 +360,7 @@
         "reset_fixtures": "รีเซ็ตตารางแข่ง",
         "reset_desc": "การดำเนินการนี้จะลบการแข่งขันและข้อมูลตารางคะแนนทั้งหมด และไม่สามารถยกเลิกได้",
         "type_to_confirm": "โปรดพิมพ์ \"{text}\" เพื่อยืนยัน:",
+        "delete_confirm_placeholder": "พิมพ์ \"{text}\" เพื่อยืนยัน",
         "active": "กำลังแข่งขัน",
         "draft": "แบบร่าง",
         "upcoming": "เร็วๆ นี้",
@@ -577,6 +578,7 @@
         "add_team": "เพิ่มทีมใหม่",
         "team_name": "ชื่อทีม",
         "team_name_placeholder": "เช่น Thunder Dragon FC, Bangkok United",
+        "contact_email_placeholder": "เช่น contact@example.com",
         "logo_url": "โลโก้ (URL)",
         "upload_logo": "อัปโหลดโลโก้",
         "click_to_upload": "คลิกเพื่อเปลี่ยนโลโก้",
@@ -1735,6 +1737,15 @@
         "save_rules": "บันทึกกฎ",
         "saved_success": "บันทึกกฎเรียบร้อยแล้ว"
     },
+    "Sponsors": {
+        "title": "เพิ่มผู้สนับสนุนใหม่",
+        "logo_label": "โลโก้ผู้สนับสนุน",
+        "name_label": "ชื่อผู้สนับสนุน",
+        "name_placeholder": "เช่น Nike, Red Bull, Chang...",
+        "link_label": "ลิงก์เว็บไซต์ (Optional)",
+        "link_placeholder": "https://www.example.com",
+        "add_button": "เพิ่มผู้สนับสนุน"
+    },
     "Announcements": {
         "title": "ประกาศ",
         "news": "ข่าวสาร",
@@ -1745,8 +1756,8 @@
         "unpin": "เลิกปักหมุด",
         "delete_announcement": "ลบประกาศ",
         "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบประกาศนี้?",
-        "title_placeholder": "หัวข้อประกาศ",
-        "content_placeholder": "เนื้อหา...",
+        "title_placeholder": "เช่น การแข่งขันกระชับมิตรประจำสัปดาห์...",
+        "content_placeholder": "เช่น รายละเอียดเวลา กติกา และสถานที่จัดการแข่งขัน...",
         "posted_success": "โพสต์ประกาศสำเร็จแล้ว"
     },
     "BannedPlayers": {
@@ -1903,6 +1914,7 @@
         "invite": "เชิญทีมงาน",
         "invite_title": "เชิญทีมงานจัดการแข่งขัน",
         "email_placeholder": "ที่อยู่อีเมลทีมงาน",
+        "email_input_placeholder": "เช่น staff@example.com",
         "send_invite": "ส่งคำเชิญ",
         "title": "จัดการทีมงาน",
         "upgrade_desc": "อัปเกรดเป็น Pro เพื่อร่วมมือกับคนอื่นๆ ในการจัดการทัวร์นาเมนต์นี้",

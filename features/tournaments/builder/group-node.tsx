@@ -66,7 +66,7 @@ export const GroupNode = memo(({
     return (
         <div
             className={cn(
-                "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm",
+                "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm shadow-md",
                 selected
                     ? "border-node-5"
                     : "border-border hover:border-node-5/50"
@@ -74,8 +74,8 @@ export const GroupNode = memo(({
         >
             <div className="flex items-center p-2 border-b">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-node-5 rounded flex items-center justify-center">
-                        <LayoutGrid className="h-4 w-4 text-background" />
+                    <div className="w-6 h-6 bg-node-5/10 rounded flex items-center justify-center">
+                        <LayoutGrid className="h-4 w-4 text-node-5" />
                     </div>
                     <span className="text-xs font-black tracking-wide text-node-5">
                         {data.label}
