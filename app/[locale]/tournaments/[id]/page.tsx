@@ -91,7 +91,7 @@ export default async function PublicViewPage({
                 {/* Navbar */}
                 <PublicNavbar user={user} />
 
-                <main className="flex-1 flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
+                <main className="flex-1 pt-14 flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
                     {/* Subtle Brand Ambient Light */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] bg-primary/10 rounded-full blur-[90px] pointer-events-none" />
 
@@ -308,7 +308,7 @@ export default async function PublicViewPage({
             {/* Navbar */}
             <PublicNavbar user={user} />
 
-            <main className="flex-1">
+            <main className="flex-1 pt-16 md:pt-20">
                 <PublicTournamentShell
                     tournament={tournament}
                     initialTeams={teams || []}

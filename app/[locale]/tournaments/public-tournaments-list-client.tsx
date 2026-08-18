@@ -142,13 +142,12 @@ export function PublicTournamentsListClient({
 
             {/* Status Tabs */}
             {showTabs && (
-                <div className="max-w-2xl">
+                <div className="w-full overflow-x-auto scrollbar-none">
                     <Tab
                         options={statusTabOptions}
                         value={activeStatusTab}
                         onChange={(val) => setActiveStatusTab(val)}
-                        fullWidth
-                        className="bg-card"
+                        className="bg-card w-max min-w-full"
                     />
                 </div>
             )}

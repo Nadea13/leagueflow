@@ -373,7 +373,8 @@ CREATE TABLE IF NOT EXISTS "public"."tournament_teams" (
     "updated_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "deleted_at" timestamp with time zone,
     "contact_name" "text",
-    "contact_phone" "text"
+    "contact_phone" "text",
+    "contact_email" "text"
 );
 
 CREATE TABLE IF NOT EXISTS "public"."tournament_roster_submissions" (

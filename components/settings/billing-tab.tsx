@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const getPlanPrice = (plan: Plan) => {
     if (plan.id === "starter" || plan.id === "match") return 0;
-    if (plan.id === "pro" || plan.id === "event") return 158;
+    if (plan.id === "pro" || plan.id === "event") return 237;
     return (plan.discounted_price || plan.price);
 };
 
@@ -290,10 +290,10 @@ export function BillingTab() {
                                                 <>
                                                     <div className="flex items-baseline gap-1 flex-wrap">
                                                         <span className="text-2xl font-black line-through text-muted-foreground/60">฿790</span>
-                                                        <span className="text-2xl font-black">฿158</span>
+                                                        <span className="text-2xl font-black">฿237</span>
                                                         <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                         <Badge variant="default">
-                                                            -80% โปรเปิดตัว
+                                                            -70% โปรเปิดตัว
                                                         </Badge>
                                                     </div>
                                                 </>

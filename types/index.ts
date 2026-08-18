@@ -101,6 +101,7 @@ export interface TournamentTeam {
     description?: string | null;
     contact_name?: string | null;
     contact_phone?: string | null;
+    contact_email?: string | null;
     group_name?: string | null;
     logo_url?: string | null;
     is_roster_locked: boolean;

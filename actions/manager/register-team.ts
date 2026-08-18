@@ -13,6 +13,7 @@ const registrationSchema = z.object({
     teamName: z.string().min(2, "Team name must be at least 2 characters"),
     contactName: z.string().min(2, "Contact name must be at least 2 characters"),
     contactPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+    contactEmail: z.string().email("Invalid email address").optional().nullable(),
     logoFile: z.unknown().optional().nullable(),
     logoUrl: z.string().optional().nullable(),
     existingTeamId: z.string().uuid().optional().nullable(),
@@ -59,6 +60,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         teamName: formData.get("teamName"),
         contactName: formData.get("contactName"),
         contactPhone: formData.get("contactPhone"),
+        contactEmail: formData.get("contactEmail") || null,
         logoFile: formData.get("logoFile"),
         logoUrl: formData.get("logoUrl"),
         existingTeamId: formData.get("existingTeamId") || null,
@@ -88,6 +90,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
         teamName,
         contactName,
         contactPhone,
+        contactEmail,
         slipFile,
         logoFile,
         logoUrl,
@@ -260,7 +263,7 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                     logo_img: finalLogoUrl,
                     contact_name: contactName,
                     contact_phone: contactPhone,
-                    contact_email: user?.email || '',
+                    contact_email: contactEmail || user?.email || '',
                     is_roster_locked: false,
                 })
                 .select("id")
@@ -282,6 +285,9 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 slip_img: publicUrl,
                 registration_status: 'pending',
                 remark: transRef || null,
+                contact_name: contactName,
+                contact_phone: contactPhone,
+                contact_email: contactEmail || user?.email || '',
                 created_at: new Date().toISOString(),
             })
             .select()

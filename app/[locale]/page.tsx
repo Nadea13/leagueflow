@@ -79,7 +79,7 @@ export default async function Home() {
       {/* Navbar */}
       <PublicNavbar user={user} />
 
-      <main className="flex-1">
+      <main className="flex-1 pt-14">
         {/* Hero Section */}
         <section
           className="relative overflow-hidden py-16 lg:py-24 border-b bg-background"
@@ -775,14 +775,14 @@ export default async function Home() {
                   <div className="flex justify-between mb-1 md:mb-2">
                     <h3 className="text-xl font-bold">Event</h3>
                     <Badge variant="default" className="text-[10px] font-bold ml-1">
-                      -80% โปรเปิดตัว
+                      -70% โปรเปิดตัว
                     </Badge>
                   </div>
                   <p className="text-muted-foreground text-xs mb-2 md:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
                   <div className="flex flex-col mb-2 md:mb-4">
                     <div className="flex items-baseline gap-1 md:gap-2 flex-wrap">
                       <span className="text-3xl md:text-4xl font-black line-through text-muted-foreground/60">฿790</span>
-                      <span className="text-3xl md:text-4xl font-black ml-2">฿158</span>
+                      <span className="text-3xl md:text-4xl font-black ml-2">฿237</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
                     <span className="text-xs text-primary font-black">หรือรายปี ฿7,900/ปี</span>
@@ -790,11 +790,11 @@ export default async function Home() {
                   <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างทัวร์นาเมนต์ 5 รายการ
+                      สร้างทัวร์นาเมนต์สูงสุด 5 รายการต่อเดือน
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างรุ่นการแข่งขัน 15 รายการ
+                      สร้างรุ่นการแข่งขันสูงสุด 3 รุ่นต่อทัวร์นาเมนต์
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -828,22 +828,25 @@ export default async function Home() {
                 <div>
                   <h3 className="text-xl font-bold mb-1">Cup</h3>
                   <p className="text-muted-foreground text-xs mb-2">จัดทัวร์นาเมนต์ขนาดใหญ่และลีกประสิทธิภาพสูง</p>
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-4xl font-black">฿1,790</span>
-                    <span className="text-muted-foreground text-sm">/ เดือน</span>
+                  <div className="flex flex-col mb-2 md:mb-4">
+                    <div className="flex items-baseline gap-1 md:gap-2 flex-wrap">
+                      <span className="text-3xl md:text-4xl font-black">฿1,790</span>
+                      <span className="text-muted-foreground text-sm">/ เดือน</span>
+                    </div>
+                    <span className="text-xs text-primary font-black">หรือรายปี ฿17,900/ปี</span>
                   </div>
                   <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างทัวร์นาเมนต์ 20 รายการ
+                      สร้างทัวร์นาเมนต์สูงสุด 20 รายการต่อเดือน
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างรุ่นการแข่งขัน 60 รุ่น
+                      สร้างรุ่นการแข่งขันสูงสุด 5 รุ่นต่อทัวร์นาเมนต์
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      จำกัดจำนวนทีมสูงสุด 128 ทีม
+                      จำกัดจำนวนทีมสูงสุด 128 ทีมต่อรุ่น
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />

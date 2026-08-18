@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { CookieBanner } from "@/components/cookies/cookie-banner";
 import { PageViewTracker } from "@/hooks/use-analytics";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 import { PresenceTracker } from "@/components/providers/presence-tracker";
 
@@ -96,6 +97,7 @@ export default async function LocaleLayout({
             <CookieBanner />
             <PageViewTracker />
             <PresenceTracker />
+            <ScrollToTop />
           </ThemeProvider>
         </NextIntlClientProvider>
       {/* impeccable-live-start */}

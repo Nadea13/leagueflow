@@ -19,10 +19,10 @@ export default async function RegistrationsListPage() {
     const initialTournaments = (await getPublicTournaments()) as unknown as Tournament[];
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
+        <div className="flex flex-col min-h-screen">
             <PublicNavbar user={user} />
 
-            <main className="flex-1 container max-w-7xl mx-auto p-2 lg:p-4 space-y-2 lg:space-4">
+            <main className="flex-1 pt-20 md:pt-24 container max-w-7xl mx-auto p-2 lg:px-0 space-y-4">
                 <PublicTournamentsListClient 
                     sports={sports || []} 
                     initialTournaments={initialTournaments} 

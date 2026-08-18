@@ -6,10 +6,13 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 
+import { useLocale } from "next-intl";
+
 export function TournamentSearchHeader() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const locale = useLocale();
     
     const [searchValue, setSearchValue] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(searchValue, 300);
@@ -43,6 +46,7 @@ export function TournamentSearchHeader() {
                     className="bg-card"
                     value={searchValue}
                     onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder={locale === "th" ? "ค้นหารายการแข่งขัน..." : "Search tournaments..."}
                 />
             </div>
         </div>

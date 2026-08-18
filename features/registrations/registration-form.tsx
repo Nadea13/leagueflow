@@ -28,6 +28,7 @@ const createFormSchema = (isFree: boolean, t: (key: string) => string) => z.obje
     teamName: z.string().min(2, t("team_name_error")),
     contactName: z.string().min(2, t("contact_name_error")),
     contactPhone: z.string().min(10, t("contact_phone_error")),
+    contactEmail: z.string().email().optional().or(z.literal("")),
     description: z.string().optional(),
     logoFile: z.unknown().optional(),
     slipFile: isFree
@@ -98,6 +99,7 @@ export function RegistrationForm({
     const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
     const t = useTranslations("Registration");
+    const tTeam = useTranslations("Team");
     const isFree = Number(tournament.registration_fee) <= 0;
     const formSchema = useMemo(() => createFormSchema(isFree, t), [isFree, t]);
 
@@ -107,6 +109,7 @@ export function RegistrationForm({
             teamName: "",
             contactName: "",
             contactPhone: "",
+            contactEmail: "",
             description: "",
         },
     });
@@ -118,6 +121,7 @@ export function RegistrationForm({
             form.setValue("description", "");
             form.setValue("contactName", "");
             form.setValue("contactPhone", "");
+            form.setValue("contactEmail", "");
             form.setValue("logoFile", undefined);
             setLogoPreviewUrl(null);
             setLogoFile(null);
@@ -130,6 +134,7 @@ export function RegistrationForm({
             form.setValue("description", selectedTeam.description || "");
             form.setValue("contactName", selectedTeam.contact_name || "");
             form.setValue("contactPhone", selectedTeam.contact_phone || "");
+            form.setValue("contactEmail", (selectedTeam as unknown as { contact_email?: string }).contact_email || "");
             setLogoPreviewUrl(selectedTeam.logo_url || null);
             setLogoFile(null);
         }
@@ -146,6 +151,9 @@ export function RegistrationForm({
             formData.append("teamName", values.teamName);
             formData.append("contactName", values.contactName);
             formData.append("contactPhone", values.contactPhone);
+            if (values.contactEmail) {
+                formData.append("contactEmail", values.contactEmail);
+            }
             if (values.description) {
                 formData.append("description", values.description);
             }
@@ -329,28 +337,29 @@ export function RegistrationForm({
                         )}
 
                         <div className="grid gap-1 md:gap-2 md:grid-cols-2">
-                            <div className="w-full col-span-2 space-y-1">
-                                <Label>{t("team_logo_label")}</Label>
-                                <LogoUploader
-                                    id="logo-upload"
-                                    initialUrl={logoPreviewUrl}
-                                    disabled={isExistingTeam || isSubmitting}
-                                    onFileChange={(file) => {
-                                        setLogoFile(file);
-                                        if (file) {
-                                            setLogoPreviewUrl(URL.createObjectURL(file));
-                                        } else {
+                            <div className="w-full col-span-2 space-y-1 flex flex-col items-center justify-center">
+                                <div className="flex justify-center py-1">
+                                    <LogoUploader
+                                        id="logo-upload"
+                                        initialUrl={logoPreviewUrl}
+                                        disabled={isExistingTeam || isSubmitting}
+                                        onFileChange={(file) => {
+                                            setLogoFile(file);
+                                            if (file) {
+                                                setLogoPreviewUrl(URL.createObjectURL(file));
+                                            } else {
+                                                setLogoPreviewUrl(null);
+                                            }
+                                        }}
+                                        onRemove={() => {
+                                            setLogoFile(null);
                                             setLogoPreviewUrl(null);
-                                        }
-                                    }}
-                                    onRemove={() => {
-                                        setLogoFile(null);
-                                        setLogoPreviewUrl(null);
-                                    }}
-                                    uploadLabel={t("team_logo_label")}
-                                    clickToUploadLabel={t("click_to_upload_logo")}
-                                    previewLabel="Logo preview"
-                                />
+                                        }}
+                                        uploadLabel={t("team_logo_label")}
+                                        clickToUploadLabel={t("click_to_upload_logo")}
+                                        previewLabel="Logo preview"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-1 col-span-2">
@@ -358,6 +367,7 @@ export function RegistrationForm({
                                 <Input
                                     {...form.register("teamName")}
                                     disabled={isExistingTeam}
+                                    placeholder={t("team_name_placeholder")}
                                 />
                                 {form.formState.errors.teamName && (
                                     <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
@@ -372,6 +382,7 @@ export function RegistrationForm({
                                     {...form.register("description")}
                                     className="bg-transparent w-full focus-visible:ring-0 resize-none min-h-[80px] text-sm"
                                     disabled={isExistingTeam}
+                                    placeholder={t("team_description_placeholder")}
                                 />
                                 {form.formState.errors.description && (
                                     <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
@@ -385,6 +396,7 @@ export function RegistrationForm({
                                 <Input
                                     {...form.register("contactName")}
                                     disabled={isExistingTeam}
+                                    placeholder={t("contact_name_placeholder")}
                                 />
                                 {form.formState.errors.contactName && (
                                     <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
@@ -399,10 +411,27 @@ export function RegistrationForm({
                                     {...form.register("contactPhone")}
                                     className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
                                     disabled={isExistingTeam}
+                                    placeholder={t("contact_phone_placeholder")}
                                 />
                                 {form.formState.errors.contactPhone && (
                                     <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
                                         {form.formState.errors.contactPhone.message}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-1 col-span-2">
+                                <Label>{tTeam("contact_email") || "Contact Email"}</Label>
+                                <Input
+                                    type="email"
+                                    {...form.register("contactEmail")}
+                                    className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
+                                    disabled={isExistingTeam}
+                                    placeholder={tTeam("contact_email_placeholder") || "e.g. contact@example.com"}
+                                />
+                                {form.formState.errors.contactEmail && (
+                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
+                                        {form.formState.errors.contactEmail.message}
                                     </p>
                                 )}
                             </div>

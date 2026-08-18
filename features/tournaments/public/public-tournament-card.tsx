@@ -7,9 +7,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 interface PublicTournamentCardProps {
-    tournament: Tournament & { tournament_teams?: { count: number }[] };
+    tournament: Tournament & { 
+        tournament_teams?: { count: number }[];
+        sports?: { id: string; sport_name: string };
+        sport_name?: string;
+    };
     href?: string;
 }
+
+const THAI_SPORT_NAMES: Record<string, string> = {
+    football: "ฟุตบอล",
+    basketball: "บาสเกตบอล",
+    volleyball: "วอลเลย์บอล",
+    futsal: "ฟุตซอล",
+    badminton: "แบดมินตัน",
+    cricket: "คริกเก็ต",
+    takraw: "เซปักตะกร้อ",
+};
 
 export function PublicTournamentCard({ tournament, href }: PublicTournamentCardProps) {
     const locale = useLocale();
@@ -23,6 +37,11 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
     const isClosed = isFull || isPastDeadline || isNotOpenYet;
 
     const cardHref = href || `/tournaments/${tournament.id}`;
+
+    const rawSportName = tournament.sports?.sport_name || tournament.sport_name || "";
+    const sportDisplayName = locale === "th" && rawSportName
+        ? (THAI_SPORT_NAMES[rawSportName.toLowerCase()] || rawSportName)
+        : rawSportName;
 
     return (
         <Link href={cardHref} className="block group">
@@ -56,6 +75,11 @@ export function PublicTournamentCard({ tournament, href }: PublicTournamentCardP
                                     </Badge>
                                 )}
                             </div>
+                            {sportDisplayName && (
+                                <p className="text-xs font-semibold text-muted-foreground truncate">
+                                    {sportDisplayName}
+                                </p>
+                            )}
                         </div>
                     </div>
                     <div className="flex items-center gap-2 md:gap-4">

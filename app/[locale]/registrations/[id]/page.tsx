@@ -130,7 +130,7 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
             {/* Navbar */}
             <PublicNavbar user={user} />
 
-            <main className="flex-1 container mx-auto p-2 md:p-0 md:py-4 max-w-7xl">
+            <main className="flex-1 pt-20 md:pt-24 container mx-auto p-2 md:p-0 md:py-4 max-w-7xl">
                 {!tournament.is_registration_open || isRegistrationDisabled ? (
                     <div className="space-y-2 md:space-y-4">
                         <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
