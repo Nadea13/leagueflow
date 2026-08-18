@@ -34,47 +34,52 @@ export function DeleteAccountButton({ email }: { email: string }) {
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="bg-card rounded-sm shadow-2xl p-0">
-                <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
-                    <DialogTitle className="text-2xl font-black tracking-tighter leading-none">
-                        {t("delete_confirm_title")}
-                    </DialogTitle>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        className="absolute right-2 top-2"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                </DialogHeader>
-                <div className="p-2 md:p-4 space-y-3">
-                    <DialogDescription className="text-xs font-bold text-muted-foreground">
-                        {t("delete_confirm_desc")}
-                    </DialogDescription>
-                    <p className="text-xs font-bold mt-2">
-                        {t("type_to_confirm", { text: email })}
-                    </p>
-                    <div className="py-1 md:py-2">
-                        <Input 
-                            id="confirm-delete" 
-                            value={confirmText} 
-                            onChange={(e) => setConfirmText(e.target.value)} 
-                            autoComplete="off"
-                        />
+            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
+                <div className="flex flex-col h-full max-h-[100vh] sm:max-h-[90vh] overflow-hidden">
+                    <DialogHeader className="relative pr-10">
+                        <DialogTitle>
+                            {t("delete_confirm_title")}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t("delete_confirm_desc")}
+                        </DialogDescription>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-2 top-2"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4">
+                        <p className="text-xs font-bold text-foreground">
+                            {t("type_to_confirm", { text: email })}
+                        </p>
+                        <div className="py-1">
+                            <Input 
+                                id="confirm-delete" 
+                                value={confirmText} 
+                                onChange={(e) => setConfirmText(e.target.value)} 
+                                placeholder={email}
+                                autoComplete="off"
+                            />
+                        </div>
                     </div>
+
+                    <DialogFooter className="border-t p-2 md:p-4 mt-auto">
+                        <Button 
+                            variant="destructive"
+                            onClick={handleDelete} 
+                            disabled={isPending || confirmText !== email}
+                            className="w-full"
+                        >
+                            {t("delete_button")}
+                        </Button>
+                    </DialogFooter>
                 </div>
-                <DialogFooter className="p-2 md:p-4 border-t">
-                    <Button 
-                        variant="destructive"
-                        onClick={handleDelete} 
-                        disabled={isPending || confirmText !== email}
-                        className="bg-destructive w-full"
-                    >
-                        {t("delete_button")}
-                    </Button>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

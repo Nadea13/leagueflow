@@ -53,8 +53,7 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
     return (
         <div className="relative overflow-hidden group bg-card p-2 md:p-4 rounded-sm border">
             <form action={handleUpdate} className="grid gap-1 md:gap-2">
-                <div className="space-y-1">
-                    <Label>Profile Photo</Label>
+                <div className="flex flex-col items-center justify-center space-y-1">
                     <LogoUploader
                         id="profile-avatar"
                         initialUrl={previewUrl}
