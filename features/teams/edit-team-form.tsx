@@ -390,7 +390,7 @@ export function EditTeamForm({
                                         {tTeam("delete_team")}
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
+                                <DialogContent showCloseButton={false} className="w-[92vw] sm:w-full sm:max-w-[640px] bg-card border shadow-2xl p-0 h-auto max-h-[90vh] flex flex-col inset-auto top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                                     <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
                                         <DialogTitle>{tTeam("delete_team")}</DialogTitle>
                                         <Button

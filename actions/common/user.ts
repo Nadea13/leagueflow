@@ -4,7 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { ensureProfileExists } from "@/lib/profile";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ActionResponse } from "@/types";
+import { ActionResponse, Tournament } from "@/types";
 
 export async function getUserSubscriptionPlan() {
     const supabase = await createClient();
@@ -267,7 +267,7 @@ export async function createMasterPlayer(formData: FormData): Promise<ActionResp
     }
 }
 
-export async function getAllPublicTournaments() {
+export async function getAllPublicTournaments(): Promise<Tournament[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from("tournaments")
@@ -291,7 +291,7 @@ export async function getAllPublicTournaments() {
             ...t,
             registration_fee: registrationFee
         };
-    });
+    }) as unknown as Tournament[];
 }
 
 export async function searchMasterPlayers(query: string) {
