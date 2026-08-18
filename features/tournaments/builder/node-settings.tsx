@@ -494,7 +494,7 @@ export function NodeSettings() {
                 ? (locale === "th" ? "ผู้สนับสนุน" : "Sponsors")
                 : isPseudoInbox
                     ? (locale === "th" ? "กล่องข้อความ" : "Inbox")
-                    : (locale === "th" ? "ตั้งค่าการลงทะเบียน" : "Registration Settings")
+                    : (locale === "th" ? "การลงทะเบียน" : "Registration")
     };
 
     // Resolve live teams from edges or database assignments

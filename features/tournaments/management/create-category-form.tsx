@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
-import { createTournamentCategory } from "@/actions/tournaments/general";
+import { createTournamentCategory, getOrCreateAgeCategory } from "@/actions/tournaments/general";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
     Dialog,
@@ -40,15 +41,19 @@ export function CreateCategoryForm({
     open,
     onOpenChange,
     tournamentId,
-    ageCategories,
     onSuccess,
     sport: initialSport
 }: CreateCategoryFormProps) {
     const locale = useLocale();
+    const isThai = locale === "th";
     const { toast } = useToast();
     const storeSport = useBracketStore((state) => state.sport);
-    const [ageCategoryId, setAgeCategoryId] = useState<string>("");
-    const [genderType, setGenderType] = useState<string>("open");
+
+    // Age Category Type & Input States
+    const [ageType, setAgeType] = useState<"under" | "over" | "open">("under");
+    const [ageValue, setAgeValue] = useState<string>("");
+
+    const [genderType, setGenderType] = useState<string>("male");
     const [maxTeams, setMaxTeams] = useState<string>("8");
     const [registrationFee, setRegistrationFee] = useState<string>("0");
     const [maxSets, setMaxSets] = useState<string>("3");
@@ -70,8 +75,8 @@ export function CreateCategoryForm({
                 .maybeSingle();
 
             const rawSport = (data as unknown as { sport?: string; sports?: { sport_name?: string } })?.sport ||
-                             (data as unknown as { sports?: { sport_name?: string } })?.sports?.sport_name ||
-                             (data?.name?.toLowerCase().includes("volleyball") || data?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
+                (data as unknown as { sports?: { sport_name?: string } })?.sports?.sport_name ||
+                (data?.name?.toLowerCase().includes("volleyball") || data?.name?.includes("วอลเลย์บอล") ? "volleyball" : null);
 
             if (rawSport) {
                 setSport(rawSport.toLowerCase());
@@ -80,22 +85,45 @@ export function CreateCategoryForm({
         fetchSport();
     }, [tournamentId, initialSport, storeSport]);
 
-    useEffect(() => {
-        if (ageCategories && ageCategories.length > 0 && !ageCategoryId) {
-            setAgeCategoryId(ageCategories[0].id.toString());
-        }
-    }, [ageCategories, ageCategoryId]);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!ageCategoryId) {
-            toast({
-                title: "Error",
-                description: "Please select an age category.",
-                variant: "destructive"
-            });
-            return;
+
+        let formattedCategoryName = "Open";
+        let minAge = 0;
+        let maxAge = 99;
+
+        if (ageType === "under") {
+            if (!ageValue.trim()) {
+                toast({
+                    title: "Error",
+                    description: isThai ? "กรุณากรอกตัวเลขอายุสำหรับรุ่น Under" : "Please enter an age number for Under.",
+                    variant: "destructive"
+                });
+                return;
+            }
+            const parsedAge = parseInt(ageValue, 10);
+            formattedCategoryName = `U${parsedAge}`;
+            minAge = 0;
+            maxAge = parsedAge;
+        } else if (ageType === "over") {
+            if (!ageValue.trim()) {
+                toast({
+                    title: "Error",
+                    description: isThai ? "กรุณากรอกตัวเลขอายุสำหรับรุ่น Over" : "Please enter an age number for Over.",
+                    variant: "destructive"
+                });
+                return;
+            }
+            const parsedAge = parseInt(ageValue, 10);
+            formattedCategoryName = `${parsedAge}+`;
+            minAge = parsedAge;
+            maxAge = 99;
+        } else { // open
+            formattedCategoryName = "Open";
+            minAge = 0;
+            maxAge = 99;
         }
+
         if (!maxTeams || parseInt(maxTeams) <= 0) {
             toast({
                 title: "Error",
@@ -107,6 +135,20 @@ export function CreateCategoryForm({
 
         setIsPending(true);
         try {
+            // Get or create Age Category ID
+            const ageCatRes = await getOrCreateAgeCategory(formattedCategoryName, minAge, maxAge);
+            if (!ageCatRes.success || !ageCatRes.id) {
+                toast({
+                    title: "Error",
+                    description: ageCatRes.error || (isThai ? "เกิดข้อผิดพลาดในการสร้างรุ่นอายุ" : "Failed to process age category"),
+                    variant: "destructive"
+                });
+                setIsPending(false);
+                return;
+            }
+
+            const targetAgeCategoryId = ageCatRes.id;
+
             // Client-side Subscription & Limit Check
             const { getUserSubscriptionPlan } = await import("@/actions/common/user");
             const activePlan = await getUserSubscriptionPlan();
@@ -131,7 +173,7 @@ export function CreateCategoryForm({
                 if (categoryCount && categoryCount >= maxAllowedCategories) {
                     toast({
                         title: "Error",
-                        description: locale === 'th'
+                        description: isThai
                             ? isCupPlan
                                 ? "แพ็คเกจ Cup สามารถสร้างรุ่นการแข่งขันได้สูงสุด 5 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
                                 : isEventPlan
@@ -152,7 +194,7 @@ export function CreateCategoryForm({
                 if (parseInt(maxTeams) > maxAllowedTeams) {
                     toast({
                         title: "Error",
-                        description: locale === 'th'
+                        description: isThai
                             ? isCupPlan
                                 ? "แพ็คเกจ Cup สามารถจำกัดจำนวนทีมได้สูงสุด 128 ทีมต่อรุ่นเท่านั้น"
                                 : isEventPlan
@@ -175,7 +217,7 @@ export function CreateCategoryForm({
 
             const res = await createTournamentCategory(
                 tournamentId,
-                parseInt(ageCategoryId),
+                targetAgeCategoryId,
                 genderType,
                 parseInt(maxTeams),
                 parseFloat(registrationFee) || 0,
@@ -183,8 +225,8 @@ export function CreateCategoryForm({
             );
             if (res.success) {
                 toast({
-                    title: locale === 'th' ? "สร้างสำเร็จ" : "Created Successfully",
-                    description: locale === 'th' ? "สร้างประเภทการแข่งขันเรียบร้อยแล้ว" : "New category has been created."
+                    title: isThai ? "สร้างสำเร็จ" : "Created Successfully",
+                    description: isThai ? "สร้างประเภทการแข่งขันเรียบร้อยแล้ว" : "New category has been created."
                 });
 
                 const supabase = createClient();
@@ -192,7 +234,7 @@ export function CreateCategoryForm({
                     .from("tournament_categories")
                     .select("id")
                     .eq("tournament_id", tournamentId)
-                    .eq("age_category_id", parseInt(ageCategoryId))
+                    .eq("age_category_id", targetAgeCategoryId)
                     .eq("gender_type", genderType)
                     .is("deleted_at", null)
                     .single();
@@ -223,11 +265,11 @@ export function CreateCategoryForm({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 rounded-sm shadow-2xl">
+            <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
                 <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
                     <DialogHeader className="relative pr-10">
                         <DialogTitle>
-                            {locale === 'th' ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
+                            {isThai ? "สร้างประเภทการแข่งขันใหม่" : "Create New Category"}
                         </DialogTitle>
                         <Button
                             type="button"
@@ -241,84 +283,152 @@ export function CreateCategoryForm({
                     </DialogHeader>
 
                     <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1 md:space-y-2 no-scrollbar">
+                        {/* Age Category Type & Input */}
                         <div className="space-y-1">
                             <Label>
-                                {locale === 'th' ? "รุ่นอายุ" : "Age Category"}
+                                {isThai ? "รุ่นอายุ" : "Age Category"}
                             </Label>
-                            <Select value={ageCategoryId} onValueChange={setAgeCategoryId}>
-                                <SelectTrigger className="w-full h-10">
-                                    <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นอายุ" : "Select Age Category"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {ageCategories.map((cat) => (
-                                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                                            {cat.category_name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                                {[
+                                    { id: "under", label: "Under (U)", icon: <ArrowDownCircle className="h-4 w-4" /> },
+                                    { id: "over", label: "Over (+)", icon: <PlusCircle className="h-4 w-4" /> },
+                                    { id: "open", label: "Open (ทั่วไป)", icon: <Globe className="h-4 w-4" /> },
+                                ].map((typeItem) => {
+                                    const isSelected = ageType === typeItem.id;
+                                    return (
+                                        <button
+                                            key={typeItem.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setAgeType(typeItem.id as "under" | "over" | "open");
+                                                if (typeItem.id === "open") setAgeValue("");
+                                            }}
+                                            className={cn(
+                                                "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                isSelected
+                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "p-1.5 rounded-full transition-colors",
+                                                isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                            )}>
+                                                {typeItem.icon}
+                                            </div>
+                                            <span className="text-xs font-bold truncate w-full transition-colors">
+                                                {typeItem.label}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {ageType !== "open" && (
+                                <div className="space-y-1">
+                                    <Label>
+                                        {isThai ? "อายุ" : "Age"}
+                                    </Label>
+                                    <Input
+                                        type="text"
+                                        value={ageValue}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/[^0-9]/g, "");
+                                            setAgeValue(val);
+                                        }}
+                                        placeholder={
+                                            ageType === "under"
+                                                ? (isThai ? "เช่น 13 (สำหรับ U13)" : "e.g. 13 (for U13)")
+                                                : (isThai ? "เช่น 35 (สำหรับ 35+)" : "e.g. 35 (for 35+)")
+                                        }
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-1">
                             <Label>
-                                {locale === 'th' ? "ประเภทเพศ" : "Gender Group"}
+                                {isThai ? "ประเภทเพศ" : "Gender Group"}
                             </Label>
-                            <Select value={genderType} onValueChange={setGenderType}>
-                                <SelectTrigger className="w-full h-10">
-                                    <SelectValue placeholder={locale === 'th' ? "เลือกประเภทเพศ" : "Select Gender Group"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="open">{locale === 'th' ? "รุ่นทั่วไป (ไม่จำกัดเพศ)" : "Open (All Genders)"}</SelectItem>
-                                    <SelectItem value="male">{locale === 'th' ? "ชาย" : "Male"}</SelectItem>
-                                    <SelectItem value="female">{locale === 'th' ? "หญิง" : "Female"}</SelectItem>
-                                    <SelectItem value="mixed">{locale === 'th' ? "คู่ผสม / ผสม" : "Mixed"}</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                                {[
+                                    { id: "male", label: isThai ? "ชาย" : "Male", icon: <Mars className="h-4 w-4" /> },
+                                    { id: "female", label: isThai ? "หญิง" : "Female", icon: <Venus className="h-4 w-4" /> },
+                                    { id: "mixed", label: isThai ? "คู่ผสม / ผสม" : "Mixed", icon: <UsersRound className="h-4 w-4" /> },
+                                ].map((genderItem) => {
+                                    const isSelected = genderType === genderItem.id;
+                                    return (
+                                        <button
+                                            key={genderItem.id}
+                                            type="button"
+                                            onClick={() => setGenderType(genderItem.id)}
+                                            className={cn(
+                                                "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                isSelected
+                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
+                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "p-1.5 rounded-full transition-colors",
+                                                isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                            )}>
+                                                {genderItem.icon}
+                                            </div>
+                                            <span className="text-xs font-bold truncate w-full transition-colors">
+                                                {genderItem.label}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            <Label>
-                                {locale === 'th' ? "จำนวนทีมสูงสุด" : "Team Limit"}
-                            </Label>
-                            <Input
-                                type="text"
-                                value={maxTeams}
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/[^0-9]/g, "");
-                                    setMaxTeams(val);
-                                }}
-                            />
-                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                                <Label>
+                                    {isThai ? "จำนวนทีมสูงสุด" : "Team Limit"}
+                                </Label>
+                                <Input
+                                    type="text"
+                                    value={maxTeams}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9]/g, "");
+                                        setMaxTeams(val);
+                                    }}
+                                />
+                            </div>
 
-                        <div className="space-y-1">
-                            <Label>
-                                {locale === 'th' ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
-                            </Label>
-                            <Input
-                                type="text"
-                                value={registrationFee}
-                                onChange={(e) => {
-                                    const val = e.target.value.replace(/[^0-9.]/g, "");
-                                    if ((val.match(/\./g) || []).length <= 1) {
-                                        setRegistrationFee(val);
-                                    }
-                                }}
-                                placeholder="0.00 (Free)"
-                            />
+                            <div className="space-y-1">
+                                <Label>
+                                    {isThai ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}
+                                </Label>
+                                <Input
+                                    type="text"
+                                    value={registrationFee}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/[^0-9.]/g, "");
+                                        if ((val.match(/\./g) || []).length <= 1) {
+                                            setRegistrationFee(val);
+                                        }
+                                    }}
+                                    placeholder="0.00 (Free)"
+                                />
+                            </div>
                         </div>
 
                         {(sport === "volleyball" || sport.includes("volleyball") || sport.includes("วอลเลย์บอล")) && (
                             <div className="space-y-1">
                                 <Label>
-                                    {locale === 'th' ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}
+                                    {isThai ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}
                                 </Label>
                                 <Select value={maxSets} onValueChange={setMaxSets}>
                                     <SelectTrigger className="w-full h-10">
-                                        <SelectValue placeholder={locale === 'th' ? "เลือกจำนวนเซ็ต" : "Select Sets"} />
+                                        <SelectValue placeholder={isThai ? "เลือกจำนวนเซ็ต" : "Select Sets"} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="3">{locale === 'th' ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
-                                        <SelectItem value="5">{locale === 'th' ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
+                                        <SelectItem value="3">{isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
+                                        <SelectItem value="5">{isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -330,10 +440,10 @@ export function CreateCategoryForm({
                             {isPending ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    {locale === 'th' ? "กำลังสร้าง..." : "Creating..."}
+                                    {isThai ? "กำลังสร้าง..." : "Creating..."}
                                 </>
                             ) : (
-                                locale === 'th' ? "สร้างรุ่นการแข่งขัน" : "Create Category"
+                                isThai ? "สร้างรุ่นการแข่งขัน" : "Create Category"
                             )}
                         </Button>
                     </DialogFooter>
@@ -342,3 +452,4 @@ export function CreateCategoryForm({
         </Dialog>
     );
 }
+

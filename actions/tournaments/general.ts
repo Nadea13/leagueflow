@@ -744,6 +744,55 @@ export async function getDashboardTournaments(query?: string) {
     return tournaments;
 }
 
+export async function getOrCreateAgeCategory(
+    categoryName: string,
+    minAge: number,
+    maxAge: number
+): Promise<{ success: boolean; id?: number; error?: string }> {
+    try {
+        const supabase = await createClient();
+
+        // 1. Check if an exact match exists
+        const { data: existing, error: fetchError } = await supabase
+            .from("age_categories")
+            .select("id")
+            .eq("category_name", categoryName)
+            .eq("min_age", minAge)
+            .eq("max_age", maxAge)
+            .maybeSingle();
+
+        if (fetchError) {
+            console.error("Error fetching age category:", fetchError);
+            return { success: false, error: fetchError.message };
+        }
+
+        if (existing) {
+            return { success: true, id: existing.id };
+        }
+
+        // 2. Insert new age category if non-existent
+        const { data: newCat, error: insertError } = await supabase
+            .from("age_categories")
+            .insert({
+                category_name: categoryName,
+                min_age: minAge,
+                max_age: maxAge
+            })
+            .select("id")
+            .single();
+
+        if (insertError) {
+            console.error("Error creating age category:", insertError);
+            return { success: false, error: insertError.message };
+        }
+
+        return { success: true, id: newCat.id };
+    } catch (error) {
+        console.error("Unexpected error in getOrCreateAgeCategory:", error);
+        return { success: false, error: "Failed to process age category" };
+    }
+}
+
 export async function createTournamentCategory(
     tournamentId: string,
     ageCategoryId: number,

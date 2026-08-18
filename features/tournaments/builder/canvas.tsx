@@ -424,6 +424,7 @@ function CanvasInternal({
             setActiveNodeId(null);
             selectNode(null);
         } else {
+            setActiveSidebar('teams');
             setActiveNodeId('registration-setting-node');
             selectNode('registration-setting-node');
         }
@@ -435,6 +436,7 @@ function CanvasInternal({
             setActiveNodeId(null);
             selectNode(null);
         } else {
+            setActiveSidebar('teams');
             setActiveNodeId('announcement-setting-node');
             selectNode('announcement-setting-node');
         }
@@ -446,6 +448,7 @@ function CanvasInternal({
             setActiveNodeId(null);
             selectNode(null);
         } else {
+            setActiveSidebar('teams');
             setActiveNodeId('sponsor-setting-node');
             selectNode('sponsor-setting-node');
         }
@@ -524,6 +527,7 @@ function CanvasInternal({
             setActiveNodeId(null);
             selectNode(null);
         } else {
+            setActiveSidebar('teams');
             setActiveNodeId('inbox-setting-node');
             selectNode('inbox-setting-node');
             fetchInboxItems();
@@ -1358,7 +1362,7 @@ function CanvasInternal({
                                     variant={activeNodeId === 'registration-setting-node' ? "default" : "ghost"}
                                     size="icon"
                                     onClick={handleOpenRegistrationSettings}
-                                    title={locale === 'th' ? "ตั้งค่าการลงทะเบียน" : "Registration Settings"}
+                                    title={locale === 'th' ? "การลงทะเบียน" : "Registration"}
                                     className={cn(
                                         "transition-all",
                                         activeNodeId === 'registration-setting-node'
@@ -1387,7 +1391,15 @@ function CanvasInternal({
                                 <Button
                                     variant={activeSidebar === 'schedule' ? "default" : "ghost"}
                                     size="icon"
-                                    onClick={() => setActiveSidebar(activeSidebar === 'schedule' ? 'teams' : 'schedule')}
+                                    onClick={() => {
+                                        if (activeSidebar === 'schedule') {
+                                            setActiveSidebar('teams');
+                                        } else {
+                                            setActiveNodeId(null);
+                                            selectNode(null);
+                                            setActiveSidebar('schedule');
+                                        }
+                                    }}
                                     className={cn(
                                         "transition-all",
                                         activeSidebar === 'schedule'
@@ -1402,7 +1414,15 @@ function CanvasInternal({
                                     <Button
                                         variant={activeSidebar === 'settings' ? "default" : "ghost"}
                                         size="icon"
-                                        onClick={() => setActiveSidebar(activeSidebar === 'settings' ? 'teams' : 'settings')}
+                                        onClick={() => {
+                                            if (activeSidebar === 'settings') {
+                                                setActiveSidebar('teams');
+                                            } else {
+                                                setActiveNodeId(null);
+                                                selectNode(null);
+                                                setActiveSidebar('settings');
+                                            }
+                                        }}
                                         className={cn(
                                             "transition-all",
                                             activeSidebar === 'settings'
@@ -1479,7 +1499,7 @@ function CanvasInternal({
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
                                                 <ClipboardEdit className="h-4 w-4" />
-                                                <span>{locale === 'th' ? "ตั้งค่าการลงทะเบียน" : "Registration Settings"}</span>
+                                                <span>{locale === 'th' ? "การลงทะเบียน" : "Registration"}</span>
                                             </DropdownMenuItem>
 
                                             <DropdownMenuItem
@@ -1491,7 +1511,11 @@ function CanvasInternal({
                                             </DropdownMenuItem>
 
                                             <DropdownMenuItem
-                                                onClick={() => setActiveSidebar('schedule')}
+                                                onClick={() => {
+                                                    setActiveNodeId(null);
+                                                    selectNode(null);
+                                                    setActiveSidebar('schedule');
+                                                }}
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
                                                 <Calendar className="h-4 w-4" />
@@ -1500,7 +1524,11 @@ function CanvasInternal({
 
                                             {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
                                                 <DropdownMenuItem
-                                                    onClick={() => setActiveSidebar('settings')}
+                                                    onClick={() => {
+                                                        setActiveNodeId(null);
+                                                        selectNode(null);
+                                                        setActiveSidebar('settings');
+                                                    }}
                                                     className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                                 >
                                                     <Settings className="h-4 w-4" />
