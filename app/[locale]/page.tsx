@@ -90,7 +90,7 @@ export default async function Home() {
         >
           {/* Ambient Fade overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/50 pointer-events-none" />
-          <div className="container max-w-7xl mx-auto relative z-10 px-2 md:px-4">
+          <div className="container max-w-7xl mx-auto relative z-10 px-2 lg:px-0">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
               {/* Left Column: Copy & Call to Action */}
@@ -106,7 +106,7 @@ export default async function Home() {
                   แพลตฟอร์มที่ช่วยให้คุณจัดลีค สร้างทัวร์นาเมนต์ รับสมัครทีม และสรุปผลการแข่งขันได้อย่างมืออาชีพ สะดวก รวดเร็ว และครบครันในที่เดียว
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 lg:gap-4 justify-center lg:justify-start pt-2">
                   <Button size="lg" className="h-12 px-8 font-semibold text-base group shadow-lg shadow-primary/20 cursor-pointer" asChild>
                     <Link href="/signup">
                       สร้างทัวร์นาเมนต์ของคุณ
@@ -125,7 +125,7 @@ export default async function Home() {
               <div className="relative w-full py-8 overflow-hidden">
                 {/* Scrollable wrapper */}
                 <div className="w-full overflow-x-auto pb-4 scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <div className="flex justify-start lg:justify-center px-4 md:px-0">
+                  <div className="flex justify-start lg:justify-center px-4 lg:px-0">
                     {/* Bracket Layout container */}
                     <div className="flex items-center gap-16 relative z-10 w-[544px] shrink-0 h-[320px] scale-90 sm:scale-100 origin-left lg:origin-center">
 
@@ -265,14 +265,14 @@ export default async function Home() {
 
         {/* Features Section */}
         <section className="py-16 lg:py-24 border-b">
-          <div className="container max-w-7xl mx-auto px-2 md:px-4">
+          <div className="container max-w-7xl mx-auto px-2 lg:px-0">
             {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4">
 
               {/* Feature 1 */}
-              <div className="bg-card border rounded-xl p-2 md:p-4 hover:shadow-xl hover:border-primary transition-all duration-300 group flex flex-col justify-between">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 hover:shadow-md hover:border-primary transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                  <div className="group flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                  <div className="group flex items-center gap-2 lg:gap-4 mb-2 lg:mb-4">
                     <div className="w-6 h-6 group-hover:text-primary transition-all duration-300">
                       <Workflow className="w-6 h-6" />
                     </div>
@@ -286,7 +286,7 @@ export default async function Home() {
                 </div>
                 {/* Graphic 1: Mini Bracket Canvas */}
                 <div
-                  className="h-36 w-full border rounded-lg bg-background/50 relative overflow-hidden flex items-center justify-center"
+                  className="h-36 w-full border rounded-sm bg-background/50 relative overflow-hidden flex items-center justify-center"
                   style={{
                     backgroundImage: `radial-gradient(color-mix(in srgb, var(--muted-foreground) 10%, transparent) 1px, transparent 1px)`,
                     backgroundSize: '10px 10px',
@@ -332,9 +332,9 @@ export default async function Home() {
               </div>
 
               {/* Feature 2 */}
-              <div className="bg-card border rounded-xl p-2 md:p-4 hover:shadow-xl hover:border-primary transition-all duration-300 group flex flex-col justify-between">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 hover:shadow-md hover:border-primary transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                  <div className="group flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                  <div className="group flex items-center gap-2 lg:gap-4 mb-2 lg:mb-4">
                     <div className="w-6 h-6 group-hover:text-primary transition-all duration-300">
                       <QrCode className="w-6 h-6" />
                     </div>
@@ -347,7 +347,7 @@ export default async function Home() {
                   </p>
                 </div>
                 {/* Graphic 2: PromptPay QR Code Payment */}
-                <div className="h-36 w-full border rounded-lg bg-background/50 flex items-center justify-between p-2.5 gap-4 overflow-hidden select-none">
+                <div className="h-36 w-full border rounded-sm bg-background/50 flex items-center justify-between p-2.5 gap-4 overflow-hidden select-none">
                   {/* Left Side: QR Code & Amount */}
                   <div className="flex flex-col items-center justify-center gap-1 shrink-0">
                     <div className="p-1 border rounded-sm relative w-[64px] h-[64px] flex items-center justify-center">
@@ -378,9 +378,9 @@ export default async function Home() {
               </div>
 
               {/* Feature 3 */}
-              <div className="bg-card border rounded-xl p-2 md:p-4 hover:shadow-xl hover:border-primary transition-all duration-300 group flex flex-col justify-between">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 hover:shadow-md hover:border-primary transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                  <div className="group flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                  <div className="group flex items-center gap-2 lg:gap-4 mb-2 lg:mb-4">
                     <div className="w-6 h-6 group-hover:text-primary transition-all duration-300">
                       <Users2 className="w-6 h-6" />
                     </div>
@@ -393,7 +393,7 @@ export default async function Home() {
                   </p>
                 </div>
                 {/* Graphic 3: Squad List */}
-                <div className="h-36 w-full border rounded-lg bg-background/50 p-2 flex flex-col gap-1.5 overflow-y-auto select-none">
+                <div className="h-36 w-full border rounded-sm bg-background/50 p-2 flex flex-col gap-1.5 overflow-y-auto select-none">
                   <div className="space-y-1">
                     {/* Player 1 */}
                     <div className="flex items-center justify-between border rounded p-1 bg-card/60 hover:border-primary/30 transition-colors">
@@ -470,9 +470,9 @@ export default async function Home() {
               </div>
 
               {/* Feature 4 */}
-              <div className="bg-card border rounded-xl p-2 md:p-4 hover:shadow-xl hover:border-primary transition-all duration-300 group flex flex-col justify-between">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 hover:shadow-md hover:border-primary transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                  <div className="group flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                  <div className="group flex items-center gap-2 lg:gap-4 mb-2 lg:mb-4">
                     <div className="w-6 h-6 group-hover:text-primary transition-all duration-300">
                       <Activity className="w-6 h-6" />
                     </div>
@@ -485,7 +485,7 @@ export default async function Home() {
                   </p>
                 </div>
                 {/* Graphic 4: Match Logs Timeline */}
-                <div className="h-36 w-full border rounded-lg bg-background/50 p-2 flex flex-col gap-1.5 overflow-y-auto select-none">
+                <div className="h-36 w-full border rounded-sm bg-background/50 p-2 flex flex-col gap-1.5 overflow-y-auto select-none">
                   <div className="space-y-2">
                     {/* Neutral Event: Kick Off */}
                     <div className="flex items-center gap-2 w-full">
@@ -531,9 +531,9 @@ export default async function Home() {
               </div>
 
               {/* Feature 5 */}
-              <div className="bg-card border rounded-xl p-2 md:p-4 hover:shadow-xl hover:border-primary transition-all duration-300 group flex flex-col justify-between">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 hover:shadow-md hover:border-primary transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                  <div className="group flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                  <div className="group flex items-center gap-2 lg:gap-4 mb-2 lg:mb-4">
                     <div className="w-6 h-6 group-hover:text-primary transition-all duration-300">
                       <Tv className="w-6 h-6" />
                     </div>
@@ -546,7 +546,7 @@ export default async function Home() {
                   </p>
                 </div>
                 {/* Graphic 5: Broadcast Scoreboard HUD */}
-                <div className="h-36 w-full border rounded-lg bg-background/50 relative overflow-hidden flex flex-col justify-between p-2">
+                <div className="h-36 w-full border rounded-sm bg-background/50 relative overflow-hidden flex flex-col justify-between p-2">
                   <div className="text-[7px] text-muted-foreground flex items-center justify-between">
                   </div>
                   <div className="mx-auto my-auto relative w-48 h-16 flex items-center justify-center">
@@ -578,9 +578,9 @@ export default async function Home() {
               </div>
 
               {/* Feature 6 */}
-              <div className="bg-card border rounded-xl p-2 md:p-4 hover:shadow-xl hover:border-primary transition-all duration-300 group flex flex-col justify-between">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 hover:shadow-md hover:border-primary transition-all duration-300 group flex flex-col justify-between">
                 <div>
-                  <div className="group flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                  <div className="group flex items-center gap-2 lg:gap-4 mb-2 lg:mb-4">
                     <div className="w-6 h-6 group-hover:text-primary transition-all duration-300">
                       <BarChart3 className="w-6 h-6" />
                     </div>
@@ -593,7 +593,7 @@ export default async function Home() {
                   </p>
                 </div>
                 {/* Graphic 6: Stats Leaders Leaderboard (Single Player + 4 Stat Cards) */}
-                <div className="h-36 w-full border rounded-lg bg-background/50 p-2 flex flex-col justify-between overflow-hidden select-none gap-1.5">
+                <div className="h-36 w-full border rounded-sm bg-background/50 p-2 flex flex-col justify-between overflow-hidden select-none gap-1.5">
                   {/* Player Name Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
@@ -639,7 +639,7 @@ export default async function Home() {
         </section>
 
         {/* Sports showcase section */}
-        <section className="py-16 md:py-24 border-b bg-background overflow-hidden relative">
+        <section className="py-16 lg:py-24 border-b bg-background overflow-hidden relative">
           {/* Custom Styles for guaranteed Marquee animation */}
           <style dangerouslySetInnerHTML={{
             __html: `
@@ -667,7 +667,7 @@ export default async function Home() {
                 {sportsList.map((sport, index) => (
                   <div
                     key={`sport-1-a-${index}`}
-                    className="bg-card border rounded-xl px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
+                    className="bg-card border rounded-sm px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
                   >
                     <span className="text-primary">{sport.icon}</span>
                     <span className="text-center">{sport.name}</span>
@@ -676,7 +676,7 @@ export default async function Home() {
                 {sportsList.map((sport, index) => (
                   <div
                     key={`sport-1-b-${index}`}
-                    className="bg-card border rounded-xl px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
+                    className="bg-card border rounded-sm px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
                   >
                     <span className="text-primary">{sport.icon}</span>
                     <span className="text-center">{sport.name}</span>
@@ -690,7 +690,7 @@ export default async function Home() {
                 {sportsList.map((sport, index) => (
                   <div
                     key={`sport-2-a-${index}`}
-                    className="bg-card border rounded-xl px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
+                    className="bg-card border rounded-sm px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
                   >
                     <span className="text-primary">{sport.icon}</span>
                     <span className="text-center">{sport.name}</span>
@@ -699,7 +699,7 @@ export default async function Home() {
                 {sportsList.map((sport, index) => (
                   <div
                     key={`sport-2-b-${index}`}
-                    className="bg-card border rounded-xl px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
+                    className="bg-card border rounded-sm px-24 py-4 flex flex-col items-center justify-center gap-2 text-xs font-bold shadow-sm transition-all duration-300 shrink-0"
                   >
                     <span className="text-primary">{sport.icon}</span>
                     <span className="text-center">{sport.name}</span>
@@ -713,20 +713,20 @@ export default async function Home() {
         </section>
 
         {/* Pricing Section */}
-        <section className="py-16 md:py-24 border-b relative overflow-hidden">
-          <div className="container max-w-7xl mx-auto relative z-10 px-2 md:px-4">
+        <section className="py-16 lg:py-24 border-b relative overflow-hidden">
+          <div className="container max-w-7xl mx-auto relative z-10 px-2 lg:px-0">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
+              <h2 className="text-3xl lg:text-4xl font-black tracking-tight mb-4">
                 แผนราคาที่เหมาะกับความต้องการของคุณ
               </h2>
-              <p className="text-muted-foreground text-sm md:text-base">
+              <p className="text-muted-foreground text-sm lg:text-base">
                 เลือกแผนการบริการที่ตรงกับรูปแบบการจัดทัวร์นาเมนต์ของคุณ ไม่มีค่าบริการแอบแฝง
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
               {/* Starter Plan */}
-              <div className="bg-card border rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 md:space-y-4 transition-all duration-300 shadow-sm relative">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 lg:space-y-4 transition-all duration-300 shadow-sm relative">
                 <div>
                   <h3 className="text-xl font-bold mb-1">Match</h3>
                   <p className="text-muted-foreground text-xs mb-2">เหมาะสำหรับทัวร์นาเมนต์ขนาดเล็กหรือผู้เริ่มต้นจัดแข่งขัน</p>
@@ -734,7 +734,7 @@ export default async function Home() {
                     <span className="text-4xl font-black">฿0</span>
                     <span className="text-muted-foreground text-sm">/ ตลอดชีพ</span>
                   </div>
-                  <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
+                  <ul className="space-y-1 lg:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       สร้างทัวร์นาเมนต์สูงสุด 1 รายการ
@@ -767,27 +767,27 @@ export default async function Home() {
               </div>
 
               {/* Pro Plan */}
-              <div className="bg-card border-2 border-primary rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:shadow-xl space-y-2 md:space-y-4 transition-all duration-300 shadow-lg relative transform">
+              <div className="bg-card border-2 border-primary rounded-sm p-2 lg:p-4 flex flex-col justify-between hover:shadow-md space-y-2 lg:space-y-4 transition-all duration-300 shadow-lg relative transform">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full tracking-wider">
                   ยอดนิยม
                 </div>
                 <div>
-                  <div className="flex justify-between mb-1 md:mb-2">
+                  <div className="flex justify-between mb-1 lg:mb-2">
                     <h3 className="text-xl font-bold">Event</h3>
                     <Badge variant="default" className="text-[10px] font-bold ml-1">
                       -70% โปรเปิดตัว
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground text-xs mb-2 md:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
-                  <div className="flex flex-col mb-2 md:mb-4">
-                    <div className="flex items-baseline gap-1 md:gap-2 flex-wrap">
-                      <span className="text-3xl md:text-4xl font-black line-through text-muted-foreground/60">฿790</span>
-                      <span className="text-3xl md:text-4xl font-black ml-2">฿237</span>
+                  <p className="text-muted-foreground text-xs mb-2 lg:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
+                  <div className="flex flex-col mb-2 lg:mb-4">
+                    <div className="flex items-baseline gap-1 lg:gap-2 flex-wrap">
+                      <span className="text-3xl lg:text-4xl font-black line-through text-muted-foreground/60">฿790</span>
+                      <span className="text-3xl lg:text-4xl font-black ml-2">฿237</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
                     <span className="text-xs text-primary font-black">หรือรายปี ฿7,900/ปี</span>
                   </div>
-                  <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
+                  <ul className="space-y-1 lg:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       สร้างทัวร์นาเมนต์สูงสุด 5 รายการต่อเดือน
@@ -824,18 +824,18 @@ export default async function Home() {
               </div>
 
               {/* Cup Plan */}
-              <div className="bg-card border rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 md:space-y-4 transition-all duration-300 shadow-sm relative">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 lg:space-y-4 transition-all duration-300 shadow-sm relative">
                 <div>
                   <h3 className="text-xl font-bold mb-1">Cup</h3>
                   <p className="text-muted-foreground text-xs mb-2">จัดทัวร์นาเมนต์ขนาดใหญ่และลีกประสิทธิภาพสูง</p>
-                  <div className="flex flex-col mb-2 md:mb-4">
-                    <div className="flex items-baseline gap-1 md:gap-2 flex-wrap">
-                      <span className="text-3xl md:text-4xl font-black">฿1,790</span>
+                  <div className="flex flex-col mb-2 lg:mb-4">
+                    <div className="flex items-baseline gap-1 lg:gap-2 flex-wrap">
+                      <span className="text-3xl lg:text-4xl font-black">฿1,790</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
                     <span className="text-xs text-primary font-black">หรือรายปี ฿17,900/ปี</span>
                   </div>
-                  <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
+                  <ul className="space-y-1 lg:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       สร้างทัวร์นาเมนต์สูงสุด 20 รายการต่อเดือน
@@ -872,14 +872,14 @@ export default async function Home() {
               </div>
 
               {/* Customs Plan */}
-              <div className="bg-card border rounded-2xl p-2 md:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 md:space-y-4 transition-all duration-300 shadow-sm relative">
+              <div className="bg-card border rounded-sm p-2 lg:p-4 flex flex-col justify-between hover:border-primary/45 space-y-2 lg:space-y-4 transition-all duration-300 shadow-sm relative">
                 <div>
                   <h3 className="text-xl font-bold mb-1">Customs</h3>
                   <p className="text-muted-foreground text-xs mb-2">สำหรับองค์กร สมาคมกีฬา หรือความต้องการปรับแต่งพิเศษ</p>
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="text-3xl font-black">ติดต่อสอบถาม</span>
                   </div>
-                  <ul className="space-y-1 md:space-y-2 text-sm text-foreground/90">
+                  <ul className="space-y-1 lg:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                       สิทธิ์การเข้าใช้งานฟีเจอร์ Pro ทั้งหมด
@@ -911,15 +911,15 @@ export default async function Home() {
         </section>
 
         {/* Call to Action Section */}
-        <section className="py-16 md:py-24 relative overflow-hidden">
-          <div className="container max-w-7xl mx-auto text-center relative z-10 px-2 md:px-4">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-4">
+        <section className="py-16 lg:py-24 relative overflow-hidden">
+          <div className="container max-w-7xl mx-auto text-center relative z-10 px-2 lg:px-0">
+            <h2 className="text-3xl lg:text-4xl font-black tracking-tight mb-4">
               พร้อมที่จะเริ่มสร้างการแข่งขันของคุณหรือยัง?
             </h2>
-            <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto mb-8 leading-relaxed">
+            <p className="text-muted-foreground text-base lg:text-lg max-w-xl mx-auto mb-8 leading-relaxed">
               เข้าร่วมกับ League Flow วันนี้ เพื่อยกระดับการจัดการแข่งขันกีฬาของคุณให้เป็นมืออาชีพและง่ายดายยิ่งขึ้น
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-2 lg:gap-4 justify-center items-center">
               <Button size="lg" className="w-full sm:w-auto h-12 px-8 font-semibold text-base group shadow-lg cursor-pointer" asChild>
                 <Link href="/signup">
                   เริ่มต้นสร้างการแข่งขัน

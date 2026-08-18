@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-
+import { Turnstile } from "@/components/ui/turnstile";
 import { signIn } from "@/actions/common/auth";
 
 export function EmailLoginForm() {
@@ -18,6 +18,7 @@ export function EmailLoginForm() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,11 +33,14 @@ export function EmailLoginForm() {
             const formData = new FormData();
             formData.append('email', email);
             formData.append('password', password);
+            if (turnstileToken) {
+                formData.append('turnstile_token', turnstileToken);
+            }
 
             const result = await signIn(formData, locale);
 
             if (!result.success) {
-                setError(t('invalid_credentials'));
+                setError(result.error || t('invalid_credentials'));
                 setIsLoading(false);
                 return;
             }
@@ -63,6 +67,7 @@ export function EmailLoginForm() {
                 <Input
                     id="email"
                     type="email"
+                    placeholder={t('email_placeholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -83,6 +88,7 @@ export function EmailLoginForm() {
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
+                        placeholder={t('password_placeholder')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -102,6 +108,7 @@ export function EmailLoginForm() {
                     </button>
                 </div>
             </div>
+            <Turnstile onVerify={(token) => setTurnstileToken(token)} onExpire={() => setTurnstileToken("")} />
             <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                     <>

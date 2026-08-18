@@ -6,12 +6,11 @@ import { AuthNavbar } from "@/features/auth/auth-navbar";
 
 export default function ForgotPasswordPage() {
     const t = useTranslations('ForgotPassword');
-    const tLogin = useTranslations('Login');
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4 pt-20 md:pt-16">
             <AuthNavbar />
-            <Card className="w-full py-2 md:py-4 max-w-sm bg-card rounded-xl shadow-xl border animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="w-full py-2 md:py-4 max-w-sm bg-card rounded-sm shadow-md border animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <CardHeader className="text-center mb-1 md:mb-2">
                     {/* Logo */}
                     <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
@@ -38,15 +37,6 @@ export default function ForgotPasswordPage() {
 
                 <CardContent className="space-y-1 md:space-y-2">
                     <ForgotPasswordForm />
-
-                    <div className="text-center text-sm text-muted-foreground">
-                        <Link
-                            href="/login"
-                            className="underline underline-offset-4 hover:text-primary transition-colors font-medium"
-                        >
-                            {tLogin('back_to_login')}
-                        </Link>
-                    </div>
                 </CardContent>
             </Card>
         </div>

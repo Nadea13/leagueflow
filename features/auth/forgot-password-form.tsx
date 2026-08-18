@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
+import { Turnstile } from "@/components/ui/turnstile";
+import { requestPasswordReset } from "@/actions/common/auth";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
 export function ForgotPasswordForm() {
@@ -14,9 +15,9 @@ export function ForgotPasswordForm() {
     const tCommon = useTranslations('Common');
     const locale = useLocale();
     const router = useRouter();
-    const supabase = createClient();
 
     const [email, setEmail] = useState("");
+    const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -27,12 +28,17 @@ export function ForgotPasswordForm() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/${locale}/reset-password`,
-            });
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('origin', window.location.origin);
+            if (turnstileToken) {
+                formData.append('turnstile_token', turnstileToken);
+            }
 
-            if (error) {
-                setError(error.message);
+            const result = await requestPasswordReset(formData, locale);
+
+            if (!result.success) {
+                setError(result.error || tCommon('something_went_wrong'));
                 return;
             }
 
@@ -46,7 +52,7 @@ export function ForgotPasswordForm() {
 
     if (isSuccess) {
         return (
-            <div className="flex flex-col items-center justify-center space-y-4 py-8 text-center animate-in fade-in zoom-in duration-300">
+            <div className="flex flex-col items-center justify-center space-y-4 mt-4 text-center animate-in fade-in zoom-in duration-300">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <CheckCircle2 className="w-8 h-8" />
                 </div>
@@ -76,12 +82,15 @@ export function ForgotPasswordForm() {
                 <Input
                     id="email"
                     type="email"
+                    placeholder={t('email_placeholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
                 />
             </div>
+
+            <Turnstile onVerify={(token) => setTurnstileToken(token)} onExpire={() => setTurnstileToken("")} />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (

@@ -45,7 +45,7 @@ export function PublicNavbar({ user }: PublicNavbarProps) {
                 </div>
 
                 {/* Centered Navigation Menu */}
-                <nav className="hidden md:flex items-center gap-6 text-sm font-semibold absolute left-1/2 -translate-x-1/2">
+                <nav className="hidden md:flex items-center gap-4 text-sm font-semibold absolute left-1/2 -translate-x-1/2">
                     <Link href="/tournaments" className="text-muted-foreground hover:text-foreground transition-colors">
                         {tLanding('nav_tournaments')}
                     </Link>
@@ -55,7 +55,7 @@ export function PublicNavbar({ user }: PublicNavbarProps) {
                 </nav>
 
                 {/* Right Side Actions */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center">
                     {user ? (
                         <Button asChild variant="outline" className="hidden sm:flex">
                             <Link href="/dashboard">{tLanding('nav_dashboard')}</Link>

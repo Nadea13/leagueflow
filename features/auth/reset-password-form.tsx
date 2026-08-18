@@ -84,6 +84,7 @@ export function ResetPasswordForm() {
                 <Input
                     id="password"
                     type="password"
+                    placeholder={t('password_placeholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -96,6 +97,7 @@ export function ResetPasswordForm() {
                 <Input
                     id="confirmPassword"
                     type="password"
+                    placeholder={t('confirm_password_placeholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required

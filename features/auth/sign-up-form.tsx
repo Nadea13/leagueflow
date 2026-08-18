@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OtpInput } from "@/components/ui/otp-input";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Turnstile } from "@/components/ui/turnstile";
 
 import { sendSignUpOtp, verifySignUpOtp, completeProfile } from "@/actions/common/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +29,7 @@ export function SignUpForm() {
 
     // Form data
     const [email, setEmail] = useState("");
+    const [turnstileToken, setTurnstileToken] = useState<string>("");
     const [otp, setOtp] = useState("");
     const [fullName, setFullName] = useState("");
     const [phone, setPhone] = useState("");
@@ -46,6 +49,9 @@ export function SignUpForm() {
         try {
             const formData = new FormData();
             formData.append('email', email);
+            if (turnstileToken) {
+                formData.append('turnstile_token', turnstileToken);
+            }
 
             const result = await sendSignUpOtp(formData, locale);
 
@@ -55,8 +61,8 @@ export function SignUpForm() {
             }
 
             toast({
-                title: "OTP Sent",
-                description: "Please check your email for the verification code.",
+                title: t('otp_sent_title'),
+                description: t('otp_sent_desc'),
             });
             setStep('otp');
         } catch (_err) {
@@ -84,8 +90,8 @@ export function SignUpForm() {
             }
 
             toast({
-                title: "Email Verified",
-                description: "You can now complete your profile.",
+                title: t('email_verified_title'),
+                description: t('email_verified_desc'),
             });
             setStep('profile');
         } catch (_err) {
@@ -152,6 +158,7 @@ export function SignUpForm() {
                             <Input
                                 id="email"
                                 type="email"
+                                placeholder={t('email_placeholder')}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -159,49 +166,48 @@ export function SignUpForm() {
                             />
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 ml-1">
-                            We will send a verification code to this email.
+                            {t('email_hint')}
                         </p>
                     </div>
+                    <Turnstile onVerify={(token) => setTurnstileToken(token)} onExpire={() => setTurnstileToken("")} />
                     <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Sending OTP...
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                {t('sending_otp')}
                             </>
                         ) : (
-                            "Verify Email"
+                            t('verify_email')
                         )}
                     </Button>
                 </form>
             )}
 
             {step === 'otp' && (
-                <form onSubmit={handleVerifyOtp} className="space-y-1 md:space-y-2">
-                    <div className="space-y-1">
-                        <Label>Verification Code (OTP)</Label>
-                        <div className="relative">
-                            <Input
-                                id="otp"
-                                type="text"
+                <form onSubmit={handleVerifyOtp} className="space-y-3 md:space-y-4">
+                    <div className="space-y-2">
+                        <Label className="text-center block text-sm font-medium">{t('otp_label')}</Label>
+                        <div className="py-2">
+                            <OtpInput
                                 value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                required
-                                maxLength={6}
+                                onChange={setOtp}
+                                length={6}
                                 disabled={isLoading}
+                                autoFocus={true}
                             />
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2 ml-1">
-                            Enter the 6-digit code sent to <strong>{email}</strong>
+                        <p className="text-xs text-muted-foreground text-center mt-1">
+                            {t('otp_hint')} <strong>{email}</strong>
                         </p>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
+                    <Button type="submit" className="w-full" disabled={isLoading || otp.length < 6}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Verifying...
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                {t('verifying')}
                             </>
                         ) : (
-                            "Confirm Code"
+                            t('confirm_code')
                         )}
                     </Button>
                     <div className="text-center">
@@ -211,7 +217,7 @@ export function SignUpForm() {
                             className="text-sm text-primary hover:underline"
                             disabled={isLoading}
                         >
-                            Change Email
+                            {t('change_email')}
                         </button>
                     </div>
                 </form>
@@ -225,6 +231,7 @@ export function SignUpForm() {
                             <Input
                                 id="fullName"
                                 type="text"
+                                placeholder={t('full_name_placeholder')}
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 required
@@ -234,11 +241,12 @@ export function SignUpForm() {
                     </div>
 
                     <div className="space-y-1">
-                        <Label>{tCommon('phone')}</Label>
+                        <Label>{t('phone')}</Label>
                         <div className="relative">
                             <Input
                                 id="phone"
                                 type="tel"
+                                placeholder={t('phone_placeholder')}
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 required
@@ -253,6 +261,7 @@ export function SignUpForm() {
                             <Input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
+                                placeholder={t('password_placeholder')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -279,6 +288,7 @@ export function SignUpForm() {
                             <Input
                                 id="confirmPassword"
                                 type={showPassword ? "text" : "password"}
+                                placeholder={t('confirm_password_placeholder')}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
@@ -290,8 +300,8 @@ export function SignUpForm() {
                     <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Completing Setup...
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                {t('completing_setup')}
                             </>
                         ) : (
                             t('register')

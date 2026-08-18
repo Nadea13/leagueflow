@@ -62,7 +62,7 @@ export function EditVerifyProfileDialog({
     const [editFirstNameEn, setEditFirstNameEn] = useState(masterPlayer?.first_name_en || "");
     const [editMiddleNameEn, setEditMiddleNameEn] = useState(masterPlayer?.middle_name_en || "");
     const [editLastNameEn, setEditLastNameEn] = useState(masterPlayer?.last_name_en || "");
-    const [editGender, setEditGender] = useState(masterPlayer?.gender || "male");
+    const [editGender, setEditGender] = useState(masterPlayer?.gender || "");
     const [editBirthday, setEditBirthday] = useState(masterPlayer?.birthday ? masterPlayer.birthday.substring(0, 10) : "");
     const [dobViewDate, setDobViewDate] = useState<Date>(() => masterPlayer?.birthday ? new Date(masterPlayer.birthday) : new Date(2000, 0, 1));
 
@@ -82,8 +82,8 @@ export function EditVerifyProfileDialog({
     }, []);
     const [editTel, setEditTel] = useState(masterPlayer?.tel || "");
     const [editFavoriteSportId, setEditFavoriteSportId] = useState(masterPlayer?.favorite_sport_id || "");
-    const [editPreferredHand, setEditPreferredHand] = useState(masterPlayer?.preferred_hand || "right");
-    const [editPreferredFoot, setEditPreferredFoot] = useState(masterPlayer?.preferred_foot || "right");
+    const [editPreferredHand, setEditPreferredHand] = useState(masterPlayer?.preferred_hand || "");
+    const [editPreferredFoot, setEditPreferredFoot] = useState(masterPlayer?.preferred_foot || "");
     const isHandRightSelected = editPreferredHand === "right" || editPreferredHand === "both";
     const isHandLeftSelected = editPreferredHand === "left" || editPreferredHand === "both";
 
@@ -384,7 +384,7 @@ export function EditVerifyProfileDialog({
                                 <button
                                     type="button"
                                     disabled={isPending}
-                                    onClick={() => setEditGender("male")}
+                                    onClick={() => setEditGender(editGender === "male" ? "" : "male")}
                                     className={cn(
                                         "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
                                         editGender === "male"
@@ -403,7 +403,7 @@ export function EditVerifyProfileDialog({
                                 <button
                                     type="button"
                                     disabled={isPending}
-                                    onClick={() => setEditGender("female")}
+                                    onClick={() => setEditGender(editGender === "female" ? "" : "female")}
                                     className={cn(
                                         "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
                                         editGender === "female"

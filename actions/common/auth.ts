@@ -4,6 +4,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ActionResponse } from "@/types";
 import { logActivity } from "@/lib/audit";
+import { verifyTurnstileToken } from "@/lib/cloudflare/turnstile";
 
 export async function signOut(formData: FormData) {
     const supabase = await createClient();
@@ -16,6 +17,13 @@ export async function signOut(formData: FormData) {
 export async function signIn(formData: FormData, _locale: string): Promise<ActionResponse> {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    const turnstileToken = formData.get('turnstile_token') as string | null;
+
+    // 0. Verify Cloudflare Turnstile if token is provided or enforced
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileCheck.success) {
+        return { success: false, error: turnstileCheck.error || "Security verification failed" };
+    }
 
     const supabase = await createClient();
 
@@ -53,6 +61,14 @@ export async function signIn(formData: FormData, _locale: string): Promise<Actio
 
 export async function sendSignUpOtp(formData: FormData, _locale: string): Promise<ActionResponse> {
     const email = formData.get('email') as string;
+    const turnstileToken = formData.get('turnstile_token') as string | null;
+
+    // Verify Cloudflare Turnstile
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileCheck.success) {
+        return { success: false, error: turnstileCheck.error || "Security verification failed" };
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -141,3 +157,28 @@ export async function completeProfile(formData: FormData, _locale: string): Prom
 
     return { success: true };
 }
+
+export async function requestPasswordReset(formData: FormData, locale: string): Promise<ActionResponse> {
+    const email = formData.get('email') as string;
+    const turnstileToken = formData.get('turnstile_token') as string | null;
+    const origin = formData.get('origin') as string || "";
+
+    const turnstileCheck = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileCheck.success) {
+        return { success: false, error: turnstileCheck.error || "Security verification failed" };
+    }
+
+    const supabase = await createClient();
+    const redirectTo = origin ? `${origin}/${locale}/reset-password` : undefined;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+    });
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    return { success: true };
+}
+
