@@ -95,7 +95,7 @@ export function Turnstile({
                 strategy="lazyOnload"
                 onLoad={() => setScriptLoaded(true)}
             />
-            <div ref={containerRef} className="rounded-sm overflow-hidden" />
+            <div ref={containerRef} />
         </div>
     );
 }
