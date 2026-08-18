@@ -36,13 +36,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html
-      lang="th"
-      suppressHydrationWarning
-      className={`${bebasNeue.variable} ${inter.variable} ${montserrat.variable} ${orbitron.variable} ${outfit.variable}`}
-    >
-      <body suppressHydrationWarning>{children}</body>
-    </html>
-  );
+  return children;
 }
+

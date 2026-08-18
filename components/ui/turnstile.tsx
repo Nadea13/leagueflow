@@ -36,32 +36,35 @@ export function Turnstile({
     onVerify,
     onError,
     onExpire,
-    className = "my-2 flex justify-center",
+    className = "my-1 lg:my-2 w-full",
     theme = "auto",
-    size = "normal",
+    size = "flexible",
 }: TurnstileProps) {
     const siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetIdRef = useRef<string | null>(null);
-    const [scriptLoaded, setScriptLoaded] = useState(false);
+    const [scriptLoaded, setScriptLoaded] = useState(() => {
+        return typeof window !== "undefined" && Boolean(window.turnstile);
+    });
+
+    // Keep latest callbacks in ref to avoid re-triggering useEffect when parent re-renders
+    const callbacksRef = useRef({ onVerify, onError, onExpire });
+    useEffect(() => {
+        callbacksRef.current = { onVerify, onError, onExpire };
+    });
 
     useEffect(() => {
         if (!siteKey || !scriptLoaded || !containerRef.current || !window.turnstile) return;
 
-        // Clean up previous widget if exists
-        if (widgetIdRef.current) {
-            try {
-                window.turnstile.remove(widgetIdRef.current);
-            } catch {}
-            widgetIdRef.current = null;
-        }
+        // If widget already rendered in this container, don't re-render
+        if (widgetIdRef.current) return;
 
         try {
             const id = window.turnstile.render(containerRef.current, {
                 sitekey: siteKey,
-                callback: (token: string) => onVerify(token),
-                "error-callback": (err?: unknown) => onError?.(err),
-                "expired-callback": () => onExpire?.(),
+                callback: (token: string) => callbacksRef.current.onVerify?.(token),
+                "error-callback": (err?: unknown) => callbacksRef.current.onError?.(err),
+                "expired-callback": () => callbacksRef.current.onExpire?.(),
                 theme,
                 size,
             });
@@ -78,7 +81,7 @@ export function Turnstile({
                 widgetIdRef.current = null;
             }
         };
-    }, [scriptLoaded, siteKey, theme, size, onVerify, onError, onExpire]);
+    }, [scriptLoaded, siteKey, theme, size]);
 
     // If no siteKey configured, silently bypass or do nothing (allows seamless dev)
     if (!siteKey) {
@@ -89,10 +92,11 @@ export function Turnstile({
         <div className={className}>
             <Script
                 src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-                strategy="afterInteractive"
+                strategy="lazyOnload"
                 onLoad={() => setScriptLoaded(true)}
             />
-            <div ref={containerRef} />
+            <div ref={containerRef} className="rounded-sm overflow-hidden" />
         </div>
     );
 }
+
