@@ -52,8 +52,8 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
 
     // Match & Team Details
     const [selectedSport, setSelectedSport] = useState<string>(sport || "football");
-    const [nameHome, setNameHome] = useState<string>("TEAM ALPHA");
-    const [nameAway, setNameAway] = useState<string>("TEAM BETA");
+    const [nameHome, setNameHome] = useState<string>("");
+    const [nameAway, setNameAway] = useState<string>("");
     const [logoHome, setLogoHome] = useState<string>("");
     const [logoAway, setLogoAway] = useState<string>("");
     const [logoTournament, setLogoTournament] = useState<string>("");
@@ -121,7 +121,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
             homeBarColor: "#10b981",
             awayBarDir: "none",
             awayBarColor: "#3b82f6",
-            blockGap: 8,
+            blockGap: 0,
             blockBg: "spaced",
             rounded: "md",
             blocks: []
@@ -147,7 +147,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
         homeBarColor: "#10b981",
         awayBarDir: "none",
         awayBarColor: "#3b82f6",
-        blockGap: 8,
+        blockGap: 0,
         blockBg: "spaced",
         rounded: "md",
         blocks: []
@@ -203,6 +203,62 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
         if (!active) return;
         const loadTemplate = async () => {
             try {
+                let fetchedNameHome = "";
+                let fetchedNameAway = "";
+                let fetchedLogoHome = "";
+                let fetchedLogoAway = "";
+
+                // 1. Fetch Match details (if matchId is provided or find the latest match in tournament)
+                let activeMatchId = matchId;
+                if (!activeMatchId && tournamentId) {
+                    const { data: firstMatch } = await supabase
+                        .from("matches")
+                        .select("id")
+                        .eq("tournament_id", tournamentId)
+                        .is("deleted_at", null)
+                        .order("created_at", { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (firstMatch) {
+                        activeMatchId = firstMatch.id;
+                    }
+                }
+
+                if (activeMatchId) {
+                    const { data: matchData } = await supabase
+                        .from("matches")
+                        .select(`
+                            id,
+                            home_score,
+                            away_score,
+                            home_team:tournament_teams!matches_home_team_id_fkey(id, name, logo_url, team:teams(name, logo_img)),
+                            away_team:tournament_teams!matches_away_team_id_fkey(id, name, logo_url, team:teams(name, logo_img))
+                        `)
+                        .eq("id", activeMatchId)
+                        .maybeSingle();
+
+                    if (matchData) {
+                        const home = Array.isArray(matchData.home_team) ? matchData.home_team[0] : matchData.home_team;
+                        const away = Array.isArray(matchData.away_team) ? matchData.away_team[0] : matchData.away_team;
+                        const homeRel = Array.isArray(home?.team) ? home.team[0] : home?.team;
+                        const awayRel = Array.isArray(away?.team) ? away.team[0] : away?.team;
+                        
+                        fetchedNameHome = homeRel?.name || home?.name || "";
+                        fetchedLogoHome = homeRel?.logo_img || home?.logo_url || "";
+                        fetchedNameAway = awayRel?.name || away?.name || "";
+                        fetchedLogoAway = awayRel?.logo_img || away?.logo_url || "";
+
+                        if (fetchedNameHome) setNameHome(fetchedNameHome);
+                        if (fetchedLogoHome) setLogoHome(fetchedLogoHome);
+                        if (fetchedNameAway) setNameAway(fetchedNameAway);
+                        if (fetchedLogoAway) setLogoAway(fetchedLogoAway);
+
+                        if (matchData.home_score !== null && matchData.home_score !== undefined) setScoreHome(String(matchData.home_score));
+                        if (matchData.away_score !== null && matchData.away_score !== undefined) setScoreAway(String(matchData.away_score));
+                    }
+                }
+
                 if (tournamentId) {
                     const { data, error } = await supabase
                         .from("tournaments")
@@ -251,7 +307,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                             homeBarColor: settings.homeBarColor || "#10b981",
                             awayBarDir: settings.awayBarDir || "none",
                             awayBarColor: settings.awayBarColor || "#3b82f6",
-                            blockGap: settings.blockGap ?? 8,
+                            blockGap: settings.blockGap ?? 0,
                             blockBg: settings.blockBg || "spaced",
                             rounded: settings.rounded || "md",
                             blocks: mergedMainBlocks
@@ -273,14 +329,14 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                         if (settings.homeBarColor) setHomeBarColor(settings.homeBarColor);
                         if (settings.awayBarDir) setAwayBarDir(settings.awayBarDir);
                         if (settings.awayBarColor) setAwayBarColor(settings.awayBarColor);
-                        if (settings.nameHome) setNameHome(settings.nameHome);
-                        if (settings.nameAway) setNameAway(settings.nameAway);
-                        if (settings.logoHome) setLogoHome(settings.logoHome);
-                        if (settings.logoAway) setLogoAway(settings.logoAway);
+                        if (settings.nameHome && !fetchedNameHome && !activeMatchId) setNameHome(settings.nameHome);
+                        if (settings.nameAway && !fetchedNameAway && !activeMatchId) setNameAway(settings.nameAway);
+                        if (settings.logoHome && !fetchedLogoHome && !activeMatchId) setLogoHome(settings.logoHome);
+                        if (settings.logoAway && !fetchedLogoAway && !activeMatchId) setLogoAway(settings.logoAway);
                         if (settings.logoTournament) setLogoTournament(settings.logoTournament);
                         if (settings.selectedSport) setSelectedSport(settings.selectedSport);
-                        if (settings.scoreHome) setScoreHome(settings.scoreHome);
-                        if (settings.scoreAway) setScoreAway(settings.scoreAway);
+                        if (settings.scoreHome && !activeMatchId) setScoreHome(settings.scoreHome);
+                        if (settings.scoreAway && !activeMatchId) setScoreAway(settings.scoreAway);
                         if (settings.timerText) setTimerText(settings.timerText);
                         if (settings.addTimeText) setAddTimeText(settings.addTimeText);
                         if (settings.homeScorer) setHomeScorer(settings.homeScorer);
@@ -315,44 +371,14 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                                 homeBarColor: c.homeBarColor ?? "#10b981",
                                 awayBarDir: c.awayBarDir ?? "none",
                                 awayBarColor: c.awayBarColor ?? "#3b82f6",
-                                blockGap: c.blockGap ?? 8,
+                                blockGap: c.blockGap ?? 0,
                                 blockBg: c.blockBg ?? "spaced",
                                 rounded: c.rounded ?? "md",
                                 blocks: (c.blocks && Array.isArray(c.blocks)) ? c.blocks : []
                             })));
                         }
 
-                        if (settings.selectedCanvasId) {
-                            const targetId = settings.selectedCanvasId;
-                            setSelectedCanvasId(targetId);
-                            if (targetId !== "scoreboard" && settings.blankCanvases) {
-                                const activeCanvas = settings.blankCanvases.find(c => `blank-${c.id}` === targetId);
-                                if (activeCanvas) {
-                                    setBg(activeCanvas.bg || "transparent");
-                                    setPosX(activeCanvas.posX || "center");
-                                    setPosY(activeCanvas.posY || "top");
-                                    setAlertDuration(activeCanvas.alertDuration || 6);
-                                    setFont(activeCanvas.font || "inter");
-                                    setLayout(activeCanvas.layout || "top-bar");
-                                    setSize(activeCanvas.size || "medium");
-                                    setShowTimeline(activeCanvas.showTimeline ?? false);
-                                    setScoreBg(activeCanvas.scoreBg || "#ef4444");
-                                    setTeamNameMode(activeCanvas.teamNameMode || "abbr");
-                                    setShowLogos(activeCanvas.showLogos ?? true);
-                                    setHeaderText(activeCanvas.headerText || "");
-                                    setHomeBarDir(activeCanvas.homeBarDir || "none");
-                                    setHomeBarColor(activeCanvas.homeBarColor || "#10b981");
-                                    setAwayBarDir(activeCanvas.awayBarDir || "none");
-                                    setAwayBarColor(activeCanvas.awayBarColor || "#3b82f6");
-                                    setBlockGap(activeCanvas.blockGap ?? 8);
-                                    setBlockBg(activeCanvas.blockBg || "spaced");
-                                    setRounded(activeCanvas.rounded || "md");
-                                    if (activeCanvas.blocks && activeCanvas.blocks.length > 0) {
-                                        setBlocks(activeCanvas.blocks);
-                                    }
-                                }
-                            }
-                        }
+                        setSelectedCanvasId("scoreboard");
                     }
                 } else {
                     // Standalone mode: load from localStorage
@@ -405,7 +431,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
             }
         };
         loadTemplate();
-    }, [active, tournamentId, supabase]);
+    }, [active, tournamentId, matchId, supabase]);
 
     // Undo / Redo History Stacks
     const historyPastRef = useRef<CanvasBlock[][]>([]);
@@ -1076,7 +1102,7 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
                 setHomeBarColor(activeCanvas.homeBarColor || "#10b981");
                 setAwayBarDir(activeCanvas.awayBarDir || "none");
                 setAwayBarColor(activeCanvas.awayBarColor || "#3b82f6");
-                setBlockGap(activeCanvas.blockGap ?? 8);
+                setBlockGap(activeCanvas.blockGap ?? 0);
                 setBlockBg(activeCanvas.blockBg || "spaced");
                 setRounded(activeCanvas.rounded || "md");
                 setBlocks(activeCanvas.blocks || []);
@@ -1979,9 +2005,9 @@ export function BroadcastEditor({ matchId, tournamentId, sport = "football", act
 
     // Step 2: Scoreboard Canvas Editor
     return (
-        <div className="flex flex-col h-full w-full min-h-0 bg-background overflow-hidden">
+        <div className="flex flex-col h-full w-full min-h-0 overflow-hidden">
             {standalone && renderStandaloneNavbar()}
-            <div className="flex-1 flex flex-col gap-2 p-2 lg:p-4 overflow-hidden min-h-0">
+            <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 flex-1 min-h-0">
                     {/* Left Column: Layer Sidebar */}
                     <LayerSidebar

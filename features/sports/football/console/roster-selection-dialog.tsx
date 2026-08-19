@@ -226,7 +226,7 @@ export function RosterSelectionDialog({
     );
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent showCloseButton={false} className="bg-card overflow-hidden min-w-[640px] w-[95vw] rounded-sm flex flex-col h-[90vh] md:h-[650px] shadow-2xl">
+            <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
                 <DialogHeader className="relative pr-10 p-2 md:p-4 border-b shrink-0">
                     <DialogTitle className="flex items-center text-2xl font-black tracking-tighter text-foreground">
                         {t("lineup_selection_title") || "Squad Lineups Selection"}

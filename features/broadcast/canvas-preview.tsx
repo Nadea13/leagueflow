@@ -6,7 +6,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Shapes, Square, Circle, Triangle, Star, Type, ChevronDown } from "lucide-react";
+import { Shapes, Square, Circle, Triangle, Star, Type, ChevronDown, Sparkles } from "lucide-react";
 import { CanvasBlock, getSnappedCoords } from "./types";
 import { isLightColor } from "./helpers";
 
@@ -43,16 +43,7 @@ interface CanvasPreviewProps {
     onUpdateBlockPosition: (id: string, x: number, y: number) => void;
 }
 
-const DEFAULT_PRESET_BLOCKS: CanvasBlock[] = [
-    { id: "header-text", name: "Header", active: true, x: 0, y: -100, w: 420, h: 28, fontSize: 13, rTL: 4, rTR: 4, rBL: 0, rBR: 0, bg: "#0f172a", color: "#ffffff", bindTo: "header-text" },
-    { id: "logo-home", name: "Home Logo", active: true, x: -170, y: -50, w: 44, h: 44, fontSize: 12, rTL: 4, rTR: 0, rBL: 4, rBR: 0, bg: "#1e293b", bindTo: "logo-home" },
-    { id: "name-home", name: "Home Team", active: true, x: -90, y: -50, w: 110, h: 44, fontSize: 16, rTL: 0, rTR: 0, rBL: 0, rBR: 0, bg: "#1e293b", color: "#ffffff", bindTo: "name-home" },
-    { id: "score-home", name: "Home Score", active: true, x: -20, y: -50, w: 34, h: 44, fontSize: 22, rTL: 0, rTR: 0, rBL: 0, rBR: 0, bg: "#3b82f6", color: "#ffffff", bindTo: "score-home" },
-    { id: "score-away", name: "Away Score", active: true, x: 20, y: -50, w: 34, h: 44, fontSize: 22, rTL: 0, rTR: 0, rBL: 0, rBR: 0, bg: "#ef4444", color: "#ffffff", bindTo: "score-away" },
-    { id: "name-away", name: "Away Team", active: true, x: 90, y: -50, w: 110, h: 44, fontSize: 16, rTL: 0, rTR: 0, rBL: 0, rBR: 0, bg: "#1e293b", color: "#ffffff", bindTo: "name-away" },
-    { id: "logo-away", name: "Away Logo", active: true, x: 170, y: -50, w: 44, h: 44, fontSize: 12, rTL: 0, rTR: 4, rBL: 0, rBR: 4, bg: "#1e293b", bindTo: "logo-away" },
-    { id: "timer", name: "Timer", active: true, x: 0, y: 0, w: 120, h: 32, fontSize: 16, rTL: 0, rTR: 0, rBL: 4, rBR: 4, bg: "#020617", color: "#f59e0b", bindTo: "timer" },
-];
+const DEFAULT_PRESET_BLOCKS: CanvasBlock[] = [];
 
 export function CanvasPreview({
     readOnly = false,
@@ -229,9 +220,9 @@ export function CanvasPreview({
                 case "header-text": return headerText || "LEAGUEFLOW";
                 case "timer": return timerText || "00:00";
                 case "add-time": return addTimeText || "+0";
-                case "logo-home": return "🛡️ Home";
-                case "logo-away": return "🛡️ Away";
-                case "logo-tournament": return "🛡️ Tour";
+                case "logo-home": return logoHome ? "" : (locale === 'th' ? "ทีมเหย้า" : "HOME");
+                case "logo-away": return logoAway ? "" : (locale === 'th' ? "ทีมเยือน" : "AWAY");
+                case "logo-tournament": return logoTournament ? "" : "LEAGUEFLOW";
                 case "home-scorer": return homeScorer || (locale === 'th' ? "👟 A. Player (12'), B. Player (45')" : "👟 A. Player (12'), B. Player (45')");
                 case "away-scorer": return awayScorer || (locale === 'th' ? "👟 X. Player (30'), Y. Player (75')" : "👟 X. Player (30'), Y. Player (75')");
                 default: break;
@@ -257,13 +248,14 @@ export function CanvasPreview({
 
     return (
         <div className={`h-full flex flex-col min-h-0 relative ${readOnly ? "w-full" : "md:col-span-6 lg:col-span-6.5"}`}>
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .custom-font-style {
                     font-family: ${font === 'orbitron' ? "'Orbitron', sans-serif" :
-                                 font === 'montserrat' ? "'Montserrat', sans-serif" :
-                                 font === 'bebas-neue' ? "'Bebas Neue', sans-serif" :
-                                 font === 'outfit' ? "'Outfit', sans-serif" :
-                                 "'Inter', sans-serif"};
+                        font === 'montserrat' ? "'Montserrat', sans-serif" :
+                            font === 'bebas-neue' ? "'Bebas Neue', sans-serif" :
+                                font === 'outfit' ? "'Outfit', sans-serif" :
+                                    "'Inter', sans-serif"};
                 }
             ` }} />
             {/* Visual Dotted Grid Board */}
@@ -321,144 +313,146 @@ export function CanvasPreview({
                     }
                 }}
                 className={`w-full flex-1 h-full ${readOnly ? "min-h-[220px]" : "min-h-[500px] max-h-[82vh]"} border rounded-sm relative overflow-hidden flex items-center justify-center transition-colors duration-300 focus:outline-none custom-font-style bg-card`}
+                style={{
+                    backgroundColor: (bg === "transparent" || bg === "chromakey")
+                        ? undefined
+                        : bg,
+                    backgroundImage: `radial-gradient(${isLightColor(bg) && bg !== "chromakey" ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.08)"} 1px, transparent 1px)`,
+                    backgroundSize: "16px 16px"
+                }}
+            >
+                {/* Rubber-band Selection Box */}
+                {!readOnly && selectionBox?.active && Math.abs(selectionBox.currentX - selectionBox.startX) > 2 && (
+                    <div
+                        className="absolute border border-primary bg-primary/20 backdrop-blur-[0.5px] pointer-events-none z-50 rounded-none"
                         style={{
-                            backgroundColor: (bg === "transparent" || bg === "chromakey")
-                                ? undefined
-                                : bg,
-                            backgroundImage: `radial-gradient(${isLightColor(bg) && bg !== "chromakey" ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.08)"} 1px, transparent 1px)`,
-                            backgroundSize: "16px 16px"
+                            left: `${Math.min(selectionBox.startX, selectionBox.currentX)}px`,
+                            top: `${Math.min(selectionBox.startY, selectionBox.currentY)}px`,
+                            width: `${Math.abs(selectionBox.currentX - selectionBox.startX)}px`,
+                            height: `${Math.abs(selectionBox.currentY - selectionBox.startY)}px`,
                         }}
-                    >
-                        {/* Rubber-band Selection Box */}
-                        {!readOnly && selectionBox?.active && Math.abs(selectionBox.currentX - selectionBox.startX) > 2 && (
-                            <div
-                                className="absolute border border-primary bg-primary/20 backdrop-blur-[0.5px] pointer-events-none z-50 rounded-none"
-                                style={{
-                                    left: `${Math.min(selectionBox.startX, selectionBox.currentX)}px`,
-                                    top: `${Math.min(selectionBox.startY, selectionBox.currentY)}px`,
-                                    width: `${Math.abs(selectionBox.currentX - selectionBox.startX)}px`,
-                                    height: `${Math.abs(selectionBox.currentY - selectionBox.startY)}px`,
-                                }}
-                            />
-                        )}
+                    />
+                )}
 
-                        {/* Active Alignment Guide Lines (Cyan Smart Snapping Guides) */}
-                        {!readOnly && activeGuideLines?.vLines.map((vX, i) => (
-                            <div
-                                key={`v-guide-${i}`}
-                                className="absolute top-0 bottom-0 border-l-2 border-primary z-50 pointer-events-none"
-                                style={{
-                                    left: `calc(50% + ${vX}px)`,
-                                }}
-                            />
-                        ))}
-                        {!readOnly && activeGuideLines?.hLines.map((hY, i) => (
-                            <div
-                                key={`h-guide-${i}`}
-                                className="absolute left-0 right-0 border-t-2 border-primary z-50 pointer-events-none"
-                                style={{
-                                    top: `calc(50% + ${hY}px)`,
-                                }}
-                            />
-                        ))}
+                {/* Active Alignment Guide Lines (Cyan Smart Snapping Guides) */}
+                {!readOnly && activeGuideLines?.vLines.map((vX, i) => (
+                    <div
+                        key={`v-guide-${i}`}
+                        className="absolute top-0 bottom-0 border-l-2 border-primary z-50 pointer-events-none"
+                        style={{
+                            left: `calc(50% + ${vX}px)`,
+                        }}
+                    />
+                ))}
+                {!readOnly && activeGuideLines?.hLines.map((hY, i) => (
+                    <div
+                        key={`h-guide-${i}`}
+                        className="absolute left-0 right-0 border-t-2 border-primary z-50 pointer-events-none"
+                        style={{
+                            top: `calc(50% + ${hY}px)`,
+                        }}
+                    />
+                ))}
 
-                        {/* Center Crosshair Reference */}
-                        {!readOnly && (
-                            <>
-                                <div className={`absolute top-1/2 left-0 right-0 border-b ${isLightColor(bg) ? "border-black/10" : "border-white/5"} pointer-events-none`} />
-                                <div className={`absolute left-1/2 top-0 bottom-0 border-l ${isLightColor(bg) ? "border-black/10" : "border-white/5"} pointer-events-none`} />
-                            </>
-                        )}
+                {/* Center Crosshair Reference */}
+                {!readOnly && (
+                    <>
+                        <div className={`absolute top-1/2 left-0 right-0 border-b ${isLightColor(bg) ? "border-black/10" : "border-white/5"} pointer-events-none`} />
+                        <div className={`absolute left-1/2 top-0 bottom-0 border-l ${isLightColor(bg) ? "border-black/10" : "border-white/5"} pointer-events-none`} />
+                    </>
+                )}
 
-                        {/* Empty Canvas Helpful Tip Overlay */}
-                        {!readOnly && displayBlocks.length === 0 && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none select-none z-10">
-                                <div className="bg-card/80 backdrop-blur-sm border rounded-lg p-4 shadow-md max-w-xs space-y-1.5 border-border">
-                                    <span className="text-2xl">✨</span>
-                                    <p className="text-xs font-black text-foreground">
-                                        {locale === 'th' ? "กระดานว่างเปล่า (Empty Canvas)" : "Empty Canvas"}
-                                    </p>
-                                    <p className="text-[11px] text-muted-foreground leading-normal">
-                                        {locale === 'th' ? "คลิกปุ่ม 'รูปทรง', 'ข้อความ' หรือ 'ตัวแปร' ด้านล่างเพื่อเริ่มสร้างป้ายคะแนน" : "Click 'Shapes', 'Text', or 'Variables' below to start building."}
-                                    </p>
-                                </div>
+                {/* Empty Canvas Helpful Tip Overlay */}
+                {!readOnly && displayBlocks.length === 0 && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none select-none z-10">
+                        <div className="bg-card/80 backdrop-blur-sm border rounded-lg p-4 shadow-md max-w-xs space-y-1.5 border-border">
+                            <div className="p-2 bg-primary/10 rounded-full w-fit mx-auto">
+                                <Sparkles className="h-4 w-4 text-primary" />
                             </div>
-                        )}
+                            <p className="text-xs font-black text-foreground">
+                                {locale === 'th' ? "กระดานว่างเปล่า" : "Empty Canvas"}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground leading-normal">
+                                {locale === 'th' ? "คลิกปุ่ม 'รูปทรง', 'ข้อความ' หรือ 'ตัวแปร' ด้านล่างเพื่อเริ่มสร้างป้ายคะแนน" : "Click 'Shapes', 'Text', or 'Variables' below to start building."}
+                            </p>
+                        </div>
+                    </div>
+                )}
 
-                        {/* Bottom Center Floating Toolbar Menu */}
-                        {!readOnly && (
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 bg-card border shadow-xl rounded-sm p-1 flex items-center">
-                                {/* Dropdown Shapes */}
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="rounded h-8 px-2 text-xs font-bold gap-1.5 hover:bg-muted text-foreground"
-                                        >
-                                            <Shapes className="h-4 w-4" />
-                                            <span>{locale === 'th' ? "รูปทรง" : "Shapes"}</span>
-                                            <ChevronDown className="h-3 w-3 opacity-50" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="center" side="top" sideOffset={8} className="bg-card border shadow-xl rounded-sm w-44">
-                                        <DropdownMenuItem onClick={() => handleAddShape("rectangle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
-                                            <Square className="h-4 w-4" />
-                                            <span>{locale === 'th' ? "สี่เหลี่ยม" : "Rectangle"}</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleAddShape("circle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
-                                            <Circle className="h-4 w-4" />
-                                            <span>{locale === 'th' ? "วงกลม" : "Circle"}</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleAddShape("polygon")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
-                                            <Triangle className="h-4 w-4" />
-                                            <span>{locale === 'th' ? "Polygon (สามเหลี่ยม)" : "Polygon"}</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleAddShape("star")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
-                                            <Star className="h-4 w-4" />
-                                            <span>{locale === 'th' ? "ดาว" : "Star"}</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-
-                                {/* Text Tool */}
+                {/* Bottom Center Floating Toolbar Menu */}
+                {!readOnly && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 bg-card border shadow-xl rounded-sm p-1 flex items-center">
+                        {/* Dropdown Shapes */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                                 <Button
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleAddShape("text")}
                                     className="rounded h-8 px-2 text-xs font-bold gap-1.5 hover:bg-muted text-foreground"
                                 >
-                                    <Type className="h-4 w-4" />
-                                    <span>{locale === 'th' ? "ข้อความ" : "Text"}</span>
+                                    <Shapes className="h-4 w-4" />
+                                    <span>{locale === 'th' ? "รูปทรง" : "Shapes"}</span>
+                                    <ChevronDown className="h-3 w-3 opacity-50" />
                                 </Button>
-                            </div>
-                        )}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="center" side="top" sideOffset={8} className="bg-card border shadow-xl rounded-sm w-44">
+                                <DropdownMenuItem onClick={() => handleAddShape("rectangle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                    <Square className="h-4 w-4" />
+                                    <span>{locale === 'th' ? "สี่เหลี่ยม" : "Rectangle"}</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleAddShape("circle")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                    <Circle className="h-4 w-4" />
+                                    <span>{locale === 'th' ? "วงกลม" : "Circle"}</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleAddShape("polygon")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                    <Triangle className="h-4 w-4" />
+                                    <span>{locale === 'th' ? "Polygon (สามเหลี่ยม)" : "Polygon"}</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleAddShape("star")} className="gap-2 rounded font-semibold text-xs cursor-pointer">
+                                    <Star className="h-4 w-4" />
+                                    <span>{locale === 'th' ? "ดาว" : "Star"}</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                        {/* Render positioned Blocks */}
-                        {displayBlocks.map((b, idx) => {
-                            if (!b.active) return null;
-                            const isSelected = selectedIds.includes(b.id);
-                            const isScoreBlock = b.id === "score" || b.id === "score-home" || b.id === "score-away";
-                            const blockBg = b.bg ?? (isScoreBlock ? scoreBg : "#000000");
+                        {/* Text Tool */}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAddShape("text")}
+                            className="rounded h-8 px-2 text-xs font-bold gap-1.5 hover:bg-muted text-foreground"
+                        >
+                            <Type className="h-4 w-4" />
+                            <span>{locale === 'th' ? "ข้อความ" : "Text"}</span>
+                        </Button>
+                    </div>
+                )}
 
-                            const isCircle = b.shapeType === "circle";
-                            const isPolygon = b.shapeType === "polygon";
-                            const isStar = b.shapeType === "star";
-                            const isText = b.shapeType === "text";
-                            const strokePos = b.strokePos || "inside";
-                            const strokeWidth = b.strokeWidth ?? 0;
-                            const strokeInset = strokeWidth > 0
-                                ? (strokePos === "outside" ? `-${strokeWidth}px` : strokePos === "center" ? `-${strokeWidth / 2}px` : "0px")
-                                : "0px";
+                {/* Render positioned Blocks */}
+                {displayBlocks.map((b, idx) => {
+                    if (!b.active) return null;
+                    const isSelected = selectedIds.includes(b.id);
+                    const isScoreBlock = b.id === "score" || b.id === "score-home" || b.id === "score-away";
+                    const blockBg = b.bg ?? (isScoreBlock ? scoreBg : "#000000");
 
-                            return (
-                                <div
-                                    key={b.id}
-                                    onPointerDown={!readOnly ? (e) => handlePointerDown(e, b.id) : undefined}
-                                    onPointerMove={!readOnly ? (e) => handlePointerMove(e, b.id) : undefined}
-                                    onPointerUp={!readOnly ? (e) => handlePointerUp(e, b.id) : undefined}
+                    const isCircle = b.shapeType === "circle";
+                    const isPolygon = b.shapeType === "polygon";
+                    const isStar = b.shapeType === "star";
+                    const isText = b.shapeType === "text";
+                    const strokePos = b.strokePos || "inside";
+                    const strokeWidth = b.strokeWidth ?? 0;
+                    const strokeInset = strokeWidth > 0
+                        ? (strokePos === "outside" ? `-${strokeWidth}px` : strokePos === "center" ? `-${strokeWidth / 2}px` : "0px")
+                        : "0px";
+
+                    return (
+                        <div
+                            key={b.id}
+                            onPointerDown={!readOnly ? (e) => handlePointerDown(e, b.id) : undefined}
+                            onPointerMove={!readOnly ? (e) => handlePointerMove(e, b.id) : undefined}
+                            onPointerUp={!readOnly ? (e) => handlePointerUp(e, b.id) : undefined}
                             style={{
                                 transform: `translate(calc(-50% + ${b.x}px), calc(-50% + ${b.y}px)) rotate(${b.rotation || 0}deg) scaleX(${b.flipX ? -1 : 1}) scaleY(${b.flipY ? -1 : 1})`,
                                 left: "50%",
@@ -524,9 +518,17 @@ export function CanvasPreview({
                                     borderTopRightRadius: isCircle ? "50%" : `${b.rTR}px`,
                                     borderBottomLeftRadius: isCircle ? "50%" : `${b.rBL}px`,
                                     borderBottomRightRadius: isCircle ? "50%" : `${b.rBR}px`,
+                                    clipPath: isPolygon
+                                        ? "polygon(50% 0%, 100% 100%, 0% 100%)"
+                                        : isStar
+                                            ? "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
+                                            : undefined,
                                 }}
                             />
-                            {b.id === "logo-tournament" || b.bindTo === "logo-tournament" ? (
+                            {b.imageUrl ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={b.imageUrl} className="w-full h-full object-contain pointer-events-none p-1" alt="" />
+                            ) : b.id === "logo-tournament" || b.bindTo === "logo-tournament" ? (
                                 logoTournament ? (
                                     /* eslint-disable-next-line @next/next/no-img-element */
                                     <img src={logoTournament} className="w-full h-full object-contain pointer-events-none p-1" alt="" />

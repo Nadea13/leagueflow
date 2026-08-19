@@ -758,15 +758,11 @@ export function EditorSidebar({
                                     <Header level={5}>{locale === 'th' ? "การเชื่อมโยงข้อมูลแมตช์ (Data Link)" : "Match Data Link"}</Header>
                                 </div>
                                 {(() => {
-                                    const isShape = selectedBlock.shapeType && selectedBlock.shapeType !== "text";
                                     return (
                                         <div className="space-y-1.5">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] text-muted-foreground font-medium">
                                                     {locale === 'th' ? `เชื่อมโยงเลเยอร์ "${selectedBlock.name}":` : `Link layer "${selectedBlock.name}":`}
-                                                </span>
-                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase">
-                                                    {isShape ? (locale === 'th' ? "รูปภาพ/โลโก้เท่านั้น" : "Images Only") : (locale === 'th' ? "ข้อความ/ตัวเลขเท่านั้น" : "Text/Numbers Only")}
                                                 </span>
                                             </div>
                                             <Select
@@ -778,41 +774,33 @@ export function EditorSidebar({
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-card">
                                                     <SelectItem value="none">{locale === 'th' ? "ไม่มี (ทั่วไป)" : "None (Static)"}</SelectItem>
-                                                    {isShape ? (
+                                                    {selectedBlock.shapeType && selectedBlock.shapeType !== "text" ? (
                                                         <>
-                                                            <SelectItem value="logo-home">{locale === 'th' ? "🛡️ โลโก้ทีมเหย้า" : "Home Logo"}</SelectItem>
-                                                            <SelectItem value="logo-away">{locale === 'th' ? "🛡️ โลโก้ทีมเยือน" : "Away Logo"}</SelectItem>
-                                                            <SelectItem value="logo-tournament">{locale === 'th' ? "🛡️ โลโก้รายการแข่งขัน" : "Tournament Logo"}</SelectItem>
-                                                            {sport === 'volleyball' && (
-                                                                <>
-                                                                    <SelectItem value="point-won-home">{locale === 'th' ? "🏐 ตัวแสดงเสิร์ฟ/ได้แต้ม (ทีมเหย้า)" : "Home Point Won / Serve"}</SelectItem>
-                                                                    <SelectItem value="point-won-away">{locale === 'th' ? "🏐 ตัวแสดงเสิร์ฟ/ได้แต้ม (ทีมเยือน)" : "Away Point Won / Serve"}</SelectItem>
-                                                                    <SelectItem value="score-bar-home">{locale === 'th' ? "🏐 แถบประวัติแต้ม/Score Bar (ทีมเหย้า)" : "Home Score Bar"}</SelectItem>
-                                                                    <SelectItem value="score-bar-away">{locale === 'th' ? "🏐 แถบประวัติแต้ม/Score Bar (ทีมเยือน)" : "Away Score Bar"}</SelectItem>
-                                                                </>
-                                                            )}
-                                                        </>
-                                                    ) : sport === 'volleyball' ? (
-                                                        <>
-                                                            <SelectItem value="name-home">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเหย้า" : "Home Team Name"}</SelectItem>
-                                                            <SelectItem value="name-away">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเยือน" : "Away Team Name"}</SelectItem>
-                                                            <SelectItem value="score-home">{locale === 'th' ? "🔢 คะแนนแต้มทีมเหย้า" : "Home Points Score"}</SelectItem>
-                                                            <SelectItem value="score-away">{locale === 'th' ? "🔢 คะแนนแต้มทีมเยือน" : "Away Points Score"}</SelectItem>
-                                                            <SelectItem value="set-home">{locale === 'th' ? "🏐 จำนวนเซตที่ชนะทีมเหย้า" : "Home Sets Won"}</SelectItem>
-                                                            <SelectItem value="set-away">{locale === 'th' ? "🏐 จำนวนเซตที่ชนะทีมเยือน" : "Away Sets Won"}</SelectItem>
-                                                            <SelectItem value="header-text">{locale === 'th' ? "🏆 ชื่อรายการแข่งขัน" : "Tournament Name"}</SelectItem>
+                                                            <SelectItem value="logo-home">{locale === 'th' ? "🖼️ โลโก้ทีมเหย้า" : "Home Logo"}</SelectItem>
+                                                            <SelectItem value="logo-away">{locale === 'th' ? "🖼️ โลโก้ทีมเยือน" : "Away Logo"}</SelectItem>
+                                                            <SelectItem value="logo-tournament">{locale === 'th' ? "🖼️ โลโก้รายการแข่งขัน" : "Tournament Logo"}</SelectItem>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <SelectItem value="name-home">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเหย้า" : "Home Team Name"}</SelectItem>
                                                             <SelectItem value="name-away">{locale === 'th' ? "🛡️ ชื่อ/ตัวย่อทีมเยือน" : "Away Team Name"}</SelectItem>
-                                                            <SelectItem value="score-home">{locale === 'th' ? "🔢 สกอร์ทีมเหย้า" : "Home Score"}</SelectItem>
-                                                            <SelectItem value="score-away">{locale === 'th' ? "🔢 สกอร์ทีมเยือน" : "Away Score"}</SelectItem>
+                                                            <SelectItem value="score-home">{locale === 'th' ? "🔢 สกอร์/คะแนนทีมเหย้า" : "Home Score"}</SelectItem>
+                                                            <SelectItem value="score-away">{locale === 'th' ? "🔢 สกอร์/คะแนนทีมเยือน" : "Away Score"}</SelectItem>
                                                             <SelectItem value="header-text">{locale === 'th' ? "🏆 ชื่อรายการแข่งขัน" : "Tournament Name"}</SelectItem>
                                                             <SelectItem value="timer">{locale === 'th' ? "⏱️ เวลาและนาฬิกาแมตช์" : "Match Timer"}</SelectItem>
                                                             <SelectItem value="add-time">{locale === 'th' ? "⏱️ เวลาทดบาดเจ็บ" : "Added Time"}</SelectItem>
                                                             <SelectItem value="home-scorer">{locale === 'th' ? "👟 ผู้ทำประตูทีมเหย้า" : "Home Scorer"}</SelectItem>
                                                             <SelectItem value="away-scorer">{locale === 'th' ? "👟 ผู้ทำประตูทีมเยือน" : "Away Scorer"}</SelectItem>
+                                                            {sport === 'volleyball' && (
+                                                                <>
+                                                                    <SelectItem value="set-home">{locale === 'th' ? "🏐 เซตที่ชนะ (ทีมเหย้า)" : "Home Sets Won"}</SelectItem>
+                                                                    <SelectItem value="set-away">{locale === 'th' ? "🏐 เซตที่ชนะ (ทีมเยือน)" : "Away Sets Won"}</SelectItem>
+                                                                    <SelectItem value="point-won-home">{locale === 'th' ? "🏐 ตัวแสดงเสิร์ฟ/ได้แต้ม (ทีมเหย้า)" : "Home Point Won / Serve"}</SelectItem>
+                                                                    <SelectItem value="point-won-away">{locale === 'th' ? "🏐 ตัวแสดงเสิร์ฟ/ได้แต้ม (ทีมเยือน)" : "Away Point Won / Serve"}</SelectItem>
+                                                                    <SelectItem value="score-bar-home">{locale === 'th' ? "🏐 แถบประวัติแต้ม (ทีมเหย้า)" : "Home Score Bar"}</SelectItem>
+                                                                    <SelectItem value="score-bar-away">{locale === 'th' ? "🏐 แถบประวัติแต้ม (ทีมเยือน)" : "Away Score Bar"}</SelectItem>
+                                                                </>
+                                                            )}
                                                         </>
                                                     )}
                                                 </SelectContent>

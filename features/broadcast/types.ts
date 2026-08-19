@@ -49,6 +49,7 @@ export interface CanvasBlock {
     fontStyle?: "normal" | "italic";
     textDecoration?: "none" | "underline" | "line-through";
     text?: string;
+    imageUrl?: string;
     groupId?: string;
 }
 
