@@ -405,15 +405,19 @@ function CanvasInternal({
         fetchTeams,
         teams,
         setTeams: setStoreTeams,
+        activeCategoryId: storeCategoryId,
         setActiveCategoryId: setStoreCategoryId,
     } = useBracketStore();
 
     // Sync server-provided teams as initial state (before category-specific fetch runs)
     useEffect(() => {
-        if (initialTeamsData && initialTeamsData.length > 0) {
-            setStoreTeams(initialTeamsData);
+        if (initialTeamsData && initialTeamsData.length > 0 && teams.length === 0) {
+            const filtered = storeCategoryId
+                ? initialTeamsData.filter((t: TournamentTeam & { tournament_category_id?: string | null }) => !t.tournament_category_id || String(t.tournament_category_id) === String(storeCategoryId))
+                : initialTeamsData;
+            setStoreTeams(filtered);
         }
-    }, [initialTeamsData, setStoreTeams]);
+    }, [initialTeamsData, storeCategoryId, teams.length, setStoreTeams]);
     const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule' | 'registration'>('teams');
     type SettingsTab = 'general' | 'categories' | 'location' | 'bank' | 'staff' | 'danger';
     const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('general');

@@ -484,8 +484,8 @@ export async function createTournament(_prevState: ActionResponse, formData: For
 
         if (!isUnlimitedPlan) {
             if (isEventPlan || isCupPlan) {
-                // Limit: max tournaments created in the current calendar month (Cup: 20, Event: 5)
-                const maxMonthlyTournaments = isCupPlan ? 20 : 5;
+                // Limit: max tournaments created in the current calendar month (Cup: 10, Event: 3)
+                const maxMonthlyTournaments = isCupPlan ? 10 : 3;
                 const startOfMonthStr = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
                 const { count, error: countError } = await supabase
                     .from("tournaments")
@@ -867,7 +867,7 @@ export async function createTournamentCategory(
                 return { success: false, error: "Failed to verify category limit." };
             }
 
-            const maxAllowedCategories = isCupPlan ? 5 : isEventPlan ? 3 : 1;
+            const maxAllowedCategories = isCupPlan ? Infinity : isEventPlan ? 3 : 1;
 
             if (categoryCount && categoryCount >= maxAllowedCategories) {
                 return {

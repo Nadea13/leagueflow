@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const getPlanPrice = (plan: Plan) => {
     if (plan.id === "starter" || plan.id === "match") return 0;
-    if (plan.id === "pro" || plan.id === "event") return 237;
+    if (plan.id === "pro" || plan.id === "event") return 145;
     return (plan.discounted_price || plan.price);
 };
 
@@ -289,17 +289,17 @@ export function BillingTab() {
                                             {isPro ? (
                                                 <>
                                                     <div className="flex items-baseline gap-1 flex-wrap">
-                                                        <span className="text-2xl font-black line-through text-muted-foreground/60">฿790</span>
-                                                        <span className="text-2xl font-black">฿237</span>
+                                                        <span className="text-2xl font-black line-through text-muted-foreground/60">฿290</span>
+                                                        <span className="text-2xl font-black">฿145</span>
                                                         <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                         <Badge variant="default">
-                                                            -70% โปรเปิดตัว
+                                                            -50% โปรเปิดตัว
                                                         </Badge>
                                                     </div>
                                                 </>
                                             ) : isProYearly ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿7,900</span>
+                                                    <span className="text-2xl font-black">฿2,900</span>
                                                     <span className="text-muted-foreground text-xs">{t("perYear")}</span>
                                                 </div>
                                             ) : isManagerPro ? (
@@ -311,12 +311,12 @@ export function BillingTab() {
                                                 <span className="text-xl font-black py-1">{t("contactSales")}</span>
                                             ) : isCup ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿1,790</span>
+                                                    <span className="text-2xl font-black">฿1,490</span>
                                                     <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                 </div>
                                             ) : isCupYearly ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿17,900</span>
+                                                    <span className="text-2xl font-black">฿14,900</span>
                                                     <span className="text-muted-foreground text-xs">{t("perYear")}</span>
                                                 </div>
                                             ) : (

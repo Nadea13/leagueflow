@@ -121,7 +121,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                                 const ownedTournaments = initialTournaments.filter(t => t.role === 'owner');
                                 if (isUnlimitedPlan) return false;
                                 if (isEventPlan || isCupPlan) {
-                                    const maxMonthly = isCupPlan ? 20 : 5;
+                                    const maxMonthly = isCupPlan ? 10 : 3;
                                     const currentYearMonth = new Date().toISOString().substring(0, 7);
                                     const thisMonthCount = ownedTournaments.filter(t => (t.created_at || '').substring(0, 7) === currentYearMonth).length;
                                     return thisMonthCount >= maxMonthly;
@@ -148,7 +148,7 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                                     const ownedTournaments = initialTournaments.filter(t => t.role === 'owner');
                                     if (isUnlimitedPlan) return false;
                                     if (isEventPlan || isCupPlan) {
-                                        const maxMonthly = isCupPlan ? 20 : 5;
+                                        const maxMonthly = isCupPlan ? 10 : 3;
                                         const currentYearMonth = new Date().toISOString().substring(0, 7);
                                         const thisMonthCount = ownedTournaments.filter(t => (t.created_at || '').substring(0, 7) === currentYearMonth).length;
                                         return thisMonthCount >= maxMonthly;

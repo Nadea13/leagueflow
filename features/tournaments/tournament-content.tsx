@@ -149,6 +149,14 @@ export function TournamentContent({
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
+                table: 'match_events'
+            }, () => {
+                // Re-trigger router refresh or internal state sync on match events (e.g. goal, cards)
+                router.refresh();
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
                 table: 'tournament_teams',
                 filter: `tournament_id=eq.${id}`
             }, () => {

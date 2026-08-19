@@ -168,7 +168,7 @@ export function CreateCategoryForm({
                     console.error("Error counting categories:", categoryCountError);
                 }
 
-                const maxAllowedCategories = isCupPlan ? 5 : isEventPlan ? 3 : 1;
+                const maxAllowedCategories = isCupPlan ? Infinity : isEventPlan ? 3 : 1;
 
                 if (categoryCount && categoryCount >= maxAllowedCategories) {
                     toast({

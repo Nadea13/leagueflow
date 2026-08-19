@@ -16,11 +16,15 @@ interface TeamListNodeProps {
 }
 
 export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
-    const { teams: storeTeams } = useBracketStore();
+    const { teams: storeTeams, activeCategoryId } = useBracketStore();
 
-    // Filter to only show approved/paid teams (null status = legacy team, treat as approved)
-    // Filter to only show approved/paid teams (null status = legacy team, treat as approved)
-    const paidTeams = (storeTeams as TournamentTeam[]).filter((team: TournamentTeam) => {
+    // Filter to only show approved/paid teams for the active category (null status = legacy team, treat as approved)
+    const paidTeams = (storeTeams as TournamentTeam[]).filter((team: TournamentTeam & { tournament_category_id?: string | null }) => {
+        // If activeCategoryId is set and team has category id, ensure they match
+        if (activeCategoryId && team.tournament_category_id && String(team.tournament_category_id) !== String(activeCategoryId)) {
+            return false;
+        }
+
         const ps = team.payment_status;
         const rs = team.registration_status;
         // Legacy teams with no status set — treat as approved

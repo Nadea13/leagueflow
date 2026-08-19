@@ -775,22 +775,22 @@ export default async function Home() {
                   <div className="flex justify-between mb-1 lg:mb-2">
                     <h3 className="text-xl font-bold">Event</h3>
                     <Badge variant="default" className="text-[10px] font-bold ml-1">
-                      -70% โปรเปิดตัว
+                      -50% โปรเปิดตัว
                     </Badge>
                   </div>
                   <p className="text-muted-foreground text-xs mb-2 lg:mb-4">จัดทัวร์นาเมนต์แบบมืออาชีพพร้อมระบบชำระเงินที่สมบูรณ์แบบ</p>
                   <div className="flex flex-col mb-2 lg:mb-4">
                     <div className="flex items-baseline gap-1 lg:gap-2 flex-wrap">
-                      <span className="text-3xl lg:text-4xl font-black line-through text-muted-foreground/60">฿790</span>
-                      <span className="text-3xl lg:text-4xl font-black ml-2">฿237</span>
+                      <span className="text-3xl lg:text-4xl font-black line-through text-muted-foreground/60">฿290</span>
+                      <span className="text-3xl lg:text-4xl font-black ml-2">฿145</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
-                    <span className="text-xs text-primary font-black">หรือรายปี ฿7,900/ปี</span>
+                    <span className="text-xs text-primary font-black">หรือรายปี ฿2,900/ปี</span>
                   </div>
                   <ul className="space-y-1 lg:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างทัวร์นาเมนต์สูงสุด 5 รายการต่อเดือน
+                      สร้างทัวร์นาเมนต์สูงสุด 3 รายการต่อเดือน
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -806,7 +806,7 @@ export default async function Home() {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      เพิ่มสตาฟดูแลการแข่งขันร่วมกัน
+                      เพิ่มสตาฟดูแลการแข่งขันร่วมกันสูงสุด 3 คน
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -830,19 +830,19 @@ export default async function Home() {
                   <p className="text-muted-foreground text-xs mb-2">จัดทัวร์นาเมนต์ขนาดใหญ่และลีกประสิทธิภาพสูง</p>
                   <div className="flex flex-col mb-2 lg:mb-4">
                     <div className="flex items-baseline gap-1 lg:gap-2 flex-wrap">
-                      <span className="text-3xl lg:text-4xl font-black">฿1,790</span>
+                      <span className="text-3xl lg:text-4xl font-black">฿1,490</span>
                       <span className="text-muted-foreground text-sm">/ เดือน</span>
                     </div>
-                    <span className="text-xs text-primary font-black">หรือรายปี ฿17,900/ปี</span>
+                    <span className="text-xs text-primary font-black">หรือรายปี ฿14,900/ปี</span>
                   </div>
                   <ul className="space-y-1 lg:space-y-2 text-sm text-foreground/90">
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างทัวร์นาเมนต์สูงสุด 20 รายการต่อเดือน
+                      สร้างทัวร์นาเมนต์สูงสุด 10 รายการต่อเดือน
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      สร้างรุ่นการแข่งขันสูงสุด 5 รุ่นต่อทัวร์นาเมนต์
+                      สร้างรุ่นการแข่งขันไม่จำกัด
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />

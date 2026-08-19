@@ -42,7 +42,7 @@ export const GroupNode = memo(({
             if (teamIdMatch) {
                 const teamId = teamIdMatch[1];
                 const sourceTeams = (sourceNode.data.teams as TournamentTeam[]) || storeTeams;
-                const team = sourceTeams.find(t => String(t.id) === String(teamId));
+                const team = sourceTeams.find(t => String(t.id) === String(teamId) || String(t.team_id) === String(teamId));
                 return team?.name || null;
             }
         }
@@ -165,15 +165,6 @@ export const GroupNode = memo(({
                 style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
             />
 
-            {/* Bottom handle to MatchNode */}
-            <div className="absolute bottom-0 left-0 right-0 flex justify-center translate-y-[1px]">
-                <Handle
-                    type="source"
-                    position={Position.Bottom}
-                    id="group-matches"
-                    className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-5 transition-all z-50"
-                />
-            </div>
         </div>
     );
 });

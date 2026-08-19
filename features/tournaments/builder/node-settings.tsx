@@ -329,10 +329,10 @@ export function NodeSettings() {
     };
 
     useEffect(() => {
-        if (activeCategoryId && selectedNode?.type === "teamListNode") {
+        if (activeCategoryId) {
             fetchTeams(activeCategoryId);
         }
-    }, [activeCategoryId, fetchTeams, selectedNode?.type]);
+    }, [activeCategoryId, fetchTeams]);
 
 
     const [dbMatches, setDbMatches] = React.useState<Match[]>([]);
