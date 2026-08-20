@@ -120,25 +120,82 @@ export function EventLog({ events, match, readOnly = false, onDelete, players = 
                                                     </div>
                                                     {event.event_type === 'substitution' ? (
                                                         <p className="text-xs font-black tracking-widest truncate text-foreground">
-                                                            {t("out_lbl")}: {String(event.extra_info?.out_player_name || t("unknown_player"))} {t("in_lbl")}: {String(event.extra_info?.in_player_name || t("unknown_player"))}
+                                                            <span className="text-red-500">▼ {t("out_lbl")}:</span> {String(event.extra_info?.out_player_name || t("unknown_player"))} {" "}
+                                                            <span className="text-emerald-500">▲ {t("in_lbl")}:</span> {String(event.extra_info?.in_player_name || t("unknown_player"))}
                                                         </p>
-                                                    ) : !isUnknownPlayer && (
-                                                        <p className={cn(
-                                                            "text-xs font-black tracking-widest truncate",
+                                                    ) : (
+                                                        <div className={cn(
+                                                            "text-xs font-black tracking-widest flex flex-wrap items-center gap-1.5",
                                                             event.event_type === 'yellow_card' ? "text-yellow-500" :
                                                             event.event_type === 'red_card' ? "text-red-500" : "text-foreground",
-                                                            isNeutral ? "text-center" : ""
+                                                            isNeutral ? "justify-center" : (isHome ? "justify-start" : "justify-end")
                                                         )}>
-                                                            {event.player_name}
+                                                            {!isUnknownPlayer && <span>{event.player_name}</span>}
+
+                                                            {/* Own Goal badge */}
+                                                            {!!(event.extra_info as Record<string, unknown> | null)?.is_own_goal && (
+                                                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-xs border border-destructive/20">
+                                                                    {t("own_goal") || "ทำเข้าประตูตัวเอง"}
+                                                                    {!!(event.extra_info as Record<string, unknown> | null)?.own_goal_player_name && (
+                                                                        <span className="font-semibold">({String((event.extra_info as Record<string, unknown>).own_goal_player_name)})</span>
+                                                                    )}
+                                                                </span>
+                                                            )}
+
+                                                            {/* Foul extras: card, penalty, fouled player */}
+                                                            {event.event_type === 'foul' && (() => {
+                                                                const cardType = (event.extra_info as Record<string, unknown> | null)?.card_type as string | undefined;
+                                                                const isPen = !!(event.extra_info as Record<string, unknown> | null)?.is_penalty;
+                                                                const fouledName = (event.extra_info as Record<string, unknown> | null)?.fouled_player_name as string | undefined;
+                                                                return (
+                                                                    <span className="inline-flex flex-wrap items-center gap-1 text-[11px] font-bold text-muted-foreground">
+                                                                        {cardType === 'yellow' && (
+                                                                            <span className="inline-flex items-center gap-1 text-amber-500 font-bold mt-1">
+                                                                                <span className="w-2 h-3 bg-amber-400 rounded-xs inline-block" />
+                                                                                {t("yellow_card")}
+                                                                            </span>
+                                                                        )}
+                                                                        {cardType === 'red' && (
+                                                                            <span className="inline-flex items-center gap-1 text-red-500 font-bold bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">
+                                                                                <span className="w-2 h-3 bg-red-600 rounded-xs inline-block" />
+                                                                                {t("red_card")}
+                                                                            </span>
+                                                                        )}
+                                                                        {isPen && (
+                                                                            <span className="text-destructive font-black bg-destructive/10 px-1.5 py-0.5 rounded-xs border border-destructive/20">
+                                                                                ⚽ {t("penalty")}
+                                                                            </span>
+                                                                        )}
+                                                                        {fouledName && (
+                                                                            <span className="text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-xs">
+                                                                                {t("fouled_player")}: {fouledName}
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                );
+                                                            })()}
+
+                                                            {/* Second yellow indicator for red card */}
+                                                            {!!(event.extra_info as Record<string, unknown> | null)?.is_second_yellow && (
+                                                                <span className="inline-flex items-center text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-xs border border-amber-500/20">
+                                                                    (2nd Yellow)
+                                                                </span>
+                                                            )}
+
+                                                            {/* Goal assist info */}
                                                             {event.event_type === 'goal' && (() => {
                                                                 const assistId = (event.extra_info as Record<string, unknown> | null)?.assist_player_id as string | undefined;
                                                                 if (!assistId || assistId === 'none') return null;
                                                                 const assistName = ((event.extra_info as Record<string, unknown> | null)?.assist_player_name as string | undefined) || 
                                                                     players?.find(p => p.id === assistId)?.name;
                                                                 if (!assistName) return null;
-                                                                return ` (${t("assist")}: ${assistName})`;
+                                                                return (
+                                                                    <span className="text-muted-foreground text-[11px] font-semibold bg-muted/40 px-1.5 py-0.5 rounded-xs">
+                                                                        {t("assist")}: {assistName}
+                                                                    </span>
+                                                                );
                                                             })()}
-                                                        </p>
+                                                        </div>
                                                     )}
                                                     {!!(event.extra_info as Record<string, unknown> | null)?.reason && (
                                                         <p className="text-[10px] text-muted-foreground mt-1 font-medium">{String((event.extra_info as Record<string, unknown>).reason)}</p>

@@ -55,7 +55,9 @@ import {
     Shuffle,
     FlagTriangleRight,
     CornerUpRight,
-    CornerRightDown
+    CornerRightDown,
+    Scissors,
+    ArrowUpRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -635,18 +637,32 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         setEventDialogOpen(true);
     };
 
-    const handleSaveEvent = async (data: { minute: number; playerId: string; extraInfo: Record<string, unknown>; autoRed?: boolean }) => {
+    const handleSaveEvent = async (data: { minute: number; playerId: string; extraInfo: Record<string, unknown>; autoRed?: boolean; overrideEventType?: EventType }) => {
         if (!selectedTeamId || !selectedEventType) return;
         const player = allPlayers.find(p => p.id === data.playerId);
         const playerName = player ? player.name : "Unknown";
-        const res = await addEvent(selectedTeamId, data.autoRed ? 'red_card' : selectedEventType, data.minute, data.playerId, data.extraInfo, playerName);
-        if (res && !res.success) {
-            toast({
-                title: "Error saving event",
-                description: res.error || "Unknown error occurred",
-                variant: "destructive"
-            });
-            return;
+        if (data.autoRed) {
+            // Second yellow card resulting in red card
+            const res = await addEvent(selectedTeamId, 'red_card', data.minute, data.playerId, { ...data.extraInfo, is_second_yellow: true }, playerName);
+            if (res && !res.success) {
+                toast({
+                    title: "Error saving red card event",
+                    description: res.error || "Unknown error occurred",
+                    variant: "destructive"
+                });
+                return;
+            }
+        } else {
+            const actualEventType = data.overrideEventType || selectedEventType;
+            const res = await addEvent(selectedTeamId, actualEventType, data.minute, data.playerId, data.extraInfo, playerName);
+            if (res && !res.success) {
+                toast({
+                    title: "Error saving event",
+                    description: res.error || "Unknown error occurred",
+                    variant: "destructive"
+                });
+                return;
+            }
         }
 
         // Swap players in active lineup when substitution occurs
@@ -695,22 +711,19 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
         const isActionDisabled = readOnly || match.status !== 'live';
         const actions = [
-            { type: 'goal', label: t("goal"), icon: Volleyball },
-            { type: 'yellow_card', label: t("yellow_card"), icon: Square, iconColor: 'text-yellow-500 fill-yellow-500' },
-            { type: 'red_card', label: t("red_card"), icon: Square, iconColor: 'text-red-500 fill-red-500' },
-            { type: 'substitution', label: t("substitution"), icon: Repeat },
+            { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight },
+            { type: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight },
+            { type: 'possession', label: t("possession") || "ตัดบอล", icon: Scissors },
             { type: 'foul', label: t("foul") || "Foul", icon: Activity },
-            { type: 'penalty', label: t("penalty") || "Penalty", icon: Target },
+            { type: 'substitution', label: t("substitution"), icon: Repeat },
+            { type: 'yellow_card', label: t("cards") || "คาดโทษ (ใบเตือน)", icon: Square, iconColor: 'text-amber-500 fill-amber-500' },
             { type: 'save', label: t("save") || "Save", icon: Shield },
             { type: 'injury', label: t("injury") || "Injury", icon: Stethoscope },
             { type: 'corner', label: t("corner") || "Corner", icon: Flag },
-            { type: 'possession', label: t("possession") || "การครองบอล", icon: PieChart },
-            { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight },
-            { type: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight },
             { type: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", icon: Crosshair },
-            { type: 'bad_pass', label: t("bad_pass") || "ส่งพลาด", icon: Shuffle },
-            { type: 'miss_cross', label: t("miss_cross") || "ครอสบอลพลาด", icon: CornerRightDown },
+            { type: 'bad_pass', label: t("bad_pass") || "ออกข้าง", icon: ArrowUpRight },
             { type: 'offside', label: t("offside") || "ล้ำหน้า", icon: FlagTriangleRight },
+            { type: 'goal', label: t("goal"), icon: Volleyball },
         ];
 
         return (
@@ -727,6 +740,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                 key={action.type}
                                 onClick={() => handleQuickAction(teamId, action.type as EventType)}
                                 disabled={isActionDisabled}
+                                className={cn(
+                                    action.type === 'goal' && "col-span-2 sm:col-span-3 font-bold"
+                                )}
                             >
                                 <action.icon className={cn("h-5 w-5 transition-transform shrink-0", action.iconColor)} />
                                 <Label className="hidden lg:inline text-xs font-semibold truncate cursor-pointer">{action.label}</Label>
@@ -812,7 +828,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         <BarChart2 className="h-4 w-4 text-primary" />
                         <span className="hidden lg:inline">{t("match_statistics") || "สถิติการแข่งขัน"}</span>
                     </Button>
-                    {match.status === 'finished' && (
+                    {match.status === 'finished' && homeScore === awayScore ? (
                         <PenaltyShootoutDialog
                             matchId={match.id}
                             homeTeamId={match.home_team_id}
@@ -823,14 +839,22 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             trigger={
                                 <Button
                                     variant="outline"
-                                    disabled={homeScore !== awayScore}
-                                    className="w-full flex justify-center lg:justify-start items-center disabled:opacity-50"
+                                    className="w-full flex justify-center lg:justify-start items-center"
                                 >
                                     <Target className="h-4 w-4 text-primary" />
                                     <span className="hidden lg:inline">{t("penalty_shootout")}</span>
                                 </Button>
                             }
                         />
+                    ) : (
+                        <Button
+                            variant="outline"
+                            disabled
+                            className="w-full flex justify-center lg:justify-start items-center opacity-50 cursor-not-allowed"
+                        >
+                            <Target className="h-4 w-4 text-muted-foreground" />
+                            <span className="hidden lg:inline">{t("penalty_shootout")}</span>
+                        </Button>
                     )}
                     <Button
                         variant="outline"
@@ -1187,7 +1211,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             </main>
 
             {/* Dialogs */}
-            <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} existingEvents={events} activeLineupIds={selectedTeamId === match.home_team_id ? homeLineup : awayLineup} onSave={handleSaveEvent} />
+            <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} opponentPlayers={selectedTeamId === match.home_team_id ? awayPlayers : homePlayers} existingEvents={events} activeLineupIds={selectedTeamId === match.home_team_id ? homeLineup : awayLineup} onSave={handleSaveEvent} />
             <RosterSelectionDialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen} homeTeamName={match.home_team?.name || 'Home'} awayTeamName={match.away_team?.name || 'Away'} homePlayers={homePlayers} awayPlayers={awayPlayers} homeActiveIds={homeLineup} awayActiveIds={awayLineup} onSave={handleSaveLineup} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
             <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />

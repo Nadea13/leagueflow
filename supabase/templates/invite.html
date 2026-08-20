@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คำเชิญเข้าร่วมทัวร์นาเมนต์ - LeagueFlow</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: #f8fafc;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    .wrapper {
+      width: 100%;
+      table-layout: fixed;
+      background-color: #0f172a;
+      padding: 40px 0;
+    }
+    .main-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      margin: 0 auto;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      padding: 36px 30px;
+      text-align: center;
+    }
+    .header-logo {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-tagline {
+      color: #a7f3d0;
+      font-size: 13px;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 36px 32px;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 16px 0;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #94a3b8;
+      margin: 0 0 28px 0;
+      text-align: center;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 32px 0;
+    }
+    .btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      display: inline-block;
+      box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.4);
+    }
+    .divider {
+      border-top: 1px solid #334155;
+      margin: 28px 0;
+    }
+    .url-box {
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      word-break: break-all;
+      font-size: 12px;
+      color: #34d399;
+      font-family: monospace;
+      margin-top: 8px;
+    }
+    .footer {
+      padding: 24px 32px;
+      background-color: #0f172a;
+      text-align: center;
+      border-top: 1px solid #1e293b;
+    }
+    .footer-text {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <table class="main-card" align="center">
+      <tr>
+        <td class="header">
+          <div class="header-logo">🏆 LEAGUEFLOW</div>
+          <div class="header-tagline">Staff & Team Invitation</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="content">
+          <h1 class="title">คุณได้รับคำเชิญเข้าร่วมจัดการ</h1>
+          <p class="subtitle">
+            คุณได้รับการเชิญให้เข้าร่วมบริหารจัดการการแข่งขันบนแพลตฟอร์ม <strong>LeagueFlow</strong> กดปุ่มด้านล่างเพื่อตอบรับคำเชิญและเข้าสู่ระบบ
+          </p>
+          
+          <div class="btn-container">
+            <a href="{{ .ConfirmationURL }}" target="_blank" class="btn">ตอบรับคำเชิญ (Accept Invitation)</a>
+          </div>
+
+          <div class="divider"></div>
+
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 4px;">หากปุ่มด้านบนใช้งานไม่ได้ คุณสามารถคัดลอกลิงก์ด้านล่างนี้ไปวางในเบราว์เซอร์ได้:</p>
+          <div class="url-box">{{ .ConfirmationURL }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="footer">
+          <p class="footer-text">
+            อีเมลนี้ถูกส่งจากระบบ LeagueFlow คำเชิญจะสิ้นสุดตามเวลาที่ผู้สร้างกำหนด<br>
+            &copy; LeagueFlow. All rights reserved.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

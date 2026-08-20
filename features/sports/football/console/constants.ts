@@ -15,13 +15,13 @@ import {
     Flag,
     Stethoscope,
     Ban,
-    PieChart,
     MoveRight,
     Crosshair,
-    Shuffle,
     FlagTriangleRight,
     CornerUpRight,
-    CornerRightDown
+    CornerRightDown,
+    Scissors,
+    ArrowUpRight
 } from "lucide-react";
 import { EventType } from "@/types";
 
@@ -36,10 +36,10 @@ export const EVENT_TYPES: { type: EventType; label: string; icon: React.ElementT
     { type: 'var', label: 'var', icon: MonitorPlay, color: 'text-purple-600' },
     { type: 'corner', label: 'corner', icon: Flag, color: 'text-slate-900 dark:text-white' },
     { type: 'injury', label: 'injury', icon: Stethoscope, color: 'text-red-600' },
-    { type: 'possession', label: 'possession', icon: PieChart, color: 'text-indigo-500' },
+    { type: 'possession', label: 'possession', icon: Scissors, color: 'text-indigo-500' },
     { type: 'pass', label: 'pass', icon: MoveRight, color: 'text-emerald-500' },
     { type: 'missed_shot', label: 'missed_shot', icon: Crosshair, color: 'text-rose-500' },
-    { type: 'bad_pass', label: 'bad_pass', icon: Shuffle, color: 'text-amber-500' },
+    { type: 'bad_pass', label: 'bad_pass', icon: ArrowUpRight, color: 'text-amber-500' },
     { type: 'cross', label: 'cross', icon: CornerUpRight, color: 'text-cyan-500' },
     { type: 'miss_cross', label: 'miss_cross', icon: CornerRightDown, color: 'text-rose-400' },
     { type: 'offside', label: 'offside', icon: FlagTriangleRight, color: 'text-orange-500' },

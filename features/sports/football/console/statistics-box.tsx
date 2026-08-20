@@ -162,20 +162,44 @@ export function MatchStatisticsBox({ match, events, homeScore, awayScore, onClos
     const homeTotalShots = homeScore + homeMissed;
     const awayTotalShots = awayScore + awayMissed;
 
+    const countYellowCards = (teamId: string | null) => {
+        if (!teamId) return 0;
+        return events.filter(e => e.team_id === teamId && (
+            e.event_type === 'yellow_card' ||
+            (e.event_type === 'foul' && (e.extra_info as Record<string, unknown> | null)?.card_type === 'yellow')
+        )).length;
+    };
+
+    const countRedCards = (teamId: string | null) => {
+        if (!teamId) return 0;
+        return events.filter(e => e.team_id === teamId && (
+            e.event_type === 'red_card' ||
+            (e.event_type === 'foul' && (e.extra_info as Record<string, unknown> | null)?.card_type === 'red')
+        )).length;
+    };
+
+    const countPenalties = (teamId: string | null) => {
+        if (!teamId) return 0;
+        return events.filter(e => e.team_id === teamId && (
+            e.event_type === 'penalty' ||
+            (e.event_type === 'foul' && !!(e.extra_info as Record<string, unknown> | null)?.is_penalty)
+        )).length;
+    };
+
     const statsList = [
-        { label: t("possession") || "การครองบอล", home: `${possession.home}%`, away: `${possession.away}%`, homeNum: possession.home, awayNum: possession.away },
+        { label: t("possession") || "ตัดบอล", home: `${possession.home}%`, away: `${possession.away}%`, homeNum: possession.home, awayNum: possession.away },
         { label: t("goal"), home: homeScore, away: awayScore },
         { label: t("total_shots") || "โอกาสยิงประตู", home: homeTotalShots, away: awayTotalShots },
         { label: t("missed_shot") || "ยิงพลาด", home: homeMissed, away: awayMissed },
         { label: t("pass") || "จ่ายบอล", home: countEvent(homeId, 'pass'), away: countEvent(awayId, 'pass') },
-        { label: t("bad_pass") || "ส่งพลาด", home: countEvent(homeId, 'bad_pass'), away: countEvent(awayId, 'bad_pass') },
+        { label: t("bad_pass") || "ออกข้าง", home: countEvent(homeId, 'bad_pass'), away: countEvent(awayId, 'bad_pass') },
         { label: t("cross") || "ครอสบอล", home: countEvent(homeId, 'cross'), away: countEvent(awayId, 'cross') },
-        { label: t("miss_cross") || "ครอสบอลพลาด", home: countEvent(homeId, 'miss_cross'), away: countEvent(awayId, 'miss_cross') },
         { label: t("corner") || "เตะมุม", home: countEvent(homeId, 'corner'), away: countEvent(awayId, 'corner') },
         { label: t("save") || "เซฟ", home: countEvent(homeId, 'save'), away: countEvent(awayId, 'save') },
         { label: t("foul") || "ฟาวล์", home: countEvent(homeId, 'foul'), away: countEvent(awayId, 'foul') },
-        { label: t("yellow_card"), home: countEvent(homeId, 'yellow_card'), away: countEvent(awayId, 'yellow_card') },
-        { label: t("red_card"), home: countEvent(homeId, 'red_card'), away: countEvent(awayId, 'red_card') },
+        { label: t("penalty") || "จุดโทษ", home: countPenalties(homeId), away: countPenalties(awayId) },
+        { label: t("yellow_card"), home: countYellowCards(homeId), away: countYellowCards(awayId) },
+        { label: t("red_card"), home: countRedCards(homeId), away: countRedCards(awayId) },
         { label: t("offside") || "ล้ำหน้า", home: countEvent(homeId, 'offside'), away: countEvent(awayId, 'offside') },
     ];
 

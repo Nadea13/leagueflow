@@ -496,7 +496,7 @@ export async function getMasterPlayerStats(masterPlayerId: string): Promise<Acti
             id: string;
             event_type: string;
             player_id: string | null;
-            extra_info: { assist_player_id?: string } | null;
+            extra_info: { assist_player_id?: string; is_own_goal?: boolean; card_type?: string } | null;
             team: { name: string } | null;
             match: {
                 category: {
@@ -553,18 +553,19 @@ export async function getMasterPlayerStats(masterPlayerId: string): Promise<Acti
             const current = tourneyStats.get(key)!;
 
             if (event.event_type === 'goal') {
-                if (isSelfPlayer) {
+                const isOwnGoal = !!event.extra_info?.is_own_goal;
+                if (isSelfPlayer && !isOwnGoal) {
                     totalGoals++;
                     current.goals++;
                 }
-                if (isAssist) {
+                if (isAssist && !isOwnGoal) {
                     totalAssists++;
                     current.assists++;
                 }
-            } else if (event.event_type === 'yellow_card' && isSelfPlayer) {
+            } else if ((event.event_type === 'yellow_card' || (event.event_type === 'foul' && event.extra_info?.card_type === 'yellow')) && isSelfPlayer) {
                 totalYellow++;
                 current.yellowCards++;
-            } else if (event.event_type === 'red_card' && isSelfPlayer) {
+            } else if ((event.event_type === 'red_card' || (event.event_type === 'foul' && event.extra_info?.card_type === 'red')) && isSelfPlayer) {
                 totalRed++;
                 current.redCards++;
             } else if (event.event_type === 'save' && isSelfPlayer) {
