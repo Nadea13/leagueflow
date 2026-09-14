@@ -1120,6 +1120,11 @@ function CanvasInternal({
         window.open(url, '_blank');
     }, [tournamentId, locale, activeCategoryId]);
 
+    const handleOpenLinkDocumentions = useCallback(() => {
+        const url = `${window.location.origin}/${locale}/documentions/${tournamentId}`;
+        window.open(url, '_blank');
+    }, [tournamentId, locale]);
+
     const handleOpenLink = useCallback(() => {
         const url = `${window.location.origin}/${locale}/tournaments/${tournamentId}`;
         window.open(url, '_blank');
@@ -1320,6 +1325,13 @@ function CanvasInternal({
                                         >
                                             <ExternalLink className="h-3.5 w-3.5" />
                                             <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={handleOpenLinkDocumentions}
+                                            className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
+                                        >
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -1559,6 +1571,14 @@ function CanvasInternal({
                                             >
                                                 <ExternalLink className="h-3.5 w-3.5" />
                                                 <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                onClick={handleOpenLinkDocumentions}
+                                                className="cursor-pointer text-xs flex items-center gap-2 py-1.5"
+                                            >
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>

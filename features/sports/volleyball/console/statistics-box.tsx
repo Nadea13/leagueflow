@@ -14,6 +14,7 @@ interface VolleyballMatchStatisticsBoxProps {
     awaySetsWon: number;
     homePoints: number;
     awayPoints: number;
+    visibleStats?: string[];
     onClose?: () => void;
 }
 
@@ -74,6 +75,7 @@ export function VolleyballMatchStatisticsBox({
     awaySetsWon,
     homePoints,
     awayPoints,
+    visibleStats,
     onClose
 }: VolleyballMatchStatisticsBoxProps) {
     const t = useTranslations("Console");
@@ -137,15 +139,19 @@ export function VolleyballMatchStatisticsBox({
     const homeGeneralPts = countEventType('point', 'home');
     const awayGeneralPts = countEventType('point', 'away');
 
-    const statsList = [
-        { label: t("sets_won") || "เซตที่ชนะ (Sets Won)", home: homeSetsWon, away: awaySetsWon },
-        { label: t("current_set_points") || "คะแนนเซตปัจจุบัน", home: homePoints, away: awayPoints },
-        { label: t("total_points") || "คะแนนรวมทั้งหมด", home: homeTotalPoints, away: awayTotalPoints },
-        { label: "Ace (เสิร์ฟเอซ)", home: homeAces, away: awayAces },
-        { label: "Spike (ตบทำแต้ม)", home: homeSpikes, away: awaySpikes },
-        { label: "Block (บล็อกทำแต้ม)", home: homeBlocks, away: awayBlocks },
-        { label: t("other_points") || "แต้มอื่นๆ", home: homeGeneralPts, away: awayGeneralPts },
+    const allStatsList = [
+        { key: 'sets_won', label: t("sets_won") || "เซตที่ชนะ (Sets Won)", home: homeSetsWon, away: awaySetsWon },
+        { key: 'current_set_points', label: t("current_set_points") || "คะแนนเซตปัจจุบัน", home: homePoints, away: awayPoints },
+        { key: 'total_points', label: t("total_points") || "คะแนนรวมทั้งหมด", home: homeTotalPoints, away: awayTotalPoints },
+        { key: 'ace', label: "Ace (เสิร์ฟเอซ)", home: homeAces, away: awayAces },
+        { key: 'spike', label: "Spike (ตบทำแต้ม)", home: homeSpikes, away: awaySpikes },
+        { key: 'block', label: "Block (บล็อกทำแต้ม)", home: homeBlocks, away: awayBlocks },
+        { key: 'other_points', label: t("other_points") || "แต้มอื่นๆ", home: homeGeneralPts, away: awayGeneralPts },
     ];
+
+    const statsList = visibleStats
+        ? allStatsList.filter(s => visibleStats.includes(s.key))
+        : allStatsList;
 
     return (
         <div className="bg-card rounded-sm relative overflow-hidden group">

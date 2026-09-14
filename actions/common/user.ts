@@ -5,6 +5,8 @@ import { ensureProfileExists } from "@/lib/profile";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ActionResponse, Tournament } from "@/types";
+import { uploadToR2 } from "@/lib/r2";
+
 
 export async function getUserSubscriptionPlan() {
     const supabase = await createClient();
@@ -123,23 +125,18 @@ export async function updateProfile(formData: FormData): Promise<ActionResponse>
         const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from("avatars")
-            .upload(filePath, avatarFile);
+        const uploadRes = await uploadToR2(avatarFile, filePath, avatarFile.type);
 
-        if (uploadError) {
-            console.error("Avatar upload error:", uploadError);
-            return { success: false, error: "Failed to upload avatar: " + uploadError.message };
+        if (!uploadRes.success || !uploadRes.url) {
+            console.error("Avatar upload error:", uploadRes.error);
+            return { success: false, error: "Failed to upload avatar: " + (uploadRes.error || "Unknown error") };
         }
 
-        const { data: { publicUrl } } = supabase.storage
-            .from("avatars")
-            .getPublicUrl(filePath);
-
-        avatarUrl = publicUrl;
+        avatarUrl = uploadRes.url;
     } else if (formData.get("remove_avatar") === "true") {
         avatarUrl = null;
     }
+
 
     const { error } = await supabase.auth.updateUser({
         data: { 

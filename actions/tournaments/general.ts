@@ -10,6 +10,9 @@ import { validateTournamentAccess } from "@/lib/security";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { initTournamentStructure } from "@/lib/fixture-utils";
 import { propagateGroupStandings, propagateKnockoutResults } from "@/actions/tournaments/matches";
+import { uploadToR2 } from "@/lib/r2";
+
+
 
 export async function addTeam(
     tournamentId: string,
@@ -67,24 +70,18 @@ export async function addTeam(
         const fileCheck = validateUploadedFile(logoFile);
         if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
-        const fileExt = logoFile.name.split('.').pop();
+        const fileExt = logoFile.name.split('.').pop() || 'png';
         const fileName = `logo-${Date.now()}.${fileExt}`;
-        const filePath = `${teamId}/${fileName}`;
+        const filePath = `teams/${teamId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from('teams')
-            .upload(filePath, logoFile);
-
-        if (uploadError) {
-            console.error("Logo upload failed", uploadError);
-            return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-        } else {
-            const { data: { publicUrl } } = supabase.storage
-                .from('teams')
-                .getPublicUrl(filePath);
-            logo_url = publicUrl;
+        const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+        if (!uploadRes.success || !uploadRes.url) {
+            console.error("Logo upload to R2 failed", uploadRes.error);
+            return { success: false, error: `Logo upload failed: ${uploadRes.error || "Unknown error"}` };
         }
+        logo_url = uploadRes.url;
     }
+
 
     // Insert into global teams table
     const { data: globalTeam, error: globalTeamError } = await supabase
@@ -178,24 +175,18 @@ export async function updateTeam(
         const fileCheck = validateUploadedFile(logoFile);
         if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
-        const fileExt = logoFile.name.split('.').pop();
+        const fileExt = logoFile.name.split('.').pop() || 'png';
         const fileName = `logo-${Date.now()}.${fileExt}`;
-        const filePath = `${registration.team_id}/${fileName}`;
+        const filePath = `teams/${registration.team_id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from('teams')
-            .upload(filePath, logoFile);
-
-        if (uploadError) {
-            console.error("Logo upload failed", uploadError);
-            return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-        } else {
-            const { data: { publicUrl } } = supabase.storage
-                .from('teams')
-                .getPublicUrl(filePath);
-            logo_url = publicUrl;
+        const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+        if (!uploadRes.success || !uploadRes.url) {
+            console.error("Logo upload to R2 failed", uploadRes.error);
+            return { success: false, error: `Logo upload failed: ${uploadRes.error || "Unknown error"}` };
         }
+        logo_url = uploadRes.url;
     }
+
 
     const updateData: Record<string, string | null> = {
         name,
@@ -306,23 +297,16 @@ export async function updateTournament(
             const fileCheck = validateUploadedFile(logoFile);
             if (!fileCheck.valid) return { success: false, error: `Logo: ${fileCheck.error}` };
 
-            const fileExt = logoFile.name.split('.').pop();
+            const fileExt = logoFile.name.split('.').pop() || 'png';
             const fileName = `logo-${Date.now()}.${fileExt}`;
-            const filePath = `${tournamentId}/${fileName}`;
+            const filePath = `tournaments/${tournamentId}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('tournaments')
-                .upload(filePath, logoFile);
-
-            if (uploadError) {
-                console.error("Logo upload failed", uploadError);
-                return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-            } else {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('tournaments')
-                    .getPublicUrl(filePath);
-                updateData.logo_img = publicUrl;
+            const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Logo upload to R2 failed", uploadRes.error);
+                return { success: false, error: `Logo upload failed: ${uploadRes.error || "Unknown error"}` };
             }
+            updateData.logo_img = uploadRes.url;
         } else if (formData.get("logo_img_remove") === 'true') {
             updateData.logo_img = null;
         }
@@ -331,26 +315,20 @@ export async function updateTournament(
             const fileCheck = validateUploadedFile(coverFile);
             if (!fileCheck.valid) return { success: false, error: `Cover: ${fileCheck.error}` };
 
-            const fileExt = coverFile.name.split('.').pop();
+            const fileExt = coverFile.name.split('.').pop() || 'png';
             const fileName = `cover-${Date.now()}.${fileExt}`;
-            const filePath = `${tournamentId}/${fileName}`;
+            const filePath = `tournaments/${tournamentId}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('tournaments')
-                .upload(filePath, coverFile);
-
-            if (uploadError) {
-                console.error("Cover upload failed", uploadError);
-                return { success: false, error: `Cover upload failed: ${uploadError.message}` };
-            } else {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('tournaments')
-                    .getPublicUrl(filePath);
-                updateData.cover_img = publicUrl;
+            const uploadRes = await uploadToR2(coverFile, filePath, coverFile.type);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Cover upload to R2 failed", uploadRes.error);
+                return { success: false, error: `Cover upload failed: ${uploadRes.error || "Unknown error"}` };
             }
+            updateData.cover_img = uploadRes.url;
         } else if (formData.get("cover_img_remove") === 'true') {
             updateData.cover_img = null;
         }
+
     }
 
     if (formType === 'registration' || !formType) {
@@ -565,23 +543,16 @@ export async function createTournament(_prevState: ActionResponse, formData: For
             const fileCheck = validateUploadedFile(logoFile);
             if (!fileCheck.valid) return { success: false, error: `Logo: ${fileCheck.error}` };
 
-            const fileExt = logoFile.name.split('.').pop();
+            const fileExt = logoFile.name.split('.').pop() || 'png';
             const fileName = `logo-${Date.now()}.${fileExt}`;
-            const filePath = `${tournament.id}/${fileName}`;
+            const filePath = `tournaments/${tournament.id}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('tournaments')
-                .upload(filePath, logoFile);
-
-            if (uploadError) {
-                console.error("Logo upload failed", uploadError);
-                return { success: false, error: `Logo upload failed: ${uploadError.message}` };
-            } else {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('tournaments')
-                    .getPublicUrl(filePath);
-                logo_img = publicUrl;
+            const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Logo upload to R2 failed", uploadRes.error);
+                return { success: false, error: `Logo upload failed: ${uploadRes.error || "Unknown error"}` };
             }
+            logo_img = uploadRes.url;
         }
 
         // Upload Cover
@@ -589,24 +560,18 @@ export async function createTournament(_prevState: ActionResponse, formData: For
             const fileCheck = validateUploadedFile(coverFile);
             if (!fileCheck.valid) return { success: false, error: `Cover: ${fileCheck.error}` };
 
-            const fileExt = coverFile.name.split('.').pop();
+            const fileExt = coverFile.name.split('.').pop() || 'png';
             const fileName = `cover-${Date.now()}.${fileExt}`;
-            const filePath = `${tournament.id}/${fileName}`;
+            const filePath = `tournaments/${tournament.id}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from('tournaments')
-                .upload(filePath, coverFile);
-
-            if (uploadError) {
-                console.error("Cover upload failed", uploadError);
-                return { success: false, error: `Cover upload failed: ${uploadError.message}` };
-            } else {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('tournaments')
-                    .getPublicUrl(filePath);
-                cover_img = publicUrl;
+            const uploadRes = await uploadToR2(coverFile, filePath, coverFile.type);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Cover upload to R2 failed", uploadRes.error);
+                return { success: false, error: `Cover upload failed: ${uploadRes.error || "Unknown error"}` };
             }
+            cover_img = uploadRes.url;
         }
+
 
         // If either was uploaded, update the tournament record
         if (logo_img || cover_img) {

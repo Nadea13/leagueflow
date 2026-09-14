@@ -14,6 +14,7 @@ interface MatchStatisticsBoxProps {
     homeScore: number;
     awayScore: number;
     onClose?: () => void;
+    visibleStats?: string[];
 }
 
 interface StatItemProps {
@@ -66,7 +67,7 @@ function StatItem({ label, home, away, homeNum, awayNum }: StatItemProps) {
     );
 }
 
-export function MatchStatisticsBox({ match, events, homeScore, awayScore, onClose }: MatchStatisticsBoxProps) {
+export function MatchStatisticsBox({ match, events, homeScore, awayScore, onClose, visibleStats }: MatchStatisticsBoxProps) {
     const t = useTranslations("Console");
 
     const [now, setNow] = useState(() => Date.now());
@@ -186,22 +187,26 @@ export function MatchStatisticsBox({ match, events, homeScore, awayScore, onClos
         )).length;
     };
 
-    const statsList = [
-        { label: t("possession") || "ตัดบอล", home: `${possession.home}%`, away: `${possession.away}%`, homeNum: possession.home, awayNum: possession.away },
-        { label: t("goal"), home: homeScore, away: awayScore },
-        { label: t("total_shots") || "โอกาสยิงประตู", home: homeTotalShots, away: awayTotalShots },
-        { label: t("missed_shot") || "ยิงพลาด", home: homeMissed, away: awayMissed },
-        { label: t("pass") || "จ่ายบอล", home: countEvent(homeId, 'pass'), away: countEvent(awayId, 'pass') },
-        { label: t("bad_pass") || "ออกข้าง", home: countEvent(homeId, 'bad_pass'), away: countEvent(awayId, 'bad_pass') },
-        { label: t("cross") || "ครอสบอล", home: countEvent(homeId, 'cross'), away: countEvent(awayId, 'cross') },
-        { label: t("corner") || "เตะมุม", home: countEvent(homeId, 'corner'), away: countEvent(awayId, 'corner') },
-        { label: t("save") || "เซฟ", home: countEvent(homeId, 'save'), away: countEvent(awayId, 'save') },
-        { label: t("foul") || "ฟาวล์", home: countEvent(homeId, 'foul'), away: countEvent(awayId, 'foul') },
-        { label: t("penalty") || "จุดโทษ", home: countPenalties(homeId), away: countPenalties(awayId) },
-        { label: t("yellow_card"), home: countYellowCards(homeId), away: countYellowCards(awayId) },
-        { label: t("red_card"), home: countRedCards(homeId), away: countRedCards(awayId) },
-        { label: t("offside") || "ล้ำหน้า", home: countEvent(homeId, 'offside'), away: countEvent(awayId, 'offside') },
+    const allStatsList = [
+        { key: 'possession', label: t("possession") || "การครองบอล", home: `${possession.home}%`, away: `${possession.away}%`, homeNum: possession.home, awayNum: possession.away },
+        { key: 'goal', label: t("goal"), home: homeScore, away: awayScore },
+        { key: 'total_shots', label: t("total_shots") || "โอกาสยิงประตู", home: homeTotalShots, away: awayTotalShots },
+        { key: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", home: homeMissed, away: awayMissed },
+        { key: 'pass', label: t("pass") || "จ่ายบอล", home: countEvent(homeId, 'pass'), away: countEvent(awayId, 'pass') },
+        { key: 'bad_pass', label: t("bad_pass") || "ออกข้าง", home: countEvent(homeId, 'bad_pass'), away: countEvent(awayId, 'bad_pass') },
+        { key: 'cross', label: t("cross") || "ครอสบอล", home: countEvent(homeId, 'cross'), away: countEvent(awayId, 'cross') },
+        { key: 'corner', label: t("corner") || "เตะมุม", home: countEvent(homeId, 'corner'), away: countEvent(awayId, 'corner') },
+        { key: 'save', label: t("save") || "เซฟ", home: countEvent(homeId, 'save'), away: countEvent(awayId, 'save') },
+        { key: 'foul', label: t("foul") || "ฟาวล์", home: countEvent(homeId, 'foul'), away: countEvent(awayId, 'foul') },
+        { key: 'penalty', label: t("penalty") || "จุดโทษ", home: countPenalties(homeId), away: countPenalties(awayId) },
+        { key: 'yellow_card', label: t("yellow_card"), home: countYellowCards(homeId), away: countYellowCards(awayId) },
+        { key: 'red_card', label: t("red_card"), home: countRedCards(homeId), away: countRedCards(awayId) },
+        { key: 'offside', label: t("offside") || "ล้ำหน้า", home: countEvent(homeId, 'offside'), away: countEvent(awayId, 'offside') },
     ];
+
+    const statsList = visibleStats
+        ? allStatsList.filter(s => visibleStats.includes(s.key))
+        : allStatsList;
 
     return (
         <div className="bg-card rounded-sm relative overflow-hidden group">

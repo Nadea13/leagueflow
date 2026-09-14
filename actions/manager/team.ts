@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { ActionResponse, Player, Sport } from "@/types/index";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { logActivity } from "@/lib/audit";
+import { uploadToR2 } from "@/lib/r2";
+
 import { 
     getGlobalPlayers as getGP, 
     createGlobalPlayer as createGP, 
@@ -171,25 +173,19 @@ export async function createTeam(prevState: ActionResponse, formData: FormData):
             const fileCheck = validateUploadedFile(logoFile);
             if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
-            const fileExt = logoFile.name.split('.').pop();
+            const fileExt = logoFile.name.split('.').pop() || 'png';
             const fileName = `logo-${Date.now()}.${fileExt}`;
-            const filePath = `${teamId}/${fileName}`;
+            const filePath = `teams/${teamId}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from("teams")
-                .upload(filePath, logoFile);
-
-            if (uploadError) {
-                console.error("Logo upload error:", uploadError);
-                return { success: false, error: "Failed to upload logo: " + uploadError.message };
+            const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Logo upload error:", uploadRes.error);
+                return { success: false, error: "Failed to upload logo: " + (uploadRes.error || "Unknown error") };
             }
 
-            const { data: { publicUrl } } = supabase.storage
-                .from("teams")
-                .getPublicUrl(filePath);
-
-            logoUrl = publicUrl;
+            logoUrl = uploadRes.url;
         }
+
 
         // Insert team record
         const { error: insertError } = await supabase
@@ -438,25 +434,19 @@ export async function updateTeamGlobal(teamId: string, formData: FormData, _tour
             const fileCheck = validateUploadedFile(logoFile);
             if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
-            const fileExt = logoFile.name.split('.').pop();
+            const fileExt = logoFile.name.split('.').pop() || 'png';
             const fileName = `logo-${Date.now()}.${fileExt}`;
-            const filePath = `${teamId}/${fileName}`;
+            const filePath = `teams/${teamId}/${fileName}`;
 
-            const { error: uploadError } = await supabase.storage
-                .from("teams")
-                .upload(filePath, logoFile);
-
-            if (uploadError) {
-                console.error("Logo upload error:", uploadError);
-                return { success: false, error: "Failed to upload logo: " + uploadError.message };
+            const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Logo upload error:", uploadRes.error);
+                return { success: false, error: "Failed to upload logo: " + (uploadRes.error || "Unknown error") };
             }
 
-            const { data: { publicUrl } } = supabase.storage
-                .from("teams")
-                .getPublicUrl(filePath);
-
-            logoUrl = publicUrl;
+            logoUrl = uploadRes.url;
         }
+
 
         // Detect which table to update
         const { data: globalTeam } = await supabase
@@ -985,20 +975,16 @@ export async function addPlayer(
         let photoUrl = null;
         if (photoFile && photoFile.size > 0) {
             const fileExt = photoFile.name.split('.').pop() || 'jpg';
-            const fileName = `${teamId}/photo_${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage
-                .from('players')
-                .upload(fileName, photoFile);
+            const fileName = `players/${teamId}/photo_${Date.now()}.${fileExt}`;
+            const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
             
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('players')
-                    .getPublicUrl(fileName);
-                photoUrl = publicUrl;
+            if (uploadRes.success && uploadRes.url) {
+                photoUrl = uploadRes.url;
             } else {
-                console.error("[addPlayer] Photo upload failed:", uploadError);
+                console.error("[addPlayer] Photo upload failed:", uploadRes.error);
             }
         }
+
 
         const { error: insertErr } = await adminSupabase
             .from("tournament_roster_submissions")
@@ -1141,26 +1127,22 @@ export async function addPlayer(
         }
         finalMasterId = newMaster.id;
 
-        // If a photo file is provided, upload it and link to master player
+        // If a photo file is provided, upload it to R2 and link to master player
         if (photoFile && photoFile.size > 0) {
-            const fileExt = photoFile.name.split('.').pop();
-            const fileName = `${finalMasterId}/photo_${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage
-                .from('players')
-                .upload(fileName, photoFile);
+            const fileExt = photoFile.name.split('.').pop() || 'jpg';
+            const fileName = `players/${finalMasterId}/photo_${Date.now()}.${fileExt}`;
+            const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
             
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('players')
-                    .getPublicUrl(fileName);
+            if (uploadRes.success && uploadRes.url) {
                 await adminSupabase
                     .from("master_players")
-                    .update({ profile_img: publicUrl })
+                    .update({ profile_img: uploadRes.url })
                     .eq("id", finalMasterId);
             } else {
-                console.error("[addPlayer] Photo upload failed:", uploadError);
+                console.error("[addPlayer] Photo upload failed:", uploadRes.error);
             }
         }
+
     }
 
     // 2. Insert into players
@@ -1407,19 +1389,15 @@ export async function addPlayersBatchForm(
                 const fileCheck = validateUploadedFile(photoFile);
                 if (fileCheck.valid) {
                     const fileExt = photoFile.name.split('.').pop() || 'jpg';
-                    const fileName = `${teamId}/photo_${Date.now()}_${i}.${fileExt}`;
-                    const { error: uploadError } = await supabase.storage
-                        .from('players')
-                        .upload(fileName, photoFile);
+                    const fileName = `players/${teamId}/photo_${Date.now()}_${i}.${fileExt}`;
+                    const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
                     
-                    if (!uploadError) {
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('players')
-                            .getPublicUrl(fileName);
-                        photoUrl = publicUrl;
+                    if (uploadRes.success && uploadRes.url) {
+                        photoUrl = uploadRes.url;
                     }
                 }
             }
+
 
             await adminSupabase
                 .from("tournament_roster_submissions")
@@ -1537,23 +1515,19 @@ export async function addPlayersBatchForm(
         // Upload photo if present
         if (photoFile && photoFile.size > 0) {
             const fileExt = photoFile.name.split('.').pop() || 'jpg';
-            const fileName = `${finalMasterId}/photo_${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage
-                .from('players')
-                .upload(fileName, photoFile);
+            const fileName = `players/${finalMasterId}/photo_${Date.now()}.${fileExt}`;
+            const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
             
-            if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage
-                    .from('players')
-                    .getPublicUrl(fileName);
+            if (uploadRes.success && uploadRes.url) {
                 await adminSupabase
                     .from("master_players")
-                    .update({ profile_img: publicUrl })
+                    .update({ profile_img: uploadRes.url })
                     .eq("id", finalMasterId);
             } else {
-                console.error(`[addPlayersBatchForm] Photo upload failed for ${name}:`, uploadError);
+                console.error(`[addPlayersBatchForm] Photo upload failed for ${name}:`, uploadRes.error);
             }
         }
+
 
         // 2. Insert into players
         const { data: newPlayer, error: playerError } = await adminSupabase

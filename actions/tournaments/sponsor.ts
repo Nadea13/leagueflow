@@ -3,6 +3,8 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/index";
+import { uploadToR2 } from "@/lib/r2";
+
 
 export interface Sponsor {
     id: string;
@@ -39,15 +41,45 @@ export async function getSponsors(tournamentId: string): Promise<ActionResponse<
 export async function addSponsor(
     tournamentId: string,
     sponsorName: string,
-    logoImg: string,
+    logoImgOrFile: string | File | FormData,
     linkUrl?: string,
     orderIndex?: number
 ): Promise<ActionResponse> {
     try {
         const adminSupabase = createAdminClient();
 
+        let finalLogoUrl = "";
+        let finalSponsorName = sponsorName;
+        let finalLinkUrl = linkUrl;
+        const finalOrderIndex = orderIndex;
+
+        if (typeof FormData !== "undefined" && logoImgOrFile instanceof FormData) {
+            finalSponsorName = (logoImgOrFile.get("sponsorName") as string) || sponsorName;
+            finalLinkUrl = (logoImgOrFile.get("linkUrl") as string) || linkUrl;
+            const file = logoImgOrFile.get("logoFile") as File;
+            if (file && file instanceof File && file.size > 0) {
+                const fileExt = file.name.split('.').pop() || 'png';
+                const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+                const uploadRes = await uploadToR2(file, fileName, file.type);
+                if (uploadRes.success && uploadRes.url) {
+                    finalLogoUrl = uploadRes.url;
+                }
+            } else {
+                finalLogoUrl = (logoImgOrFile.get("logoUrl") as string) || "";
+            }
+        } else if (typeof File !== "undefined" && logoImgOrFile instanceof File) {
+            const fileExt = logoImgOrFile.name.split('.').pop() || 'png';
+            const fileName = `sponsors/${tournamentId}/${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+            const uploadRes = await uploadToR2(logoImgOrFile, fileName, logoImgOrFile.type);
+            if (uploadRes.success && uploadRes.url) {
+                finalLogoUrl = uploadRes.url;
+            }
+        } else if (typeof logoImgOrFile === "string") {
+            finalLogoUrl = logoImgOrFile;
+        }
+
         // Get max order index to append
-        let nextOrderIndex = orderIndex;
+        let nextOrderIndex = finalOrderIndex;
         if (nextOrderIndex === undefined) {
             const { data } = await adminSupabase
                 .from("tournament_sponsors")
@@ -65,9 +97,9 @@ export async function addSponsor(
             .from("tournament_sponsors")
             .insert({
                 tournament_id: tournamentId,
-                sponsor_name: sponsorName,
-                logo_img: logoImg,
-                link_url: linkUrl || null,
+                sponsor_name: finalSponsorName,
+                logo_img: finalLogoUrl,
+                link_url: finalLinkUrl || null,
                 order_index: nextOrderIndex,
             });
 
@@ -83,6 +115,7 @@ export async function addSponsor(
         return { success: false, error: "An unexpected error occurred" };
     }
 }
+
 
 export async function updateSponsorsOrder(
     tournamentId: string,

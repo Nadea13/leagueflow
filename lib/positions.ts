@@ -59,9 +59,9 @@ export function getPositionOptions(sport?: string | null): PositionOption[] {
 
     // Staff roles for EVERY sport
     const staffPositions: PositionOption[] = [
-        { value: "Coach", labelTh: "ผู้ฝึกสอน / โค้ช", labelEn: "Head Coach", category: "staff" },
-        { value: "Staff", labelTh: "ผู้ช่วยผู้ฝึกสอน / สตาฟฟ์", labelEn: "Assistant Coach / Staff", category: "staff" },
-        { value: "Manager", labelTh: "ผู้จัดการทีม", labelEn: "Team Manager", category: "staff" },
+        { value: "ผู้จัดการทีม", labelTh: "ผู้จัดการทีม", labelEn: "Team Manager", category: "staff" },
+        { value: "ผู้ฝึกสอน", labelTh: "ผู้ฝึกสอน", labelEn: "Head Coach", category: "staff" },
+        { value: "ผู้ช่วยผู้ฝึกสอน", labelTh: "ผู้ช่วยผู้ฝึกสอน", labelEn: "Assistant Coach", category: "staff" },
     ];
 
     return [...playerPositions, ...staffPositions];

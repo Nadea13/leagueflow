@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -16,7 +15,7 @@ import { Logo } from "@/components/shared/logo";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -52,12 +51,14 @@ import {
     PieChart,
     MoveRight,
     Crosshair,
-    Shuffle,
     FlagTriangleRight,
     CornerUpRight,
-    CornerRightDown,
     Scissors,
-    ArrowUpRight
+    ArrowUpRight,
+    Check,
+    Settings,
+    RotateCcw,
+    X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "@/i18n/routing";
@@ -81,6 +82,7 @@ import { useMatchEvents } from "@/hooks/use-match-events";
 import { EVENT_TYPES } from "./console/constants";
 import { Header } from "@/components/ui/header";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface ConsolePageProps {
     match: Match;
@@ -97,7 +99,6 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
     const tPublic = useTranslations("PublicView");
-    const router = useRouter();
     const { toast } = useToast();
     const supabase = createClient();
 
@@ -106,6 +107,117 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const [homePlayers, setHomePlayers] = useState<Player[]>([]);
     const [awayPlayers, setAwayPlayers] = useState<Player[]>([]);
     const [playersLoading, setPlayersLoading] = useState(true);
+    const ALL_CUSTOMIZABLE_ACTIONS = [
+        'pass', 'cross', 'possession', 'foul', 'substitution',
+        'yellow_card', 'save', 'injury', 'corner', 'missed_shot',
+        'bad_pass', 'offside'
+    ];
+    const ALL_STATS_KEYS = [
+        'possession', 'goal', 'total_shots', 'missed_shot', 'pass',
+        'bad_pass', 'cross', 'corner', 'save', 'foul', 'penalty',
+        'yellow_card', 'red_card', 'offside'
+    ];
+    const [customActionTypes, setCustomActionTypes] = useState<string[]>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const savedCustom = localStorage.getItem("leagueflow-custom-actions");
+                if (savedCustom) {
+                    const parsed = JSON.parse(savedCustom);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) {}
+        }
+        return ALL_CUSTOMIZABLE_ACTIONS;
+    });
+    const [showScoreboardPossession, setShowScoreboardPossession] = useState<boolean>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem("leagueflow-scoreboard-possession");
+                if (saved !== null) return saved === "true";
+            } catch (_) {}
+        }
+        return true;
+    });
+    const [visibleStats, setVisibleStats] = useState<string[]>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const savedStats = localStorage.getItem("leagueflow-visible-stats");
+                if (savedStats) {
+                    const parsed = JSON.parse(savedStats);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) {}
+        }
+        return ALL_STATS_KEYS;
+    });
+    const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
+
+    // Load custom action preferences from localStorage
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const savedCustom = localStorage.getItem("leagueflow-custom-actions");
+                if (savedCustom) {
+                    const parsed = JSON.parse(savedCustom);
+                    if (Array.isArray(parsed)) {
+                        setCustomActionTypes(parsed);
+                    }
+                }
+                const savedScoreboardPoss = localStorage.getItem("leagueflow-scoreboard-possession");
+                if (savedScoreboardPoss !== null) {
+                    setShowScoreboardPossession(savedScoreboardPoss === "true");
+                }
+                const savedStats = localStorage.getItem("leagueflow-visible-stats");
+                if (savedStats) {
+                    const parsed = JSON.parse(savedStats);
+                    if (Array.isArray(parsed)) {
+                        setVisibleStats(parsed);
+                    }
+                }
+            } catch (_) {}
+        }
+    }, []);
+
+    const toggleCustomAction = (type: string) => {
+        setCustomActionTypes((prev) => {
+            const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
+            if (typeof window !== "undefined") {
+                localStorage.setItem("leagueflow-custom-actions", JSON.stringify(next));
+            }
+            return next;
+        });
+    };
+
+    const resetCustomActions = (types: string[]) => {
+        setCustomActionTypes(types);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("leagueflow-custom-actions", JSON.stringify(types));
+        }
+    };
+
+    const toggleScoreboardPossession = (enabled: boolean) => {
+        setShowScoreboardPossession(enabled);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("leagueflow-scoreboard-possession", String(enabled));
+        }
+    };
+
+    const toggleVisibleStat = (statKey: string) => {
+        setVisibleStats((prev) => {
+            const next = prev.includes(statKey) ? prev.filter((k) => k !== statKey) : [...prev, statKey];
+            if (typeof window !== "undefined") {
+                localStorage.setItem("leagueflow-visible-stats", JSON.stringify(next));
+            }
+            return next;
+        });
+    };
+
+    const resetVisibleStats = (stats: string[]) => {
+        setVisibleStats(stats);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("leagueflow-visible-stats", JSON.stringify(stats));
+        }
+    };
 
     // Hooks
     const { events, queue, isSyncing, syncQueue, addEvent, deleteEvent } = useMatchEvents(match.id, tournamentId, initialEvents, readOnly);
@@ -504,6 +616,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
                 try {
+                    setIsRunning(false);
                     await addEvent(winnerId, 'walkover', 0, null, { winner_id: winnerId }, `Walkover Victory (${isHomeWinner ? '3-0' : '0-3'})`);
                     await queueMatchUpdate({
                         status: 'finished',
@@ -511,14 +624,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         away_score: isHomeWinner ? 0 : 3,
                         winner_id: winnerId,
                         current_minute: 0,
-                        winner_to_node_id: winnerId
+                        winner_to_node_id: winnerId,
+                        timer_status: 'stopped'
                     });
 
                     // Auto-advance if possible
                     await advanceStage(tournamentId);
 
                     setWoDialogOpen(false);
-                    router.refresh();
                 } catch (error) {
                     console.error("Walkover error:", error);
                     toast({
@@ -540,13 +653,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
                 try {
+                    setIsRunning(false);
                     await queueMatchUpdate({
                         status: 'canceled',
                         timer_status: 'stopped',
                     });
 
                     toast({ title: t("abandoned") });
-                    router.refresh();
                 } catch (error) {
                     console.error("Abandon match error:", error);
                     toast({
@@ -568,14 +681,15 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             cancelLabel: tCommon("cancel") || "Cancel",
             onConfirm: async () => {
                 try {
+                    setIsRunning(false);
                     await queueMatchUpdate({
                         status: 'scheduled',
+                        timer_status: 'stopped',
                         match_date: null,
                         match_time: null,
                     });
 
                     toast({ title: t("postponed") });
-                    router.refresh();
                 } catch (error) {
                     console.error("Postpone match error:", error);
                     toast({
@@ -707,13 +821,13 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         ? (lastAddTimeEvent?.extra_info as Record<string, unknown> | null)?.added_minutes as number | undefined || null
         : null;
 
-    // --- Team Action Grid Component ---
-    const TeamActionGrid = ({ teamId, name }: { teamId: string, name: string, type: 'home' | 'away' }) => {
+    // --- Unified Actions Card Component ---
+    const ActionGridsCard = () => {
         const isActionDisabled = readOnly || match.status !== 'live';
         const actions = [
             { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight },
             { type: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight },
-            { type: 'possession', label: t("possession") || "ตัดบอล", icon: Scissors },
+            { type: 'possession', label: t("possession_action") || "ครองบอล/ตัดบอล", icon: Scissors },
             { type: 'foul', label: t("foul") || "Foul", icon: Activity },
             { type: 'substitution', label: t("substitution"), icon: Repeat },
             { type: 'yellow_card', label: t("cards") || "คาดโทษ (ใบเตือน)", icon: Square, iconColor: 'text-amber-500 fill-amber-500' },
@@ -726,28 +840,56 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             { type: 'goal', label: t("goal"), icon: Volleyball },
         ];
 
+        // Filter actions based on customActionTypes, but 'goal' is ALWAYS displayed
+        const filteredActions = actions.filter((action) => {
+            if (action.type === 'goal') return true;
+            return customActionTypes.includes(action.type);
+        });
+
+        const renderTeamButtons = (teamId: string) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 lg:gap-2">
+                {filteredActions.map((action) => (
+                    <Button
+                        variant="outline"
+                        key={action.type}
+                        onClick={() => handleQuickAction(teamId, action.type as EventType)}
+                        disabled={isActionDisabled}
+                        className={cn(
+                            "h-9 px-2.5 rounded-sm font-medium border-border/80 hover:border-primary/50 hover:bg-muted/40 transition-colors shadow-none",
+                            action.type === 'goal' && "col-span-2 sm:col-span-3 h-10 font-bold bg-primary/5 border-primary/30 hover:bg-primary/10 hover:border-primary text-primary"
+                        )}
+                    >
+                        <action.icon className={cn("h-4 w-4 transition-transform shrink-0", action.iconColor)} />
+                        <span className="hidden lg:inline text-xs font-semibold truncate cursor-pointer tracking-normal">{action.label}</span>
+                    </Button>
+                ))}
+            </div>
+        );
+
         return (
-            <div className="bg-card border rounded-sm p-2 lg:p-4 relative overflow-hidden group">
-                <div className="relative z-10 space-y-2 lg:space-y-4">
-                    <div className="space-y-1">
-                        <h3 className="text-xl lg:text-2xl font-black tracking-tighter">{name}</h3>
+            <div className="bg-card border rounded-sm relative overflow-hidden group">
+                {/* Team Action Grids Side by Side with Divider between Home and Away */}
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-border">
+                    {/* Home Team Column */}
+                    <div className="p-3 lg:p-4 space-y-2 lg:space-y-3">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                            <h3 className="text-lg lg:text-xl font-black tracking-tight truncate">
+                                {match.home_team?.name || 'Home'}
+                            </h3>
+                        </div>
+                        {renderTeamButtons(match.home_team_id!)}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 lg:gap-2">
-                        {actions.map((action) => (
-                            <Button
-                                variant="outline"
-                                key={action.type}
-                                onClick={() => handleQuickAction(teamId, action.type as EventType)}
-                                disabled={isActionDisabled}
-                                className={cn(
-                                    action.type === 'goal' && "col-span-2 sm:col-span-3 font-bold"
-                                )}
-                            >
-                                <action.icon className={cn("h-5 w-5 transition-transform shrink-0", action.iconColor)} />
-                                <Label className="hidden lg:inline text-xs font-semibold truncate cursor-pointer">{action.label}</Label>
-                            </Button>
-                        ))}
+                    {/* Away Team Column */}
+                    <div className="p-3 lg:p-4 space-y-2 lg:space-y-3">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary/60" />
+                            <h3 className="text-lg lg:text-xl font-black tracking-tight truncate">
+                                {match.away_team?.name || 'Away'}
+                            </h3>
+                        </div>
+                        {renderTeamButtons(match.away_team_id!)}
                     </div>
                 </div>
             </div>
@@ -795,15 +937,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     const quickActionsBox = !readOnly ? (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="console-action-panel">
             <div className="relative z-10 space-y-2 lg:space-y-4">
-                <div className="grid grid-cols-4 lg:grid-cols-1 gap-1 lg:gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={handleUndo}
-                        className="w-full flex justify-center lg:justify-start items-center"
-                    >
-                        <Undo className="h-4 w-4 text-muted-foreground" />
-                        <span className="hidden lg:inline">{t("undo")}</span>
-                    </Button>
+                <div className="grid grid-cols-3 lg:grid-cols-1 gap-1 lg:gap-2">
                     <Button
                         variant="outline"
                         onClick={() => setOverlayDialogOpen(true)}
@@ -856,33 +990,6 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             <span className="hidden lg:inline">{t("penalty_shootout")}</span>
                         </Button>
                     )}
-                    <Button
-                        variant="outline"
-                        onClick={handlePostponeMatch}
-                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                    >
-                        <CalendarRange className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{t("postponed")}</span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => setWoDialogOpen(true)}
-                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
-                    >
-                        <Ban className="h-4 w-4 text-destructive" />
-                        <span className="hidden lg:inline">{t("walkover")}</span>
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={handleAbandonMatch}
-                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
-                    >
-                        <XCircle className="h-4 w-4 text-destructive" />
-                        <span className="hidden lg:inline">{t("abandoned")}</span>
-                    </Button>
                 </div>
             </div>
         </div>
@@ -1089,6 +1196,33 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
                 {!readOnly && (
                     <div className="flex items-center">
+                        {/* Match Status */}
+                        <div className="flex items-center gap-1 lg:gap-2 px-2 relative group shrink-0">
+                            <span className="relative flex h-2 w-2 shrink-0">
+                                <span className={cn(
+                                    "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
+                                )}></span>
+                                <span className={cn(
+                                    "relative inline-flex rounded-full h-2 w-2",
+                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
+                                )}></span>
+                            </span>
+                            <span className="text-[10px] font-black tracking-widest whitespace-nowrap">
+                                {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
+                            </span>
+                        </div>
+
+                        {/* Undo Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleUndo}
+                            title={t("undo") || "ย้อนกลับ (Undo)"}
+                        >
+                            <Undo className="h-4 w-4" />
+                        </Button>
+
                         {/* Help Tutorial Button */}
                         <Button
                             variant="ghost"
@@ -1097,6 +1231,16 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                         >
                             <HelpCircle className="h-4 w-4" />
+                        </Button>
+
+                        {/* Settings Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setCustomizeDialogOpen(true)}
+                            title={t("settings") || "ตั้งค่า"}
+                        >
+                            <Settings className="h-4 w-4" />
                         </Button>
                         {(isSyncing || isMatchSyncing) ? (
                             <div className="flex items-center justify-center text-primary h-8 w-8" title={locale === "th" ? "กำลังบันทึกลง Database..." : "Syncing to Database..."}>
@@ -1126,22 +1270,6 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                 </div>
                             );
                         })()}
-
-                        <div className="flex items-center gap-1 lg:gap-2 px-2 relative group overflow-hidden">
-                            <span className="relative flex h-2 w-2">
-                                <span className={cn(
-                                    "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
-                                )}></span>
-                                <span className={cn(
-                                    "relative inline-flex rounded-full h-2 w-2",
-                                    isHalfTime ? "bg-warning" : (match.status === 'live' ? "bg-primary" : "bg-warning")
-                                )}></span>
-                            </span>
-                            <span className="text-[10px] font-black tracking-widest">
-                                {isHalfTime ? (t("half_time") || "HALF TIME").toUpperCase() : (match.status === 'live' ? tMatch("status_live") : tMatch("status_" + match.status))}
-                            </span>
-                        </div>
                     </div>
                 )}
             </header>
@@ -1182,6 +1310,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             timerReadOnly={readOnly || match.status === 'finished'}
                             timerCustomText={match.status === 'finished' ? "FT" : isHalfTime ? "HT" : null}
                             addedTime={isHalfTime || match.status === 'finished' ? null : addedTime}
+                            showPossession={showScoreboardPossession}
                         />
 
                         {/* Quick Actions (Mobile only) */}
@@ -1190,10 +1319,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         </div>
 
                         {!readOnly && (
-                            <div className="grid grid-cols-2 gap-2 lg:gap-4">
-                                <TeamActionGrid teamId={match.home_team_id!} name={match.home_team?.name || 'Home'} type="home" />
-                                <TeamActionGrid teamId={match.away_team_id!} name={match.away_team?.name || 'Away'} type="away" />
-                            </div>
+                            <ActionGridsCard />
                         )}
                     </section>
 
@@ -1230,13 +1356,14 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         events={events}
                         homeScore={homeScore}
                         awayScore={awayScore}
+                        visibleStats={visibleStats}
                         onClose={() => setStatsDialogOpen(false)}
                     />
                 </DialogContent>
             </Dialog>
 
             <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
-                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl sm:max-w-md z-[60]">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="border-b p-2 lg:p-4">
                             {confirmConfig.title}
@@ -1262,6 +1389,354 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Settings Dialog */}
+            <Dialog open={customizeDialogOpen} onOpenChange={setCustomizeDialogOpen}>
+                <DialogContent showCloseButton={false} className="sm:max-w-xl max-h-[85vh] flex flex-col bg-card rounded-sm p-0 overflow-hidden border shadow-2xl">
+                    <DialogHeader className="p-4 border-b shrink-0 bg-card relative pr-12">
+                        <div>
+                            <DialogTitle className="text-base font-bold">
+                                {t("settings") || "ตั้งค่า"}
+                            </DialogTitle>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                {locale === "th" ? "จัดการการแสดงผลปุ่ม สถิติ และกระดานคะแนน" : "Manage buttons, statistics, and scoreboard display"}
+                            </p>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
+                            onClick={() => setCustomizeDialogOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
+
+                    {/* Scrollable Content Body */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {/* SECTION 1: Display Settings (Moved to first) */}
+                        <section id="settings-section-display" className="space-y-2.5">
+                            <div>
+                                <h3 className="text-sm font-bold text-foreground">
+                                    {t("tab_display") || "การแสดงผล"}
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {locale === "th" ? "ปรับแต่งส่วนแสดงผลของกระดานคะแนนและหน้าจอการแข่งขัน" : "Configure scoreboard display and view options"}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <div className="flex items-center justify-between p-3 rounded-sm border bg-card hover:bg-muted/10 transition-colors">
+                                    <div className="space-y-0.5 pr-4">
+                                        <div className="flex items-center gap-2">
+                                            <PieChart className="h-4 w-4 text-primary" />
+                                            <Label htmlFor="possession-switch" className="text-sm font-semibold cursor-pointer">
+                                                {t("scoreboard_possession") || "แสดงการครองบอลบนสกอร์บอร์ด"}
+                                            </Label>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t("scoreboard_possession_desc") || "เปิด/ปิดการแสดงผลแถบการครองบอล (Possession) บนกระดานคะแนน"}
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="possession-switch"
+                                        checked={showScoreboardPossession}
+                                        onCheckedChange={toggleScoreboardPossession}
+                                        className="cursor-pointer shrink-0"
+                                    />
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* SECTION 2: Action Buttons */}
+                        <section id="settings-section-actions" className="space-y-2.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="space-y-0.5">
+                                    <h3 className="text-sm font-bold text-foreground">
+                                        {t("tab_buttons") || "ปุ่มเหตุการณ์"}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t("select_action_to_toggle") || "คลิกเพื่อเปิด/ปิดปุ่มที่ต้องการใช้งาน"}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1 self-end sm:self-auto">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => resetCustomActions(ALL_CUSTOMIZABLE_ACTIONS)}
+                                    >
+                                        <RotateCcw className="h-3 w-3 mr-1" />
+                                        {t("show_all") || "แสดงทั้งหมด"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                                        onClick={() => resetCustomActions([])}
+                                    >
+                                        {t("hide_all") || "ซ่อนทั้งหมด"}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Action Items List */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {/* Goal indicator (Permanent) */}
+                                <div className="flex items-center justify-between p-2.5 rounded-sm border bg-primary/5 border-primary/20 col-span-1 sm:col-span-2">
+                                    <div className="flex items-center gap-2.5">
+                                        <Volleyball className="h-4 w-4 text-emerald-500 shrink-0" />
+                                        <span className="text-sm font-bold text-foreground">
+                                            {t("goal") || "ประตู"}
+                                        </span>
+                                    </div>
+                                    <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                        {t("always_visible") || "แสดงตลอด"}
+                                    </span>
+                                </div>
+
+                                {/* Customizable Action Buttons */}
+                                {[
+                                    { type: 'yellow_card', label: t("cards") || "คาดโทษ (ใบเตือน)", icon: Square, iconColor: 'text-amber-500 fill-amber-500' },
+                                    { type: 'substitution', label: t("substitution") || "เปลี่ยนตัว", icon: Repeat, iconColor: 'text-blue-500' },
+                                    { type: 'foul', label: t("foul") || "ฟาวล์", icon: Activity, iconColor: 'text-orange-500' },
+                                    { type: 'corner', label: t("corner") || "เตะมุม", icon: Flag, iconColor: 'text-foreground' },
+                                    { type: 'save', label: t("save") || "เซฟ", icon: Shield, iconColor: 'text-teal-500' },
+                                    { type: 'injury', label: t("injury") || "บาดเจ็บ", icon: Stethoscope, iconColor: 'text-rose-500' },
+                                    { type: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", icon: Crosshair, iconColor: 'text-rose-400' },
+                                    { type: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight, iconColor: 'text-emerald-500' },
+                                    { type: 'bad_pass', label: t("bad_pass") || "ออกข้าง", icon: ArrowUpRight, iconColor: 'text-amber-500' },
+                                    { type: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight, iconColor: 'text-cyan-500' },
+                                    { type: 'possession', label: t("possession_action") || "การครองบอล (ตัดบอล)", icon: Scissors, iconColor: 'text-indigo-500' },
+                                    { type: 'offside', label: t("offside") || "ล้ำหน้า", icon: FlagTriangleRight, iconColor: 'text-orange-500' },
+                                ].map((item) => {
+                                    const isSelected = customActionTypes.includes(item.type);
+                                    return (
+                                        <button
+                                            key={item.type}
+                                            type="button"
+                                            onClick={() => toggleCustomAction(item.type)}
+                                            className={cn(
+                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
+                                                isSelected
+                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
+                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
+                                                <span className="text-xs font-semibold truncate">{item.label}</span>
+                                            </div>
+                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
+                                                {isSelected && (
+                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="text-xs text-muted-foreground pt-1">
+                                <span>{customActionTypes.length} / {ALL_CUSTOMIZABLE_ACTIONS.length} {locale === "th" ? "ปุ่มที่เลือกแสดง" : "actions visible"}</span>
+                            </div>
+                        </section>
+
+                        {/* SECTION 3: Match Statistics */}
+                        <section id="settings-section-stats" className="space-y-2.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <div className="space-y-0.5">
+                                    <h3 className="text-sm font-bold text-foreground">
+                                        {t("tab_stats") || "สถิติการแข่งขัน"}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t("customize_stats_desc") || "เลือกรายการสถิติที่ต้องการให้แสดงในหน้าต่างสถิติการแข่งขัน"}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1 self-end sm:self-auto">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => resetVisibleStats(ALL_STATS_KEYS)}
+                                    >
+                                        <RotateCcw className="h-3 w-3 mr-1" />
+                                        {t("show_all") || "แสดงทั้งหมด"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                                        onClick={() => resetVisibleStats([])}
+                                    >
+                                        {t("hide_all") || "ซ่อนทั้งหมด"}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Stats Items List */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {[
+                                    { key: 'possession', label: t("possession") || "การครองบอล", icon: PieChart, iconColor: 'text-indigo-500' },
+                                    { key: 'goal', label: t("goal") || "ประตู", icon: Volleyball, iconColor: 'text-emerald-500' },
+                                    { key: 'total_shots', label: t("total_shots") || "โอกาสยิงประตู", icon: Target, iconColor: 'text-blue-500' },
+                                    { key: 'missed_shot', label: t("missed_shot") || "ยิงพลาด", icon: Crosshair, iconColor: 'text-rose-400' },
+                                    { key: 'pass', label: t("pass") || "จ่ายบอล", icon: MoveRight, iconColor: 'text-emerald-500' },
+                                    { key: 'bad_pass', label: t("bad_pass") || "ออกข้าง", icon: ArrowUpRight, iconColor: 'text-amber-500' },
+                                    { key: 'cross', label: t("cross") || "ครอสบอล", icon: CornerUpRight, iconColor: 'text-cyan-500' },
+                                    { key: 'corner', label: t("corner") || "เตะมุม", icon: Flag, iconColor: 'text-foreground' },
+                                    { key: 'save', label: t("save") || "เซฟ", icon: Shield, iconColor: 'text-teal-500' },
+                                    { key: 'foul', label: t("foul") || "ฟาวล์", icon: Activity, iconColor: 'text-orange-500' },
+                                    { key: 'penalty', label: t("penalty") || "จุดโทษ", icon: Target, iconColor: 'text-red-500' },
+                                    { key: 'yellow_card', label: t("yellow_card") || "ใบเหลือง", icon: Square, iconColor: 'text-amber-500 fill-amber-500' },
+                                    { key: 'red_card', label: t("red_card") || "ใบแดง", icon: Square, iconColor: 'text-rose-500 fill-rose-500' },
+                                    { key: 'offside', label: t("offside") || "ล้ำหน้า", icon: FlagTriangleRight, iconColor: 'text-orange-500' },
+                                ].map((item) => {
+                                    const isSelected = visibleStats.includes(item.key);
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            type="button"
+                                            onClick={() => toggleVisibleStat(item.key)}
+                                            className={cn(
+                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
+                                                isSelected
+                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
+                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
+                                                <span className="text-xs font-semibold truncate">{item.label}</span>
+                                            </div>
+                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
+                                                {isSelected && (
+                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="text-xs text-muted-foreground pt-1">
+                                <span>{visibleStats.length} / {ALL_STATS_KEYS.length} {locale === "th" ? "สถิติที่เลือกแสดง" : "statistics visible"}</span>
+                            </div>
+                        </section>
+
+                        {/* SECTION 4: Danger Zone */}
+                        <section id="settings-section-danger" className="space-y-2.5">
+                            <div>
+                                <h3 className="text-sm font-bold text-destructive">
+                                    {t("danger_zone") || "โซนอันตราย (การจัดการสถานะแมตช์)"}
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {t("danger_zone_desc") || "การดำเนินการเหล่านี้จะส่งผลกระทบต่อผลการแข่งขันหรือตารางเวลาโดยตรง โปรดใช้ความระมัดระวัง"}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                                {/* เลื่อนการแข่งขัน (Postpone Match) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-border bg-card hover:bg-muted/10 transition-all">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <CalendarRange className="h-4 w-4 text-amber-500" />
+                                            <span className="text-xs font-bold text-foreground">
+                                                {t("postponed") || "เลื่อนการแข่งขัน"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {locale === "th" ? "เปลี่ยนสถานะแมตช์กลับเป็นรอแข่งขัน และล้างวัน/เวลาของแมตช์" : "Reschedule match and reset match date/time"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            handlePostponeMatch();
+                                        }}
+                                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                                        className="h-8 text-xs font-semibold shrink-0 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                                    >
+                                        <CalendarRange className="h-3.5 w-3.5 mr-1.5" />
+                                        {t("postponed") || "เลื่อนการแข่งขัน"}
+                                    </Button>
+                                </div>
+
+                                {/* จบการแข่งขันก่อนเวลา (Walkover / Early Finish) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-all">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <Ban className="h-4 w-4 text-destructive" />
+                                            <span className="text-xs font-bold text-destructive">
+                                                {t("walkover") || "จบการแข่งขันก่อนเวลา"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {locale === "th" ? "บันทึกผลชนะบาย (3-0 หรือ 0-3) และยุติการแข่งขันทันที" : "Award walkover victory (3-0 or 0-3) and end match"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => {
+                                            setWoDialogOpen(true);
+                                        }}
+                                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
+                                    >
+                                        <Ban className="h-3.5 w-3.5 mr-1.5" />
+                                        {t("walkover") || "จบการแข่งขันก่อนเวลา"}
+                                    </Button>
+                                </div>
+
+                                {/* ยกเลิกการแข่งขัน (Abandon Match) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <XCircle className="h-4 w-4 text-destructive" />
+                                            <span className="text-xs font-bold text-destructive">
+                                                {t("abandoned") || "ยกเลิกการแข่งขัน"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {locale === "th" ? "ยกเลิกแมตช์นี้ (Canceled) โดยไม่มีผลคะแนนแพ้ชนะ" : "Cancel and abandon this match without recorded winner"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => {
+                                            handleAbandonMatch();
+                                        }}
+                                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
+                                    >
+                                        <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                                        {t("abandoned") || "ยกเลิกการแข่งขัน"}
+                                    </Button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    {/* Dialog Footer */}
+                    <DialogFooter className="p-3 border-t bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                            {locale === "th" ? "การตั้งค่าจะถูกบันทึกอัตโนมัติ" : "Settings saved automatically"}
+                        </span>
+                        <Button
+                            size="sm"
+                            className="h-8 text-xs font-semibold px-5 cursor-pointer ml-auto"
+                            onClick={() => setCustomizeDialogOpen(false)}
+                        >
+                            <Check className="h-3.5 w-3.5 mr-1" />
+                            {tCommon("done") || "เสร็จสิ้น"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

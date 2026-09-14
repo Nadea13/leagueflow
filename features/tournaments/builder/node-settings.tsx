@@ -258,29 +258,12 @@ export function NodeSettings() {
 
         setIsSubmittingSponsor(true);
         try {
-            let logoUrl = "";
-            if (newSponsorLogoFile) {
-                const fileExt = newSponsorLogoFile.name.split('.').pop();
-                const fileName = `${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-                const filePath = `sponsors/${fileName}`;
+            const formData = new FormData();
+            formData.append("sponsorName", newSponsorName);
+            if (newSponsorLink) formData.append("linkUrl", newSponsorLink);
+            if (newSponsorLogoFile) formData.append("logoFile", newSponsorLogoFile);
 
-                const { error } = await supabase.storage
-                    .from('tournaments')
-                    .upload(filePath, newSponsorLogoFile, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
-
-                if (error) throw error;
-
-                const { data: { publicUrl } } = supabase.storage
-                    .from('tournaments')
-                    .getPublicUrl(filePath);
-
-                logoUrl = publicUrl;
-            }
-
-            const res = await addSponsor(tournamentId, newSponsorName, logoUrl, newSponsorLink);
+            const res = await addSponsor(tournamentId, newSponsorName, formData, newSponsorLink);
             if (res.success) {
                 toast({
                     title: "Sponsor added",
@@ -293,6 +276,7 @@ export function NodeSettings() {
                 loadSponsors();
                 window.dispatchEvent(new Event("reload-sponsors"));
             } else {
+
                 toast({
                     title: "Error",
                     description: res.error || "Failed to add sponsor",

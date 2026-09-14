@@ -46,3 +46,8 @@ supabase_bin.exe
 all-warnings.json
 warnings.json
 scratch/
+
+# agent & tooling caches
+.agents
+.impeccable
+.qodo

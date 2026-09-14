@@ -21,7 +21,7 @@ export function PublicFooter() {
     };
 
     return (
-        <footer className="py-10 border-t bg-background" id="footer">
+        <footer className="py-10 z-10 border-t bg-background" id="footer">
             <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start justify-between text-sm text-muted-foreground gap-8 px-4 md:px-0">
                 {/* Brand & Tournaments link */}
                 <div className="flex flex-col items-center md:items-start gap-4">

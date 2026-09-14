@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LogoUploader } from "@/components/shared/logo-uploader";
-import { Header } from "@/components/ui/header";
+import { cn } from "@/lib/utils";
 
 // Schema generator based on fee
 const createFormSchema = (isFree: boolean, t: (key: string) => string) => z.object({
@@ -76,6 +76,7 @@ interface RegistrationFormProps {
     isRegistrationDisabled?: boolean;
     isFull?: boolean;
     isPastDeadline?: boolean;
+    className?: string;
 }
 
 export function RegistrationForm({
@@ -85,7 +86,8 @@ export function RegistrationForm({
     categories,
     isRegistrationDisabled,
     isFull,
-    isPastDeadline
+    isPastDeadline,
+    className
 }: RegistrationFormProps) {
     const tCommon = useTranslations("Common");
     const router = useRouter();
@@ -216,8 +218,7 @@ export function RegistrationForm({
     const isExistingTeam = selectedTeamId !== "" && selectedTeamId !== "new";
 
     return (
-        <div className="bg-card space-y-2 md:space-y-4 p-2 md:p-4 border rounded-sm">
-
+        <div className={cn("bg-card/50 space-y-2 md:space-y-4 p-2 md:p-4 border rounded-sm", className)}>
             <div className="relative overflow-hidden">
                 {isRegistrationDisabled ? (
                     <EmptyState
@@ -283,157 +284,179 @@ export function RegistrationForm({
                             </div>
                         )}
 
-                        {initialTeams && initialTeams.length > 0 && (
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-4 p-2 md:p-4 border rounded-sm">
-                                <Header level={4}>{t("use_existing_team")}</Header>
-                                <Select value={selectedTeamId} onValueChange={handleSelectTeam}>
-                                    <SelectTrigger className="w-full md:w-auto">
-                                        <SelectValue placeholder={t("select_team_placeholder")} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="new" className="text-sm tracking-tighter">{t("create_new_team")}</SelectItem>
-                                        {initialTeams.map((team) => (
-                                            <SelectItem key={team.id} value={team.id} className="text-sm tracking-tighter">
-                                                {team.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
+                        <div className="space-y-2 lg:space-y-4">
+                            {/* Section 1: Tournament & Team Selection */}
+                            <div className="border rounded-sm overflow-hidden">
+                                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+                                    {initialTeams && initialTeams.length > 0 && (
+                                        <div className="p-3.5 md:p-4 space-y-1.5">
+                                            <Label>{t("use_existing_team")}</Label>
+                                            <Select value={selectedTeamId} onValueChange={handleSelectTeam}>
+                                                <SelectTrigger className="w-full bg-card/50">
+                                                    <SelectValue placeholder={t("select_team_placeholder")} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {initialTeams.map((team) => (
+                                                        <SelectItem key={team.id} value={team.id} className="text-sm">
+                                                            {team.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
 
-                        {categories && categories.length > 0 && (
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 md:gap-4 p-2 md:p-4 border rounded-sm">
-                                <Header level={4}>{t("category_title")}</Header>
-                                <Select
-                                    value={tournamentCategoryId || ""}
-                                    onValueChange={(val) => {
-                                        const params = new URLSearchParams(searchParams.toString());
-                                        params.set("category", val);
-                                        router.push(`${pathname}?${params.toString()}`);
-                                    }}
-                                >
-                                    <SelectTrigger className="w-full md:w-auto">
-                                        <SelectValue placeholder={t("select_category")} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map((cat) => {
-                                            const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
-                                            const ageName = ageCategoriesData?.category_name || t("general");
-                                            const gender = cat.gender_type === 'open' ? t("gender_open")
-                                                : cat.gender_type === 'male' ? t("gender_male")
-                                                    : cat.gender_type === 'female' ? t("gender_female")
-                                                        : t("gender_mixed");
-                                            const label = `${ageName} (${gender})`;
-                                            return (
-                                                <SelectItem key={String(cat.id)} value={String(cat.id)} className="text-sm tracking-tighter">
-                                                    {label}
-                                                </SelectItem>
-                                            );
-                                        })}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-
-                        <div className="grid gap-1 md:gap-2 md:grid-cols-2">
-                            <div className="w-full col-span-2 space-y-1 flex flex-col items-center justify-center">
-                                <div className="flex justify-center py-1">
-                                    <LogoUploader
-                                        id="logo-upload"
-                                        initialUrl={logoPreviewUrl}
-                                        disabled={isExistingTeam || isSubmitting}
-                                        onFileChange={(file) => {
-                                            setLogoFile(file);
-                                            if (file) {
-                                                setLogoPreviewUrl(URL.createObjectURL(file));
-                                            } else {
-                                                setLogoPreviewUrl(null);
-                                            }
-                                        }}
-                                        onRemove={() => {
-                                            setLogoFile(null);
-                                            setLogoPreviewUrl(null);
-                                        }}
-                                        uploadLabel={t("team_logo_label")}
-                                        clickToUploadLabel={t("click_to_upload_logo")}
-                                        previewLabel="Logo preview"
-                                    />
+                                    {categories && categories.length > 0 && (
+                                        <div className={cn("p-3.5 md:p-4 space-y-1.5", (!initialTeams || initialTeams.length === 0) && "md:col-span-2")}>
+                                            <Label>{t("category_title")}</Label>
+                                            <Select
+                                                value={tournamentCategoryId || ""}
+                                                onValueChange={(val) => {
+                                                    const params = new URLSearchParams(searchParams.toString());
+                                                    params.set("category", val);
+                                                    router.push(`${pathname}?${params.toString()}`);
+                                                }}
+                                            >
+                                                <SelectTrigger className="w-full bg-card/50">
+                                                    <SelectValue placeholder={t("select_category")} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {categories.map((cat) => {
+                                                        const ageCategoriesData = (Array.isArray(cat.age_categories) ? cat.age_categories[0] : cat.age_categories) as unknown as { category_name: string | null } | null;
+                                                        const ageName = ageCategoriesData?.category_name || t("general");
+                                                        const gender = cat.gender_type === 'open' ? t("gender_open")
+                                                            : cat.gender_type === 'male' ? t("gender_male")
+                                                                : cat.gender_type === 'female' ? t("gender_female")
+                                                                    : t("gender_mixed");
+                                                        const label = `${ageName} (${gender})`;
+                                                        return (
+                                                            <SelectItem key={String(cat.id)} value={String(cat.id)} className="text-sm">
+                                                                {label}
+                                                            </SelectItem>
+                                                        );
+                                                    })}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="space-y-1 col-span-2">
-                                <Label>{t("team_name_label")} <span className="text-destructive">*</span></Label>
-                                <Input
-                                    {...form.register("teamName")}
-                                    disabled={isExistingTeam}
-                                    placeholder={t("team_name_placeholder")}
-                                />
-                                {form.formState.errors.teamName && (
-                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
-                                        {form.formState.errors.teamName.message}
-                                    </p>
-                                )}
+                            {/* Section 2: Team Details */}
+                            <div className="space-y-4 p-4 border rounded-sm">
+                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                                    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                                        <LogoUploader
+                                            id="logo-upload"
+                                            initialUrl={logoPreviewUrl}
+                                            disabled={isExistingTeam || isSubmitting}
+                                            onFileChange={(file) => {
+                                                setLogoFile(file);
+                                                if (file) {
+                                                    setLogoPreviewUrl(URL.createObjectURL(file));
+                                                } else {
+                                                    setLogoPreviewUrl(null);
+                                                }
+                                            }}
+                                            onRemove={() => {
+                                                setLogoFile(null);
+                                                setLogoPreviewUrl(null);
+                                            }}
+                                            uploadLabel={t("team_logo_label")}
+                                            clickToUploadLabel={t("click_to_upload_logo")}
+                                            previewLabel="Logo preview"
+                                        />
+                                        <span className="text-xs font-black">{t("team_logo_label")}</span>
+                                    </div>
+
+                                    <div className="flex-1 w-full space-y-2">
+                                        <div className="space-y-1">
+                                            <Label>{t("team_name_label")} <span className="text-destructive">*</span></Label>
+                                            <Input
+                                                id="teamName"
+                                                {...form.register("teamName")}
+                                                disabled={isExistingTeam}
+                                                placeholder={t("team_name_placeholder")}
+                                                className="bg-card/50"
+                                            />
+                                            {form.formState.errors.teamName && (
+                                                <p className="text-xs font-medium text-destructive mt-1">
+                                                    {form.formState.errors.teamName.message}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="teamDesc">{t("team_description_label")}</Label>
+                                            <Textarea
+                                                id="teamDesc"
+                                                {...form.register("description")}
+                                                className="bg-card/50 w-full resize-none min-h-[72px] text-sm"
+                                                disabled={isExistingTeam}
+                                                placeholder={t("team_description_placeholder")}
+                                            />
+                                            {form.formState.errors.description && (
+                                                <p className="text-xs font-medium text-destructive mt-1">
+                                                    {form.formState.errors.description.message}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="w-full col-span-2 space-y-1">
-                                <Label>{t("team_description_label")}</Label>
-                                <Textarea
-                                    {...form.register("description")}
-                                    className="bg-transparent w-full focus-visible:ring-0 resize-none min-h-[80px] text-sm"
-                                    disabled={isExistingTeam}
-                                    placeholder={t("team_description_placeholder")}
-                                />
-                                {form.formState.errors.description && (
-                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
-                                        {form.formState.errors.description.message}
-                                    </p>
-                                )}
-                            </div>
+                            {/* Section 3: Contact Information */}
+                            <div className="p-4 border rounded-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <Label>{t("contact_name_label")} <span className="text-destructive">*</span></Label>
+                                        <Input
+                                            id="contactName"
+                                            {...form.register("contactName")}
+                                            disabled={isExistingTeam}
+                                            placeholder={t("contact_name_placeholder")}
+                                            className="bg-card/50"
+                                        />
+                                        {form.formState.errors.contactName && (
+                                            <p className="text-xs font-medium text-destructive mt-1">
+                                                {form.formState.errors.contactName.message}
+                                            </p>
+                                        )}
+                                    </div>
 
-                            <div className="space-y-1">
-                                <Label>{t("contact_name_label")} <span className="text-destructive">*</span></Label>
-                                <Input
-                                    {...form.register("contactName")}
-                                    disabled={isExistingTeam}
-                                    placeholder={t("contact_name_placeholder")}
-                                />
-                                {form.formState.errors.contactName && (
-                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
-                                        {form.formState.errors.contactName.message}
-                                    </p>
-                                )}
-                            </div>
+                                    <div className="space-y-1">
+                                        <Label>{t("contact_phone_label")} <span className="text-destructive">*</span></Label>
+                                        <Input
+                                            id="contactPhone"
+                                            {...form.register("contactPhone")}
+                                            className="bg-card/50 text-sm"
+                                            disabled={isExistingTeam}
+                                            placeholder={t("contact_phone_placeholder")}
+                                        />
+                                        {form.formState.errors.contactPhone && (
+                                            <p className="text-xs font-medium text-destructive mt-1">
+                                                {form.formState.errors.contactPhone.message}
+                                            </p>
+                                        )}
+                                    </div>
 
-                            <div className="space-y-1">
-                                <Label>{t("contact_phone_label")} <span className="text-destructive">*</span></Label>
-                                <Input
-                                    {...form.register("contactPhone")}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
-                                    disabled={isExistingTeam}
-                                    placeholder={t("contact_phone_placeholder")}
-                                />
-                                {form.formState.errors.contactPhone && (
-                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
-                                        {form.formState.errors.contactPhone.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-1 col-span-2">
-                                <Label>{tTeam("contact_email") || "Contact Email"}</Label>
-                                <Input
-                                    type="email"
-                                    {...form.register("contactEmail")}
-                                    className="bg-transparent text-foreground focus-visible:ring-0 text-sm"
-                                    disabled={isExistingTeam}
-                                    placeholder={tTeam("contact_email_placeholder") || "e.g. contact@example.com"}
-                                />
-                                {form.formState.errors.contactEmail && (
-                                    <p className="text-[10px] font-black tracking-widest text-destructive mt-1">
-                                        {form.formState.errors.contactEmail.message}
-                                    </p>
-                                )}
+                                    <div className="space-y-1 md:col-span-2">
+                                        <Label>{tTeam("contact_email")}</Label>
+                                        <Input
+                                            id="contactEmail"
+                                            type="email"
+                                            {...form.register("contactEmail")}
+                                            className="bg-card/50 text-sm"
+                                            disabled={isExistingTeam}
+                                            placeholder={tTeam("contact_email_placeholder") || "e.g. contact@example.com"}
+                                        />
+                                        {form.formState.errors.contactEmail && (
+                                            <p className="text-xs font-medium text-destructive mt-1">
+                                                {form.formState.errors.contactEmail.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -515,7 +538,7 @@ export function RegistrationForm({
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="relative overflow-hidden border p-2 md:p-4 rounded-lg">
+                                                    <div className="relative overflow-hidden border p-2 md:p-4 rounded-sm">
                                                         <div className="flex flex-col gap-2 md:gap-4">
                                                             <div className="relative aspect-[3/4] w-full max-h-[360px] overflow-hidden flex items-center justify-center">
                                                                 <Image

@@ -2,28 +2,19 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Payment, Tournament, Plan } from "@/types";
+import { Plan, Tournament } from "@/types";
 import { getPlans } from "@/actions/common/plans";
-import { getUserPayments, getUserTournaments, createPaymentRecord, createPaymentRecordWithSlip } from "@/actions/common/payments";
+import { getUserTournaments, createPaymentRecord } from "@/actions/common/payments";
 import { getUserSubscriptionDetails } from "@/actions/common/user";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { PromptPayQR } from "@/features/registrations/promptpay-qr";
 import { createStripeCheckoutSession, createStripeCustomerPortalSession, verifyStripeCheckoutSession } from "@/actions/common/stripe";
-import { Loader2, X, Upload, CreditCard, ShieldCheck, Check, ExternalLink } from "lucide-react";
+import { Loader2, Check, ExternalLink } from "lucide-react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/ui/header";
-import Image from "next/image";
 import { Tab } from "@/components/ui/tab";
-import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
-
-
 
 const getPlanPrice = (plan: Plan) => {
     if (plan.id === "starter" || plan.id === "match") return 0;
@@ -33,14 +24,12 @@ const getPlanPrice = (plan: Plan) => {
 
 export function BillingTab() {
     const t = useTranslations("Billing");
-    const tReg = useTranslations("Registration");
     const locale = useLocale();
     const router = useRouter();
 
     const [activePlan, setActivePlan] = useState<string>("free");
     const [expiryDate, setExpiryDate] = useState<string | null>(null);
     const [plans, setPlans] = useState<Plan[]>([]);
-    const [payments, setPayments] = useState<Payment[]>([]);
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -131,7 +120,7 @@ export function BillingTab() {
                 }
             });
         }
-    }, [searchParams]);
+    }, [searchParams, router]);
 
 
     // Helper to get plan displayName

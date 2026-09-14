@@ -77,7 +77,7 @@ export function LogoUploader({
             <div className="relative group w-20 h-20">
                 <label
                     htmlFor={id}
-                    className={`w-20 h-20 rounded-full border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer transition-colors hover:border-primary/50 ${disabled || isCompressing ? "pointer-events-none opacity-50" : ""
+                    className={`w-20 h-20 bg-card rounded-full border-2 border-dashed border-border flex items-center justify-center overflow-hidden cursor-pointer transition-colors hover:border-primary/50 ${disabled || isCompressing ? "pointer-events-none opacity-50" : ""
                         }`}
                 >
                     {isCompressing ? (
@@ -96,7 +96,7 @@ export function LogoUploader({
                             </div>
                         </div>
                     ) : (
-                        <div className="group bg-muted p-2 rounded-full transition-colors group-hover:bg-primary/10">
+                        <div className="group p-2 rounded-full transition-colors group-hover:bg-primary/10">
                             <ImageIcon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
                         </div>
                     )}

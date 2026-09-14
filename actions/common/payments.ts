@@ -3,6 +3,8 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse, Payment, Tournament } from "@/types";
+import { uploadToR2 } from "@/lib/r2";
+
 
 export async function getUserPayments(): Promise<ActionResponse<Payment[]>> {
     try {
@@ -232,22 +234,18 @@ export async function createPaymentRecordWithSlip(formData: FormData): Promise<A
                 return { success: false, error: "File must be an image" };
             }
 
-            const fileExt = slipFile.name.split('.').pop();
-            const fileName = `subscriptions/${user.id}_${Date.now()}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage
-                .from('slips')
-                .upload(fileName, slipFile);
+            const fileExt = slipFile.name.split('.').pop() || 'jpg';
+            const fileName = `slips/subscriptions/${user.id}_${Date.now()}.${fileExt}`;
+            const uploadRes = await uploadToR2(slipFile, fileName, slipFile.type);
 
-            if (uploadError) {
-                console.error("Upload error:", uploadError);
-                return { success: false, error: "Failed to upload slip image" };
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Upload error:", uploadRes.error);
+                return { success: false, error: "Failed to upload slip image: " + (uploadRes.error || "Unknown error") };
             }
 
-            const { data: urlData } = supabase.storage
-                .from('slips')
-                .getPublicUrl(fileName);
-            slipUrl = urlData.publicUrl;
+            slipUrl = uploadRes.url;
         }
+
 
         const providerId = `LF_TXN_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
         const adminSupabase = createAdminClient();

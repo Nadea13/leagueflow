@@ -13,7 +13,8 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import {
     ArrowLeft, Zap, Flame, ShieldCheck, HelpCircle, Cloud, CloudOff, RefreshCw,
-    Undo, Tv, CalendarRange, Ban, XCircle, Users, Play, Square, BarChart2, Timer, Info
+    Undo, Tv, CalendarRange, Ban, XCircle, Users, Play, Square, BarChart2, Timer, Info,
+    Settings, Check, RotateCcw, X, Trophy
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Header } from "@/components/ui/header";
@@ -28,7 +29,7 @@ import { WalkoverDialog } from "../football/console/walkover-dialog";
 import { RosterSelectionDialog } from "../football/console/roster-selection-dialog";
 import { VolleyballMatchStatisticsBox } from "./console/statistics-box";
 import { VolleyballTeamInfoDialog } from "./console/team-info-dialog";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -68,7 +69,76 @@ export function VolleyballConsolePage({
 }: VolleyballConsolePageProps) {
     const locale = useLocale();
     const tPublic = useTranslations("PublicView");
+    const tConsole = useTranslations("Console");
+    const tCommon = useTranslations("Common");
     const { toast } = useToast();
+
+    // Customizable Actions & Stats
+    const ALL_VOLLEYBALL_ACTIONS = ['ace', 'spike', 'block'];
+    const ALL_VOLLEYBALL_STATS_KEYS = [
+        'sets_won', 'current_set_points', 'total_points',
+        'ace', 'spike', 'block', 'other_points'
+    ];
+    const [customActionTypes, setCustomActionTypes] = useState<string[]>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const savedCustom = localStorage.getItem("leagueflow-volleyball-custom-actions");
+                if (savedCustom) {
+                    const parsed = JSON.parse(savedCustom);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) {}
+        }
+        return ALL_VOLLEYBALL_ACTIONS;
+    });
+
+    const [visibleStats, setVisibleStats] = useState<string[]>(() => {
+        if (typeof window !== "undefined") {
+            try {
+                const savedStats = localStorage.getItem("leagueflow-volleyball-visible-stats");
+                if (savedStats) {
+                    const parsed = JSON.parse(savedStats);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (_) {}
+        }
+        return ALL_VOLLEYBALL_STATS_KEYS;
+    });
+    const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
+
+    const toggleCustomAction = (type: string) => {
+        setCustomActionTypes(prev => {
+            const next = prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type];
+            if (typeof window !== "undefined") {
+                localStorage.setItem("leagueflow-volleyball-custom-actions", JSON.stringify(next));
+            }
+            return next;
+        });
+    };
+
+    const resetCustomActions = (types: string[]) => {
+        setCustomActionTypes(types);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("leagueflow-volleyball-custom-actions", JSON.stringify(types));
+        }
+    };
+
+    const toggleVisibleStat = (key: string) => {
+        setVisibleStats(prev => {
+            const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
+            if (typeof window !== "undefined") {
+                localStorage.setItem("leagueflow-volleyball-visible-stats", JSON.stringify(next));
+            }
+            return next;
+        });
+    };
+
+    const resetVisibleStats = (keys: string[]) => {
+        setVisibleStats(keys);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("leagueflow-volleyball-visible-stats", JSON.stringify(keys));
+        }
+    };
 
     // State for Volleyball Match
     const [match, setMatch] = useState<Match>(initialMatch);
@@ -548,74 +618,33 @@ export function VolleyballConsolePage({
 
     const quickActionsBox = !readOnly ? (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="vball-action-panel">
-            <div className="relative z-10 space-y-2 lg:space-y-4">
-                <div className="grid grid-cols-4 lg:grid-cols-1 gap-1 lg:gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={handleUndo}
-                        className="w-full flex justify-center lg:justify-start items-center"
-                    >
-                        <Undo className="h-4 w-4 text-muted-foreground" />
-                        <span className="hidden lg:inline">{locale === "th" ? "ยกเลิก" : "Undo"}</span>
-                    </Button>
+            <div className="grid grid-cols-3 lg:grid-cols-1 gap-1 lg:gap-2">
+                <Button
+                    variant="outline"
+                    onClick={() => setOverlayDialogOpen(true)}
+                    className="w-full flex justify-center lg:justify-start items-center"
+                >
+                    <Tv className="h-4 w-4 text-primary" />
+                    <span className="hidden lg:inline">{locale === "th" ? "กราฟิกถ่ายทอดสด" : "Broadcast Overlay"}</span>
+                </Button>
 
-                    <Button
-                        variant="outline"
-                        onClick={() => setOverlayDialogOpen(true)}
-                        className="hidden lg:flex w-full justify-start items-center"
-                    >
-                        <Tv className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{locale === "th" ? "กราฟิกถ่ายทอดสด" : "Broadcast Overlay"}</span>
-                    </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => setRosterDialogOpen(true)}
+                    className="w-full flex justify-center lg:justify-start items-center"
+                >
+                    <Users className="h-4 w-4 text-primary" />
+                    <span className="hidden lg:inline">{locale === "th" ? "จัดตัวผู้เล่น" : "Lineups"}</span>
+                </Button>
 
-                    <Button
-                        variant="outline"
-                        onClick={() => setRosterDialogOpen(true)}
-                        className="w-full flex justify-center lg:justify-start items-center"
-                    >
-                        <Users className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{locale === "th" ? "จัดตัวผู้เล่น" : "Lineups"}</span>
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        onClick={() => setStatsDialogOpen(true)}
-                        className="w-full flex justify-center lg:justify-start items-center"
-                    >
-                        <BarChart2 className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{locale === "th" ? "สถิติการแข่งขัน" : "Statistics"}</span>
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        onClick={handlePostponeMatch}
-                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-foreground/5 hover:bg-foreground/10 hover:border-primary/50 transition-all group"
-                    >
-                        <CalendarRange className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{locale === "th" ? "เลื่อนแข่ง" : "Postponed"}</span>
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        onClick={() => setWoDialogOpen(true)}
-                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
-                    >
-                        <Ban className="h-4 w-4 text-destructive" />
-                        <span className="hidden lg:inline">{locale === "th" ? "ชนะบาย" : "Walkover"}</span>
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        onClick={handleAbandonMatch}
-                        disabled={match.status === 'finished' || match.status === 'canceled'}
-                        className="w-full flex justify-center lg:justify-start items-center gap-1 lg:gap-2 border-foreground/5 bg-red-500/5 hover:bg-red-500/10 border-red-500/10 hover:border-red-500/30 transition-all group"
-                    >
-                        <XCircle className="h-4 w-4 text-destructive" />
-                        <span className="hidden lg:inline">{locale === "th" ? "ยกเลิกแข่ง" : "Abandoned"}</span>
-                    </Button>
-                </div>
+                <Button
+                    variant="outline"
+                    onClick={() => setStatsDialogOpen(true)}
+                    className="w-full flex justify-center lg:justify-start items-center"
+                >
+                    <BarChart2 className="h-4 w-4 text-primary" />
+                    <span className="hidden lg:inline">{locale === "th" ? "สถิติการแข่งขัน" : "Statistics"}</span>
+                </Button>
             </div>
         </div>
     ) : null;
@@ -710,6 +739,37 @@ export function VolleyballConsolePage({
 
                 {!readOnly && (
                     <div className="flex items-center">
+                        {/* Match Status */}
+                        <div className="flex items-center gap-1 lg:gap-2 px-2 relative group shrink-0">
+                            <span className="relative flex h-2 w-2 shrink-0">
+                                <span className={cn(
+                                    "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                                    match.status === 'live' ? "bg-primary" : (match.status === 'finished' ? "bg-emerald-500" : "bg-warning")
+                                )}></span>
+                                <span className={cn(
+                                    "relative inline-flex rounded-full h-2 w-2",
+                                    match.status === 'live' ? "bg-primary" : (match.status === 'finished' ? "bg-emerald-500" : "bg-warning")
+                                )}></span>
+                            </span>
+                            <span className="text-[10px] font-black tracking-widest uppercase whitespace-nowrap">
+                                {match.status === 'finished'
+                                    ? (locale === 'th' ? 'จบการแข่งขัน' : 'FINISHED')
+                                    : (match.status === 'live'
+                                        ? (locale === 'th' ? 'กำลังแข่งขัน' : 'LIVE')
+                                        : (locale === 'th' ? 'ยังไม่เริ่มการแข่งขัน' : 'SCHEDULED'))}
+                            </span>
+                        </div>
+
+                        {/* Undo Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleUndo}
+                            title={tConsole("undo") || "ย้อนกลับ (Undo)"}
+                        >
+                            <Undo className="h-4 w-4" />
+                        </Button>
+
                         {/* Help Tutorial Button */}
                         <Button
                             variant="ghost"
@@ -718,6 +778,16 @@ export function VolleyballConsolePage({
                             title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                         >
                             <HelpCircle className="h-4 w-4" />
+                        </Button>
+
+                        {/* Settings Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setCustomizeDialogOpen(true)}
+                            title={tConsole("settings") || "ตั้งค่า"}
+                        >
+                            <Settings className="h-4 w-4" />
                         </Button>
 
                         {/* Sync Icon */}
@@ -749,27 +819,6 @@ export function VolleyballConsolePage({
                                 </div>
                             );
                         })()}
-
-                        {/* Status Badge */}
-                        <div className="flex items-center gap-1 lg:gap-2 px-2 relative group overflow-hidden">
-                            <span className="relative flex h-2 w-2">
-                                <span className={cn(
-                                    "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
-                                    match.status === 'live' ? "bg-primary" : (match.status === 'finished' ? "bg-emerald-500" : "bg-warning")
-                                )}></span>
-                                <span className={cn(
-                                    "relative inline-flex rounded-full h-2 w-2",
-                                    match.status === 'live' ? "bg-primary" : (match.status === 'finished' ? "bg-emerald-500" : "bg-warning")
-                                )}></span>
-                            </span>
-                            <span className="text-[10px] font-black tracking-widest uppercase">
-                                {match.status === 'finished'
-                                    ? (locale === 'th' ? 'จบการแข่งขัน' : 'FINISHED')
-                                    : (match.status === 'live'
-                                        ? (locale === 'th' ? 'กำลังแข่งขัน' : 'LIVE')
-                                        : (locale === 'th' ? 'ยังไม่เริ่มการแข่งขัน' : 'SCHEDULED'))}
-                            </span>
-                        </div>
                     </div>
                 )}
             </header>
@@ -844,18 +893,24 @@ export function VolleyballConsolePage({
                                                 </div>
 
                                                 <div className="grid grid-cols-3 gap-1 lg:gap-2">
-                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'ace')}>
-                                                        <Zap className="h-4 w-4 text-yellow-500" />
-                                                        <span>Serve</span>
-                                                    </Button>
-                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'spike')}>
-                                                        <Flame className="h-4 w-4 text-red-500" />
-                                                        <span>Attack</span>
-                                                    </Button>
-                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'block')}>
-                                                        <ShieldCheck className="h-4 w-4 text-blue-500" />
-                                                        <span>Block</span>
-                                                    </Button>
+                                                    {customActionTypes.includes('ace') && (
+                                                        <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'ace')}>
+                                                            <Zap className="h-4 w-4 text-yellow-500" />
+                                                            <span>Serve</span>
+                                                        </Button>
+                                                    )}
+                                                    {customActionTypes.includes('spike') && (
+                                                        <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'spike')}>
+                                                            <Flame className="h-4 w-4 text-red-500" />
+                                                            <span>Attack</span>
+                                                        </Button>
+                                                    )}
+                                                    {customActionTypes.includes('block') && (
+                                                        <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('home', 'block')}>
+                                                            <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                            <span>Block</span>
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -873,18 +928,24 @@ export function VolleyballConsolePage({
                                                 </div>
 
                                                 <div className="grid grid-cols-3 gap-1 lg:gap-2">
-                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'ace')}>
-                                                        <Zap className="h-4 w-4 text-yellow-500" />
-                                                        <span>Serve</span>
-                                                    </Button>
-                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'spike')}>
-                                                        <Flame className="h-4 w-4 text-red-500" />
-                                                        <span>Attack</span>
-                                                    </Button>
-                                                    <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'block')}>
-                                                        <ShieldCheck className="h-4 w-4 text-blue-500" />
-                                                        <span>Block</span>
-                                                    </Button>
+                                                    {customActionTypes.includes('ace') && (
+                                                        <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'ace')}>
+                                                            <Zap className="h-4 w-4 text-yellow-500" />
+                                                            <span>Serve</span>
+                                                        </Button>
+                                                    )}
+                                                    {customActionTypes.includes('spike') && (
+                                                        <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'spike')}>
+                                                            <Flame className="h-4 w-4 text-red-500" />
+                                                            <span>Attack</span>
+                                                        </Button>
+                                                    )}
+                                                    {customActionTypes.includes('block') && (
+                                                        <Button variant="outline" disabled={isActionDisabled} onClick={() => handleTriggerActionEvent('away', 'block')}>
+                                                            <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                                            <span>Block</span>
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -953,6 +1014,7 @@ export function VolleyballConsolePage({
                         awaySetsWon={awaySets}
                         homePoints={homePoints}
                         awayPoints={awayPoints}
+                        visibleStats={visibleStats}
                         onClose={() => setStatsDialogOpen(false)}
                     />
                 </DialogContent>
@@ -974,7 +1036,7 @@ export function VolleyballConsolePage({
             />
 
             <AlertDialog open={confirmConfig.open} onOpenChange={(open) => setConfirmConfig(prev => ({ ...prev, open }))}>
-                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl max-w-md">
+                <AlertDialogContent className="bg-card border rounded-sm shadow-2xl sm:max-w-md z-[60]">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="border-b p-4">
                             {confirmConfig.title}
@@ -993,6 +1055,290 @@ export function VolleyballConsolePage({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Settings Dialog */}
+            <Dialog open={customizeDialogOpen} onOpenChange={setCustomizeDialogOpen}>
+                <DialogContent showCloseButton={false} className="sm:max-w-xl max-h-[85vh] flex flex-col bg-card rounded-sm p-0 overflow-hidden border shadow-2xl">
+                    <DialogHeader className="p-4 border-b shrink-0 bg-card relative pr-12">
+                        <div>
+                            <DialogTitle className="text-base font-bold">
+                                {tConsole("settings") || "ตั้งค่า"}
+                            </DialogTitle>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                {locale === "th" ? "จัดการการแสดงผลปุ่ม สถิติ และสถานะการแข่งขัน" : "Manage buttons, statistics, and match options"}
+                            </p>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground cursor-pointer"
+                            onClick={() => setCustomizeDialogOpen(false)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </DialogHeader>
+
+                    {/* Scrollable Content Body */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {/* SECTION 1: Action Buttons */}
+                        <section id="settings-section-actions" className="space-y-2.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="space-y-0.5">
+                                    <h3 className="text-sm font-bold text-foreground">
+                                        {tConsole("tab_buttons") || "ปุ่มเหตุการณ์"}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {tConsole("select_action_to_toggle") || "คลิกเพื่อเปิด/ปิดปุ่มที่ต้องการใช้งาน"}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1 self-end sm:self-auto">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => resetCustomActions(ALL_VOLLEYBALL_ACTIONS)}
+                                    >
+                                        <RotateCcw className="h-3 w-3 mr-1" />
+                                        {tConsole("show_all") || "แสดงทั้งหมด"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                                        onClick={() => resetCustomActions([])}
+                                    >
+                                        {tConsole("hide_all") || "ซ่อนทั้งหมด"}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Action Items List */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {[
+                                    { key: 'ace', label: 'Serve (เสิร์ฟเอซ)', icon: Zap, iconColor: 'text-yellow-500' },
+                                    { key: 'spike', label: 'Attack (ตบทำแต้ม)', icon: Flame, iconColor: 'text-red-500' },
+                                    { key: 'block', label: 'Block (บล็อกทำแต้ม)', icon: ShieldCheck, iconColor: 'text-blue-500' },
+                                ].map((item) => {
+                                    const isSelected = customActionTypes.includes(item.key);
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            type="button"
+                                            onClick={() => toggleCustomAction(item.key)}
+                                            className={cn(
+                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
+                                                isSelected
+                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
+                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
+                                                <span className="text-xs font-semibold truncate">{item.label}</span>
+                                            </div>
+                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
+                                                {isSelected && (
+                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="text-xs text-muted-foreground pt-1">
+                                <span>{customActionTypes.length} / {ALL_VOLLEYBALL_ACTIONS.length} {locale === "th" ? "ปุ่มที่เลือกแสดง" : "actions visible"}</span>
+                            </div>
+                        </section>
+
+                        {/* SECTION 2: Match Statistics */}
+                        <section id="settings-section-stats" className="space-y-2.5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                <div className="space-y-0.5">
+                                    <h3 className="text-sm font-bold text-foreground">
+                                        {tConsole("tab_stats") || "สถิติการแข่งขัน"}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {tConsole("customize_stats_desc") || "เลือกรายการสถิติที่ต้องการให้แสดงในหน้าต่างสถิติการแข่งขัน"}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1 self-end sm:self-auto">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => resetVisibleStats(ALL_VOLLEYBALL_STATS_KEYS)}
+                                    >
+                                        <RotateCcw className="h-3 w-3 mr-1" />
+                                        {tConsole("show_all") || "แสดงทั้งหมด"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                                        onClick={() => resetVisibleStats([])}
+                                    >
+                                        {tConsole("hide_all") || "ซ่อนทั้งหมด"}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Stats Items List */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {[
+                                    { key: 'sets_won', label: tConsole("sets_won") || "เซตที่ชนะ (Sets Won)", icon: Trophy, iconColor: 'text-amber-500' },
+                                    { key: 'current_set_points', label: tConsole("current_set_points") || "คะแนนเซตปัจจุบัน", icon: BarChart2, iconColor: 'text-primary' },
+                                    { key: 'total_points', label: tConsole("total_points") || "คะแนนรวมทั้งหมด", icon: BarChart2, iconColor: 'text-blue-500' },
+                                    { key: 'ace', label: "Ace (เสิร์ฟเอซ)", icon: Zap, iconColor: 'text-yellow-500' },
+                                    { key: 'spike', label: "Spike (ตบทำแต้ม)", icon: Flame, iconColor: 'text-red-500' },
+                                    { key: 'block', label: "Block (บล็อกทำแต้ม)", icon: ShieldCheck, iconColor: 'text-blue-500' },
+                                    { key: 'other_points', label: tConsole("other_points") || "แต้มอื่นๆ", icon: BarChart2, iconColor: 'text-muted-foreground' },
+                                ].map((item) => {
+                                    const isSelected = visibleStats.includes(item.key);
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            type="button"
+                                            onClick={() => toggleVisibleStat(item.key)}
+                                            className={cn(
+                                                "flex items-center justify-between p-2.5 rounded-sm border text-left transition-all cursor-pointer",
+                                                isSelected
+                                                    ? "bg-card border-primary/40 hover:border-primary/70 shadow-xs"
+                                                    : "opacity-45 hover:opacity-75 border-border bg-muted/10"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <item.icon className={cn("h-4 w-4 shrink-0", item.iconColor)} />
+                                                <span className="text-xs font-semibold truncate">{item.label}</span>
+                                            </div>
+                                            <div className="flex items-center justify-center w-5 h-5 shrink-0 ml-2">
+                                                {isSelected && (
+                                                    <Check className="h-4 w-4 text-emerald-500 stroke-[2.5]" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="text-xs text-muted-foreground pt-1">
+                                <span>{visibleStats.length} / {ALL_VOLLEYBALL_STATS_KEYS.length} {locale === "th" ? "สถิติที่เลือกแสดง" : "statistics visible"}</span>
+                            </div>
+                        </section>
+
+                        {/* SECTION 3: Danger Zone */}
+                        <section id="settings-section-danger" className="space-y-2.5">
+                            <div>
+                                <h3 className="text-sm font-bold text-destructive">
+                                    {tConsole("danger_zone") || "โซนอันตราย (การจัดการสถานะแมตช์)"}
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {tConsole("danger_zone_desc") || "การดำเนินการเหล่านี้จะส่งผลกระทบต่อผลการแข่งขันหรือตารางเวลาโดยตรง โปรดใช้ความระมัดระวัง"}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                                {/* เลื่อนการแข่งขัน (Postpone Match) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-border bg-card hover:bg-muted/10 transition-all">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <CalendarRange className="h-4 w-4 text-amber-500" />
+                                            <span className="text-xs font-bold text-foreground">
+                                                {tConsole("postponed") || "เลื่อนการแข่งขัน"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {locale === "th" ? "เปลี่ยนสถานะแมตช์กลับเป็นรอแข่งขัน และล้างวัน/เวลาของแมตช์" : "Reschedule match and reset match date/time"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            handlePostponeMatch();
+                                        }}
+                                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                                        className="h-8 text-xs font-semibold shrink-0 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                                    >
+                                        <CalendarRange className="h-3.5 w-3.5 mr-1.5" />
+                                        {tConsole("postponed") || "เลื่อนการแข่งขัน"}
+                                    </Button>
+                                </div>
+
+                                {/* จบการแข่งขันก่อนเวลา (Walkover / Early Finish) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-all">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <Ban className="h-4 w-4 text-destructive" />
+                                            <span className="text-xs font-bold text-destructive">
+                                                {tConsole("walkover") || "จบการแข่งขันก่อนเวลา"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {locale === "th" ? "บันทึกผลชนะบาย (3-0 หรือ 0-3) และยุติการแข่งขันทันที" : "Award walkover victory (3-0 or 0-3) and end match"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => {
+                                            setWoDialogOpen(true);
+                                        }}
+                                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
+                                    >
+                                        <Ban className="h-3.5 w-3.5 mr-1.5" />
+                                        {tConsole("walkover") || "จบการแข่งขันก่อนเวลา"}
+                                    </Button>
+                                </div>
+
+                                {/* ยกเลิกการแข่งขัน (Abandon Match) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-sm border border-destructive/30 bg-destructive/10 hover:bg-destructive/15 transition-all">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <XCircle className="h-4 w-4 text-destructive" />
+                                            <span className="text-xs font-bold text-destructive">
+                                                {tConsole("abandoned") || "ยกเลิกการแข่งขัน"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {locale === "th" ? "ยกเลิกแมตช์นี้ (Canceled) โดยไม่มีผลคะแนนแพ้ชนะ" : "Cancel and abandon this match without recorded winner"}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => {
+                                            handleAbandonMatch();
+                                        }}
+                                        disabled={match.status === 'finished' || match.status === 'canceled'}
+                                        className="h-8 text-xs font-semibold shrink-0 cursor-pointer"
+                                    >
+                                        <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                                        {tConsole("abandoned") || "ยกเลิกการแข่งขัน"}
+                                    </Button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    {/* Dialog Footer */}
+                    <DialogFooter className="p-3 border-t bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                            {locale === "th" ? "การตั้งค่าจะถูกบันทึกอัตโนมัติ" : "Settings saved automatically"}
+                        </span>
+                        <Button
+                            size="sm"
+                            className="h-8 text-xs font-semibold px-5 cursor-pointer ml-auto"
+                            onClick={() => setCustomizeDialogOpen(false)}
+                        >
+                            <Check className="h-3.5 w-3.5 mr-1" />
+                            {tCommon("done") || "เสร็จสิ้น"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

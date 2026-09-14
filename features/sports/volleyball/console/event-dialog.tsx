@@ -60,7 +60,7 @@ export function VolleyballEventDialog({
 
     return (
         <Dialog key={`${open}-${eventType}`} open={open} onOpenChange={onOpenChange}>
-            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden max-w-md">
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden sm:max-w-md border shadow-2xl">
                 <DialogHeader className="relative pr-10 p-3 md:p-4 border-b">
                     <DialogTitle className="flex items-center gap-2 text-xl font-black tracking-tighter capitalize">
                         <span>{eventType.toUpperCase()} - {teamName || (teamSide === 'home' ? 'Home' : 'Away')}</span>

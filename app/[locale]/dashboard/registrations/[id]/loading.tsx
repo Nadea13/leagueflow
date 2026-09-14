@@ -27,31 +27,8 @@ export default function Loading() {
 
             {/* Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-2 md:gap-4">
-                {/* Left Side (3 Columns): Registration Form */}
+                {/* Left Side (3 Columns): Tournament Info & Teams */}
                 <div className="lg:col-span-3 space-y-2 md:space-y-4">
-                    <div className="bg-card border rounded-sm p-4 space-y-4">
-                        <Skeleton className="h-6 w-1/4 rounded-sm" />
-                        <Skeleton className="h-10 w-full rounded-sm" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-4 w-1/3 rounded-sm" />
-                            <Skeleton className="h-10 w-full rounded-sm" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-1/2 rounded-sm" />
-                                <Skeleton className="h-10 w-full rounded-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-1/2 rounded-sm" />
-                                <Skeleton className="h-10 w-full rounded-sm" />
-                            </div>
-                        </div>
-                        <Skeleton className="h-10 w-full rounded-sm" />
-                    </div>
-                </div>
-
-                {/* Right Side (2 Columns): Tournament Info & Teams */}
-                <div className="lg:col-span-2 space-y-2 md:space-y-4">
                     {/* Tournament Details */}
                     <div className="bg-card border rounded-sm p-4 space-y-4">
                         <Skeleton className="h-6 w-1/3 rounded-sm" />
@@ -92,6 +69,29 @@ export default function Loading() {
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </div>
+
+                {/* Right Side (2 Columns): Registration Form */}
+                <div className="lg:col-span-2 space-y-2 md:space-y-4">
+                    <div className="bg-card border rounded-sm p-4 space-y-4">
+                        <Skeleton className="h-6 w-1/4 rounded-sm" />
+                        <Skeleton className="h-10 w-full rounded-sm" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-1/3 rounded-sm" />
+                            <Skeleton className="h-10 w-full rounded-sm" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-1/2 rounded-sm" />
+                                <Skeleton className="h-10 w-full rounded-sm" />
+                            </div>
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-1/2 rounded-sm" />
+                                <Skeleton className="h-10 w-full rounded-sm" />
+                            </div>
+                        </div>
+                        <Skeleton className="h-10 w-full rounded-sm" />
                     </div>
                 </div>
             </div>

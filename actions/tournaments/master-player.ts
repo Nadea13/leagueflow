@@ -4,6 +4,8 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { ActionResponse, GlobalPlayer } from "@/types/index";
 import { deleteFileFromUrl } from "@/lib/supabase/storage";
 import { validateUploadedFile } from "@/lib/file-validation";
+import { uploadToR2 } from "@/lib/r2";
+
 
 async function isAuthorizedForPlayer(playerId: string, userId: string) {
     const supabase = await createClient();
@@ -416,24 +418,21 @@ export async function updateGlobalPlayerPhoto(
     const fileCheck = validateUploadedFile(file);
     if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${globalPlayerId}/photo_${Date.now()}.${fileExt}`;
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `players/${globalPlayerId}/photo_${Date.now()}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-        .from('players')
-        .upload(fileName, file);
+    const uploadRes = await uploadToR2(file, fileName, file.type);
 
-    if (uploadError) {
-        console.error("[updateGlobalPlayerPhoto] Upload error:", uploadError);
+    if (!uploadRes.success || !uploadRes.url) {
+        console.error("[updateGlobalPlayerPhoto] Upload error:", uploadRes.error);
         return { 
             success: false, 
-            error: `Upload failed: ${uploadError.message}` 
+            error: `Upload failed: ${uploadRes.error || "Unknown error"}` 
         };
     }
 
-    const { data: { publicUrl } } = supabase.storage
-        .from('players')
-        .getPublicUrl(fileName);
+    const publicUrl = uploadRes.url;
+
 
     const { data: existingPlayer } = await adminSupabase
         .from("master_players")

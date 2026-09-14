@@ -238,6 +238,41 @@ export const MatchNode = memo(function MatchNode({
                                                 <span />
                                             )}
                                             {dbMatch?.status === 'live' ? (() => {
+                                                if (sport === 'volleyball') {
+                                                    const vballEvents = dbMatch ? dbEvents.filter(e => e.match_id === dbMatch.id && ['point', 'ace', 'spike', 'block'].includes(e.event_type)) : [];
+                                                    const setPointsMap = new Map<number, { home: number; away: number }>();
+                                                    if (vballEvents.length > 0) {
+                                                        vballEvents.forEach(e => {
+                                                            const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
+                                                            const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
+                                                            const isHome = dbMatch?.home_team_id ? e.team_id === dbMatch.home_team_id : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
+                                                            if (isHome) current.home += 1;
+                                                            else current.away += 1;
+                                                            setPointsMap.set(setNum, current);
+                                                        });
+                                                    }
+                                                    const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
+                                                    const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
+                                                    let derivedHomeSets = 0;
+                                                    let derivedAwaySets = 0;
+                                                    for (let s = 1; s <= maxLoggedSet; s++) {
+                                                        const pts = setPointsMap.get(s) || { home: 0, away: 0 };
+                                                        const targetPts = (s === 3 || s === 5) ? 15 : 25;
+                                                        const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
+                                                        if (s < maxLoggedSet || isFinishedScore) {
+                                                            if (pts.home > pts.away) derivedHomeSets += 1;
+                                                            else if (pts.away > pts.home) derivedAwaySets += 1;
+                                                        }
+                                                    }
+                                                    const currentSetNum = vballEvents.length > 0 ? (derivedHomeSets + derivedAwaySets + 1) : 1;
+                                                    return (
+                                                        <span className="text-[10px] font-black text-primary flex items-center gap-1">
+                                                            <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
+                                                            SET {currentSetNum}
+                                                        </span>
+                                                    );
+                                                }
+
                                                 const elapsed = dbMatch.elapsed_before_pause || 0;
                                                 let liveSeconds = elapsed;
                                                 

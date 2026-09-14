@@ -24,21 +24,12 @@ export function RegistrationTourButton() {
                         align: "start" as const
                     }
                 },
-                {
-                    element: "#tour-registration-form",
-                    popover: {
-                        title: t("tour_reg_form_title"),
-                        description: t("tour_reg_form_desc"),
-                        side: "right" as const,
-                        align: "start" as const
-                    }
-                },
                 ...(document.getElementById("tour-registration-details") ? [{
                     element: "#tour-registration-details",
                     popover: {
                         title: t("tour_reg_details_title"),
                         description: t("tour_reg_details_desc"),
-                        side: "left" as const,
+                        side: "right" as const,
                         align: "start" as const
                     }
                 }] : []),
@@ -47,7 +38,7 @@ export function RegistrationTourButton() {
                     popover: {
                         title: t("tour_reg_info_title"),
                         description: t("tour_reg_info_desc"),
-                        side: "left" as const,
+                        side: "right" as const,
                         align: "start" as const
                     }
                 }] : []),
@@ -56,10 +47,19 @@ export function RegistrationTourButton() {
                     popover: {
                         title: t("tour_reg_teams_title"),
                         description: t("tour_reg_teams_desc"),
+                        side: "right" as const,
+                        align: "start" as const
+                    }
+                }] : []),
+                {
+                    element: "#tour-registration-form",
+                    popover: {
+                        title: t("tour_reg_form_title"),
+                        description: t("tour_reg_form_desc"),
                         side: "left" as const,
                         align: "start" as const
                     }
-                }] : [])
+                }
             ]
         });
         driverObj.drive();

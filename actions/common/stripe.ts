@@ -2,6 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
+import type Stripe from "stripe";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types";
 import { headers } from "next/headers";
@@ -69,7 +70,7 @@ export async function createStripeCheckoutSession({
 
         // Full base price vs discount calculation
         let originalPrice = amount;
-        let discounts: any[] | undefined = undefined;
+        let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined = undefined;
 
         // Pro Monthly Promo: Original 290 THB, Promo 145 THB (-50%)
         if ((planId === "pro" || planId === "event") && isMonthly && amount === 145) {
@@ -92,7 +93,7 @@ export async function createStripeCheckoutSession({
             }
         }
 
-        const priceDataObj: any = {
+        const priceDataObj: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
             currency: 'thb',
             product_data: {
                 name: displayTitle,
@@ -124,7 +125,7 @@ export async function createStripeCheckoutSession({
             }
         }
 
-        const checkoutOptions: any = {
+        const checkoutOptions: Stripe.Checkout.SessionCreateParams = {
             payment_method_types: ['card'],
             line_items: [
                 {

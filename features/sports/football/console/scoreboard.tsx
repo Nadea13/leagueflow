@@ -24,9 +24,10 @@ interface ScoreboardProps {
     timerReadOnly?: boolean;
     timerCustomText?: string | number | null;
     addedTime?: number | null;
+    showPossession?: boolean;
 }
 
-export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamClick, timerTime, timerReadOnly, timerCustomText, addedTime }: ScoreboardProps) {
+export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamClick, timerTime, timerReadOnly, timerCustomText, addedTime, showPossession = true }: ScoreboardProps) {
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
@@ -200,25 +201,27 @@ export function Scoreboard({ match, homeScore, awayScore, events = [], onTeamCli
                 </div>
 
                 {/* Possession Gauge Bar */}
-                <div className="w-full max-w-xs sm:max-w-md flex flex-col">
-                    <div className="flex justify-between items-center text-xs lg:text-sm font-black tabular-nums">
-                        <span className="text-primary">{possession.home}%</span>
-                        <span className="text-[10px] lg:text-xs font-bold tracking-widest text-muted-foreground">
-                            Possession / การครองบอล
-                        </span>
-                        <span className="text-muted-foreground">{possession.away}%</span>
+                {showPossession && (
+                    <div className="w-full max-w-xs sm:max-w-md flex flex-col">
+                        <div className="flex justify-between items-center text-xs lg:text-sm font-black tabular-nums">
+                            <span className="text-primary">{possession.home}%</span>
+                            <span className="text-[10px] lg:text-xs font-bold tracking-widest text-muted-foreground">
+                                Possession / การครองบอล
+                            </span>
+                            <span className="text-muted-foreground">{possession.away}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full overflow-hidden flex">
+                            <div
+                                className="h-full bg-primary rounded-l-full transition-all duration-500 ease-out"
+                                style={{ width: `${possession.home}%` }}
+                            />
+                            <div
+                                className="h-full bg-muted-foreground rounded-r-full transition-all duration-500 ease-out"
+                                style={{ width: `${possession.away}%` }}
+                            />
+                        </div>
                     </div>
-                    <div className="w-full h-2 rounded-full overflow-hidden flex">
-                        <div
-                            className="h-full bg-primary rounded-l-full transition-all duration-500 ease-out"
-                            style={{ width: `${possession.home}%` }}
-                        />
-                        <div
-                            className="h-full bg-muted-foreground rounded-r-full transition-all duration-500 ease-out"
-                            style={{ width: `${possession.away}%` }}
-                        />
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );

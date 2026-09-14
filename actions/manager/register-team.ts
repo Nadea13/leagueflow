@@ -5,6 +5,8 @@ import { ActionResponse } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { validateUploadedFile } from "@/lib/file-validation";
+import { uploadToR2 } from "@/lib/r2";
+
 
 // Zod Schema for Validation (Basic fields, slip validated conditionally)
 const registrationSchema = z.object({
@@ -160,20 +162,15 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
             const fileCheck = validateUploadedFile(logoFile);
             if (!fileCheck.valid) return { success: false, error: fileCheck.error };
 
-            const fileExt = logoFile.name.split('.').pop();
+            const fileExt = logoFile.name.split('.').pop() || 'png';
             const fileName = `logo-${Date.now()}.${fileExt}`;
-            const filePath = `${finalTeamId}/${fileName}`;
-            const { error: logoUploadError } = await supabase.storage
-                .from('teams')
-                .upload(filePath, logoFile);
-
-            if (!logoUploadError) {
-                const { data: logoUrlData } = supabase.storage
-                    .from('teams')
-                    .getPublicUrl(filePath);
-                finalLogoUrl = logoUrlData.publicUrl;
+            const filePath = `teams/${finalTeamId}/${fileName}`;
+            const uploadRes = await uploadToR2(logoFile, filePath, logoFile.type);
+            if (uploadRes.success && uploadRes.url) {
+                finalLogoUrl = uploadRes.url;
             }
         }
+
 
         if (!isFree) {
             // --- PAID TOURNAMENT LOGIC ---
@@ -208,9 +205,9 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 };
             }
 
-            // 3. Unique Transaction Ref (Use admin client to check existence)
-            const adminSupabase = createAdminClient();
-            const { data: existingRef } = await adminSupabase
+
+            // 3. Check for Duplicate TransRef
+            const { data: existingRef } = await supabase
                 .from("tournament_teams")
                 .select("id")
                 .eq("remark", transRef)
@@ -221,23 +218,17 @@ export async function registerTeam(formData: FormData): Promise<ActionResponse> 
                 return { success: false, error: "This slip has already been used" };
             }
 
-            // 4. Upload Slip to Storage
-            const fileExt = slipFile.name.split('.').pop();
-            const fileName = `${tournamentId}/${transRef}.${fileExt}`;
-            const { error: uploadError } = await supabase.storage
-                .from('slips')
-                .upload(fileName, slipFile);
+            // 4. Upload Slip to R2 Storage
+            const fileExt = slipFile.name.split('.').pop() || 'jpg';
+            const fileName = `slips/${tournamentId}/${transRef}.${fileExt}`;
+            const uploadRes = await uploadToR2(slipFile, fileName, slipFile.type);
 
-            if (uploadError) {
-                console.error("Upload error:", uploadError);
+            if (!uploadRes.success || !uploadRes.url) {
+                console.error("Upload error:", uploadRes.error);
                 return { success: false, error: "Failed to upload slip image" };
             }
 
-            // Get Public URL
-            const { data: urlData } = supabase.storage
-                .from('slips')
-                .getPublicUrl(fileName);
-            publicUrl = urlData.publicUrl;
+            publicUrl = uploadRes.url;
 
         } else {
             // --- FREE TOURNAMENT LOGIC ---

@@ -4,6 +4,8 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/index";
 import { validateTournamentAccess } from "@/lib/security";
+import { uploadToR2 } from "@/lib/r2";
+
 
 export async function approveRegistration(
     registrationId: string,
@@ -123,6 +125,8 @@ export async function submitRosterWithSender(
             .from("tournament_teams")
             .select(`
                 id,
+                contact_phone,
+                contact_name,
                 team_id,
                 teams ( user_id, sport_id ),
                 tournament_category_id,
@@ -136,6 +140,17 @@ export async function submitRosterWithSender(
         const teamOwnerId = (participation.teams as unknown as { user_id: string } | null)?.user_id;
         if (teamOwnerId !== user.id) {
             return { success: false, error: "Unauthorized to manage this roster" };
+        }
+
+        // Verify contact phone matches the registration phone
+        const cleanSenderPhone = senderPhone.replace(/\D/g, "");
+        const registeredPhone = (participation.contact_phone || "").replace(/\D/g, "");
+
+        if (registeredPhone && cleanSenderPhone !== registeredPhone) {
+            return {
+                success: false,
+                error: "เบอร์โทรศัพท์ไม่ตรงกับเบอร์ที่ใช้ลงทะเบียนทีม กรุณาตรวจสอบเบอร์โทรศัพท์ของผู้สมัคร"
+            };
         }
 
         // 2. Update contact info
@@ -175,23 +190,19 @@ export async function submitRosterWithSender(
 
             let photoUrl = null;
 
-            // Upload photo to storage if present
+            // Upload photo to R2 storage if present
             if (photoFile && photoFile.size > 0) {
                 const fileExt = photoFile.name.split('.').pop() || 'jpg';
-                const fileName = `${tournamentTeamId}/photo_${i}_${Date.now()}.${fileExt}`;
-                const { error: uploadError } = await supabase.storage
-                    .from('players')
-                    .upload(fileName, photoFile);
+                const fileName = `players/${tournamentTeamId}/photo_${i}_${Date.now()}.${fileExt}`;
+                const uploadRes = await uploadToR2(photoFile, fileName, photoFile.type);
                 
-                if (!uploadError) {
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('players')
-                        .getPublicUrl(fileName);
-                    photoUrl = publicUrl;
+                if (uploadRes.success && uploadRes.url) {
+                    photoUrl = uploadRes.url;
                 } else {
-                    console.error(`[submitRosterWithSender] Photo upload failed for ${name}:`, uploadError);
+                    console.error(`[submitRosterWithSender] Photo upload failed for ${name}:`, uploadRes.error);
                 }
             }
+
 
             // Split name into first and last name
             const nameParts = name.trim().split(" ");

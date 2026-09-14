@@ -16,7 +16,7 @@ export function WalkoverDialog({ open, onOpenChange, match, onConfirm }: Walkove
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden max-w-md">
+            <DialogContent showCloseButton={false} className="bg-card rounded-sm overflow-hidden sm:max-w-md border shadow-2xl z-[60]">
                 <DialogHeader className="relative pr-10">
                     <DialogTitle>{t("walkover")}</DialogTitle>
                     <Button

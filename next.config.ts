@@ -24,7 +24,16 @@ const nextConfig: NextConfig = {
         hostname: 'jecwwowcbuylxqvblgqf.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.r2.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.r2.cloudflarestorage.com',
+      },
     ],
+
   },
   async headers() {
     return [
