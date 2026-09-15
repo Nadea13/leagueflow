@@ -8,13 +8,6 @@ import { createTournamentCategory, getOrCreateAgeCategory } from "@/actions/tour
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Loader2, X, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 

@@ -598,8 +598,6 @@ export function generateGroupStageWithKnockout(
     // Each group advances 2 teams -> total knockout teams = effectiveGroupCount * 2
     // Number of matches in Round 1 = effectiveGroupCount
     const knockoutOffsetX = offsetX + 720;
-    const totalKnockoutTeams = effectiveGroupCount * 2;
-    const numKnockoutRounds = Math.log2(totalKnockoutTeams); // e.g. 2 groups -> 4 teams -> 2 rounds (SF, Final)
 
     const getRoundName = (matchesInRound: number): string => {
         if (matchesInRound === 1) return "Grand Final";

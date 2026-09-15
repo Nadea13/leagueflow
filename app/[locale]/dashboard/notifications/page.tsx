@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Bell, Check, X, Clock, ShieldCheck, Mail, Phone, Inbox } from "lucide-react";
 import { 
