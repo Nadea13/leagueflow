@@ -30,17 +30,17 @@ export function DeleteAccountButton({ email }: { email: string }) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="destructive">
+                <Button variant="destructive" size="sm">
                     {t("delete_account")}
                 </Button>
             </DialogTrigger>
-            <DialogContent showCloseButton={false} className="sm:max-w-[640px] max-h-[100vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl">
-                <div className="flex flex-col h-full max-h-[100vh] sm:max-h-[90vh] overflow-hidden">
-                    <DialogHeader className="relative pr-10">
-                        <DialogTitle>
+            <DialogContent showCloseButton={false} className="sm:max-w-[480px] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-sm">
+                <div className="flex flex-col h-full overflow-hidden">
+                    <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
+                        <DialogTitle className="text-base font-bold">
                             {t("delete_confirm_title")}
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-xs">
                             {t("delete_confirm_desc")}
                         </DialogDescription>
                         <Button
@@ -54,12 +54,13 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         </Button>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4">
+                    <div className="p-2 md:p-4 space-y-2">
                         <p className="text-xs font-bold text-foreground">
                             {t("type_to_confirm", { text: email })}
                         </p>
-                        <div className="py-1">
+                        <div>
                             <Input 
+                                size="sm"
                                 id="confirm-delete" 
                                 value={confirmText} 
                                 onChange={(e) => setConfirmText(e.target.value)} 
@@ -69,12 +70,20 @@ export function DeleteAccountButton({ email }: { email: string }) {
                         </div>
                     </div>
 
-                    <DialogFooter className="border-t p-2 md:p-4 mt-auto">
+                    <DialogFooter className="border-t p-2 md:p-4 flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            Cancel
+                        </Button>
                         <Button 
                             variant="destructive"
+                            size="sm"
                             onClick={handleDelete} 
                             disabled={isPending || confirmText !== email}
-                            className="w-full"
                         >
                             {t("delete_button")}
                         </Button>

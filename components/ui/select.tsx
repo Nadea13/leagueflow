@@ -37,7 +37,10 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "aria-invalid:border-destructive mb-0 rounded-sm aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 flex w-fit items-center justify-between gap-2 border bg-transparent px-3 py-2 text-sm lg:text-base whitespace-nowrap transition-all duration-500 outline-none h-8 lg:h-10 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "aria-invalid:border-destructive mb-0 rounded-sm aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 flex w-fit items-center justify-between gap-2 border bg-transparent whitespace-nowrap transition-all duration-500 outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        size === "sm"
+          ? "px-2.5 py-1 h-8 text-xs font-semibold"
+          : "px-3 py-2 text-sm lg:text-base h-8 lg:h-10",
         "bg-[linear-gradient(var(--color-primary),var(--color-primary))] bg-[length:0%_2px] bg-no-repeat bg-[position:bottom_left] focus:bg-[length:100%_2px]",
         className
       )}
@@ -45,7 +48,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 opacity-50" />
+        <ChevronDownIcon className={cn("opacity-50", size === "sm" ? "size-3.5" : "size-4")} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )

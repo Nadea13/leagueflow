@@ -89,6 +89,7 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                 <Label>{t("registration_fee")}</Label>
                                 <Input
                                     type="number"
+                                    size="sm"
                                     id="registration_fee"
                                     name="registration_fee"
                                     defaultValue={tournament.registration_fee ?? undefined}
@@ -103,6 +104,7 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                 <Label>{t("promptpay_id")}</Label>
                                 <Input
                                     type="text"
+                                    size="sm"
                                     id="bank_account_number"
                                     name="bank_account_number"
                                     defaultValue={tournament.bank_account_number ?? undefined}
@@ -114,7 +116,7 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                 <div className="space-y-1">
                                     <Label>{t("bank_name")}</Label>
                                     <Select name="bank_name" defaultValue={tournament.bank_name || "PromptPay"} disabled={!isPro}>
-                                        <SelectTrigger id="bank_name" className="bg-transparent w-full">
+                                        <SelectTrigger size="sm" id="bank_name" className="bg-transparent w-full">
                                             <SelectValue placeholder={t("select_bank")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-neutral-950 border-foreground/10">
@@ -126,6 +128,7 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                                     <Label>{t("account_name")}</Label>
                                     <Input
                                         type="text"
+                                        size="sm"
                                         id="bank_account_name"
                                         name="bank_account_name"
                                         defaultValue={tournament.bank_account_name ?? undefined}
@@ -138,6 +141,7 @@ export function RegistrationSettings({ tournament }: Omit<RegistrationSettingsPr
                             <div className="flex justify-end">
                                 <Button
                                     type="submit"
+                                    size="sm"
                                     disabled={!isPro || isPending}
                                     className="md:w-fit w-full"
                                 >

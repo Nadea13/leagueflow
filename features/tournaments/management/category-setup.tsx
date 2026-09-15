@@ -98,11 +98,11 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                         {/* Age Category Type & Input */}
                         <div className="space-y-1">
                             <Label>{t("age_category")}</Label>
-                            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                            <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
-                                    { id: "under", label: "Under (U)", icon: <ArrowDownCircle className="h-4 w-4" /> },
-                                    { id: "over", label: "Over (+)", icon: <PlusCircle className="h-4 w-4" /> },
-                                    { id: "open", label: "Open (ทั่วไป)", icon: <Globe className="h-4 w-4" /> },
+                                    { id: "under", label: t("age_under"), icon: <ArrowDownCircle className="h-4 w-4" /> },
+                                    { id: "over", label: t("age_over"), icon: <PlusCircle className="h-4 w-4" /> },
+                                    { id: "open", label: t("age_open"), icon: <Globe className="h-4 w-4" /> },
                                 ].map((typeItem) => {
                                     const isSelected = ageType === typeItem.id;
                                     return (
@@ -114,10 +114,10 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                                                 if (typeItem.id === "open") setAgeValue("");
                                             }}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
-                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                    ? "bg-primary/10 text-primary font-bold"
+                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                             )}
                                         >
                                             <div className={cn(
@@ -135,14 +135,15 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                             </div>
 
                             {ageType !== "open" && (
-                                <div className="mt-2 space-y-1">
-                                    <Label className="text-xs text-muted-foreground">
+                                <div className="space-y-1">
+                                    <Label>
                                         {ageType === "under" 
                                             ? "ระบุตัวเลขอายุ (เช่น 13 สื่อถึง U13)"
                                             : "ระบุตัวเลขอายุ (เช่น 35 สื่อถึง 35+)"}
                                     </Label>
                                     <Input
                                         type="text"
+                                        size="sm"
                                         value={ageValue}
                                         onChange={(e) => {
                                             const val = e.target.value.replace(/[^0-9]/g, "");
@@ -162,7 +163,7 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                         {/* Gender Type Selector */}
                         <div className="space-y-1">
                             <Label>{t("gender_group")}</Label>
-                            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                            <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
                                     { id: "male", label: t("gender_male"), icon: <Mars className="h-4 w-4" /> },
                                     { id: "female", label: t("gender_female"), icon: <Venus className="h-4 w-4" /> },
@@ -175,10 +176,10 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                                             type="button"
                                             onClick={() => setGenderType(genderItem.id)}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
-                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                    ? "bg-primary/10 text-primary font-bold"
+                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                             )}
                                         >
                                             <div className={cn(

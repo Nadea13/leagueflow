@@ -115,55 +115,51 @@ export async function SettingsView({ user, profile, activeTab = "profile" }: Set
                         )}
 
                         {activeTab === 'preferences' && (
-                            <div className="space-y-1 md:space-y-2 bg-card p-2 md:p-4 rounded-sm border">                                
-                                <div className="space-y-1 md:space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <Header level={4}>{tCommon("language")}</Header>
-                                            <p className="text-xs text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
-                                        </div>
-                                        <LanguageToggle />
+                            <div className="bg-card rounded-sm border divide-y overflow-hidden">                                
+                                <div className="flex items-center justify-between p-3 md:p-4">
+                                    <div className="space-y-0.5">
+                                        <Header level={4}>{tCommon("language")}</Header>
+                                        <p className="text-xs text-muted-foreground/60 font-medium">{t("language_desc", { defaultValue: "Select your preferred language" })}</p>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <Header level={4}>{tCommon("theme")}</Header>
-                                            <p className="text-xs text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
-                                        </div>
-                                        <ThemeToggle />
+                                    <LanguageToggle />
+                                </div>
+                                <div className="flex items-center justify-between p-3 md:p-4">
+                                    <div className="space-y-0.5">
+                                        <Header level={4}>{tCommon("theme")}</Header>
+                                        <p className="text-xs text-muted-foreground/60 font-medium">{t("theme_desc", { defaultValue: "Choose between light and dark mode" })}</p>
                                     </div>
+                                    <ThemeToggle />
                                 </div>
                             </div>
                         )}
 
                         {activeTab === 'legal' && (
-                            <div className="space-y-1 md:space-y-2 bg-card p-2 md:p-4 rounded-sm border">                                
-                                <div className="grid gap-1 md:gap-2">
-                                    <Link href="/privacy-policy" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <Header level={4}>{tLegal("privacy")}</Header>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
-                                    </Link>
-                                    <Link href="/terms-of-service" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <Header level={4}>{tLegal("terms")}</Header>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
-                                    </Link>
-                                    <Link href="/refund-policy" className="group/item rounded-sm flex items-center justify-between border hover:border-primary/40 p-2 md:p-3 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <Header level={4}>{tLegal("refund")}</Header>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
-                                    </Link>
-                                </div>
+                            <div className="bg-card rounded-sm border divide-y overflow-hidden">                                
+                                <Link href="/privacy-policy" className="group/item flex items-center justify-between hover:bg-muted/40 p-3 md:p-4 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <Header level={4}>{tLegal("privacy")}</Header>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
+                                </Link>
+                                <Link href="/terms-of-service" className="group/item flex items-center justify-between hover:bg-muted/40 p-3 md:p-4 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <Header level={4}>{tLegal("terms")}</Header>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
+                                </Link>
+                                <Link href="/refund-policy" className="group/item flex items-center justify-between hover:bg-muted/40 p-3 md:p-4 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <Header level={4}>{tLegal("refund")}</Header>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary transition-all" />
+                                </Link>
                             </div>
                         )}
 
                         {activeTab === 'danger' && (
-                            <div className=" bg-card p-2 md:p-4 rounded-sm border">
-                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-                                    <div className="space-y-1">
+                            <div className="bg-card p-3 md:p-4 rounded-sm border">
+                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                                    <div className="space-y-0.5">
                                         <Header level={4} className="text-destructive">{t("delete_account")}</Header>
                                         <p className="text-xs text-muted-foreground font-medium">{t("delete_account_desc")}</p>
                                     </div>

@@ -133,10 +133,11 @@ export function Announcements({
         return (
             <div className="bg-card flex flex-col h-full overflow-hidden">
                 <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
-                    <div className="p-2 md:p-4 space-y-3 md:space-y-4 flex-1 overflow-y-auto">
+                    <div className="p-2 md:p-4 space-y-2 md:space-y-3 flex-1 overflow-y-auto">
                         <div className="space-y-1">
                             <Label htmlFor="announcement-title-mode">{t("title_placeholder")}</Label>
                             <Input
+                                size="sm"
                                 id="announcement-title-mode"
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
@@ -151,12 +152,13 @@ export function Announcements({
                                 value={content}
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                                 placeholder={t("content_placeholder")}
-                                className="resize-none min-h-[160px]"
+                                className="resize-none min-h-[120px] text-xs"
                             />
                         </div>
                     </div>
                     <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                         <Button
+                            size="sm"
                             type="submit"
                             className="bg-node-4 w-full"
                             disabled={isSaving || !title.trim()}
@@ -180,43 +182,46 @@ export function Announcements({
                         </p>
                     </div>
                 ) : (
-                    announcements.map(ann => (
-                        <div
-                            key={ann.id}
-                            className={cn(
-                                "p-2 transition-all relative overflow-hidden group/item rounded-sm",
-                                ann.is_pinned ? "bg-node-4/5 border-node-4/20 border border-node-4/60" : "border hover:border-node-4/60"
-                            )}
-                        >
-                            <div className="space-y-1 pr-6">
-                                <div className="flex items-center gap-2">
-                                    {ann.is_pinned && <Pin className="h-3 w-3 text-node-4 shrink-0" />}
-                                    <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
-                                        {ann.title}
-                                    </h4>
-                                </div>
-                                {ann.content && (
-                                    <p className="text-muted-foreground text-[10px] leading-relaxed font-medium">
-                                        {ann.content}
-                                    </p>
+                    <div className="border bg-card rounded-sm divide-y overflow-hidden">
+                        {announcements.map(ann => (
+                            <div
+                                key={ann.id}
+                                className={cn(
+                                    "p-2 transition-all relative overflow-hidden group/item",
+                                    ann.is_pinned ? "bg-node-4/5" : "hover:bg-muted/40"
                                 )}
-                                <div className="flex items-center justify-between pt-1">
-                                    <span className="text-[8px] font-black tracking-widest text-muted-foreground/30">
-                                        {formatDate(ann.created_at, "MMM d, HH:mm", locale)}
-                                    </span>
+                            >
+                                <div className="space-y-1 pr-6">
+                                    <div className="flex items-center gap-2">
+                                        {ann.is_pinned && <Pin className="h-3 w-3 text-node-4 shrink-0" />}
+                                        <h4 className="font-bold text-[11px] leading-tight text-foreground truncate">
+                                            {ann.title}
+                                        </h4>
+                                    </div>
+                                    {ann.content && (
+                                        <p className="text-muted-foreground text-[10px] leading-relaxed font-medium">
+                                            {ann.content}
+                                        </p>
+                                    )}
+                                    <div className="flex items-center justify-between pt-1">
+                                        <span className="text-[8px] font-black tracking-widest text-muted-foreground/30">
+                                            {formatDate(ann.created_at, "MMM d, HH:mm", locale)}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                            {isEditable && (
-                                <div className="absolute top-1.5 right-1.5 z-10">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-sm hover:bg-muted"
-                                            >
-                                                <MoreVertical className="h-3.5 w-3.5" />
-                                            </button>
-                                        </DropdownMenuTrigger>
+                                {isEditable && (
+                                    <div className="absolute top-1.5 right-1.5 z-10">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <MoreVertical className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-36 bg-card border shadow-xl p-1">
                                             <DropdownMenuItem
                                                 onClick={() => handleTogglePin(ann.id, ann.is_pinned)}
@@ -246,7 +251,8 @@ export function Announcements({
                                 </div>
                             )}
                         </div>
-                    ))
+                    ))}
+                    </div>
                 )}
             </div>
         );
@@ -285,10 +291,11 @@ export function Announcements({
                                     </Button>
                                 </DialogHeader>
                                 <form onSubmit={handleAdd} className="flex flex-col h-full overflow-hidden">
-                                    <div className="p-2 md:p-4 space-y-3 md:space-y-4 flex-1 overflow-y-auto">
+                                    <div className="p-2 md:p-4 space-y-2 md:space-y-3 flex-1 overflow-y-auto">
                                         <div className="space-y-1">
                                             <Label htmlFor="announcement-title">{t("title_placeholder")}</Label>
                                             <Input
+                                                size="sm"
                                                 id="announcement-title"
                                                 value={title}
                                                 onChange={e => setTitle(e.target.value)}
@@ -303,13 +310,14 @@ export function Announcements({
                                                 value={content}
                                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
                                                 placeholder={t("content_placeholder")}
-                                                rows={5}
-                                                className="resize-none min-h-[120px]"
+                                                rows={4}
+                                                className="resize-none min-h-[100px] text-xs"
                                             />
                                         </div>
                                     </div>
                                     <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                                         <Button
+                                            size="sm"
                                             type="submit"
                                             className="w-full"
                                             disabled={isSaving || !title.trim()}

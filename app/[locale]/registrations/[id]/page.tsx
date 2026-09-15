@@ -239,11 +239,9 @@ export default async function RegisterPage({ params, searchParams }: RegisterPag
             )}
 
             {/* Navbar */}
-            <div className="relative z-20">
-                <PublicNavbar user={user} />
-            </div>
+            <PublicNavbar user={user} />
 
-            <main className="relative z-90 flex-1 pt-16 md:pt-18 container mx-auto p-2 md:p-0 md:py-4 max-w-7xl">
+            <main className="relative z-10 flex-1 pt-16 md:pt-18 container mx-auto p-2 md:p-0 md:py-4 max-w-7xl">
                 {activeTab === "documents" ? (
                     <div className="space-y-2 md:space-y-4">
                         {/* Header & Tab Switcher */}

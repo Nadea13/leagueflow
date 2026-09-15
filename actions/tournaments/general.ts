@@ -715,7 +715,7 @@ export async function getOrCreateAgeCategory(
     maxAge: number
 ): Promise<{ success: boolean; id?: number; error?: string }> {
     try {
-        const supabase = await createClient();
+        const supabase = createAdminClient();
 
         // 1. Check if an exact match exists
         const { data: existing, error: fetchError } = await supabase

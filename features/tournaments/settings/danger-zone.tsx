@@ -5,9 +5,10 @@ import { useTranslations } from "next-intl";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { RefreshCw, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Header } from "@/components/ui/header";
+import { cn } from "@/lib/utils";
 import {
     Dialog,
     DialogContent,
@@ -110,9 +111,9 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
 
     return (
         <div className="space-y-1 md:space-y-2">
-            <div className="grid gap-1 md:gap-2">
+            <div className="border bg-card rounded-sm divide-y">
                 {/* Delete Tournament */}
-                <div className="border relative overflow-hidden transition-colors p-2 md:p-4 rounded-sm">
+                <div className="relative overflow-hidden transition-colors p-2 md:p-4">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
                         <div className="space-y-1">
                             <Header level={4} className="text-destructive">{t("delete_tournament")}</Header>
@@ -122,6 +123,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                             <DialogTrigger asChild>
                                 <Button
                                     variant="destructive"
+                                    size="sm"
                                 >
                                     {t("delete_tournament")}
                                 </Button>
@@ -146,6 +148,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                     </DialogDescription>
                                     <div className="py-1 md:py-2">
                                         <Input
+                                            size="sm"
                                             value={deleteConfirmText}
                                             onChange={(e) => setDeleteConfirmText(e.target.value)}
                                             placeholder={tTournament("delete_confirm_placeholder", { text: tournamentName })}
@@ -155,6 +158,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                                 <DialogFooter className="p-2 md:p-4 border-t shrink-0">
                                     <Button
                                         variant="destructive"
+                                        size="sm"
                                         disabled={deleteConfirmText !== tournamentName || isPending}
                                         onClick={handleDelete}
                                         className="bg-destructive w-full"
@@ -168,7 +172,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                 </div>
 
                 {/* Reset Bracket Flow */}
-                <div className="border relative overflow-hidden transition-colors p-2 md:p-4">
+                <div className="relative overflow-hidden transition-colors p-2 md:p-4">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
                         <div className="space-y-1">
                             <Header level={4} className="text-destructive">{t("reset_flow_title")}</Header>
@@ -176,6 +180,7 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                         </div>
                         <Button
                             variant="destructive"
+                            size="sm"
                             disabled={isPending}
                             onClick={() => setResetFlowDialogOpen(true)}
                         >
@@ -196,12 +201,12 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
-                        <AlertDialogCancel>
+                        <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-0")}>
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleResetFlow}
-                            className="bg-destructive"
+                            className={cn(buttonVariants({ size: "sm", variant: "destructive" }))}
                         >
                             {t("confirm_reset")}
                         </AlertDialogAction>
@@ -221,12 +226,12 @@ export function DangerZone({ tournamentId, tournamentName, activeCategoryId }: D
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-foreground/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
                             {tCommon("cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleReset}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-10 text-[11px] font-black tracking-widest"
+                            className={cn(buttonVariants({ size: "sm" }))}
                         >
                             {t("reset_confirm")}
                         </AlertDialogAction>

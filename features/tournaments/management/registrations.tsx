@@ -209,23 +209,23 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
 
     return (
         <div className="relative overflow-hidden transition-colors space-y-1 md:space-y-2">
-            <div className="relative overflow-hidden transition-colors">
+            <div className="border bg-card rounded-sm overflow-hidden">
                 <div className="w-full overflow-x-auto">
-                    <Table className="min-w-[800px] border-t">
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent h-10">
-                                <TableHead className="px-1 md:px-2 text-[10px] font-black tracking-widest">{t("team_name")}</TableHead>
-                                <TableHead className="px-1 md:px-2 text-[10px] font-black tracking-widest">{t("contact_info")}</TableHead>
-                                <TableHead className="text-center px-1 md:px-2 text-[10px] font-black tracking-widest">{t("payment_status")}</TableHead>
-                                <TableHead className="text-center px-1 md:px-2 text-[10px] font-black tracking-widest">{t("slip")}</TableHead>
-                                <TableHead className="px-1 md:px-2 text-[10px] font-black tracking-widest">{t("date")}</TableHead>
-                                <TableHead className="text-center px-1 md:px-2 text-[10px] font-black tracking-widest"></TableHead>
+                    <Table className="min-w-[800px]">
+                        <TableHeader className="bg-muted/40">
+                            <TableRow className="hover:bg-transparent h-10 border-b">
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest">{t("team_name")}</TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest">{t("contact_info")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest">{t("payment_status")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest">{t("slip")}</TableHead>
+                                <TableHead className="px-2 md:px-3 text-[10px] font-black tracking-widest">{t("date")}</TableHead>
+                                <TableHead className="text-center px-2 md:px-3 text-[10px] font-black tracking-widest"></TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
+                        <TableBody className="divide-y">
                             {registrations.map((reg) => (
                                 <TableRow key={reg.id} className="hover:bg-muted/5 transition-colors group">
-                                    <TableCell className="px-1 md:px-2">
+                                    <TableCell className="px-2 md:px-3">
                                         <RosterDialog
                                             team={{
                                                 id: reg.tournament_team_id || "",
@@ -363,7 +363,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
-                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-10 text-[11px] font-black tracking-widest">
+                        <AlertDialogCancel className="border-border/10 bg-foreground/5 hover:bg-foreground/10 hover:text-foreground transition-all h-8 text-xs font-semibold">
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
@@ -371,9 +371,9 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                 e.preventDefault();
                                 confirmReject();
                             }}
-                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-10 text-[11px] font-black tracking-widest"
+                            className="border border-destructive/20 bg-destructive/90 text-foreground hover:bg-destructive hover:shadow-[0_0_15_rgba(220,38,38,0.3)] transition-all h-8 text-xs font-semibold"
                         >
-                            <X className="h-3.5 w-3.5 mr-2" />
+                            <X className="h-3.5 w-3.5 mr-1.5" />
                             Reject
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -388,7 +388,7 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
             }}>
                 <DialogContent showCloseButton={false} className="bg-card border rounded-sm shadow-2xl max-w-md p-0">
                     <DialogHeader className="border-b p-2 md:p-4 relative pr-10">
-                        <DialogTitle>
+                        <DialogTitle className="text-base font-bold">
                             {locale === 'th' ? "ถอนทีมออกจากการแข่งขัน" : "Withdraw Team from Tournament"}
                         </DialogTitle>
                         <Button
@@ -417,10 +417,10 @@ export function Registrations({ tournamentId, categoryId }: { tournamentId: stri
                                     : `Please type "${withdrawingReg?.name}" to confirm.`}
                             </p>
                             <Input
+                                size="sm"
                                 value={withdrawConfirmText}
                                 onChange={(e) => setWithdrawConfirmText(e.target.value)}
                                 autoComplete="off"
-                                className="h-9 text-xs"
                             />
                         </div>
                     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -111,6 +111,7 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                 <Dialog open={possessesStaffAccess && dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button
+                            size="sm"
                             disabled={!possessesStaffAccess}
                             onClick={() => {
                                 if (!possessesStaffAccess) {
@@ -143,9 +144,11 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                             </DialogHeader>
                             <div className="p-2 space-y-1 md:p-4 md:space-y-2 flex-1 overflow-y-auto">
                                 <div className="space-y-1">
-                                    <Label>{t("email_placeholder")}</Label>
+                                    <Label htmlFor="email">{t("email_address")} <span className="text-destructive">*</span></Label>
                                     <Input
+                                        id="email"
                                         type="email"
+                                        size="sm"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={t("email_input_placeholder")}
@@ -154,7 +157,7 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                                 </div>
                                 <div className="space-y-1">
                                     <Label>{t("role")}</Label>
-                                    <div className="grid grid-cols-3 gap-1 md:gap-2">
+                                    <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                         {[
                                             { id: 'co_organizer', label: t("role_co_organizer"), icon: <ShieldCheck className="h-4 w-4" /> },
                                             { id: 'staff', label: t("role_staff"), icon: <UserCog className="h-4 w-4" /> },
@@ -167,10 +170,10 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                                                     type="button"
                                                     onClick={() => setRole(item.id as 'co_organizer' | 'staff' | 'referee')}
                                                     className={cn(
-                                                        "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                        "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                         isSelected
-                                                            ? "border-primary/50 bg-primary/10 text-primary font-bold ring-1 ring-primary/50"
-                                                            : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                            ? "bg-primary/10 text-primary font-bold"
+                                                            : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                                     )}
                                                 >
                                                     <div className={cn(
@@ -190,6 +193,7 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                             </div>
                             <div className="border-t p-2 md:p-4 shrink-0">
                                 <Button
+                                    size="sm"
                                     onClick={handleInvite}
                                     disabled={isInviting || !email.trim()}
                                     className="w-full"
@@ -220,11 +224,11 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                                 className="py-12"
                             />
                         ) : (
-                            <div className="space-y-1 md:space-y-2">
+                            <div className="border bg-card rounded-sm divide-y">
                                 {staffSettings.map((collab) => (
                                     <div
                                         key={collab.id}
-                                        className="flex items-center justify-between p-1 md:p-2 bg-card border rounded-sm hover:border-primary transition-colors group/item"
+                                        className="flex items-center justify-between p-1 md:p-2 hover:bg-muted/30 transition-colors group/item"
                                     >
                                         <div className="flex items-center gap-1 lg:gap-2">
                                             <div className="h-10 w-10 border rounded-full group-hover/item:border-primary/30 transition-all shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -271,7 +275,7 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                             <AlertDialogDescription className="p-2 md:p-4">{t("confirm_remove")}</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="p-2 md:p-4 border-t grid grid-cols-2 gap-1 md:gap-2">
-                            <AlertDialogCancel className="mt-0">
+                            <AlertDialogCancel className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-0")}>
                                 {tCommon("cancel")}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -279,7 +283,7 @@ export function StaffSettings({ tournamentId, togglePayment }: StaffSettingsProp
                                     e.preventDefault();
                                     confirmRemove();
                                 }}
-                                className="bg-destructive hover:bg-destructive/90 transition-all flex items-center justify-center"
+                                className={cn(buttonVariants({ size: "sm", variant: "destructive" }), "flex items-center justify-center")}
                             >
                                 {t("remove") || "Remove"}
                             </AlertDialogAction>

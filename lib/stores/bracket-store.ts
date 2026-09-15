@@ -42,6 +42,7 @@ interface BracketState {
     addGroupNode: (position?: { x: number; y: number }) => void;
     addStandingNode: (position?: { x: number; y: number }) => void;
     addTeamListNode: (teams: TournamentTeam[], position?: { x: number; y: number }) => void;
+    insertTemplate: (templateNodes: Node[], templateEdges: Edge[], targetPosition?: { x: number; y: number }) => void;
     generateRoundRobinMatches: (groupId: string) => void;
     deleteNode: (id: string) => void;
     hydrate: (data: BracketCanvasData | null) => void;
@@ -591,6 +592,77 @@ export const useBracketStore = create<BracketState>((set, get) => ({
 
         set({
             nodes: [...nodes, newNode],
+            isDirty: true,
+        });
+    },
+
+    insertTemplate: (templateNodes, templateEdges, targetPosition) => {
+        get().takeSnapshot();
+        const { nodes, edges } = get();
+
+        if (!templateNodes || templateNodes.length === 0) return;
+
+        // Calculate bounding box of incoming template nodes
+        let minX = Infinity;
+        let minY = Infinity;
+        templateNodes.forEach((node) => {
+            if (node.position.x < minX) minX = node.position.x;
+            if (node.position.y < minY) minY = node.position.y;
+        });
+
+        // Determine destination origin
+        let destX = 0;
+        let destY = 0;
+
+        if (targetPosition) {
+            destX = targetPosition.x;
+            destY = targetPosition.y;
+        } else if (nodes.length > 0) {
+            // Find existing canvas right edge to place new template gracefully
+            let maxExistingX = -Infinity;
+            let minExistingY = Infinity;
+            nodes.forEach((n) => {
+                if (n.position.x > maxExistingX) maxExistingX = n.position.x;
+                if (n.position.y < minExistingY) minExistingY = n.position.y;
+            });
+            destX = maxExistingX + 450;
+            destY = isFinite(minExistingY) ? minExistingY : 50;
+        } else {
+            destX = 100;
+            destY = 100;
+        }
+
+        const idMap = new Map<string, string>();
+        const mappedNodes: Node[] = templateNodes.map((node) => {
+            const newId = `${node.type || "node"}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+            idMap.set(node.id, newId);
+            return {
+                ...node,
+                id: newId,
+                selected: true,
+                position: {
+                    x: destX + (node.position.x - minX),
+                    y: destY + (node.position.y - minY),
+                },
+            };
+        });
+
+        const mappedEdges: Edge[] = templateEdges.map((edge) => {
+            const newSource = idMap.get(edge.source) || edge.source;
+            const newTarget = idMap.get(edge.target) || edge.target;
+            return {
+                ...edge,
+                id: `edge-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+                source: newSource,
+                target: newTarget,
+            };
+        });
+
+        const deselectedExisting = nodes.map((n) => ({ ...n, selected: false }));
+
+        set({
+            nodes: [...deselectedExisting, ...mappedNodes],
+            edges: [...edges, ...mappedEdges],
             isDirty: true,
         });
     },

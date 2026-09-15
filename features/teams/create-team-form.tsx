@@ -65,7 +65,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className={iconOnlyMobile ? "h-8 w-8 p-0 sm:w-auto gap-1" : ""}>
+                <Button size="sm" className={iconOnlyMobile ? "h-8 w-8 p-0 sm:w-auto gap-1.5" : "gap-1.5"}>
                     <Plus className="h-4 w-4" />
                     <span className={iconOnlyMobile ? "hidden sm:inline" : ""}>{t("add_team")}</span>
                 </Button>
@@ -116,6 +116,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                             <Input
                                 id="name"
                                 name="name"
+                                size="sm"
                                 placeholder={t("team_name_placeholder")}
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                                 required
@@ -125,7 +126,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                         <div className="space-y-1">
                             <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
                             <input type="hidden" name="sport_id" value={selectedSport} required />
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 lg:gap-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 border bg-card rounded-sm divide-x divide-y overflow-hidden">
                                 {sportsList.map((sport) => {
                                     const isSelected = selectedSport === sport.id;
                                     return (
@@ -134,14 +135,14 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                             type="button"
                                             onClick={() => setSelectedSport(sport.id)}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
-                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                    ? "bg-primary/10 text-primary font-bold"
+                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                             )}
                                         >
                                             <div className={cn(
-                                                "p-2 rounded-full transition-colors",
+                                                "p-1.5 rounded-full transition-colors",
                                                 isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                                             )}>
                                                 {getSportIcon(sport.sport_name, "h-4 w-4")}
@@ -159,7 +160,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 id="description"
                                 name="description"
                                 placeholder={t("team_description_placeholder")}
-                                className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
+                                className="bg-transparent w-full text-xs text-foreground focus-visible:ring-0 resize-none min-h-[60px]"
                             />
                         </div>
 
@@ -169,6 +170,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 <Input
                                     id="contact_name"
                                     name="contact_name"
+                                    size="sm"
                                     placeholder={t("contact_name_placeholder")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required
@@ -179,6 +181,7 @@ export function CreateTeamForm({ iconOnlyMobile = false }: CreateTeamFormProps) 
                                 <Input
                                     id="contact_phone"
                                     name="contact_phone"
+                                    size="sm"
                                     placeholder={t("contact_phone_placeholder")}
                                     className="bg-transparent text-foreground focus-visible:ring-0"
                                     required

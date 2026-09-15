@@ -231,11 +231,11 @@ export default function NotificationsPage() {
             </div>
 
             {isLoading ? (
-                <div className="flex flex-col gap-2 md:gap-3">
+                <div className="border bg-card rounded-sm divide-y overflow-hidden">
                     {[...Array(4)].map((_, idx) => (
-                        <Card
+                        <div
                             key={idx}
-                            className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm"
+                            className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card"
                         >
                             <div className="flex items-start gap-4 w-full">
                                 <Skeleton className="h-10 w-10 rounded-full shrink-0" />
@@ -252,7 +252,7 @@ export default function NotificationsPage() {
                                 <Skeleton className="h-8 w-10 rounded-sm" />
                                 <Skeleton className="h-8 w-20 rounded-sm" />
                             </div>
-                        </Card>
+                        </div>
                     ))}
                 </div>
             ) : notifications.length === 0 ? (
@@ -264,15 +264,15 @@ export default function NotificationsPage() {
                     className="bg-card rounded-sm border"
                 />
             ) : (
-                <div className="flex flex-col gap-2 md:gap-3">
+                <div className="border bg-card rounded-sm divide-y overflow-hidden">
                     {notifications.map((item) => {
                         if (item.type === 'invite') {
                             const currentStatus = actionState[item.id] || item.status;
 
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="p-2 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -315,12 +315,14 @@ export default function NotificationsPage() {
                                             <div className="flex items-center gap-1 md:gap-2">
                                                 <Button
                                                     variant="destructive"
+                                                    size="icon-sm"
                                                     onClick={() => handleReject(item.tournament_id, item.id)}
                                                     disabled={isPending}
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </Button>
                                                 <Button
+                                                    size="sm"
                                                     onClick={() => handleAccept(item.tournament_id, item.id)}
                                                     disabled={isPending}
                                                 >
@@ -330,15 +332,15 @@ export default function NotificationsPage() {
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
                             );
                         } else if (item.type === 'registration') {
                             // Registration Notification
                             const regStatus = item.registration_status;
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all cursor-pointer"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors cursor-pointer"
                                     onClick={() => router.push(`/${locale}/dashboard/tournament-teams/${item.id}`)}
                                 >
                                     <div className="flex items-start gap-4">
@@ -392,15 +394,15 @@ export default function NotificationsPage() {
                                             </Badge>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
                             );
                         } else if (item.type === 'team_request') {
                             // Team Management Request Notification (Own Claims)
                             const reqStatus = item.status;
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -447,15 +449,15 @@ export default function NotificationsPage() {
                                             </Badge>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
                             );
                         } else {
                             // Incoming Team Management Request Notification (For Organizer/Collaborator)
                             const currentStatus = actionState[item.id] || item.status;
                             return (
-                                <Card
+                                <div
                                     key={item.id}
-                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 bg-card border rounded-sm hover:border-primary/50 transition-all"
+                                    className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 hover:bg-muted/40 transition-colors"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="h-10 w-10 border rounded-full shrink-0 p-1 bg-muted/30 flex items-center justify-center">
@@ -521,12 +523,14 @@ export default function NotificationsPage() {
                                             <div className="flex items-center gap-1 md:gap-2">
                                                 <Button
                                                     variant="destructive"
+                                                    size="icon-sm"
                                                     onClick={() => handleRejectTeamRequest(item.id)}
                                                     disabled={isPending}
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </Button>
                                                 <Button
+                                                    size="sm"
                                                     onClick={() => handleApproveTeamRequest(item.id)}
                                                     disabled={isPending}
                                                 >
@@ -536,7 +540,7 @@ export default function NotificationsPage() {
                                             </div>
                                         )}
                                     </div>
-                                </Card>
+                                </div>
                             );
                         }
                     })}

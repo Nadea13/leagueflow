@@ -13,7 +13,7 @@ import dynamic from "next/dynamic";
 const MapPicker = dynamic(() => import("./map-picker"), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-80 rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
+        <div className="w-full aspect-[2/1] rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
             <span className="text-xs text-muted-foreground">Loading interactive map...</span>
         </div>
     )
@@ -63,6 +63,7 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                     <Label htmlFor="location_name">{t("venue_name")} <span className="text-destructive">*</span></Label>
                     <Input
                         type="text"
+                        size="sm"
                         id="location_name"
                         name="location_name"
                         value={locationName}
@@ -84,6 +85,7 @@ export function LocationSettings({ tournament }: LocationSettingsProps) {
                 <div className="flex justify-end">
                     <Button
                         type="submit"
+                        size="sm"
                         disabled={isPending}
                         className="md:w-fit w-full"
                     >

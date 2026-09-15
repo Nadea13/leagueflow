@@ -299,7 +299,7 @@ export function PublicMatchesHome() {
                                                     </div>
                                                     <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent ml-4" />
                                                 </div>
-                                                <div className="grid grid-cols-1 gap-4">
+                                                <div className="border bg-card rounded-sm divide-y overflow-hidden">
                                                     {tournamentMatches.map((match) => (
                                                         <MatchCard 
                                                             key={match.id} 

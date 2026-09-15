@@ -163,7 +163,7 @@ export default function MapPicker({ value, onChange, onLocationNameSelect }: Map
 
     return (
         <div className="space-y-1 md:space-y-2">
-            <div className="relative w-full h-120 rounded-sm overflow-hidden border border-foreground/10 z-10">
+            <div className="relative w-full aspect-[2/1] rounded-sm overflow-hidden border border-foreground/10 z-10">
                 <div ref={mapContainerRef} className="w-full h-full" />
             </div>
         </div>

@@ -34,7 +34,25 @@ const getScore = (score: number | { total?: number } | null | undefined): number
     return score;
 };
 
-export function MatchCard({ match: initialMatch, tournamentId, isPublic = false, isEditMode = false, teams = [], canvasData = null, sport: propSport }: { match: Match; tournamentId: string; isPublic?: boolean; isEditMode?: boolean; teams?: Team[]; canvasData?: BracketCanvasData | null; sport?: string }) {
+export function MatchCard({
+    match: initialMatch,
+    tournamentId,
+    isPublic = false,
+    isEditMode = false,
+    teams = [],
+    canvasData = null,
+    sport: propSport,
+    className
+}: {
+    match: Match;
+    tournamentId: string;
+    isPublic?: boolean;
+    isEditMode?: boolean;
+    teams?: Team[];
+    canvasData?: BracketCanvasData | null;
+    sport?: string;
+    className?: string;
+}) {
     const t = useTranslations("Fixtures");
     const tMatch = useTranslations("Match");
     const tCommon = useTranslations("Common");
@@ -146,15 +164,16 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
     const CardContent = (
         <div
             className={cn(
-                "flex flex-col bg-card border md:grid md:grid-cols-[150px_1fr_150px] items-center p-2 md:p-4 transition-all cursor-pointer group relative overflow-hidden rounded-sm",
+                "flex flex-col bg-card md:grid md:grid-cols-[120px_1fr_120px] items-center px-2 py-2 md:px-4 md:py-2.5 transition-all cursor-pointer group relative overflow-hidden hover:bg-muted/40",
+                className
             )}
         >
             {/* 1. Status/Time/Badge Section */}
-            <div className="flex flex-col items-center justify-center w-full md:w-auto gap-2 min-w-[120px]">
+            <div className="flex flex-col items-center justify-center w-full md:w-auto gap-1 min-w-[90px]">
                 {status !== 'scheduled' && (
                     <div
                         className={cn(
-                            "text-xs tracking-widest font-black",
+                            "text-[10px] md:text-xs tracking-wider font-bold",
                             status === 'scheduled' && "text-muted-foreground",
                             isLive && "text-primary border-primary animate-pulse",
                             isFinished && "text-muted-foreground",
@@ -163,7 +182,7 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                     >
                         {isFinished ? t("ft") : (!match.away_team_id ? t("scheduled") : (
                             isLive ? (
-                                <span className="flex items-center gap-2">
+                                <span className="flex items-center gap-1.5">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
@@ -177,11 +196,11 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                 {/* Date/Time Info (Edit Mode only) */}
                 {!isFinished && !isLive && !isPublic && isEditMode && (
                     <div className="w-full pr-2 md:pr-3">
-                        <div className="flex flex-col gap-2 w-full" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-col gap-1 w-full" onClick={(e) => e.stopPropagation()}>
                             <Input
                                 type="date"
                                 value={matchDate}
-                                className="bg-card"
+                                className="bg-card h-8 text-xs"
                                 onChange={(e) => handleDateUpdate(e.target.value)}
                             />
                         </div>
@@ -190,9 +209,9 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
             </div>
 
             {/* 2. Teams & Score Section */}
-            <div className="flex flex-col items-center w-full gap-1 md:gap-2">
+            <div className="flex flex-col items-center w-full gap-0.5 md:gap-1">
                 {/* Match Label (Middle Top) */}
-                <div className="text-[10px] font-black tracking-wider text-muted-foreground/60">
+                <div className="text-[9px] md:text-[10px] font-bold tracking-wider text-muted-foreground/60 uppercase">
                     {(() => {
                         let nodeLabel = "";
                         const nodeId = match.node_id;
@@ -235,10 +254,10 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
 
                 <div className="flex flex-row items-center justify-between w-full gap-2 md:gap-3">
                     {/* Home Team */}
-                    <div className="flex-1 flex items-center justify-end gap-3 md:gap-6 text-right w-[40%]">
+                    <div className="flex-1 flex items-center justify-end gap-2 md:gap-3 text-right w-[40%]">
                         <div className={cn(
-                            "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-end group-hover:text-primary transition-colors duration-300",
-                            (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground/60"
+                            "text-xs md:text-sm font-bold tracking-tight flex items-center gap-2 justify-end group-hover:text-primary transition-colors duration-300",
+                            (isFinished && (match.home_score ?? -1) > (match.away_score ?? -1)) || match.winner_id === match.home_team_id ? "text-foreground" : "text-muted-foreground/70"
                         )}>
                             {isEditMode ? (
                                 <div onClick={e => e.stopPropagation()}>
@@ -246,27 +265,27 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                         value={match.home_team_id || "tbd"}
                                         onValueChange={(value) => updateMatch(match.id, { home_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                     >
-                                        <SelectTrigger className="w-[120px] md:w-[180px]">
+                                        <SelectTrigger size="sm" className="w-[120px] md:w-[150px]">
                                             <SelectValue placeholder={tMatch("select_team")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-card">
-                                            <SelectItem value="tbd" className="font-black text-xs text-foreground">{tMatch("tbd")}</SelectItem>
+                                            <SelectItem value="tbd" className="font-bold text-xs text-foreground">{tMatch("tbd")}</SelectItem>
                                             {teams.map((t) => (
-                                                <SelectItem key={t.id} value={t.id} className="font-black text-xs text-foreground">{t.name}</SelectItem>
+                                                <SelectItem key={t.id} value={t.id} className="font-bold text-xs text-foreground">{t.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                             ) : (
                                 <>
-                                    <span className="line-clamp-1 py-1 px-2 text-foreground">
+                                    <span className="line-clamp-1 py-0.5 px-1 text-foreground">
                                         {match.home_team?.name || tMatch("tbd")}
                                     </span>
                                     {match.home_team?.logo_url ? (
-                                        <Image src={match.home_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
+                                        <Image src={match.home_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 p-0.5 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                     ) : (
-                                        <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
-                                            <span className="text-sm md:text-base font-black text-muted-foreground">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 border rounded-full bg-muted/20">
+                                            <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
                                                 {match.home_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                             </span>
                                         </div>
@@ -294,10 +313,10 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                     />
 
                     {/* Away Team */}
-                    <div className="flex-1 flex items-center justify-start gap-3 md:gap-6 text-left w-[40%]">
+                    <div className="flex-1 flex items-center justify-start gap-2 md:gap-3 text-left w-[40%]">
                         <div className={cn(
-                            "text-base md:text-2xl font-black tracking-tighter flex items-center gap-3 justify-start group-hover:text-primary transition-colors duration-300",
-                            (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground/60"
+                            "text-xs md:text-sm font-bold tracking-tight flex items-center gap-2 justify-start group-hover:text-primary transition-colors duration-300",
+                            (isFinished && (match.away_score ?? -1) > (match.home_score ?? -1)) || match.winner_id === match.away_team_id ? "text-foreground" : "text-muted-foreground/70"
                         )}>
                             {isEditMode ? (
                                 <div onClick={e => e.stopPropagation()}>
@@ -305,13 +324,13 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                                         value={match.away_team_id || "tbd"}
                                         onValueChange={(value) => updateMatch(match.id, { away_team_id: value === "tbd" ? "" : value }, tournamentId)}
                                     >
-                                        <SelectTrigger className="w-[120px] md:w-[180px]">
+                                        <SelectTrigger size="sm" className="w-[120px] md:w-[150px]">
                                             <SelectValue placeholder={tMatch("select_team")} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-card">
-                                            <SelectItem value="tbd" className="font-black text-xs">{tMatch("tbd")}</SelectItem>
+                                            <SelectItem value="tbd" className="font-bold text-xs">{tMatch("tbd")}</SelectItem>
                                             {teams.map((t) => (
-                                                <SelectItem key={t.id} value={t.id} className="font-black text-xs">{t.name}</SelectItem>
+                                                <SelectItem key={t.id} value={t.id} className="font-bold text-xs">{t.name}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -319,15 +338,15 @@ export function MatchCard({ match: initialMatch, tournamentId, isPublic = false,
                             ) : (
                                 <>
                                     {match.away_team?.logo_url ? (
-                                        <Image src={match.away_team.logo_url} width={48} height={48} className="w-8 h-8 p-1 md:w-12 md:h-12 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
+                                        <Image src={match.away_team.logo_url} width={32} height={32} className="w-6 h-6 md:w-8 md:h-8 p-0.5 object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all rounded-full" alt="" />
                                     ) : (
-                                        <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center shrink-0 border rounded-full">
-                                            <span className="text-sm md:text-base font-black text-muted-foreground">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 border rounded-full bg-muted/20">
+                                            <span className="text-[10px] md:text-xs font-bold text-muted-foreground">
                                                 {match.away_team?.name?.substring(0, 2).toUpperCase() || "?"}
                                             </span>
                                         </div>
                                     )}
-                                    <span className="line-clamp-1 py-1 px-2 text-foreground">
+                                    <span className="line-clamp-1 py-0.5 px-1 text-foreground">
                                         {match.away_team?.name || tMatch("tbd")}
                                     </span>
                                 </>

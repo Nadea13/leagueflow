@@ -102,9 +102,10 @@ export function MyTournamentsClient({ initialTournaments, userPlan }: MyTourname
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 lg:w-128 sm:flex-none" id="tour-my-tournaments-search">
-                        <Search className="absolute right-2 lg:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
+                        <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                         <Input
                             type="search"
+                            size="sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-card"

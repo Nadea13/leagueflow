@@ -148,28 +148,28 @@ export function MatchManager({
                             <div key={date} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                                 {/* Date Header */}
                                 {date !== "TBD" && (
-                                    <div className="flex items-center gap-1 md:gap-2">
-                                        <h2 className="text-base md:text-xl font-black tracking-tighter text-foreground">
+                                    <div className="flex items-center gap-1 md:gap-2 mb-1">
+                                        <h2 className="text-xs md:text-sm font-bold tracking-tight text-foreground">
                                             {formatDate(date, "EEEE, d MMM yyyy", locale)}
                                         </h2>
                                     </div>
                                 )}
 
-                                <div className="space-y-1 md:space-y-2">
+                                <div className="space-y-2 md:space-y-3">
                                     {Object.entries(groupedMatches[date]).map(([stageLabel, stageMatches]) => (
-                                        <div key={stageLabel} className="space-y-1 md:space-y-2">
+                                        <div key={stageLabel} className="space-y-1 md:space-y-1.5">
                                             {/* Stage Header */}
-                                            <div className="flex items-center gap-1 md:gap-2 group/stage">
-                                                <div className="h-px flex-1 bg-border" />
+                                            <div className="flex items-center gap-1.5 md:gap-2 group/stage py-0.5">
+                                                <div className="h-px flex-1 bg-border/60" />
                                                 <div className="flex flex-col">
-                                                    <h4 className="text-lg font-black tracking-tight text-primary">
+                                                    <h4 className="text-[10px] md:text-xs font-bold tracking-wider text-primary uppercase">
                                                         {stageLabel}
                                                     </h4>
                                                 </div>
-                                                <div className="h-px flex-1 bg-border" />
+                                                <div className="h-px flex-1 bg-border/60" />
                                             </div>
 
-                                            <div className="grid grid-cols-1 gap-1 md:gap-2">
+                                            <div className="border bg-card rounded-sm divide-y overflow-hidden">
                                                 {stageMatches
                                                     .sort((a, b) => (a.match_time || "") > (b.match_time || "") ? 1 : -1)
                                                     .map((match) => (

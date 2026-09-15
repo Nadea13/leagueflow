@@ -13,9 +13,7 @@ import {
     CheckCircle2, 
     FileText, 
     Trash2,
-    MapPin,
     Clock,
-    ArrowLeft,
     ShieldCheck,
     AlertCircle
 } from "lucide-react";
@@ -34,7 +32,6 @@ import { searchMasterPlayers } from "@/actions/common/user";
 import { submitRosterWithSender } from "@/actions/tournaments/registration";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Player } from "@/types/index";
-import { Header } from "@/components/ui/header";
 import { formatDate } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { getPositionOptions } from "@/lib/positions";
@@ -124,8 +121,6 @@ export function DocumentSubmissionClient({
     registeredTeams,
     locale,
     initialTeamId,
-    hideHeader = false,
-    backHref
 }: DocumentSubmissionClientProps) {
     const [selectedRegId, setSelectedRegId] = useState<string>(
         initialTeamId || (registeredTeams.length > 0 ? registeredTeams[0].id : "")
@@ -523,65 +518,11 @@ export function DocumentSubmissionClient({
 
     return (
         <div className="space-y-2 md:space-y-4 pb-4">
-            {/* Header with Navigation */}
-            {!hideHeader ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            asChild
-                            className="h-9 w-9 shrink-0 hover:bg-primary/10 hover:text-primary transition-all"
-                        >
-                            <Link href={backHref || `/dashboard/registrations/${tournament.id}`}>
-                                <ArrowLeft className="h-4 w-4" />
-                            </Link>
-                        </Button>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <Header level={2} className="text-xl md:text-2xl font-black tracking-tight">
-                                    {tournament.name}
-                                </Header>
-                                <Badge variant="outline" className="text-xs">
-                                    {tournament.sport_name || "Sport"}
-                                </Badge>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleDownloadTemplate}
-                            className="gap-1.5 h-9 text-xs font-bold"
-                        >
-                            <Download className="h-3.5 w-3.5 text-primary" />
-                            ดาวน์โหลด Template (.xlsx)
-                        </Button>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex items-center justify-end pb-1">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadTemplate}
-                        className="gap-1.5 h-9 text-xs font-bold"
-                    >
-                        <Download className="h-3.5 w-3.5 text-primary" />
-                        ดาวน์โหลด Template (.xlsx)
-                    </Button>
-                </div>
-            )}
-
             {/* Tournament Deadline Notice */}
             {tournament.document_deadline && (
                 <div
                     className={cn(
-                        "p-3 md:p-4 rounded-sm border flex items-center justify-between gap-3 text-xs",
+                        "p-3 md:p-4 rounded-sm border backdrop-blur-lg flex items-center justify-between gap-3 text-xs",
                         isPastDeadline
                             ? "bg-destructive/10 border-destructive/30 text-destructive"
                             : "bg-primary/5 border-primary/20 text-foreground"
@@ -597,12 +538,16 @@ export function DocumentSubmissionClient({
                             )}
                         </div>
                     </div>
-                    {tournament.location_name && (
-                        <div className="hidden md:flex items-center gap-1.5 text-muted-foreground">
-                            <MapPin className="h-3.5 w-3.5" />
-                            <span>{tournament.location_name}</span>
-                        </div>
-                    )}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadTemplate}
+                        className="gap-1.5 h-9 text-xs font-bold"
+                    >
+                        <Download className="h-3.5 w-3.5 text-primary" />
+                        ดาวน์โหลด Template (.xlsx)
+                    </Button>
                 </div>
             )}
 
@@ -622,7 +567,7 @@ export function DocumentSubmissionClient({
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-2 md:space-y-4">
                     {/* Step 1: Select Team & Contact Info */}
-                    <Card className="rounded-sm border bg-card">
+                    <Card className="rounded-sm border bg-card/50 backdrop-blur-lg">
                         <CardHeader className="p-4">
                             <div className="flex items-center gap-1">
                                 <CardTitle className="text-base font-bold">เลือกทีมและข้อมูลผู้ยื่นเอกสาร</CardTitle>
@@ -716,7 +661,7 @@ export function DocumentSubmissionClient({
                     </Card>
 
                     {/* Step 2: Upload File or Manual Form Entry */}
-                    <Card className="rounded-sm border bg-card">
+                    <Card className="rounded-sm border bg-card/50 backdrop-blur-lg">
                         <CardHeader className="p-4">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
@@ -845,7 +790,7 @@ export function DocumentSubmissionClient({
                                     {players.map((player, idx) => (
                                         <div
                                             key={idx}
-                                            className="border rounded-sm p-3 relative flex flex-col items-center gap-2 bg-card hover:border-primary/40 transition-colors"
+                                            className="border rounded-sm p-3 relative flex flex-col items-center gap-2`1 hover:border-primary/40 transition-colors"
                                         >
                                             {/* Remove row button */}
                                             {players.length > 1 && (
@@ -1022,7 +967,7 @@ export function DocumentSubmissionClient({
                     </Card>
 
                     {/* Submit Bar */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border rounded-sm bg-card">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border rounded-sm bg-card/50 backdrop-blur-lg">
                         <div className="text-xs text-muted-foreground text-center sm:text-left">
                             ตรวจสอบความถูกต้องของรายชื่อและข้อมูลผู้ส่งก่อนกดยืนยันส่งเอกสาร
                         </div>
@@ -1034,12 +979,12 @@ export function DocumentSubmissionClient({
                         >
                             {isPending ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     กำลังบันทึกและส่งเอกสาร...
                                 </>
                             ) : (
                                 <>
-                                    <FileText className="w-4 h-4 mr-2" />
+                                    <FileText className="w-4 h-4" />
                                     ยืนยันส่งเอกสาร
                                 </>
                             )}

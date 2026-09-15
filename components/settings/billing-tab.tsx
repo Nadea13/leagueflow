@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/ui/header";
 import { Tab } from "@/components/ui/tab";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const getPlanPrice = (plan: Plan) => {
     if (plan.id === "starter" || plan.id === "match") return 0;
@@ -212,9 +213,9 @@ export function BillingTab() {
                 </div>
 
                 {loadingData && plans.length === 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 items-stretch animate-pulse">
+                    <div className="border bg-card rounded-sm overflow-hidden divide-y md:divide-y-0 md:divide-x grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-stretch animate-pulse">
                         {[...Array(4)].map((_, idx) => (
-                            <div key={idx} className="bg-card border rounded-sm p-2 md:p-4 flex flex-col justify-between space-y-4">
+                            <div key={idx} className="p-3 md:p-4 flex flex-col justify-between space-y-4">
                                 <div className="space-y-3">
                                     <Skeleton className="h-6 w-1/2 rounded-sm" />
                                     <Skeleton className="h-8 w-1/3 rounded-sm" />
@@ -225,12 +226,12 @@ export function BillingTab() {
                                     <Skeleton className="h-3 w-5/6 rounded-sm" />
                                     <Skeleton className="h-3 w-4/5 rounded-sm" />
                                 </div>
-                                <Skeleton className="h-9 w-full rounded-sm mt-4" />
+                                <Skeleton className="h-8 w-full rounded-sm mt-4" />
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-4 items-stretch">
+                    <div className="border bg-card rounded-sm overflow-hidden divide-y md:divide-y-0 md:divide-x grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-stretch">
                         {filteredPlans.map((plan) => {
                             const isCurrent = activePlan === plan.id || ((plan.id === 'starter' || plan.id === 'match') && activePlan === 'free') || ((plan.id === 'pro' || plan.id === 'event') && (activePlan === 'monthly' || activePlan === 'event' || activePlan === 'pro')) || (plan.id === 'pro_yearly' && activePlan === 'yearly');
                             const isCustoms = plan.id === 'customs';
@@ -244,28 +245,29 @@ export function BillingTab() {
                             return (
                                 <div
                                     key={plan.id}
-                                    className={`bg-card border rounded-sm p-2 md:p-4 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative ${isCurrent
-                                        ? "border-2 border-primary shadow-lg"
-                                        : isRecommended
-                                            ? "shadow-sm hover:border-primary"
-                                            : "border shadow-sm hover:border-primary/45"
-                                        }`}
-                                >
-                                    {isRecommended && (
-                                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-2.5 py-0.5 rounded tracking-wider">
-                                            {t("recommended")}
-                                        </div>
+                                    className={cn(
+                                        "p-3 md:p-4 flex flex-col justify-between transition-colors relative",
+                                        isCurrent && "bg-primary/5",
+                                        isRecommended && !isCurrent && "bg-muted/10"
                                     )}
+                                >
                                     <div>
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h3 className="text-md font-black">{getPlanName(plan.id)}</h3>
+                                        <div className="flex justify-between items-start mb-1 gap-1">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <h3 className="text-sm font-black">{getPlanName(plan.id)}</h3>
+                                                {isRecommended && (
+                                                    <span className="bg-primary text-primary-foreground text-[9px] font-black px-1.5 py-0.5 rounded-sm tracking-wider uppercase">
+                                                        {t("recommended")}
+                                                    </span>
+                                                )}
+                                            </div>
                                             {isCurrent && (
-                                                <Badge variant="outline" className="text-[10px]">
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-bold border-primary text-primary">
                                                     {t("active_badge")}
                                                 </Badge>
                                             )}
                                         </div>
-                                        <p className="text-muted-foreground text-[10px]">
+                                        <p className="text-muted-foreground text-[10px] min-h-[28px]">
                                             {isPro
                                                 ? t("proDesc")
                                                 : (plan.id === "starter" || plan.id === "match")
@@ -282,63 +284,64 @@ export function BillingTab() {
                                             }
                                         </p>
 
-                                        <div className="flex flex-col min-h-[48px] justify-center">
+                                        <div className="flex flex-col min-h-[44px] justify-center my-2">
                                             {isPro ? (
                                                 <>
                                                     <div className="flex items-baseline gap-1 flex-wrap">
-                                                        <span className="text-2xl font-black line-through text-muted-foreground/60">฿290</span>
-                                                        <span className="text-2xl font-black">฿145</span>
+                                                        <span className="text-lg font-black line-through text-muted-foreground/60">฿290</span>
+                                                        <span className="text-xl font-black">฿145</span>
                                                         <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
-                                                        <Badge variant="default">
-                                                            -50% โปรเปิดตัว
+                                                        <Badge variant="default" className="text-[9px] px-1.5 py-0 font-bold">
+                                                            -50%
                                                         </Badge>
                                                     </div>
                                                 </>
                                             ) : isProYearly ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿2,900</span>
+                                                    <span className="text-xl font-black">฿2,900</span>
                                                     <span className="text-muted-foreground text-xs">{t("perYear")}</span>
                                                 </div>
                                             ) : isManagerPro ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿{plan.price.toLocaleString()}</span>
+                                                    <span className="text-xl font-black">฿{plan.price.toLocaleString()}</span>
                                                     <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                 </div>
                                             ) : isCustoms ? (
-                                                <span className="text-xl font-black py-1">{t("contactSales")}</span>
+                                                <span className="text-base font-black py-1">{t("contactSales")}</span>
                                             ) : isCup ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿1,490</span>
+                                                    <span className="text-xl font-black">฿1,490</span>
                                                     <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                 </div>
                                             ) : isCupYearly ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿14,900</span>
+                                                    <span className="text-xl font-black">฿14,900</span>
                                                     <span className="text-muted-foreground text-xs">{t("perYear")}</span>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-2xl font-black">฿0</span>
+                                                    <span className="text-xl font-black">฿0</span>
                                                     <span className="text-muted-foreground text-xs">{t("lifetime")}</span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="space-y-1.5 pt-2 md:pt-4 border-t">
+                                        <div className="space-y-1.5 pt-3 border-t">
                                             {getPlanFeatures(plan.id).map((feature, idx) => (
-                                                <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                                                    <span className="leading-tight">{feature}</span>
+                                                <div key={idx} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                                                    <Check className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                                                    <span className="leading-tight text-[11px]">{feature}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="pt-2 md:pt-4">
+                                    <div className="pt-3 mt-3 border-t">
                                         {isCustoms ? (
                                             <Button
                                                 variant="outline"
-                                                className="w-full text-xs font-bold h-9"
+                                                size="sm"
+                                                className="w-full text-xs font-bold"
                                                 asChild
                                             >
                                                 <a href="https://www.facebook.com/profile.php?id=61583928452496" target="_blank" rel="noopener noreferrer">
@@ -348,7 +351,8 @@ export function BillingTab() {
                                         ) : (
                                             <Button
                                                 variant={isCurrent ? "outline" : ((isRecommended || isProYearly || isCup || isCupYearly) ? "default" : "outline")}
-                                                className={`w-full text-xs font-bold h-9 ${isCurrent
+                                                size="sm"
+                                                className={`w-full text-xs font-bold ${isCurrent
                                                     ? "border-primary text-primary hover:bg-primary/10"
                                                     : (isRecommended || isProYearly || isCup || isCupYearly) && !isCurrent
                                                         ? "bg-primary text-primary-foreground hover:bg-primary/95"
@@ -370,7 +374,7 @@ export function BillingTab() {
                                                                     : plan.id === "manager_pro"
                                                                         ? t("manager_pro.title") || "Subscribe Manager Pro"
                                                                         : t("getStartedFree")
-                                                }
+                                                 }
                                             </Button>
                                         )}
                                     </div>

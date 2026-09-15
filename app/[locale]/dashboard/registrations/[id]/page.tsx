@@ -237,7 +237,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
             {/* Content Wrapper */}
             <div className="relative z-10 space-y-2 md:space-y-4">
                 {/* Top Navigation & Action Bar */}
-                <div className="flex md:items-start justify-between gap-2 md:gap-4">
+                <div className="flex items-center justify-between gap-2 md:gap-4 w-full">
                     <div className="flex items-center gap-1 md:gap-2">
                         <Button variant="ghost" size="icon" asChild className="h-10 w-10 shrink-0 hover:bg-primary/10 hover:text-primary transition-all">
                             <Link href="/dashboard">
@@ -294,7 +294,7 @@ export default async function DashboardRegistrationPage({ params, searchParams }
                 </div>
 
                 {activeTab === "documents" ? (
-                    <div className="pt-2">
+                    <div>
                         <DocumentSubmissionClient
                             tournament={tournamentDetails}
                             registeredTeams={userRegisteredTeams}

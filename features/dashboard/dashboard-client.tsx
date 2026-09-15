@@ -397,9 +397,10 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
                         {/* Search input */}
                         <div className="relative w-full md:w-128">
-                            <Search className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30 group-focus-within:text-primary group-focus-within:scale-110 transition-all duration-300" />
+                            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30 group-focus-within:text-primary transition-all duration-300" />
                             <Input
                                 type="search"
+                                size="sm"
                                 name="q"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}

@@ -15,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, X, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound } from "lucide-react";
+import { Loader2, X, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import {
@@ -288,7 +288,7 @@ export function CreateCategoryForm({
                             <Label>
                                 {isThai ? "รุ่นอายุ" : "Age Category"}
                             </Label>
-                            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                            <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
                                     { id: "under", label: "Under (U)", icon: <ArrowDownCircle className="h-4 w-4" /> },
                                     { id: "over", label: "Over (+)", icon: <PlusCircle className="h-4 w-4" /> },
@@ -304,10 +304,10 @@ export function CreateCategoryForm({
                                                 if (typeItem.id === "open") setAgeValue("");
                                             }}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
-                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                    ? "bg-primary/10 text-primary font-bold"
+                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                             )}
                                         >
                                             <div className={cn(
@@ -331,6 +331,7 @@ export function CreateCategoryForm({
                                     </Label>
                                     <Input
                                         type="text"
+                                        size="sm"
                                         value={ageValue}
                                         onChange={(e) => {
                                             const val = e.target.value.replace(/[^0-9]/g, "");
@@ -350,7 +351,7 @@ export function CreateCategoryForm({
                             <Label>
                                 {isThai ? "ประเภทเพศ" : "Gender Group"}
                             </Label>
-                            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                            <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
                                     { id: "male", label: isThai ? "ชาย" : "Male", icon: <Mars className="h-4 w-4" /> },
                                     { id: "female", label: isThai ? "หญิง" : "Female", icon: <Venus className="h-4 w-4" /> },
@@ -363,10 +364,10 @@ export function CreateCategoryForm({
                                             type="button"
                                             onClick={() => setGenderType(genderItem.id)}
                                             className={cn(
-                                                "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                 isSelected
-                                                    ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                    : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                    ? "bg-primary/10 text-primary font-bold"
+                                                    : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                             )}
                                         >
                                             <div className={cn(
@@ -423,15 +424,37 @@ export function CreateCategoryForm({
                                 <Label>
                                     {isThai ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}
                                 </Label>
-                                <Select value={maxSets} onValueChange={setMaxSets}>
-                                    <SelectTrigger className="w-full h-10">
-                                        <SelectValue placeholder={isThai ? "เลือกจำนวนเซ็ต" : "Select Sets"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="3">{isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
-                                        <SelectItem value="5">{isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="grid grid-cols-2 border bg-card rounded-sm divide-x overflow-hidden">
+                                    {[
+                                        { id: "3", label: isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets", icon: <Layers className="h-4 w-4" /> },
+                                        { id: "5", label: isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets", icon: <Layers className="h-4 w-4" /> },
+                                    ].map((setItem) => {
+                                        const isSelected = maxSets === setItem.id;
+                                        return (
+                                            <button
+                                                key={setItem.id}
+                                                type="button"
+                                                onClick={() => setMaxSets(setItem.id)}
+                                                className={cn(
+                                                    "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
+                                                    isSelected
+                                                        ? "bg-primary/10 text-primary font-bold"
+                                                        : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "p-1.5 rounded-full transition-colors",
+                                                    isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                )}>
+                                                    {setItem.icon}
+                                                </div>
+                                                <span className="text-xs font-bold truncate w-full transition-colors">
+                                                    {setItem.label}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
                     </div>

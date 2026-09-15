@@ -461,12 +461,17 @@ export function RegistrationForm({
                         </div>
 
                         {!isFree && (
-                            <>
-                                <div className="grid md:grid-cols-2 gap-1 md:gap-2">
+                            <div className="border rounded-sm overflow-hidden bg-card/30">
+                                <div className={cn(
+                                    tournament.bank_account_number
+                                        ? "grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border"
+                                        : "flex flex-col"
+                                )}>
                                     {tournament.bank_account_number && (
-                                        <div className="border rounded-sm overflow-hidden">
-                                            <div className="flex justify-center bg-[#113566] p-2">
-                                                <svg width="761" height="227" viewBox="0 0 761 227" className="h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <div className="flex flex-col">
+                                            {/* PromptPay Header on the left side only as per mockup */}
+                                            <div className="flex justify-center bg-[#113566] p-2.5">
+                                                <svg width="761" height="227" viewBox="0 0 761 227" className="h-7" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M595.456 145.496V161.836H624.416V174.086H595.476V188.956H627.806V201.776H581.266V132.766H626.246V145.506H595.466L595.456 145.496Z" fill="#FFFEFE" />
                                                     <path d="M429.286 201.756H428.476C424.076 201.756 419.676 201.746 415.276 201.766C414.656 201.766 414.366 201.606 414.146 200.966C412.506 196.196 410.816 191.446 409.166 186.686C408.976 186.136 408.726 185.936 408.146 185.936C400.126 185.956 392.116 185.956 384.096 185.936C383.476 185.936 383.236 186.136 383.026 186.726C381.346 191.446 379.616 196.156 377.906 200.876C377.806 201.146 377.706 201.406 377.586 201.716H363.666C364.396 199.806 365.116 197.946 365.836 196.086C373.906 175.236 381.986 154.376 390.036 133.516C390.286 132.876 390.586 132.676 391.246 132.686C394.786 132.726 398.326 132.716 401.866 132.686C402.396 132.686 402.656 132.826 402.866 133.366C411.576 155.916 420.316 178.466 429.036 201.016C429.116 201.226 429.176 201.446 429.276 201.756H429.286ZM396.196 150.316C396.136 150.316 396.086 150.296 396.026 150.296C393.166 158.276 390.306 166.266 387.436 174.296H404.686C401.846 166.266 399.016 158.286 396.196 150.316Z" fill="#FFFEFE" />
                                                     <path d="M318.536 132.766C318.736 132.746 318.916 132.716 319.086 132.716C328.366 132.736 337.646 132.636 346.926 132.816C352.666 132.926 357.966 134.646 362.436 138.456C365.926 141.426 367.876 145.247 368.556 149.727C369.186 153.887 369.016 158.006 367.556 161.986C365.576 167.396 361.596 170.826 356.386 172.956C352.976 174.346 349.396 174.936 345.726 174.966C341.306 175.006 336.876 174.986 332.446 174.986C332.216 174.986 331.996 174.986 331.686 174.986V201.786H318.536V132.776V132.766ZM331.676 162.917C331.846 162.937 331.946 162.956 332.046 162.956C336.416 162.956 340.796 163.006 345.166 162.906C346.636 162.876 348.136 162.576 349.556 162.176C352.256 161.426 354.216 159.806 354.896 156.946C355.366 154.966 355.376 152.996 354.896 151.016C354.386 148.916 353.146 147.416 351.196 146.486C349.606 145.716 347.916 145.256 346.166 145.216C341.466 145.126 336.766 145.126 332.066 145.096C331.946 145.096 331.826 145.146 331.686 145.176V162.906L331.676 162.917Z" fill="#FFFEFE" />
@@ -484,13 +489,13 @@ export function RegistrationForm({
                                                     <path d="M162.016 127.896C171.946 137.496 181.566 147.417 191.406 157.107C204.976 170.717 218.626 184.237 232.186 197.857C200.636 197.927 169.086 197.866 137.536 197.886C134.376 197.856 131.226 197.956 128.076 197.836C128.126 186.906 128.076 175.986 128.096 165.056C128.136 163.386 128.006 161.716 128.176 160.066C135.596 160.146 143.016 160.067 150.436 160.107C153.666 160.147 157.066 159.106 159.326 156.716C161.356 154.516 162.106 151.426 161.996 148.496C161.996 141.626 161.966 134.756 162.006 127.896H162.016Z" fill="#54A69A" />
                                                 </svg>
                                             </div>
-                                            <div className="space-y-2 md:space-y-4 flex flex-col items-center justify-center p-2 md:p-4">
+                                            <div className="p-3 md:p-5 flex flex-col items-center justify-center space-y-3 flex-1">
                                                 <Image
                                                     src="/prompt-pay.png"
                                                     alt="PromptPay Logo"
                                                     width={120}
                                                     height={40}
-                                                    className="h-10 w-auto object-contain"
+                                                    className="h-8 w-auto object-contain"
                                                 />
                                                 {tournament.bank_name === 'PromptPay' && (
                                                     <PromptPayQR
@@ -498,21 +503,22 @@ export function RegistrationForm({
                                                         amount={Number(tournament.registration_fee)}
                                                     />
                                                 )}
-                                                <div className="space-y-2 md:space-y-4 text-sm relative overflow-hidden">
-                                                    <div className="flex justify-center items-center gap-1">
-                                                        <Label>{t("account_name_label")}:</Label>
-                                                        <span className="font-black text-foreground">{tournament.bank_account_name}</span>
+                                                <div className="text-center space-y-1 text-sm">
+                                                    <div className="flex justify-center items-center gap-1.5 flex-wrap">
+                                                        <Label className="text-muted-foreground">{t("account_name_label")}:</Label>
+                                                        <span className="font-bold text-foreground">{tournament.bank_account_name}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    <div className="flex flex-col">
+                                    {/* Right Side: Clean Slip Upload Box */}
+                                    <div className="flex flex-col justify-center">
                                         <div className="flex-1 flex flex-col space-y-1">
                                             <div className="group relative h-full flex flex-col">
                                                 {!slipPreviewUrl ? (
-                                                    <div className="py-24 border-2 border-dashed rounded-sm hover:border-primary/40 transition-colors text-center cursor-pointer relative flex-1 flex items-center justify-center">
+                                                    <div className="py-12 md:py-16 hover:border-primary/40 transition-colors text-center cursor-pointer relative flex-1 flex items-center justify-center hover:bg-card/60 min-h-[220px]">
                                                         <input
                                                             type="file"
                                                             accept="image/jpeg,image/png,image/webp"
@@ -526,21 +532,24 @@ export function RegistrationForm({
                                                                 }
                                                             })}
                                                         />
-                                                        <div className="flex flex-col items-center gap-4">
-                                                            <div className="p-4 bg-primary/10 text-primary rounded-sm transition-transform">
-                                                                <Upload className="w-4 h-4" />
+                                                        <div className="flex flex-col items-center gap-3">
+                                                            <div className="p-3 bg-primary/10 text-primary rounded-sm transition-transform">
+                                                                <Upload className="w-5 h-5" />
                                                             </div>
                                                             <div className="space-y-1">
-                                                                <div className="text-sm tracking-wide text-foreground">
+                                                                <div className="text-sm font-medium tracking-wide text-foreground">
                                                                     {t("click_to_upload")}
+                                                                </div>
+                                                                <div className="text-[11px] text-muted-foreground">
+                                                                    JPG, PNG, WebP (Max 5MB)
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="relative overflow-hidden border p-2 md:p-4 rounded-sm">
-                                                        <div className="flex flex-col gap-2 md:gap-4">
-                                                            <div className="relative aspect-[3/4] w-full max-h-[360px] overflow-hidden flex items-center justify-center">
+                                                    <div className="relative overflow-hidden border p-2 md:p-3 rounded-sm bg-card/60">
+                                                        <div className="flex flex-col gap-2 md:gap-3">
+                                                            <div className="relative aspect-[3/4] w-full max-h-[300px] overflow-hidden flex items-center justify-center">
                                                                 <Image
                                                                     src={slipPreviewUrl}
                                                                     alt="Slip preview"
@@ -552,7 +561,7 @@ export function RegistrationForm({
                                                                     type="button"
                                                                     variant="ghost"
                                                                     size="icon-sm"
-                                                                    className="absolute top-0 right-0 h-8 w-8"
+                                                                    className="absolute top-0 right-0 h-8 w-8 bg-background/60 backdrop-blur-sm"
                                                                     onClick={() => {
                                                                         form.setValue("slipFile", undefined);
                                                                         setSlipPreviewUrl(null);
@@ -562,7 +571,7 @@ export function RegistrationForm({
                                                                 </Button>
                                                             </div>
                                                             <div className="flex items-center justify-between">
-                                                                <div className="flex-1 space-y-1">
+                                                                <div className="flex-1 space-y-0.5">
                                                                     <p className="text-xs font-black tracking-wide truncate text-foreground">{t("slip_preview")}</p>
                                                                     <p className="text-[10px] font-bold text-muted-foreground">{t("ready_to_submit")}</p>
                                                                 </div>
@@ -572,14 +581,14 @@ export function RegistrationForm({
                                                 )}
                                             </div>
                                             {form.formState.errors.slipFile && (
-                                                <p className="text-[10px] font-black tracking-wide text-destructive">
+                                                <p className="text-[10px] font-black tracking-wide text-destructive mt-1">
                                                     {form.formState.errors.slipFile.message as string}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                            </>
+                            </div>
                         )}
 
                         <div className="space-y-2 md:space-y-3">

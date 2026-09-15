@@ -78,31 +78,34 @@ export function ProfileForm({ user, profile }: { user: User; profile?: Profile }
                     />
                 </div>
                 <div className="space-y-1">
-                    <Label>{t("email")}</Label>
+                    <Label className="text-xs font-semibold">{t("email")}</Label>
                     <Input
+                        size="sm"
                         id="email"
                         value={user?.email}
                         disabled
                     />
                 </div>
                 <div className="space-y-1">
-                    <Label>{t("full_name")}</Label>
+                    <Label className="text-xs font-semibold">{t("full_name")}</Label>
                     <Input
+                        size="sm"
                         id="fullName"
                         name="fullName"
                         defaultValue={profile?.full_name || user?.user_metadata?.full_name || ""}
                     />
                 </div>
                 <div className="space-y-1">
-                    <Label>{tRoster("tel")}</Label>
+                    <Label className="text-xs font-semibold">{tRoster("tel")}</Label>
                     <Input
+                        size="sm"
                         id="phone"
                         name="phone"
                         defaultValue={profile?.phone || ""}
                     />
                 </div>
-                <div className="flex justify-end">
-                    <Button type="submit" disabled={isLoading} variant="default">
+                <div className="flex justify-end pt-1">
+                    <Button type="submit" size="sm" disabled={isLoading} variant="default">
                         {isLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (

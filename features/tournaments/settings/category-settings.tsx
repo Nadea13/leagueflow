@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trophy, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound } from "lucide-react";
+import { Loader2, Trophy, ArrowDownCircle, PlusCircle, Globe, Mars, Venus, UsersRound, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TournamentCategory } from "@/types";
 import {
@@ -305,7 +305,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                     {isThai ? "เลือกประเภทการแข่งขัน" : "Select Category"}
                 </Label>
                 <Select value={selectedCategoryId || ""} onValueChange={setSelectedCategoryId}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger size="sm" className="w-full">
                         <SelectValue placeholder={isThai ? "เลือกประเภทการแข่งขัน" : "Select Category"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -340,7 +340,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                         <Label>
                                             {isThai ? "รุ่นอายุ" : "Age Category"}
                                         </Label>
-                                        <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                                        <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                             {[
                                                 { id: "under", label: "Under (U)", icon: <ArrowDownCircle className="h-4 w-4" /> },
                                                 { id: "over", label: "Over (+)", icon: <PlusCircle className="h-4 w-4" /> },
@@ -356,10 +356,10 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                                             if (typeItem.id === "open") setAgeValue("");
                                                         }}
                                                         className={cn(
-                                                            "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                            "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                             isSelected
-                                                                ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                                : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                ? "bg-primary/10 text-primary font-bold"
+                                                                : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                                         )}
                                                     >
                                                         <div className={cn(
@@ -383,6 +383,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                                 </Label>
                                                 <Input
                                                     type="text"
+                                                    size="sm"
                                                     value={ageValue}
                                                     onChange={(e) => {
                                                         const val = e.target.value.replace(/[^0-9]/g, "");
@@ -403,7 +404,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                         <Label>
                                             {isThai ? "ประเภทเพศ" : "Gender Group"}
                                         </Label>
-                                        <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                                        <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                             {[
                                                 { id: "male", label: isThai ? "ชาย" : "Male", icon: <Mars className="h-4 w-4" /> },
                                                 { id: "female", label: isThai ? "หญิง" : "Female", icon: <Venus className="h-4 w-4" /> },
@@ -416,10 +417,10 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                                         type="button"
                                                         onClick={() => setGenderType(genderItem.id)}
                                                         className={cn(
-                                                            "group flex flex-col items-center justify-center p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                                            "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                                             isSelected
-                                                                ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                                : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30"
+                                                                ? "bg-primary/10 text-primary font-bold"
+                                                                : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
                                                         )}
                                                     >
                                                         <div className={cn(
@@ -442,6 +443,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                             <Label>{isThai ? "จำนวนทีมสูงสุด" : "Team Limit"}</Label>
                                             <Input
                                                 type="text"
+                                                size="sm"
                                                 value={maxTeams}
                                                 onChange={(e) => {
                                                     const val = e.target.value.replace(/[^0-9]/g, "");
@@ -455,6 +457,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                             <Label>{isThai ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}</Label>
                                             <Input
                                                 type="text"
+                                                size="sm"
                                                 value={registrationFee}
                                                 onChange={(e) => {
                                                     const val = e.target.value.replace(/[^0-9.]/g, "");
@@ -469,15 +472,37 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                         {(sport === "volleyball" || sport.includes("volleyball") || sport.includes("วอลเลย์บอล")) && (
                                             <div className="space-y-1 md:col-span-2">
                                                 <Label>{isThai ? "จำนวนเซ็ตการแข่งขัน" : "Match Sets"}</Label>
-                                                <Select value={maxSets} onValueChange={setMaxSets}>
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder={isThai ? "เลือกจำนวนเซ็ต" : "Select Sets"} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="3">{isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets"}</SelectItem>
-                                                        <SelectItem value="5">{isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets"}</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                                                <div className="grid grid-cols-2 border bg-card rounded-sm divide-x overflow-hidden">
+                                                    {[
+                                                        { id: "3", label: isThai ? "ชนะ 2 ใน 3 เซ็ต (Best of 3)" : "Best of 3 Sets", icon: <Layers className="h-4 w-4" /> },
+                                                        { id: "5", label: isThai ? "ชนะ 3 ใน 5 เซ็ต (Best of 5)" : "Best of 5 Sets", icon: <Layers className="h-4 w-4" /> },
+                                                    ].map((setItem) => {
+                                                        const isSelected = maxSets === setItem.id;
+                                                        return (
+                                                            <button
+                                                                key={setItem.id}
+                                                                type="button"
+                                                                onClick={() => setMaxSets(setItem.id)}
+                                                                className={cn(
+                                                                    "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
+                                                                    isSelected
+                                                                        ? "bg-primary/10 text-primary font-bold"
+                                                                        : "hover:bg-muted/30 text-muted-foreground hover:text-primary"
+                                                                )}
+                                                            >
+                                                                <div className={cn(
+                                                                    "p-1.5 rounded-full transition-colors",
+                                                                    isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                                                                )}>
+                                                                    {setItem.icon}
+                                                                </div>
+                                                                <span className="text-xs font-bold truncate w-full transition-colors">
+                                                                    {setItem.label}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -489,6 +514,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
                                             <Button
                                                 type="button"
                                                 variant="destructive"
+                                                size="sm"
                                                 disabled={isDeleting || isSaving}
                                             >
                                                 {isThai ? "ลบรุ่นการแข่งขัน" : "Delete Category"}
@@ -532,6 +558,7 @@ export function CategorySettings({ tournamentId, sport: initialSport }: Category
 
                                     <Button
                                         type="submit"
+                                        size="sm"
                                         disabled={isSaving || isDeleting}
                                     >
                                         {isThai ? "บันทึกการเปลี่ยนแปลง" : "Save Changes"}

@@ -1,6 +1,7 @@
 "use client";
 
 import { NodeTools } from "./node-tools";
+import { TournamentTemplateDialog } from "./tournament-template-dialog";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import {
     Background,
@@ -202,6 +203,23 @@ function CanvasInternal({
     const t = useTranslations("Tournament");
     const tSettings = useTranslations("Settings");
     const { screenToFlowPosition } = useReactFlow();
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === undefined) {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+        const newQuery = params.toString();
+        const targetUrl = newQuery ? `${pathname}?${newQuery}` : pathname;
+        router.replace(targetUrl, { scroll: false });
+    }, [pathname, router, searchParams]);
 
     const startTour = useCallback(() => {
         const driverObj = driver({
@@ -418,45 +436,63 @@ function CanvasInternal({
             setStoreTeams(filtered);
         }
     }, [initialTeamsData, storeCategoryId, teams.length, setStoreTeams]);
-    const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule' | 'registration'>('teams');
+    const initialTab = searchParams.get("tab");
+    const initialSubtab = searchParams.get("subtab");
+
+    const [activeSidebar, setActiveSidebar] = useState<'teams' | 'settings' | 'schedule' | 'registration'>(() => {
+        if (initialTab === 'schedule') return 'schedule';
+        if (initialTab === 'settings') return 'settings';
+        return 'teams';
+    });
     type SettingsTab = 'general' | 'categories' | 'location' | 'bank' | 'staff' | 'danger';
-    const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('general');
+    const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>(() => {
+        if (initialSubtab && ['general', 'categories', 'location', 'bank', 'staff', 'danger'].includes(initialSubtab)) {
+            return initialSubtab as SettingsTab;
+        }
+        return 'general';
+    });
 
     const handleOpenRegistrationSettings = useCallback(() => {
         const currentActiveId = useBracketStore.getState().activeNodeId;
         if (currentActiveId === 'registration-setting-node') {
             setActiveNodeId(null);
             selectNode(null);
+            updateUrlParams({ tab: null, subtab: null });
         } else {
             setActiveSidebar('teams');
             setActiveNodeId('registration-setting-node');
             selectNode('registration-setting-node');
+            updateUrlParams({ tab: 'registration', subtab: null });
         }
-    }, [setActiveNodeId, selectNode]);
+    }, [setActiveNodeId, selectNode, updateUrlParams]);
 
     const handleOpenAnnouncementSettings = useCallback(() => {
         const currentActiveId = useBracketStore.getState().activeNodeId;
         if (currentActiveId === 'announcement-setting-node') {
             setActiveNodeId(null);
             selectNode(null);
+            updateUrlParams({ tab: null, subtab: null });
         } else {
             setActiveSidebar('teams');
             setActiveNodeId('announcement-setting-node');
             selectNode('announcement-setting-node');
+            updateUrlParams({ tab: 'announcements', subtab: null });
         }
-    }, [setActiveNodeId, selectNode]);
+    }, [setActiveNodeId, selectNode, updateUrlParams]);
 
     const handleOpenSponsorSettings = useCallback(() => {
         const currentActiveId = useBracketStore.getState().activeNodeId;
         if (currentActiveId === 'sponsor-setting-node') {
             setActiveNodeId(null);
             selectNode(null);
+            updateUrlParams({ tab: null, subtab: null });
         } else {
             setActiveSidebar('teams');
             setActiveNodeId('sponsor-setting-node');
             selectNode('sponsor-setting-node');
+            updateUrlParams({ tab: 'sponsors', subtab: null });
         }
-    }, [setActiveNodeId, selectNode]);
+    }, [setActiveNodeId, selectNode, updateUrlParams]);
 
 
 
@@ -530,13 +566,58 @@ function CanvasInternal({
         if (currentActiveId === 'inbox-setting-node') {
             setActiveNodeId(null);
             selectNode(null);
+            updateUrlParams({ tab: null, subtab: null });
         } else {
             setActiveSidebar('teams');
             setActiveNodeId('inbox-setting-node');
             selectNode('inbox-setting-node');
             fetchInboxItems();
+            updateUrlParams({ tab: 'inbox', subtab: null });
         }
-    }, [setActiveNodeId, selectNode, fetchInboxItems]);
+    }, [setActiveNodeId, selectNode, fetchInboxItems, updateUrlParams]);
+
+    // Synchronize tab and subtab from URL
+    useEffect(() => {
+        const tab = searchParams.get("tab");
+        const subtab = searchParams.get("subtab");
+
+        if (tab === "inbox") {
+            setActiveSidebar("teams");
+            setActiveNodeId("inbox-setting-node");
+            selectNode("inbox-setting-node");
+            fetchInboxItems();
+        } else if (tab === "announcements" || tab === "announcement") {
+            setActiveSidebar("teams");
+            setActiveNodeId("announcement-setting-node");
+            selectNode("announcement-setting-node");
+        } else if (tab === "registration") {
+            setActiveSidebar("teams");
+            setActiveNodeId("registration-setting-node");
+            selectNode("registration-setting-node");
+        } else if (tab === "sponsors" || tab === "sponsor") {
+            setActiveSidebar("teams");
+            setActiveNodeId("sponsor-setting-node");
+            selectNode("sponsor-setting-node");
+        } else if (tab === "schedule") {
+            setActiveNodeId(null);
+            selectNode(null);
+            setActiveSidebar("schedule");
+        } else if (tab === "settings") {
+            setActiveNodeId(null);
+            selectNode(null);
+            setActiveSidebar("settings");
+            if (subtab && ['general', 'categories', 'location', 'bank', 'staff', 'danger'].includes(subtab)) {
+                setActiveSettingsTab(subtab as SettingsTab);
+            }
+        } else if (!tab) {
+            setActiveSidebar(prev => (prev === 'schedule' || prev === 'settings' ? 'teams' : prev));
+            const currentActiveId = useBracketStore.getState().activeNodeId;
+            if (['inbox-setting-node', 'announcement-setting-node', 'registration-setting-node', 'sponsor-setting-node'].includes(currentActiveId || '')) {
+                setActiveNodeId(null);
+                selectNode(null);
+            }
+        }
+    }, [searchParams, fetchInboxItems, setActiveNodeId, selectNode]);
 
     const settingsTabOptions = useMemo<TabOption<SettingsTab>[]>(() => {
         const options: TabOption<SettingsTab>[] = [
@@ -694,8 +775,6 @@ function CanvasInternal({
         setPendingAction(null);
     };
 
-    const router = useRouter();
-
     const handleWithdrawTeam = async () => {
         if (!withdrawingItem || !withdrawingItem.team) return;
         if (withdrawConfirmText !== withdrawingItem.team.name) {
@@ -745,8 +824,6 @@ function CanvasInternal({
             fetchInboxItems();
         }
     }, [categories, fetchInboxItems]);
-    const searchParams = useSearchParams();
-    const pathname = usePathname();
     // Read persisted category from URL (?category=id), fallback to null (first category)
     const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
         searchParams.get("category")
@@ -1174,6 +1251,7 @@ function CanvasInternal({
                     <div className="flex items-center">
                         {isEditingName && !readonly ? (
                             <Input
+                                size="sm"
                                 value={tempName}
                                 onChange={(e) => setTempName(e.target.value)}
                                 onBlur={handleNameSave}
@@ -1184,6 +1262,7 @@ function CanvasInternal({
                                         setTempName(currentName);
                                     }
                                 }}
+                                className="max-w-[200px]"
                                 autoFocus
                             />
                         ) : (
@@ -1201,15 +1280,16 @@ function CanvasInternal({
 
                         <Button
                             variant="ghost"
-                            size="icon"
-                            onClick={startTour}                    >
+                            size="icon-sm"
+                            onClick={startTour}
+                        >
                             <HelpCircle className="h-4 w-4" />
                         </Button>
 
                         {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
                             <Button
                                 variant={isLocked ? "default" : "ghost"}
-                                size="icon"
+                                size="icon-sm"
                                 onClick={() => setIsLocked(!isLocked)}
                                 disabled={currentStatus === 'finished' || readonly}
                                 className={cn(
@@ -1238,7 +1318,7 @@ function CanvasInternal({
                                                 title: "Error",
                                                 description: locale === 'th'
                                                     ? isEventPlan
-                                                        ? "แพ็คเกจ Event สามารถสร้างรุ่นการแข่งขันได้สูงสุด 3 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
+                                                         ? "แพ็คเกจ Event สามารถสร้างรุ่นการแข่งขันได้สูงสุด 3 รุ่นต่อทัวร์นาเมนต์เท่านั้น"
                                                         : "ผู้ใช้ทั่วไปสามารถสร้างรุ่นการแข่งขันได้สูงสุด 1 รุ่นเท่านั้น กรุณาอัพเกรดแพ็คเกจ"
                                                     : isEventPlan
                                                         ? "Event plan allows up to 3 categories per tournament."
@@ -1253,7 +1333,7 @@ function CanvasInternal({
                                     }
                                 }}
                             >
-                                <SelectTrigger className="w-[160px]">
+                                <SelectTrigger size="sm" className="w-[160px] h-8 text-xs">
                                     <SelectValue placeholder={locale === 'th' ? "เลือกรุ่นการแข่งขัน" : "Select Category"} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1291,7 +1371,7 @@ function CanvasInternal({
 
                 <div className="flex items-center gap-1 lg:gap-2">
                     {onClose && (
-                        <Button variant="ghost" size="icon" onClick={handleClose} className="h-10 w-10">
+                        <Button variant="ghost" size="icon-sm" onClick={handleClose}>
                             <X className="h-4 w-4" />
                         </Button>
                     )}
@@ -1301,44 +1381,47 @@ function CanvasInternal({
                                 {/* Desktop Sidebar & Tool Buttons */}
                                 <div className="hidden md:flex items-center" id="tour-console-sidebar-buttons">
 
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="text-foreground transition-all"
-                                        >
-                                            <Share2 className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-56 bg-card shadow-2xl rounded-sm">
-                                        <DropdownMenuItem
-                                            onClick={handleOpenLink}
-                                            className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                        >
-                                            <ExternalLink className="h-3.5 w-3.5" />
-                                            <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={handleOpenLinkRegister}
-                                            className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                        >
-                                            <ExternalLink className="h-3.5 w-3.5" />
-                                            <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={handleOpenLinkDocumentions}
-                                            className="cursor-pointer text-xs rounded font-medium focus:bg-primary/10 focus:text-primary flex items-center gap-1.5"
-                                        >
-                                            <ExternalLink className="h-3.5 w-3.5" />
-                                            <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                    <div id="tour-console-share-select">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    title={locale === 'th' ? "แชร์ลิงก์" : "Share"}
+                                                    className="text-foreground"
+                                                >
+                                                    <Share2 className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-fit min-w-[180px] bg-card shadow-2xl rounded-sm p-1">
+                                                <DropdownMenuItem
+                                                    onClick={handleOpenLink}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    <span>{locale === 'th' ? "เปิดหน้าทัวร์นาเมนต์" : "Open Tournament Page"}</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={handleOpenLinkRegister}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    <span>{locale === 'th' ? "เปิดหน้าลงทะเบียน" : "Open Registration Page"}</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={handleOpenLinkDocumentions}
+                                                    className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                                    <span>{locale === 'th' ? "เปิดหน้ายื่นเอกสาร" : "Open Document Submission"}</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
 
                                 <Button
                                     variant={activeNodeId === 'inbox-setting-node' ? "default" : "ghost"}
-                                    size="icon"
+                                    size="icon-sm"
                                     onClick={handleOpenInboxSettings}
                                     title={locale === 'th' ? "กล่องข้อความ" : "Inbox"}
                                     className={cn(
@@ -1360,7 +1443,7 @@ function CanvasInternal({
 
                                 <Button
                                     variant={activeNodeId === 'announcement-setting-node' ? "default" : "ghost"}
-                                    size="icon"
+                                    size="icon-sm"
                                     onClick={handleOpenAnnouncementSettings}
                                     title={locale === 'th' ? "ประกาศ" : "Announcements"}
                                     className={cn(
@@ -1375,7 +1458,7 @@ function CanvasInternal({
 
                                 <Button
                                     variant={activeNodeId === 'registration-setting-node' ? "default" : "ghost"}
-                                    size="icon"
+                                    size="icon-sm"
                                     onClick={handleOpenRegistrationSettings}
                                     title={locale === 'th' ? "การลงทะเบียน" : "Registration"}
                                     className={cn(
@@ -1390,7 +1473,7 @@ function CanvasInternal({
 
                                 <Button
                                     variant={activeNodeId === 'sponsor-setting-node' ? "default" : "ghost"}
-                                    size="icon"
+                                    size="icon-sm"
                                     onClick={handleOpenSponsorSettings}
                                     title={locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}
                                     className={cn(
@@ -1405,14 +1488,16 @@ function CanvasInternal({
 
                                 <Button
                                     variant={activeSidebar === 'schedule' ? "default" : "ghost"}
-                                    size="icon"
+                                    size="icon-sm"
                                     onClick={() => {
                                         if (activeSidebar === 'schedule') {
                                             setActiveSidebar('teams');
+                                            updateUrlParams({ tab: null, subtab: null });
                                         } else {
                                             setActiveNodeId(null);
                                             selectNode(null);
                                             setActiveSidebar('schedule');
+                                            updateUrlParams({ tab: 'schedule', subtab: null });
                                         }
                                     }}
                                     className={cn(
@@ -1428,14 +1513,16 @@ function CanvasInternal({
                                 {userInvitationRole !== 'staff' && userInvitationRole !== 'referee' && (
                                     <Button
                                         variant={activeSidebar === 'settings' ? "default" : "ghost"}
-                                        size="icon"
+                                        size="icon-sm"
                                         onClick={() => {
                                             if (activeSidebar === 'settings') {
                                                 setActiveSidebar('teams');
+                                                updateUrlParams({ tab: null, subtab: null });
                                             } else {
                                                 setActiveNodeId(null);
                                                 selectNode(null);
                                                 setActiveSidebar('settings');
+                                                updateUrlParams({ tab: 'settings', subtab: activeSettingsTab || 'general' });
                                             }
                                         }}
                                         className={cn(
@@ -1455,11 +1542,12 @@ function CanvasInternal({
                                 {(activeSidebar === 'schedule' || activeSidebar === 'settings' || Boolean(activeNodeId)) ? (
                                     <Button
                                         variant="ghost"
-                                        size="icon"
+                                        size="icon-sm"
                                         onClick={() => {
                                             setActiveSidebar('teams');
                                             setActiveNodeId(null);
                                             selectNode(null);
+                                            updateUrlParams({ tab: null, subtab: null });
                                         }}
                                         className="text-foreground transition-all"
                                     >
@@ -1470,7 +1558,7 @@ function CanvasInternal({
                                         <DropdownMenuTrigger asChild>
                                             <Button
                                                 variant="ghost"
-                                                size="icon"
+                                                size="icon-sm"
                                                 className="relative text-foreground"
                                             >
                                                 <MoreVertical className="h-4 w-4" />
@@ -1530,6 +1618,7 @@ function CanvasInternal({
                                                     setActiveNodeId(null);
                                                     selectNode(null);
                                                     setActiveSidebar('schedule');
+                                                    updateUrlParams({ tab: 'schedule', subtab: null });
                                                 }}
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
@@ -1543,6 +1632,7 @@ function CanvasInternal({
                                                         setActiveNodeId(null);
                                                         selectNode(null);
                                                         setActiveSidebar('settings');
+                                                        updateUrlParams({ tab: 'settings', subtab: activeSettingsTab || 'general' });
                                                     }}
                                                     className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                                 >
@@ -1652,11 +1742,11 @@ function CanvasInternal({
                                     {/* Mobile Schedule Controls Bar */}
                                     <div className="flex md:hidden flex-row overflow-x-auto border-b p-2 gap-2 bg-card shrink-0 custom-scrollbar items-center whitespace-nowrap z-10">
                                         {/* Date Filter */}
-                                        <div className="flex items-center border bg-muted/5 rounded-sm shrink-0">
+                                        <div className="flex items-center border bg-card rounded-sm shrink-0 h-8">
                                             <button
                                                 onClick={() => setSelectedDate(null)}
                                                 className={cn(
-                                                    "px-2 py-1.5 text-[10px] font-black tracking-tighter transition-all border-r rounded-l-sm",
+                                                    "px-2.5 h-full text-xs font-semibold tracking-tight transition-all border-r rounded-l-sm flex items-center",
                                                     selectedDate === null
                                                         ? "bg-primary text-black"
                                                         : "text-muted-foreground hover:text-foreground"
@@ -1664,7 +1754,7 @@ function CanvasInternal({
                                             >
                                                 {locale === 'th' ? "ทั้งหมด" : "ALL"}
                                             </button>
-                                            <div className="flex items-center justify-between px-1 gap-1">
+                                            <div className="flex items-center justify-between px-1 gap-0.5 h-full">
                                                 <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
                                                     <ChevronLeft className="h-3.5 w-3.5" />
                                                 </button>
@@ -1672,7 +1762,7 @@ function CanvasInternal({
                                                     <PopoverTrigger asChild>
                                                         <Button variant="ghost" size="sm" className="h-7 gap-1 px-1.5 hover:bg-muted transition-all">
                                                             <CalendarIcon className="h-3.5 w-3.5 text-primary" />
-                                                            <span className="text-[10px] font-black tracking-tight truncate">
+                                                            <span className="text-xs font-semibold tracking-tight truncate">
                                                                 {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
                                                             </span>
                                                         </Button>
@@ -1753,14 +1843,14 @@ function CanvasInternal({
 
                                         {/* Stage Filter */}
                                         <Select value={filterStage} onValueChange={setFilterStage}>
-                                            <SelectTrigger className="w-[130px] h-8 text-xs shrink-0">
+                                            <SelectTrigger size="sm" className="w-[130px] shrink-0">
                                                 <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-card shadow-2xl">
-                                                <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                <SelectItem value="all" className="font-semibold text-xs">
                                                     {locale === 'th' ? "ทั้งหมด" : "ALL"}
                                                 </SelectItem>
-                                                <SelectItem value="group" className="font-black text-[10px] tracking-widest">
+                                                <SelectItem value="group" className="font-semibold text-xs">
                                                     {locale === 'th' ? "รอบแบ่งกลุ่ม (ทั้งหมด)" : "GROUP STAGE (ALL)"}
                                                 </SelectItem>
                                                 {nodes
@@ -1771,14 +1861,14 @@ function CanvasInternal({
                                                             <SelectItem 
                                                                 key={node.id} 
                                                                 value={label} 
-                                                                className="font-black text-[10px] tracking-widest pl-4"
+                                                                className="font-semibold text-xs pl-4"
                                                             >
                                                                 - {label}
                                                             </SelectItem>
                                                         );
                                                     })
                                                 }
-                                                <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
+                                                <SelectItem value="knockout" className="font-semibold text-xs">
                                                     {locale === 'th' ? "รอบน็อคเอาท์" : "KNOCKOUT STAGE"}
                                                 </SelectItem>
                                             </SelectContent>
@@ -1786,15 +1876,15 @@ function CanvasInternal({
 
                                         {/* Team Filter */}
                                         <Select value={filterTeam} onValueChange={setFilterTeam}>
-                                            <SelectTrigger className="w-[130px] h-8 text-xs shrink-0">
+                                            <SelectTrigger size="sm" className="w-[130px] shrink-0">
                                                 <SelectValue placeholder={locale === 'th' ? "เลือกทีม" : "Select Team"} />
                                             </SelectTrigger>
                                             <SelectContent className="bg-card shadow-2xl">
-                                                <SelectItem value="all" className="font-black text-[10px] tracking-widest">
+                                                <SelectItem value="all" className="font-semibold text-xs">
                                                     {locale === 'th' ? "แสดงทั้งหมด" : "SHOW ALL"}
                                                 </SelectItem>
                                                 {teams.map(team => (
-                                                    <SelectItem key={team.id} value={team.id} className="font-black text-[10px] tracking-widest">
+                                                    <SelectItem key={team.id} value={team.id} className="font-semibold text-xs">
                                                         {team.name}
                                                     </SelectItem>
                                                 ))}
@@ -1803,174 +1893,172 @@ function CanvasInternal({
                                     </div>
 
                                     {/* Desktop Controls Sidebar */}
-                                    <div className="hidden md:flex w-64 border-r flex-col p-2 lg:p-3 gap-2 shrink-0 z-10">
-                                        <div>
-                                            <div className="space-y-4">
-                                                {/* Date Filter */}
-                                                <div className="space-y-1">
-                                                    <Label>{locale === 'th' ? "เลือกวันที่" : "Date Selection"}</Label>
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center border bg-muted/5 rounded-sm">
-                                                            <button
-                                                                onClick={() => setSelectedDate(null)}
-                                                                className={cn(
-                                                                    "px-2 py-3 text-[10px] font-black tracking-tighter transition-all border-r rounded-l-sm",
-                                                                    selectedDate === null
-                                                                        ? "bg-primary text-black"
-                                                                        : "text-muted-foreground hover:text-foreground"
-                                                                )}
-                                                            >
-                                                                {locale === 'th' ? "ทั้งหมด" : "ALL"}
-                                                            </button>
-                                                            <div className="flex items-center justify-between flex-1 px-1">
-                                                                <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
+                                    <aside className="hidden md:flex w-64 border-r flex-col shrink-0 p-3 bg-card gap-4 z-10">
+                                        {/* Date Filter */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                                {locale === 'th' ? "เลือกวันที่" : "Date Selection"}
+                                            </Label>
+                                            <div className="flex items-center border bg-card rounded-sm h-9 overflow-hidden">
+                                                <button
+                                                    onClick={() => setSelectedDate(null)}
+                                                    className={cn(
+                                                        "px-3 h-full text-xs font-semibold tracking-tight transition-all border-r flex items-center shrink-0",
+                                                        selectedDate === null
+                                                            ? "bg-primary text-black"
+                                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                                    )}
+                                                >
+                                                    {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                                </button>
+                                                <div className="flex items-center justify-between flex-1 px-1 h-full">
+                                                    <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
+                                                        <ChevronLeft className="h-4 w-4" />
+                                                    </button>
+                                                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 hover:bg-muted transition-all flex-1 justify-center">
+                                                                <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                                <span className="text-xs font-semibold tracking-tight truncate">
+                                                                    {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
+                                                                </span>
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="right" sideOffset={10}>
+                                                            <div className="p-3 border-b flex items-center justify-between bg-muted/20">
+                                                                <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                                     <ChevronLeft className="h-4 w-4" />
                                                                 </button>
-                                                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                                                    <PopoverTrigger asChild>
-                                                                        <Button variant="ghost" className="gap-2 hover:bg-muted transition-all">
-                                                                            <CalendarIcon className="h-4 w-4 text-primary" />
-                                                                            <div className="flex flex-col items-start overflow-hidden">
-                                                                                <span className="text-[10px] font-black tracking-tight truncate">
-                                                                                    {selectedDate ? formatDate(selectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
-                                                                                </span>
-                                                                            </div>
-                                                                        </Button>
-                                                                    </PopoverTrigger>
-                                                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="right" sideOffset={10}>
-                                                                        <div className="p-3 border-b flex items-center justify-between bg-muted/20">
-                                                                            <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
-                                                                                <ChevronLeft className="h-4 w-4" />
-                                                                            </button>
-                                                                            <span className="text-xs font-black tracking-widest">
-                                                                                {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
-                                                                            </span>
-                                                                            <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
-                                                                                <ChevronRight className="h-4 w-4" />
-                                                                            </button>
-                                                                        </div>
-                                                                        <div className="p-4 space-y-4">
-                                                                            <div className="grid grid-cols-7 gap-1">
-                                                                                {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
-                                                                                    <div key={`${d}-${idx}`} className="text-[9px] text-center font-black opacity-30">{d}</div>
-                                                                                ))}
-                                                                            </div>
-                                                                            <div className="grid grid-cols-7 gap-1">
-                                                                                {calendarDays.map((day, i) => {
-                                                                                    if (!day) return <div key={`empty-${i}`} />;
-                                                                                    const dateStr = format(day, 'yyyy-MM-dd');
-                                                                                    const isSel = selectedDate === dateStr;
-                                                                                    const hasMatch = datesWithMatches.has(dateStr);
-                                                                                    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
-                                                                                    const isOutsideRange = !!((tournament?.start_date && dateStr < tournament.start_date) || (tournament?.end_date && dateStr > tournament.end_date));
-
-                                                                                    return (
-                                                                                        <button
-                                                                                            key={dateStr}
-                                                                                            disabled={isOutsideRange}
-                                                                                            onClick={() => {
-                                                                                                setSelectedDate(dateStr);
-                                                                                                setIsCalendarOpen(false);
-                                                                                            }}
-                                                                                            className={cn(
-                                                                                                "h-9 flex flex-col items-center justify-center relative transition-all",
-                                                                                                isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
-                                                                                                isToday && !isSel && "border border-primary text-primary",
-                                                                                                isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
-                                                                                            )}
-                                                                                        >
-                                                                                            <span className="text-[11px]">{format(day, 'd')}</span>
-                                                                                            {hasMatch && (
-                                                                                                <div className={cn(
-                                                                                                    "absolute bottom-1.5 h-1 w-1 rounded-full",
-                                                                                                    isSel ? "bg-black" : "bg-primary"
-                                                                                                )} />
-                                                                                            )}
-                                                                                        </button>
-                                                                                    );
-                                                                                })}
-                                                                            </div>
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                size="sm"
-                                                                                onClick={() => {
-                                                                                    setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
-                                                                                    setViewDate(new Date());
-                                                                                    setIsCalendarOpen(false);
-                                                                                }}
-                                                                                className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
-                                                                            >
-                                                                                {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
-                                                                            </Button>
-                                                                        </div>
-                                                                    </PopoverContent>
-                                                                </Popover>
-                                                                <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors">
+                                                                <span className="text-xs font-black tracking-widest">
+                                                                    {viewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
+                                                                </span>
+                                                                <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-1 hover:text-primary transition-colors">
                                                                     <ChevronRight className="h-4 w-4" />
                                                                 </button>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                            <div className="p-4 space-y-4">
+                                                                <div className="grid grid-cols-7 gap-1">
+                                                                    {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
+                                                                        <div key={`${d}-${idx}`} className="text-[9px] text-center font-black opacity-30">{d}</div>
+                                                                    ))}
+                                                                </div>
+                                                                <div className="grid grid-cols-7 gap-1">
+                                                                    {calendarDays.map((day, i) => {
+                                                                        if (!day) return <div key={`empty-${i}`} />;
+                                                                        const dateStr = format(day, 'yyyy-MM-dd');
+                                                                        const isSel = selectedDate === dateStr;
+                                                                        const hasMatch = datesWithMatches.has(dateStr);
+                                                                        const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+                                                                        const isOutsideRange = !!((tournament?.start_date && dateStr < tournament.start_date) || (tournament?.end_date && dateStr > tournament.end_date));
 
-                                                {/* Stage Filter */}
-                                                <div className="space-y-2">
-                                                    <Label>{locale === 'th' ? "ตัวกรองรอบการแข่งขัน" : "Stage Filter"}</Label>
-                                                    <Select value={filterStage} onValueChange={setFilterStage}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="bg-card shadow-2xl">
-                                                            <SelectItem value="all" className="font-black text-[10px] tracking-widest">
-                                                                {locale === 'th' ? "ทั้งหมด" : "ALL"}
-                                                            </SelectItem>
-                                                            <SelectItem value="group" className="font-black text-[10px] tracking-widest">
-                                                                {locale === 'th' ? "รอบแบ่งกลุ่ม (ทั้งหมด)" : "GROUP STAGE (ALL)"}
-                                                            </SelectItem>
-                                                            {nodes
-                                                                .filter(n => n.type === 'groupNode')
-                                                                .map(node => {
-                                                                    const label = (node.data as { label?: string })?.label || "Group";
-                                                                    return (
-                                                                        <SelectItem 
-                                                                            key={node.id} 
-                                                                            value={label} 
-                                                                            className="font-black text-[10px] tracking-widest pl-4"
-                                                                        >
-                                                                            - {label}
-                                                                        </SelectItem>
-                                                                    );
-                                                                })
-                                                            }
-                                                            <SelectItem value="knockout" className="font-black text-[10px] tracking-widest">
-                                                                {locale === 'th' ? "รอบน็อคเอาท์" : "KNOCKOUT STAGE"}
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-
-                                                {/* Team Filter */}
-                                                <div className="space-y-2">
-                                                    <Label>{locale === 'th' ? "ตัวกรองทีม" : "Team Filter"}</Label>
-                                                    <Select value={filterTeam} onValueChange={setFilterTeam}>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder={locale === 'th' ? "เลือกทีม" : "Select Team"} />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="bg-card shadow-2xl">
-                                                            <SelectItem value="all" className="font-black text-[10px] tracking-widest">
-                                                                {locale === 'th' ? "แสดงทั้งหมด" : "SHOW ALL"}
-                                                            </SelectItem>
-                                                            {teams.map(team => (
-                                                                <SelectItem key={team.id} value={team.id} className="font-black text-[10px] tracking-widest">
-                                                                    {team.name}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                                                        return (
+                                                                            <button
+                                                                                key={dateStr}
+                                                                                disabled={isOutsideRange}
+                                                                                onClick={() => {
+                                                                                    setSelectedDate(dateStr);
+                                                                                    setIsCalendarOpen(false);
+                                                                                }}
+                                                                                className={cn(
+                                                                                    "h-9 flex flex-col items-center justify-center relative transition-all",
+                                                                                    isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                                                                                    isToday && !isSel && "border border-primary text-primary",
+                                                                                    isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
+                                                                                )}
+                                                                            >
+                                                                                <span className="text-[11px]">{format(day, 'd')}</span>
+                                                                                {hasMatch && (
+                                                                                    <div className={cn(
+                                                                                        "absolute bottom-1.5 h-1 w-1 rounded-full",
+                                                                                        isSel ? "bg-black" : "bg-primary"
+                                                                                    )} />
+                                                                                )}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+                                                                        setViewDate(new Date());
+                                                                        setIsCalendarOpen(false);
+                                                                    }}
+                                                                    className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                                                >
+                                                                    {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
+                                                                </Button>
+                                                            </div>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                    <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
+                                                        <ChevronRight className="h-4 w-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+
+                                        {/* Stage Filter */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                                {locale === 'th' ? "ตัวกรองรอบการแข่งขัน" : "Stage Filter"}
+                                            </Label>
+                                            <Select value={filterStage} onValueChange={setFilterStage}>
+                                                <SelectTrigger size="sm" className="w-full">
+                                                    <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-card shadow-2xl">
+                                                    <SelectItem value="all" className="font-semibold text-xs">
+                                                        {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                                                    </SelectItem>
+                                                    <SelectItem value="group" className="font-semibold text-xs">
+                                                        {locale === 'th' ? "รอบแบ่งกลุ่ม (ทั้งหมด)" : "GROUP STAGE (ALL)"}
+                                                    </SelectItem>
+                                                    {nodes
+                                                        .filter(n => n.type === 'groupNode')
+                                                        .map(node => {
+                                                            const label = (node.data as { label?: string })?.label || "Group";
+                                                            return (
+                                                                <SelectItem 
+                                                                    key={node.id} 
+                                                                    value={label} 
+                                                                    className="font-semibold text-xs pl-4"
+                                                                >
+                                                                    - {label}
+                                                                </SelectItem>
+                                                            );
+                                                        })
+                                                    }
+                                                    <SelectItem value="knockout" className="font-semibold text-xs">
+                                                        {locale === 'th' ? "รอบน็อคเอาท์" : "KNOCKOUT STAGE"}
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        {/* Team Filter */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                                {locale === 'th' ? "ตัวกรองทีม" : "Team Filter"}
+                                            </Label>
+                                            <Select value={filterTeam} onValueChange={setFilterTeam}>
+                                                <SelectTrigger size="sm" className="w-full">
+                                                    <SelectValue placeholder={locale === 'th' ? "เลือกทีม" : "Select Team"} />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-card shadow-2xl">
+                                                    <SelectItem value="all" className="font-semibold text-xs">
+                                                        {locale === 'th' ? "แสดงทั้งหมด" : "SHOW ALL"}
+                                                    </SelectItem>
+                                                    {teams.map(team => (
+                                                        <SelectItem key={team.id} value={team.id} className="font-semibold text-xs">
+                                                            {team.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </aside>
 
                                     {/* Main Content */}
                                     <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -2011,7 +2099,10 @@ function CanvasInternal({
                                         <Tab
                                             options={settingsTabOptions}
                                             value={activeSettingsTab}
-                                            onChange={(val) => setActiveSettingsTab(val)}
+                                            onChange={(val) => {
+                                                setActiveSettingsTab(val);
+                                                updateUrlParams({ tab: 'settings', subtab: val });
+                                            }}
                                             orientation="horizontal"
                                             className="border-none p-0 flex-nowrap min-w-max"
                                         />
@@ -2022,7 +2113,10 @@ function CanvasInternal({
                                         <Tab
                                             options={settingsTabOptions}
                                             value={activeSettingsTab}
-                                            onChange={(val) => setActiveSettingsTab(val)}
+                                            onChange={(val) => {
+                                                setActiveSettingsTab(val);
+                                                updateUrlParams({ tab: 'settings', subtab: val });
+                                            }}
                                             orientation="vertical"
                                             className="w-full border-none p-0 gap-1.5"
                                             itemClassName="justify-start py-2.5 px-3 text-xs rounded-sm"
@@ -2047,10 +2141,14 @@ function CanvasInternal({
                             <>
                                 <div className="flex-1 relative flex overflow-hidden">
                                     {!readonly && !isLocked && activeSidebar !== 'schedule' && !activeNodeId && (
-                                        <div className="absolute top-4 right-4 z-50" id="tour-console-add-components">
+                                        <div className="absolute top-4 right-4 z-50 flex items-center gap-2" id="tour-console-add-components">
+                                            <TournamentTemplateDialog
+                                                getCenterPos={getCenterPos}
+                                                maxTeams={(categories.find((c) => toCategoryId(c.id) === activeCategoryId)?.max_teams ?? tournament?.max_teams) || 8}
+                                            />
                                             <Popover>
                                                 <PopoverTrigger asChild>
-                                                    <Button>
+                                                    <Button size="sm">
                                                         <Plus className="h-4 w-4" />
                                                         New
                                                     </Button>

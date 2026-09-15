@@ -28,7 +28,7 @@ const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 const MapPicker = dynamic(() => import("./map-picker"), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-80 rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
+        <div className="w-full aspect-[2/1] rounded-sm bg-muted/20 animate-pulse flex items-center justify-center border border-foreground/10">
             <span className="text-xs text-muted-foreground">Loading interactive map...</span>
         </div>
     )
@@ -231,6 +231,7 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                             <Label>{tDialog("name")} <span className="text-destructive">*</span></Label>
                             <Input
                                 type="text"
+                                size="sm"
                                 id="name"
                                 name="name"
                                 defaultValue={tournament.name}
@@ -246,7 +247,7 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                                 name="status"
                                 defaultValue={tournament.status}
                             >
-                                <SelectTrigger className="w-full bg-transparent text-foreground">
+                                <SelectTrigger size="sm" className="w-full bg-transparent text-foreground">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-card">
@@ -475,6 +476,7 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                             <Input
                                 id="location_name"
                                 name="location_name"
+                                size="sm"
                                 value={locationName}
                                 onChange={(e) => setLocationName(e.target.value)}
                                 placeholder={isThai ? "เช่น สนามกีฬาเฉลิมพระเกียรติ 80 พรรษา" : "e.g. National Stadium Bangkok"}
@@ -494,6 +496,7 @@ export function GeneralSettings({ tournament }: GeneralSettingsProps) {
                         <div className="flex justify-end">
                             <Button
                                 type="submit"
+                                size="sm"
                                 disabled={isPending}
                                 className="md:w-fit w-full"
                             >

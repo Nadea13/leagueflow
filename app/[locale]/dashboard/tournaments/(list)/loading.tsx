@@ -23,10 +23,10 @@ export default function TournamentsLoading() {
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 lg:w-128 sm:flex-none">
-                        <Search className="absolute right-2 lg:right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/30" />
-                        <Input type="search" className="bg-card" disabled />
+                        <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
+                        <Input type="search" size="sm" className="bg-card" disabled />
                     </div>
-                    <Button className="h-8 w-8 p-0 lg:h-10 lg:w-auto lg:px-4 lg:py-2 gap-2" disabled>
+                    <Button size="sm" className="h-8 w-8 p-0 lg:h-8 lg:w-auto lg:px-3 gap-1.5" disabled>
                         <Plus className="h-4 w-4" />
                         <span className="hidden lg:inline">{tDialog("create_button")}</span>
                     </Button>

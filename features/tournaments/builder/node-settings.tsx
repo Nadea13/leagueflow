@@ -546,9 +546,9 @@ export function NodeSettings() {
             <div className="p-2 md:p-4 border-b flex items-center justify-between">
                 <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     onClick={startNodeTutorial}
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    className="text-muted-foreground hover:text-primary"
                     title={locale === "th" ? "สอนการใช้งาน" : "Help Tutorial"}
                 >
                     <HelpCircle className="h-4 w-4 text-primary" />
@@ -556,12 +556,12 @@ export function NodeSettings() {
                 {!isRegistrationMode && !isPseudoNode && (
                     <Button
                         variant="ghost"
-                        size="icon"
+                        size="icon-sm"
                         onClick={() => {
                             setActiveNodeId(null);
                             selectNode(null);
                         }}
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground"
                         title={locale === "th" ? "ปิด" : "Close"}
                     >
                         <X className="h-4 w-4" />
@@ -1064,7 +1064,7 @@ export function NodeSettings() {
                             <Dialog open={isAddSponsorOpen} onOpenChange={setIsAddSponsorOpen}>
                                 <DialogContent showCloseButton={false} className="w-full h-full sm:h-auto sm:max-w-[640px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col bg-card p-0 shadow-2xl rounded-none sm:rounded-sm">
                                         <DialogHeader className="p-2 md:p-4 border-b relative pr-10 shrink-0">
-                                            <DialogTitle className="text-lg font-black tracking-tighter">{tSponsors("title")}</DialogTitle>
+                                            <DialogTitle className="text-base font-bold tracking-tight">{tSponsors("title")}</DialogTitle>
                                             <Button
                                                 type="button"
                                                 variant="ghost"
@@ -1091,6 +1091,7 @@ export function NodeSettings() {
                                                 <div className="space-y-1">
                                                     <Label htmlFor="sponsor-name">{tSponsors("name_label")}</Label>
                                                     <Input
+                                                        size="sm"
                                                         id="sponsor-name"
                                                         value={newSponsorName}
                                                         onChange={e => setNewSponsorName(e.target.value)}
@@ -1102,6 +1103,7 @@ export function NodeSettings() {
                                                 <div className="space-y-1">
                                                     <Label htmlFor="sponsor-link">{tSponsors("link_label")}</Label>
                                                     <Input
+                                                        size="sm"
                                                         id="sponsor-link"
                                                         value={newSponsorLink}
                                                         onChange={e => setNewSponsorLink(e.target.value)}
@@ -1113,6 +1115,7 @@ export function NodeSettings() {
 
                                             <DialogFooter className="border-t p-2 md:p-4 shrink-0">
                                                 <Button
+                                                    size="sm"
                                                     type="submit"
                                                     className="w-full"
                                                     disabled={isSubmittingSponsor || !newSponsorName}
@@ -1140,60 +1143,62 @@ export function NodeSettings() {
                             ) : (
                                 <div className="space-y-1 md:space-y-2">
                                     <p className="text-[10px] text-muted-foreground/60 italic">
-                                        Drag handles to reorder sponsors. Reordering updates order_index automatically.
-                                    </p>
-                                    {sponsorsList.map((sponsor, idx) => (
-                                        <div
-                                            key={sponsor.id}
-                                            draggable
-                                            onDragStart={(e) => handleDragStart(e, idx)}
-                                            onDragOver={(e) => handleDragOver(e, idx)}
-                                            onDragEnd={handleDragEnd}
-                                            className={cn(
-                                                "flex items-center justify-between p-2 border bg-card/30 hover:bg-card/70 transition-all rounded-sm",
-                                                draggedIndex === idx && "opacity-50 border-red-500 bg-red-500/5"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground p-1">
-                                                    <GripVertical className="h-4 w-4" />
-                                                </div>
-                                                <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
-                                                    {sponsor.logo_img ? (
-                                                        <Image
-                                                            src={sponsor.logo_img}
-                                                            alt={sponsor.sponsor_name || "Sponsor logo"}
-                                                            className="max-h-full max-w-full object-contain rounded-full"
-                                                            width={32}
-                                                            height={32}
-                                                        />
-                                                    ) : (
-                                                        <Heart className="h-3.5 w-3.5 text-muted-foreground/20" />
-                                                    )}
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-xs font-bold truncate leading-none mb-1 text-foreground">
-                                                        {sponsor.sponsor_name}
-                                                    </span>
-                                                    {sponsor.link_url && (
-                                                        <a href={sponsor.link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:underline truncate flex items-center gap-1">
-                                                            <Globe className="h-2.5 w-2.5" />
-                                                            {sponsor.link_url}
-                                                        </a>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                                                onClick={() => handleDeleteSponsorClick(sponsor.id)}
+                                         Drag handles to reorder sponsors. Reordering updates order_index automatically.
+                                     </p>
+                                    <div className="border bg-card rounded-sm divide-y overflow-hidden">
+                                        {sponsorsList.map((sponsor, idx) => (
+                                            <div
+                                                key={sponsor.id}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, idx)}
+                                                onDragOver={(e) => handleDragOver(e, idx)}
+                                                onDragEnd={handleDragEnd}
+                                                className={cn(
+                                                    "flex items-center justify-between p-2 hover:bg-muted/40 transition-colors",
+                                                    draggedIndex === idx && "opacity-50 bg-destructive/10"
+                                                )}
                                             >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
-                                    ))}
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground p-1">
+                                                        <GripVertical className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="h-8 w-8 rounded-full bg-muted/40 flex items-center justify-center overflow-hidden border p-0.5">
+                                                        {sponsor.logo_img ? (
+                                                            <Image
+                                                                src={sponsor.logo_img}
+                                                                alt={sponsor.sponsor_name || "Sponsor logo"}
+                                                                className="max-h-full max-w-full object-contain rounded-full"
+                                                                width={32}
+                                                                height={32}
+                                                            />
+                                                        ) : (
+                                                            <Heart className="h-3.5 w-3.5 text-muted-foreground/20" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-xs font-bold truncate leading-none mb-1 text-foreground">
+                                                            {sponsor.sponsor_name}
+                                                        </span>
+                                                        {sponsor.link_url && (
+                                                            <a href={sponsor.link_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-muted-foreground hover:underline truncate flex items-center gap-1">
+                                                                <Globe className="h-2.5 w-2.5" />
+                                                                {sponsor.link_url}
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    className="text-muted-foreground hover:text-destructive shrink-0"
+                                                    onClick={() => handleDeleteSponsorClick(sponsor.id)}
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -1249,6 +1254,7 @@ export function NodeSettings() {
                                             <div className="space-y-1">
                                                 <Label>{locale === "th" ? "ค่าสมัคร (บาท)" : "Registration Fee (THB)"}</Label>
                                                 <Input
+                                                    size="sm"
                                                     type="number"
                                                     id="reg_fee"
                                                     value={regFee}
@@ -1262,6 +1268,7 @@ export function NodeSettings() {
                                             <div className="space-y-1">
                                                 <Label>{locale === "th" ? "หมายเลขพร้อมเพย์" : "PromptPay ID"}</Label>
                                                 <Input
+                                                    size="sm"
                                                     type="text"
                                                     id="reg_promptpay"
                                                     value={bankNumber}
@@ -1275,7 +1282,7 @@ export function NodeSettings() {
                                             <div className="space-y-1">
                                                 <Label>{locale === "th" ? "ชื่อธนาคาร" : "Bank Name"}</Label>
                                                 <Select value={bankName} onValueChange={setBankName}>
-                                                    <SelectTrigger className="w-full">
+                                                    <SelectTrigger size="sm" className="w-full">
                                                         <SelectValue placeholder={locale === "th" ? "เลือกธนาคาร" : "Select Bank"} />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -1286,6 +1293,7 @@ export function NodeSettings() {
                                             <div className="space-y-1">
                                                 <Label>{locale === "th" ? "ชื่อบัญชี" : "Account Name"}</Label>
                                                 <Input
+                                                    size="sm"
                                                     type="text"
                                                     id="reg_acc_name"
                                                     value={accountName}
@@ -1298,6 +1306,7 @@ export function NodeSettings() {
 
                                     <div className="flex justify-end mt-2 md:mt-4">
                                         <Button
+                                            size="sm"
                                             type="submit"
                                             disabled={isRegSaving}
                                             className="w-full bg-violet-600 hover:bg-violet-700"
