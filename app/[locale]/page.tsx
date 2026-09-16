@@ -5,6 +5,8 @@ import { ArrowRight, Workflow, QrCode, Users2, Activity, Tv, BarChart3, MoreVert
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { createClient } from "@/lib/supabase/server";
 import { PublicFooter } from "@/components/layout/public-footer";
+import { FaqSection } from "@/components/landing/faq-section";
+import { getLocale } from 'next-intl/server';
 
 const sportsList = [
   {
@@ -70,7 +72,7 @@ const sportsList = [
 ];
 
 export default async function Home() {
-
+  const locale = await getLocale();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -909,6 +911,9 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* FAQ Section for SEO & Google AI Overview */}
+        <FaqSection locale={locale} />
 
         {/* Call to Action Section */}
         <section className="py-16 lg:py-24 relative overflow-hidden">

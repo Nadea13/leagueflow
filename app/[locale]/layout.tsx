@@ -20,44 +20,98 @@ const notoSansThai = Noto_Sans_Thai({
   variable: '--font-noto-sans-thai',
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
-    template: "%s | League Flow",
-  },
-  description: "League Flow - แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร ช่วยให้คุณสร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ จัดการทีม และระบบชำระเงิน PromptPay รองรับทั้งภาษาไทยและอังกฤษ",
-  keywords: [
-    "จัดการแข่งขันฟุตบอล",
-    "จัดการทัวร์นาเมนต์",
-    "สร้างตารางแข่ง",
-    "โปรแกรมการแข่งขัน",
-    "ระบบจัดการลีก",
-    "สมัครแข่งบอล",
-    "League Flow",
-    "Tournament Management",
-    "Football League",
-    "Match Scoring"
-  ],
-  authors: [{ name: "League Flow" }],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://leagueflow.app"),
-  openGraph: {
-    type: "website",
-    locale: "th_TH",
-    alternateLocale: "en_US",
-    title: "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
-    description: "สร้างและจัดการการแข่งขันฟุตบอลของคุณแบบมืออาชีพ ด้วยระบบตารางแข่งอัตโนมัติและผลคะแนนเรียลไทม์",
-    siteName: "League Flow",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ",
-    description: "จัดการแข่งขันฟุตบอลและกีฬาครบวงจร บันทึกผลเรียลไทม์ และระบบสมัครทีมออนไลน์",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+import { JsonLd } from "@/components/seo/json-ld";
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isThai = locale === 'th';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leagueflow.app";
+
+  return {
+    title: {
+      default: isThai
+        ? "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬา สร้างตารางแข่งอัตโนมัติ"
+        : "League Flow | Sports & Football Tournament Management Platform",
+      template: "%s | League Flow",
+    },
+    description: isThai
+      ? "League Flow แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬาครบวงจร สร้างตารางแข่งอัตโนมัติ (Bracket & Round Robin) สรุปผลคะแนนสดเรียลไทม์ รับสมัครทีมพร้อมชำระเงิน PromptPay และ OBS Live Score Overlay"
+      : "League Flow - All-in-one tournament management platform for football and sports. Automated bracket generator, real-time live scoring, team registration, and OBS live streaming overlays.",
+    keywords: isThai
+      ? [
+          "จัดการแข่งขันฟุตบอล",
+          "จัดการทัวร์นาเมนต์",
+          "สร้างตารางแข่ง",
+          "โปรแกรมการแข่งขัน",
+          "ระบบจัดการลีก",
+          "สมัครแข่งบอล",
+          "League Flow",
+          "Tournament Management",
+          "Football League",
+          "Match Scoring",
+          "ตารางแข่งบอล",
+          "สายแข่งบอล",
+          "โปรแกรมจัดสายการแข่งขัน",
+          "OBS Scoreboard Overlay"
+        ]
+      : [
+          "Tournament Management",
+          "Football League Management",
+          "Bracket Generator",
+          "Round Robin Schedule",
+          "Live Match Scoring",
+          "Sports Tournament Platform",
+          "OBS Scoreboard Overlay",
+          "League Flow"
+        ],
+    authors: [{ name: "League Flow", url: siteUrl }],
+    metadataBase: new URL(siteUrl),
+    alternates: {
+      canonical: `${siteUrl}/${locale}`,
+      languages: {
+        th: `${siteUrl}/th`,
+        en: `${siteUrl}/en`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      locale: isThai ? "th_TH" : "en_US",
+      alternateLocale: isThai ? "en_US" : "th_TH",
+      title: isThai
+        ? "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลและกีฬามืออาชีพ"
+        : "League Flow | Professional Sports Tournament Management",
+      description: isThai
+        ? "สร้างตารางแข่งอัตโนมัติ บันทึกผลคะแนนเรียลไทม์ และระบบสมัครทีมออนไลน์ครบวงจร"
+        : "Automated bracket generation, real-time match scoring, and online team registration.",
+      siteName: "League Flow",
+      url: `${siteUrl}/${locale}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: isThai
+        ? "League Flow | แพลตฟอร์มจัดการแข่งขันฟุตบอลมืออาชีพ"
+        : "League Flow | Sports Tournament Management",
+      description: isThai
+        ? "จัดการแข่งขันฟุตบอลและกีฬาครบวงจร บันทึกผลเรียลไทม์ และระบบสมัครทีมออนไลน์"
+        : "Tournament management, real-time live score, and team registration.",
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children,
@@ -82,6 +136,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning className="scroll-smooth">
+      <head>
+        <JsonLd locale={locale} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${notoSansThai.variable} font-sans antialiased`}
