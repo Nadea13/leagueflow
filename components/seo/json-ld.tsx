@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSiteUrl } from '@/lib/site-url';
 
 interface JsonLdProps {
   locale: string;
@@ -6,7 +7,7 @@ interface JsonLdProps {
 
 export function JsonLd({ locale }: JsonLdProps) {
   const isThai = locale === 'th';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leagueflow.app';
+  const siteUrl = getSiteUrl();
 
   const organizationSchema = {
     '@context': 'https://schema.org',

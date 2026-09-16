@@ -21,6 +21,7 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 import { JsonLd } from "@/components/seo/json-ld";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function generateMetadata({
   params
@@ -29,7 +30,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const isThai = locale === 'th';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leagueflow.app";
+  const siteUrl = getSiteUrl();
 
   return {
     title: {
