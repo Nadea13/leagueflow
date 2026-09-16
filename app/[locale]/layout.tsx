@@ -110,6 +110,9 @@ export async function generateMetadata({
         'max-snippet': -1,
       },
     },
+    verification: {
+      google: 'uZqMBYSLdlDxnlF8IB0FUtrsQ7krGX8EsN3jSuNU9kQ',
+    },
   };
 }
 
@@ -137,6 +140,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning className="scroll-smooth">
       <head>
+        <meta name="google-site-verification" content="uZqMBYSLdlDxnlF8IB0FUtrsQ7krGX8EsN3jSuNU9kQ" />
         <JsonLd locale={locale} />
       </head>
       <body
