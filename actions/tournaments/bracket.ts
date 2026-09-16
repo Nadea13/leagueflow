@@ -149,26 +149,9 @@ export async function saveBracketCanvas(
         return null;
     };
 
-    // 2. Collect all node_ids currently in the canvas
-    const activeNodeIds = canvasData.nodes
-        .filter(n => n.type === 'matchNode')
-        .map(n => n.id);
-
-    // 3. Soft-delete matches whose node_id is no longer in the canvas
-    //    (i.e. the match node was deleted by the user)
-    const orphanedMatchIds = (activeDbMatches || [])
-        .filter(m => m.node_id && !activeNodeIds.includes(m.node_id))
-        .map(m => m.id);
-
-    if (orphanedMatchIds.length > 0) {
-        await supabase
-            .from('matches')
-            .update({ deleted_at: new Date().toISOString() })
-            .in('id', orphanedMatchIds);
-    }
-
-    // 4. Process matches in nodes — create new or update existing
+    // 2. Process matches in nodes — create new or update existing
     const updatedNodes = [...canvasData.nodes];
+    const validMatchIds = new Set<string>();
     
     for (const node of updatedNodes) {
         if (node.type === 'matchNode') {
@@ -208,23 +191,42 @@ export async function saveBracketCanvas(
 
                 const matchId = match.dbId || match.matchId;
 
-                if (matchId) {
-                    // Check if this match still exists (not soft-deleted)
-                    const { data: existingMatch } = await supabase
+                // 1. Try to find existing match by ID
+                let existingMatch = matchId
+                    ? activeDbMatches.find(m => m.id === matchId)
+                    : undefined;
+
+                // 2. If no match by ID, check if a match for this node and match_index already exists
+                if (!existingMatch) {
+                    existingMatch = activeDbMatches.find(m => m.node_id === node.id && m.match_index === (i + 1));
+                }
+
+                if (existingMatch) {
+                    // Update existing match (preserve status, scores, etc.)
+                    await supabase
+                        .from('matches')
+                        .update(baseRecord)
+                        .eq('id', existingMatch.id);
+                    
+                    matches[i] = { ...match, dbId: existingMatch.id };
+                    validMatchIds.add(existingMatch.id);
+                } else if (matchId) {
+                    // Check if match exists in DB (outside activeDbMatches cache)
+                    const { data: dbExisting } = await supabase
                         .from('matches')
                         .select('id')
                         .eq('id', matchId)
                         .is('deleted_at', null)
                         .single();
 
-                    if (existingMatch) {
-                        // Update existing (do not overwrite status)
+                    if (dbExisting) {
                         await supabase
                             .from('matches')
                             .update(baseRecord)
                             .eq('id', matchId);
+                        matches[i] = { ...match, dbId: matchId };
+                        validMatchIds.add(matchId);
                     } else {
-                        // Match was soft-deleted, create a new one
                         const { data: newMatch } = await supabase
                             .from('matches')
                             .insert(insertRecord)
@@ -233,6 +235,7 @@ export async function saveBracketCanvas(
                         
                         if (newMatch) {
                             matches[i] = { ...match, dbId: newMatch.id };
+                            validMatchIds.add(newMatch.id);
                         }
                     }
                 } else {
@@ -245,16 +248,35 @@ export async function saveBracketCanvas(
                     
                     if (newMatch) {
                         matches[i] = { ...match, dbId: newMatch.id };
+                        validMatchIds.add(newMatch.id);
                     }
                 }
             }
         }
     }
 
+    // 3. Soft-delete all matches in this category that are no longer on the canvas
+    //    (Handles deleted nodes, deleted submatches, and orphaned fixtures with null node_id)
+    const orphanedMatchIds = (activeDbMatches || [])
+        .filter(m => !validMatchIds.has(m.id))
+        .map(m => m.id);
+
+    if (orphanedMatchIds.length > 0) {
+        await supabase
+            .from('matches')
+            .update({ deleted_at: new Date().toISOString() })
+            .in('id', orphanedMatchIds);
+    }
+
     // 5. Save the final updated canvas data
+    const returnData: BracketCanvasData = {
+        ...canvasData,
+        nodes: updatedNodes
+    };
+
     const { error } = await supabase
         .from("tournament_categories")
-        .update({ canvas_data: canvasData })
+        .update({ canvas_data: returnData })
         .eq("id", categoryId);
 
     if (error) {
@@ -262,5 +284,5 @@ export async function saveBracketCanvas(
     }
 
     revalidatePath(`/organizer/tournaments/${tournamentId}`);
-    return { success: true, data: canvasData };
+    return { success: true, data: returnData };
 }

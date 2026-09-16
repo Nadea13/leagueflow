@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/ui/header";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -413,10 +412,10 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
 
                     {/* Tournaments Grid */}
                     {loadingStats ? (
-                        <div className="flex flex-col gap-2 md:gap-4">
-                            {[...Array(2)].map((_, idx) => (
-                                <div key={idx} className="bg-card border rounded-sm p-2 md:p-4 flex gap-2 md:gap-4">
-                                    <div className="flex gap-2 md:gap-4 flex-1">
+                        <div className="border bg-card rounded-sm divide-y overflow-hidden">
+                            {[...Array(3)].map((_, idx) => (
+                                <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                                    <div className="flex items-center gap-3 flex-1">
                                         <Skeleton className="h-12 w-12 rounded-full shrink-0" />
                                         <div className="flex flex-col gap-2 justify-center flex-1">
                                             <Skeleton className="h-5 w-1/3 rounded-sm" />
@@ -441,46 +440,42 @@ export function DashboardClient({ initialTournaments, initialMasterPlayer }: Das
                             className="bg-card rounded-sm border"
                         />
                     ) : (
-                        <div className="flex flex-col gap-2 md:gap-4 group" id="tour-tournaments-list">
+                        <div className="border bg-card rounded-sm divide-y overflow-hidden" id="tour-tournaments-list">
                             {filteredTournaments.map((tournament) => (
-                                <Link key={tournament.id} href={`/dashboard/registrations/${tournament.id}`} className="block">
-                                    <Card
-                                        className="flex flex-col h-full bg-card border rounded-sm transition-all hover:border-primary/50 overflow-hidden relative cursor-pointer"
-                                    >
-                                        <CardContent className="flex justify-between py-2 md:py-4 relative z-10">
-                                            <div className="flex items-center gap-1 md:gap-2 overflow-hidden">
-                                                <Avatar className="h-12 w-12 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
-                                                    <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
-                                                    <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex flex-col gap-1">
-                                                    <CardTitle className="text-lg font-black leading-none tracking-tight group-hover:text-primary transition-colors truncate">
-                                                        {tournament.name}
-                                                    </CardTitle>
-                                                    <CardDescription className="capitalize">
-                                                        {t("status")}: {tCommon(tournament.status || 'draft')}
-                                                    </CardDescription>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 md:gap-4">
-                                                <div className="flex gap-2">
-                                                    <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary">
-                                                        <Calendar className="h-4 w-4" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">{t("schedule")}</p>
-                                                        <p className="text-xs font-bold truncate">
-                                                            {tournament.start_date && tournament.end_date ? (
-                                                                `${new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })}`
-                                                            ) : (
-                                                                t("not_specified")
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                <Link
+                                    key={tournament.id}
+                                    href={`/dashboard/registrations/${tournament.id}`}
+                                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4 hover:bg-muted/40 transition-colors block group"
+                                >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <Avatar className="h-12 w-12 border rounded-full group-hover:border-primary/30 transition-all shrink-0 p-1 bg-muted/30">
+                                            <AvatarImage src={tournament.logo_img ?? undefined} alt={tournament.name ?? ""} className="object-contain rounded-full" />
+                                            <AvatarFallback className="bg-primary/5 text-primary font-black rounded-full">{tournament.name ? tournament.name.substring(0, 2).toUpperCase() : ""}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col gap-1 min-w-0">
+                                            <span className="text-base font-black leading-tight tracking-tight group-hover:text-primary transition-colors truncate">
+                                                {tournament.name}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground capitalize">
+                                                {t("status")}: {tCommon(tournament.status || 'draft')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                                        <div className="h-8 w-8 bg-muted border border-border flex items-center justify-center rounded-sm text-primary shrink-0">
+                                            <Calendar className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] font-bold text-muted-foreground/60 tracking-wider">{t("schedule")}</p>
+                                            <p className="text-xs font-bold truncate">
+                                                {tournament.start_date && tournament.end_date ? (
+                                                    `${new Date(tournament.start_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })} - ${new Date(tournament.end_date).toLocaleDateString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: '2-digit' })}`
+                                                ) : (
+                                                    t("not_specified")
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </Link>
                             ))}
                         </div>

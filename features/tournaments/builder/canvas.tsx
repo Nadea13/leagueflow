@@ -398,10 +398,6 @@ function CanvasInternal({
         return days;
     }, [viewDate]);
 
-    const datesWithMatches = useMemo(() => {
-        return new Set(activeMatches.map(m => m.match_date).filter(Boolean));
-    }, [activeMatches]);
-
     const {
         nodes,
         edges,
@@ -426,6 +422,30 @@ function CanvasInternal({
         activeCategoryId: storeCategoryId,
         setActiveCategoryId: setStoreCategoryId,
     } = useBracketStore();
+
+    const canvasMatches = useMemo(() => {
+        const activeNodeIds = new Set(nodes.filter(n => n.type === 'matchNode').map(n => n.id));
+        const activeMatchDbIds = new Set<string>();
+        nodes.forEach(n => {
+            if (n.type === 'matchNode') {
+                const matches = (n.data as { matches?: { dbId?: string; matchId?: string }[] })?.matches || [];
+                matches.forEach(m => {
+                    if (m.dbId) activeMatchDbIds.add(m.dbId);
+                    if (m.matchId) activeMatchDbIds.add(m.matchId);
+                });
+            }
+        });
+
+        return activeMatches.filter(m => {
+            if (activeMatchDbIds.has(m.id)) return true;
+            if (m.node_id && activeNodeIds.has(m.node_id)) return true;
+            return false;
+        });
+    }, [activeMatches, nodes]);
+
+    const datesWithMatches = useMemo(() => {
+        return new Set(canvasMatches.map(m => m.match_date).filter(Boolean));
+    }, [canvasMatches]);
 
     // Sync server-provided teams as initial state (before category-specific fetch runs)
     useEffect(() => {
@@ -1000,12 +1020,43 @@ function CanvasInternal({
                 markClean();
                 setLastSavedAt(new Date());
                 if (result.data) {
-                    // Update local categories list cache without re-hydrating react-flow nodes (which destroys active input focus)
+                    // Update local categories list cache
                     setCategories(prev => prev.map(c =>
                         c.id === activeCategoryId
                             ? { ...c, canvas_data: result.data ?? null }
                             : c
                     ));
+
+                    // Sync dbIds into store nodes so subsequent edits don't recreate new matches
+                    if (result.data.nodes) {
+                        const storeNodes = useBracketStore.getState().nodes;
+                        let hasChanges = false;
+                        const updatedStoreNodes = storeNodes.map(storeNode => {
+                            const serverNode = result.data?.nodes?.find(n => n.id === storeNode.id);
+                            if (serverNode && serverNode.type === 'matchNode') {
+                                const serverMatches = (serverNode.data as { matches?: unknown[] })?.matches;
+                                if (serverMatches && JSON.stringify(serverMatches) !== JSON.stringify((storeNode.data as { matches?: unknown[] })?.matches)) {
+                                    hasChanges = true;
+                                    return {
+                                        ...storeNode,
+                                        data: {
+                                            ...storeNode.data,
+                                            matches: serverMatches
+                                        }
+                                    };
+                                }
+                            }
+                            return storeNode;
+                        });
+
+                        if (hasChanges) {
+                            useBracketStore.setState({ nodes: updatedStoreNodes });
+                        }
+                    }
+
+                    if (activeCategoryId) {
+                        fetchMatches(activeCategoryId);
+                    }
                 }
                 if (showToast) {
                     toast({
@@ -1034,7 +1085,7 @@ function CanvasInternal({
         } finally {
             setIsSaving(false);
         }
-    }, [getCanvasData, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId, locale]);
+    }, [getCanvasData, isDirty, isSaving, markClean, readonly, toast, tournamentId, activeCategoryId, locale, fetchMatches]);
 
     // Auto-save effect: save seamlessly in background like Figma/Canva
     // 1. Debounce timer is set to a snappy 800ms after user stops typing/dragging.
@@ -1489,7 +1540,7 @@ function CanvasInternal({
                                 <Button
                                     variant={activeSidebar === 'schedule' ? "default" : "ghost"}
                                     size="icon-sm"
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (activeSidebar === 'schedule') {
                                             setActiveSidebar('teams');
                                             updateUrlParams({ tab: null, subtab: null });
@@ -1498,6 +1549,12 @@ function CanvasInternal({
                                             selectNode(null);
                                             setActiveSidebar('schedule');
                                             updateUrlParams({ tab: 'schedule', subtab: null });
+                                            if (isDirty) {
+                                                await handleSave(false);
+                                            }
+                                            if (activeCategoryId) {
+                                                fetchMatches(activeCategoryId);
+                                            }
                                         }
                                     }}
                                     className={cn(
@@ -1613,12 +1670,18 @@ function CanvasInternal({
                                                 <span>{locale === 'th' ? "ผู้สนับสนุน" : "Sponsors"}</span>
                                             </DropdownMenuItem>
 
-                                            <DropdownMenuItem
-                                                onClick={() => {
+                                             <DropdownMenuItem
+                                                onClick={async () => {
                                                     setActiveNodeId(null);
                                                     selectNode(null);
                                                     setActiveSidebar('schedule');
                                                     updateUrlParams({ tab: 'schedule', subtab: null });
+                                                    if (isDirty) {
+                                                        await handleSave(false);
+                                                    }
+                                                    if (activeCategoryId) {
+                                                        fetchMatches(activeCategoryId);
+                                                    }
                                                 }}
                                                 className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-2"
                                             >
@@ -2065,8 +2128,8 @@ function CanvasInternal({
                                         <div className="p-2 lg:p-4">
                                             <MatchManager
                                                 matches={filterTeam === "all"
-                                                    ? activeMatches
-                                                    : activeMatches.filter(m => {
+                                                    ? canvasMatches
+                                                    : canvasMatches.filter(m => {
                                                         const selTeam = teams.find(t => t.id === filterTeam);
                                                         const targetIds = selTeam 
                                                             ? [selTeam.id, selTeam.team_id].filter(Boolean) as string[]
@@ -2145,6 +2208,7 @@ function CanvasInternal({
                                             <TournamentTemplateDialog
                                                 getCenterPos={getCenterPos}
                                                 maxTeams={(categories.find((c) => toCategoryId(c.id) === activeCategoryId)?.max_teams ?? tournament?.max_teams) || 8}
+                                                onApplyTemplate={() => handleSave(false)}
                                             />
                                             <Popover>
                                                 <PopoverTrigger asChild>

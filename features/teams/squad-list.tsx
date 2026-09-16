@@ -43,6 +43,7 @@ interface SquadListProps {
     onDeletePlayer: (playerId: string) => void;
     t: (key: string, values?: Record<string, string | number | Date>) => string;
     tCommon: (key: string) => string;
+    className?: string;
 }
 
 export function SquadList({
@@ -52,7 +53,8 @@ export function SquadList({
     refreshPlayers,
     onDeletePlayer,
     t,
-    tCommon
+    tCommon,
+    className
 }: SquadListProps) {
     const locale = useLocale();
     const isThai = locale === "th";
@@ -112,7 +114,7 @@ export function SquadList({
     const activePlayers = players.filter((player) => !player.deleted_at);
 
     return (
-        <div className="bg-card space-y-2 md:space-y-4 border rounded-sm p-2 md:p-4">
+        <div className={cn("bg-card space-y-2 md:space-y-4 border rounded-sm p-2 md:p-4", className)}>
 
             {activePlayers.length === 0 ? (
                 <EmptyState
@@ -181,20 +183,20 @@ export function SquadList({
                                                                 e.stopPropagation();
                                                                 editFileInputRef.current?.click();
                                                             }}
-                                                            className="h-10 w-10 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group"
+                                                            className="h-8 w-8 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group"
                                                         >
                                                             {(() => {
                                                                 const photoUrl = player.photo_url || player.profile_img || player.master_player?.profile_img || player.global_player?.photo_url || player.global_player?.profile_img;
                                                                 return editPhotoPreview ? (
-                                                                    <Image src={editPhotoPreview} alt="Preview" width={40} height={40} className="h-full w-full object-cover" />
+                                                                    <Image src={editPhotoPreview} alt="Preview" width={32} height={32} className="h-full w-full object-cover" />
                                                                 ) : photoUrl ? (
-                                                                    <Image src={photoUrl} alt="Current" width={40} height={40} className="h-full w-full object-cover" />
+                                                                    <Image src={photoUrl} alt="Current" width={32} height={32} className="h-full w-full object-cover" />
                                                                 ) : (
-                                                                    <Camera className="h-4 w-4 text-primary" />
+                                                                    <Camera className="h-3.5 w-3.5 text-primary" />
                                                                 );
                                                             })()}
                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                                <Camera className="h-4 w-4 text-foreground" />
+                                                                <Camera className="h-3.5 w-3.5 text-foreground" />
                                                             </div>
                                                         </button>
                                                     </div>
@@ -205,6 +207,7 @@ export function SquadList({
                                                             value={editNumber}
                                                             onChange={(e) => setEditNumber(e.target.value)}
                                                             placeholder={isThai ? "10" : "10"}
+                                                            size="sm"
                                                             className="w-full focus-visible:ring-0"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
@@ -216,6 +219,7 @@ export function SquadList({
                                                             value={editName}
                                                             onChange={(e) => setEditName(e.target.value)}
                                                             placeholder={isThai ? "ชื่อนักกีฬา..." : "Player name..."}
+                                                            size="sm"
                                                             className="focus-visible:ring-0"
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
@@ -225,6 +229,7 @@ export function SquadList({
                                                          <Label>{t("position")}</Label>
                                                          <Select value={editPosition} onValueChange={setEditPosition}>
                                                              <SelectTrigger 
+                                                                 size="sm"
                                                                  className="w-full"
                                                                  onClick={(e) => e.stopPropagation()}
                                                              >
@@ -246,6 +251,7 @@ export function SquadList({
                                                             value={editTel}
                                                             onChange={(e) => setEditTel(e.target.value)}
                                                             type="tel"
+                                                            size="sm"
                                                             placeholder={isThai ? "เบอร์โทร..." : "Phone number..."}
                                                             onClick={(e) => e.stopPropagation()}
                                                         />
@@ -309,20 +315,20 @@ export function SquadList({
                                             <div className="flex items-center gap-1">
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    className="h-10 w-10 text-primary hover:bg-primary/10 transition-all"
+                                                    size="icon-sm"
+                                                    className="text-primary hover:bg-primary/10 transition-all"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleUpdatePlayer(player);
                                                     }}
                                                     disabled={isSaving}
                                                 >
-                                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-5 w-5" />}
+                                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    className="h-10 w-10 text-red-500 hover:bg-red-500/10 transition-all"
+                                                    size="icon-sm"
+                                                    className="text-red-500 hover:bg-red-500/10 transition-all"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setEditingPlayerId(null);
@@ -331,7 +337,7 @@ export function SquadList({
                                                     }}
                                                     disabled={isSaving}
                                                 >
-                                                    <X className="h-5 w-5" />
+                                                    <X className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         ) : (
@@ -341,11 +347,11 @@ export function SquadList({
                                                         <DropdownMenuTrigger asChild>
                                                             <Button
                                                                 variant="ghost"
-                                                                size="icon"
-                                                                className="h-10 w-10 text-muted-foreground hover:text-primary hover:bg-muted/10 transition-all"
+                                                                size="icon-sm"
+                                                                className="text-muted-foreground hover:text-primary hover:bg-muted/10 transition-all"
                                                                 onClick={(e) => e.stopPropagation()}
                                                             >
-                                                                <MoreVertical className="h-5 w-5" />
+                                                                <MoreVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="w-36 rounded-sm">

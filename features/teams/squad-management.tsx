@@ -320,6 +320,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     {team.isParticipation && team.roster_status !== 'rejected' && !isDeadlinePassed && (
                         <Button
                             variant="destructive"
+                            size="sm"
                             onClick={() => setShowWithdrawDialog(true)}
                             disabled={isWithdrawing}
                         >
@@ -336,6 +337,7 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
                     {(!effectivelyLocked || unlockRequested || !isDeadlinePassed) && (
                         <Button
                             variant={(effectivelyLocked && !unlockRequested) ? "outline" : "warning"}
+                            size="sm"
                             onClick={(effectivelyLocked && !unlockRequested) ? (isDeadlinePassed ? handleRequestUnlock : handleToggleLock) : handleToggleLock}
                             disabled={isLocking || isRequestingUnlock}
                             title={(effectivelyLocked && !unlockRequested) ? t("unlock_roster") : t("submit_lock")}
@@ -441,27 +443,32 @@ export function SquadManagement({ team, initialPlayers }: SquadManagementProps) 
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <div className={cn(
-                    "lg:col-span-2 w-full min-w-0 space-y-2 md:space-y-4",
+                    "lg:col-span-2 w-full min-w-0",
                     mobileTab !== 'roster' && "hidden lg:block"
                 )}>
-                    <div id="tour-add-player-form">
-                        <AddPlayerForm
-                            teamId={team.id}
-                            onSuccess={refreshPlayers}
-                            effectivelyLocked={unlockRequested ? false : effectivelyLocked}
-                            sport={team.sport || team.sport_name}
-                        />
-                    </div>
-                    <div id="tour-squad-list">
-                        <SquadList
-                            players={players}
-                            team={team}
-                            effectivelyLocked={unlockRequested ? false : effectivelyLocked}
-                            refreshPlayers={refreshPlayers}
-                            onDeletePlayer={setPlayerToDelete}
-                            t={t}
-                            tCommon={tCommon}
-                        />
+                    {/* Combined Add Player Form & Player List Card */}
+                    <div className="bg-card border rounded-sm divide-y divide-border overflow-hidden">
+                        <div id="tour-add-player-form">
+                            <AddPlayerForm
+                                teamId={team.id}
+                                onSuccess={refreshPlayers}
+                                effectivelyLocked={unlockRequested ? false : effectivelyLocked}
+                                sport={team.sport || team.sport_name}
+                                className="border-0 rounded-none bg-transparent"
+                            />
+                        </div>
+                        <div id="tour-squad-list">
+                            <SquadList
+                                players={players}
+                                team={team}
+                                effectivelyLocked={unlockRequested ? false : effectivelyLocked}
+                                refreshPlayers={refreshPlayers}
+                                onDeletePlayer={setPlayerToDelete}
+                                t={t}
+                                tCommon={tCommon}
+                                className="border-0 rounded-none bg-transparent"
+                            />
+                        </div>
                     </div>
                 </div>
 

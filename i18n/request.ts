@@ -16,6 +16,15 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
     return {
         locale: locale as string,
-        messages
+        messages,
+        onError(error) {
+            if (error.code === 'MISSING_MESSAGE') {
+                console.warn(`[next-intl Warning]: ${error.message}`);
+            }
+        },
+        getMessageFallback({ key, namespace }) {
+            const fullKey = namespace ? `${namespace}.${key}` : key;
+            return `[MISSING: ${fullKey}]`;
+        }
     };
 });

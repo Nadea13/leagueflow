@@ -17,8 +17,16 @@ import { Tab } from "@/components/ui/tab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-const getPlanPrice = (plan: Plan) => {
+const getPlanPrice = (plan: Plan, isEn: boolean = false) => {
     if (plan.id === "starter" || plan.id === "match") return 0;
+    if (isEn) {
+        if (plan.id === "pro" || plan.id === "event") return 4.5;
+        if (plan.id === "pro_yearly") return 89;
+        if (plan.id === "cup") return 45;
+        if (plan.id === "cup_yearly") return 450;
+        if (plan.id === "manager_pro") return 5.99;
+        return plan.price ? Math.round((plan.price / 35) * 100) / 100 : 0;
+    }
     if (plan.id === "pro" || plan.id === "event") return 145;
     return (plan.discounted_price || plan.price);
 };
@@ -26,6 +34,7 @@ const getPlanPrice = (plan: Plan) => {
 export function BillingTab() {
     const t = useTranslations("Billing");
     const locale = useLocale();
+    const isEn = locale === "en";
     const router = useRouter();
 
     const [activePlan, setActivePlan] = useState<string>("free");
@@ -73,7 +82,7 @@ export function BillingTab() {
     }, []);
 
     const handleSelectPlan = (plan: Plan) => {
-        const price = getPlanPrice(plan);
+        const price = getPlanPrice(plan, isEn);
 
         if (price === 0) {
             startTransition(async () => {
@@ -95,6 +104,7 @@ export function BillingTab() {
                 planId: plan.id,
                 planName: plan.name.replace(/^สมัครใช้\s*/i, '').trim(),
                 amount: price,
+                currency: isEn ? 'usd' : 'thb',
                 tournamentId: tourId,
             });
 
@@ -168,7 +178,7 @@ export function BillingTab() {
                         <p className="text-xs text-muted-foreground font-medium">{t("description")}</p>
                         {expiryDate && (
                             <p className="text-[10px] text-muted-foreground mt-1 font-bold">
-                                {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                {t("expiryDate")}: {new Date(expiryDate).toLocaleDateString(isEn ? 'en-US' : 'th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
                             </p>
                         )}
                     </div>
@@ -288,8 +298,12 @@ export function BillingTab() {
                                             {isPro ? (
                                                 <>
                                                     <div className="flex items-baseline gap-1 flex-wrap">
-                                                        <span className="text-lg font-black line-through text-muted-foreground/60">฿290</span>
-                                                        <span className="text-xl font-black">฿145</span>
+                                                        <span className="text-lg font-black line-through text-muted-foreground/60">
+                                                            {isEn ? "$9" : "฿290"}
+                                                        </span>
+                                                        <span className="text-xl font-black">
+                                                            {isEn ? "$4.50" : "฿145"}
+                                                        </span>
                                                         <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                         <Badge variant="default" className="text-[9px] px-1.5 py-0 font-bold">
                                                             -50%
@@ -298,29 +312,39 @@ export function BillingTab() {
                                                 </>
                                             ) : isProYearly ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black">฿2,900</span>
+                                                    <span className="text-xl font-black">
+                                                        {isEn ? "$89" : "฿2,900"}
+                                                    </span>
                                                     <span className="text-muted-foreground text-xs">{t("perYear")}</span>
                                                 </div>
                                             ) : isManagerPro ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black">฿{plan.price.toLocaleString()}</span>
+                                                    <span className="text-xl font-black">
+                                                        {isEn ? "$5.99" : `฿${plan.price.toLocaleString()}`}
+                                                    </span>
                                                     <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                 </div>
                                             ) : isCustoms ? (
                                                 <span className="text-base font-black py-1">{t("contactSales")}</span>
                                             ) : isCup ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black">฿1,490</span>
+                                                    <span className="text-xl font-black">
+                                                        {isEn ? "$45" : "฿1,490"}
+                                                    </span>
                                                     <span className="text-muted-foreground text-xs">{t("perMonth")}</span>
                                                 </div>
                                             ) : isCupYearly ? (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black">฿14,900</span>
+                                                    <span className="text-xl font-black">
+                                                        {isEn ? "$450" : "฿14,900"}
+                                                    </span>
                                                     <span className="text-muted-foreground text-xs">{t("perYear")}</span>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-xl font-black">฿0</span>
+                                                    <span className="text-xl font-black">
+                                                        {isEn ? "$0" : "฿0"}
+                                                    </span>
                                                     <span className="text-muted-foreground text-xs">{t("lifetime")}</span>
                                                 </div>
                                             )}

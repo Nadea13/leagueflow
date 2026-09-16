@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { Noto_Sans_Thai } from "next/font/google";
 import "../globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
@@ -101,16 +101,8 @@ export default async function LocaleLayout({
             <ScrollToTop />
           </ThemeProvider>
         </NextIntlClientProvider>
-        {/* Cloudflare Web Analytics */}
-        <Script
-          strategy="afterInteractive"
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "fc1a8d5afc084d8ea93687a5283ad2bf"}'
-        />
-      {/* impeccable-live-start */}
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-      <script src="http://localhost:8400/live.js"></script>
-      {/* impeccable-live-end */}
+        {/* Vercel Web Analytics */}
+        <Analytics />
       </body>
     </html>
   );

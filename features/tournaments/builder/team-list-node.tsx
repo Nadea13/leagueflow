@@ -47,11 +47,11 @@ export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
                 "relative w-[320px] border bg-card text-card-foreground transition-all rounded-sm shadow-md",
                 selected
                     ? "border-node-3"
-                    : "border-border hover:border-node-3/50"
+                    : "border-muted-foreground hover:border-node-3/50"
             )}
         >
             {/* Header */}
-            <div className="flex items-center p-2 border-b">
+            <div className="flex items-center p-2 border-b border-muted-foreground">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-node-3/10 rounded flex items-center justify-center">
                         <Users className="h-4 w-4 text-node-3" />
@@ -63,7 +63,7 @@ export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
             </div>
 
             {/* Teams List */}
-            <div className="flex flex-col divide-y divide-border">
+            <div className="flex flex-col divide-y divide-muted-foreground">
                 {paidTeams.length === 0 ? (
                     <div className="p-4 text-center">
                         <p className="text-[10px] text-center text-muted-foreground">
@@ -104,7 +104,7 @@ export const TeamListNode = memo(({ data, selected }: TeamListNodeProps) => {
                                 type="source"
                                 position={Position.Right}
                                 id={`team-${team.id}`}
-                                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-3 transition-all z-50"
+                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-3 transition-all z-50"
                                 style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
                             />
                         </div>

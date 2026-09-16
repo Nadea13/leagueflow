@@ -6,6 +6,7 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Users, LayoutGrid, Trash2, ListOrdered, Megaphone, X, Heart, Loader2, GripVertical, Globe, ClipboardEdit, Check, HelpCircle, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -326,13 +327,21 @@ export function NodeSettings() {
             if (selectedNode?.type !== "matchNode") return;
             const nodeMatches = (selectedNode.data.matches as MatchItem[]) || [];
             const matchDbIds = nodeMatches.map(m => m.dbId || m.matchId).filter(Boolean) as string[];
-            if (matchDbIds.length === 0) return;
 
-            const { data: results } = await supabase
+            let query = supabase
                 .from('matches')
                 .select('*')
-                .in('id', matchDbIds)
                 .is('deleted_at', null);
+
+            if (matchDbIds.length > 0) {
+                query = query.in('id', matchDbIds);
+            } else if (selectedNode.id) {
+                query = query.eq('node_id', selectedNode.id);
+            } else {
+                return;
+            }
+
+            const { data: results } = await query;
 
             if (results) {
                 setDbMatches(results as Match[]);
@@ -340,7 +349,7 @@ export function NodeSettings() {
         }
 
         fetchScores();
-        const interval = setInterval(fetchScores, 10000);
+        const interval = setInterval(fetchScores, 2000);
         return () => clearInterval(interval);
     }, [selectedNode, supabase]);
 
@@ -873,7 +882,9 @@ export function NodeSettings() {
                                             };
 
                                             const dbMatch = dbMatches.find(m =>
-                                                m.id === match.dbId ||
+                                                (match.dbId && m.id === match.dbId) ||
+                                                (match.matchId && m.id === match.matchId) ||
+                                                (m.node_id === id && m.match_index === (idx + 1)) ||
                                                 (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
                                             );
                                             const liveTeamA = getResolvedTeam(id, `slot-a-${idx}`, dbMatch, 'a');
@@ -884,6 +895,8 @@ export function NodeSettings() {
 
                                             const homeSelectItems = getSelectItems(homeOptions, liveTeamA);
                                             const awaySelectItems = getSelectItems(awayOptions, liveTeamB);
+
+                                            const matchConsoleId = match.dbId || match.matchId || dbMatch?.id || (type === "matchNode" && !!data.matchId && idx === 0 ? (data.matchId as string) : undefined);
 
                                             return (
                                                 <div key={match.id || idx} className="p-2 bg-card border rounded-lg space-y-2 relative group">
@@ -947,38 +960,38 @@ export function NodeSettings() {
                                                     </div>
                                                     <div className="space-y-1">
                                                         <Label className="text-[10px]">{locale === "th" ? "วันและเวลาแข่ง" : "Date & Time"}</Label>
-                                                        <Input
-                                                            type="datetime-local"
-                                                            value={
-                                                                match.match_date
-                                                                    ? `${match.match_date}T${match.match_time || "00:00"}`
-                                                                    : ""
-                                                            }
-                                                            onChange={(e) => {
-                                                                const val = e.target.value;
-                                                                if (val) {
-                                                                    const [date, time] = val.split("T");
-                                                                    updateMatch({ match_date: date, match_time: time });
-                                                                } else {
-                                                                    updateMatch({ match_date: "", match_time: "" });
-                                                                }
+                                                        <DateTimePicker
+                                                            date={match.match_date}
+                                                            time={match.match_time}
+                                                            onChange={(date, time) => {
+                                                                updateMatch({ match_date: date, match_time: time });
                                                             }}
-                                                            className="bg-card w-full"
+                                                            placeholder={locale === "th" ? "เลือกวันและเวลาแข่ง" : "Select date & time"}
+                                                            size="sm"
                                                         />
                                                     </div>
 
-                                                    {(match.dbId || match.matchId || (type === "matchNode" && !!data.matchId && idx === 0)) && (
+                                                    {matchConsoleId ? (
                                                         <Button
                                                             asChild
                                                             variant={dbMatch?.status === 'finished' ? "outline" : "default"}
                                                             size="sm"
                                                             className="w-full"
                                                         >
-                                                            <Link href={`/dashboard/tournaments/${tournamentId}/matches/${match.dbId || match.matchId || (data.matchId as string)}`}>
+                                                            <Link href={`/dashboard/tournaments/${tournamentId}/matches/${matchConsoleId}`}>
                                                                 {dbMatch?.status === 'finished'
                                                                     ? (locale === "th" ? "ดูผลการแข่งขัน" : "VIEW MATCH")
                                                                     : (locale === "th" ? "จัดการการแข่งขัน" : "MATCH CONSOLE")}
                                                             </Link>
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full text-muted-foreground opacity-70"
+                                                            disabled
+                                                        >
+                                                            {locale === "th" ? "กำลังสร้างการแข่งขัน..." : "Generating Match..."}
                                                         </Button>
                                                     )}
                                                 </div>

@@ -36,6 +36,7 @@ export interface TournamentTemplateDialogProps {
     getCenterPos: () => { x: number; y: number };
     maxTeams?: number;
     triggerButton?: React.ReactNode;
+    onApplyTemplate?: () => void | Promise<void>;
 }
 
 type TemplateCategory = "all" | "knockout" | "league" | "hybrid";
@@ -560,23 +561,15 @@ export function TournamentTemplateDialog({
     getCenterPos,
     maxTeams = 8,
     triggerButton,
+    onApplyTemplate,
 }: TournamentTemplateDialogProps) {
-    const locale = useLocale();
-    const isThai = locale === "th";
-
-    const templates = React.useMemo(() => buildTemplates(maxTeams, isThai), [maxTeams, isThai]);
-
+    const isThai = useLocale() === "th";
     const [open, setOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>("all");
-    const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0]?.id || "single_elim_8");
+    const [selectedTemplateId, setSelectedTemplateId] = useState<string>("single_elim_8");
     const [includeThirdPlace, setIncludeThirdPlace] = useState(true);
 
-    // Sync selected template if templates change
-    React.useEffect(() => {
-        if (templates.length > 0 && !templates.some((t) => t.id === selectedTemplateId)) {
-            setSelectedTemplateId(templates[0].id);
-        }
-    }, [templates, selectedTemplateId]);
+    const templates = React.useMemo(() => buildTemplates(maxTeams, isThai), [maxTeams, isThai]);
 
     const insertTemplate = useBracketStore((state) => state.insertTemplate);
 
@@ -587,7 +580,7 @@ export function TournamentTemplateDialog({
 
     const activeTemplate = templates.find((tpl) => tpl.id === selectedTemplateId) || filteredTemplates[0] || templates[0];
 
-    const handleApplyTemplate = () => {
+    const handleApplyTemplate = async () => {
         if (!activeTemplate) return;
         const centerPos = getCenterPos();
         const templateData = activeTemplate.generate({
@@ -597,6 +590,9 @@ export function TournamentTemplateDialog({
 
         insertTemplate(templateData.nodes, templateData.edges, centerPos);
         setOpen(false);
+        if (onApplyTemplate) {
+            await onApplyTemplate();
+        }
     };
 
     return (

@@ -22,6 +22,7 @@ interface AddPlayersDialogProps {
 
 interface BulkPlayerInput {
     name: string;
+    nickname: string;
     number: string;
     position: string;
     tel: string;
@@ -63,6 +64,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
 
     const initialBulkPlayers = Array.from({ length: 12 }, () => ({
         name: "",
+        nickname: "",
         number: "",
         position: "",
         tel: "",
@@ -106,6 +108,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
             ...prev,
             ...Array.from({ length: 3 }, () => ({
                 name: "",
+                nickname: "",
                 number: "",
                 position: "",
                 tel: "",
@@ -177,7 +180,10 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
             formData.append("count", activePlayers.length.toString());
 
             activePlayers.forEach((p, idx) => {
-                formData.append(`name_${idx}`, p.name);
+                const fullNameWithNickname = p.nickname?.trim()
+                    ? `${p.name.trim()} (${p.nickname.trim()})`
+                    : p.name.trim();
+                formData.append(`name_${idx}`, fullNameWithNickname);
                 formData.append(`number_${idx}`, p.number);
                 formData.append(`position_${idx}`, p.position);
                 formData.append(`tel_${idx}`, p.tel);
@@ -219,7 +225,8 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
         <Dialog open={isBulkOpen} onOpenChange={setIsBulkOpen}>
             <DialogTrigger asChild>
                 <Button 
-                    variant="outline" 
+                    variant="outline"
+                    size="sm" 
                 >
                     <Plus className="h-4 w-4" />
                     <span className="hidden lg:block">{isThai ? "เพิ่มหลายคน" : "Add Multiple"}</span>
@@ -249,43 +256,46 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
                 <div className="flex-1 overflow-y-auto space-y-2 md:space-y-4 p-2 md:p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
                         {bulkPlayers.map((player, idx) => (
-                            <div key={idx} className="border rounded-sm p-1 md:p-2 relative flex flex-col items-center gap-1 md:gap-2">
-                                
-                                {/* Photo Selector */}
-                                <div className="relative">
+                            <div
+                                key={idx}
+                                className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-card/50 relative group hover:border-primary/50 transition-colors"
+                            >
+                                {/* Photo Upload Circle */}
+                                <div className="flex justify-center">
+                                    <label
+                                        htmlFor={`bulk-photo-${idx}`}
+                                        className="relative h-14 w-14 rounded-full border-2 border-dashed border-border hover:border-primary/70 flex items-center justify-center cursor-pointer overflow-hidden group/photo bg-muted/20 transition-colors"
+                                    >
+                                        {player.photoPreview ? (
+                                            <>
+                                                <Image
+                                                    src={player.photoPreview}
+                                                    alt="Preview"
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/photo:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <Camera className="h-4 w-4 text-white" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <Camera className="h-5 w-5 text-muted-foreground/40 group-hover/photo:text-primary transition-colors" />
+                                        )}
+                                    </label>
                                     <input
+                                        id={`bulk-photo-${idx}`}
                                         type="file"
-                                        id={`photo-input-${idx}`}
                                         accept="image/*"
                                         className="hidden"
                                         onChange={(e) => handlePhotoChange(idx, e.target.files?.[0] || null)}
                                     />
-                                    <label
-                                        htmlFor={`photo-input-${idx}`}
-                                        className="h-16 w-16 rounded-full border transition-all flex items-center justify-center overflow-hidden relative group cursor-pointer"
-                                    >
-                                        {player.photoPreview ? (
-                                            <Image 
-                                                src={player.photoPreview} 
-                                                alt="Preview" 
-                                                width={40} 
-                                                height={40} 
-                                                className="h-full w-full object-cover" 
-                                            />
-                                        ) : (
-                                            <Camera className="h-4 w-4 text-primary" />
-                                        )}
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <Camera className="h-4 w-4 text-foreground" />
-                                        </div>
-                                    </label>
-                                    {player.photoPreview && (
+                                    {player.photoFile && (
                                         <button
                                             type="button"
                                             onClick={() => handlePhotoChange(idx, null)}
-                                            className="absolute -top-0 -right-0 bg-destructive text-destructive-foreground rounded-full p-0.5 hover:bg-destructive/90 shadow-md transition-transform z-10"
+                                            className="absolute top-2 right-2 text-muted-foreground/40 hover:text-destructive transition-colors"
                                         >
-                                            <X className="h-3 w-3" />
+                                            <X className="h-3.5 w-3.5" />
                                         </button>
                                     )}
                                 </div>
@@ -295,6 +305,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
                                     <div className="relative">
                                         <Input
                                             type="text"
+                                            size="sm"
                                             value={player.name}
                                             onChange={(e) => handleBulkNameChange(idx, e.target.value)}
                                             placeholder={isThai ? "ชื่อนักกีฬา *" : "Player Name *"}
@@ -342,9 +353,17 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
                                             </div>
                                         )}
                                     </div>
+                                    <Input
+                                        type="text"
+                                        size="sm"
+                                        value={player.nickname}
+                                        onChange={(e) => updateBulkPlayer(idx, "nickname", e.target.value)}
+                                        placeholder={isThai ? "ชื่อเล่น" : "Nickname"}
+                                    />
                                     <div className="grid grid-cols-2 gap-1.5">
                                         <Input
                                             type="text"
+                                            size="sm"
                                             value={player.number}
                                             onChange={(e) => updateBulkPlayer(idx, "number", e.target.value)}
                                             placeholder={isThai ? "เบอร์เสื้อ" : "Shirt No."}
@@ -353,7 +372,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
                                             value={player.position}
                                             onValueChange={(val) => updateBulkPlayer(idx, "position", val)}
                                         >
-                                            <SelectTrigger className="w-full">
+                                            <SelectTrigger size="sm" className="w-full">
                                                 <SelectValue placeholder={isThai ? "ตำแหน่ง" : "Position"} />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -367,6 +386,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
                                     </div>
                                     <Input
                                         type="tel"
+                                        size="sm"
                                         value={player.tel}
                                         onChange={(e) => updateBulkPlayer(idx, "tel", e.target.value)}
                                         placeholder={isThai ? "เบอร์โทรศัพท์" : "Phone Number"}
@@ -380,6 +400,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
                         <Button
                             type="button"
                             variant="outline"
+                            size="sm"
                             onClick={addBulkRow}
                         >
                             {isThai ? "เพิ่มช่องแถวใหม่" : "Add More Rows"}
@@ -389,6 +410,7 @@ export function AddPlayersDialog({ teamId, onSuccess, effectivelyLocked, sport }
 
                 <DialogFooter>
                     <Button
+                        size="sm"
                         onClick={handleBulkFormSubmit}
                         disabled={isSubmittingBulk || bulkPlayers.filter(p => p.name.trim().length > 0).length === 0}
                     >

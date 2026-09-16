@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import Image from "next/image";
-import { Handle, Position, NodeProps, Node } from "@xyflow/react";
+import { Handle, Position, NodeProps, Node, useUpdateNodeInternals } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 import { MatchNodeData, useBracketStore } from "@/lib/stores/bracket-store";
 import { useParams } from "next/navigation";
@@ -11,12 +11,14 @@ import { useEffect, useState, useMemo } from "react";
 import { Match, TournamentTeam, MatchEvent } from "@/types";
 
 type MatchNodeType = Node<MatchNodeData, "matchNode">;
+type MatchItem = NonNullable<MatchNodeData['matches']>[number];
 
 export const MatchNode = memo(function MatchNode({
     id,
     data,
     selected,
 }: NodeProps<MatchNodeType>) {
+    const updateNodeInternals = useUpdateNodeInternals();
     const updateNodeData = useBracketStore((s) => s.updateNodeData);
     const edges = useBracketStore((s) => s.edges);
     const nodes = useBracketStore((s) => s.nodes);
@@ -29,7 +31,7 @@ export const MatchNode = memo(function MatchNode({
     const [dbMatches, setDbMatches] = useState<Match[]>([]);
     const [dbEvents, setDbEvents] = useState<MatchEvent[]>([]);
     const [fetchedSport, setFetchedSport] = useState<string | null>(null);
-    const [_tick, setTick] = useState(0);
+    const [currentTimestamp, setCurrentTimestamp] = useState<number>(0);
     const matches = useMemo(() => Array.isArray(data.matches) ? data.matches : [], [data.matches]);
 
     const sport = useMemo(() => {
@@ -40,7 +42,7 @@ export const MatchNode = memo(function MatchNode({
     // Local ticker to update the live timer every second
     useEffect(() => {
         const timer = setInterval(() => {
-            setTick(t => t + 1);
+            setCurrentTimestamp(Date.now());
         }, 1000);
         return () => clearInterval(timer);
     }, []);
@@ -61,25 +63,35 @@ export const MatchNode = memo(function MatchNode({
             }
 
             const matchDbIds = matches.map(m => m.dbId).filter(Boolean) as string[];
-            if (matchDbIds.length === 0) return;
 
-            const { data: results } = await supabase
+            let query = supabase
                 .from('matches')
                 .select('*')
-                .in('id', matchDbIds)
                 .is('deleted_at', null);
+
+            if (matchDbIds.length > 0) {
+                query = query.in('id', matchDbIds);
+            } else if (id) {
+                query = query.eq('node_id', id);
+            } else {
+                return;
+            }
+
+            const { data: results } = await query;
             
             if (results) {
                 setDbMatches(results);
-            }
-
-            const { data: evs } = await supabase
-                .from('match_events')
-                .select('*')
-                .in('match_id', matchDbIds);
-            
-            if (evs) {
-                setDbEvents(evs as MatchEvent[]);
+                const fetchedIds = results.map(r => r.id);
+                if (fetchedIds.length > 0) {
+                    const { data: evs } = await supabase
+                        .from('match_events')
+                        .select('*')
+                        .in('match_id', fetchedIds);
+                    
+                    if (evs) {
+                        setDbEvents(evs as MatchEvent[]);
+                    }
+                }
             }
         }
 
@@ -98,13 +110,121 @@ export const MatchNode = memo(function MatchNode({
         };
     }, [id, tournamentId, supabase, matches, storeSport, data]);
 
+    useEffect(() => {
+        updateNodeInternals(id);
+    }, [id, matches, dbMatches, updateNodeInternals]);
+
+    const renderMatchStatus = (m: MatchItem | undefined, dbM: Match | undefined) => {
+        if (!m) return null;
+        const matchDate = dbM?.match_date || m.match_date;
+        const matchTime = dbM?.match_time || m.match_time;
+
+        if (dbM?.status === 'live') {
+            if (sport === 'volleyball') {
+                const vballEvents = dbM ? dbEvents.filter(e => e.match_id === dbM.id && ['point', 'ace', 'spike', 'block'].includes(e.event_type)) : [];
+                const setPointsMap = new Map<number, { home: number; away: number }>();
+                if (vballEvents.length > 0) {
+                    vballEvents.forEach(e => {
+                        const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
+                        const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
+                        const isHome = dbM?.home_team_id ? e.team_id === dbM.home_team_id : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
+                        if (isHome) current.home += 1;
+                        else current.away += 1;
+                        setPointsMap.set(setNum, current);
+                    });
+                }
+                const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
+                const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
+                let derivedHomeSets = 0;
+                let derivedAwaySets = 0;
+                for (let s = 1; s <= maxLoggedSet; s++) {
+                    const pts = setPointsMap.get(s) || { home: 0, away: 0 };
+                    const targetPts = (s === 3 || s === 5) ? 15 : 25;
+                    const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
+                    if (s < maxLoggedSet || isFinishedScore) {
+                        if (pts.home > pts.away) derivedHomeSets += 1;
+                        else if (pts.away > pts.home) derivedAwaySets += 1;
+                    }
+                }
+                const currentSetNum = vballEvents.length > 0 ? (derivedHomeSets + derivedAwaySets + 1) : 1;
+                return (
+                    <span className="text-[10px] font-black text-primary flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
+                        SET {currentSetNum}
+                    </span>
+                );
+            }
+
+            const elapsed = dbM.elapsed_before_pause || 0;
+            let liveSeconds = elapsed;
+            
+            // Check if half time is the latest event
+            const matchEvents = dbEvents.filter(e => e.match_id === dbM.id);
+            const lastTimerEvent = [...matchEvents].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+            const isNodeHalfTime = lastTimerEvent?.event_type === 'half_time';
+            
+            if (isNodeHalfTime) {
+                return (
+                    <span className="text-[10px] font-black text-primary flex items-center gap-1">
+                        HT
+                    </span>
+                );
+            }
+
+            if (dbM.timer_status === 'playing') {
+                const markers = matchEvents.filter(e => e.event_type === 'kick_off' || e.event_type === 'match_resumed');
+                const latestMarker = markers.length > 0
+                    ? [...markers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+                    : null;
+                    
+                if (latestMarker) {
+                    const markerTimestamp = (latestMarker.extra_info as Record<string, unknown> | undefined)?.start_timestamp as number || new Date(latestMarker.created_at).getTime();
+                    const effectiveNow = currentTimestamp || markerTimestamp;
+                    const diffSeconds = Math.max(0, Math.floor((effectiveNow - markerTimestamp) / 1000));
+                    liveSeconds = elapsed + diffSeconds;
+                }
+            }
+            
+            const mins = Math.floor(liveSeconds / 60);
+            const secs = liveSeconds % 60;
+            const formattedTime = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            return (
+                <span className="text-[10px] font-black text-primary flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
+                    {formattedTime}
+                </span>
+            );
+        }
+
+        if (matchDate || matchTime) {
+            return (
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                    {matchDate && <span>{matchDate}</span>}
+                    {matchDate && matchTime && <span className="mx-1">|</span>}
+                    {matchTime && <span>{matchTime}</span>}
+                </span>
+            );
+        }
+
+        return null;
+    };
+
+    const singleMatch = matches[0];
+    const singleDbMatch = singleMatch ? dbMatches.find(m => 
+        (singleMatch.dbId && m.id === singleMatch.dbId) || 
+        (singleMatch.matchId && m.id === singleMatch.matchId) ||
+        (m.node_id === id && m.match_index === 1) ||
+        (m.placeholder_a === singleMatch.placeholderA && m.placeholder_b === singleMatch.placeholderB)
+    ) : undefined;
+
     return (
         <div
             className={cn(
                 "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm shadow-md",
                 selected
                     ? "border-node-2"
-                    : "border-border hover:border-node-2/50"
+                    : "border-muted-foreground hover:border-node-2/50"
             )}
         >
             {/* Top Target Handle for Group Connection */}
@@ -112,23 +232,30 @@ export const MatchNode = memo(function MatchNode({
                 type="target"
                 position={Position.Top}
                 id="group-in"
-                className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
+                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
                 style={{ top: "-1px" }}
             />
 
             {/* ── Header ── */}
-            <div className="flex items-center p-2 border-b">
-                <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-node-2/10 rounded flex items-center justify-center">
+            <div className="flex items-center justify-between p-2 border-b border-muted-foreground gap-2">
+                <div className="flex items-center gap-2 truncate min-w-0">
+                    <div className="w-6 h-6 bg-node-2/10 rounded flex items-center justify-center shrink-0">
                         <span className="text-node-2 text-xs font-bold">VS</span>
                     </div>
-                    <span className="text-xs font-black tracking-wide text-node-2">
+                    <span className="text-xs font-black tracking-wide text-node-2 shrink-0">
                         {matches.length > 1 ? "Round" : "Match"}
                     </span>
-                    <span className="text-xs font-black tracking-wide">
+                    <span className="text-xs font-black tracking-wide truncate">
                         {data.label}
                     </span>
                 </div>
+
+                {/* Right side of Header: Date & Time or Live Status for single match */}
+                {matches.length === 1 && (
+                    <div className="flex items-center shrink-0 ml-auto">
+                        {renderMatchStatus(singleMatch, singleDbMatch)}
+                    </div>
+                )}
             </div>
 
             {/* ── Match List ── */}
@@ -153,7 +280,9 @@ export const MatchNode = memo(function MatchNode({
                         })
                         .map((match, index) => {
                             const dbMatch = dbMatches.find(m => 
-                                m.id === match.dbId || 
+                                (match.dbId && m.id === match.dbId) || 
+                                (match.matchId && m.id === match.matchId) ||
+                                (m.node_id === id && m.match_index === (index + 1)) ||
                                 (m.placeholder_a === match.placeholderA && m.placeholder_b === match.placeholderB)
                             );
 
@@ -219,151 +348,21 @@ export const MatchNode = memo(function MatchNode({
 
                             const liveTeamA = getResolvedTeam('a');
                             const liveTeamB = getResolvedTeam('b');
-                            
-                            const matchDate = dbMatch?.match_date || match.match_date;
-                            const matchTime = dbMatch?.match_time || match.match_time;
 
                             const isGroupConnected = edges.some(e => e.target === id && e.targetHandle === 'group-in');
 
                             return (
                                 <div key={match.id || index} className="relative">
-                                    {/* Match Number Indicator / Date-Time */}
-                                    {(matches.length > 1 || matchDate || matchTime) && (
-                                        <div className="px-2 flex items-center justify-between gap-2 mt-1">
-                                            {matches.length > 1 ? (
-                                                <span className="text-[10px] font-black text-node-2 tracking-tighter">
-                                                    Match #{index + 1}
-                                                </span>
-                                            ) : (
-                                                <span />
-                                            )}
-                                            {dbMatch?.status === 'live' ? (() => {
-                                                if (sport === 'volleyball') {
-                                                    const vballEvents = dbMatch ? dbEvents.filter(e => e.match_id === dbMatch.id && ['point', 'ace', 'spike', 'block'].includes(e.event_type)) : [];
-                                                    const setPointsMap = new Map<number, { home: number; away: number }>();
-                                                    if (vballEvents.length > 0) {
-                                                        vballEvents.forEach(e => {
-                                                            const setNum = (e.extra_info as { set?: number } | null)?.set || 1;
-                                                            const current = setPointsMap.get(setNum) || { home: 0, away: 0 };
-                                                            const isHome = dbMatch?.home_team_id ? e.team_id === dbMatch.home_team_id : (e.extra_info as { team_side?: string } | null)?.team_side === 'home';
-                                                            if (isHome) current.home += 1;
-                                                            else current.away += 1;
-                                                            setPointsMap.set(setNum, current);
-                                                        });
-                                                    }
-                                                    const allSetNumbers = Array.from(setPointsMap.keys()).sort((a, b) => a - b);
-                                                    const maxLoggedSet = allSetNumbers.length > 0 ? Math.max(...allSetNumbers) : 1;
-                                                    let derivedHomeSets = 0;
-                                                    let derivedAwaySets = 0;
-                                                    for (let s = 1; s <= maxLoggedSet; s++) {
-                                                        const pts = setPointsMap.get(s) || { home: 0, away: 0 };
-                                                        const targetPts = (s === 3 || s === 5) ? 15 : 25;
-                                                        const isFinishedScore = (pts.home >= targetPts || pts.away >= targetPts) && Math.abs(pts.home - pts.away) >= 2;
-                                                        if (s < maxLoggedSet || isFinishedScore) {
-                                                            if (pts.home > pts.away) derivedHomeSets += 1;
-                                                            else if (pts.away > pts.home) derivedAwaySets += 1;
-                                                        }
-                                                    }
-                                                    const currentSetNum = vballEvents.length > 0 ? (derivedHomeSets + derivedAwaySets + 1) : 1;
-                                                    return (
-                                                        <span className="text-[10px] font-black text-primary flex items-center gap-1">
-                                                            <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
-                                                            SET {currentSetNum}
-                                                        </span>
-                                                    );
-                                                }
-
-                                                const elapsed = dbMatch.elapsed_before_pause || 0;
-                                                let liveSeconds = elapsed;
-                                                
-                                                // Check if half time is the latest event
-                                                const matchEvents = dbEvents.filter(e => e.match_id === dbMatch.id);
-                                                const lastTimerEvent = [...matchEvents].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-                                                const isNodeHalfTime = lastTimerEvent?.event_type === 'half_time';
-                                                
-                                                if (isNodeHalfTime) {
-                                                    return (
-                                                        <span className="text-[10px] font-black text-primary flex items-center gap-1">
-                                                            HT
-                                                        </span>
-                                                    );
-                                                }
-
-                                                if (dbMatch.timer_status === 'playing') {
-                                                    const markers = matchEvents.filter(e => e.event_type === 'kick_off' || e.event_type === 'match_resumed');
-                                                    const latestMarker = markers.length > 0
-                                                        ? [...markers].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
-                                                        : null;
-                                                        
-                                                    if (latestMarker) {
-                                                        const markerTimestamp = (latestMarker.extra_info as Record<string, unknown> | undefined)?.start_timestamp as number || new Date(latestMarker.created_at).getTime();
-                                                        const diffSeconds = Math.max(0, Math.floor((Date.now() - markerTimestamp) / 1000));
-                                                        liveSeconds = elapsed + diffSeconds;
-                                                    }
-                                                }
-                                                
-                                                const mins = Math.floor(liveSeconds / 60);
-                                                const secs = liveSeconds % 60;
-                                                const formattedTime = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                                                
-                                                return (
-                                                    <span className="text-[10px] font-black text-primary flex items-center gap-1">
-                                                        <span className="w-2 h-2 rounded-full bg-primary inline-block animate-pulse"></span>
-                                                        {formattedTime}
-                                                    </span>
-                                                );
-                                            })() : (matchDate || matchTime) ? (
-                                                <span className="text-[10px] font-medium text-muted-foreground">
-                                                    {matchDate && <span>{matchDate}</span>}
-                                                    {matchDate && matchTime && <span className="mx-1">| </span>}
-                                                    {matchTime && <span>{matchTime}</span>}
-                                                </span>
-                                            ) : null}
+                                    {/* Sub-header for multi-match round nodes */}
+                                    {matches.length > 1 && (
+                                        <div className="px-2 py-1 flex items-center justify-between gap-2 border-b bg-muted/20">
+                                            <span className="text-[10px] font-black text-node-2 tracking-tighter">
+                                                Match #{index + 1}
+                                            </span>
+                                            <div className="flex items-center shrink-0">
+                                                {renderMatchStatus(match, dbMatch)}
+                                            </div>
                                         </div>
-                                    )}
- 
-                                    {/* Handles for Slot A */}
-                                    {!isGroupConnected && (
-                                        <Handle
-                                            type="target"
-                                            position={Position.Left}
-                                            id={`slot-a-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
-                                            style={{ top: matches.length > 1 ? "45%" : "25%", left: "-1px" }}
-                                        />
-                                    )}
- 
-                                    {/* Handles for Slot B */}
-                                    {!isGroupConnected && (
-                                        <Handle
-                                            type="target"
-                                            position={Position.Left}
-                                            id={`slot-b-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
-                                            style={{ top: matches.length > 1 ? "85%" : "75%", left: "-1px" }}
-                                        />
-                                    )}
- 
-                                    {/* Source Handle (Winner) */}
-                                    {!isGroupConnected && (
-                                        <Handle
-                                            type="source"
-                                            position={Position.Right}
-                                            id={`winner-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
-                                            style={{ top: matches.length > 1 ? "45%" : "35%", right: "-1px" }}
-                                        />
-                                    )}
-
-                                    {/* Source Handle (Loser) */}
-                                    {!isGroupConnected && (
-                                        <Handle
-                                            type="source"
-                                            position={Position.Right}
-                                            id={`loser-${index}`}
-                                            className="!w-2 !h-2 !bg-card !border !border-border !rounded-full hover:!bg-node-2 transition-all z-50"
-                                            style={{ top: matches.length > 1 ? "75%" : "65%", right: "-1px" }}
-                                        />
                                     )}
 
                                     <div>
@@ -427,50 +426,93 @@ export const MatchNode = memo(function MatchNode({
                                             const isAwayLoser = isEnded && !isAwayWinner && (isHomeWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.home_team_id : true));
 
                                             return (
-                                                <>
-                                                    <SlotRow
-                                                        label={liveTeamA || match.placeholderA}
-                                                        isResolved={!!liveTeamA}
-                                                        score={sport === 'volleyball' ? homeSetsWon : dbMatch?.home_score}
-                                                        setPoints={currentSetPts.home}
-                                                        isWinner={isHomeWinner}
-                                                        isLoser={isHomeLoser}
-                                                        status={dbMatch?.status}
-                                                        position="top"
-                                                        sport={sport}
-                                                        onDropTeam={(teamName) => {
-                                                            const nextMatches = [...matches];
-                                                            nextMatches[index] = { ...nextMatches[index], placeholderA: teamName };
-                                                            updateNodeData(id, { matches: nextMatches });
-                                                        }}
-                                                        onClear={() => {
-                                                            const nextMatches = [...matches];
-                                                            nextMatches[index] = { ...nextMatches[index], placeholderA: "TBD" };
-                                                            updateNodeData(id, { matches: nextMatches });
-                                                        }}
-                                                    />
-                                                    <SlotRow
-                                                        label={liveTeamB || match.placeholderB}
-                                                        isResolved={!!liveTeamB}
-                                                        score={sport === 'volleyball' ? awaySetsWon : dbMatch?.away_score}
-                                                        setPoints={currentSetPts.away}
-                                                        isWinner={isAwayWinner}
-                                                        isLoser={isAwayLoser}
-                                                        status={dbMatch?.status}
-                                                        position="bottom"
-                                                        sport={sport}
-                                                        onDropTeam={(teamName) => {
-                                                            const nextMatches = [...matches];
-                                                            nextMatches[index] = { ...nextMatches[index], placeholderB: teamName };
-                                                            updateNodeData(id, { matches: nextMatches });
-                                                        }}
-                                                        onClear={() => {
-                                                            const nextMatches = [...matches];
-                                                            nextMatches[index] = { ...nextMatches[index], placeholderB: "TBD" };
-                                                            updateNodeData(id, { matches: nextMatches });
-                                                        }}
-                                                    />
-                                                </>
+                                                <div className="flex flex-col divide-y divide-muted-foreground">
+                                                    {/* Slot A Row with Handles */}
+                                                    <div className="relative">
+                                                        {!isGroupConnected && (
+                                                            <Handle
+                                                                type="target"
+                                                                position={Position.Left}
+                                                                id={`slot-a-${index}`}
+                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                style={{ left: "-1px" }}
+                                                            />
+                                                        )}
+                                                        {!isGroupConnected && (
+                                                            <Handle
+                                                                type="source"
+                                                                position={Position.Right}
+                                                                id={`winner-${index}`}
+                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                style={{ right: "-1px" }}
+                                                            />
+                                                        )}
+                                                        <SlotRow
+                                                            label={liveTeamA || match.placeholderA}
+                                                            isResolved={!!liveTeamA}
+                                                            score={sport === 'volleyball' ? homeSetsWon : dbMatch?.home_score}
+                                                            setPoints={currentSetPts.home}
+                                                            isWinner={isHomeWinner}
+                                                            isLoser={isHomeLoser}
+                                                            status={dbMatch?.status}
+                                                            position="top"
+                                                            sport={sport}
+                                                            onDropTeam={(teamName) => {
+                                                                const nextMatches = [...matches];
+                                                                nextMatches[index] = { ...nextMatches[index], placeholderA: teamName };
+                                                                updateNodeData(id, { matches: nextMatches });
+                                                            }}
+                                                            onClear={() => {
+                                                                const nextMatches = [...matches];
+                                                                nextMatches[index] = { ...nextMatches[index], placeholderA: "TBD" };
+                                                                updateNodeData(id, { matches: nextMatches });
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    {/* Slot B Row with Handles */}
+                                                    <div className="relative">
+                                                        {!isGroupConnected && (
+                                                            <Handle
+                                                                type="target"
+                                                                position={Position.Left}
+                                                                id={`slot-b-${index}`}
+                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                style={{ left: "-1px" }}
+                                                            />
+                                                        )}
+                                                        {!isGroupConnected && (
+                                                            <Handle
+                                                                type="source"
+                                                                position={Position.Right}
+                                                                id={`loser-${index}`}
+                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                style={{ right: "-1px" }}
+                                                            />
+                                                        )}
+                                                        <SlotRow
+                                                            label={liveTeamB || match.placeholderB}
+                                                            isResolved={!!liveTeamB}
+                                                            score={sport === 'volleyball' ? awaySetsWon : dbMatch?.away_score}
+                                                            setPoints={currentSetPts.away}
+                                                            isWinner={isAwayWinner}
+                                                            isLoser={isAwayLoser}
+                                                            status={dbMatch?.status}
+                                                            position="bottom"
+                                                            sport={sport}
+                                                            onDropTeam={(teamName) => {
+                                                                const nextMatches = [...matches];
+                                                                nextMatches[index] = { ...nextMatches[index], placeholderB: teamName };
+                                                                updateNodeData(id, { matches: nextMatches });
+                                                            }}
+                                                            onClear={() => {
+                                                                const nextMatches = [...matches];
+                                                                nextMatches[index] = { ...nextMatches[index], placeholderB: "TBD" };
+                                                                updateNodeData(id, { matches: nextMatches });
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
                                             );
                                         })()}
                                     </div>

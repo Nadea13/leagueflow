@@ -30,6 +30,7 @@ const eslintConfig = defineConfig([
     "fix-all-lint.js",
     "scratch/**",
     "scratch-*",
+    "scripts/**",
   ]),
 ]);
 

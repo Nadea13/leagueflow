@@ -308,6 +308,7 @@ export async function rejectInvite(
 
     revalidatePath(`/dashboard/invites`);
     revalidatePath(`/dashboard/notifications`);
+    revalidatePath(`/dashboard/inboxes`);
     revalidatePath(`/dashboard`);
 
     return { success: true };
@@ -320,6 +321,7 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
     id: string;
     tournament_id: string;
     tournament_name?: string;
+    tournament_logo?: string | null;
     role: string;
     status: 'pending' | 'accepted' | 'rejected';
     created_at: string;
@@ -340,7 +342,8 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
             status,
             created_at,
             tournaments (
-                name
+                name,
+                logo_img
             )
         `)
         .eq("email", user.email.toLowerCase())
@@ -355,7 +358,8 @@ export async function getAllUserInvites(): Promise<ActionResponse<Array<{
     const invites = (data || []).map((item) => ({
         id: item.id,
         tournament_id: item.tournament_id,
-        tournament_name: (item.tournaments as unknown as { name: string } | null)?.name,
+        tournament_name: (item.tournaments as unknown as { name: string; logo_img?: string | null } | null)?.name,
+        tournament_logo: (item.tournaments as unknown as { name: string; logo_img?: string | null } | null)?.logo_img || null,
         role: item.role,
         status: item.status as 'pending' | 'accepted' | 'rejected',
         created_at: item.created_at,
@@ -371,7 +375,9 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
     id: string;
     team_id: string;
     team_name: string;
+    team_logo?: string | null;
     tournament_name: string;
+    tournament_logo?: string | null;
     registration_status: 'pending' | 'approved' | 'rejected';
     payment_status: 'pending' | 'paid' | 'waived' | 'failed';
     created_at: string;
@@ -406,7 +412,8 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
             payment_status,
             created_at,
             team:teams (
-                name
+                name,
+                logo_img
             ),
             tournament_categories (
                 gender_type,
@@ -414,7 +421,8 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
                     category_name
                 ),
                 tournaments (
-                    name
+                    name,
+                    logo_img
                 )
             )
         `)
@@ -433,24 +441,27 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
         registration_status: string;
         payment_status: string;
         created_at: string;
-        team: { name: string } | null | Array<{ name: string }>;
+        team: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
         tournament_categories: {
             gender_type?: string;
             age_categories?: { category_name: string } | null | Array<{ category_name: string }>;
-            tournaments: { name: string } | null | Array<{ name: string }>;
+            tournaments: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
         } | null | Array<{
             gender_type?: string;
             age_categories?: { category_name: string } | null | Array<{ category_name: string }>;
-            tournaments: { name: string } | null | Array<{ name: string }>;
+            tournaments: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
         }>;
     }
 
     const registrations = (regData as unknown as RegistrationRow[] || []).map((item) => {
         const team = Array.isArray(item.team) ? item.team[0] : item.team;
         const teamName = team?.name || "Unknown Team";
+        const teamLogo = team?.logo_img || null;
         const category = Array.isArray(item.tournament_categories) ? item.tournament_categories[0] : item.tournament_categories;
         const tournament = category?.tournaments;
-        const rawTournamentName = (Array.isArray(tournament) ? tournament[0] : tournament)?.name || "Unknown Tournament";
+        const tournamentObj = Array.isArray(tournament) ? tournament[0] : tournament;
+        const rawTournamentName = tournamentObj?.name || "Unknown Tournament";
+        const tournamentLogo = tournamentObj?.logo_img || null;
 
         const ageCategoryObj = Array.isArray(category?.age_categories) ? category.age_categories[0] : category?.age_categories;
         const ageName = ageCategoryObj?.category_name;
@@ -466,7 +477,9 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
             id: item.id,
             team_id: item.team_id,
             team_name: teamName,
+            team_logo: teamLogo,
             tournament_name: tournamentName,
+            tournament_logo: tournamentLogo,
             registration_status: item.registration_status as 'pending' | 'approved' | 'rejected',
             payment_status: item.payment_status as 'pending' | 'paid' | 'waived' | 'failed',
             created_at: item.created_at,
@@ -482,6 +495,7 @@ export async function getUserRegistrations(): Promise<ActionResponse<Array<{
 export async function getUserTeamManagementRequests(): Promise<ActionResponse<Array<{
     id: string;
     team_name: string;
+    team_logo?: string | null;
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
 }>>> {
@@ -500,7 +514,8 @@ export async function getUserTeamManagementRequests(): Promise<ActionResponse<Ar
             status,
             created_at,
             team:teams (
-                name
+                name,
+                logo_img
             )
         `)
         .eq("requester_id", user.id)
@@ -515,7 +530,7 @@ export async function getUserTeamManagementRequests(): Promise<ActionResponse<Ar
         id: string;
         status: string;
         created_at: string;
-        team: { name: string } | null | Array<{ name: string }>;
+        team: { name: string; logo_img?: string | null } | null | Array<{ name: string; logo_img?: string | null }>;
     }
 
     const requests = (data as unknown as MgmtRequestRow[] || []).map((item) => {
@@ -523,6 +538,7 @@ export async function getUserTeamManagementRequests(): Promise<ActionResponse<Ar
         return {
             id: item.id,
             team_name: team?.name || "Unknown Team",
+            team_logo: team?.logo_img || null,
             status: item.status as 'pending' | 'approved' | 'rejected',
             created_at: item.created_at,
         };
@@ -538,8 +554,10 @@ export async function getIncomingTeamManagementRequests(): Promise<ActionRespons
     id: string;
     team_id: string;
     team_name: string;
+    team_logo?: string | null;
     requester_name: string;
     requester_email: string;
+    requester_avatar?: string | null;
     contact_phone: string;
     message: string | null;
     status: 'pending' | 'approved' | 'rejected';
@@ -617,31 +635,35 @@ export async function getIncomingTeamManagementRequests(): Promise<ActionRespons
             return { success: true, data: [] };
         }
 
-        // 5. Gather team names
+        // 5. Gather team names & logos
         const uniqueTeamIds = Array.from(new Set(requests.map(r => r.team_id)));
         const { data: teamsData } = await adminSupabase
             .from("teams")
-            .select("id, name")
+            .select("id, name, logo_img")
             .in("id", uniqueTeamIds);
-        const teamMap = new Map((teamsData || []).map(t => [t.id, t.name]));
+        const teamMap = new Map((teamsData || []).map(t => [t.id, { name: t.name, logo: t.logo_img }]));
 
         // 6. Gather requester profile info from public.users
         const uniqueRequesterIds = Array.from(new Set(requests.map(r => r.requester_id)));
         const { data: usersData } = await adminSupabase
             .from("users")
-            .select("id, full_name, email")
+            .select("id, full_name, email, profile_img")
             .in("id", uniqueRequesterIds);
-        const userMap = new Map((usersData || []).map(u => [u.id, { name: u.full_name, email: u.email }]));
+        const userMap = new Map((usersData || []).map(u => [u.id, { name: u.full_name, email: u.email, avatar: u.profile_img }]));
 
         const formatted = requests.map((item) => {
-            const teamName = teamMap.get(item.team_id) || "Unknown Team";
+            const teamInfo = teamMap.get(item.team_id);
+            const teamName = teamInfo?.name || "Unknown Team";
+            const teamLogo = teamInfo?.logo || null;
             const requester = userMap.get(item.requester_id);
             return {
                 id: item.id,
                 team_id: item.team_id,
                 team_name: teamName,
+                team_logo: teamLogo,
                 requester_name: requester?.name || "Unknown User",
                 requester_email: requester?.email || "",
+                requester_avatar: requester?.avatar || null,
                 contact_phone: item.contact_phone,
                 message: item.message,
                 status: item.status as 'pending' | 'approved' | 'rejected',

@@ -111,7 +111,7 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
                                         </Badge>
                                     )}
                                     <div className="text-[9px] font-black text-muted-foreground/40 tracking-widest mt-1">
-                                        {tSports(team.sport)}
+                                        {team.sport ? (tSports(team.sport) || team.sport) : ""}
                                     </div>
                                 </div>
                             </div>
@@ -121,7 +121,7 @@ export function DashboardCard({ type, data, mode }: DashboardCardProps) {
                 <CardContent className="pb-2 md:pb-4 text-sm relative z-10">
                     <div className="grid gap-4">
                         <div className="flex items-center gap-2 rounded text-[11px] font-bold text-muted-foreground/80 bg-muted/20 p-2">
-                            <Trophy className="h- w-3.5 text-primary" />
+                            <Trophy className="h-3.5 w-3.5 text-primary" />
                             <span className="truncate tracking-tight">
                                 {team.tournament ? team.tournament.name : tTeam("unassigned_badge")}
                             </span>

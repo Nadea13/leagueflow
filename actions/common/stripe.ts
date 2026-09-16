@@ -11,11 +11,13 @@ export async function createStripeCheckoutSession({
     planId,
     planName,
     amount,
+    currency = 'thb',
     tournamentId
 }: {
     planId: string;
     planName: string;
     amount: number;
+    currency?: 'thb' | 'usd';
     tournamentId?: string | null;
 }): Promise<ActionResponse<{ sessionId: string; url: string | null }>> {
     try {
@@ -72,17 +74,17 @@ export async function createStripeCheckoutSession({
         let originalPrice = amount;
         let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined = undefined;
 
-        // Pro Monthly Promo: Original 290 THB, Promo 145 THB (-50%)
-        if ((planId === "pro" || planId === "event") && isMonthly && amount === 145) {
-            originalPrice = 290;
+        // Pro Monthly Promo: Original 290 THB / $9 USD, Promo 145 THB / $4.50 USD (-50%)
+        if ((planId === "pro" || planId === "event") && isMonthly && (amount === 145 || amount === 4.5)) {
+            originalPrice = currency === 'usd' ? 9 : 290;
             try {
-                const couponId = "PROMO50_LAUNCH";
+                const couponId = currency === 'usd' ? "PROMO50_LAUNCH_USD" : "PROMO50_LAUNCH";
                 try {
                     await stripe.coupons.retrieve(couponId);
                 } catch {
                     await stripe.coupons.create({
                         id: couponId,
-                        name: "โปรโมชั่นเปิดตัว (-50%)",
+                        name: currency === 'usd' ? "Launch Promo (-50%)" : "โปรโมชั่นเปิดตัว (-50%)",
                         percent_off: 50,
                         duration: "once", // First billing cycle 50% off
                     });
@@ -94,12 +96,12 @@ export async function createStripeCheckoutSession({
         }
 
         const priceDataObj: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
-            currency: 'thb',
+            currency: currency,
             product_data: {
                 name: displayTitle,
                 description: baseDesc,
             },
-            unit_amount: Math.round(originalPrice * 100), // Original amount in satang
+            unit_amount: Math.round(originalPrice * 100), // Original amount in satang or cents
             recurring: {
                 interval: isYearly ? 'year' : 'month',
             },

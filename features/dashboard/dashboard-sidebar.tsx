@@ -63,7 +63,7 @@ export function DashboardSidebar({
             const ackCountStr = localStorage.getItem("acknowledgedNotificationsCount");
             const ackCount = ackCountStr ? parseInt(ackCountStr, 10) : 0;
 
-            if (pathname === "/dashboard/notifications") {
+            if (pathname === "/dashboard/inboxes" || pathname === "/dashboard/notifications") {
                 localStorage.setItem("acknowledgedNotificationsCount", String(total));
                 setHasUnread(false);
             } else {

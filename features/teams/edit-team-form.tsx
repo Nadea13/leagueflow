@@ -225,6 +225,7 @@ export function EditTeamForm({
                             value={teamName}
                             onChange={e => setTeamName(e.target.value)}
                             placeholder={tTeam("team_name_placeholder")}
+                            size="sm"
                             className="bg-transparent text-foreground focus-visible:ring-0"
                             required
                             readOnly={isLocked}
@@ -233,7 +234,7 @@ export function EditTeamForm({
 
                     <div className="space-y-1">
                         <Label>{tCommon("sport")} <span className="text-destructive">*</span></Label>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1 lg:gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 border bg-card rounded-sm divide-x divide-y overflow-hidden">
                             {sportsList.map((sport) => {
                                 const isSelected = teamSport === sport.id;
                                 return (
@@ -243,15 +244,15 @@ export function EditTeamForm({
                                         disabled={isLocked}
                                         onClick={() => setTeamSport(sport.id)}
                                         className={cn(
-                                            "group flex flex-col items-center justify-center p-1 lg:p-2 rounded-sm border text-center transition-all cursor-pointer gap-1.5",
+                                            "group flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer gap-1.5",
                                             isSelected
-                                                ? "border-primary bg-primary/10 text-primary font-bold ring-1 ring-primary"
-                                                : "border-border hover:border-primary/50 text-muted-foreground hover:text-primary hover:bg-muted/30",
+                                                ? "bg-primary/10 text-primary font-bold"
+                                                : "hover:bg-muted/30 text-muted-foreground hover:text-primary",
                                             isLocked && "opacity-50 cursor-not-allowed"
                                         )}
                                     >
                                         <div className={cn(
-                                            "p-2 rounded-full transition-colors",
+                                            "p-1.5 rounded-full transition-colors",
                                             isSelected ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
                                         )}>
                                             {getSportIcon(sport.sport_name, "h-4 w-4")}
@@ -272,7 +273,7 @@ export function EditTeamForm({
                             onChange={e => setTeamDescription(e.target.value)}
                             placeholder={tTeam("team_description_placeholder")}
                             readOnly={isLocked}
-                            className="bg-transparent w-full text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
+                            className="bg-transparent w-full text-xs text-foreground focus-visible:ring-0 resize-none min-h-[80px]"
                         />
                     </div>
 
@@ -285,6 +286,7 @@ export function EditTeamForm({
                                 value={contactName}
                                 onChange={e => setContactName(e.target.value)}
                                 placeholder={tTeam("contact_name_placeholder")}
+                                size="sm"
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                                 required
                                 readOnly={isLocked}
@@ -298,6 +300,7 @@ export function EditTeamForm({
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
                                 placeholder={tTeam("contact_phone_placeholder")}
+                                size="sm"
                                 className="bg-transparent text-foreground focus-visible:ring-0"
                                 required
                                 readOnly={isLocked}
@@ -309,6 +312,7 @@ export function EditTeamForm({
                         <div className="flex gap-1 md:gap-2">
                             <Button
                                 type="submit"
+                                size="sm"
                                 className="flex-1"
                                 disabled={isUpdatingTeam || isLocked}
                             >
@@ -319,8 +323,8 @@ export function EditTeamForm({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    size="icon"
-                                    className="shrink-0 border-primary text-primary hover:bg-primary/10 transition-all h-10 w-10 flex items-center justify-center"
+                                    size="icon-sm"
+                                    className="shrink-0 border-primary text-primary hover:bg-primary/10 transition-all flex items-center justify-center"
                                     onClick={handleRestoreRoster}
                                     disabled={isRestoringRoster || isLocked}
                                     title={t("restore_roster") || "Restore Roster"}
@@ -351,6 +355,7 @@ export function EditTeamForm({
                                     <Button
                                         type="button"
                                         variant="outline"
+                                        size="sm"
                                         className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                                         disabled={isResettingRoster || isLocked}
                                     >
@@ -384,6 +389,7 @@ export function EditTeamForm({
                                     <Button
                                         type="button"
                                         variant="outline"
+                                        size="sm"
                                         className="w-full border-destructive/40 text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
                                         disabled={isDeletingTeam || isLocked}
                                     >
@@ -412,6 +418,8 @@ export function EditTeamForm({
                                                     id="confirm-team-delete"
                                                     value={deleteConfirmText}
                                                     onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                                    placeholder={team.name}
+                                                    size="sm"
                                                     autoComplete="off"
                                                 />
                                             </div>
@@ -420,6 +428,7 @@ export function EditTeamForm({
                                     <DialogFooter className="p-2 md:p-4 border-t">
                                         <Button
                                             variant="destructive"
+                                            size="sm"
                                             disabled={isDeletingTeam || deleteConfirmText !== team.name}
                                             onClick={handleDeleteTeam}
                                             className="bg-destructive w-full"
