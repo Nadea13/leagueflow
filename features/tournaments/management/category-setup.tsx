@@ -100,8 +100,8 @@ export function CategorySetup({ tournamentId, tournamentName }: CategorySetupPro
                             <Label>{t("age_category")}</Label>
                             <div className="grid grid-cols-3 border bg-card rounded-sm divide-x overflow-hidden">
                                 {[
-                                    { id: "under", label: t("age_under"), icon: <ArrowDownCircle className="h-4 w-4" /> },
-                                    { id: "over", label: t("age_over"), icon: <PlusCircle className="h-4 w-4" /> },
+                                    { id: "under", label: ageValue ? t("age_under", { age: ageValue }) : t("type_under"), icon: <ArrowDownCircle className="h-4 w-4" /> },
+                                    { id: "over", label: ageValue ? t("age_over", { age: ageValue }) : t("type_over"), icon: <PlusCircle className="h-4 w-4" /> },
                                     { id: "open", label: t("age_open"), icon: <Globe className="h-4 w-4" /> },
                                 ].map((typeItem) => {
                                     const isSelected = ageType === typeItem.id;

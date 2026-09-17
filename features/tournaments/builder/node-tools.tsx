@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Users, ListOrdered, LayoutGrid } from "lucide-react"
+import { useLocale } from "next-intl"
 
 interface NodeToolsProps {
     onAddMatch: () => void
@@ -16,6 +17,7 @@ export function NodeTools({
     onAddStanding,
     onAddTeamList,
 }: NodeToolsProps) {
+    const isThai = useLocale() === "th"
     return (
         <div className="flex flex-col gap-1 p-1">
             <Button
@@ -27,9 +29,9 @@ export function NodeTools({
                     <span className="text-xs font-bold text-node-2 select-none">VS</span>
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black tracking-tight">Add Match</span>
+                    <span className="text-[11px] font-black tracking-tight">{isThai ? "เพิ่มแมตช์" : "Add Match"}</span>
                     <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                        Knockout Slot
+                        {isThai ? "รอบน็อคเอาท์" : "Knockout Slot"}
                     </span>
                 </div>
             </Button>
@@ -43,9 +45,9 @@ export function NodeTools({
                     <LayoutGrid className="h-4 w-4 text-node-5" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black tracking-tight">Add Group</span>
+                    <span className="text-[11px] font-black tracking-tight">{isThai ? "เพิ่มกลุ่ม" : "Add Group"}</span>
                     <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                        Stage / Pool
+                        {isThai ? "แบ่งกลุ่ม / สาย" : "Stage / Pool"}
                     </span>
                 </div>
             </Button>
@@ -59,9 +61,9 @@ export function NodeTools({
                     <ListOrdered className="h-4 w-4 text-node-1" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black tracking-tight">Add Standing</span>
+                    <span className="text-[11px] font-black tracking-tight">{isThai ? "เพิ่มตารางคะแนน" : "Add Standing"}</span>
                     <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                        Group Ranking
+                        {isThai ? "อันดับคะแนนในกลุ่ม" : "Group Ranking"}
                     </span>
                 </div>
             </Button>
@@ -75,9 +77,9 @@ export function NodeTools({
                     <Users className="h-4 w-4 text-node-3" />
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-[11px] font-black tracking-tight">Teams List</span>
+                    <span className="text-[11px] font-black tracking-tight">{isThai ? "รายชื่อทีม" : "Teams List"}</span>
                     <span className="text-[9px] text-muted-foreground tracking-tighter font-medium text-left">
-                        Team List
+                        {isThai ? "กล่องรายชื่อทีม" : "Team List"}
                     </span>
                 </div>
             </Button>

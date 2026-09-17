@@ -24,7 +24,8 @@ import {
     Loader2, Plus, Users, X,
     Settings, ShieldAlert,
     Calendar, ChevronLeft, ChevronRight, ExternalLink, Megaphone,
-    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, ClipboardEdit, Heart
+    Calendar as CalendarIcon, Lock, Unlock, Share2, Trophy, Inbox, MoreVertical, ClipboardEdit, Heart,
+    LayoutGrid, ListOrdered
 } from "lucide-react";
 import {
     Popover,
@@ -119,9 +120,15 @@ function DeletableEdge({
     });
     const { deleteElements } = useReactFlow();
 
+    const edgeStyle: React.CSSProperties = {
+        stroke: "var(--border)",
+        strokeWidth: 2,
+        ...style,
+    };
+
     return (
         <>
-            <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={edgeStyle} />
             {selected && (
                 <EdgeLabelRenderer>
                     <div
@@ -2210,40 +2217,67 @@ function CanvasInternal({
                                                 maxTeams={(categories.find((c) => toCategoryId(c.id) === activeCategoryId)?.max_teams ?? tournament?.max_teams) || 8}
                                                 onApplyTemplate={() => handleSave(false)}
                                             />
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <Button size="sm">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button size="sm" className="gap-1.5 font-bold shadow-xs">
                                                         <Plus className="h-4 w-4" />
-                                                        New
+                                                        <span>{t("new_element")}</span>
                                                     </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent
-                                                    side="bottom"
-                                                    align="end"
-                                                    className="w-64 p-0 bg-card shadow-2xl mt-1 rounded-sm"
-                                                    sideOffset={5}
-                                                >
-                                                    <div className="p-2 border-b">
-                                                        <span className="text-xs font-bold tracking-wider">Add Components</span>
-                                                    </div>
-                                                    <NodeTools
-                                                        onAddMatch={() => addMatchNode(getCenterPos())}
-                                                        onAddGroup={() => addGroupNode(getCenterPos())}
-                                                        onAddStanding={() => addStandingNode(getCenterPos())}
-                                                        onAddTeamList={() => addTeamListNode(teams, getCenterPos())}
-                                                    />
-                                                    <div className="p-2 border-t mt-1 flex items-center justify-between">
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-fit min-w-[200px] bg-card shadow-2xl rounded-sm p-1">
+                                                    <DropdownMenuItem
+                                                        onClick={() => addMatchNode(getCenterPos())}
+                                                        className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-2/10 focus:bg-node-2/10 group"
+                                                    >
+                                                        <div className="w-6 h-6 bg-node-2/10 rounded flex items-center justify-center shrink-0">
+                                                            <span className="text-node-2 text-xs font-bold">VS</span>
+                                                        </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[9px] text-muted-foreground font-bold">Elements</span>
-                                                            <span className="text-[11px] font-black">{nodes.length}</span>
+                                                            <span className="font-bold text-foreground">{locale === 'th' ? "เพิ่มแมตช์" : "Add Match"}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "รอบน็อคเอาท์" : "Knockout Slot"}</span>
                                                         </div>
-                                                        <div className="flex flex-col items-end">
-                                                            <span className="text-[9px] text-muted-foreground font-bold">Connections</span>
-                                                            <span className="text-[11px] font-black">{edges.length}</span>
+                                                    </DropdownMenuItem>
+
+                                                    <DropdownMenuItem
+                                                        onClick={() => addGroupNode(getCenterPos())}
+                                                        className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-5/10 focus:bg-node-5/10 group"
+                                                    >
+                                                        <div className="w-6 h-6 bg-node-5/10 rounded flex items-center justify-center shrink-0">
+                                                            <LayoutGrid className="h-4 w-4 text-node-5" />
                                                         </div>
-                                                    </div>
-                                                </PopoverContent>
-                                            </Popover>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-foreground">{locale === 'th' ? "เพิ่มกลุ่ม" : "Add Group"}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "แบ่งกลุ่ม / สาย" : "Stage / Pool"}</span>
+                                                        </div>
+                                                    </DropdownMenuItem>
+
+                                                    <DropdownMenuItem
+                                                        onClick={() => addStandingNode(getCenterPos())}
+                                                        className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-1/10 focus:bg-node-1/10 group"
+                                                    >
+                                                        <div className="w-6 h-6 bg-node-1/10 rounded flex items-center justify-center shrink-0">
+                                                            <ListOrdered className="h-4 w-4 text-node-1" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-foreground">{locale === 'th' ? "เพิ่มตารางคะแนน" : "Add Standing"}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "อันดับคะแนนในกลุ่ม" : "Group Ranking"}</span>
+                                                        </div>
+                                                    </DropdownMenuItem>
+
+                                                    <DropdownMenuItem
+                                                        onClick={() => addTeamListNode(teams, getCenterPos())}
+                                                        className="cursor-pointer text-xs font-semibold flex items-center gap-2 py-1.5 hover:bg-node-3/10 focus:bg-node-3/10 group"
+                                                    >
+                                                        <div className="w-6 h-6 bg-node-3/10 rounded flex items-center justify-center shrink-0">
+                                                            <Users className="h-4 w-4 text-node-3" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-foreground">{locale === 'th' ? "รายชื่อทีม" : "Teams List"}</span>
+                                                            <span className="text-[10px] text-muted-foreground">{locale === 'th' ? "กล่องรายชื่อทีม" : "Team List"}</span>
+                                                        </div>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </div>
                                     )}
                                     <div className="w-full h-full" id="tour-console-canvas-wrapper">
@@ -2295,14 +2329,14 @@ function CanvasInternal({
                                             colorMode="light"
                                             connectionMode={ConnectionMode.Loose}
                                             connectionRadius={50}
-                                            connectionLineStyle={{ stroke: "#00c692", strokeWidth: 2 }}
+                                            connectionLineStyle={{ stroke: "var(--border)", strokeWidth: 2 }}
                                             connectionLineType={ConnectionLineType.Bezier}
                                             snapToGrid
                                             snapGrid={[10, 10]}
                                             defaultEdgeOptions={{
                                                 type: "default",
                                                 style: {
-                                                    stroke: "#00c692",
+                                                    stroke: "var(--border)",
                                                     strokeWidth: 2,
                                                 },
                                             }}

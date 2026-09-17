@@ -439,7 +439,7 @@ export function PublicTournamentShell({
     }, [hasStandings, t]);
 
     return (
-        <main className="container mx-auto px-2 md:px-0 py-2 md:py-4 max-w-7xl">
+        <main className="container mx-auto px-2 md:px-0 pb-2 md:pb-4 max-w-7xl">
             {/* Unified Header Block - Styled like squad-management */}
             <div className="flex md:items-center justify-between">
                 <div className="flex items-center gap-1 md:gap-2">

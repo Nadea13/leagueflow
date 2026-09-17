@@ -285,7 +285,11 @@
     "tour_console_canvas_desc": "Map teams to fixtures and build match progression pathways visually.",
     "tour_console_sidebar_title": "Utility Sidebar Controls",
     "tour_console_sidebar_desc": "Use these tools to write Announcements, manage public registrations (Share), organize daily Schedules, or access detailed Settings.",
-    "select_category": "Select Category"
+    "select_category": "Select Category",
+    "new_element": "New",
+    "add_components": "Add Components",
+    "elements": "Elements",
+    "connections": "Connections"
   },
   "Registration": {
     "title": "Tournament Registration",
@@ -1958,7 +1962,9 @@
     "err_limit": "Please enter a valid team limit",
     "age_under": "Under {age}",
     "age_over": "{age} and Over",
-    "age_open": "Open (No Age Limit)"
+    "age_open": "Open (No Age Limit)",
+    "type_under": "Under",
+    "type_over": "Over"
   },
   "StaffSettings": {
     "invite_sent": "Invitation Sent",

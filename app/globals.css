@@ -367,3 +367,8 @@
   border: 1px solid var(--primary) !important;
   border-style: solid !important;
 }
+
+/* React Flow Default Edge Path */
+.react-flow__edge-path {
+  stroke: var(--border) !important;
+}

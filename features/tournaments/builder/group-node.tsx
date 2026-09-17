@@ -69,10 +69,10 @@ export const GroupNode = memo(({
                 "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm shadow-md",
                 selected
                     ? "border-node-5"
-                    : "border-muted-foreground hover:border-node-5/50"
+                    : "border-node-5/50 hover:border-node-5"
             )}
         >
-            <div className="flex items-center p-2 border-b border-muted-foreground">
+            <div className="flex items-center p-2 border-b border-node-5/50">
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-node-5/10 rounded flex items-center justify-center">
                         <LayoutGrid className="h-4 w-4 text-node-5" />
@@ -85,7 +85,7 @@ export const GroupNode = memo(({
 
             {/* Config inputs moved to sidebar */}
 
-            <div className="flex flex-col divide-y divide-muted-foreground">
+            <div className="flex flex-col divide-y divide-node-5/50">
                 {Math.max(0, data.teamCount || 0) === 0 ? (
                     <div className="p-4 text-center">
                         <p className="text-[10px] text-center text-muted-foreground">
@@ -123,7 +123,7 @@ export const GroupNode = memo(({
                                     type="target"
                                     position={Position.Left}
                                     id={`team-in-${index}`}
-                                    className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-5 transition-all z-50"
+                                    className="!w-2 !h-2 !bg-card !border !border-node-5/50 !rounded-full hover:!bg-node-5 transition-all z-50"
                                     style={{ left: "-1px" }}
                                 />
                                 <div className="w-6 h-6 border rounded-full flex items-center justify-center bg-muted/50 group-hover/slot:border-node-5/50 group-hover/slot:bg-node-5/10 transition-colors text-muted-foreground group-hover/slot:text-node-5">
@@ -161,7 +161,7 @@ export const GroupNode = memo(({
                 type="source"
                 position={Position.Right}
                 id="standing"
-                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-emerald transition-all z-50"
+                className="!w-2 !h-2 !bg-card !border !border-node-5/50 !rounded-full hover:!bg-node-5 transition-all z-50"
                 style={{ right: "-4px", top: "50%", transform: "translateY(-50%)" }}
             />
 

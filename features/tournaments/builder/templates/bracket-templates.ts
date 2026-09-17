@@ -46,7 +46,7 @@ function createEdge(
         type: "bezier",
         animated: false,
         style: {
-            stroke: "var(--muted-foreground)",
+            stroke: "var(--border)",
             strokeWidth: 2,
             strokeDasharray: isDashed ? "5,5" : "none",
             opacity: 1,

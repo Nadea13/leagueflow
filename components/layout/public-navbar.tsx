@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,16 @@ interface PublicNavbarProps {
 export function PublicNavbar({ user }: PublicNavbarProps) {
     const tLanding = useTranslations('Landing');
     const pathname = usePathname();
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+        };
+        handleScroll();
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (pathname === "/" || pathname === "") {
@@ -22,24 +33,30 @@ export function PublicNavbar({ user }: PublicNavbarProps) {
     };
 
     return (
-        <header className="border-b fixed top-0 left-0 right-0 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 bg-background/80 print:hidden">
-            <div className="container max-w-7xl mx-auto px-2 md:px-0 h-14 flex items-center justify-between relative">
+        <header
+            className={`fixed top-0 left-0 right-0 z-50 print:hidden transition-all duration-300 ${
+                scrolled
+                    ? "py-3 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-xs"
+                    : "py-6 border-0 border-transparent bg-transparent"
+            }`}
+        >
+            <div className="container max-w-7xl mx-auto px-4 md:px-0 flex items-center justify-between relative transition-all duration-300">
                 {/* Logo & Brand */}
                 <div className="flex items-center gap-6">
                     <Link 
                         href="/" 
                         onClick={handleLogoClick}
-                        className="flex items-center gap-2 font-bold text-xl cursor-pointer"
+                        className="flex items-center gap-2.5 font-bold text-xl cursor-pointer"
                     >
                         <div className="relative shrink-0">
-                            <Logo className="w-7 h-7 md:w-8 md:h-8 transition-all" color="#00C49A" />
+                            <Logo className="w-8 h-8 transition-all" color="#00C49A" />
                         </div>
-                        <span className="text-base md:text-lg font-black tracking-tighter text-foreground shrink-0 leading-none">League Flow</span>
+                        <span className="text-lg md:text-xl font-black tracking-tighter text-foreground shrink-0 leading-none">League Flow</span>
                     </Link>
                 </div>
 
                 {/* Centered Navigation Menu */}
-                <nav className="hidden md:flex items-center gap-4 text-sm font-semibold absolute left-1/2 -translate-x-1/2">
+                <nav className="hidden md:flex items-center gap-6 text-base font-semibold absolute left-1/2 -translate-x-1/2">
                     <Link href="/tournaments" className="text-muted-foreground hover:text-foreground transition-colors">
                         {tLanding('nav_tournaments')}
                     </Link>
@@ -49,17 +66,17 @@ export function PublicNavbar({ user }: PublicNavbarProps) {
                 </nav>
 
                 {/* Right Side Actions */}
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                     {user ? (
-                        <Button asChild variant="outline" className="hidden sm:flex">
+                        <Button asChild size="sm" variant="outline" className="hidden sm:flex font-medium">
                             <Link href="/dashboard">{tLanding('nav_dashboard')}</Link>
                         </Button>
                     ) : (
                         <>
-                            <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                            <Button size="sm" variant="ghost" asChild className="hidden sm:inline-flex font-medium">
                                 <Link href="/login">{tLanding('nav_signin')}</Link>
                             </Button>
-                            <Button asChild>
+                            <Button size="sm" asChild className="font-semibold shadow-xs">
                                 <Link href="/signup">{tLanding('hero_cta_start')}</Link>
                             </Button>
                         </>

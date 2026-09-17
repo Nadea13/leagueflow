@@ -402,7 +402,11 @@
     "upsell_view_plans": "ดูแพ็กเกจ",
     "upsell_pro_feature": "ฟีเจอร์สำหรับ Pro",
     "export_groups": "ส่งออกข้อมูลกลุ่ม",
-    "select_category": "เลือกรุ่นการแข่งขัน"
+    "select_category": "เลือกรุ่นการแข่งขัน",
+    "new_element": "เพิ่ม",
+    "add_components": "เพิ่มองค์ประกอบ",
+    "elements": "องค์ประกอบ",
+    "connections": "จุดเชื่อมต่อ"
   },
   "Format": {
     "league": "ลีก",
@@ -1958,7 +1962,9 @@
     "err_limit": "โปรดระบุจำนวนทีมที่ถูกต้อง",
     "age_under": "อายุไม่เกิน {age} ปี",
     "age_over": "อายุ {age} ปีขึ้นไป",
-    "age_open": "รุ่นทั่วไป (ไม่จำกัดอายุ)"
+    "age_open": "รุ่นทั่วไป (ไม่จำกัดอายุ)",
+    "type_under": "รุ่นไม่เกินกำหนด (Under)",
+    "type_over": "รุ่นอายุขึ้นไป (Over)"
   },
   "StaffSettings": {
     "invite_sent": "ส่งคำเชิญแล้ว",

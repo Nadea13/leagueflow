@@ -224,7 +224,7 @@ export const MatchNode = memo(function MatchNode({
                 "relative w-[320px] border bg-card text-card-foreground transition-all cursor-pointer rounded-sm shadow-md",
                 selected
                     ? "border-node-2"
-                    : "border-muted-foreground hover:border-node-2/50"
+                    : "border-node-2/50 hover:border-node-2"
             )}
         >
             {/* Top Target Handle for Group Connection */}
@@ -232,12 +232,12 @@ export const MatchNode = memo(function MatchNode({
                 type="target"
                 position={Position.Top}
                 id="group-in"
-                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                className="!w-2 !h-2 !bg-card !border !border-node-2/50 !rounded-full hover:!bg-node-2 transition-all z-50"
                 style={{ top: "-1px" }}
             />
 
             {/* ── Header ── */}
-            <div className="flex items-center justify-between p-2 border-b border-muted-foreground gap-2">
+            <div className="flex items-center justify-between p-2 border-b border-node-2/50 gap-2">
                 <div className="flex items-center gap-2 truncate min-w-0">
                     <div className="w-6 h-6 bg-node-2/10 rounded flex items-center justify-center shrink-0">
                         <span className="text-node-2 text-xs font-bold">VS</span>
@@ -426,7 +426,7 @@ export const MatchNode = memo(function MatchNode({
                                             const isAwayLoser = isEnded && !isAwayWinner && (isHomeWinner || (dbMatch?.winner_id ? dbMatch.winner_id === dbMatch?.home_team_id : true));
 
                                             return (
-                                                <div className="flex flex-col divide-y divide-muted-foreground">
+                                                <div className="flex flex-col divide-y divide-node-2/50">
                                                     {/* Slot A Row with Handles */}
                                                     <div className="relative">
                                                         {!isGroupConnected && (
@@ -434,7 +434,7 @@ export const MatchNode = memo(function MatchNode({
                                                                 type="target"
                                                                 position={Position.Left}
                                                                 id={`slot-a-${index}`}
-                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                className="!w-2 !h-2 !bg-card !border !border-node-2/50 !rounded-full hover:!bg-node-2 transition-all z-50"
                                                                 style={{ left: "-1px" }}
                                                             />
                                                         )}
@@ -443,7 +443,7 @@ export const MatchNode = memo(function MatchNode({
                                                                 type="source"
                                                                 position={Position.Right}
                                                                 id={`winner-${index}`}
-                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                className="!w-2 !h-2 !bg-card !border !border-node-2/50 !rounded-full hover:!bg-node-2 transition-all z-50"
                                                                 style={{ right: "-1px" }}
                                                             />
                                                         )}
@@ -477,7 +477,7 @@ export const MatchNode = memo(function MatchNode({
                                                                 type="target"
                                                                 position={Position.Left}
                                                                 id={`slot-b-${index}`}
-                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                className="!w-2 !h-2 !bg-card !border !border-node-2/50 !rounded-full hover:!bg-node-2 transition-all z-50"
                                                                 style={{ left: "-1px" }}
                                                             />
                                                         )}
@@ -486,7 +486,7 @@ export const MatchNode = memo(function MatchNode({
                                                                 type="source"
                                                                 position={Position.Right}
                                                                 id={`loser-${index}`}
-                                                                className="!w-2 !h-2 !bg-card !border !border-muted-foreground !rounded-full hover:!bg-node-2 transition-all z-50"
+                                                                className="!w-2 !h-2 !bg-card !border !border-node-2/50 !rounded-full hover:!bg-node-2 transition-all z-50"
                                                                 style={{ right: "-1px" }}
                                                             />
                                                         )}
