@@ -41,7 +41,7 @@ export function PublicFooter() {
                             {tLanding('nav_registrations')}
                         </Link>
                         <Button asChild className="mt-1">
-                            <Link href="/signup">
+                            <Link href="/sign-up">
                                 {tPricing('get_started')} <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>

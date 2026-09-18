@@ -8,10 +8,10 @@ import { Logo } from "@/components/shared/logo";
 import type { User } from "@supabase/supabase-js";
 
 interface PublicNavbarProps {
-    user: User | null;
+    user?: User | null;
 }
 
-export function PublicNavbar({ user }: PublicNavbarProps) {
+export function PublicNavbar({ user = null }: PublicNavbarProps) {
     const tLanding = useTranslations('Landing');
     const pathname = usePathname();
     const [scrolled, setScrolled] = useState(false);
@@ -31,6 +31,9 @@ export function PublicNavbar({ user }: PublicNavbarProps) {
             window.scrollTo({ top: 0, behavior: "smooth" });
         }
     };
+
+    const isSignInPage = pathname === "/sign-in" || pathname === "/login";
+    const isSignUpPage = pathname === "/sign-up" || pathname === "/signup";
 
     return (
         <header
@@ -68,16 +71,24 @@ export function PublicNavbar({ user }: PublicNavbarProps) {
                 {/* Right Side Actions */}
                 <div className="flex items-center gap-2">
                     {user ? (
-                        <Button asChild size="sm" variant="outline" className="hidden sm:flex font-medium">
+                        <Button asChild size="sm" variant="outline" className="font-medium">
                             <Link href="/dashboard">{tLanding('nav_dashboard')}</Link>
+                        </Button>
+                    ) : isSignInPage ? (
+                        <Button size="sm" asChild className="font-semibold shadow-xs">
+                            <Link href="/sign-up">ลงทะเบียน</Link>
+                        </Button>
+                    ) : isSignUpPage ? (
+                        <Button size="sm" variant="outline" asChild className="font-semibold shadow-xs">
+                            <Link href="/sign-in">{tLanding('nav_signin') || "เข้าสู่ระบบ"}</Link>
                         </Button>
                     ) : (
                         <>
                             <Button size="sm" variant="ghost" asChild className="hidden sm:inline-flex font-medium">
-                                <Link href="/login">{tLanding('nav_signin')}</Link>
+                                <Link href="/sign-in">{tLanding('nav_signin')}</Link>
                             </Button>
                             <Button size="sm" asChild className="font-semibold shadow-xs">
-                                <Link href="/signup">{tLanding('hero_cta_start')}</Link>
+                                <Link href="/sign-up">{tLanding('hero_cta_start')}</Link>
                             </Button>
                         </>
                     )}

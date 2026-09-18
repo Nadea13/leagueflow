@@ -11,7 +11,7 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-        redirect(`/${locale}/login`)
+        redirect(`/${locale}/sign-in`)
     }
 
     // Fetch user profile and verify admin role

@@ -21,7 +21,7 @@ import { Header } from "@/components/ui/header";
 import { Logo } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { updateMatch } from "@/actions/tournaments/general";
+import { updateMatch, updateCategoryRulesConfig } from "@/actions/tournaments/general";
 import { getPlayers } from "@/actions/tournaments/player";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { BroadcastDialog } from "@/features/broadcast";
@@ -49,6 +49,7 @@ interface VolleyballConsolePageProps {
     backUrl: string;
     tournamentName?: string;
     maxSets?: number;
+    rulesConfig?: Record<string, unknown> | null;
 }
 
 const pointTypes = ['point', 'ace', 'spike', 'block'];
@@ -65,7 +66,8 @@ export function VolleyballConsolePage({
     initialEvents = [],
     backUrl,
     tournamentName: _tournamentName,
-    maxSets = 3
+    maxSets = 3,
+    rulesConfig
 }: VolleyballConsolePageProps) {
     const locale = useLocale();
     const tPublic = useTranslations("PublicView");
@@ -79,7 +81,14 @@ export function VolleyballConsolePage({
         'sets_won', 'current_set_points', 'total_points',
         'ace', 'spike', 'block', 'other_points'
     ];
+    const DEFAULT_VOLLEYBALL_STATS_KEYS = ['sets_won', 'current_set_points', 'total_points'];
     const [customActionTypes, setCustomActionTypes] = useState<string[]>(() => {
+        if (Array.isArray(rulesConfig?.volleyball_custom_actions)) {
+            return rulesConfig.volleyball_custom_actions as string[];
+        }
+        if (Array.isArray(rulesConfig?.custom_actions)) {
+            return rulesConfig.custom_actions as string[];
+        }
         if (typeof window !== "undefined") {
             try {
                 const savedCustom = localStorage.getItem("leagueflow-volleyball-custom-actions");
@@ -93,6 +102,12 @@ export function VolleyballConsolePage({
     });
 
     const [visibleStats, setVisibleStats] = useState<string[]>(() => {
+        if (Array.isArray(rulesConfig?.volleyball_visible_stats)) {
+            return rulesConfig.volleyball_visible_stats as string[];
+        }
+        if (Array.isArray(rulesConfig?.visible_stats)) {
+            return rulesConfig.visible_stats as string[];
+        }
         if (typeof window !== "undefined") {
             try {
                 const savedStats = localStorage.getItem("leagueflow-volleyball-visible-stats");
@@ -102,15 +117,49 @@ export function VolleyballConsolePage({
                 }
             } catch (_) {}
         }
-        return ALL_VOLLEYBALL_STATS_KEYS;
+        return DEFAULT_VOLLEYBALL_STATS_KEYS;
     });
     const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
+
+    // Sync from rulesConfig
+    useEffect(() => {
+        const stats = rulesConfig?.volleyball_visible_stats || rulesConfig?.visible_stats;
+        if (Array.isArray(stats)) {
+            setVisibleStats(stats as string[]);
+        } else if (typeof window !== "undefined") {
+            try {
+                const savedStats = localStorage.getItem("leagueflow-volleyball-visible-stats");
+                if (savedStats) {
+                    const parsed = JSON.parse(savedStats);
+                    if (Array.isArray(parsed)) setVisibleStats(parsed);
+                } else {
+                    setVisibleStats(DEFAULT_VOLLEYBALL_STATS_KEYS);
+                }
+            } catch (_) {}
+        }
+
+        const actions = rulesConfig?.volleyball_custom_actions || rulesConfig?.custom_actions;
+        if (Array.isArray(actions)) {
+            setCustomActionTypes(actions as string[]);
+        } else if (typeof window !== "undefined") {
+            try {
+                const savedCustom = localStorage.getItem("leagueflow-volleyball-custom-actions");
+                if (savedCustom) {
+                    const parsed = JSON.parse(savedCustom);
+                    if (Array.isArray(parsed)) setCustomActionTypes(parsed);
+                }
+            } catch (_) {}
+        }
+    }, [rulesConfig]);
 
     const toggleCustomAction = (type: string) => {
         setCustomActionTypes(prev => {
             const next = prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type];
             if (typeof window !== "undefined") {
                 localStorage.setItem("leagueflow-volleyball-custom-actions", JSON.stringify(next));
+            }
+            if (!readOnly && match.tournament_category_id) {
+                updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_custom_actions: next }).catch(console.error);
             }
             return next;
         });
@@ -121,6 +170,9 @@ export function VolleyballConsolePage({
         if (typeof window !== "undefined") {
             localStorage.setItem("leagueflow-volleyball-custom-actions", JSON.stringify(types));
         }
+        if (!readOnly && match.tournament_category_id) {
+            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_custom_actions: types }).catch(console.error);
+        }
     };
 
     const toggleVisibleStat = (key: string) => {
@@ -128,6 +180,9 @@ export function VolleyballConsolePage({
             const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
             if (typeof window !== "undefined") {
                 localStorage.setItem("leagueflow-volleyball-visible-stats", JSON.stringify(next));
+            }
+            if (!readOnly && match.tournament_category_id) {
+                updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_visible_stats: next }).catch(console.error);
             }
             return next;
         });
@@ -137,6 +192,9 @@ export function VolleyballConsolePage({
         setVisibleStats(keys);
         if (typeof window !== "undefined") {
             localStorage.setItem("leagueflow-volleyball-visible-stats", JSON.stringify(keys));
+        }
+        if (!readOnly && match.tournament_category_id) {
+            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { volleyball_visible_stats: keys }).catch(console.error);
         }
     };
 
@@ -616,17 +674,22 @@ export function VolleyballConsolePage({
         </div>
     );
 
-    const quickActionsBox = !readOnly ? (
+    const quickActionsBox = (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="vball-action-panel">
-            <div className="grid grid-cols-3 lg:grid-cols-1 gap-1 lg:gap-2">
-                <Button
-                    variant="outline"
-                    onClick={() => setOverlayDialogOpen(true)}
-                    className="w-full flex justify-center lg:justify-start items-center"
-                >
-                    <Tv className="h-4 w-4 text-primary" />
-                    <span className="hidden lg:inline">{locale === "th" ? "กราฟิกถ่ายทอดสด" : "Broadcast Overlay"}</span>
-                </Button>
+            <div className={cn(
+                "grid gap-1 lg:gap-2",
+                readOnly ? "grid-cols-2 lg:grid-cols-1" : "grid-cols-3 lg:grid-cols-1"
+            )}>
+                {!readOnly && (
+                    <Button
+                        variant="outline"
+                        onClick={() => setOverlayDialogOpen(true)}
+                        className="w-full flex justify-center lg:justify-start items-center"
+                    >
+                        <Tv className="h-4 w-4 text-primary" />
+                        <span className="hidden lg:inline">{locale === "th" ? "กราฟิกถ่ายทอดสด" : "Broadcast Overlay"}</span>
+                    </Button>
+                )}
 
                 <Button
                     variant="outline"
@@ -634,7 +697,7 @@ export function VolleyballConsolePage({
                     className="w-full flex justify-center lg:justify-start items-center"
                 >
                     <Users className="h-4 w-4 text-primary" />
-                    <span className="hidden lg:inline">{locale === "th" ? "จัดตัวผู้เล่น" : "Lineups"}</span>
+                    <span className="inline text-xs font-semibold">{locale === "th" ? "จัดตัวผู้เล่น" : "Lineups"}</span>
                 </Button>
 
                 <Button
@@ -643,11 +706,11 @@ export function VolleyballConsolePage({
                     className="w-full flex justify-center lg:justify-start items-center"
                 >
                     <BarChart2 className="h-4 w-4 text-primary" />
-                    <span className="hidden lg:inline">{locale === "th" ? "สถิติการแข่งขัน" : "Statistics"}</span>
+                    <span className="inline text-xs font-semibold">{locale === "th" ? "สถิติการแข่งขัน" : "Statistics"}</span>
                 </Button>
             </div>
         </div>
-    ) : null;
+    );
 
     const [_pendingCount, setPendingCount] = useState(0);
 
@@ -697,26 +760,7 @@ export function VolleyballConsolePage({
     };
 
     return (
-        <div className={cn(
-            "min-h-screen flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4 bg-background text-foreground",
-            readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : ""
-        )}>
-            {/* Top Navigation Bar (Public View) */}
-            {readOnly && (
-                <nav className="border-b fixed top-0 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
-                    <div className="px-4 h-16 flex items-center justify-between">
-                        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                            <Logo className="w-8 h-8" color="#00C49A" />
-                            <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
-                        </Link>
-                        <div className="flex items-center gap-2 lg:gap-3">
-                            <span className="text-sm text-muted-foreground">{tPublic("public_view")}</span>
-                            <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5">{tPublic("beta")}</Badge>
-                        </div>
-                    </div>
-                </nav>
-            )}
-
+        <div className="flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4 bg-background text-foreground">
             {/* Console Main Header */}
             <header className="flex items-center justify-between gap-1 lg:gap-2">
                 <div className="flex items-center gap-1 lg:gap-2 w-full">
@@ -826,7 +870,10 @@ export function VolleyballConsolePage({
             {/* Main Content & Sidebar Grid */}
             <main className="flex-1 w-full grid grid-cols-12 gap-2 lg:gap-4">
                 {/* Sidebar: Admin Controls or Match Info */}
-                <aside className="col-span-12 lg:col-span-3 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col">
+                <aside className={cn(
+                    "col-span-12 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col",
+                    readOnly ? "lg:col-span-4" : "lg:col-span-3"
+                )}>
                     {/* Match Controls (Desktop only) */}
                     <div className="hidden lg:block">
                         {matchControlsBox}
@@ -836,10 +883,27 @@ export function VolleyballConsolePage({
                     <div className="hidden lg:block">
                         {quickActionsBox}
                     </div>
+
+                    {readOnly && (
+                        <div className="hidden lg:block border rounded-sm overflow-hidden bg-card shadow-xs">
+                            <VolleyballMatchStatisticsBox
+                                match={match}
+                                events={events}
+                                homeSetsWon={homeSets}
+                                awaySetsWon={awaySets}
+                                homePoints={homePoints}
+                                awayPoints={awayPoints}
+                                visibleStats={visibleStats}
+                            />
+                        </div>
+                    )}
                 </aside>
 
                 {/* Main Content Area */}
-                <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4">
+                <div className={cn(
+                    "col-span-12 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4",
+                    readOnly ? "lg:col-span-8" : "lg:col-span-9"
+                )}>
                     {/* Match Controls (Mobile only) */}
                     <div className="block lg:hidden">
                         {matchControlsBox}
@@ -1002,6 +1066,7 @@ export function VolleyballConsolePage({
                 homeActiveIds={homeLineup}
                 awayActiveIds={awayLineup}
                 onSave={handleSaveLineup}
+                readOnly={readOnly}
             />
             <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} sport="volleyball" />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
@@ -1168,9 +1233,17 @@ export function VolleyballConsolePage({
                                         variant="ghost"
                                         size="sm"
                                         className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetVisibleStats(ALL_VOLLEYBALL_STATS_KEYS)}
+                                        onClick={() => resetVisibleStats(DEFAULT_VOLLEYBALL_STATS_KEYS)}
                                     >
                                         <RotateCcw className="h-3 w-3 mr-1" />
+                                        {locale === "th" ? "ค่าเริ่มต้น" : "Default"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => resetVisibleStats(ALL_VOLLEYBALL_STATS_KEYS)}
+                                    >
                                         {tConsole("show_all") || "แสดงทั้งหมด"}
                                     </Button>
                                     <Button

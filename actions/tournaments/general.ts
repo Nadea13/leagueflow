@@ -1708,6 +1708,57 @@ export async function updateTournamentCategory(
     }
 }
 
+export async function updateCategoryRulesConfig(
+    tournamentId: string,
+    categoryId: string,
+    rulesConfigUpdate: Record<string, unknown>
+): Promise<ActionResponse> {
+    try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return { success: false, error: "Authentication required" };
+        }
+
+        // Fetch current rules_config
+        const { data: currentCat, error: fetchErr } = await supabase
+            .from("tournament_categories")
+            .select("rules_config")
+            .eq("id", categoryId)
+            .eq("tournament_id", tournamentId)
+            .single();
+
+        if (fetchErr || !currentCat) {
+            return { success: false, error: "Category not found" };
+        }
+
+        const currentRules = (currentCat.rules_config && typeof currentCat.rules_config === 'object')
+            ? (currentCat.rules_config as Record<string, unknown>)
+            : {};
+
+        const updatedRules = {
+            ...currentRules,
+            ...rulesConfigUpdate
+        };
+
+        const { error: updateErr } = await supabase
+            .from("tournament_categories")
+            .update({ rules_config: updatedRules })
+            .eq("id", categoryId)
+            .eq("tournament_id", tournamentId);
+
+        if (updateErr) {
+            return { success: false, error: updateErr.message };
+        }
+
+        return { success: true, data: updatedRules };
+    } catch (error) {
+        console.error("Unexpected error in updateCategoryRulesConfig:", error);
+        return { success: false, error: "An unexpected error occurred" };
+    }
+}
+
 export async function deleteTournamentCategory(
     tournamentId: string,
     categoryId: string

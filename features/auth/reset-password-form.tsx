@@ -64,7 +64,7 @@ export function ResetPasswordForm() {
                         {t('success_desc')}
                     </p>
                 </div>
-                <Button variant="outline" onClick={() => router.push(`/${locale}/login`)} className="mt-4">
+                <Button variant="outline" onClick={() => router.push(`/${locale}/sign-in`)} className="mt-4">
                     {tCommon('back_to_login') || "Back to Login"}
                 </Button>
             </div>

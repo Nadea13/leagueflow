@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
-import { Trophy, Calendar, ArrowLeft, Award, Pin, MapPin, Users } from "lucide-react";
+import { Trophy, Calendar, ArrowLeft, Award, Pin, MapPin, Users, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tab } from "@/components/ui/tab";
@@ -20,6 +20,9 @@ import { Sponsor } from "@/actions/tournaments/sponsor";
 import { Header } from "@/components/ui/header";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { addDays, subDays, addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
+import { formatDate } from "@/lib/date";
 
 interface PublicTournamentShellProps {
     tournament: Tournament;
@@ -54,6 +57,61 @@ export function PublicTournamentShell({
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+
+    // Match Filter & Date States (matches Schedule view)
+    const [matchSelectedDate, setMatchSelectedDate] = useState<string | null>(null);
+    const [matchFilterStage, setMatchFilterStage] = useState<string>("all");
+    const [matchFilterTeam, setMatchFilterTeam] = useState<string>("all");
+    const [matchViewDate, setMatchViewDate] = useState(new Date());
+    const [isMatchCalendarOpen, setIsMatchCalendarOpen] = useState(false);
+
+    const datesWithMatches = useMemo(() => {
+        return new Set(matches.map(m => m.match_date).filter(Boolean));
+    }, [matches]);
+
+    const calendarDays = useMemo(() => {
+        const days = [];
+        const startOfViewMonth = startOfMonth(matchViewDate);
+        const endOfViewMonth = endOfMonth(matchViewDate);
+        const firstDay = getDay(startOfViewMonth);
+
+        for (let i = 0; i < firstDay; i++) days.push(null);
+        const interval = eachDayOfInterval({ start: startOfViewMonth, end: endOfViewMonth });
+        interval.forEach(day => days.push(day));
+        return days;
+    }, [matchViewDate]);
+
+    const goToPrevDay = () => {
+        const current = matchSelectedDate ? new Date(matchSelectedDate) : new Date();
+        const prev = subDays(current, 1);
+        setMatchSelectedDate(format(prev, 'yyyy-MM-dd'));
+    };
+
+    const goToNextDay = () => {
+        const current = matchSelectedDate ? new Date(matchSelectedDate) : new Date();
+        const next = addDays(current, 1);
+        setMatchSelectedDate(format(next, 'yyyy-MM-dd'));
+    };
+
+    const groupNodes = useMemo(() => {
+        return tournament.canvas_data?.nodes?.filter(n => n.type === 'groupNode') || [];
+    }, [tournament.canvas_data]);
+
+    const filteredMatchesForDisplay = useMemo(() => {
+        if (matchFilterTeam === "all") return matches;
+        return matches.filter(m => {
+            const selTeam = initialTeams.find(t => t.id === matchFilterTeam);
+            const targetIds = selTeam
+                ? [selTeam.id, (selTeam as { team_id?: string }).team_id].filter(Boolean) as string[]
+                : [matchFilterTeam];
+            return (
+                targetIds.includes(m.home_team_id || "") ||
+                targetIds.includes(m.away_team_id || "") ||
+                (m.home_team?.id && targetIds.includes(m.home_team.id)) ||
+                (m.away_team?.id && targetIds.includes(m.away_team.id))
+            );
+        });
+    }, [matches, matchFilterTeam, initialTeams]);
 
     const marqueeTeams = (() => {
         if (initialTeams.length === 0) return [];
@@ -772,9 +830,160 @@ export function PublicTournamentShell({
             )}
 
             {currentTab === 'matches' && (
-                <div className="space-y-2 md:space-y-4">
+                <div className="space-y-3 md:space-y-4">
+                    {/* Schedule Filter Bar */}
+                    <div className="flex flex-wrap items-center gap-2 bg-card border p-2 md:p-3 rounded-sm">
+                        {/* Date Filter */}
+                        <div className="flex items-center border bg-card rounded-sm h-8 md:h-9 overflow-hidden shrink-0">
+                            <button
+                                onClick={() => setMatchSelectedDate(null)}
+                                className={cn(
+                                    "px-2.5 md:px-3 h-full text-xs font-semibold tracking-tight transition-all border-r flex items-center shrink-0",
+                                    matchSelectedDate === null
+                                        ? "bg-primary text-black font-bold"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                )}
+                            >
+                                {locale === 'th' ? "ทั้งหมด" : "ALL"}
+                            </button>
+                            <div className="flex items-center justify-between px-1 h-full gap-0.5">
+                                <button onClick={goToPrevDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
+                                    <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                </button>
+                                <Popover open={isMatchCalendarOpen} onOpenChange={setIsMatchCalendarOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-7 px-2 gap-1.5 hover:bg-muted transition-all flex-1 justify-center">
+                                            <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                                            <span className="text-xs font-semibold tracking-tight truncate max-w-[120px] md:max-w-none">
+                                                {matchSelectedDate ? formatDate(matchSelectedDate, "d MMM yyyy", locale) : (locale === 'th' ? "วันนี้" : "TODAY")}
+                                            </span>
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-0 bg-card rounded-lg shadow-2xl" align="start" side="bottom" sideOffset={5}>
+                                        <div className="p-3 border-b flex items-center justify-between bg-muted/20">
+                                            <button onClick={() => setMatchViewDate(subMonths(matchViewDate, 1))} className="p-1 hover:text-primary transition-colors">
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+                                            <span className="text-xs font-black tracking-widest">
+                                                {matchViewDate.toLocaleString(locale === 'th' ? 'th-TH' : 'en-US', { month: 'long', year: 'numeric' })}
+                                            </span>
+                                            <button onClick={() => setMatchViewDate(addMonths(matchViewDate, 1))} className="p-1 hover:text-primary transition-colors">
+                                                <ChevronRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="p-4 space-y-4">
+                                            <div className="grid grid-cols-7 gap-1">
+                                                {(locale === 'th' ? ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']).map((d, idx) => (
+                                                    <div key={`${d}-${idx}`} className="text-[9px] text-center font-black opacity-30">{d}</div>
+                                                ))}
+                                            </div>
+                                            <div className="grid grid-cols-7 gap-1">
+                                                {calendarDays.map((day, i) => {
+                                                    if (!day) return <div key={`empty-${i}`} />;
+                                                    const dateStr = format(day, 'yyyy-MM-dd');
+                                                    const isSel = matchSelectedDate === dateStr;
+                                                    const hasMatch = datesWithMatches.has(dateStr);
+                                                    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+                                                    const isOutsideRange = !!((tournament?.start_date && dateStr < tournament.start_date) || (tournament?.end_date && dateStr > tournament.end_date));
+
+                                                    return (
+                                                        <button
+                                                            key={dateStr}
+                                                            disabled={isOutsideRange}
+                                                            onClick={() => {
+                                                                setMatchSelectedDate(dateStr);
+                                                                setIsMatchCalendarOpen(false);
+                                                            }}
+                                                            className={cn(
+                                                                "h-9 flex flex-col items-center justify-center relative transition-all",
+                                                                isSel ? "bg-primary text-black font-black" : "hover:bg-muted text-muted-foreground hover:text-foreground",
+                                                                isToday && !isSel && "border border-primary text-primary",
+                                                                isOutsideRange && "opacity-20 cursor-not-allowed grayscale"
+                                                            )}
+                                                        >
+                                                            <span className="text-[11px]">{format(day, 'd')}</span>
+                                                            {hasMatch && (
+                                                                <div className={cn(
+                                                                    "absolute bottom-1.5 h-1 w-1 rounded-full",
+                                                                    isSel ? "bg-black" : "bg-primary"
+                                                                )} />
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setMatchSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+                                                    setMatchViewDate(new Date());
+                                                    setIsMatchCalendarOpen(false);
+                                                }}
+                                                className="w-full text-[10px] font-black tracking-widest h-9 hover:bg-primary hover:text-black hover:border-primary transition-all"
+                                            >
+                                                {locale === 'th' ? "กลับไปที่วันนี้" : "BACK TO TODAY"}
+                                            </Button>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                                <button onClick={goToNextDay} className="p-1 hover:text-primary text-muted-foreground transition-colors rounded-sm hover:bg-muted">
+                                    <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Stage Filter */}
+                        <Select value={matchFilterStage} onValueChange={setMatchFilterStage}>
+                            <SelectTrigger size="sm" className="w-[140px] md:w-[170px] h-8 md:h-9 bg-card">
+                                <SelectValue placeholder={locale === 'th' ? "รอบการแข่งขัน" : "Stage"} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card shadow-2xl">
+                                <SelectItem value="all" className="font-semibold text-xs">
+                                    {locale === 'th' ? "ทุกรอบการแข่งขัน" : "ALL STAGES"}
+                                </SelectItem>
+                                <SelectItem value="group" className="font-semibold text-xs">
+                                    {locale === 'th' ? "รอบแบ่งกลุ่ม (ทั้งหมด)" : "GROUP STAGE (ALL)"}
+                                </SelectItem>
+                                {groupNodes.map(node => {
+                                    const label = (node.data as { label?: string })?.label || "Group";
+                                    return (
+                                        <SelectItem 
+                                            key={node.id} 
+                                            value={label} 
+                                            className="font-semibold text-xs pl-4"
+                                        >
+                                            - {label}
+                                        </SelectItem>
+                                    );
+                                })}
+                                <SelectItem value="knockout" className="font-semibold text-xs">
+                                    {locale === 'th' ? "รอบน็อคเอาท์" : "KNOCKOUT STAGE"}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Team Filter */}
+                        <Select value={matchFilterTeam} onValueChange={setMatchFilterTeam}>
+                            <SelectTrigger size="sm" className="w-[140px] md:w-[170px] h-8 md:h-9 bg-card">
+                                <SelectValue placeholder={locale === 'th' ? "เลือกทีม" : "Select Team"} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card shadow-2xl">
+                                <SelectItem value="all" className="font-semibold text-xs">
+                                    {locale === 'th' ? "แสดงทุกทีม" : "SHOW ALL TEAMS"}
+                                </SelectItem>
+                                {initialTeams.map(team => (
+                                    <SelectItem key={team.id} value={team.id} className="font-semibold text-xs">
+                                        {team.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Match Manager List */}
                     <MatchManager
-                        matches={matches}
+                        matches={filteredMatchesForDisplay}
                         teams={initialTeams}
                         tournamentId={tournament.id}
                         format={tournament.format}
@@ -782,6 +991,8 @@ export function PublicTournamentShell({
                         endDate={tournament.end_date}
                         isPublic={true}
                         canvasData={tournament.canvas_data}
+                        externalFilterStage={matchFilterStage}
+                        externalSelectedDate={matchSelectedDate}
                     />
                 </div>
             )}

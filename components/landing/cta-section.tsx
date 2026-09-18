@@ -38,7 +38,7 @@ export function CtaSection() {
               className="w-full sm:w-auto h-13 px-9 font-bold text-base group shadow-xl shadow-primary/25 cursor-pointer rounded-sm"
               asChild
             >
-              <Link href="/signup">
+              <Link href="/sign-up">
                 เริ่มต้นสร้างการแข่งขันฟรี
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>

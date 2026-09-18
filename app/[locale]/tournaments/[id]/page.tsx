@@ -211,13 +211,28 @@ export default async function PublicViewPage({
         away_team: { name: string; logo_img: string | null } | null;
         home_score: { total: number } | null;
         away_score: { total: number } | null;
-    } & Record<string, unknown>)[]).map((m) => ({
-        ...m,
-        home_team: m.home_team ? { id: m.home_team_id, name: m.home_team.name, logo_url: m.home_team.logo_img } : null,
-        away_team: m.away_team ? { id: m.away_team_id, name: m.away_team.name, logo_url: m.away_team.logo_img } : null,
-        home_score: typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as { total?: number }).total) || 0 : Number(m.home_score) || 0,
-        away_score: typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as { total?: number }).total) || 0 : Number(m.away_score) || 0
-    }));
+        match_date?: string | null;
+        match_time?: string | null;
+        scheduled_at?: string | null;
+    } & Record<string, unknown>)[]).map((m) => {
+        let match_date = m.match_date || null;
+        let match_time = m.match_time || null;
+        if (m.scheduled_at) {
+            const parts = m.scheduled_at.split('T');
+            match_date = match_date || parts[0];
+            match_time = match_time || parts[1]?.substring(0, 5) || null;
+        }
+
+        return {
+            ...m,
+            match_date,
+            match_time,
+            home_team: m.home_team ? { id: m.home_team_id, name: m.home_team.name, logo_url: m.home_team.logo_img } : null,
+            away_team: m.away_team ? { id: m.away_team_id, name: m.away_team.name, logo_url: m.away_team.logo_img } : null,
+            home_score: typeof m.home_score === 'object' && m.home_score !== null && 'total' in m.home_score ? Number((m.home_score as { total?: number }).total) || 0 : Number(m.home_score) || 0,
+            away_score: typeof m.away_score === 'object' && m.away_score !== null && 'total' in m.away_score ? Number((m.away_score as { total?: number }).total) || 0 : Number(m.away_score) || 0
+        };
+    });
 
     // 4. Fetch Match Events (Admin Client to bypass RLS for public view)
     const adminSupa = createAdminClient();

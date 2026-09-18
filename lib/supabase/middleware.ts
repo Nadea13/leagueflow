@@ -57,17 +57,21 @@ export async function updateSession(request: NextRequest) {
     // If user is signed in and the current path is / login / or auth pages redirect the user to /dashboard
     if (user) {
         const path = request.nextUrl.pathname;
-        const isLoginPage = path.includes('/login');
+        const isAuthPage = path.includes('/sign-in') || path.includes('/sign-up') || path.includes('/login') || path.includes('/signup');
         // Check for root '/' or locale roots '/en', '/th'
         const isRootPage = path === '/' || /^\/(en|th)$/.test(path);
 
-        if (isLoginPage || isRootPage) {
+        if (isAuthPage || isRootPage) {
             const url = request.nextUrl.clone();
             const dashboardPath = '/dashboard';
 
-            // If it's a login page, we want to replace 'login' with the dashboard path to preserve locale if present
-            if (isLoginPage) {
-                url.pathname = path.replace('/login', dashboardPath);
+            // If it's an auth page, we want to replace the auth segment with the dashboard path to preserve locale if present
+            if (isAuthPage) {
+                url.pathname = path
+                    .replace('/sign-in', dashboardPath)
+                    .replace('/sign-up', dashboardPath)
+                    .replace('/login', dashboardPath)
+                    .replace('/signup', dashboardPath);
             } else {
                 // It's a root page
                 if (path === '/') {

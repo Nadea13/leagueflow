@@ -21,7 +21,7 @@ export function PricingSection() {
       priceLabel: "ตลอดชีพ",
       popular: false,
       ctaText: "เริ่มต้นใช้งานฟรี",
-      ctaHref: "/signup",
+      ctaHref: "/sign-up",
       ctaVariant: "outline" as const,
       features: [
         "สร้างทัวร์นาเมนต์สูงสุด 1 รายการ",
@@ -43,7 +43,7 @@ export function PricingSection() {
       popular: true,
       discountBadge: "-50% โปรเปิดตัว",
       ctaText: "สมัครแพ็คเกจ Event",
-      ctaHref: "/signup",
+      ctaHref: "/sign-up",
       ctaVariant: "default" as const,
       features: [
         "สร้างทัวร์นาเมนต์สูงสุด 3 รายการ/เดือน",
@@ -64,7 +64,7 @@ export function PricingSection() {
       priceLabel: "/ เดือน",
       popular: false,
       ctaText: "สมัครแพ็คเกจ Cup",
-      ctaHref: "/signup",
+      ctaHref: "/sign-up",
       ctaVariant: "outline" as const,
       features: [
         "สร้างทัวร์นาเมนต์สูงสุด 10 รายการ/เดือน",

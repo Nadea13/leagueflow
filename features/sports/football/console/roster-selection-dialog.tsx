@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tab } from "@/components/ui/tab";
 import { Player } from "@/types";
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
-import { Users, Check, X } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import { Users, Check, X, RotateCcw } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 
 interface TeamRosterColumnProps {
@@ -21,9 +21,11 @@ interface TeamRosterColumnProps {
     togglePlayer: (team: 'home' | 'away', playerId: string) => void;
     selectAll: (team: 'home' | 'away', players: Player[]) => void;
     clearAll: (team: 'home' | 'away') => void;
+    readOnly?: boolean;
     t: (key: string) => string;
     tCommon: (key: string) => string;
     tRoster: (key: string) => string;
+    placeholderText?: string;
 }
 
 function TeamRosterColumn({
@@ -35,41 +37,48 @@ function TeamRosterColumn({
     setSearchVal,
     togglePlayer,
     clearAll,
+    readOnly = false,
     t,
-    tCommon
+    tCommon,
+    placeholderText
 }: TeamRosterColumnProps) {
     return (
-        <div className="flex flex-col border rounded-sm overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 overflow-hidden">
             {/* Team Header */}
-            <div className="p-1 md:p-2 border-b flex items-center justify-between">
+            <div className="p-2 md:p-3 border-b flex items-center justify-between bg-muted/10">
                 <div>
                     <h4 className="font-black tracking-tight text-foreground truncate max-w-[200px]">{teamName}</h4>
                     <p className="text-[10px] font-bold text-primary tracking-widest">
                         {t("player") || "Players"}: {selectedIds.length}
                     </p>
                 </div>
-                <div className="flex items-center gap-1.5">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => clearAll(team)}
-                    >
-                        {tCommon("clear")}
-                    </Button>
-                </div>
+                {!readOnly && (
+                    <div className="flex items-center gap-1.5">
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-destructive h-7 w-7 rounded-sm hover:bg-destructive/10"
+                            onClick={() => clearAll(team)}
+                            title={tCommon("clear")}
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Search Bar */}
-            <div className="p-1 md:p-2 border-b flex items-center gap-1 md:gap-2">
+            <div className="p-2 border-b flex items-center gap-1 md:gap-2 bg-card">
                 <Input
+                    size="sm"
+                    placeholder={placeholderText || "ค้นหาผู้เล่น..."}
                     value={searchVal}
                     onChange={(e) => setSearchVal(e.target.value)}
                 />
             </div>
 
             {/* Player List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 min-h-0">
                 {filteredPlayers.length === 0 ? (
                     <EmptyState
                         icon={Users}
@@ -82,12 +91,13 @@ function TeamRosterColumn({
                         return (
                             <div
                                 key={player.id}
-                                onClick={() => togglePlayer(team, player.id)}
+                                onClick={() => !readOnly && togglePlayer(team, player.id)}
                                 className={cn(
-                                    "flex items-center justify-between p-1 md:p-2 rounded-lg border transition-all cursor-pointer select-none",
+                                    "flex items-center justify-between p-1 md:p-2 rounded-lg border transition-all select-none",
+                                    !readOnly && "cursor-pointer",
                                     isSelected
                                         ? "border-primary bg-primary/5 text-primary-foreground"
-                                        : "hover:border-border hover:bg-muted/10 text-foreground"
+                                        : (!readOnly ? "hover:border-border hover:bg-muted/10 text-foreground" : "text-foreground opacity-60")
                                 )}
                             >
                                 <div className="flex items-center gap-1 md:gap-2 min-w-0">
@@ -142,7 +152,8 @@ interface RosterSelectionDialogProps {
     awayPlayers: Player[];
     homeActiveIds: string[];
     awayActiveIds: string[];
-    onSave: (homeActiveIds: string[], awayActiveIds: string[]) => void;
+    onSave?: (homeActiveIds: string[], awayActiveIds: string[]) => void;
+    readOnly?: boolean;
 }
 
 export function RosterSelectionDialog({
@@ -154,11 +165,16 @@ export function RosterSelectionDialog({
     awayPlayers,
     homeActiveIds,
     awayActiveIds,
-    onSave
+    onSave,
+    readOnly = false,
 }: RosterSelectionDialogProps) {
+    const locale = useLocale();
+    const isThai = locale === "th";
     const t = useTranslations("Console");
     const tCommon = useTranslations("Common");
     const tRoster = useTranslations("Roster");
+
+    const searchPlaceholder = isThai ? "ค้นหาชื่อ หรือ เบอร์เสื้อ..." : "Search name or number...";
 
     const [selectedHome, setSelectedHome] = useState<string[]>([]);
     const [selectedAway, setSelectedAway] = useState<string[]>([]);
@@ -211,7 +227,7 @@ export function RosterSelectionDialog({
     };
 
     const handleSave = () => {
-        onSave(selectedHome, selectedAway);
+        onSave?.(selectedHome, selectedAway);
         onOpenChange(false);
     };
 
@@ -247,8 +263,8 @@ export function RosterSelectionDialog({
 
                 {/* Main Content Area */}
                 <div className="flex-1 overflow-hidden p-2 md:p-4">
-                    {/* Desktop Layout */}
-                    <div className="hidden md:grid grid-cols-2 gap-1 md:gap-2 h-full">
+                    {/* Desktop Layout - Single card with divider */}
+                    <div className="hidden md:grid grid-cols-2 divide-x border rounded-sm overflow-hidden h-full bg-card">
                         <TeamRosterColumn
                             team="home"
                             teamName={homeTeamName}
@@ -260,9 +276,11 @@ export function RosterSelectionDialog({
                             togglePlayer={togglePlayer}
                             selectAll={selectAll}
                             clearAll={clearAll}
+                            readOnly={readOnly}
                             t={t}
                             tCommon={tCommon}
                             tRoster={tRoster}
+                            placeholderText={searchPlaceholder}
                         />
                         <TeamRosterColumn
                             team="away"
@@ -275,13 +293,15 @@ export function RosterSelectionDialog({
                             togglePlayer={togglePlayer}
                             selectAll={selectAll}
                             clearAll={clearAll}
+                            readOnly={readOnly}
                             t={t}
                             tCommon={tCommon}
                             tRoster={tRoster}
+                            placeholderText={searchPlaceholder}
                         />
                     </div>
 
-                    {/* Mobile Tabs Layout */}
+                    {/* Mobile Tabs Layout - Single card */}
                     <div className="md:hidden flex flex-col h-full gap-2">
                         <Tab
                             options={[
@@ -293,7 +313,7 @@ export function RosterSelectionDialog({
                             fullWidth
                             className="border"
                         />
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 border rounded-sm overflow-hidden min-h-0 bg-card">
                             {activeTab === 'home' ? (
                                 <TeamRosterColumn
                                     team="home"
@@ -306,9 +326,11 @@ export function RosterSelectionDialog({
                                     togglePlayer={togglePlayer}
                                     selectAll={selectAll}
                                     clearAll={clearAll}
+                                    readOnly={readOnly}
                                     t={t}
                                     tCommon={tCommon}
                                     tRoster={tRoster}
+                                    placeholderText={searchPlaceholder}
                                 />
                             ) : (
                                 <TeamRosterColumn
@@ -322,9 +344,11 @@ export function RosterSelectionDialog({
                                     togglePlayer={togglePlayer}
                                     selectAll={selectAll}
                                     clearAll={clearAll}
+                                    readOnly={readOnly}
                                     t={t}
                                     tCommon={tCommon}
                                     tRoster={tRoster}
+                                    placeholderText={searchPlaceholder}
                                 />
                             )}
                         </div>
@@ -333,13 +357,24 @@ export function RosterSelectionDialog({
 
                 {/* Footer Controls */}
                 <DialogFooter className="p-2 md:p-4 border-t shrink-0 flex flex-row gap-1 md:gap-2 items-center">
-                    <Button
-                        type="button"
-                        onClick={handleSave}
-                        className="w-full"
-                    >
-                        {tCommon("save")}
-                    </Button>
+                    {readOnly ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            className="w-full"
+                        >
+                            {tCommon("close") || "Close"}
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            onClick={handleSave}
+                            className="w-full"
+                        >
+                            {tCommon("save")}
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

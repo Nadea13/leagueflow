@@ -51,7 +51,7 @@ export default async function Home() {
 
                 <div className="flex flex-col sm:flex-row gap-2 lg:gap-4 justify-center lg:justify-start pt-2">
                   <Button size="lg" className="h-12 px-8 font-semibold text-base group shadow-lg shadow-primary/20 cursor-pointer" asChild>
-                    <Link href="/signup">
+                    <Link href="/sign-up">
                       สร้างทัวร์นาเมนต์ของคุณ
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>

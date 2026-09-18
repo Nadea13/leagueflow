@@ -134,7 +134,7 @@ export function SignUpForm() {
                 description: t('success_desc'),
             });
 
-            router.push(`/${locale}/login`);
+            router.push(`/${locale}/sign-in`);
         } catch (_err) {
             setError(tCommon('something_went_wrong'));
         } finally {

@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import { getPlayers } from "@/actions/tournaments/player";
-import { updateMatch, advanceStage } from "@/actions/tournaments/general";
+import { updateMatch, advanceStage, updateCategoryRulesConfig } from "@/actions/tournaments/general";
 import { getPenaltyShootout } from "@/actions/tournaments/penalty";
 import { createClient } from "@/lib/supabase/client";
 
@@ -91,9 +91,10 @@ interface ConsolePageProps {
     initialEvents?: MatchEvent[];
     backUrl: string;
     tournamentName?: string;
+    rulesConfig?: Record<string, unknown> | null;
 }
 
-export function ConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName }: ConsolePageProps) {
+export function ConsolePage({ match: initialMatch, tournamentId, readOnly = false, initialEvents, backUrl, tournamentName, rulesConfig }: ConsolePageProps) {
     const t = useTranslations("Console");
     const locale = useLocale();
     const tMatch = useTranslations("Match");
@@ -117,7 +118,11 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         'bad_pass', 'cross', 'corner', 'save', 'foul', 'penalty',
         'yellow_card', 'red_card', 'offside'
     ];
+    const DEFAULT_STATS_KEYS = ['goal', 'yellow_card', 'red_card'];
     const [customActionTypes, setCustomActionTypes] = useState<string[]>(() => {
+        if (Array.isArray(rulesConfig?.custom_actions)) {
+            return rulesConfig.custom_actions as string[];
+        }
         if (typeof window !== "undefined") {
             try {
                 const savedCustom = localStorage.getItem("leagueflow-custom-actions");
@@ -130,6 +135,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         return ALL_CUSTOMIZABLE_ACTIONS;
     });
     const [showScoreboardPossession, setShowScoreboardPossession] = useState<boolean>(() => {
+        if (typeof rulesConfig?.scoreboard_possession === 'boolean') {
+            return rulesConfig.scoreboard_possession;
+        }
         if (typeof window !== "undefined") {
             try {
                 const saved = localStorage.getItem("leagueflow-scoreboard-possession");
@@ -139,6 +147,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         return true;
     });
     const [visibleStats, setVisibleStats] = useState<string[]>(() => {
+        if (Array.isArray(rulesConfig?.visible_stats)) {
+            return rulesConfig.visible_stats as string[];
+        }
         if (typeof window !== "undefined") {
             try {
                 const savedStats = localStorage.getItem("leagueflow-visible-stats");
@@ -148,13 +159,31 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                 }
             } catch (_) {}
         }
-        return ALL_STATS_KEYS;
+        return DEFAULT_STATS_KEYS;
     });
     const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
 
-    // Load custom action preferences from localStorage
+    // Load custom action preferences from rulesConfig or localStorage
     useEffect(() => {
-        if (typeof window !== "undefined") {
+        if (Array.isArray(rulesConfig?.visible_stats)) {
+            setVisibleStats(rulesConfig.visible_stats as string[]);
+        } else if (typeof window !== "undefined") {
+            try {
+                const savedStats = localStorage.getItem("leagueflow-visible-stats");
+                if (savedStats) {
+                    const parsed = JSON.parse(savedStats);
+                    if (Array.isArray(parsed)) {
+                        setVisibleStats(parsed);
+                    }
+                } else {
+                    setVisibleStats(DEFAULT_STATS_KEYS);
+                }
+            } catch (_) {}
+        }
+
+        if (Array.isArray(rulesConfig?.custom_actions)) {
+            setCustomActionTypes(rulesConfig.custom_actions as string[]);
+        } else if (typeof window !== "undefined") {
             try {
                 const savedCustom = localStorage.getItem("leagueflow-custom-actions");
                 if (savedCustom) {
@@ -163,26 +192,29 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         setCustomActionTypes(parsed);
                     }
                 }
+            } catch (_) {}
+        }
+
+        if (typeof rulesConfig?.scoreboard_possession === 'boolean') {
+            setShowScoreboardPossession(rulesConfig.scoreboard_possession);
+        } else if (typeof window !== "undefined") {
+            try {
                 const savedScoreboardPoss = localStorage.getItem("leagueflow-scoreboard-possession");
                 if (savedScoreboardPoss !== null) {
                     setShowScoreboardPossession(savedScoreboardPoss === "true");
                 }
-                const savedStats = localStorage.getItem("leagueflow-visible-stats");
-                if (savedStats) {
-                    const parsed = JSON.parse(savedStats);
-                    if (Array.isArray(parsed)) {
-                        setVisibleStats(parsed);
-                    }
-                }
             } catch (_) {}
         }
-    }, []);
+    }, [rulesConfig]);
 
     const toggleCustomAction = (type: string) => {
         setCustomActionTypes((prev) => {
             const next = prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type];
             if (typeof window !== "undefined") {
                 localStorage.setItem("leagueflow-custom-actions", JSON.stringify(next));
+            }
+            if (!readOnly && match.tournament_category_id) {
+                updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { custom_actions: next }).catch(console.error);
             }
             return next;
         });
@@ -193,12 +225,18 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         if (typeof window !== "undefined") {
             localStorage.setItem("leagueflow-custom-actions", JSON.stringify(types));
         }
+        if (!readOnly && match.tournament_category_id) {
+            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { custom_actions: types }).catch(console.error);
+        }
     };
 
     const toggleScoreboardPossession = (enabled: boolean) => {
         setShowScoreboardPossession(enabled);
         if (typeof window !== "undefined") {
             localStorage.setItem("leagueflow-scoreboard-possession", String(enabled));
+        }
+        if (!readOnly && match.tournament_category_id) {
+            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { scoreboard_possession: enabled }).catch(console.error);
         }
     };
 
@@ -208,6 +246,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
             if (typeof window !== "undefined") {
                 localStorage.setItem("leagueflow-visible-stats", JSON.stringify(next));
             }
+            if (!readOnly && match.tournament_category_id) {
+                updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { visible_stats: next }).catch(console.error);
+            }
             return next;
         });
     };
@@ -216,6 +257,9 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         setVisibleStats(stats);
         if (typeof window !== "undefined") {
             localStorage.setItem("leagueflow-visible-stats", JSON.stringify(stats));
+        }
+        if (!readOnly && match.tournament_category_id) {
+            updateCategoryRulesConfig(tournamentId, String(match.tournament_category_id), { visible_stats: stats }).catch(console.error);
         }
     };
 
@@ -934,25 +978,30 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
         </div>
     );
 
-    const quickActionsBox = !readOnly ? (
+    const quickActionsBox = (
         <div className="bg-card border p-2 lg:p-4 relative overflow-hidden group rounded-sm" id="console-action-panel">
             <div className="relative z-10 space-y-2 lg:space-y-4">
-                <div className="grid grid-cols-3 lg:grid-cols-1 gap-1 lg:gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => setOverlayDialogOpen(true)}
-                        className="hidden lg:flex w-full justify-start items-center"
-                    >
-                        <Tv className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{t("broadcast_overlay")}</span>
-                    </Button>
+                <div className={cn(
+                    "grid gap-1 lg:gap-2",
+                    readOnly ? "grid-cols-2 lg:grid-cols-1" : "grid-cols-3 lg:grid-cols-1"
+                )}>
+                    {!readOnly && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setOverlayDialogOpen(true)}
+                            className="hidden lg:flex w-full justify-start items-center"
+                        >
+                            <Tv className="h-4 w-4 text-primary" />
+                            <span className="hidden lg:inline">{t("broadcast_overlay")}</span>
+                        </Button>
+                    )}
                     <Button
                         variant="outline"
                         onClick={() => setRosterDialogOpen(true)}
                         className="w-full flex justify-center lg:justify-start items-center"
                     >
                         <Users className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{t("select_starting_lineup") || "Lineups"}</span>
+                        <span className="inline text-xs font-semibold">{t("select_starting_lineup") || "Lineups"}</span>
                     </Button>
                     <Button
                         variant="outline"
@@ -960,7 +1009,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                         className="w-full flex justify-center lg:justify-start items-center"
                     >
                         <BarChart2 className="h-4 w-4 text-primary" />
-                        <span className="hidden lg:inline">{t("match_statistics") || "สถิติการแข่งขัน"}</span>
+                        <span className="inline text-xs font-semibold">{t("match_statistics") || "สถิติการแข่งขัน"}</span>
                     </Button>
                     {match.status === 'finished' && homeScore === awayScore ? (
                         <PenaltyShootoutDialog
@@ -970,17 +1019,18 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             homeTeamName={match.home_team?.name || 'Home'}
                             awayTeamName={match.away_team?.name || 'Away'}
                             onUpdate={fetchShots}
+                            readOnly={readOnly}
                             trigger={
                                 <Button
                                     variant="outline"
-                                    className="w-full flex justify-center lg:justify-start items-center"
+                                    className="w-full flex justify-center lg:justify-start items-center col-span-2 lg:col-span-1"
                                 >
                                     <Target className="h-4 w-4 text-primary" />
-                                    <span className="hidden lg:inline">{t("penalty_shootout")}</span>
+                                    <span className="inline text-xs font-semibold">{t("penalty_shootout")}</span>
                                 </Button>
                             }
                         />
-                    ) : (
+                    ) : (!readOnly ? (
                         <Button
                             variant="outline"
                             disabled
@@ -989,11 +1039,11 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                             <Target className="h-4 w-4 text-muted-foreground" />
                             <span className="hidden lg:inline">{t("penalty_shootout")}</span>
                         </Button>
-                    )}
+                    ) : null)}
                 </div>
             </div>
         </div>
-    ) : null;
+    );
 
     const startConsoleTutorial = () => {
         const steps = [
@@ -1045,10 +1095,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
     if (playersLoading) {
         return (
-            <div className={cn(
-                "min-h-screen flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4 animate-pulse",
-                readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : "pt-0"
-            )}>
+            <div className="flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4 animate-pulse">
                 {/* Header Skeleton */}
                 <header className="flex items-center justify-between gap-1 lg:gap-2 h-10 dark:border-foreground/10">
                     <div className="flex items-center gap-1 lg:gap-2 w-full">
@@ -1155,26 +1202,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
     }
 
     return (
-        <div className={cn(
-            "min-h-screen flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4",
-            readOnly ? "pt-18 lg:pt-22 px-2 lg:px-0" : "pt-0"
-        )}>
-            {/* Top Navigation Bar */}
-            {readOnly && (
-                <nav className="border-b fixed top-0 dark:border-foreground/10 left-0 right-0 z-50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 print:hidden">
-                    <div className="px-4 h-16 flex items-center justify-between">
-                        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                            <Logo className="w-8 h-8" color="#00C49A" />
-                            <span className="font-black text-foreground text-xl tracking-tighter">League Flow</span>
-                        </Link>
-                        <div className="flex items-center gap-2 lg:gap-3">
-                            <span className="text-sm text-muted-foreground">{tPublic("public_view")}</span>
-                            <Badge variant="default" className="text-[10px] px-1.5 py-0 h-5">{tPublic("beta")}</Badge>
-                        </div>
-                    </div>
-                </nav>
-            )}
-
+        <div className="flex flex-col font-display selection:bg-primary selection:text-primary-foreground space-y-2 lg:space-y-4">
             <header className="flex items-center justify-between gap-1 lg:gap-2">
                 <div className="flex items-center gap-1 lg:gap-2 w-full">
                     <Button
@@ -1276,7 +1304,10 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
             <main className="flex-1 w-full grid grid-cols-12 gap-2 lg:gap-4">
                 {/* Sidebar: Admin Controls or Match Info */}
-                <aside className="col-span-12 lg:col-span-3 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col">
+                <aside className={cn(
+                    "col-span-12 gap-2 lg:gap-4 order-2 lg:order-1 flex flex-col",
+                    readOnly ? "lg:col-span-4" : "lg:col-span-3"
+                )}>
                     {/* Match Controls (Desktop only) */}
                     <div className="hidden lg:block">
                         {matchControlsBox}
@@ -1285,10 +1316,25 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                     <div className="hidden lg:block">
                         {quickActionsBox}
                     </div>
+
+                    {readOnly && (
+                        <div className="hidden lg:block border rounded-sm overflow-hidden bg-card shadow-xs">
+                            <MatchStatisticsBox
+                                match={match}
+                                events={events}
+                                homeScore={homeScore}
+                                awayScore={awayScore}
+                                visibleStats={visibleStats}
+                            />
+                        </div>
+                    )}
                 </aside>
 
                 {/* Main Content Area */}
-                <div className="col-span-12 lg:col-span-9 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4">
+                <div className={cn(
+                    "col-span-12 order-1 lg:order-2 flex flex-col gap-2 lg:gap-4",
+                    readOnly ? "lg:col-span-8" : "lg:col-span-9"
+                )}>
                     {/* Match Controls (Mobile only) */}
                     <div className="block lg:hidden">
                         {matchControlsBox}
@@ -1338,7 +1384,7 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
 
             {/* Dialogs */}
             <MatchEventDialog open={eventDialogOpen} onOpenChange={setEventDialogOpen} teamId={selectedTeamId} eventType={selectedEventType} initialMinute={Math.floor(time / 60) + 1} players={selectedTeamId === match.home_team_id ? homePlayers : awayPlayers} opponentPlayers={selectedTeamId === match.home_team_id ? awayPlayers : homePlayers} existingEvents={events} activeLineupIds={selectedTeamId === match.home_team_id ? homeLineup : awayLineup} onSave={handleSaveEvent} />
-            <RosterSelectionDialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen} homeTeamName={match.home_team?.name || 'Home'} awayTeamName={match.away_team?.name || 'Away'} homePlayers={homePlayers} awayPlayers={awayPlayers} homeActiveIds={homeLineup} awayActiveIds={awayLineup} onSave={handleSaveLineup} />
+            <RosterSelectionDialog open={rosterDialogOpen} onOpenChange={setRosterDialogOpen} homeTeamName={match.home_team?.name || 'Home'} awayTeamName={match.away_team?.name || 'Away'} homePlayers={homePlayers} awayPlayers={awayPlayers} homeActiveIds={homeLineup} awayActiveIds={awayLineup} onSave={handleSaveLineup} readOnly={readOnly} />
             <WalkoverDialog open={woDialogOpen} onOpenChange={setWoDialogOpen} match={match} onConfirm={handleWalkover} />
             <BroadcastDialog open={overlayDialogOpen} onOpenChange={setOverlayDialogOpen} matchId={match.id} tournamentId={tournamentId} />
             <SetTimeDialog open={setTimeDialogOpen} onOpenChange={setSetTimeDialogOpen} currentTime={time} onSave={handleSetTime} />
@@ -1559,9 +1605,17 @@ export function ConsolePage({ match: initialMatch, tournamentId, readOnly = fals
                                         variant="ghost"
                                         size="sm"
                                         className="h-7 text-xs text-muted-foreground hover:text-foreground"
-                                        onClick={() => resetVisibleStats(ALL_STATS_KEYS)}
+                                        onClick={() => resetVisibleStats(DEFAULT_STATS_KEYS)}
                                     >
                                         <RotateCcw className="h-3 w-3 mr-1" />
+                                        {locale === "th" ? "ค่าเริ่มต้น" : "Default"}
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                                        onClick={() => resetVisibleStats(ALL_STATS_KEYS)}
+                                    >
                                         {t("show_all") || "แสดงทั้งหมด"}
                                     </Button>
                                     <Button

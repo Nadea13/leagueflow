@@ -8,13 +8,13 @@ test.describe('LeagueFlow E2E Page Tests', () => {
     expect(bodyText).toBeTruthy();
   });
 
-  test('Login Page - check layout', async ({ page }) => {
-    await page.goto('/th/login');
+  test('Sign In Page - check layout', async ({ page }) => {
+    await page.goto('/th/sign-in');
     await expect(page.locator('input[type="email"], input[name="email"]')).toBeVisible({ timeout: 10000 });
   });
 
-  test('Signup Page - check layout', async ({ page }) => {
-    await page.goto('/th/signup');
+  test('Sign Up Page - check layout', async ({ page }) => {
+    await page.goto('/th/sign-up');
     await expect(page.locator('input[type="email"], input[name="email"]')).toBeVisible({ timeout: 10000 });
   });
 
@@ -32,9 +32,9 @@ test.describe('LeagueFlow E2E Page Tests', () => {
 
   test('Settings Billing Tab - check Event pricing and discount tag', async ({ page }) => {
     await page.goto('/th/dashboard/settings?tab=billing');
-    // Page will either render billing tab or redirect to login
+    // Page will either render billing tab or redirect to sign-in
     const url = page.url();
-    if (url.includes('/login')) {
+    if (url.includes('/sign-in') || url.includes('/login')) {
       await expect(page.locator('input[type="email"], input[name="email"]')).toBeVisible();
     } else {
       const bodyText = await page.innerText('body');

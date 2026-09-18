@@ -20,6 +20,7 @@ interface PenaltyShootoutDialogProps {
     trigger?: React.ReactNode;
     onComplete?: (homeScore: number, awayScore: number) => void;
     onUpdate?: () => void;
+    readOnly?: boolean;
 }
 
 export function PenaltyShootoutDialog({
@@ -31,6 +32,7 @@ export function PenaltyShootoutDialog({
     trigger,
     onComplete: _onComplete,
     onUpdate,
+    readOnly = false,
 }: PenaltyShootoutDialogProps) {
     const { toast } = useToast();
     const t = useTranslations("Penalty");
@@ -237,7 +239,7 @@ export function PenaltyShootoutDialog({
                                                 )}>
                                                     {homeShot.scored ? <Check className="h-6 w-6" /> : <X className="h-6 w-6" />}
                                                 </div>
-                                            ) : !hasWinner ? (
+                                            ) : (!hasWinner && !readOnly) ? (
                                                 <div className="flex gap-2">
                                                     <button
                                                         className="w-12 h-12 rounded-sm border border-foreground/5 bg-foreground/5 hover:bg-primary hover:text-black hover:border-primary flex items-center justify-center group/btn transition-all disabled:opacity-20"
@@ -275,7 +277,7 @@ export function PenaltyShootoutDialog({
                                                 )}>
                                                     {awayShot.scored ? <Check className="h-6 w-6" /> : <X className="h-6 w-6" />}
                                                 </div>
-                                            ) : !hasWinner ? (
+                                            ) : (!hasWinner && !readOnly) ? (
                                                 <div className="flex gap-2">
                                                     <button
                                                         className="w-12 h-12 rounded-sm border border-foreground/5 bg-foreground/5 hover:bg-primary hover:text-black hover:border-primary flex items-center justify-center group/btn transition-all disabled:opacity-20"
@@ -302,18 +304,20 @@ export function PenaltyShootoutDialog({
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col gap-3 relative z-10">
-                            {shots.length > 0 && (
-                                <Button
-                                    variant="ghost"
-                                    className="h-10 text-[9px] font-black tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all"
-                                    onClick={handleClear}
-                                >
-                                    <Trash2 className="h-3 w-3 mr-2" />
-                                    {t("clear_all")}
-                                </Button>
-                            )}
-                        </div>
+                        {!readOnly && (
+                            <div className="flex flex-col gap-3 relative z-10">
+                                {shots.length > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        className="h-10 text-[9px] font-black tracking-widest text-red-500/40 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                                        onClick={handleClear}
+                                    >
+                                        <Trash2 className="h-3 w-3 mr-2" />
+                                        {t("clear_all")}
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </DialogContent>

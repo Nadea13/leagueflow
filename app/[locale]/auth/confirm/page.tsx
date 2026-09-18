@@ -8,6 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/routing";
 import { Logo } from "@/components/shared/logo";
+import { HeroDotBackground } from "@/components/landing/hero-dot-background";
 
 export default function AuthConfirmPage() {
     const router = useRouter();
@@ -50,8 +51,8 @@ export default function AuthConfirmPage() {
             // Timeout fallback - if no session after 5 seconds, redirect to login
             setTimeout(() => {
                 if (isMounted) {
-                    // console.log("AuthConfirmPage: Timeout, redirecting to login");
-                    router.push(`/${locale}/login`);
+                    // console.log("AuthConfirmPage: Timeout, redirecting to sign-in");
+                    router.push(`/${locale}/sign-in`);
                 }
             }, 5000);
 
@@ -70,12 +71,14 @@ export default function AuthConfirmPage() {
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4">
-                {/* Background gradient effects */}
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10" />
-                <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-destructive/10 blur-3xl -z-10" />
+                {/* Interactive Canvas Dot Background */}
+                <HeroDotBackground />
 
-                <Card className="w-full max-w-sm backdrop-blur-sm bg-card shadow-md border rounded-sm">
-                    <CardContent className="pt-6 space-y-6 text-center">
+                {/* Ambient Fade overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/50 pointer-events-none z-[1]" />
+
+                <Card className="w-full max-w-sm bg-card/50 backdrop-blur-md shadow-xl border rounded-sm relative z-10">
+                    <CardContent className="px-4 pt-6 space-y-6 text-center">
                         {/* Logo */}
                         <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
                             <Logo className="w-8 h-8" color="#00C49A" />
@@ -85,7 +88,7 @@ export default function AuthConfirmPage() {
                         <div className="text-destructive font-semibold">Authentication Error</div>
                         <p className="text-muted-foreground text-sm">{error}</p>
                         <button
-                            onClick={() => router.push(`/${locale}/login`)}
+                            onClick={() => router.push(`/${locale}/sign-in`)}
                             className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                         >
                             Back to Login
@@ -98,12 +101,14 @@ export default function AuthConfirmPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background p-4">
-            {/* Background gradient effects */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent -z-10" />
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 blur-3xl -z-10" />
+            {/* Interactive Canvas Dot Background */}
+            <HeroDotBackground />
 
-            <Card className="w-full max-w-sm backdrop-blur-sm bg-card shadow-md border rounded-sm">
-                <CardContent className="pt-6 space-y-6 text-center">
+            {/* Ambient Fade overlay */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-background via-background/90 to-background/50 pointer-events-none z-[1]" />
+
+            <Card className="w-full max-w-sm bg-card/50 backdrop-blur-md shadow-xl border rounded-sm relative z-10">
+                <CardContent className="px-4 pt-6 space-y-6 text-center">
                     {/* Logo */}
                     <Link href="/" className="flex items-center justify-center gap-1 md:gap-2 group">
                         <Logo className="w-8 h-8" color="#00C49A" />

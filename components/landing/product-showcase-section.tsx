@@ -103,8 +103,14 @@ export function ProductShowcaseSection() {
         </div>
 
         {/* Clean Text-Only Navigation with Active Pill/Glow */}
-        <div className="flex justify-center items-center gap-2 sm:gap-4 mb-6 sm:mb-8 flex-wrap">
-          {showcaseList.map((item, index) => {
+        <motion.div 
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="flex justify-center items-center gap-2 sm:gap-4 mb-8 sm:mb-12 flex-wrap"
+        >
+          {showcaseList.map((item) => {
             const isActive = item.id === activeTab;
             return (
               <button
@@ -128,11 +134,16 @@ export function ProductShowcaseSection() {
               </button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* 3D Stacked Windows Container (Cascading Layered Windows) */}
-        {/* Height tightly hugs the max-w-5xl 1536:748 aspect ratio card + header */}
-        <div className="relative mx-auto max-w-5xl h-[220px] min-[480px]:h-[270px] sm:h-[370px] md:h-[430px] lg:h-[510px] xl:h-[540px] flex justify-center items-start perspective-[1200px]">
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="relative mx-auto max-w-5xl h-[240px] min-[480px]:h-[300px] sm:h-[400px] md:h-[470px] lg:h-[540px] xl:h-[570px] flex justify-center items-start pt-6 sm:pt-8"
+        >
           {showcaseList.map((item, index) => {
             const activeIndex = showcaseList.findIndex((it) => it.id === activeTab);
             // Calculate relative offset from active tab
@@ -140,11 +151,11 @@ export function ProductShowcaseSection() {
             const diff = (index - activeIndex + showcaseList.length) % showcaseList.length;
             const isFront = diff === 0;
 
-            // Stack order styling
-            const scale = isFront ? 1 : Math.max(0.85, 1 - diff * 0.05);
-            const translateY = isFront ? 0 : -diff * 20;
+            // Stack order styling matching Image 2
+            const scale = isFront ? 1 : Math.max(0.92, 1 - diff * 0.025);
+            const translateY = isFront ? 0 : -diff * 8;
             const zIndex = isFront ? 30 : 30 - diff * 5;
-            const opacity = isFront ? 1 : Math.max(0.3, 0.85 - diff * 0.22);
+            const opacity = isFront ? 1 : diff > 2 ? 0 : Math.max(0.3, 0.75 - diff * 0.25);
 
             return (
               <motion.div
@@ -158,8 +169,8 @@ export function ProductShowcaseSection() {
                 }}
                 transition={{
                   type: "spring",
-                  stiffness: 260,
-                  damping: 26,
+                  stiffness: 280,
+                  damping: 28,
                 }}
                 onClick={() => setActiveTab(item.id)}
                 className={cn(
@@ -214,7 +225,7 @@ export function ProductShowcaseSection() {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

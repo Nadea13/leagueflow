@@ -12,7 +12,7 @@ import { useBracketStore } from "@/lib/stores/bracket-store";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { useMatchEvents } from "@/hooks/use-match-events";
 import { useMatchTimer } from "@/hooks/use-match-timer";
 import { createClient } from "@/lib/supabase/client";
@@ -373,22 +373,41 @@ export function MatchCard({
         </div>
     );
 
-    // If there is an away team, the card is clickable to open the full page console
-    const canOpen = isPublic || !!match.away_team_id;
+    const router = useRouter();
+
+    // The card is clickable to open the full page console
+    const canOpen = !isEditMode;
     const currentTab = searchParams.get('tab');
-    const querySuffix = currentTab ? `?from=${currentTab}` : '';
+    const currentCategory = searchParams.get('category') || searchParams.get('category_id');
+    const queryParams = new URLSearchParams();
+    if (currentTab) queryParams.set('from', currentTab);
+    if (currentCategory) queryParams.set('category', currentCategory);
+    const querySuffix = queryParams.toString() ? `?${queryParams.toString()}` : '';
 
     const url = isPublic
-        ? `/${tournamentId}/matches/${match.id}${querySuffix}`
+        ? `/tournaments/${tournamentId}/matches/${match.id}${querySuffix}`
         : `/dashboard/tournaments/${tournamentId}/matches/${match.id}${querySuffix}`;
+
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (!canOpen) return;
+        // Don't navigate if clicking on an interactive control (button, select, input, dialog)
+        const target = e.target as HTMLElement;
+        if (target.closest('button, input, select, [role="button"], [data-radix-collection-item]')) {
+            return;
+        }
+        router.push(url);
+    };
 
     return (
         <>
-            {canOpen ? (
-                <Link href={url} className="block transition-transform">
-                    {CardContent}
-                </Link>
-            ) : CardContent}
+            <div 
+                onClick={handleCardClick}
+                className={cn(
+                    canOpen && "cursor-pointer"
+                )}
+            >
+                {CardContent}
+            </div>
 
             <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
                 <AlertDialogContent className="bg-card border-border/10 shadow-2xl max-w-md">

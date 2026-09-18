@@ -11,7 +11,7 @@ export async function signOut(formData: FormData) {
     await supabase.auth.signOut();
     const locale = formData.get("locale");
     const safeLocale = typeof locale === "string" && locale.length > 0 ? locale : "th";
-    return redirect(`/${safeLocale}/login`);
+    return redirect(`/${safeLocale}/sign-in`);
 }
 
 export async function signIn(formData: FormData, _locale: string): Promise<ActionResponse> {

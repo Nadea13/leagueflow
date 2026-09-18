@@ -131,12 +131,16 @@ export default async function AdminMatchConsole(props: {
     }));
 
     const categoryId = typeof resolvedParams.category === 'string' ? resolvedParams.category : rawMatch.tournament_category_id;
-    const backUrl = categoryId
-        ? `/dashboard/tournaments/${id}?category=${categoryId}`
-        : `/dashboard/tournaments/${id}?tab=${fromTab}`;
+    const backParams = new URLSearchParams();
+    if (categoryId) backParams.set('category', categoryId);
+    if (fromTab) backParams.set('tab', fromTab);
+    const backUrl = backParams.toString()
+        ? `/dashboard/tournaments/${id}?${backParams.toString()}`
+        : `/dashboard/tournaments/${id}`;
 
     // Fetch category rules_config if available
     let maxSets = 3;
+    let rulesConfig: Record<string, unknown> | null = null;
     if (rawMatch.tournament_category_id) {
         const { data: categoryData } = await supabase
             .from('tournament_categories')
@@ -145,7 +149,8 @@ export default async function AdminMatchConsole(props: {
             .maybeSingle();
 
         if (categoryData?.rules_config && typeof categoryData.rules_config === 'object') {
-            const rules = categoryData.rules_config as { max_sets?: number };
+            rulesConfig = categoryData.rules_config as Record<string, unknown>;
+            const rules = rulesConfig as { max_sets?: number };
             if (rules.max_sets) {
                 maxSets = Number(rules.max_sets);
             }
@@ -162,6 +167,7 @@ export default async function AdminMatchConsole(props: {
                 initialEvents={formattedEvents as MatchEvent[]}
                 backUrl={backUrl}
                 maxSets={maxSets}
+                rulesConfig={rulesConfig}
             />
         );
     }
@@ -174,6 +180,7 @@ export default async function AdminMatchConsole(props: {
             readOnly={false}
             initialEvents={formattedEvents as MatchEvent[]}
             backUrl={backUrl}
+            rulesConfig={rulesConfig}
         />
     );
 }
